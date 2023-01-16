@@ -48,6 +48,32 @@ TEST_CASE(to_unicode_uppercase)
     EXPECT_EQ(Unicode::to_unicode_uppercase(0x3401u), 0x3401u);
     EXPECT_EQ(Unicode::to_unicode_uppercase(0x3402u), 0x3402u);
     EXPECT_EQ(Unicode::to_unicode_uppercase(0x4dbfu), 0x4dbfu);
+
+    // Code points whose uppercase and titlecase mappings actually differ.
+    EXPECT_EQ(Unicode::to_unicode_uppercase(0x01c6u), 0x01c4u); // "ǆ" to "Ǆ"
+    EXPECT_EQ(Unicode::to_unicode_uppercase(0x01c9u), 0x01c7u); // "ǉ" to "Ǉ"
+    EXPECT_EQ(Unicode::to_unicode_uppercase(0x01ccu), 0x01cau); // "ǌ" to "Ǌ"
+    EXPECT_EQ(Unicode::to_unicode_uppercase(0x01f3u), 0x01f1u); // "ǳ" to "Ǳ"
+}
+
+TEST_CASE(to_unicode_titlecase)
+{
+    compare_to_ascii(toupper, Unicode::to_unicode_titlecase);
+
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x03c9u), 0x03a9u); // "ω" to "Ω"
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x03a9u), 0x03a9u); // "Ω" to "Ω"
+
+    // Code points encoded by ranges in UnicodeData.txt
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x3400u), 0x3400u);
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x3401u), 0x3401u);
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x3402u), 0x3402u);
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x4dbfu), 0x4dbfu);
+
+    // Code points whose uppercase and titlecase mappings actually differ.
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x01c6u), 0x01c5u); // "ǆ" to "ǅ"
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x01c9u), 0x01c8u); // "ǉ" to "ǈ"
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x01ccu), 0x01cbu); // "ǌ" to "ǋ"
+    EXPECT_EQ(Unicode::to_unicode_titlecase(0x01f3u), 0x01f2u); // "ǳ" to "ǲ"
 }
 
 TEST_CASE(to_unicode_lowercase_unconditional_special_casing)

@@ -113,6 +113,7 @@ struct UnicodeData {
 
     u32 simple_uppercase_mapping_size { 0 };
     u32 simple_lowercase_mapping_size { 0 };
+    u32 simple_titlecase_mapping_size { 0 };
 
     Vector<SpecialCasing> special_casing;
     u32 code_points_with_special_casing { 0 };
@@ -674,6 +675,7 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
         unicode_data.code_points_with_non_zero_combining_class += data.canonical_combining_class != 0;
         unicode_data.simple_uppercase_mapping_size += data.simple_uppercase_mapping.has_value();
         unicode_data.simple_lowercase_mapping_size += data.simple_lowercase_mapping.has_value();
+        unicode_data.simple_titlecase_mapping_size += data.simple_titlecase_mapping.has_value();
         unicode_data.code_points_with_decomposition_mapping += data.decomposition_mapping.has_value();
 
         unicode_data.code_points_with_special_casing += has_special_casing;
@@ -978,6 +980,7 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
         });
     append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
     append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
+    append_code_point_mappings("titlecase"sv, "CodePointMapping"sv, unicode_data.simple_titlecase_mapping_size, [](auto const& data) { return data.simple_titlecase_mapping; });
     append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
 
@@ -1138,6 +1141,7 @@ u32 @method@(u32 code_point)
     append_code_point_mapping_search("canonical_combining_class"sv, "s_combining_class_mappings"sv, "0"sv);
     append_code_point_mapping_search("to_unicode_uppercase"sv, "s_uppercase_mappings"sv, "code_point"sv);
     append_code_point_mapping_search("to_unicode_lowercase"sv, "s_lowercase_mappings"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_titlecase"sv, "s_titlecase_mappings"sv, "code_point"sv);
 
     generator.append(R"~~~(
 Span<SpecialCasing const* const> special_case_mapping(u32 code_point)

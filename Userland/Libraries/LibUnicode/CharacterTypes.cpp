@@ -38,6 +38,11 @@ u32 __attribute__((weak)) to_unicode_uppercase(u32 code_point)
     return to_ascii_uppercase(code_point);
 }
 
+u32 __attribute__((weak)) to_unicode_titlecase(u32 code_point)
+{
+    return to_ascii_uppercase(code_point);
+}
+
 ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView string, Optional<StringView> const& locale)
 {
     StringBuilder builder;
