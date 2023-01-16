@@ -468,6 +468,76 @@ TEST_CASE(buffered_small_file_read)
     EXPECT(!file->can_read_line().value());
 }
 
+TEST_CASE(buffered_file_tell_and_seek)
+{
+    auto file = Core::Stream::File::open("/usr/Tests/LibCore/small.txt"sv, Core::Stream::OpenMode::Read).release_value();
+    auto buffered_file = Core::Stream::BufferedFile::create(move(file)).release_value();
+
+    // Initial state.
+    {
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 0);
+    }
+
+    // Read a character.
+    {
+        auto character = buffered_file->read_value<char>().release_value();
+        EXPECT_EQ(character, 'W');
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 1);
+    }
+
+    // Read one more character.
+    {
+        auto character = buffered_file->read_value<char>().release_value();
+        EXPECT_EQ(character, 'e');
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 2);
+    }
+
+    // Seek seven characters forward.
+    {
+        auto current_offset = buffered_file->seek(7, Core::Stream::SeekMode::FromCurrentPosition).release_value();
+        EXPECT_EQ(current_offset, 9);
+    }
+
+    // Read a character again.
+    {
+        auto character = buffered_file->read_value<char>().release_value();
+        EXPECT_EQ(character, 'o');
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 10);
+    }
+
+    // Seek five characters backwards.
+    {
+        auto current_offset = buffered_file->seek(-5, Core::Stream::SeekMode::FromCurrentPosition).release_value();
+        EXPECT_EQ(current_offset, 5);
+    }
+
+    // Read a character.
+    {
+        auto character = buffered_file->read_value<char>().release_value();
+        EXPECT_EQ(character, 'h');
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 6);
+    }
+
+    // Seek back to the beginning.
+    {
+        auto current_offset = buffered_file->seek(0, Core::Stream::SeekMode::SetPosition).release_value();
+        EXPECT_EQ(current_offset, 0);
+    }
+
+    // Read the first character.
+    {
+        auto character = buffered_file->read_value<char>().release_value();
+        EXPECT_EQ(character, 'W');
+        auto current_offset = buffered_file->tell().release_value();
+        EXPECT_EQ(current_offset, 1);
+    }
+}
+
 constexpr auto buffered_sent_data = "Well hello friends!\n:^)\nThis shouldn't be present. :^("sv;
 constexpr auto first_line = "Well hello friends!"sv;
 constexpr auto second_line = ":^)"sv;
