@@ -41,6 +41,16 @@ StringView Presentation::author() const
     return "Unknown Author"sv;
 }
 
+bool Presentation::has_a_next_frame() const
+{
+    return m_current_slide < u32(m_slides.size() > 1 ? m_slides.size() - 1 : 0);
+}
+
+bool Presentation::has_a_previous_frame() const
+{
+    return m_current_slide > 0u;
+}
+
 void Presentation::next_frame()
 {
     m_current_frame_in_slide++;
