@@ -18,12 +18,14 @@ public:
         Length,
         Percentage,
         FlexibleLength,
-        // TODO: Max-Content
+        MaxContent,
+        MinContent,
     };
 
     GridSize(Length);
     GridSize(Percentage);
     GridSize(float);
+    GridSize(Type);
     GridSize();
     ~GridSize();
 
@@ -34,17 +36,19 @@ public:
     bool is_length() const { return m_type == Type::Length; }
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_flexible_length() const { return m_type == Type::FlexibleLength; }
+    bool is_max_content() const { return m_type == Type::MaxContent; }
+    bool is_min_content() const { return m_type == Type::MinContent; }
 
     Length length() const;
     Percentage percentage() const { return m_percentage; }
     float flexible_length() const { return m_flexible_length; }
 
-    // https://drafts.csswg.org/css-grid/#layout-algorithm
-    // Intrinsic sizing function - min-content, max-content, auto, fit-content()
+    // https://www.w3.org/TR/css-grid-2/#layout-algorithm
+    // An intrinsic sizing function (min-content, max-content, auto, fit-content()).
     // FIXME: Add missing properties once implemented.
     bool is_intrinsic_track_sizing() const
     {
-        return (m_type == Type::Length && m_length.is_auto());
+        return (m_type == Type::Length && m_length.is_auto()) || m_type == Type::MaxContent || m_type == Type::MinContent;
     }
 
     bool is_definite() const

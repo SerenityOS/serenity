@@ -33,6 +33,13 @@ GridSize::GridSize(float flexible_length)
 {
 }
 
+GridSize::GridSize(Type type)
+    : m_length { Length::make_auto() }
+{
+    VERIFY(type == Type::MinContent || type == Type::MaxContent);
+    m_type = type;
+}
+
 GridSize::GridSize()
     : m_length { Length::make_auto() }
 {
@@ -54,6 +61,10 @@ ErrorOr<String> GridSize::to_string() const
         return m_percentage.to_string();
     case Type::FlexibleLength:
         return String::formatted("{}fr", m_flexible_length);
+    case Type::MaxContent:
+        return String::from_utf8("max-content"sv);
+    case Type::MinContent:
+        return String::from_utf8("min-content"sv);
     }
     VERIFY_NOT_REACHED();
 }
