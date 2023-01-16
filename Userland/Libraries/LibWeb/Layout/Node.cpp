@@ -659,6 +659,12 @@ bool Node::is_inline_block() const
     return display.is_inline_outside() && display.is_flow_root_inside();
 }
 
+bool Node::is_inline_table() const
+{
+    auto display = this->display();
+    return display.is_inline_outside() && display.is_table_inside();
+}
+
 JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());

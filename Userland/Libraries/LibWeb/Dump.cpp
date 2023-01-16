@@ -121,7 +121,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
     StringView svg_box_color_on = ""sv;
     StringView positioned_color_on = ""sv;
     StringView floating_color_on = ""sv;
-    StringView inline_block_color_on = ""sv;
+    StringView inline_color_on = ""sv;
     StringView line_box_color_on = ""sv;
     StringView fragment_color_on = ""sv;
     StringView flex_color_on = ""sv;
@@ -133,7 +133,7 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         svg_box_color_on = "\033[31m"sv;
         positioned_color_on = "\033[31;1m"sv;
         floating_color_on = "\033[32;1m"sv;
-        inline_block_color_on = "\033[36;1m"sv;
+        inline_color_on = "\033[36;1m"sv;
         line_box_color_on = "\033[34;1m"sv;
         fragment_color_on = "\033[35;1m"sv;
         flex_color_on = "\033[34;1m"sv;
@@ -178,7 +178,9 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
         if (box.is_floating())
             builder.appendff(" {}floating{}", floating_color_on, color_off);
         if (box.is_inline_block())
-            builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
+            builder.appendff(" {}inline-block{}", inline_color_on, color_off);
+        if (box.is_inline_table())
+            builder.appendff(" {}inline-table{}", inline_color_on, color_off);
         if (box.display().is_flex_inside()) {
             StringView direction;
             switch (box.computed_values().flex_direction()) {
