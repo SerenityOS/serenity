@@ -332,6 +332,34 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
     case CSS::PropertyID::Float:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
+    case CSS::PropertyID::GridArea: {
+        auto maybe_grid_row_start = property(CSS::PropertyID::GridRowStart);
+        auto maybe_grid_column_start = property(CSS::PropertyID::GridColumnStart);
+        auto maybe_grid_row_end = property(CSS::PropertyID::GridRowEnd);
+        auto maybe_grid_column_end = property(CSS::PropertyID::GridColumnEnd);
+        RefPtr<GridTrackPlacementStyleValue> grid_row_start, grid_column_start, grid_row_end, grid_column_end;
+        if (maybe_grid_row_start.has_value()) {
+            VERIFY(maybe_grid_row_start.value().value->is_grid_track_placement());
+            grid_row_start = maybe_grid_row_start.value().value->as_grid_track_placement();
+        }
+        if (maybe_grid_column_start.has_value()) {
+            VERIFY(maybe_grid_column_start.value().value->is_grid_track_placement());
+            grid_column_start = maybe_grid_column_start.value().value->as_grid_track_placement();
+        }
+        if (maybe_grid_row_end.has_value()) {
+            VERIFY(maybe_grid_row_end.value().value->is_grid_track_placement());
+            grid_row_end = maybe_grid_row_end.value().value->as_grid_track_placement();
+        }
+        if (maybe_grid_column_end.has_value()) {
+            VERIFY(maybe_grid_column_end.value().value->is_grid_track_placement());
+            grid_column_end = maybe_grid_column_end.value().value->as_grid_track_placement();
+        }
+        return GridAreaShorthandStyleValue::create(
+            grid_row_start.release_nonnull(),
+            grid_column_start.release_nonnull(),
+            grid_row_end.release_nonnull(),
+            grid_column_end.release_nonnull());
+    }
     case CSS::PropertyID::GridColumn: {
         auto maybe_grid_column_end = property(CSS::PropertyID::GridColumnEnd);
         auto maybe_grid_column_start = property(CSS::PropertyID::GridColumnStart);

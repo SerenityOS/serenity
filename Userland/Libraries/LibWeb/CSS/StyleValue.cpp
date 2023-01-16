@@ -140,6 +140,12 @@ GridTrackPlacementShorthandStyleValue const& StyleValue::as_grid_track_placement
     return static_cast<GridTrackPlacementShorthandStyleValue const&>(*this);
 }
 
+GridAreaShorthandStyleValue const& StyleValue::as_grid_area_shorthand() const
+{
+    VERIFY(is_grid_area_shorthand());
+    return static_cast<GridAreaShorthandStyleValue const&>(*this);
+}
+
 GridTemplateAreaStyleValue const& StyleValue::as_grid_template_area() const
 {
     VERIFY(is_grid_template_area());
@@ -1425,6 +1431,31 @@ bool GridTrackPlacementShorthandStyleValue::equals(StyleValue const& other) cons
     auto const& typed_other = other.as_grid_track_placement_shorthand();
     return m_start->equals(typed_other.m_start)
         && m_end->equals(typed_other.m_end);
+}
+
+ErrorOr<String> GridAreaShorthandStyleValue::to_string() const
+{
+    StringBuilder builder;
+    if (!m_row_start->as_grid_track_placement().grid_track_placement().is_auto())
+        builder.appendff("{}", m_row_start->as_grid_track_placement().grid_track_placement().to_string().value());
+    if (!m_column_start->as_grid_track_placement().grid_track_placement().is_auto())
+        builder.appendff(" / {}", m_column_start->as_grid_track_placement().grid_track_placement().to_string().value());
+    if (!m_row_end->as_grid_track_placement().grid_track_placement().is_auto())
+        builder.appendff(" / {}", m_row_end->as_grid_track_placement().grid_track_placement().to_string().value());
+    if (!m_column_end->as_grid_track_placement().grid_track_placement().is_auto())
+        builder.appendff(" / {}", m_column_end->as_grid_track_placement().grid_track_placement().to_string().value());
+    return builder.to_string();
+}
+
+bool GridAreaShorthandStyleValue::equals(StyleValue const& other) const
+{
+    if (type() != other.type())
+        return false;
+    auto const& typed_other = other.as_grid_area_shorthand();
+    return m_row_start->equals(typed_other.m_row_start)
+        && m_column_start->equals(typed_other.m_column_start)
+        && m_row_end->equals(typed_other.m_row_end)
+        && m_column_end->equals(typed_other.m_column_end);
 }
 
 ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
