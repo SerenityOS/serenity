@@ -10,6 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibUnicode/Forward.h>
@@ -42,6 +43,7 @@ u32 to_unicode_titlecase(u32 code_point);
 
 ErrorOr<DeprecatedString> to_unicode_lowercase_full(StringView, Optional<StringView> const& locale = {});
 ErrorOr<DeprecatedString> to_unicode_uppercase_full(StringView, Optional<StringView> const& locale = {});
+ErrorOr<String> to_unicode_titlecase_full(StringView, Optional<StringView> const& locale = {});
 
 Optional<GeneralCategory> general_category_from_string(StringView);
 bool code_point_has_general_category(u32 code_point, GeneralCategory general_category);

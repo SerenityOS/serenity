@@ -74,6 +74,27 @@ TEST_CASE(to_unicode_titlecase)
     EXPECT_EQ(Unicode::to_unicode_titlecase(0x01c9u), 0x01c8u); // "ǉ" to "ǈ"
     EXPECT_EQ(Unicode::to_unicode_titlecase(0x01ccu), 0x01cbu); // "ǌ" to "ǋ"
     EXPECT_EQ(Unicode::to_unicode_titlecase(0x01f3u), 0x01f2u); // "ǳ" to "ǲ"
+
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full(""sv)), ""sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full(" "sv)), " "sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full(" - "sv)), " - "sv);
+
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("a"sv)), "A"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("A"sv)), "A"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full(" a"sv)), " A"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("a "sv)), "A "sv);
+
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("ab"sv)), "Ab"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("Ab"sv)), "Ab"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("aB"sv)), "Ab"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("AB"sv)), "Ab"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full(" ab"sv)), " Ab"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("ab "sv)), "Ab "sv);
+
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("foo bar baz"sv)), "Foo Bar Baz"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("foo \n \r bar \t baz"sv)), "Foo \n \r Bar \t Baz"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("f\"oo\" b'ar'"sv)), "F\"Oo\" B'Ar'"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("123dollars"sv)), "123Dollars"sv);
 }
 
 TEST_CASE(to_unicode_lowercase_unconditional_special_casing)
@@ -380,6 +401,78 @@ TEST_CASE(to_unicode_uppercase_special_casing_soft_dotted)
 
     result = MUST(Unicode::to_unicode_uppercase_full("j\u0307"sv, "lt"sv));
     EXPECT_EQ(result, "J"sv);
+}
+
+TEST_CASE(to_unicode_titlecase_unconditional_special_casing)
+{
+    // LATIN SMALL LETTER SHARP S
+    auto result = MUST(Unicode::to_unicode_titlecase_full("\u00DF"sv));
+    EXPECT_EQ(result, "\u0053\u0073"sv);
+
+    // LATIN CAPITAL LETTER I WITH DOT ABOVE
+    result = MUST(Unicode::to_unicode_titlecase_full("\u0130"sv));
+    EXPECT_EQ(result, "\u0130"sv);
+
+    // LATIN SMALL LIGATURE FF
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB00"sv));
+    EXPECT_EQ(result, "\u0046\u0066"sv);
+
+    // LATIN SMALL LIGATURE FI
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB01"sv));
+    EXPECT_EQ(result, "\u0046\u0069"sv);
+
+    // LATIN SMALL LIGATURE FL
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB02"sv));
+    EXPECT_EQ(result, "\u0046\u006C"sv);
+
+    // LATIN SMALL LIGATURE FFI
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB03"sv));
+    EXPECT_EQ(result, "\u0046\u0066\u0069"sv);
+
+    // LATIN SMALL LIGATURE FFL
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB04"sv));
+    EXPECT_EQ(result, "\u0046\u0066\u006C"sv);
+
+    // LATIN SMALL LIGATURE LONG S T
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB05"sv));
+    EXPECT_EQ(result, "\u0053\u0074"sv);
+
+    // LATIN SMALL LIGATURE ST
+    result = MUST(Unicode::to_unicode_titlecase_full("\uFB06"sv));
+    EXPECT_EQ(result, "\u0053\u0074"sv);
+
+    // GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS
+    result = MUST(Unicode::to_unicode_titlecase_full("\u0390"sv));
+    EXPECT_EQ(result, "\u0399\u0308\u0301"sv);
+
+    // GREEK SMALL LETTER UPSILON WITH DIALYTIKA AND TONOS
+    result = MUST(Unicode::to_unicode_titlecase_full("\u03B0"sv));
+    EXPECT_EQ(result, "\u03A5\u0308\u0301"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST(Unicode::to_unicode_titlecase_full("\u1FB7"sv));
+    EXPECT_EQ(result, "\u0391\u0342\u0345"sv);
+
+    // GREEK SMALL LETTER ETA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST(Unicode::to_unicode_titlecase_full("\u1FC7"sv));
+    EXPECT_EQ(result, "\u0397\u0342\u0345"sv);
+
+    // GREEK SMALL LETTER OMEGA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST(Unicode::to_unicode_titlecase_full("\u1FF7"sv));
+    EXPECT_EQ(result, "\u03A9\u0342\u0345"sv);
+}
+
+TEST_CASE(to_unicode_titlecase_special_casing_i)
+{
+    // LATIN SMALL LETTER I
+    auto result = MUST(Unicode::to_unicode_titlecase_full("i"sv, "en"sv));
+    EXPECT_EQ(result, "I"sv);
+
+    result = MUST(Unicode::to_unicode_titlecase_full("i"sv, "az"sv));
+    EXPECT_EQ(result, "\u0130"sv);
+
+    result = MUST(Unicode::to_unicode_titlecase_full("i"sv, "tr"sv));
+    EXPECT_EQ(result, "\u0130"sv);
 }
 
 TEST_CASE(general_category)

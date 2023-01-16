@@ -249,4 +249,66 @@ ErrorOr<void> build_uppercase_string([[maybe_unused]] Utf8View code_points, [[ma
 #endif
 }
 
+ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale)
+{
+#if ENABLE_UNICODE_DATA
+    // toTitlecase(X): Find the word boundaries in X according to Unicode Standard Annex #29,
+    // “Unicode Text Segmentation.” For each word boundary, find the first cased character F following
+    // the word boundary. If F exists, map F to Titlecase_Mapping(F); then map all characters C between
+    // F and the following word boundary to Lowercase_Mapping(C).
+
+    auto boundaries = find_word_segmentation_boundaries(code_points);
+    if (boundaries.is_empty())
+        return {};
+
+    auto first_cased_code_point_after_boundary = [&](auto boundary, auto next_boundary) -> Optional<Utf8CodePointIterator> {
+        auto it = code_points.iterator_at_byte_offset_without_validation(boundary);
+        auto end = code_points.iterator_at_byte_offset_without_validation(next_boundary);
+
+        for (; it != end; ++it) {
+            if (code_point_has_property(*it, Property::Cased))
+                return it;
+        }
+
+        return {};
+    };
+
+    auto append_code_point_as_titlecase = [&](auto code_point, auto code_point_offset, auto code_point_length) -> ErrorOr<void> {
+        auto const* special_casing = find_matching_special_case(code_point, code_points, locale, code_point_offset, code_point_length);
+        if (!special_casing) {
+            TRY(builder.try_append_code_point(to_unicode_titlecase(code_point)));
+            return {};
+        }
+
+        for (size_t i = 0; i < special_casing->titlecase_mapping_size; ++i)
+            TRY(builder.try_append_code_point(special_casing->titlecase_mapping[i]));
+        return {};
+    };
+
+    for (size_t i = 0; i < boundaries.size() - 1; ++i) {
+        auto boundary = boundaries[i];
+        auto next_boundary = boundaries[i + 1];
+
+        if (auto it = first_cased_code_point_after_boundary(boundary, next_boundary); it.has_value()) {
+            auto code_point = *it.value();
+            auto code_point_offset = code_points.byte_offset_of(*it);
+            auto code_point_length = it->underlying_code_point_length_in_bytes();
+
+            auto caseless_code_points = code_points.substring_view(boundary, code_point_offset - boundary);
+            TRY(builder.try_append(caseless_code_points.as_string()));
+
+            TRY(append_code_point_as_titlecase(code_point, code_point_offset, code_point_length));
+            boundary = code_point_offset + code_point_length;
+        }
+
+        auto substring_to_lowercase = code_points.substring_view(boundary, next_boundary - boundary);
+        TRY(build_lowercase_string(substring_to_lowercase, builder, locale));
+    }
+
+    return {};
+#else
+    return Error::from_string_literal("Unicode data has been disabled");
+#endif
+}
+
 }
