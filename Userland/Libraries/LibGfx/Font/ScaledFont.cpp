@@ -10,6 +10,28 @@
 
 namespace Gfx {
 
+ScaledFont::ScaledFont(NonnullRefPtr<VectorFont> font, float point_width, float point_height, unsigned dpi_x, unsigned dpi_y)
+    : m_font(move(font))
+    , m_point_width(point_width)
+    , m_point_height(point_height)
+{
+    float units_per_em = m_font->units_per_em();
+    m_x_scale = (point_width * dpi_x) / (POINTS_PER_INCH * units_per_em);
+    m_y_scale = (point_height * dpi_y) / (POINTS_PER_INCH * units_per_em);
+
+    auto metrics = m_font->metrics(m_x_scale, m_y_scale);
+
+    m_pixel_metrics = Gfx::FontPixelMetrics {
+        .size = (float)pixel_size(),
+        .x_height = (float)x_height(),
+        .advance_of_ascii_zero = (float)glyph_width('0'),
+        .glyph_spacing = (float)glyph_spacing(),
+        .ascent = metrics.ascender,
+        .descent = metrics.descender,
+        .line_gap = metrics.line_gap,
+    };
+}
+
 float ScaledFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
 float ScaledFont::width(Utf8View const& view) const { return unicode_view_width(view); }
 float ScaledFont::width(Utf32View const& view) const { return unicode_view_width(view); }
@@ -103,17 +125,7 @@ u8 ScaledFont::glyph_fixed_width() const
 
 Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
 {
-    auto metrics = m_font->metrics(m_x_scale, m_y_scale);
-
-    return Gfx::FontPixelMetrics {
-        .size = (float)pixel_size(),
-        .x_height = (float)x_height(),
-        .advance_of_ascii_zero = (float)glyph_width('0'),
-        .glyph_spacing = (float)glyph_spacing(),
-        .ascent = metrics.ascender,
-        .descent = metrics.descender,
-        .line_gap = metrics.line_gap,
-    };
+    return m_pixel_metrics;
 }
 
 }
