@@ -382,7 +382,9 @@ inline T* IntrusiveList<T, Container, member>::node_to_value(SubstitutedIntrusiv
     //       named `member`.
     //       This function effectively takes in the address of the data member, and returns the address
     //       of the value (of type T) holding that member.
-    return bit_cast<T*>(bit_cast<unsigned char*>(&node) - bit_cast<unsigned char*>(member));
+    auto member_offset_sized = bit_cast<Conditional<sizeof(member) == 8, u64, u32>>(member);
+    auto member_offset = bit_cast<unsigned char*>(static_cast<uintptr_t>(member_offset_sized));
+    return bit_cast<T*>(bit_cast<unsigned char*>(&node) - member_offset);
 }
 
 template<typename T, typename Container>
