@@ -137,9 +137,9 @@ void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashM
     connection().async_set_clipboard_data(move(buffer), type, metadata);
 }
 
-void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap)
+void Clipboard::set_bitmap(Gfx::Bitmap const& bitmap, HashMap<DeprecatedString, DeprecatedString> const& additional_metadata)
 {
-    HashMap<DeprecatedString, DeprecatedString> metadata;
+    HashMap<DeprecatedString, DeprecatedString> metadata(additional_metadata);
     metadata.set("width", DeprecatedString::number(bitmap.width()));
     metadata.set("height", DeprecatedString::number(bitmap.height()));
     metadata.set("scale", DeprecatedString::number(bitmap.scale()));
