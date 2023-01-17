@@ -95,28 +95,30 @@ template<>
 struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent::Type const& value)
     {
-        StringView type;
-        switch (value) {
-        case Core::FileWatcherEvent::Type::ChildCreated:
-            type = "ChildCreated"sv;
-            break;
-        case Core::FileWatcherEvent::Type::ChildDeleted:
-            type = "ChildDeleted"sv;
-            break;
-        case Core::FileWatcherEvent::Type::Deleted:
-            type = "Deleted"sv;
-            break;
-        case Core::FileWatcherEvent::Type::ContentModified:
-            type = "ContentModified"sv;
-            break;
-        case Core::FileWatcherEvent::Type::MetadataModified:
-            type = "MetadataModified"sv;
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        bool had_any_flag = false;
 
-        return builder.put_string(type);
+        auto put_string_if_has_flag = [&](auto mask, auto name) -> ErrorOr<void> {
+            if (!has_flag(value, mask))
+                return {};
+
+            if (had_any_flag)
+                TRY(builder.put_string(", "sv));
+            TRY(builder.put_string(name));
+
+            had_any_flag = true;
+            return {};
+        };
+
+        TRY(builder.put_string("["sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ChildCreated, "ChildCreated"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ChildDeleted, "ChildDeleted"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::Deleted, "Deleted"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ContentModified, "ContentModified"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::MetadataModified, "MetadataModified"sv));
+        TRY(builder.put_string("]"sv));
+
+        VERIFY(had_any_flag);
+        return {};
     }
 };
 
