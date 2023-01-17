@@ -117,6 +117,7 @@ private:
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
 
     void build_valid_grid_areas(Box const&);
+    int find_valid_grid_area(String const& needle);
 
     void place_item_with_row_and_column_position(Box const& box, Box const& child_box);
     void place_item_with_row_position(Box const& box, Box const& child_box);
