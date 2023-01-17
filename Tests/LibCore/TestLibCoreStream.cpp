@@ -36,7 +36,7 @@ TEST_CASE(file_open)
 
     auto maybe_size = file->size();
     EXPECT(!maybe_size.is_error());
-    EXPECT_EQ(maybe_size.value(), 0);
+    EXPECT_EQ(maybe_size.value(), 0ul);
 }
 
 TEST_CASE(file_write_bytes)
@@ -80,7 +80,7 @@ TEST_CASE(file_seeking_around)
     EXPECT(!maybe_file.is_error());
     auto file = maybe_file.release_value();
 
-    EXPECT_EQ(file->size().release_value(), 8702);
+    EXPECT_EQ(file->size().release_value(), 8702ul);
 
     auto maybe_buffer = ByteBuffer::create_uninitialized(16);
     EXPECT(!maybe_buffer.is_error());
@@ -89,17 +89,17 @@ TEST_CASE(file_seeking_around)
     StringView buffer_contents { buffer.bytes() };
 
     EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
-    EXPECT_EQ(file->tell().release_value(), 500);
+    EXPECT_EQ(file->tell().release_value(), 500ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
     EXPECT(!file->seek(234, Core::Stream::SeekMode::FromCurrentPosition).is_error());
-    EXPECT_EQ(file->tell().release_value(), 750);
+    EXPECT_EQ(file->tell().release_value(), 750ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents2);
 
     EXPECT(!file->seek(-105, Core::Stream::SeekMode::FromEndPosition).is_error());
-    EXPECT_EQ(file->tell().release_value(), 8597);
+    EXPECT_EQ(file->tell().release_value(), 8597ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents3);
 }
@@ -113,7 +113,7 @@ TEST_CASE(file_adopt_fd)
     EXPECT(!maybe_file.is_error());
     auto file = maybe_file.release_value();
 
-    EXPECT_EQ(file->size().release_value(), 8702);
+    EXPECT_EQ(file->size().release_value(), 8702ul);
 
     auto maybe_buffer = ByteBuffer::create_uninitialized(16);
     EXPECT(!maybe_buffer.is_error());
@@ -122,7 +122,7 @@ TEST_CASE(file_adopt_fd)
     StringView buffer_contents { buffer.bytes() };
 
     EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
-    EXPECT_EQ(file->tell().release_value(), 500);
+    EXPECT_EQ(file->tell().release_value(), 500ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
@@ -142,10 +142,10 @@ TEST_CASE(file_truncate)
     auto file = maybe_file.release_value();
 
     EXPECT(!file->truncate(999).is_error());
-    EXPECT_EQ(file->size().release_value(), 999);
+    EXPECT_EQ(file->size().release_value(), 999ul);
 
     EXPECT(!file->truncate(42).is_error());
-    EXPECT_EQ(file->size().release_value(), 42);
+    EXPECT_EQ(file->size().release_value(), 42ul);
 }
 
 // TCPSocket tests
@@ -477,7 +477,7 @@ TEST_CASE(buffered_file_tell_and_seek)
     // Initial state.
     {
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 0);
+        EXPECT_EQ(current_offset, 0ul);
     }
 
     // Read a character.
@@ -485,7 +485,7 @@ TEST_CASE(buffered_file_tell_and_seek)
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'W');
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 1);
+        EXPECT_EQ(current_offset, 1ul);
     }
 
     // Read one more character.
@@ -493,13 +493,13 @@ TEST_CASE(buffered_file_tell_and_seek)
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'e');
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 2);
+        EXPECT_EQ(current_offset, 2ul);
     }
 
     // Seek seven characters forward.
     {
         auto current_offset = buffered_file->seek(7, Core::Stream::SeekMode::FromCurrentPosition).release_value();
-        EXPECT_EQ(current_offset, 9);
+        EXPECT_EQ(current_offset, 9ul);
     }
 
     // Read a character again.
@@ -507,13 +507,13 @@ TEST_CASE(buffered_file_tell_and_seek)
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'o');
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 10);
+        EXPECT_EQ(current_offset, 10ul);
     }
 
     // Seek five characters backwards.
     {
         auto current_offset = buffered_file->seek(-5, Core::Stream::SeekMode::FromCurrentPosition).release_value();
-        EXPECT_EQ(current_offset, 5);
+        EXPECT_EQ(current_offset, 5ul);
     }
 
     // Read a character.
@@ -521,13 +521,13 @@ TEST_CASE(buffered_file_tell_and_seek)
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'h');
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 6);
+        EXPECT_EQ(current_offset, 6ul);
     }
 
     // Seek back to the beginning.
     {
         auto current_offset = buffered_file->seek(0, Core::Stream::SeekMode::SetPosition).release_value();
-        EXPECT_EQ(current_offset, 0);
+        EXPECT_EQ(current_offset, 0ul);
     }
 
     // Read the first character. This should prime the buffer if it hasn't happened already.
@@ -535,13 +535,13 @@ TEST_CASE(buffered_file_tell_and_seek)
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'W');
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 1);
+        EXPECT_EQ(current_offset, 1ul);
     }
 
     // Seek beyond the buffer size, which should invalidate the buffer.
     {
         auto current_offset = buffered_file->seek(12, Core::Stream::SeekMode::SetPosition).release_value();
-        EXPECT_EQ(current_offset, 12);
+        EXPECT_EQ(current_offset, 12ul);
     }
 
     // Ensure that we still read the correct contents from the new offset with a (presumably) freshly filled buffer.
@@ -549,7 +549,7 @@ TEST_CASE(buffered_file_tell_and_seek)
         auto character = buffered_file->read_value<char>().release_value();
         EXPECT_EQ(character, 'r');
         auto current_offset = buffered_file->tell().release_value();
-        EXPECT_EQ(current_offset, 13);
+        EXPECT_EQ(current_offset, 13ul);
     }
 }
 

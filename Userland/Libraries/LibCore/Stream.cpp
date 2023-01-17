@@ -108,14 +108,14 @@ ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
     return {};
 }
 
-ErrorOr<off_t> SeekableStream::tell() const
+ErrorOr<size_t> SeekableStream::tell() const
 {
     // Seek with 0 and SEEK_CUR does not modify anything despite the const_cast,
     // so it's safe to do this.
     return const_cast<SeekableStream*>(this)->seek(0, SeekMode::FromCurrentPosition);
 }
 
-ErrorOr<off_t> SeekableStream::size()
+ErrorOr<size_t> SeekableStream::size()
 {
     auto original_position = TRY(tell());
 
@@ -280,7 +280,7 @@ void File::close()
     m_fd = -1;
 }
 
-ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
+ErrorOr<size_t> File::seek(i64 offset, SeekMode mode)
 {
     int syscall_mode;
     switch (mode) {
@@ -297,7 +297,7 @@ ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
         VERIFY_NOT_REACHED();
     }
 
-    off_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
+    size_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
     m_last_read_was_eof = false;
     return seek_result;
 }
