@@ -680,6 +680,8 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         // - An intrinsic sizing function
         // Use an initial base size of zero.
         case CSS::GridSize::Type::FlexibleLength:
+        case CSS::GridSize::Type::MaxContent:
+        case CSS::GridSize::Type::MinContent:
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -704,6 +706,12 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
         case CSS::GridSize::Type::FlexibleLength:
+            grid_column.growth_limit = -1;
+            break;
+        // - An intrinsic sizing function
+        // Use an initial growth limit of infinity.
+        case CSS::GridSize::Type::MaxContent:
+        case CSS::GridSize::Type::MinContent:
             grid_column.growth_limit = -1;
             break;
         default:
@@ -749,16 +757,25 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
                 boxes_of_column.append(positioned_box.box);
         }
 
+        switch (grid_column.min_track_sizing_function.type()) {
         // - For min-content minimums:
         // If the track has a min-content min track sizing function, set its base size to the maximum of the
         // items’ min-content contributions, floored at zero.
-        // FIXME: Not implemented yet min-content.
-
+        case CSS::GridSize::Type::MinContent: {
+            CSSPixels column_width = 0;
+            for (auto& box_of_column : boxes_of_column)
+                column_width = max(column_width, calculate_min_content_width(box_of_column));
+            grid_column.base_size = column_width;
+        } break;
         // - For max-content minimums:
         // If the track has a max-content min track sizing function, set its base size to the maximum of the
         // items’ max-content contributions, floored at zero.
-        // FIXME: Not implemented yet max-content.
-
+        case CSS::GridSize::Type::MaxContent: {
+            CSSPixels column_width = 0;
+            for (auto& box_of_column : boxes_of_column)
+                column_width = max(column_width, calculate_max_content_width(box_of_column));
+            grid_column.base_size = column_width;
+        } break;
         // - For auto minimums:
         // If the track has an auto min track sizing function and the grid container is being sized under a
         // min-/max-content constraint, set the track’s base size to the maximum of its items’ limited
@@ -767,8 +784,8 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         // limited by the max track sizing function (which could be the argument to a fit-content() track
         // sizing function) if that is fixed and ultimately floored by its minimum contribution (defined
         // below).
-        // FIXME: Not implemented yet min-/max-content.
-
+        // FIXME: Container min/max-content
+        case CSS::GridSize::Type::Length:
         // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored
         // at zero. The minimum contribution of an item is the smallest outer size it can have.
         // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
@@ -776,21 +793,44 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
         // contribution is its min-content contribution. Because the minimum contribution often depends on
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
-        CSSPixels grid_column_width = 0;
-        for (auto& box_of_column : boxes_of_column)
-            grid_column_width = max(grid_column_width, calculate_min_content_width(box_of_column).value());
-        grid_column.base_size = grid_column_width;
+        case CSS::GridSize::Type::Percentage:
+        case CSS::GridSize::Type::FlexibleLength: {
+            CSSPixels grid_column_width = 0;
+            for (auto& box_of_column : boxes_of_column)
+                grid_column_width = max(grid_column_width, calculate_min_content_width(box_of_column).value());
+            grid_column.base_size = grid_column_width;
+        } break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
 
+        switch (grid_column.max_track_sizing_function.type()) {
         // - For min-content maximums:
         // If the track has a min-content max track sizing function, set its growth limit to the maximum of
         // the items’ min-content contributions.
-        // FIXME: Not implemented yet min-content maximums.
-
+        case CSS::GridSize::Type::MinContent: {
+            CSSPixels column_width = 0;
+            for (auto& box_of_column : boxes_of_column)
+                column_width = max(column_width, calculate_min_content_width(box_of_column));
+            grid_column.growth_limit = column_width;
+        } break;
         // - For max-content maximums:
         // If the track has a max-content max track sizing function, set its growth limit to the maximum of
         // the items’ max-content contributions. For fit-content() maximums, furthermore clamp this growth
         // limit by the fit-content() argument.
-        // FIXME: Not implemented yet max-content maximums.
+        case CSS::GridSize::Type::MaxContent: {
+            CSSPixels column_width = 0;
+            for (auto& box_of_column : boxes_of_column)
+                column_width = max(column_width, calculate_max_content_width(box_of_column));
+            grid_column.growth_limit = column_width;
+        } break;
+        case CSS::GridSize::Type::Length:
+        case CSS::GridSize::Type::Percentage:
+        case CSS::GridSize::Type::FlexibleLength:
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
 
         // In all cases, if a track’s growth limit is now less than its base size, increase the growth limit
         // to match the base size.
@@ -1139,6 +1179,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // - An intrinsic sizing function
         // Use an initial base size of zero.
         case CSS::GridSize::Type::FlexibleLength:
+        case CSS::GridSize::Type::MaxContent:
+        case CSS::GridSize::Type::MinContent:
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1162,6 +1204,12 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // - A flexible sizing function
         // Use an initial growth limit of infinity.
         case CSS::GridSize::Type::FlexibleLength:
+            grid_row.growth_limit = -1;
+            break;
+        // - An intrinsic sizing function
+        // Use an initial growth limit of infinity.
+        case CSS::GridSize::Type::MaxContent:
+        case CSS::GridSize::Type::MinContent:
             grid_row.growth_limit = -1;
             break;
         default:
@@ -1207,16 +1255,25 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
                 positioned_boxes_of_row.append(positioned_box);
         }
 
+        switch (grid_row.min_track_sizing_function.type()) {
         // - For min-content minimums:
         // If the track has a min-content min track sizing function, set its base size to the maximum of the
         // items’ min-content contributions, floored at zero.
-        // FIXME: Not implemented yet min-content.
-
+        case CSS::GridSize::Type::MinContent: {
+            CSSPixels row_height = 0;
+            for (auto& positioned_box : positioned_boxes_of_row)
+                row_height = max(row_height, calculate_min_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
+            grid_row.base_size = row_height;
+        } break;
         // - For max-content minimums:
         // If the track has a max-content min track sizing function, set its base size to the maximum of the
         // items’ max-content contributions, floored at zero.
-        // FIXME: Not implemented yet max-content.
-
+        case CSS::GridSize::Type::MaxContent: {
+            CSSPixels row_height = 0;
+            for (auto& positioned_box : positioned_boxes_of_row)
+                row_height = max(row_height, calculate_max_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
+            grid_row.base_size = row_height;
+        } break;
         // - For auto minimums:
         // If the track has an auto min track sizing function and the grid container is being sized under a
         // min-/max-content constraint, set the track’s base size to the maximum of its items’ limited
@@ -1225,8 +1282,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // limited by the max track sizing function (which could be the argument to a fit-content() track
         // sizing function) if that is fixed and ultimately floored by its minimum contribution (defined
         // below).
-        // FIXME: Not implemented yet min-/max-content.
-
+        // FIXME: Container min/max-content
+        case CSS::GridSize::Type::Length:
         // Otherwise, set the track’s base size to the maximum of its items’ minimum contributions, floored
         // at zero. The minimum contribution of an item is the smallest outer size it can have.
         // Specifically, if the item’s computed preferred size behaves as auto or depends on the size of its
@@ -1234,21 +1291,44 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // result from assuming the item’s used minimum size as its preferred size; else the item’s minimum
         // contribution is its min-content contribution. Because the minimum contribution often depends on
         // the size of the item’s content, it is considered a type of intrinsic size contribution.
-        CSSPixels grid_row_height = 0;
-        for (auto& positioned_box : positioned_boxes_of_row)
-            grid_row_height = max(grid_row_height, calculate_min_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
-        grid_row.base_size = grid_row_height;
+        case CSS::GridSize::Type::Percentage:
+        case CSS::GridSize::Type::FlexibleLength: {
+            CSSPixels grid_row_height = 0;
+            for (auto& positioned_box : positioned_boxes_of_row)
+                grid_row_height = max(grid_row_height, calculate_min_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
+            grid_row.base_size = grid_row_height;
+        } break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
 
+        switch (grid_row.max_track_sizing_function.type()) {
         // - For min-content maximums:
         // If the track has a min-content max track sizing function, set its growth limit to the maximum of
         // the items’ min-content contributions.
-        // FIXME: Not implemented yet min-content maximums.
-
+        case CSS::GridSize::Type::MinContent: {
+            CSSPixels row_height = 0;
+            for (auto& positioned_box : positioned_boxes_of_row)
+                row_height = max(row_height, calculate_max_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
+            grid_row.base_size = row_height;
+        } break;
         // - For max-content maximums:
         // If the track has a max-content max track sizing function, set its growth limit to the maximum of
         // the items’ max-content contributions. For fit-content() maximums, furthermore clamp this growth
         // limit by the fit-content() argument.
-        // FIXME: Not implemented yet max-content maximums.
+        case CSS::GridSize::Type::MaxContent: {
+            CSSPixels row_height = 0;
+            for (auto& positioned_box : positioned_boxes_of_row)
+                row_height = max(row_height, calculate_max_content_height(positioned_box.box, AvailableSize::make_definite(m_grid_columns[positioned_box.column].base_size)));
+            grid_row.base_size = row_height;
+        } break;
+        case CSS::GridSize::Type::Length:
+        case CSS::GridSize::Type::Percentage:
+        case CSS::GridSize::Type::FlexibleLength:
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
 
         // In all cases, if a track’s growth limit is now less than its base size, increase the growth limit
         // to match the base size.
