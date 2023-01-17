@@ -112,7 +112,7 @@ struct UnicodeData {
 
     Vector<SpecialCasing> special_casing;
     u32 code_points_with_special_casing { 0 };
-    u32 largest_casing_transform_size { 0 };
+    u32 largest_special_casing_mapping_size { 0 };
     u32 largest_special_casing_size { 0 };
     Vector<DeprecatedString> conditions;
     Vector<DeprecatedString> locales;
@@ -253,9 +253,9 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
                 unicode_data.conditions.append(casing.condition);
         }
 
-        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.lowercase_mapping.size());
-        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.titlecase_mapping.size());
-        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.uppercase_mapping.size());
+        unicode_data.largest_special_casing_mapping_size = max(unicode_data.largest_special_casing_mapping_size, casing.lowercase_mapping.size());
+        unicode_data.largest_special_casing_mapping_size = max(unicode_data.largest_special_casing_mapping_size, casing.titlecase_mapping.size());
+        unicode_data.largest_special_casing_mapping_size = max(unicode_data.largest_special_casing_mapping_size, casing.uppercase_mapping.size());
 
         unicode_data.special_casing.append(move(casing));
     }
@@ -660,7 +660,6 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
         }
 
         bool has_special_casing { false };
-
         for (auto const& casing : unicode_data.special_casing) {
             if (casing.code_point == data.code_point) {
                 data.special_casing_indices.append(casing.index);
@@ -688,7 +687,7 @@ static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& fi
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("casing_transform_size", DeprecatedString::number(unicode_data.largest_casing_transform_size));
+    generator.set("special_casing_mapping_size", DeprecatedString::number(unicode_data.largest_special_casing_mapping_size));
 
     auto generate_enum = [&](StringView name, StringView default_, Vector<DeprecatedString> values, Vector<Alias> aliases = {}) {
         quick_sort(values);
@@ -751,13 +750,13 @@ namespace Unicode {
 struct SpecialCasing {
     u32 code_point { 0 };
 
-    u32 lowercase_mapping[@casing_transform_size@];
+    u32 lowercase_mapping[@special_casing_mapping_size@];
     u32 lowercase_mapping_size { 0 };
 
-    u32 uppercase_mapping[@casing_transform_size@];
+    u32 uppercase_mapping[@special_casing_mapping_size@];
     u32 uppercase_mapping_size { 0 };
 
-    u32 titlecase_mapping[@casing_transform_size@];
+    u32 titlecase_mapping[@special_casing_mapping_size@];
     u32 titlecase_mapping_size { 0 };
 
     Locale locale { Locale::None };
