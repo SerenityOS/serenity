@@ -196,41 +196,39 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     // https://www.w3.org/TR/css-grid-2/#common-uses-named-lines
     // 8.1.3. Named Lines and Spans
     // Instead of counting lines by number, lines can be referenced by their line name:
-    if (child_box.computed_values().grid_column_start().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns());
-        if (found_flag_and_index > -1)
-            column_start = found_flag_and_index;
-        else
-            column_start = 0;
-    }
     if (child_box.computed_values().grid_column_end().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns());
-        if (found_flag_and_index > -1) {
-            column_end = found_flag_and_index;
-            if (!child_box.computed_values().grid_column_start().is_position())
-                column_start = column_end - column_span;
-        } else {
-            column_end = 1;
-            column_start = 0;
-        }
-    }
-    if (child_box.computed_values().grid_row_start().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows());
-        if (found_flag_and_index > -1)
-            row_start = found_flag_and_index;
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
+            column_end = m_valid_grid_areas[grid_area_index].column_end;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+            column_end = line_name_index;
         else
-            row_start = 0;
+            column_end = 1;
+        column_start = column_end - 1;
+    }
+    if (child_box.computed_values().grid_column_start().has_line_name()) {
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
+            column_start = m_valid_grid_areas[grid_area_index].column_start;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+            column_start = line_name_index;
+        else
+            column_start = 0;
     }
     if (child_box.computed_values().grid_row_end().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows());
-        if (found_flag_and_index > -1) {
-            row_end = found_flag_and_index;
-            if (!child_box.computed_values().grid_row_start().is_position())
-                row_start = row_end - row_span;
-        } else {
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
+            row_end = m_valid_grid_areas[grid_area_index].row_end;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+            row_end = line_name_index;
+        else
             row_end = 1;
+        row_start = row_end - 1;
+    }
+    if (child_box.computed_values().grid_row_start().has_line_name()) {
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
+            row_start = m_valid_grid_areas[grid_area_index].row_start;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+            row_start = line_name_index;
+        else
             row_start = 0;
-        }
     }
 
     // If there are multiple lines of the same name, they effectively establish a named set of grid
@@ -324,23 +322,22 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
     // https://www.w3.org/TR/css-grid-2/#common-uses-named-lines
     // 8.1.3. Named Lines and Spans
     // Instead of counting lines by number, lines can be referenced by their line name:
+    if (child_box.computed_values().grid_row_end().has_line_name()) {
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
+            row_end = m_valid_grid_areas[grid_area_index].row_end;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+            row_end = line_name_index;
+        else
+            row_end = 1;
+        row_start = row_end - 1;
+    }
     if (child_box.computed_values().grid_row_start().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows());
-        if (found_flag_and_index > -1)
-            row_start = found_flag_and_index;
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_row_end().line_name()); grid_area_index > -1)
+            row_start = m_valid_grid_areas[grid_area_index].row_start;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows()); line_name_index > -1)
+            row_start = line_name_index;
         else
             row_start = 0;
-    }
-    if (child_box.computed_values().grid_row_end().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows());
-        if (found_flag_and_index > -1) {
-            row_end = found_flag_and_index;
-            if (!child_box.computed_values().grid_row_start().is_position())
-                row_start = row_end - row_span;
-        } else {
-            row_start = 0;
-            row_end = 1;
-        }
     }
 
     // If there are multiple lines of the same name, they effectively establish a named set of grid
@@ -453,23 +450,22 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
     // https://www.w3.org/TR/css-grid-2/#common-uses-named-lines
     // 8.1.3. Named Lines and Spans
     // Instead of counting lines by number, lines can be referenced by their line name:
+    if (child_box.computed_values().grid_column_end().has_line_name()) {
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
+            column_end = m_valid_grid_areas[grid_area_index].column_end;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+            column_end = line_name_index;
+        else
+            column_end = 1;
+        column_start = column_end - 1;
+    }
     if (child_box.computed_values().grid_column_start().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns());
-        if (found_flag_and_index > -1)
-            column_start = found_flag_and_index;
+        if (auto grid_area_index = find_valid_grid_area(child_box.computed_values().grid_column_end().line_name()); grid_area_index > -1)
+            column_start = m_valid_grid_areas[grid_area_index].column_start;
+        else if (auto line_name_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns()); line_name_index > -1)
+            column_start = line_name_index;
         else
             column_start = 0;
-    }
-    if (child_box.computed_values().grid_column_end().has_line_name()) {
-        auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns());
-        if (found_flag_and_index > -1) {
-            column_end = found_flag_and_index;
-            if (!child_box.computed_values().grid_column_start().is_position())
-                column_start = column_end - column_span;
-        } else {
-            column_end = 1;
-            column_start = 0;
-        }
     }
 
     // If there are multiple lines of the same name, they effectively establish a named set of grid
@@ -1636,6 +1632,15 @@ void GridFormattingContext::build_valid_grid_areas(Box const& box)
 
     for (auto const& checked_grid_area : found_grid_areas)
         m_valid_grid_areas.append(checked_grid_area);
+}
+
+int GridFormattingContext::find_valid_grid_area(String const& needle)
+{
+    for (size_t x = 0; x < m_valid_grid_areas.size(); x++) {
+        if (m_valid_grid_areas[x].name == needle)
+            return static_cast<int>(x);
+    }
+    return -1;
 }
 
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
