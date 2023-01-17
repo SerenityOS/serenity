@@ -144,7 +144,7 @@ void CalculatorWidget::set_entry(Crypto::BigFraction value)
 
 void CalculatorWidget::mimic_pressed_button(RefPtr<GUI::Button> button)
 {
-    button->set_mimic_pressed(true);
+    button->mimic_pressed();
 }
 
 void CalculatorWidget::update_display()
