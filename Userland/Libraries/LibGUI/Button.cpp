@@ -136,6 +136,9 @@ void Button::click(unsigned modifiers)
             return;
         set_checked(!is_checked());
     }
+
+    mimic_pressed();
+
     if (on_click)
         on_click(modifiers);
     if (m_action)
@@ -248,7 +251,7 @@ void Button::set_default(bool default_button)
 
 void Button::mimic_pressed()
 {
-    if (!is_being_pressed()) {
+    if (!is_being_pressed() && !was_being_pressed()) {
         m_mimic_pressed = true;
 
         stop_timer();

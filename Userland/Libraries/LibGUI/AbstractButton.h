@@ -34,6 +34,7 @@ public:
 
     bool is_hovered() const { return m_hovered; }
     bool is_being_pressed() const { return m_being_pressed; }
+    bool was_being_pressed() const { return m_was_being_pressed; }
 
     unsigned allowed_mouse_buttons_for_pressing() const { return m_allowed_mouse_buttons_for_pressing; }
     void set_allowed_mouse_buttons_for_pressing(unsigned allowed_buttons) { m_allowed_mouse_buttons_for_pressing = allowed_buttons; }
@@ -66,6 +67,7 @@ private:
     bool m_checkable { false };
     bool m_hovered { false };
     bool m_being_pressed { false };
+    bool m_was_being_pressed { false };
     bool m_being_keyboard_pressed { false };
     bool m_exclusive { false };
 
