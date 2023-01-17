@@ -86,7 +86,6 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
     m_synthesis_buffer = {};
     m_bit_reservoir.discard_or_error(m_bit_reservoir.size());
     m_bit_reservoir.handle_any_error();
-    m_is_first_frame = true;
     m_bitstream->align_to_byte_boundary();
     return {};
 }
@@ -108,7 +107,6 @@ LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_samples_to_read_from_
             m_current_frame = maybe_frame.release_value();
             if (!m_current_frame.has_value())
                 break;
-            m_is_first_frame = false;
             m_current_frame_read = 0;
         }
 
@@ -219,11 +217,11 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_next_frame()
             continue;
         }
 
-        return read_frame_data(header, m_is_first_frame);
+        return read_frame_data(header);
     }
 }
 
-ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header const& header, bool is_first_frame)
+ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header const& header)
 {
     MP3::MP3Frame frame { header };
 
@@ -239,8 +237,10 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
     if (m_bit_reservoir.write(buffer) != header.slot_count)
         return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Could not write frame into bit reservoir." };
 
-    if (frame.main_data_begin > 0 && is_first_frame)
+    // If we don't have enough data in the reservoir to process this frame, skip it (but keep the data).
+    if (old_reservoir_size < static_cast<size_t>(frame.main_data_begin))
         return frame;
+
     if (!m_bit_reservoir.discard_or_error(old_reservoir_size - frame.main_data_begin))
         return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Could not discard old frame data." };
 
