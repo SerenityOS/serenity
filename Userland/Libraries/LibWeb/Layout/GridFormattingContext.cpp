@@ -1591,6 +1591,53 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
     }
 }
 
+void GridFormattingContext::build_valid_grid_areas(Box const& box)
+{
+    Vector<GridArea> found_grid_areas;
+
+    auto get_index_of_found_grid_area = [&](String needle) -> int {
+        for (size_t x = 0; x < found_grid_areas.size(); x++) {
+            if (found_grid_areas[x].name == needle)
+                return static_cast<int>(x);
+        }
+        return -1;
+    };
+
+    // https://www.w3.org/TR/css-grid-2/#grid-template-areas-property
+    // If a named grid area spans multiple grid cells, but those cells do not form a single
+    // filled-in rectangle, the declaration is invalid.
+    for (int y = 0; y < static_cast<int>(box.computed_values().grid_template_areas().size()); y++) {
+        for (int x = 0; x < static_cast<int>(box.computed_values().grid_template_areas()[y].size()); x++) {
+            auto grid_area_idx = get_index_of_found_grid_area(box.computed_values().grid_template_areas()[y][x]);
+            if (grid_area_idx == -1) {
+                found_grid_areas.append({ box.computed_values().grid_template_areas()[y][x], y, y + 1, x, x + 1 });
+            } else {
+                auto& grid_area = found_grid_areas[grid_area_idx];
+                if (grid_area.row_start == y) {
+                    if (grid_area.column_end == x)
+                        grid_area.column_end = grid_area.column_end + 1;
+                    else
+                        return;
+                } else {
+                    if (grid_area.row_end == y) {
+                        if (grid_area.column_start != x)
+                            return;
+                        grid_area.row_end = grid_area.row_end + 1;
+                    } else if (grid_area.row_end == y + 1) {
+                        if (grid_area.column_end < x || grid_area.column_end > x + 1)
+                            return;
+                    } else {
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    for (auto const& checked_grid_area : found_grid_areas)
+        m_valid_grid_areas.append(checked_grid_area);
+}
+
 void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const& available_space)
 {
     auto grid_template_columns = box.computed_values().grid_template_columns();
@@ -1613,6 +1660,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     auto row_count = get_count_of_tracks(grid_template_rows.track_list(), available_space, box);
 
     m_occupation_grid = OccupationGrid(column_count, row_count);
+
+    build_valid_grid_areas(box);
 
     // https://drafts.csswg.org/css-grid/#auto-placement-algo
     // 8.5. Grid Item Placement Algorithm

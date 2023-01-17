@@ -89,6 +89,15 @@ private:
         }
     };
 
+    struct GridArea {
+        String name;
+        int row_start { 0 };
+        int row_end { 1 };
+        int column_start { 0 };
+        int column_end { 1 };
+    };
+    Vector<GridArea> m_valid_grid_areas;
+
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
 
@@ -106,6 +115,8 @@ private:
     CSSPixels resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&, Box const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
+
+    void build_valid_grid_areas(Box const&);
 
     void place_item_with_row_and_column_position(Box const& box, Box const& child_box);
     void place_item_with_row_position(Box const& box, Box const& child_box);
