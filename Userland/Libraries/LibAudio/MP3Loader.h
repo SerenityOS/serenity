@@ -47,7 +47,7 @@ private:
     MaybeLoaderError build_seek_table();
     ErrorOr<MP3::Header, LoaderError> read_header();
     ErrorOr<MP3::MP3Frame, LoaderError> read_next_frame();
-    ErrorOr<MP3::MP3Frame, LoaderError> read_frame_data(MP3::Header const&, bool is_first_frame);
+    ErrorOr<MP3::MP3Frame, LoaderError> read_frame_data(MP3::Header const&);
     MaybeLoaderError read_side_information(MP3::MP3Frame&);
     ErrorOr<size_t, LoaderError> read_scale_factors(MP3::MP3Frame&, InputBitStream& reservoir, size_t granule_index, size_t channel_index);
     MaybeLoaderError read_huffman_data(MP3::MP3Frame&, InputBitStream& reservoir, size_t granule_index, size_t channel_index, size_t granule_bits_read);
@@ -70,7 +70,6 @@ private:
     PcmSampleFormat m_sample_format { PcmSampleFormat::Int16 };
     int m_total_samples { 0 };
     size_t m_loaded_samples { 0 };
-    bool m_is_first_frame { true };
 
     AK::Optional<MP3::MP3Frame> m_current_frame;
     u32 m_current_frame_read;
