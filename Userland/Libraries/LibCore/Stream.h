@@ -22,7 +22,6 @@
 #include <LibCore/SocketAddress.h>
 #include <LibIPC/Forward.h>
 #include <errno.h>
-#include <netdb.h>
 
 namespace Core::Stream {
 
@@ -565,9 +564,12 @@ public:
             notifier->set_enabled(enabled);
     }
 
+#if !defined(AK_OS_WINDOWS)
     ErrorOr<int> receive_fd(int flags);
     ErrorOr<void> send_fd(int fd);
     ErrorOr<pid_t> peer_pid() const;
+#endif
+
     ErrorOr<Bytes> read_without_waiting(Bytes buffer);
 
     /// Release the fd associated with this LocalSocket. After the fd is

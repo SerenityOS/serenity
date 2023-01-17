@@ -8,7 +8,6 @@
 #include "Stream.h"
 #include <LibCore/System.h>
 #include <fcntl.h>
-#include <netdb.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
