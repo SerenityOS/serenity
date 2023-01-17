@@ -573,6 +573,10 @@ if (BUILD_LAGOM)
         # LibCore
         lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
 
+        if (LINUX AND NOT EMSCRIPTEN)
+            lagom_test(../../Tests/LibCore/TestLibCoreFileWatcher.cpp)
+        endif()
+
         # Crypto
         file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
         foreach(source ${LIBCRYPTO_TESTS})

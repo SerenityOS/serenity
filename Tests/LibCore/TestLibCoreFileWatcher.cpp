@@ -28,10 +28,10 @@ TEST_CASE(file_watcher_child_events)
     file_watcher->on_change = [&](Core::FileWatcherEvent const& event) {
         if (event_count == 0) {
             EXPECT_EQ(event.event_path, "/tmp/testfile");
-            EXPECT_EQ(event.type, Core::FileWatcherEvent::Type::ChildCreated);
+            EXPECT(has_flag(event.type, Core::FileWatcherEvent::Type::ChildCreated));
         } else if (event_count == 1) {
             EXPECT_EQ(event.event_path, "/tmp/testfile");
-            EXPECT_EQ(event.type, Core::FileWatcherEvent::Type::ChildDeleted);
+            EXPECT(has_flag(event.type, Core::FileWatcherEvent::Type::ChildDeleted));
 
             event_loop.quit(0);
         }
