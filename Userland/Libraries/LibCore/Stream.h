@@ -152,13 +152,13 @@ class SeekableStream : public Stream {
 public:
     /// Seeks to the given position in the given mode. Returns either the
     /// current position of the file, or an errno in the case of an error.
-    virtual ErrorOr<off_t> seek(i64 offset, SeekMode) = 0;
+    virtual ErrorOr<size_t> seek(i64 offset, SeekMode) = 0;
     /// Returns the current position of the file, or an errno in the case of
     /// an error.
-    virtual ErrorOr<off_t> tell() const;
+    virtual ErrorOr<size_t> tell() const;
     /// Returns the total size of the stream, or an errno in the case of an
     /// error. May not preserve the original position on the stream on failure.
-    virtual ErrorOr<off_t> size();
+    virtual ErrorOr<size_t> size();
     /// Shrinks or extends the stream to the given size. Returns an errno in
     /// the case of an error.
     virtual ErrorOr<void> truncate(off_t length) = 0;
@@ -306,7 +306,7 @@ public:
     virtual bool is_eof() const override;
     virtual bool is_open() const override;
     virtual void close() override;
-    virtual ErrorOr<off_t> seek(i64 offset, SeekMode) override;
+    virtual ErrorOr<size_t> seek(i64 offset, SeekMode) override;
     virtual ErrorOr<void> truncate(off_t length) override;
 
     int leak_fd(Badge<::IPC::File>)
@@ -871,7 +871,7 @@ public:
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.stream().is_open(); }
     virtual void close() override { m_helper.stream().close(); }
-    virtual ErrorOr<off_t> seek(i64 offset, SeekMode mode) override
+    virtual ErrorOr<size_t> seek(i64 offset, SeekMode mode) override
     {
         if (mode == SeekMode::FromCurrentPosition) {
             // If possible, seek using the buffer alone.

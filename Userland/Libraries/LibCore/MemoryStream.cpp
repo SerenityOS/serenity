@@ -63,7 +63,7 @@ ErrorOr<Bytes> FixedMemoryStream::read(Bytes bytes)
     return bytes.trim(to_read);
 }
 
-ErrorOr<off_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
+ErrorOr<size_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
 {
     switch (seek_mode) {
     case SeekMode::SetPosition:
@@ -85,7 +85,7 @@ ErrorOr<off_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
         m_offset = m_bytes.size() - offset;
         break;
     }
-    return static_cast<off_t>(m_offset);
+    return m_offset;
 }
 
 ErrorOr<size_t> FixedMemoryStream::write(ReadonlyBytes bytes)
