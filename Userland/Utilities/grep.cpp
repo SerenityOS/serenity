@@ -13,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
@@ -212,27 +213,16 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         bool did_match_something = false;
 
-        auto handle_file = [&matches, binary_mode, suppress_errors, count_lines, quiet_mode,
-                               user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> bool {
-            auto file = Core::File::construct(filename);
-            if (!file->open(Core::OpenMode::ReadOnly)) {
-                if (!suppress_errors)
-                    warnln("Failed to open {}: {}", filename, file->error_string());
-                return false;
-            }
+        auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
+                               user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> ErrorOr<void> {
+            auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+            auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
 
-            auto file_size_or_error = Core::File::size(filename);
-            if (file_size_or_error.is_error()) {
-                if (!suppress_errors)
-                    warnln("Failed to retrieve size of {}: {}", filename, strerror(file_size_or_error.error().code()));
-                return false;
-            }
+            for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
+                Array<u8, PAGE_SIZE> buffer;
+                auto line = TRY(buffered_file->read_line(buffer));
 
-            auto file_size = file_size_or_error.release_value();
-
-            for (size_t line_number = 1; file->can_read_line(); ++line_number) {
-                auto line = file->read_line(file_size);
-                auto is_binary = memchr(line.characters(), 0, line.length()) != nullptr;
+                auto is_binary = line.contains('\0');
 
                 auto matched = matches(line, filename, line_number, print_filename, is_binary);
                 did_match_something = did_match_something || matched;
@@ -248,16 +238,18 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 matched_line_count = 0;
             }
 
-            return true;
+            return {};
         };
 
-        auto add_directory = [&handle_file, user_has_specified_files](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
+        auto add_directory = [&handle_file, user_has_specified_files, suppress_errors](DeprecatedString base, Optional<DeprecatedString> recursive, auto handle_directory) -> void {
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();
                 if (!Core::File::is_directory(path)) {
                     auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1, path.length() - base.length() - 1);
-                    handle_file(key, true);
+                    if (auto result = handle_file(key, true); result.is_error() && !suppress_errors)
+                        warnln("Failed with file {}: {}", key, result.release_error());
+
                 } else {
                     handle_directory(base, path, handle_directory);
                 }
@@ -303,8 +295,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             } else {
                 bool print_filename { files.size() > 1 };
                 for (auto& filename : files) {
-                    if (!handle_file(filename, print_filename))
+                    auto result = handle_file(filename, print_filename);
+                    if (result.is_error()) {
+                        if (!suppress_errors)
+                            warnln("Failed with file {}: {}", filename, result.release_error());
                         return 1;
+                    }
                 }
             }
         }
