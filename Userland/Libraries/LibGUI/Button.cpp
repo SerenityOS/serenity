@@ -246,10 +246,10 @@ void Button::set_default(bool default_button)
     });
 }
 
-void Button::set_mimic_pressed(bool mimic_pressed)
+void Button::mimic_pressed()
 {
     if (!is_being_pressed()) {
-        m_mimic_pressed = mimic_pressed;
+        m_mimic_pressed = true;
 
         stop_timer();
         start_timer(80, Core::TimerShouldFireWhenNotVisible::Yes);
