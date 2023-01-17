@@ -268,32 +268,32 @@ private:
     Core::AnonymousBuffer m_buffer;
 };
 
-inline u8* Bitmap::scanline_u8(int y)
+ALWAYS_INLINE u8* Bitmap::scanline_u8(int y)
 {
     VERIFY(y >= 0);
     VERIFY(y < physical_height());
     return reinterpret_cast<u8*>(m_data) + (y * m_pitch);
 }
 
-inline u8 const* Bitmap::scanline_u8(int y) const
+ALWAYS_INLINE u8 const* Bitmap::scanline_u8(int y) const
 {
     VERIFY(y >= 0);
     VERIFY(y < physical_height());
     return reinterpret_cast<u8 const*>(m_data) + (y * m_pitch);
 }
 
-inline ARGB32* Bitmap::scanline(int y)
+ALWAYS_INLINE ARGB32* Bitmap::scanline(int y)
 {
     return reinterpret_cast<ARGB32*>(scanline_u8(y));
 }
 
-inline ARGB32 const* Bitmap::scanline(int y) const
+ALWAYS_INLINE ARGB32 const* Bitmap::scanline(int y) const
 {
     return reinterpret_cast<ARGB32 const*>(scanline_u8(y));
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::BGRx8888>(int x, int y) const
+ALWAYS_INLINE Color Bitmap::get_pixel<StorageFormat::BGRx8888>(int x, int y) const
 {
     VERIFY(x >= 0);
     VERIFY(x < physical_width());
@@ -301,7 +301,7 @@ inline Color Bitmap::get_pixel<StorageFormat::BGRx8888>(int x, int y) const
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
+ALWAYS_INLINE Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 {
     VERIFY(x >= 0);
     VERIFY(x < physical_width());
@@ -309,14 +309,14 @@ inline Color Bitmap::get_pixel<StorageFormat::BGRA8888>(int x, int y) const
 }
 
 template<>
-inline Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
+ALWAYS_INLINE Color Bitmap::get_pixel<StorageFormat::Indexed8>(int x, int y) const
 {
     VERIFY(x >= 0);
     VERIFY(x < physical_width());
     return Color::from_rgb(m_palette[scanline_u8(y)[x]]);
 }
 
-inline Color Bitmap::get_pixel(int x, int y) const
+ALWAYS_INLINE Color Bitmap::get_pixel(int x, int y) const
 {
     switch (determine_storage_format(m_format)) {
     case StorageFormat::BGRx8888:
@@ -331,21 +331,23 @@ inline Color Bitmap::get_pixel(int x, int y) const
 }
 
 template<>
-inline void Bitmap::set_pixel<StorageFormat::BGRx8888>(int x, int y, Color color)
+ALWAYS_INLINE void Bitmap::set_pixel<StorageFormat::BGRx8888>(int x, int y, Color color)
 {
     VERIFY(x >= 0);
     VERIFY(x < physical_width());
     scanline(y)[x] = color.value();
 }
+
 template<>
-inline void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color)
+ALWAYS_INLINE void Bitmap::set_pixel<StorageFormat::BGRA8888>(int x, int y, Color color)
 {
     VERIFY(x >= 0);
     VERIFY(x < physical_width());
     scanline(y)[x] = color.value(); // drop alpha
 }
+
 template<>
-inline void Bitmap::set_pixel<StorageFormat::RGBA8888>(int x, int y, Color color)
+ALWAYS_INLINE void Bitmap::set_pixel<StorageFormat::RGBA8888>(int x, int y, Color color)
 {
     VERIFY(x >= 0);
     VERIFY(x < physical_width());
@@ -354,7 +356,8 @@ inline void Bitmap::set_pixel<StorageFormat::RGBA8888>(int x, int y, Color color
     auto rgba = (color.alpha() << 24) | (color.blue() << 16) | (color.green() << 8) | color.red();
     scanline(y)[x] = rgba;
 }
-inline void Bitmap::set_pixel(int x, int y, Color color)
+
+ALWAYS_INLINE void Bitmap::set_pixel(int x, int y, Color color)
 {
     switch (determine_storage_format(m_format)) {
     case StorageFormat::BGRx8888:
