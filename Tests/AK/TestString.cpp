@@ -187,6 +187,66 @@ TEST_CASE(to_titlecase)
     }
 }
 
+TEST_CASE(equals_ignoring_case)
+{
+    {
+        String string1 {};
+        String string2 {};
+
+        EXPECT(MUST(string1.equals_ignoring_case(string2)));
+    }
+    {
+        auto string1 = MUST(String::from_utf8("abcd"sv));
+        auto string2 = MUST(String::from_utf8("ABCD"sv));
+        auto string3 = MUST(String::from_utf8("AbCd"sv));
+        auto string4 = MUST(String::from_utf8("dcba"sv));
+
+        EXPECT(MUST(string1.equals_ignoring_case(string2)));
+        EXPECT(MUST(string1.equals_ignoring_case(string3)));
+        EXPECT(!MUST(string1.equals_ignoring_case(string4)));
+
+        EXPECT(MUST(string2.equals_ignoring_case(string1)));
+        EXPECT(MUST(string2.equals_ignoring_case(string3)));
+        EXPECT(!MUST(string2.equals_ignoring_case(string4)));
+
+        EXPECT(MUST(string3.equals_ignoring_case(string1)));
+        EXPECT(MUST(string3.equals_ignoring_case(string2)));
+        EXPECT(!MUST(string3.equals_ignoring_case(string4)));
+    }
+    {
+        auto string1 = MUST(String::from_utf8("\u00DF"sv)); // LATIN SMALL LETTER SHARP S
+        auto string2 = MUST(String::from_utf8("SS"sv));
+        auto string3 = MUST(String::from_utf8("Ss"sv));
+        auto string4 = MUST(String::from_utf8("ss"sv));
+        auto string5 = MUST(String::from_utf8("S"sv));
+        auto string6 = MUST(String::from_utf8("s"sv));
+
+        EXPECT(MUST(string1.equals_ignoring_case(string2)));
+        EXPECT(MUST(string1.equals_ignoring_case(string3)));
+        EXPECT(MUST(string1.equals_ignoring_case(string4)));
+        EXPECT(!MUST(string1.equals_ignoring_case(string5)));
+        EXPECT(!MUST(string1.equals_ignoring_case(string6)));
+
+        EXPECT(MUST(string2.equals_ignoring_case(string1)));
+        EXPECT(MUST(string2.equals_ignoring_case(string3)));
+        EXPECT(MUST(string2.equals_ignoring_case(string4)));
+        EXPECT(!MUST(string2.equals_ignoring_case(string5)));
+        EXPECT(!MUST(string2.equals_ignoring_case(string6)));
+
+        EXPECT(MUST(string3.equals_ignoring_case(string1)));
+        EXPECT(MUST(string3.equals_ignoring_case(string2)));
+        EXPECT(MUST(string3.equals_ignoring_case(string4)));
+        EXPECT(!MUST(string3.equals_ignoring_case(string5)));
+        EXPECT(!MUST(string3.equals_ignoring_case(string6)));
+
+        EXPECT(MUST(string4.equals_ignoring_case(string1)));
+        EXPECT(MUST(string4.equals_ignoring_case(string2)));
+        EXPECT(MUST(string4.equals_ignoring_case(string3)));
+        EXPECT(!MUST(string4.equals_ignoring_case(string5)));
+        EXPECT(!MUST(string4.equals_ignoring_case(string6)));
+    }
+}
+
 TEST_CASE(is_one_of)
 {
     auto foo = MUST(String::from_utf8("foo"sv));

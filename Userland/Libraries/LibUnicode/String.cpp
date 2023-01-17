@@ -33,4 +33,19 @@ ErrorOr<String> String::to_titlecase(Optional<StringView> const& locale) const
     return builder.to_string();
 }
 
+ErrorOr<String> String::to_casefold() const
+{
+    StringBuilder builder;
+    TRY(Unicode::Detail::build_casefold_string(code_points(), builder));
+    return builder.to_string();
+}
+
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34145
+ErrorOr<bool> String::equals_ignoring_case(String const& other) const
+{
+    // A string X is a caseless match for a string Y if and only if:
+    //     toCasefold(X) = toCasefold(Y)
+    return TRY(to_casefold()) == TRY(other.to_casefold());
+}
+
 }
