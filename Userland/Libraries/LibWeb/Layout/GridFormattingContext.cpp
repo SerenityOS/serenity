@@ -136,10 +136,10 @@ int GridFormattingContext::count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS:
 
 void GridFormattingContext::place_item_with_row_and_column_position(Box const& box, Box const& child_box)
 {
-    int row_start = child_box.computed_values().grid_row_start().raw_value();
-    int row_end = child_box.computed_values().grid_row_end().raw_value();
-    int column_start = child_box.computed_values().grid_column_start().raw_value();
-    int column_end = child_box.computed_values().grid_column_end().raw_value();
+    int row_start = child_box.computed_values().grid_row_start().raw_value() - 1;
+    int row_end = child_box.computed_values().grid_row_end().raw_value() - 1;
+    int column_start = child_box.computed_values().grid_column_start().raw_value() - 1;
+    int column_end = child_box.computed_values().grid_column_end().raw_value() - 1;
 
     // https://www.w3.org/TR/css-grid-2/#line-placement
     // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
@@ -199,37 +199,37 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
     if (child_box.computed_values().grid_column_start().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns());
         if (found_flag_and_index > -1)
-            column_start = 1 + found_flag_and_index;
+            column_start = found_flag_and_index;
         else
-            column_start = 1; // FIXME
+            column_start = 0;
     }
     if (child_box.computed_values().grid_column_end().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns());
         if (found_flag_and_index > -1) {
-            column_end = 1 + found_flag_and_index;
+            column_end = found_flag_and_index;
             if (!child_box.computed_values().grid_column_start().is_position())
                 column_start = column_end - column_span;
         } else {
-            column_end = 2;   // FIXME
-            column_start = 1; // FIXME
+            column_end = 1;
+            column_start = 0;
         }
     }
     if (child_box.computed_values().grid_row_start().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows());
         if (found_flag_and_index > -1)
-            row_start = 1 + found_flag_and_index;
+            row_start = found_flag_and_index;
         else
-            row_start = 1; // FIXME
+            row_start = 0;
     }
     if (child_box.computed_values().grid_row_end().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows());
         if (found_flag_and_index > -1) {
-            row_end = 1 + found_flag_and_index;
+            row_end = found_flag_and_index;
             if (!child_box.computed_values().grid_row_start().is_position())
                 row_start = row_end - row_span;
         } else {
-            row_end = 2;   // FIXME
-            row_start = 1; // FIXME
+            row_end = 1;
+            row_start = 0;
         }
     }
 
@@ -263,8 +263,6 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
 
     // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
-    row_start -= 1;
-    column_start -= 1;
     m_positioned_boxes.append({ child_box, row_start, row_span, column_start, column_span });
 
     m_occupation_grid.maybe_add_row(row_start + 1);
@@ -274,8 +272,8 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
 
 void GridFormattingContext::place_item_with_row_position(Box const& box, Box const& child_box)
 {
-    int row_start = child_box.computed_values().grid_row_start().raw_value();
-    int row_end = child_box.computed_values().grid_row_end().raw_value();
+    int row_start = child_box.computed_values().grid_row_start().raw_value() - 1;
+    int row_end = child_box.computed_values().grid_row_end().raw_value() - 1;
 
     // https://www.w3.org/TR/css-grid-2/#line-placement
     // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
@@ -310,7 +308,7 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
         row_start = row_end - row_span;
         // FIXME: Remove me once have implemented spans overflowing into negative indexes, e.g., grid-row: span 2 / 1
         if (row_start < 0)
-            row_start = 1;
+            row_start = 0;
     }
 
     // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
@@ -329,19 +327,19 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
     if (child_box.computed_values().grid_row_start().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_start().line_name(), box.computed_values().grid_template_rows());
         if (found_flag_and_index > -1)
-            row_start = 1 + found_flag_and_index;
+            row_start = found_flag_and_index;
         else
-            row_start = 1; // FIXME
+            row_start = 0;
     }
     if (child_box.computed_values().grid_row_end().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_row_end().line_name(), box.computed_values().grid_template_rows());
         if (found_flag_and_index > -1) {
-            row_end = 1 + found_flag_and_index;
+            row_end = found_flag_and_index;
             if (!child_box.computed_values().grid_row_start().is_position())
                 row_start = row_end - row_span;
         } else {
-            row_start = 1; // FIXME
-            row_end = 2;   // FIXME
+            row_start = 0;
+            row_end = 1;
         }
     }
 
@@ -360,8 +358,8 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
             row_span = row_end - row_start;
     }
     // FIXME: Have yet to find the spec for this.
-    if (!child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_position() && row_end == 1)
-        row_start = 1;
+    if (!child_box.computed_values().grid_row_start().is_position() && child_box.computed_values().grid_row_end().is_position() && row_end == 0)
+        row_start = 0;
 
     // If the placement contains two spans, remove the one contributed by the end grid-placement
     // property.
@@ -370,7 +368,6 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
 
     // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
-    row_start -= 1;
     m_occupation_grid.maybe_add_row(row_start + row_span);
 
     int column_start = 0;
@@ -400,8 +397,8 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
 
 void GridFormattingContext::place_item_with_column_position(Box const& box, Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y)
 {
-    int column_start = child_box.computed_values().grid_column_start().raw_value();
-    int column_end = child_box.computed_values().grid_column_end().raw_value();
+    int column_start = child_box.computed_values().grid_column_start().raw_value() - 1;
+    int column_end = child_box.computed_values().grid_column_end().raw_value() - 1;
 
     // https://www.w3.org/TR/css-grid-2/#line-placement
     // 8.3. Line-based Placement: the grid-row-start, grid-column-start, grid-row-end, and grid-column-end properties
@@ -437,11 +434,11 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
         column_start = column_end - column_span;
         // FIXME: Remove me once have implemented spans overflowing into negative indexes, e.g., grid-column: span 2 / 1
         if (column_start < 0)
-            column_start = 1;
+            column_start = 0;
     }
     // FIXME: Have yet to find the spec for this.
-    if (!child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_position() && column_end == 1)
-        column_start = 1;
+    if (!child_box.computed_values().grid_column_start().is_position() && child_box.computed_values().grid_column_end().is_position() && column_end == 0)
+        column_start = 0;
 
     // If a name is given as a <custom-ident>, only lines with that name are counted. If not enough
     // lines with that name exist, all implicit grid lines on the side of the explicit grid
@@ -459,19 +456,19 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
     if (child_box.computed_values().grid_column_start().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_start().line_name(), box.computed_values().grid_template_columns());
         if (found_flag_and_index > -1)
-            column_start = 1 + found_flag_and_index;
+            column_start = found_flag_and_index;
         else
-            column_start = 1; // FIXME
+            column_start = 0;
     }
     if (child_box.computed_values().grid_column_end().has_line_name()) {
         auto found_flag_and_index = get_line_index_by_line_name(child_box.computed_values().grid_column_end().line_name(), box.computed_values().grid_template_columns());
         if (found_flag_and_index > -1) {
-            column_end = 1 + found_flag_and_index;
+            column_end = found_flag_and_index;
             if (!child_box.computed_values().grid_column_start().is_position())
                 column_start = column_end - column_span;
         } else {
-            column_end = 2;   // FIXME
-            column_start = 1; // FIXME
+            column_end = 1;
+            column_start = 0;
         }
     }
 
@@ -496,8 +493,6 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
         column_span = child_box.computed_values().grid_column_start().raw_value();
 
     // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
-
-    column_start -= 1;
 
     // 4.1.1.1. Set the column position of the cursor to the grid item's column-start line. If this is
     // less than the previous column position of the cursor, increment the row position by 1.
