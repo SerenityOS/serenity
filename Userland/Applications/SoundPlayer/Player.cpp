@@ -18,7 +18,6 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
         auto sample_rate = m_playback_manager.loader()->sample_rate();
         float source_to_dest_ratio = static_cast<float>(sample_rate) / m_playback_manager.device_sample_rate();
         samples_played *= source_to_dest_ratio;
-        samples_played += m_playback_manager.last_seek();
 
         auto played_seconds = samples_played / sample_rate;
         time_elapsed(played_seconds);

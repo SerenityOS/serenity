@@ -38,7 +38,6 @@ void PlaybackManager::stop()
 {
     set_paused(true);
     m_connection->async_clear_buffer();
-    m_last_seek = 0;
 
     if (m_loader)
         (void)m_loader->reset();
@@ -59,7 +58,6 @@ void PlaybackManager::seek(int const position)
     if (!m_loader)
         return;
 
-    m_last_seek = position;
     bool paused_state = m_paused;
     set_paused(true);
 
