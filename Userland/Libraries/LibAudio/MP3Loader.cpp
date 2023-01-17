@@ -68,6 +68,7 @@ MaybeLoaderError MP3LoaderPlugin::reset()
     m_synthesis_buffer = {};
     m_loaded_samples = 0;
     m_bit_reservoir.discard_or_error(m_bit_reservoir.size());
+    m_bitstream->align_to_byte_boundary();
     return {};
 }
 
@@ -86,6 +87,7 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
     m_bit_reservoir.discard_or_error(m_bit_reservoir.size());
     m_bit_reservoir.handle_any_error();
     m_is_first_frame = true;
+    m_bitstream->align_to_byte_boundary();
     return {};
 }
 
