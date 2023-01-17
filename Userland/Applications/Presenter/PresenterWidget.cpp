@@ -10,6 +10,7 @@
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -54,19 +55,20 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 {
     auto* window = this->window();
     // Set up the menu bar.
-    auto& file_menu = window->add_menu("&File");
+    auto file_menu = TRY(window->try_add_menu("&File"));
     auto open_action = GUI::CommonActions::make_open_action([this](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(this->window());
         if (response.is_error())
             return;
         this->set_file(response.value().filename());
     });
-    auto about_action = GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-display-settings"sv));
+    TRY(file_menu->try_add_action(open_action));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+    })));
 
-    TRY(file_menu.try_add_action(open_action));
-    TRY(file_menu.try_add_action(about_action));
-
-    auto& presentation_menu = window->add_menu("&Presentation");
+    auto presentation_menu = TRY(window->try_add_menu("&Presentation"));
     auto next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();
@@ -81,21 +83,24 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
             update_slides_actions();
         }
     });
-    TRY(presentation_menu.try_add_action(next_slide_action));
-    TRY(presentation_menu.try_add_action(previous_slide_action));
+    TRY(presentation_menu->try_add_action(next_slide_action));
+    TRY(presentation_menu->try_add_action(previous_slide_action));
     m_next_slide_action = next_slide_action;
     m_previous_slide_action = previous_slide_action;
 
-    TRY(presentation_menu.try_add_action(GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
+    TRY(presentation_menu->try_add_action(GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
         this->window()->set_fullscreen(true);
     })));
-    TRY(presentation_menu.try_add_action(GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
+    TRY(presentation_menu->try_add_action(GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->go_to_first_slide();
             update_web_view();
         }
         this->window()->set_fullscreen(true);
     })));
+
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-display-settings"sv))));
 
     return {};
 }
