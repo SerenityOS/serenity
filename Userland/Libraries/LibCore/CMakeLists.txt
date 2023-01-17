@@ -10,7 +10,6 @@ set(SOURCES
     Event.cpp
     EventLoop.cpp
     File.cpp
-    FileWatcher.cpp
     IODevice.cpp
     LockFile.cpp
     MappedFile.cpp
@@ -43,6 +42,13 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
         Group.cpp
         LocalServer.cpp
     )
+endif()
+
+# FIXME: Implement Core::FileWatcher for Linux, macOS, *BSD, and Windows.
+if (SERENITYOS)
+    list(APPEND SOURCES FileWatcherSerenity.cpp)
+else()
+    list(APPEND SOURCES FileWatcherUnimplemented.cpp)
 endif()
 
 serenity_lib(LibCore core)

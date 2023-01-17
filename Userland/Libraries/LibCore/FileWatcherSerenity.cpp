@@ -18,10 +18,11 @@
 #include <string.h>
 #include <unistd.h>
 
-namespace Core {
+#if !defined(AK_OS_SERENITY)
+static_assert(false, "This file must only be used for SerenityOS");
+#endif
 
-// Only supported in serenity mode because we use InodeWatcher syscalls
-#ifdef AK_OS_SERENITY
+namespace Core {
 
 static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, DeprecatedString> const& wd_to_path)
 {
@@ -205,31 +206,5 @@ FileWatcher::~FileWatcher()
     close(m_notifier->fd());
     dbgln_if(FILE_WATCHER_DEBUG, "Stopped watcher at fd {}", m_notifier->fd());
 }
-
-#else
-// FIXME: Implement Core::FileWatcher for linux, macOS, and *BSD
-FileWatcher::~FileWatcher() { }
-FileWatcher::FileWatcher(int watcher_fd, NonnullRefPtr<Notifier> notifier)
-    : FileWatcherBase(watcher_fd)
-    , m_notifier(move(notifier))
-{
-}
-
-ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(InodeWatcherFlags)
-{
-    return Error::from_errno(ENOTSUP);
-}
-
-ErrorOr<bool> FileWatcherBase::add_watch(DeprecatedString, FileWatcherEvent::Type)
-{
-    return Error::from_errno(ENOTSUP);
-}
-
-ErrorOr<bool> FileWatcherBase::remove_watch(DeprecatedString)
-{
-    return Error::from_errno(ENOTSUP);
-}
-
-#endif
 
 }
