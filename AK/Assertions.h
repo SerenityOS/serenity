@@ -10,7 +10,10 @@
 #    include <Kernel/Assertions.h>
 #else
 #    include <assert.h>
-#    ifndef NDEBUG
+//   NOTE: assert() from the Windows CRT is not [[noreturn]].
+//         Perhaps we should add a __builtin_unreachable() to the false case of VERIFY?
+//   FIXME: Why are we deferring to LibC assert at all?
+#    if !defined(NDEBUG) && !defined(_WIN32)
 #        define VERIFY assert
 #    else
 #        define __stringify_helper(x) #x
