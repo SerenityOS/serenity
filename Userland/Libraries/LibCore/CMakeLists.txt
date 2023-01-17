@@ -44,9 +44,11 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
     )
 endif()
 
-# FIXME: Implement Core::FileWatcher for Linux, macOS, *BSD, and Windows.
+# FIXME: Implement Core::FileWatcher for macOS, *BSD, and Windows.
 if (SERENITYOS)
     list(APPEND SOURCES FileWatcherSerenity.cpp)
+elseif (LINUX AND NOT EMSCRIPTEN)
+    list(APPEND SOURCES FileWatcherLinux.cpp)
 else()
     list(APPEND SOURCES FileWatcherUnimplemented.cpp)
 endif()
