@@ -31,7 +31,6 @@ public:
     RefPtr<Audio::Loader> loader() const { return m_loader; }
     size_t device_sample_rate() const { return m_device_sample_rate; }
 
-    int last_seek() const { return m_last_seek; }
     bool is_paused() const { return m_paused; }
     float total_length() const { return m_total_length; }
     FixedArray<Audio::Sample> const& current_buffer() const { return m_current_buffer; }
@@ -50,7 +49,6 @@ private:
 
     bool m_paused { true };
     bool m_loop = { false };
-    size_t m_last_seek { 0 };
     float m_total_length { 0 };
     size_t m_device_sample_rate { 44100 };
     size_t m_device_samples_per_buffer { 0 };
