@@ -964,6 +964,12 @@ void TextEditor::keydown_event(KeyEvent& event)
                 auto word_break_pos = document().first_word_break_after(m_cursor);
                 erase_count = word_break_pos.column() - m_cursor.column();
             }
+
+            auto const new_cursor = TextPosition(m_cursor.line(), m_cursor.column());
+            auto& line = this->line(new_cursor.line());
+            // If we are not deleting a selection, then lets check if there is an emoji or glyph with multiple code points.
+            erase_count = document().get_code_points_after_cursor(new_cursor, line.next_whitespace_column(new_cursor));
+
             TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + erase_count });
             execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
             return;
@@ -1004,6 +1010,11 @@ void TextEditor::keydown_event(KeyEvent& event)
                     new_column = (m_cursor.column() / m_soft_tab_width) * m_soft_tab_width;
                 erase_count = m_cursor.column() - new_column;
             }
+
+            TextPosition const new_cursor = TextPosition(m_cursor.line(), m_cursor.column());
+            auto& line = this->line(new_cursor.line());
+            // If we are not deleting a selection, then lets check if there is an emoji or glyph with multiple code points.
+            erase_count = document().get_code_points_before_cursor(new_cursor, line.prev_whitespace_column(new_cursor));
 
             // Backspace within line
             TextRange erased_range({ m_cursor.line(), m_cursor.column() - erase_count }, m_cursor);
