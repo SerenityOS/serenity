@@ -515,10 +515,8 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 {
     auto*& handler_slot = s_interrupt_handler[interrupt_number];
     VERIFY(handler_slot != nullptr);
-    if (handler_slot->type() == HandlerType::UnhandledInterruptHandler) {
-        dbgln("Trying to unregister unused handler (?)");
+    if (handler_slot->type() == HandlerType::UnhandledInterruptHandler)
         return;
-    }
     if (handler_slot->is_shared_handler() && !handler_slot->is_sharing_with_others()) {
         VERIFY(handler_slot->type() == HandlerType::SharedIRQHandler);
         auto* shared_handler = static_cast<SharedIRQHandler*>(handler_slot);
