@@ -12,6 +12,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/Try.h>
+#include <LibCore/Debounce.h>
 #include <LibCore/LockFile.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -195,7 +196,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    text_box.on_change = [&]() {
+    text_box.on_change = Core::debounce([&]() {
         {
             Threading::MutexLocker locker(app_state.lock);
             if (app_state.last_query == text_box.text())
@@ -205,7 +206,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         db.search(text_box.text());
-    };
+    },
+        5);
     text_box.on_return_pressed = [&]() {
         if (!app_state.selected_index.has_value())
             return;
