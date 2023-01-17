@@ -147,4 +147,72 @@ private:
     IntSize m_size;
 };
 
+// The following paint styles implement the gradients required for the HTML canvas.
+// These gradients are (unlike CSS ones) not relative to the painted shape, and do not
+// support premultiplied alpha.
+
+class CanvasLinearGradientPaintStyle final : public GradientPaintStyle {
+public:
+    static NonnullRefPtr<CanvasLinearGradientPaintStyle> create(FloatPoint p0, FloatPoint p1)
+    {
+        return adopt_ref(*new CanvasLinearGradientPaintStyle(p0, p1));
+    }
+
+private:
+    virtual void paint(IntRect physical_bounding_box, PaintFunction paint) const override;
+
+    CanvasLinearGradientPaintStyle(FloatPoint p0, FloatPoint p1)
+        : m_p0(p0)
+        , m_p1(p1)
+    {
+    }
+
+    FloatPoint m_p0;
+    FloatPoint m_p1;
+};
+
+class CanvasConicGradientPaintStyle final : public GradientPaintStyle {
+public:
+    static NonnullRefPtr<CanvasConicGradientPaintStyle> create(FloatPoint center, float start_angle = 0.0f)
+    {
+        return adopt_ref(*new CanvasConicGradientPaintStyle(center, start_angle));
+    }
+
+private:
+    virtual void paint(IntRect physical_bounding_box, PaintFunction paint) const override;
+
+    CanvasConicGradientPaintStyle(FloatPoint center, float start_angle)
+        : m_center(center)
+        , m_start_angle(start_angle)
+    {
+    }
+
+    FloatPoint m_center;
+    float m_start_angle { 0.0f };
+};
+
+class CanvasRadialGradientPaintStyle final : public GradientPaintStyle {
+public:
+    static NonnullRefPtr<CanvasRadialGradientPaintStyle> create(FloatPoint start_center, float start_radius, FloatPoint end_center, float end_radius)
+    {
+        return adopt_ref(*new CanvasRadialGradientPaintStyle(start_center, start_radius, end_center, end_radius));
+    }
+
+private:
+    virtual void paint(IntRect physical_bounding_box, PaintFunction paint) const override;
+
+    CanvasRadialGradientPaintStyle(FloatPoint start_center, float start_radius, FloatPoint end_center, float end_radius)
+        : m_start_center(start_center)
+        , m_start_radius(start_radius)
+        , m_end_center(end_center)
+        , m_end_radius(end_radius)
+    {
+    }
+
+    FloatPoint m_start_center;
+    float m_start_radius { 0.0f };
+    FloatPoint m_end_center;
+    float m_end_radius { 0.0f };
+};
+
 }

@@ -15,7 +15,7 @@
 
 namespace Gfx {
 
-// Note: This file implements the CSS gradients for LibWeb according to the spec.
+// Note: This file implements the CSS/Canvas gradients for LibWeb according to the spec.
 // Please do not make ad-hoc changes that may break spec compliance!
 
 static float color_stop_step(ColorStop const& previous_stop, ColorStop const& next_stop, float position)
@@ -92,6 +92,8 @@ public:
 
     Color sample_color(float loc) const
     {
+        if (!isfinite(loc))
+            return Color();
         if (m_sample_scale != 1.0f)
             loc *= m_sample_scale;
         auto repeat_wrap_if_required = [&](i64 loc) {
@@ -277,6 +279,163 @@ void RadialGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunctio
     VERIFY(color_stops().size() > 2);
     auto radial_gradient = create_radial_gradient(physical_bounding_box, color_stops(), m_center, m_size, repeat_length());
     paint(radial_gradient.sample_function());
+}
+
+// The following implements the gradient fill/stoke styles for the HTML canvas: https://html.spec.whatwg.org/multipage/canvas.html#fill-and-stroke-styles
+
+static auto make_sample_non_relative(IntPoint draw_location, auto sample)
+{
+    return [=, sample = move(sample)](IntPoint point) { return sample(point.translated(draw_location)); };
+}
+
+void CanvasLinearGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunction paint) const
+{
+    // If x0 = x1 and y0 = y1, then the linear gradient must paint nothing.
+    if (m_p0 == m_p1)
+        return;
+    if (color_stops().is_empty())
+        return;
+    if (color_stops().size() < 2)
+        return paint([this](IntPoint) { return color_stops().first().color; });
+
+    auto delta = m_p1 - m_p0;
+    auto angle = AK::atan2(delta.y(), delta.x());
+    float sin_angle, cos_angle;
+    AK::sincos(angle, sin_angle, cos_angle);
+    int gradient_length = ceilf(m_p1.distance_from(m_p0));
+    auto rotated_start_point_x = m_p0.x() * cos_angle - m_p0.y() * -sin_angle;
+
+    Gradient linear_gradient {
+        GradientLine(gradient_length, color_stops(), repeat_length(), UsePremultipliedAlpha::No),
+        [=](int x, int y) {
+            return (x * cos_angle - y * -sin_angle) - rotated_start_point_x;
+        }
+    };
+
+    paint(make_sample_non_relative(physical_bounding_box.location(), linear_gradient.sample_function()));
+}
+
+void CanvasConicGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunction paint) const
+{
+    if (color_stops().is_empty())
+        return;
+    if (color_stops().size() < 2)
+        return paint([this](IntPoint) { return color_stops().first().color; });
+
+    // Follows the same rendering rule as CSS 'conic-gradient' and it is equivalent to CSS
+    // 'conic-gradient(from adjustedStartAnglerad at xpx ypx, angularColorStopList)'.
+    //  Here:
+    //      adjustedStartAngle is given by startAngle + π/2;
+    auto conic_gradient = create_conic_gradient(color_stops(), m_center, m_start_angle + 90.0f, repeat_length(), UsePremultipliedAlpha::No);
+    paint(make_sample_non_relative(physical_bounding_box.location(), conic_gradient.sample_function()));
+}
+
+void CanvasRadialGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunction paint) const
+{
+    // 1. If x0 = x1 and y0 = y1 and r0 = r1, then the radial gradient must paint nothing. Return.
+    if (m_start_center == m_end_center && m_start_radius == m_end_radius)
+        return;
+    if (color_stops().is_empty())
+        return;
+    if (color_stops().size() < 2)
+        return paint([this](IntPoint) { return color_stops().first().color; });
+
+    auto start_radius = m_start_radius;
+    auto start_center = m_start_center;
+    auto end_radius = m_end_radius;
+    auto end_center = m_end_center;
+
+    if (end_radius == 0 && start_radius == 0)
+        return;
+
+    if (fabs(start_radius - end_radius) < 1)
+        start_radius += 1;
+
+    // Needed for the start circle > end circle case, but FIXME, this seems kind of hacky.
+    bool reverse_gradient = end_radius < start_radius;
+    if (reverse_gradient) {
+        swap(end_radius, start_radius);
+        swap(end_center, start_center);
+    }
+
+    // Spec steps: Useless for writing an actual implementation (give it a go :P):
+    //
+    // 2. Let x(ω) = (x1-x0)ω + x0
+    //    Let y(ω) = (y1-y0)ω + y0
+    //    Let r(ω) = (r1-r0)ω + r0
+    // Let the color at ω be the color at that position on the gradient
+    // (with the colors coming from the interpolation and extrapolation described above).
+    //
+    // 3. For all values of ω where r(ω) > 0, starting with the value of ω nearest to positive infinity and
+    // ending with the value of ω nearest to negative infinity, draw the circumference of the circle with
+    // radius r(ω) at position (x(ω), y(ω)), with the color at ω, but only painting on the parts of the
+    // bitmap that have not yet been painted on by earlier circles in this step for this rendering of the gradient.
+
+    auto center_delta = end_center - start_center;
+    auto center_dist = end_center.distance_from(start_center);
+    bool inner_contained = ((center_dist + start_radius) < end_radius);
+
+    auto start_point = start_center;
+    if (!inner_contained) {
+        // The intersection point of the direct common tangents of the start/end circles.
+        start_point = FloatPoint {
+            (start_radius * end_center.x() - end_radius * start_center.x()) / (start_radius - end_radius),
+            (start_radius * end_center.y() - end_radius * start_center.y()) / (start_radius - end_radius)
+        };
+    }
+
+    // This is just an approximate upperbound (the gradient line class will shorten this if necessary).
+    int gradient_length = center_dist + end_radius + start_radius;
+    GradientLine gradient_line(gradient_length, color_stops(), repeat_length(), UsePremultipliedAlpha::No);
+
+    auto radius2 = end_radius * end_radius;
+    center_delta = end_center - start_point;
+    auto dx2_factor = (radius2 - center_delta.y() * center_delta.y());
+    auto dy2_factor = (radius2 - center_delta.x() * center_delta.x());
+
+    // If you can simplify this please do, this is "best guess" implementation due to lack of specification.
+    // It was implemented to visually match chrome/firefox in all cases:
+    //      - Start circle inside end circle
+    //      - Start circle outside end circle
+    //      - Start circle radius == end circle radius
+    //      - Start circle larger than end circle (inside end circle)
+    //      - Start circle larger than end circle (outside end circle)
+    //      - Start cirlce or end circle radius == 0
+
+    Gradient radial_gradient {
+        move(gradient_line),
+        [=](int x, int y) {
+            auto get_gradient_location = [&] {
+                FloatPoint point { x, y };
+                auto dist = point.distance_from(start_point);
+                if (dist == 0)
+                    return 0.0f;
+                auto vec = (point - start_point) / dist;
+                auto dx2 = vec.x() * vec.x();
+                auto dy2 = vec.y() * vec.y();
+                // This works out the distance to the nearest point on the end circle in the direction of the "vec" vector.
+                // The "vec" vector points from the center of the start circle to the current point.
+                auto root = sqrtf(dx2 * dx2_factor + dy2 * dy2_factor
+                    + 2 * vec.x() * vec.y() * center_delta.x() * center_delta.y());
+                auto dot = vec.x() * center_delta.x() + vec.y() * center_delta.y();
+                // Note: When reversed we always want the farthest point
+                auto edge_dist = (((inner_contained || reverse_gradient ? root : -root) + dot) / (dx2 + dy2));
+                auto start_offset = inner_contained ? start_radius : (edge_dist / end_radius) * start_radius;
+                // FIXME: Returning nan is a hack for "Don't paint me!"
+                if (edge_dist < 0)
+                    return AK::NaN<float>;
+                if (edge_dist - start_offset < 0)
+                    return float(gradient_length);
+                return ((dist - start_offset) / (edge_dist - start_offset));
+            };
+            auto loc = get_gradient_location();
+            if (reverse_gradient)
+                loc = 1.0f - loc;
+            return loc * gradient_length;
+        }
+    };
+
+    paint(make_sample_non_relative(physical_bounding_box.location(), radial_gradient.sample_function()));
 }
 
 }
