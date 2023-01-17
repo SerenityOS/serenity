@@ -28,7 +28,7 @@ struct FileWatcherEvent {
         ChildCreated = 1 << 3,
         ChildDeleted = 1 << 4,
     };
-    Type type;
+    Type type { Type::Invalid };
     DeprecatedString event_path;
 };
 
