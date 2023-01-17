@@ -155,6 +155,7 @@ void Player::toggle_mute()
 
 void Player::seek(int sample)
 {
+    sample *= (m_playback_manager.device_sample_rate() / static_cast<float>(m_playback_manager.loader()->sample_rate()));
     m_playback_manager.seek(sample);
 }
 
