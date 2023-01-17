@@ -195,6 +195,19 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
     return nullptr;
 }
 
+template<CaseFoldingStatus... StatusFilter>
+static CaseFolding const* find_matching_case_folding(u32 code_point)
+{
+    auto case_foldings = case_folding_mapping(code_point);
+
+    for (auto const* case_folding : case_foldings) {
+        if (((case_folding->status == StatusFilter) || ...))
+            return case_folding;
+    }
+
+    return nullptr;
+}
+
 #endif
 
 // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34078
@@ -306,6 +319,34 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
 
         auto substring_to_lowercase = code_points.substring_view(boundary, next_boundary - boundary);
         TRY(build_lowercase_string(substring_to_lowercase, builder, locale));
+    }
+
+    return {};
+#else
+    return Error::from_string_literal("Unicode data has been disabled");
+#endif
+}
+
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G53253
+ErrorOr<void> build_casefold_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder)
+{
+#if ENABLE_UNICODE_DATA
+    // toCasefold(X): Map each character C in X to Case_Folding(C).
+    //
+    // Case_Folding(C) uses the mappings with the status field value “C” or “F” in the data file
+    // CaseFolding.txt in the Unicode Character Database.
+
+    using enum CaseFoldingStatus;
+
+    for (auto code_point : code_points) {
+        auto const* case_folding = find_matching_case_folding<Common, Full>(code_point);
+        if (!case_folding) {
+            TRY(builder.try_append_code_point(code_point));
+            continue;
+        }
+
+        for (size_t i = 0; i < case_folding->mapping_size; ++i)
+            TRY(builder.try_append_code_point(case_folding->mapping[i]));
     }
 
     return {};

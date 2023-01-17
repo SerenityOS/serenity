@@ -97,6 +97,33 @@ TEST_CASE(to_unicode_titlecase)
     EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("123dollars"sv)), "123Dollars"sv);
 }
 
+TEST_CASE(to_unicode_casefold)
+{
+    for (u8 code_point = 0; code_point < 0x80; ++code_point) {
+        auto ascii = tolower(code_point);
+        auto unicode = MUST(Unicode::to_unicode_casefold_full({ reinterpret_cast<char const*>(&code_point), 1 }));
+
+        EXPECT_EQ(unicode.bytes_as_string_view().length(), 1u);
+        EXPECT_EQ(unicode.bytes_as_string_view()[0], ascii);
+    }
+
+    // LATIN SMALL LETTER SHARP S
+    auto result = MUST(Unicode::to_unicode_casefold_full("\u00DF"sv));
+    EXPECT_EQ(result, "\u0073\u0073"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH YPOGEGRAMMENI
+    result = MUST(Unicode::to_unicode_casefold_full("\u1FB3"sv));
+    EXPECT_EQ(result, "\u03B1\u03B9"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI
+    result = MUST(Unicode::to_unicode_casefold_full("\u1FB6"sv));
+    EXPECT_EQ(result, "\u03B1\u0342"sv);
+
+    // GREEK SMALL LETTER ALPHA WITH PERISPOMENI AND YPOGEGRAMMENI
+    result = MUST(Unicode::to_unicode_casefold_full("\u1FB7"sv));
+    EXPECT_EQ(result, "\u03B1\u0342\u03B9"sv);
+}
+
 TEST_CASE(to_unicode_lowercase_unconditional_special_casing)
 {
     // LATIN SMALL LETTER SHARP S

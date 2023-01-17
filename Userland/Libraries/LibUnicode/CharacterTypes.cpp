@@ -61,6 +61,13 @@ ErrorOr<String> to_unicode_titlecase_full(StringView string, Optional<StringView
     return builder.to_string();
 }
 
+ErrorOr<String> to_unicode_casefold_full(StringView string)
+{
+    StringBuilder builder;
+    TRY(Detail::build_casefold_string(Utf8View { string }, builder));
+    return builder.to_string();
+}
+
 Optional<GeneralCategory> __attribute__((weak)) general_category_from_string(StringView) { return {}; }
 bool __attribute__((weak)) code_point_has_general_category(u32, GeneralCategory) { return {}; }
 Optional<Property> __attribute__((weak)) property_from_string(StringView) { return {}; }
