@@ -131,12 +131,13 @@ void AbstractButton::mouseup_event(MouseEvent& event)
     if (event.button() == m_pressed_mouse_button && m_being_pressed) {
         bool was_auto_repeating = m_auto_repeat_timer->is_active();
         m_auto_repeat_timer->stop();
-        bool was_being_pressed = m_being_pressed;
+        m_was_being_pressed = m_being_pressed;
+        ScopeGuard update_was_being_pressed { [this] { m_was_being_pressed = m_being_pressed; } };
         m_being_pressed = false;
         m_pressed_mouse_button = MouseButton::None;
         if (!is_checkable() || is_checked())
             repaint();
-        if (was_being_pressed && !was_auto_repeating) {
+        if (m_was_being_pressed && !was_auto_repeating) {
             switch (event.button()) {
             case MouseButton::Primary:
                 click(event.modifiers());
