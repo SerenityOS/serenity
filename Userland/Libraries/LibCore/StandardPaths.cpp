@@ -12,20 +12,28 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/StandardPaths.h>
-#include <pwd.h>
 #include <stdlib.h>
-#include <unistd.h>
+
+#if !defined(AK_OS_WINDOWS)
+#    include <pwd.h>
+#    include <unistd.h>
+#endif
 
 namespace Core {
 
 DeprecatedString StandardPaths::home_directory()
 {
+#if defined(AK_OS_WINDOWS)
+    auto* home_env = getenv("USERPROFILE");
+    DeprecatedString path { home_env, strlen(home_env) };
+#else
     if (auto* home_env = getenv("HOME"))
         return LexicalPath::canonicalized_path(home_env);
 
     auto* pwd = getpwuid(getuid());
     DeprecatedString path = pwd ? pwd->pw_dir : "/";
     endpwent();
+#endif
     return LexicalPath::canonicalized_path(path);
 }
 
@@ -109,7 +117,12 @@ ErrorOr<DeprecatedString> StandardPaths::runtime_directory()
 
 DeprecatedString StandardPaths::tempfile_directory()
 {
+#if defined(AK_OS_WINDOWS)
+    auto* temp_env = getenv("TEMP");
+    return { temp_env, strlen(temp_env) };
+#else
     return "/tmp";
+#endif
 }
 
 ErrorOr<Vector<String>> StandardPaths::font_directories()
