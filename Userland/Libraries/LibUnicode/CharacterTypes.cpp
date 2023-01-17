@@ -17,9 +17,6 @@
 #    include <LibUnicode/UnicodeData.h>
 #endif
 
-// For details on the algorithms used here, see Section 3.13 Default Case Algorithms
-// https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf
-
 namespace Unicode {
 
 Optional<DeprecatedString> __attribute__((weak)) code_point_display_name(u32) { return {}; }

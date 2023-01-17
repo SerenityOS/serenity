@@ -30,8 +30,7 @@ struct CodePointRange {
     u32 last;
 };
 
-// SpecialCasing source: https://www.unicode.org/Public/13.0.0/ucd/SpecialCasing.txt
-// Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#SpecialCasing.txt
+// https://www.unicode.org/reports/tr44/#SpecialCasing.txt
 struct SpecialCasing {
     u32 index { 0 };
     u32 code_point { 0 };
@@ -42,7 +41,7 @@ struct SpecialCasing {
     DeprecatedString condition;
 };
 
-// Field descriptions: https://www.unicode.org/reports/tr44/#Character_Decomposition_Mappings
+// https://www.unicode.org/reports/tr44/#Character_Decomposition_Mappings
 struct CodePointDecomposition {
     // `tag` is a string since it's used for codegen as an enum value.
     DeprecatedString tag { "Canonical"sv };
@@ -50,12 +49,10 @@ struct CodePointDecomposition {
     size_t decomposition_size { 0 };
 };
 
-// PropList source: https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
-// Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
+// https://www.unicode.org/reports/tr44/#PropList.txt
 using PropList = HashMap<DeprecatedString, Vector<CodePointRange>>;
 
-// Normalization source: https://www.unicode.org/Public/13.0.0/ucd/DerivedNormalizationProps.txt
-// Normalization descriptions: https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
+// https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
 enum class QuickCheck {
     Yes,
     No,
@@ -75,9 +72,7 @@ struct CodePointName {
     size_t name { 0 };
 };
 
-// UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
-// Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
-//                     https://www.unicode.org/reports/tr44/#General_Category_Values
+// https://www.unicode.org/reports/tr44/#UnicodeData.txt
 struct CodePointData {
     u32 code_point { 0 };
     DeprecatedString name;
@@ -128,6 +123,7 @@ struct UnicodeData {
     HashMap<u32, size_t> code_point_display_name_aliases;
     Vector<CodePointName> code_point_display_names;
 
+    // https://www.unicode.org/reports/tr44/#General_Category_Values
     PropList general_categories;
     Vector<Alias> general_category_aliases;
 

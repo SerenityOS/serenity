@@ -16,7 +16,7 @@
 #endif
 
 // For details on the algorithms used here, see Section 3.13 Default Case Algorithms
-// https://www.unicode.org/versions/Unicode13.0.0/ch03.pdf
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf
 
 namespace Unicode::Detail {
 
@@ -197,6 +197,7 @@ static SpecialCasing const* find_matching_special_case(u32 code_point, Utf8View 
 
 #endif
 
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34078
 ErrorOr<void> build_lowercase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale)
 {
 #if ENABLE_UNICODE_DATA
@@ -223,6 +224,7 @@ ErrorOr<void> build_lowercase_string([[maybe_unused]] Utf8View code_points, [[ma
 #endif
 }
 
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34078
 ErrorOr<void> build_uppercase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale)
 {
 #if ENABLE_UNICODE_DATA
@@ -249,6 +251,7 @@ ErrorOr<void> build_uppercase_string([[maybe_unused]] Utf8View code_points, [[ma
 #endif
 }
 
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G34078
 ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder, [[maybe_unused]] Optional<StringView> const& locale)
 {
 #if ENABLE_UNICODE_DATA
