@@ -773,7 +773,11 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
             if (fits_on_line) {
                 auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
-                if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
+                // NOTE: If we're in inline layout, the LineBuilder has already provided the right Y offset.
+                //       In block layout, we adjust by the side's current Y offset here.
+                if (!line_builder)
+                    y_in_root += side_data.y_offset;
+                if (previous_rect.contains_vertically(y_in_root)) {
                     // This box touches another already floating box. Stack after others.
                     offset_from_edge = wanted_offset_from_edge;
                 } else {
