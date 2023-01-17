@@ -518,3 +518,73 @@ length value, and as a minimum two lengths with an auto. -->
     ">1</div>
     <div class="grid-item">1</div>
 </div>
+
+<p>Grid template areas basics</p>
+<div
+  class="grid-container"
+  style="
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'left right-top'
+      'left right-bottom';
+  ">
+  <div style="background-color: lightpink; grid-area: right-bottom / right-bottom / right-bottom / right-bottom;">right-bottom</div>
+  <div style="background-color: lightgreen; grid-area: left;">left</div>
+  <div style="background-color: lightgrey; grid-column-end: right-top;">right-top</div>
+</div>
+
+<!-- Grid-lines vs. Grid template areas -->
+<p>There should be a left-aligned column taking up 1 / 3 of the grid</p>
+<div
+class="grid-container"
+  style="
+    grid-template-columns: [c] 1fr [b] 1fr [a] 1fr;
+    grid-template-areas: 'a b c';
+    ">
+  <div class="grid-item" style="grid-column-start: a; grid-column-end: a;">1fr</div>
+</div>
+
+<!-- Valid grid areas -->
+<p>Column taking up 50% width</p>
+<div
+class="grid-container"
+  style="
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-areas: 'one one three two' 'one one four two' 'one one four two';
+    ">
+  <div class="grid-item" style="grid-column-start: one; grid-column-end: one;">1fr</div>
+</div>
+
+<!-- Valid grid areas. This test should ideally fail differently FIXME -->
+<p>Left-aligned column taking up 25% width</p>
+<div
+class="grid-container"
+  style="
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-areas: 'one one three two' 'one one four one';
+    ">
+  <div class="grid-item" style="grid-column-start: two; grid-column-end: two;">1fr</div>
+</div>
+
+<!-- Valid grid areas. This test should ideally fail differently FIXME -->
+<p>Left-aligned column taking up 25% width</p>
+<div
+class="grid-container"
+  style="
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-areas: 'one one three two' 'one one four five' 'one one four two';
+    ">
+  <div class="grid-item" style="grid-column-start: two; grid-column-end: two;">1fr</div>
+</div>
+
+<p>Min-content / Max-content / 1fr column widths</p>
+<div
+class="grid-container"
+  style="
+    grid-template-columns: min-content max-content 1fr;
+    grid-template-areas: 'one two three';
+    ">
+  <div class="grid-item" style="grid-area: one; min-width: 25%; max-width: 50%;">min-content</div>
+  <div class="grid-item" style="grid-area: two;">max-content</div>
+  <div class="grid-item" style="grid-area: three;">1fr</div>
+</div>
