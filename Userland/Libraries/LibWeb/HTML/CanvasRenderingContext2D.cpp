@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,7 +74,13 @@ void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float he
     auto& drawing_state = this->drawing_state();
 
     auto rect = drawing_state.transform.map(Gfx::FloatRect(x, y, width, height));
-    painter->fill_rect(rect, drawing_state.fill_style);
+    auto color_fill = drawing_state.fill_style.as_color();
+    if (color_fill.has_value()) {
+        painter->fill_rect(rect, *color_fill);
+    } else {
+        // FIXME: This should use AntiAliasingPainter::fill_rect() too but that does not support FillPath yet.
+        painter->underlying_painter().fill_rect(rect.to_rounded<int>(), *drawing_state.fill_style.to_gfx_paint_style());
+    }
     did_draw(rect);
 }
 
@@ -109,7 +116,7 @@ void CanvasRenderingContext2D::stroke_rect(float x, float y, float width, float 
     path.line_to(bottom_right);
     path.line_to(bottom_left);
     path.line_to(top_left);
-    painter->stroke_path(path, drawing_state.stroke_style, drawing_state.line_width);
+    painter->stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
 
     did_draw(rect);
 }
@@ -211,7 +218,7 @@ void CanvasRenderingContext2D::fill_text(DeprecatedString const& text, float x, 
 
     auto text_rect = Gfx::FloatRect(x, y, max_width.has_value() ? static_cast<float>(max_width.value()) : painter->font().width(text), painter->font().pixel_size());
     auto transformed_rect = drawing_state.transform.map(text_rect);
-    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, drawing_state.fill_style);
+    painter->draw_text(transformed_rect, text, Gfx::TextAlignment::TopLeft, drawing_state.fill_style.to_color_but_fixme_should_accept_any_paint_style());
     did_draw(transformed_rect);
 }
 
@@ -234,7 +241,7 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 
     auto& drawing_state = this->drawing_state();
 
-    painter->stroke_path(path, drawing_state.stroke_style, drawing_state.line_width);
+    painter->stroke_path(path, drawing_state.stroke_style.to_color_but_fixme_should_accept_any_paint_style(), drawing_state.line_width);
     did_draw(path.bounding_box());
 }
 
@@ -266,7 +273,7 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, DeprecatedString c
     else
         dbgln("Unrecognized fillRule for CRC2D.fill() - this problem goes away once we pass an enum instead of a string");
 
-    painter->fill_path(path, drawing_state().fill_style, winding);
+    painter->fill_path(path, *drawing_state().fill_style.to_gfx_paint_style(), winding);
     did_draw(path.bounding_box());
 }
 

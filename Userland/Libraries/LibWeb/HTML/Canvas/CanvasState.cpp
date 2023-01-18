@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,6 +38,23 @@ bool CanvasState::is_context_lost()
 {
     // The isContextLost() method steps are to return this's context lost.
     return m_context_lost;
+}
+
+NonnullRefPtr<Gfx::PaintStyle> CanvasState::FillOrStrokeStyle::to_gfx_paint_style()
+{
+    VERIFY_NOT_REACHED();
+}
+
+Gfx::Color CanvasState::FillOrStrokeStyle::to_color_but_fixme_should_accept_any_paint_style() const
+{
+    return as_color().value_or(Gfx::Color::Black);
+}
+
+Optional<Gfx::Color> CanvasState::FillOrStrokeStyle::as_color() const
+{
+    if (auto* color = m_fill_or_stoke_style.get_pointer<Gfx::Color>())
+        return *color;
+    return {};
 }
 
 }
