@@ -16,6 +16,7 @@
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibDNS/Packet.h>
+#include <limits.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
