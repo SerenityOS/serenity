@@ -11,6 +11,7 @@
 #include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
 #include <sys/inotify.h>
 #include <sys/ioctl.h>
