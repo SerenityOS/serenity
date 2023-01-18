@@ -12,7 +12,6 @@
 #include <AK/AnyOf.h>
 #include <AK/Array.h>
 #include <AK/Error.h>
-#include <AK/FixedPoint.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
@@ -533,44 +532,6 @@ struct Formatter<long double> : StandardFormatter {
     ErrorOr<void> format(FormatBuilder&, long double value);
 };
 #endif
-
-template<size_t precision, typename Underlying>
-struct Formatter<FixedPoint<precision, Underlying>> : StandardFormatter {
-    Formatter() = default;
-    explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(formatter)
-    {
-    }
-
-    ErrorOr<void> format(FormatBuilder& builder, FixedPoint<precision, Underlying> value)
-    {
-        u8 base;
-        bool upper_case;
-        FormatBuilder::RealNumberDisplayMode real_number_display_mode = FormatBuilder::RealNumberDisplayMode::General;
-        if (m_mode == Mode::Default || m_mode == Mode::FixedPoint) {
-            base = 10;
-            upper_case = false;
-            if (m_mode == Mode::FixedPoint)
-                real_number_display_mode = FormatBuilder::RealNumberDisplayMode::FixedPoint;
-        } else if (m_mode == Mode::Hexfloat) {
-            base = 16;
-            upper_case = false;
-        } else if (m_mode == Mode::HexfloatUppercase) {
-            base = 16;
-            upper_case = true;
-        } else {
-            VERIFY_NOT_REACHED();
-        }
-
-        m_width = m_width.value_or(0);
-        m_precision = m_precision.value_or(6);
-
-        i64 integer = value.ltrunk();
-        constexpr u64 one = static_cast<Underlying>(1) << precision;
-        u64 fraction_raw = value.raw() & (one - 1);
-        return builder.put_fixed_point(integer, fraction_raw, one, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode, real_number_display_mode);
-    }
-};
 
 template<>
 struct Formatter<nullptr_t> : Formatter<FlatPtr> {
