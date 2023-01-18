@@ -5,6 +5,7 @@
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
@@ -160,7 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
         }
 
         auto string = TRY(vm.argument(1).to_string(vm));
-        fprintf(fzliout, "%s\n", string.characters());
+        outln(fzliout, "{}", string);
         fflush(fzliout);
     }
 
