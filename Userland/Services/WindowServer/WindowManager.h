@@ -210,7 +210,7 @@ public:
     bool is_theme_overridden() { return m_theme_overridden; }
 
     bool set_hovered_window(Window*);
-    void deliver_mouse_event(Window&, MouseEvent const&, bool process_double_click);
+    void deliver_mouse_event(Window&, MouseEvent const&);
 
     void did_popup_a_menu(Badge<Menu>);
 

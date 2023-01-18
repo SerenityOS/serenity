@@ -168,7 +168,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
     bool event_is_inside_current_menu = window->rect().contains(mouse_event.position());
     if (event_is_inside_current_menu) {
         WindowManager::the().set_hovered_window(window);
-        WindowManager::the().deliver_mouse_event(*window, mouse_event, true);
+        WindowManager::the().deliver_mouse_event(*window, mouse_event);
         return;
     }
 
@@ -204,7 +204,7 @@ void MenuManager::handle_mouse_event(MouseEvent& mouse_event)
             if (!menu->menu_window()->rect().contains(mouse_event.position()))
                 continue;
             WindowManager::the().set_hovered_window(menu->menu_window());
-            WindowManager::the().deliver_mouse_event(*menu->menu_window(), mouse_event, true);
+            WindowManager::the().deliver_mouse_event(*menu->menu_window(), mouse_event);
             break;
         }
     }
