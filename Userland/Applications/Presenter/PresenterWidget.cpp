@@ -69,35 +69,37 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     })));
 
     auto presentation_menu = TRY(window->try_add_menu("&Presentation"));
-    auto next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
+    m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();
             update_web_view();
             update_slides_actions();
         }
     });
-    auto previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [this](auto&) {
+    m_previous_slide_action = GUI::Action::create("&Previous", { KeyCode::Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->previous_frame();
             update_web_view();
             update_slides_actions();
         }
     });
-    TRY(presentation_menu->try_add_action(next_slide_action));
-    TRY(presentation_menu->try_add_action(previous_slide_action));
-    m_next_slide_action = next_slide_action;
-    m_previous_slide_action = previous_slide_action;
-
-    TRY(presentation_menu->try_add_action(GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
+    m_full_screen_action = GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
         this->window()->set_fullscreen(true);
-    })));
-    TRY(presentation_menu->try_add_action(GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
+    });
+    m_present_from_first_slide_action = GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->go_to_first_slide();
             update_web_view();
         }
         this->window()->set_fullscreen(true);
-    })));
+    });
+
+    TRY(presentation_menu->try_add_action(*m_next_slide_action));
+    TRY(presentation_menu->try_add_action(*m_previous_slide_action));
+    TRY(presentation_menu->try_add_action(*m_full_screen_action));
+    TRY(presentation_menu->try_add_action(*m_present_from_first_slide_action));
+
+    update_slides_actions();
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-display-settings"sv))));
@@ -115,6 +117,13 @@ void PresenterWidget::update_slides_actions()
     if (m_current_presentation) {
         m_next_slide_action->set_enabled(m_current_presentation->has_a_next_frame());
         m_previous_slide_action->set_enabled(m_current_presentation->has_a_previous_frame());
+        m_full_screen_action->set_enabled(true);
+        m_present_from_first_slide_action->set_enabled(true);
+    } else {
+        m_next_slide_action->set_enabled(false);
+        m_previous_slide_action->set_enabled(false);
+        m_full_screen_action->set_enabled(false);
+        m_present_from_first_slide_action->set_enabled(false);
     }
 }
 
