@@ -425,7 +425,9 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 {
-    set_override_cursor(m_active_cursor);
+    if (!(m_active_tool && event.alt() && !m_active_tool->is_overriding_alt()))
+        set_override_cursor(m_active_cursor);
+
     if (event.button() == GUI::MouseButton::Middle) {
         stop_panning();
         return;
@@ -454,7 +456,13 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    if (m_active_tool && m_active_tool->on_keydown(event))
+    if (!m_active_tool)
+        return;
+
+    if (!m_active_tool->is_overriding_alt() && event.key() == Key_Alt)
+        set_override_cursor(Gfx::StandardCursor::Eyedropper);
+
+    if (m_active_tool->on_keydown(event))
         return;
 
     if (event.key() == Key_Escape && !m_image->selection().is_empty()) {
@@ -468,8 +476,13 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 
 void ImageEditor::keyup_event(GUI::KeyEvent& event)
 {
-    if (m_active_tool)
-        m_active_tool->on_keyup(event);
+    if (!m_active_tool)
+        return;
+
+    if (!m_active_tool->is_overriding_alt() && event.key() == Key_Alt)
+        update_tool_cursor();
+
+    m_active_tool->on_keyup(event);
 }
 
 void ImageEditor::enter_event(Core::Event&)
