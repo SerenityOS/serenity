@@ -645,6 +645,7 @@ public:
     HashMap<u16, CharDescriptor> const& descriptors() const { return m_descriptors; }
     HashMap<DeprecatedString, u16> const& name_mapping() const { return m_name_mapping; }
 
+    u16 get_char_code(DeprecatedString const&) const;
     CharDescriptor const& get_char_code_descriptor(u16 char_code) const;
 
     bool should_map_to_bullet(u16 char_code) const;
