@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,6 @@
 #include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/FetchMethod.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
@@ -36,6 +36,7 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Focus.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Origin.h>
@@ -102,7 +103,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_current_event.ptr());
     visitor.visit(m_performance.ptr());
     visitor.visit(m_screen.ptr());
-    visitor.visit(m_location_object);
+    visitor.visit(m_location);
     visitor.visit(m_crypto);
     visitor.visit(m_navigator);
     for (auto& it : m_timers)
@@ -581,7 +582,7 @@ void Window::cancel_animation_frame_impl(i32 id)
     m_animation_frame_callback_driver.remove(id);
 }
 
-void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href)
+void Window::did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -589,7 +590,7 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL cons
     browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
 }
 
-void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
+void Window::did_call_location_reload(Badge<HTML::Location>)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -597,7 +598,7 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
-void Window::did_call_location_replace(Badge<Bindings::LocationObject>, DeprecatedString url)
+void Window::did_call_location_replace(Badge<HTML::Location>, DeprecatedString url)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -1142,7 +1143,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     // Legacy
     define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
 
-    m_location_object = heap().allocate<Bindings::LocationObject>(realm, realm);
+    m_location = heap().allocate<HTML::Location>(realm, realm);
 
     m_navigator = heap().allocate<HTML::Navigator>(realm, realm);
     define_direct_property("navigator", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1611,13 +1612,13 @@ JS_DEFINE_NATIVE_FUNCTION(Window::event_setter)
 JS_DEFINE_NATIVE_FUNCTION(Window::location_getter)
 {
     auto* impl = TRY(impl_from(vm));
-    return impl->m_location_object;
+    return impl->m_location;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
 {
     auto* impl = TRY(impl_from(vm));
-    TRY(impl->m_location_object->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
+    TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
 }
 

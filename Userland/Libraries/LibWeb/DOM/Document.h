@@ -339,7 +339,7 @@ public:
 
     JS::NonnullGCPtr<HTML::History> history();
 
-    Bindings::LocationObject* location();
+    HTML::Location* location();
 
     size_t number_of_things_delaying_the_load_event() { return m_number_of_things_delaying_the_load_event; }
     void increment_number_of_things_delaying_the_load_event(Badge<DocumentLoadEventDelayer>);

@@ -9,7 +9,6 @@ set(SOURCES
     Bindings/Intrinsics.cpp
     Bindings/LegacyPlatformObject.cpp
     Bindings/LocationConstructor.cpp
-    Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
@@ -262,6 +261,7 @@ set(SOURCES
     HTML/HTMLUnknownElement.cpp
     HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
+    HTML/Location.cpp
     HTML/MessageChannel.cpp
     HTML/MessageEvent.cpp
     HTML/MessagePort.cpp

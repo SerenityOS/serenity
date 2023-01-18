@@ -2,7 +2,7 @@
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +16,10 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -67,7 +67,7 @@ JS::VM& main_thread_vm()
         // 8.1.5.1 HostEnsureCanAddPrivateElement(O), https://html.spec.whatwg.org/multipage/webappapis.html#the-hostensurecanaddprivateelement-implementation
         vm->host_ensure_can_add_private_element = [](JS::Object const& object) -> JS::ThrowCompletionOr<void> {
             // 1. If O is a WindowProxy object, or implements Location, then return Completion { [[Type]]: throw, [[Value]]: a new TypeError }.
-            if (is<HTML::WindowProxy>(object) || is<LocationObject>(object))
+            if (is<HTML::WindowProxy>(object) || is<HTML::Location>(object))
                 return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object");
 
             // 2. Return NormalCompletion(unused).
