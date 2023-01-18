@@ -150,11 +150,11 @@ jobs:
       - name: Convert PVS Log to SARIF
         run: plog-converter -a 'GA:1,2;64:1;OP:1,2,3' -o project.sarif -t sarif ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ${{ github.workspace }}/Build/${{ env.PVS_STUDIO_ANALYSIS_ARCH }}/project.plog
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ${{ github.workspace }}/project.sarif
 
