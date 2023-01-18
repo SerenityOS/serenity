@@ -30,7 +30,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
 
     m_view = new WebContentView(webdriver_content_ipc_path);
     m_toolbar = new QToolBar(this);
-    m_location_edit = new QLineEdit(this);
+    m_location_edit = new LocationEdit(this);
 
     m_hover_label = new QLabel(this);
     m_hover_label->hide();

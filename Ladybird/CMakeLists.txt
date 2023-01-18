@@ -83,6 +83,7 @@ set(SOURCES
     BrowserWindow.cpp
     ConsoleWidget.cpp
     InspectorWidget.cpp
+    LocationEdit.cpp
     ModelTranslator.cpp
     Settings.cpp
     SettingsDialog.cpp
