@@ -9,6 +9,7 @@
 
 #define AK_DONT_REPLACE_STD
 
+#include "LocationEdit.h"
 #include "WebContentView.h"
 #include <Browser/History.h>
 #include <QBoxLayout>
@@ -55,7 +56,7 @@ private:
 
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
-    QLineEdit* m_location_edit { nullptr };
+    LocationEdit* m_location_edit { nullptr };
     WebContentView* m_view { nullptr };
     BrowserWindow* m_window { nullptr };
     Browser::History m_history;
