@@ -1137,6 +1137,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
     define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
     define_native_accessor(realm, "origin", origin_getter, {}, attr);
+    define_native_accessor(realm, "isSecureContext", is_secure_context_getter, {}, attr);
 
     // Legacy
     define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
@@ -1861,6 +1862,14 @@ JS_DEFINE_NATIVE_FUNCTION(Window::origin_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return JS::PrimitiveString::create(vm, impl->associated_document().origin().serialize());
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#dom-issecurecontext
+JS_DEFINE_NATIVE_FUNCTION(Window::is_secure_context_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    // The isSecureContext getter steps are to return true if this's relevant settings object is a secure context, or false otherwise.
+    return JS::Value(is_secure_context(impl->associated_document().relevant_settings_object()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::local_storage_getter)
