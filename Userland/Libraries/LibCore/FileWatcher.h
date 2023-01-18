@@ -13,8 +13,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <Kernel/API/InodeWatcherEvent.h>
-#include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
 
 namespace Core {
@@ -33,6 +31,14 @@ struct FileWatcherEvent {
 };
 
 AK_ENUM_BITWISE_OPERATORS(FileWatcherEvent::Type);
+
+enum class FileWatcherFlags : u32 {
+    None = 0,
+    Nonblock = 1 << 0,
+    CloseOnExec = 1 << 1,
+};
+
+AK_ENUM_BITWISE_OPERATORS(FileWatcherFlags);
 
 class FileWatcherBase {
 public:
@@ -57,7 +63,7 @@ class BlockingFileWatcher final : public FileWatcherBase {
     AK_MAKE_NONCOPYABLE(BlockingFileWatcher);
 
 public:
-    explicit BlockingFileWatcher(InodeWatcherFlags = InodeWatcherFlags::None);
+    explicit BlockingFileWatcher(FileWatcherFlags = FileWatcherFlags::None);
     ~BlockingFileWatcher();
 
     Optional<FileWatcherEvent> wait_for_event();
@@ -68,7 +74,7 @@ class FileWatcher final : public FileWatcherBase
     AK_MAKE_NONCOPYABLE(FileWatcher);
 
 public:
-    static ErrorOr<NonnullRefPtr<FileWatcher>> create(InodeWatcherFlags = InodeWatcherFlags::None);
+    static ErrorOr<NonnullRefPtr<FileWatcher>> create(FileWatcherFlags = FileWatcherFlags::None);
     ~FileWatcher();
 
     Function<void(FileWatcherEvent const&)> on_change;

@@ -6,13 +6,12 @@
  */
 
 #include "FileWatcher.h"
-#include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 
 namespace Core {
 
-ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(InodeWatcherFlags)
+ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(FileWatcherFlags)
 {
     return Error::from_errno(ENOTSUP);
 }
