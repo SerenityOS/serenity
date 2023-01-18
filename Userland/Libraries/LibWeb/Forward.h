@@ -319,6 +319,7 @@ class HTMLUListElement;
 class HTMLUnknownElement;
 class HTMLVideoElement;
 class ImageData;
+class Location;
 class MessageChannel;
 class MessageEvent;
 class MessagePort;
@@ -496,7 +497,6 @@ class URLSearchParamsIterator;
 
 namespace Web::Bindings {
 class Intrinsics;
-class LocationObject;
 class OptionConstructor;
 enum class CanPlayTypeResult;
 enum class CanvasFillRule;

@@ -19,6 +19,7 @@
 #import <HTML/HTMLElement.idl>
 #import <HTML/HTMLHeadElement.idl>
 #import <HTML/HTMLScriptElement.idl>
+#import <HTML/Location.idl>
 #import <Selection/Selection.idl>
 
 // https://dom.spec.whatwg.org/#document
@@ -28,7 +29,6 @@ interface Document : Node {
 
     boolean hasFocus();
 
-    // FIXME: These attributes currently don't do anything.
     [PutForwards=href, LegacyUnforgeable] readonly attribute Location? location;
     attribute USVString domain;
 

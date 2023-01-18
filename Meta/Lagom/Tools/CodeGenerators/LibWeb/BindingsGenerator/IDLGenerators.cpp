@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
@@ -2380,7 +2380,6 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>

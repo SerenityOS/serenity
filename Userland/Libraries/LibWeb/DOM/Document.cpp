@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -53,6 +53,7 @@
 #include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
@@ -1667,7 +1668,7 @@ bool Document::is_active() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
-Bindings::LocationObject* Document::location()
+HTML::Location* Document::location()
 {
     // The Document object's location attribute's getter must return this Document object's relevant global object's Location object,
     // if this Document object is fully active, and null otherwise.
@@ -1675,7 +1676,7 @@ Bindings::LocationObject* Document::location()
     if (!is_fully_active())
         return nullptr;
 
-    return window().location_object();
+    return window().location();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden

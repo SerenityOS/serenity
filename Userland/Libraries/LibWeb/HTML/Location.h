@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,14 +14,42 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
 
-namespace Web {
-namespace Bindings {
+namespace Web::HTML {
 
-class LocationObject final : public Bindings::PlatformObject {
-    JS_OBJECT(LocationObject, Bindings::PlatformObject);
+class Location final : public Bindings::PlatformObject {
+    JS_OBJECT(Location, Bindings::PlatformObject);
 
 public:
-    virtual ~LocationObject() override;
+    virtual ~Location() override;
+
+    DeprecatedString href() const;
+    JS::ThrowCompletionOr<void> set_href(DeprecatedString const&);
+
+    DeprecatedString origin() const;
+
+    DeprecatedString protocol() const;
+    JS::ThrowCompletionOr<void> set_protocol(DeprecatedString const&);
+
+    DeprecatedString host() const;
+    JS::ThrowCompletionOr<void> set_host(DeprecatedString const&);
+
+    DeprecatedString hostname() const;
+    JS::ThrowCompletionOr<void> set_hostname(DeprecatedString const&);
+
+    DeprecatedString port() const;
+    JS::ThrowCompletionOr<void> set_port(DeprecatedString const&);
+
+    DeprecatedString pathname() const;
+    JS::ThrowCompletionOr<void> set_pathname(DeprecatedString const&);
+
+    DeprecatedString search() const;
+    JS::ThrowCompletionOr<void> set_search(DeprecatedString const&);
+
+    DeprecatedString hash() const;
+    JS::ThrowCompletionOr<void> set_hash(DeprecatedString const&);
+
+    void replace(DeprecatedString url) const;
+    void reload() const;
 
     virtual JS::ThrowCompletionOr<JS::Object*> internal_get_prototype_of() const override;
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(Object* prototype) override;
@@ -38,28 +66,13 @@ public:
     HTML::CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
-    explicit LocationObject(JS::Realm&);
+    explicit Location(JS::Realm&);
 
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     DOM::Document const* relevant_document() const;
     AK::URL url() const;
-
-    JS_DECLARE_NATIVE_FUNCTION(reload);
-    JS_DECLARE_NATIVE_FUNCTION(replace);
-
-    JS_DECLARE_NATIVE_FUNCTION(href_getter);
-    JS_DECLARE_NATIVE_FUNCTION(href_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(host_getter);
-    JS_DECLARE_NATIVE_FUNCTION(hostname_getter);
-    JS_DECLARE_NATIVE_FUNCTION(pathname_getter);
-    JS_DECLARE_NATIVE_FUNCTION(hash_getter);
-    JS_DECLARE_NATIVE_FUNCTION(search_getter);
-    JS_DECLARE_NATIVE_FUNCTION(protocol_getter);
-    JS_DECLARE_NATIVE_FUNCTION(port_getter);
-    JS_DECLARE_NATIVE_FUNCTION(origin_getter);
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     HTML::CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
@@ -68,5 +81,4 @@ private:
     Vector<JS::Value> m_default_properties;
 };
 
-}
 }

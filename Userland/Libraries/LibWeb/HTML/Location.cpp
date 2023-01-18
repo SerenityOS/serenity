@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,52 +11,36 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/LocationPrototype.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CrossOrigin/AbstractOperations.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
-namespace Web::Bindings {
+namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface
-LocationObject::LocationObject(JS::Realm& realm)
+Location::Location(JS::Realm& realm)
     : PlatformObject(realm)
 {
 }
 
-LocationObject::~LocationObject() = default;
+Location::~Location() = default;
 
-void LocationObject::visit_edges(Cell::Visitor& visitor)
+void Location::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     for (auto& property : m_default_properties)
         visitor.visit(property);
 }
 
-void LocationObject::initialize(JS::Realm& realm)
+void Location::initialize(JS::Realm& realm)
 {
-    auto& vm = this->vm();
-
     Object::initialize(realm);
-    set_prototype(&ensure_web_prototype<LocationPrototype>(realm, "Location"));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::LocationPrototype>(realm, "Location"));
 
-    u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_accessor(realm, "href", href_getter, href_setter, attr);
-    define_native_accessor(realm, "host", host_getter, {}, attr);
-    define_native_accessor(realm, "hostname", hostname_getter, {}, attr);
-    define_native_accessor(realm, "pathname", pathname_getter, {}, attr);
-    define_native_accessor(realm, "hash", hash_getter, {}, attr);
-    define_native_accessor(realm, "search", search_getter, {}, attr);
-    define_native_accessor(realm, "protocol", protocol_getter, {}, attr);
-    define_native_accessor(realm, "port", port_getter, {}, attr);
-    define_native_accessor(realm, "origin", origin_getter, {}, attr);
-
-    define_native_function(realm, "reload", reload, 0, JS::Attribute::Enumerable);
-    define_native_function(realm, "replace", replace, 1, JS::Attribute::Enumerable);
-
-    define_native_function(realm, vm.names.toString, href_getter, 0, JS::Attribute::Enumerable);
+    // FIXME: Implement steps 2.-4.
 
     // 5. Set the value of the [[DefaultProperties]] internal slot of location to location.[[OwnPropertyKeys]]().
     // NOTE: In LibWeb this happens before the ESO is set up, so we must avoid location's custom [[OwnPropertyKeys]].
@@ -64,7 +48,7 @@ void LocationObject::initialize(JS::Realm& realm)
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#relevant-document
-DOM::Document const* LocationObject::relevant_document() const
+DOM::Document const* Location::relevant_document() const
 {
     // A Location object has an associated relevant Document, which is this Location object's
     // relevant global object's browsing context's active document, if this Location object's
@@ -74,7 +58,7 @@ DOM::Document const* LocationObject::relevant_document() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#concept-location-url
-AK::URL LocationObject::url() const
+AK::URL Location::url() const
 {
     // A Location object has an associated url, which is this Location object's relevant Document's URL,
     // if this Location object's relevant Document is non-null, and about:blank otherwise.
@@ -82,34 +66,24 @@ AK::URL LocationObject::url() const
     return relevant_document ? relevant_document->url() : "about:blank"sv;
 }
 
-static JS::ThrowCompletionOr<LocationObject*> typed_this_value(JS::VM& vm)
-{
-    auto this_value = vm.this_value();
-    if (!this_value.is_object() || !is<LocationObject>(this_value.as_object()))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Location");
-    return static_cast<LocationObject*>(&this_value.as_object());
-}
-
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-href
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_getter)
+DeprecatedString Location::href() const
 {
-    auto* location_object = TRY(typed_this_value(vm));
-
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return this's url, serialized.
-    return JS::PrimitiveString::create(vm, location_object->url().to_deprecated_string());
+    return url().to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
+JS::ThrowCompletionOr<void> Location::set_href(DeprecatedString const& new_href)
 {
+    auto& vm = this->vm();
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
 
     // FIXME: 1. If this's relevant Document is null, then return.
 
     // 2. Parse the given value relative to the entry settings object. If that failed, throw a TypeError exception.
-    auto new_href = TRY(vm.argument(0).to_deprecated_string(vm));
     auto href_url = window.associated_document().parse_url(new_href);
     if (!href_url.is_valid())
         return vm.throw_completion<JS::URIError>(DeprecatedString::formatted("Invalid URL '{}'", new_href));
@@ -117,144 +91,175 @@ JS_DEFINE_NATIVE_FUNCTION(LocationObject::href_setter)
     // 3. Location-object navigate given the resulting URL record.
     window.did_set_location_href({}, href_url);
 
-    return JS::js_undefined();
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-pathname
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::pathname_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. Return the result of URL path serializing this Location object's url.
-    return JS::PrimitiveString::create(vm, location_object->url().path());
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-hostname
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::hostname_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. If this's url's host is null, return the empty string.
-    if (location_object->url().host().is_null())
-        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
-
-    // 3. Return this's url's host, serialized.
-    return JS::PrimitiveString::create(vm, location_object->url().host());
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-host
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::host_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. Let url be this's url.
-    auto url = location_object->url();
-
-    // 3. If url's host is null, return the empty string.
-    if (url.host().is_null())
-        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
-
-    // 4. If url's port is null, return url's host, serialized.
-    if (!url.port().has_value())
-        return JS::PrimitiveString::create(vm, url.host());
-
-    // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
-    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("{}:{}", url.host(), *url.port()));
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-hash
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::hash_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. If this's url's fragment is either null or the empty string, return the empty string.
-    if (location_object->url().fragment().is_empty())
-        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
-
-    // 3. Return "#", followed by this's url's fragment.
-    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("#{}", location_object->url().fragment()));
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-search
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::search_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. If this's url's query is either null or the empty string, return the empty string.
-    if (location_object->url().query().is_empty())
-        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
-
-    // 3. Return "?", followed by this's url's query.
-    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("?{}", location_object->url().query()));
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::protocol_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. Return this's url's scheme, followed by ":".
-    return JS::PrimitiveString::create(vm, DeprecatedString::formatted("{}:", location_object->url().scheme()));
-}
-
-// https://html.spec.whatwg.org/multipage/history.html#dom-location-port
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::port_getter)
-{
-    auto* location_object = TRY(typed_this_value(vm));
-
-    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
-
-    // 2. If this's url's port is null, return the empty string.
-    if (!location_object->url().port().has_value())
-        return JS::PrimitiveString::create(vm, DeprecatedString::empty());
-
-    // 3. Return this's url's port, serialized.
-    return JS::PrimitiveString::create(vm, DeprecatedString::number(*location_object->url().port()));
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-origin
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::origin_getter)
+DeprecatedString Location::origin() const
 {
-    auto* location_object = TRY(typed_this_value(vm));
-
     // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
 
     // 2. Return the serialization of this's url's origin.
-    return JS::PrimitiveString::create(vm, location_object->url().serialize_origin());
+    return url().serialize_origin();
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-protocol
+DeprecatedString Location::protocol() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    // 2. Return this's url's scheme, followed by ":".
+    return DeprecatedString::formatted("{}:", url().scheme());
+}
+
+JS::ThrowCompletionOr<void> Location::set_protocol(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.protocol setter");
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-host
+DeprecatedString Location::host() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    // 2. Let url be this's url.
+    auto url = this->url();
+
+    // 3. If url's host is null, return the empty string.
+    if (url.host().is_null())
+        return DeprecatedString::empty();
+
+    // 4. If url's port is null, return url's host, serialized.
+    if (!url.port().has_value())
+        return url.host();
+
+    // 5. Return url's host, serialized, followed by ":" and url's port, serialized.
+    return DeprecatedString::formatted("{}:{}", url.host(), *url.port());
+}
+
+JS::ThrowCompletionOr<void> Location::set_host(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.host setter");
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-hostname
+DeprecatedString Location::hostname() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    auto url = this->url();
+
+    // 2. If this's url's host is null, return the empty string.
+    if (url.host().is_null())
+        return DeprecatedString::empty();
+
+    // 3. Return this's url's host, serialized.
+    return url.host();
+}
+
+JS::ThrowCompletionOr<void> Location::set_hostname(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.hostname setter");
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-port
+DeprecatedString Location::port() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    auto url = this->url();
+
+    // 2. If this's url's port is null, return the empty string.
+    if (!url.port().has_value())
+        return DeprecatedString::empty();
+
+    // 3. Return this's url's port, serialized.
+    return DeprecatedString::number(*url.port());
+}
+
+JS::ThrowCompletionOr<void> Location::set_port(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.port setter");
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-pathname
+DeprecatedString Location::pathname() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    // 2. Return the result of URL path serializing this Location object's url.
+    return url().path();
+}
+
+JS::ThrowCompletionOr<void> Location::set_pathname(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.pathname setter");
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-search
+DeprecatedString Location::search() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    auto url = this->url();
+
+    // 2. If this's url's query is either null or the empty string, return the empty string.
+    if (url.query().is_empty())
+        return DeprecatedString::empty();
+
+    // 3. Return "?", followed by this's url's query.
+    return DeprecatedString::formatted("?{}", url.query());
+}
+
+JS::ThrowCompletionOr<void> Location::set_search(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.search setter");
+}
+
+// https://html.spec.whatwg.org/multipage/history.html#dom-location-hash
+DeprecatedString Location::hash() const
+{
+    // FIXME: 1. If this's relevant Document is non-null and its origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    auto url = this->url();
+
+    // 2. If this's url's fragment is either null or the empty string, return the empty string.
+    if (url.fragment().is_empty())
+        return DeprecatedString::empty();
+
+    // 3. Return "#", followed by this's url's fragment.
+    return DeprecatedString::formatted("#{}", url.fragment());
+}
+
+JS::ThrowCompletionOr<void> Location::set_hash(DeprecatedString const&)
+{
+    auto& vm = this->vm();
+    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.hash setter");
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::reload)
+void Location::reload() const
 {
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
     window.did_call_location_reload({});
-    return JS::js_undefined();
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-replace
-JS_DEFINE_NATIVE_FUNCTION(LocationObject::replace)
+void Location::replace(DeprecatedString url) const
 {
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    auto url = TRY(vm.argument(0).to_deprecated_string(vm));
     // FIXME: This needs spec compliance work.
     window.did_call_location_replace({}, move(url));
-    return JS::js_undefined();
 }
 
 // 7.10.5.1 [[GetPrototypeOf]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-getprototypeof
-JS::ThrowCompletionOr<JS::Object*> LocationObject::internal_get_prototype_of() const
+JS::ThrowCompletionOr<JS::Object*> Location::internal_get_prototype_of() const
 {
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ! OrdinaryGetPrototypeOf(this).
     if (HTML::is_platform_object_same_origin(*this))
@@ -265,28 +270,28 @@ JS::ThrowCompletionOr<JS::Object*> LocationObject::internal_get_prototype_of() c
 }
 
 // 7.10.5.2 [[SetPrototypeOf]] ( V ), https://html.spec.whatwg.org/multipage/history.html#location-setprototypeof
-JS::ThrowCompletionOr<bool> LocationObject::internal_set_prototype_of(Object* prototype)
+JS::ThrowCompletionOr<bool> Location::internal_set_prototype_of(Object* prototype)
 {
     // 1. Return ! SetImmutablePrototype(this, V).
     return MUST(set_immutable_prototype(prototype));
 }
 
 // 7.10.5.3 [[IsExtensible]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-isextensible
-JS::ThrowCompletionOr<bool> LocationObject::internal_is_extensible() const
+JS::ThrowCompletionOr<bool> Location::internal_is_extensible() const
 {
     // 1. Return true.
     return true;
 }
 
 // 7.10.5.4 [[PreventExtensions]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-preventextensions
-JS::ThrowCompletionOr<bool> LocationObject::internal_prevent_extensions()
+JS::ThrowCompletionOr<bool> Location::internal_prevent_extensions()
 {
     // 1. Return false.
     return false;
 }
 
 // 7.10.5.5 [[GetOwnProperty]] ( P ), https://html.spec.whatwg.org/multipage/history.html#location-getownproperty
-JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal_get_own_property(JS::PropertyKey const& property_key) const
+JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> Location::internal_get_own_property(JS::PropertyKey const& property_key) const
 {
     auto& vm = this->vm();
 
@@ -307,7 +312,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal
     }
 
     // 2. Let property be CrossOriginGetOwnPropertyHelper(this, P).
-    auto property = HTML::cross_origin_get_own_property_helper(const_cast<LocationObject*>(this), property_key);
+    auto property = HTML::cross_origin_get_own_property_helper(const_cast<Location*>(this), property_key);
 
     // 3. If property is not undefined, then return property.
     if (property.has_value())
@@ -318,7 +323,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> LocationObject::internal
 }
 
 // 7.10.5.6 [[DefineOwnProperty]] ( P, Desc ), https://html.spec.whatwg.org/multipage/history.html#location-defineownproperty
-JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::PropertyKey const& property_key, JS::PropertyDescriptor const& descriptor)
+JS::ThrowCompletionOr<bool> Location::internal_define_own_property(JS::PropertyKey const& property_key, JS::PropertyDescriptor const& descriptor)
 {
     // 1. If IsPlatformObjectSameOrigin(this) is true, then:
     if (HTML::is_platform_object_same_origin(*this)) {
@@ -332,7 +337,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_define_own_property(JS::Pro
 }
 
 // 7.10.5.7 [[Get]] ( P, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-get
-JS::ThrowCompletionOr<JS::Value> LocationObject::internal_get(JS::PropertyKey const& property_key, JS::Value receiver) const
+JS::ThrowCompletionOr<JS::Value> Location::internal_get(JS::PropertyKey const& property_key, JS::Value receiver) const
 {
     auto& vm = this->vm();
 
@@ -345,7 +350,7 @@ JS::ThrowCompletionOr<JS::Value> LocationObject::internal_get(JS::PropertyKey co
 }
 
 // 7.10.5.8 [[Set]] ( P, V, Receiver ), https://html.spec.whatwg.org/multipage/history.html#location-set
-JS::ThrowCompletionOr<bool> LocationObject::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
+JS::ThrowCompletionOr<bool> Location::internal_set(JS::PropertyKey const& property_key, JS::Value value, JS::Value receiver)
 {
     auto& vm = this->vm();
 
@@ -358,7 +363,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_set(JS::PropertyKey const& 
 }
 
 // 7.10.5.9 [[Delete]] ( P ), https://html.spec.whatwg.org/multipage/history.html#location-delete
-JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey const& property_key)
+JS::ThrowCompletionOr<bool> Location::internal_delete(JS::PropertyKey const& property_key)
 {
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return ? OrdinaryDelete(this, P).
     if (HTML::is_platform_object_same_origin(*this))
@@ -369,7 +374,7 @@ JS::ThrowCompletionOr<bool> LocationObject::internal_delete(JS::PropertyKey cons
 }
 
 // 7.10.5.10 [[OwnPropertyKeys]] ( ), https://html.spec.whatwg.org/multipage/history.html#location-ownpropertykeys
-JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> LocationObject::internal_own_property_keys() const
+JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> Location::internal_own_property_keys() const
 {
     // 1. If IsPlatformObjectSameOrigin(this) is true, then return OrdinaryOwnPropertyKeys(this).
     if (HTML::is_platform_object_same_origin(*this))

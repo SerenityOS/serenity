@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -79,9 +80,9 @@ public:
     int inner_width() const;
     int inner_height() const;
 
-    void did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href);
-    void did_call_location_reload(Badge<Bindings::LocationObject>);
-    void did_call_location_replace(Badge<Bindings::LocationObject>, DeprecatedString url);
+    void did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href);
+    void did_call_location_reload(Badge<HTML::Location>);
+    void did_call_location_replace(Badge<HTML::Location>, DeprecatedString url);
 
     void deallocate_timer_id(Badge<Timer>, i32);
 
@@ -186,8 +187,8 @@ private:
 public:
     HTML::Origin origin() const;
 
-    Bindings::LocationObject* location_object() { return m_location_object; }
-    Bindings::LocationObject const* location_object() const { return m_location_object; }
+    HTML::Location* location() { return m_location; }
+    HTML::Location const* location() const { return m_location; }
 
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
@@ -281,7 +282,7 @@ private:
     ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
 
-    Bindings::LocationObject* m_location_object { nullptr };
+    HTML::Location* m_location { nullptr };
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
