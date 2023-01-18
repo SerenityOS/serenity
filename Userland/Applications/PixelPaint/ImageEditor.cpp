@@ -417,10 +417,13 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         on_image_mouse_position_change(image_event.position());
     }
 
-    if (!m_active_tool || (event.alt() && !m_active_tool->is_overriding_alt()))
-        return;
-
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
+    if (m_active_tool && event.alt() && !m_active_tool->is_overriding_alt()) {
+        set_override_cursor(Gfx::StandardCursor::Eyedropper);
+        set_editor_color_to_color_at_mouse_position(layer_event);
+        return;
+    }
+
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
     m_active_tool->on_mousemove(m_active_layer.ptr(), tool_event);
 }
