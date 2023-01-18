@@ -335,8 +335,10 @@ void FrameLoader::set_error_page_url(DeprecatedString error_page_url)
 
 void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString const& error)
 {
+    LoadRequest request = LoadRequest::create_for_url_on_page(s_error_page_url, browsing_context().page());
+
     ResourceLoader::the().load(
-        s_error_page_url,
+        request,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
             StringBuilder builder;
