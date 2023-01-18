@@ -523,9 +523,6 @@ template<typename T>
 inline constexpr bool IsTriviallyCopyable = __is_trivially_copyable(T);
 
 template<typename T, typename... Args>
-inline constexpr bool IsCallableWithArguments = requires(T t) { t(declval<Args>()...); };
-
-template<typename T, typename... Args>
 inline constexpr bool IsConstructible = requires { ::new T(declval<Args>()...); };
 
 template<typename T, typename... Args>
@@ -635,7 +632,6 @@ using AK::Detail::IntegerSequence;
 using AK::Detail::IsArithmetic;
 using AK::Detail::IsAssignable;
 using AK::Detail::IsBaseOf;
-using AK::Detail::IsCallableWithArguments;
 using AK::Detail::IsClass;
 using AK::Detail::IsConst;
 using AK::Detail::IsConstructible;
