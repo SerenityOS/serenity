@@ -370,11 +370,6 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (event.alt() && !m_active_tool->is_overriding_alt()) {
-        set_editor_color_to_color_at_mouse_position(event);
-        return; // Pick Color instead of acivating active tool when holding alt.
-    }
-
     if (!m_active_tool)
         return;
 
@@ -384,6 +379,11 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
     }
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
+    if (event.alt() && !m_active_tool->is_overriding_alt()) {
+        set_editor_color_to_color_at_mouse_position(layer_event);
+        return; // Pick Color instead of acivating active tool when holding alt.
+    }
+
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
     m_active_tool->on_mousedown(m_active_layer.ptr(), tool_event);
