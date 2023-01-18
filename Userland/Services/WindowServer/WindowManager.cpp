@@ -1020,7 +1020,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
         if (auto* window = hovered_window()) {
             event.set_drag(true);
             event.set_mime_data(*m_dnd_mime_data);
-            deliver_mouse_event(*window, event, false);
+            deliver_mouse_event(*window, event);
         } else {
             set_accepts_drag(false);
         }
@@ -1171,11 +1171,11 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
     metadata.last_position = event.position();
 }
 
-void WindowManager::deliver_mouse_event(Window& window, MouseEvent const& event, bool process_double_click)
+void WindowManager::deliver_mouse_event(Window& window, MouseEvent const& event)
 {
     auto translated_event = event.translated(-window.position());
     window.dispatch_event(translated_event);
-    if (process_double_click && translated_event.type() == Event::MouseUp) {
+    if (translated_event.type() == Event::MouseUp) {
         process_event_for_doubleclick(window, translated_event);
         if (translated_event.type() == Event::MouseDoubleClick)
             window.dispatch_event(translated_event);
@@ -1194,7 +1194,7 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent const& e
     //
     // This prevents e.g. moving on one window out of the bounds starting
     // a move in that other unrelated window, and other silly shenanigans.
-    deliver_mouse_event(*input_tracking_window, event, true);
+    deliver_mouse_event(*input_tracking_window, event);
 
     if (event.type() == Event::MouseUp && event.buttons() == 0)
         set_automatic_cursor_tracking_window(nullptr);
@@ -1278,9 +1278,8 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
         return;
     }
 
-    if (!window.is_automatic_cursor_tracking()) {
-        deliver_mouse_event(window, event, true);
-    }
+    if (!window.is_automatic_cursor_tracking())
+        deliver_mouse_event(window, event);
 
     if (event.type() == Event::MouseDown)
         set_automatic_cursor_tracking_window(&window);
@@ -1306,7 +1305,7 @@ void WindowManager::process_mouse_event(MouseEvent& event)
     // in the next step.
     for_each_visible_window_from_front_to_back([&](Window& window) {
         if (window.is_automatic_cursor_tracking() && &window != automatic_cursor_tracking_window())
-            deliver_mouse_event(window, event, false);
+            deliver_mouse_event(window, event);
         return IterationDecision::Continue;
     });
 
