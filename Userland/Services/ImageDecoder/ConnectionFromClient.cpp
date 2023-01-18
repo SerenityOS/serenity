@@ -73,7 +73,7 @@ Messages::ImageDecoderServer::DecodeImageWithKnownPathResponse ConnectionFromCli
     u32 loop_count = 0;
     Vector<Gfx::ShareableBitmap> bitmaps;
     Vector<u32> durations;
-    decode_image_to_details(encoded_buffer, path.substring_view(0), is_animated, loop_count, bitmaps, durations);
+    decode_image_to_details(encoded_buffer, path, is_animated, loop_count, bitmaps, durations);
     return { is_animated, loop_count, bitmaps, durations };
 }
 
