@@ -344,7 +344,7 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString co
             generator.set("failed_url", escape_html_entities(failed_url.to_deprecated_string()));
             generator.set("error", escape_html_entities(error));
             generator.append(data);
-            load_html(generator.as_string_view(), failed_url);
+            load_html(generator.as_string_view(), s_error_page_url);
         },
         [](auto& error, auto) {
             dbgln("Failed to load error page: {}", error);
