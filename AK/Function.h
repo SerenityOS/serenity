@@ -36,6 +36,16 @@
 
 namespace AK {
 
+namespace Detail {
+
+template<typename T, typename... Args>
+inline constexpr bool IsCallableWithArguments = requires(T t) {
+                                                    t(declval<Args>()...);
+                                                };
+}
+
+using Detail::IsCallableWithArguments;
+
 template<typename>
 class Function;
 
@@ -271,4 +281,5 @@ private:
 
 #if USING_AK_GLOBALLY
 using AK::Function;
+using AK::IsCallableWithArguments;
 #endif
