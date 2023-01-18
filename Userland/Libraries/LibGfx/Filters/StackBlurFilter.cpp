@@ -10,6 +10,7 @@
 #endif
 
 #include <AK/Array.h>
+#include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/Vector.h>
 #include <LibGfx/Filters/StackBlurFilter.h>

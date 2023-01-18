@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/IntegralMath.h>
 #include <AK/Span.h>
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>

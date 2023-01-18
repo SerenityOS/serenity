@@ -6,6 +6,7 @@
  */
 
 #include "BarsVisualizationWidget.h"
+#include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/TypedTransfer.h>
 #include <LibDSP/FFT.h>
