@@ -159,7 +159,7 @@ jobs:
           path: ${{ github.workspace }}/project.sarif
 
       - name: Upload SARIF results file
-        uses: github/codeql-action/upload-sarif@v1
+        uses: github/codeql-action/upload-sarif@v2
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: project.sarif
