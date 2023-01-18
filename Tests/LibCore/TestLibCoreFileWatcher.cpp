@@ -26,12 +26,16 @@ TEST_CASE(file_watcher_child_events)
 
     int event_count = 0;
     file_watcher->on_change = [&](Core::FileWatcherEvent const& event) {
+        // Ignore path events under /tmp that can occur for anything else the OS is
+        // doing to create/delete files there.
+        if (event.event_path != "/tmp/testfile"sv)
+            return;
+
         if (event_count == 0) {
-            EXPECT_EQ(event.event_path, "/tmp/testfile");
             EXPECT(has_flag(event.type, Core::FileWatcherEvent::Type::ChildCreated));
         } else if (event_count == 1) {
-            EXPECT_EQ(event.event_path, "/tmp/testfile");
             EXPECT(has_flag(event.type, Core::FileWatcherEvent::Type::ChildDeleted));
+            EXPECT(MUST(file_watcher->remove_watch("/tmp/"sv)));
 
             event_loop.quit(0);
         }
