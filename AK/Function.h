@@ -38,10 +38,16 @@ namespace AK {
 
 namespace Detail {
 
-template<typename T, typename... Args>
+template<typename T, typename Out, typename... Args>
 inline constexpr bool IsCallableWithArguments = requires(T t) {
-                                                    t(declval<Args>()...);
-                                                };
+                                                    {
+                                                        t(declval<Args>()...)
+                                                        } -> ConvertibleTo<Out>;
+                                                } || requires(T t) {
+                                                         {
+                                                             t(declval<Args>()...)
+                                                             } -> SameAs<Out>;
+                                                     };
 }
 
 using Detail::IsCallableWithArguments;
@@ -75,14 +81,14 @@ public:
 
     template<typename CallableType>
     Function(CallableType&& callable)
-    requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...> && !IsSame<RemoveCVReference<CallableType>, Function>))
+    requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...> && !IsSame<RemoveCVReference<CallableType>, Function>))
     {
         init_with_callable(forward<CallableType>(callable));
     }
 
     template<typename FunctionType>
     Function(FunctionType f)
-    requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...> && !IsSame<RemoveCVReference<FunctionType>, Function>))
+    requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, Out, In...> && !IsSame<RemoveCVReference<FunctionType>, Function>))
     {
         init_with_callable(move(f));
     }
@@ -109,7 +115,7 @@ public:
 
     template<typename CallableType>
     Function& operator=(CallableType&& callable)
-    requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...>))
+    requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...>))
     {
         clear();
         init_with_callable(forward<CallableType>(callable));
@@ -118,7 +124,7 @@ public:
 
     template<typename FunctionType>
     Function& operator=(FunctionType f)
-    requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...>))
+    requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, Out, In...>))
     {
         clear();
         if (f)
