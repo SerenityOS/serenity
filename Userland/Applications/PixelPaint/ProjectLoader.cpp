@@ -15,7 +15,7 @@
 
 namespace PixelPaint {
 
-ErrorOr<void> ProjectLoader::try_load_from_file(NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<void> ProjectLoader::try_load_from_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
 {
     auto contents = TRY(file->read_until_eof());
 
@@ -24,7 +24,7 @@ ErrorOr<void> ProjectLoader::try_load_from_file(NonnullOwnPtr<Core::Stream::File
         m_is_raw_image = true;
 
         // FIXME: Find a way to avoid the memory copy here.
-        auto bitmap = TRY(Image::try_decode_bitmap(contents));
+        auto bitmap = TRY(Image::try_decode_bitmap(path, contents));
         auto image = TRY(Image::try_create_from_bitmap(move(bitmap)));
 
         m_image = image;

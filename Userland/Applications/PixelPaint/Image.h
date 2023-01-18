@@ -15,6 +15,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
+#include <AK/StringView.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Bitmap.h>
@@ -49,7 +50,7 @@ public:
     static ErrorOr<NonnullRefPtr<Image>> try_create_from_pixel_paint_json(JsonObject const&);
     static ErrorOr<NonnullRefPtr<Image>> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
 
-    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_decode_bitmap(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_decode_bitmap(StringView path, ReadonlyBytes);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_compose_bitmap(Gfx::BitmapFormat format) const;

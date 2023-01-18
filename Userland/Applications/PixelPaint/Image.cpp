@@ -51,13 +51,13 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) con
     }
 }
 
-ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitmap_data)
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(StringView path, ReadonlyBytes bitmap_data)
 {
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = TRY(ImageDecoderClient::Client::try_create());
 
     // FIXME: Find a way to avoid the memory copying here.
-    auto maybe_decoded_image = client->decode_image(bitmap_data);
+    auto maybe_decoded_image = client->decode_image_with_known_path(path, bitmap_data);
     if (!maybe_decoded_image.has_value())
         return Error::from_string_literal("Image decode failed");
 
@@ -91,13 +91,13 @@ ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject
 
         auto bitmap_base64_encoded = layer_object.get_deprecated("bitmap"sv).as_string();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
-        auto bitmap = TRY(try_decode_bitmap(bitmap_data));
+        auto bitmap = TRY(try_decode_bitmap(""sv, bitmap_data));
         auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
 
         if (auto const& mask_object = layer_object.get_deprecated("mask"sv); !mask_object.is_null()) {
             auto mask_base64_encoded = mask_object.as_string();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
-            auto mask = TRY(try_decode_bitmap(mask_data));
+            auto mask = TRY(try_decode_bitmap(""sv, mask_data));
             TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));
         }
 
