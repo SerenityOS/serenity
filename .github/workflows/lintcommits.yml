@@ -15,6 +15,9 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
+            const excludedBotIds = [
+              49699333,  // dependabot[bot]
+            ];
             const rules = [
               {
                 pattern: /^[^\r]*$/,
@@ -62,7 +65,10 @@ jobs:
             const commits = await github.paginate(opts);
 
             const errors = [];
-            for (const { sha, commit: { message } } of commits) {
+            for (const { sha, commit: { message }, author } of commits) {
+              if (excludedBotIds.includes(author.id)) {
+                continue;
+              }
               const commitErrors = [];
               for (const { pattern, error } of rules) {
                 if (!pattern.test(message)) {
