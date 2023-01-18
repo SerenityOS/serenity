@@ -860,6 +860,15 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (!m_resize_window)
         return false;
 
+    // Deliver MouseDoubleClick events to the frame
+    if (event.type() == Event::MouseUp) {
+        auto& frame = m_resize_window->frame();
+        auto frame_event = event.translated(-frame.rect().location());
+        process_event_for_doubleclick(*m_resize_window, frame_event);
+        if (frame_event.type() == Event::MouseDoubleClick)
+            frame.handle_mouse_event(frame_event);
+    }
+
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
         dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
 

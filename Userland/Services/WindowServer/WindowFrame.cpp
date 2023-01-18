@@ -10,6 +10,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/WindowTheme.h>
+#include <Services/Taskbar/TaskbarWindow.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Event.h>
@@ -868,6 +869,12 @@ void WindowFrame::handle_border_mouse_event(MouseEvent const& event)
                                                                                                                          : 1;
     ResizeDirection resize_direction = direction_for_hot_area[hot_area_row][hot_area_column];
 
+    // Double click latches a window's edge to the screen's edge
+    if (event.type() == Event::MouseDoubleClick) {
+        latch_window_to_screen_edge(resize_direction);
+        return;
+    }
+
     if (event.type() == Event::MouseMove && event.buttons() == 0) {
         wm.set_resize_candidate(m_window, resize_direction);
         Compositor::the().invalidate_cursor();
@@ -964,6 +971,39 @@ int WindowFrame::menu_row_count() const
     if (!m_window.should_show_menubar())
         return 0;
     return m_window.menubar().has_menus() ? 1 : 0;
+}
+
+void WindowFrame::latch_window_to_screen_edge(ResizeDirection resize_direction)
+{
+    auto window_rect = m_window.rect();
+    auto frame_rect = rect();
+    auto& screen = Screen::closest_to_rect(window_rect);
+    auto screen_rect = screen.rect();
+
+    if (screen.is_main_screen())
+        screen_rect.shrink(0, 0, TaskbarWindow::taskbar_height(), 0);
+
+    if (resize_direction == ResizeDirection::UpLeft
+        || resize_direction == ResizeDirection::Up
+        || resize_direction == ResizeDirection::UpRight)
+        window_rect.inflate(frame_rect.top() - screen_rect.top(), 0, 0, 0);
+
+    if (resize_direction == ResizeDirection::UpRight
+        || resize_direction == ResizeDirection::Right
+        || resize_direction == ResizeDirection::DownRight)
+        window_rect.inflate(0, screen_rect.right() - frame_rect.right(), 0, 0);
+
+    if (resize_direction == ResizeDirection::DownLeft
+        || resize_direction == ResizeDirection::Down
+        || resize_direction == ResizeDirection::DownRight)
+        window_rect.inflate(0, 0, screen_rect.bottom() - frame_rect.bottom(), 0);
+
+    if (resize_direction == ResizeDirection::UpLeft
+        || resize_direction == ResizeDirection::Left
+        || resize_direction == ResizeDirection::DownLeft)
+        window_rect.inflate(0, 0, 0, frame_rect.left() - screen_rect.left());
+
+    m_window.set_rect(window_rect);
 }
 
 }
