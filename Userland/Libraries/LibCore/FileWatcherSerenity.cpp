@@ -24,6 +24,18 @@ static_assert(false, "This file must only be used for SerenityOS");
 
 namespace Core {
 
+static constexpr unsigned file_watcher_flags_to_inode_watcher_flags(FileWatcherFlags flags)
+{
+    auto result = InodeWatcherFlags::None;
+
+    if (has_flag(flags, FileWatcherFlags::Nonblock))
+        result |= InodeWatcherFlags::Nonblock;
+    if (has_flag(flags, FileWatcherFlags::CloseOnExec))
+        result |= InodeWatcherFlags::CloseOnExec;
+
+    return static_cast<unsigned>(result);
+}
+
 static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, DeprecatedString> const& wd_to_path)
 {
     u8 buffer[MAXIMUM_EVENT_SIZE];
@@ -139,8 +151,8 @@ ErrorOr<bool> FileWatcherBase::remove_watch(DeprecatedString path)
     return true;
 }
 
-BlockingFileWatcher::BlockingFileWatcher(InodeWatcherFlags flags)
-    : FileWatcherBase(create_inode_watcher(static_cast<unsigned>(flags)))
+BlockingFileWatcher::BlockingFileWatcher(FileWatcherFlags flags)
+    : FileWatcherBase(create_inode_watcher(file_watcher_flags_to_inode_watcher_flags(flags)))
 {
     VERIFY(m_watcher_fd != -1);
     dbgln_if(FILE_WATCHER_DEBUG, "BlockingFileWatcher created with InodeWatcher {}", m_watcher_fd);
@@ -170,9 +182,9 @@ Optional<FileWatcherEvent> BlockingFileWatcher::wait_for_event()
     return event;
 }
 
-ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(InodeWatcherFlags flags)
+ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(FileWatcherFlags flags)
 {
-    auto watcher_fd = create_inode_watcher(static_cast<unsigned>(flags | InodeWatcherFlags::CloseOnExec));
+    auto watcher_fd = create_inode_watcher(file_watcher_flags_to_inode_watcher_flags(flags | FileWatcherFlags::CloseOnExec));
     if (watcher_fd < 0)
         return Error::from_errno(errno);
 

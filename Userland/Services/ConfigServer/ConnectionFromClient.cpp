@@ -39,7 +39,7 @@ static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
 
     auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
     // FIXME: Use a single FileWatcher with multiple watches inside.
-    auto watcher_or_error = Core::FileWatcher::create(InodeWatcherFlags::Nonblock);
+    auto watcher_or_error = Core::FileWatcher::create(Core::FileWatcherFlags::Nonblock);
     VERIFY(!watcher_or_error.is_error());
     auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
     VERIFY(!result.is_error());

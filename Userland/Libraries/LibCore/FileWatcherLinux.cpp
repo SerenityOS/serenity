@@ -8,7 +8,6 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 #include <limits.h>
@@ -23,13 +22,13 @@ static_assert(false, "This file must only be used for Linux");
 
 namespace Core {
 
-static constexpr unsigned inode_watcher_flags_to_inotify_flags(InodeWatcherFlags flags)
+static constexpr unsigned file_watcher_flags_to_inotify_flags(FileWatcherFlags flags)
 {
     unsigned result = 0;
 
-    if ((flags & InodeWatcherFlags::Nonblock) != InodeWatcherFlags::None)
+    if (has_flag(flags, FileWatcherFlags::Nonblock))
         result |= IN_NONBLOCK;
-    if ((flags & InodeWatcherFlags::CloseOnExec) != InodeWatcherFlags::None)
+    if (has_flag(flags, FileWatcherFlags::CloseOnExec))
         result |= IN_CLOEXEC;
 
     return result;
@@ -92,9 +91,9 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, De
     return result;
 }
 
-ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(InodeWatcherFlags flags)
+ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(FileWatcherFlags flags)
 {
-    auto watcher_fd = ::inotify_init1(inode_watcher_flags_to_inotify_flags(flags | InodeWatcherFlags::CloseOnExec));
+    auto watcher_fd = ::inotify_init1(file_watcher_flags_to_inotify_flags(flags | FileWatcherFlags::CloseOnExec));
     if (watcher_fd < 0)
         return Error::from_errno(errno);
 
