@@ -6,13 +6,14 @@
 
 #pragma once
 
-#include "HitTestResult.h"
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/WindowTheme.h>
+#include <WindowServer/HitTestResult.h>
+#include <WindowServer/ResizeDirection.h>
 
 namespace WindowServer {
 
@@ -125,6 +126,7 @@ private:
     void paint_menubar(Gfx::Painter&);
     MultiScaleBitmaps const* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(Gfx::IntRect const&) const;
+    void latch_window_to_screen_edge(ResizeDirection);
 
     void handle_menubar_mouse_event(MouseEvent const&);
     void handle_menu_mouse_event(Menu&, MouseEvent const&);
