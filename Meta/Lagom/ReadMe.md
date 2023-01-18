@@ -22,7 +22,8 @@ the ``BuildFuzzers.sh`` script with no arguments. The script does the equivalent
     # Stage 1: Build and install code generators and other tools
     cmake -GNinja -B Build/tools \
       -DBUILD_LAGOM=OFF \
-      -DCMAKE_INSTALL_PREFIX=Build/tool-install
+      -DCMAKE_INSTALL_PREFIX=Build/tool-install \
+      -Dpackage=LagomTools
     ninja -C Build/tools install
     # Stage 2: Build fuzzers, making sure the build can find the tools we just built
     cmake -GNinja -B Build/lagom-fuzzers \
