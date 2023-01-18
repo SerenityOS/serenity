@@ -69,7 +69,7 @@ public:
     Optional<FileWatcherEvent> wait_for_event();
 };
 
-class FileWatcher final : public FileWatcherBase
+class FileWatcher : public FileWatcherBase
     , public RefCounted<FileWatcher> {
     AK_MAKE_NONCOPYABLE(FileWatcher);
 
@@ -79,7 +79,7 @@ public:
 
     Function<void(FileWatcherEvent const&)> on_change;
 
-private:
+protected:
     FileWatcher(int watcher_fd, NonnullRefPtr<Notifier>);
 
     NonnullRefPtr<Notifier> m_notifier;
