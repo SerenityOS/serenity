@@ -14,7 +14,6 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
 #include <LibCore/File.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
