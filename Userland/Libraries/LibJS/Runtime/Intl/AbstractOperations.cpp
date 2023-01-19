@@ -41,16 +41,16 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
     // locale can be generated from the EBNF grammar for unicode_locale_id in Unicode Technical Standard #35 LDML § 3.2 Unicode Locale Identifier;
     auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale));
     if (!locale_id.has_value())
-        return Optional<::Locale::LocaleID> {};
+        return OptionalNone {};
 
     // locale does not use any of the backwards compatibility syntax described in Unicode Technical Standard #35 LDML § 3.3 BCP 47 Conformance;
     // https://unicode.org/reports/tr35/#BCP_47_Conformance
     if (locale.contains('_') || locale_id->language_id.is_root || !locale_id->language_id.language.has_value())
-        return Optional<::Locale::LocaleID> {};
+        return OptionalNone {};
 
     // the unicode_language_id within locale contains no duplicate unicode_variant_subtag subtags; and
     if (TRY(contains_duplicate_variant(locale_id->language_id.variants)))
-        return Optional<::Locale::LocaleID> {};
+        return OptionalNone {};
 
     // if locale contains an extensions* component, that component
     Vector<char> unique_keys;
@@ -64,7 +64,8 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
             [](::Locale::OtherExtension const& ext) { return static_cast<char>(to_ascii_lowercase(ext.key)); });
 
         if (unique_keys.contains_slow(key))
-            return Optional<::Locale::LocaleID> {};
+            return OptionalNone {};
+
         TRY_OR_THROW_OOM(vm, unique_keys.try_append(key));
 
         // if a transformed_extensions component that contains a tlang component is present, then
