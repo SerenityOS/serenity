@@ -53,7 +53,7 @@ public:
 
     private:
         FillOrStrokeVariant m_fill_or_stoke_style;
-        RefPtr<Gfx::PaintStyle> m_color_fill_style { nullptr };
+        RefPtr<Gfx::PaintStyle> m_color_paint_style { nullptr };
     };
 
     // https://html.spec.whatwg.org/multipage/canvas.html#drawing-state
