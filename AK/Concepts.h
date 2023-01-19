@@ -36,6 +36,9 @@ concept Enum = IsEnum<T>;
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
+template<class From, class To>
+concept ConvertibleTo = IsConvertible<From, To>;
+
 template<typename U, typename... Ts>
 concept OneOf = IsOneOf<U, Ts...>;
 
@@ -139,6 +142,7 @@ namespace AK {
 #endif
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
+using AK::Concepts::ConvertibleTo;
 using AK::Concepts::DerivedFrom;
 using AK::Concepts::Enum;
 using AK::Concepts::FallibleFunction;
