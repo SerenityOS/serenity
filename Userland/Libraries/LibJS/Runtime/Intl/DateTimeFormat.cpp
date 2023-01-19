@@ -621,7 +621,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             value = floor(value * pow(10, static_cast<int>(*fractional_second_digits) - 3));
 
             // iii. Let fv be FormatNumeric(nf3, v).
-            auto formatted_value = format_numeric(vm, *number_format3, Value(value));
+            auto formatted_value = TRY(format_numeric(vm, *number_format3, Value(value)));
 
             // iv. Append a new Record { [[Type]]: "fractionalSecond", [[Value]]: fv } as the last element of result.
             result.append({ "fractionalSecond"sv, move(formatted_value) });
@@ -705,13 +705,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // viii. If f is "numeric", then
             case ::Locale::CalendarPatternStyle::Numeric:
                 // 1. Let fv be FormatNumeric(nf, v).
-                formatted_value = format_numeric(vm, *number_format, Value(value));
+                formatted_value = TRY(format_numeric(vm, *number_format, Value(value)));
                 break;
 
             // ix. Else if f is "2-digit", then
             case ::Locale::CalendarPatternStyle::TwoDigit:
                 // 1. Let fv be FormatNumeric(nf2, v).
-                formatted_value = format_numeric(vm, *number_format2, Value(value));
+                formatted_value = TRY(format_numeric(vm, *number_format2, Value(value)));
 
                 // 2. If the "length" property of fv is greater than 2, let fv be the substring of fv containing the last two characters.
                 // NOTE: The first length check here isn't enough, but lets us avoid UTF-16 transcoding when the formatted value is ASCII.
@@ -820,7 +820,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     // 1. Let patternParts be PartitionPattern(dateTimeFormat.[[Pattern]]).
-    auto pattern_parts = partition_pattern(date_time_format.pattern());
+    auto pattern_parts = TRY(partition_pattern(vm, date_time_format.pattern()));
 
     // 2. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
     auto result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, nullptr));
@@ -1067,7 +1067,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto const& pattern = date_time_format.pattern();
 
         // b. Let patternParts be PartitionPattern(pattern).
-        auto pattern_parts = partition_pattern(pattern);
+        auto pattern_parts = TRY(partition_pattern(vm, pattern));
 
         // c. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
         auto raw_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), start, nullptr));
@@ -1124,7 +1124,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto time = ((source == "startRange") || (source == "shared")) ? start : end;
 
         // e. Let patternParts be PartitionPattern(pattern).
-        auto pattern_parts = partition_pattern(pattern);
+        auto pattern_parts = TRY(partition_pattern(vm, pattern));
 
         // f. Let partResult be ? FormatDateTimePattern(dateTimeFormat, patternParts, z, rangePattern).
         auto raw_part_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, &range_pattern.value()));

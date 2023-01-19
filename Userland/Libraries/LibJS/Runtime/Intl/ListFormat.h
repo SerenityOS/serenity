@@ -51,10 +51,10 @@ private:
 
 using Placeables = HashMap<StringView, Variant<PatternPartition, Vector<PatternPartition>>>;
 
-Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables);
-Vector<PatternPartition> create_parts_from_list(ListFormat const&, Vector<DeprecatedString> const& list);
-DeprecatedString format_list(ListFormat const&, Vector<DeprecatedString> const& list);
-Array* format_list_to_parts(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
+ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM&, StringView pattern, Placeables);
+ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
+ThrowCompletionOr<DeprecatedString> format_list(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
+ThrowCompletionOr<Array*> format_list_to_parts(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
 ThrowCompletionOr<Vector<DeprecatedString>> string_list_from_iterable(VM&, Value iterable);
 
 }

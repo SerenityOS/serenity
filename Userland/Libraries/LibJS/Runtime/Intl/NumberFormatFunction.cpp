@@ -45,8 +45,7 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
     auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 5. Return ? FormatNumeric(nf, x).
-    // Note: Our implementation of FormatNumeric does not throw.
-    auto formatted = format_numeric(vm, m_number_format, move(mathematical_value));
+    auto formatted = TRY(format_numeric(vm, m_number_format, move(mathematical_value)));
     return PrimitiveString::create(vm, move(formatted));
 }
 

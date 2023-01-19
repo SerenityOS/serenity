@@ -76,8 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
     auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 4. Return ? FormatNumericToParts(nf, x).
-    // Note: Our implementation of FormatNumericToParts does not throw.
-    return format_numeric_to_parts(vm, *number_format, move(mathematical_value));
+    return TRY(format_numeric_to_parts(vm, *number_format, move(mathematical_value)));
 }
 
 // 1.3.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-intl.numberformat.prototype.formatrange

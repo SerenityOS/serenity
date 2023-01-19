@@ -46,10 +46,11 @@ StringView ListFormat::type_string() const
 }
 
 // 13.5.1 DeconstructPattern ( pattern, placeables ), https://tc39.es/ecma402/#sec-deconstructpattern
-Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables placeables)
+ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM& vm, StringView pattern, Placeables placeables)
 {
     // 1. Let patternParts be ! PartitionPattern(pattern).
-    auto pattern_parts = partition_pattern(pattern);
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto pattern_parts = TRY(partition_pattern(vm, pattern));
 
     // 2. Let result be a new empty List.
     Vector<PatternPartition> result {};
@@ -93,11 +94,11 @@ Vector<PatternPartition> deconstruct_pattern(StringView pattern, Placeables plac
 }
 
 // 13.5.2 CreatePartsFromList ( listFormat, list ), https://tc39.es/ecma402/#sec-createpartsfromlist
-Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, Vector<DeprecatedString> const& list)
+ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM& vm, ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     auto list_patterns = ::Locale::get_locale_list_patterns(list_format.locale(), list_format.type_string(), list_format.style());
     if (!list_patterns.has_value())
-        return {};
+        return Vector<PatternPartition> {};
 
     // 1. Let size be the number of elements of list.
     auto size = list.size();
@@ -105,7 +106,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
     // 2. If size is 0, then
     if (size == 0) {
         // a. Return a new empty List.
-        return {};
+        return Vector<PatternPartition> {};
     }
 
     // 3. If size is 2, then
@@ -126,7 +127,7 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
         placeables.set("1"sv, move(second));
 
         // f. Return ! DeconstructPattern(pattern, placeables).
-        return deconstruct_pattern(pattern, move(placeables));
+        return deconstruct_pattern(vm, pattern, move(placeables));
     }
 
     // 4. Let last be a new Record { [[Type]]: "element", [[Value]]: list[size - 1] }.
@@ -172,7 +173,8 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
         placeables.set("1"sv, move(parts));
 
         // g. Set parts to ! DeconstructPattern(pattern, placeables).
-        parts = deconstruct_pattern(pattern, move(placeables));
+        // NOTE: We TRY this operation only to propagate OOM errors.
+        parts = TRY(deconstruct_pattern(vm, pattern, move(placeables)));
 
         // h. Decrement i by 1.
     } while (i-- != 0);
@@ -182,10 +184,11 @@ Vector<PatternPartition> create_parts_from_list(ListFormat const& list_format, V
 }
 
 // 13.5.3 FormatList ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlist
-DeprecatedString format_list(ListFormat const& list_format, Vector<DeprecatedString> const& list)
+ThrowCompletionOr<DeprecatedString> format_list(VM& vm, ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
-    auto parts = create_parts_from_list(list_format, list);
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto parts = TRY(create_parts_from_list(vm, list_format, list));
 
     // 2. Let result be an empty String.
     StringBuilder result;
@@ -201,12 +204,13 @@ DeprecatedString format_list(ListFormat const& list_format, Vector<DeprecatedStr
 }
 
 // 13.5.4 FormatListToParts ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlisttoparts
-Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<DeprecatedString> const& list)
+ThrowCompletionOr<Array*> format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     auto& realm = *vm.current_realm();
 
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
-    auto parts = create_parts_from_list(list_format, list);
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto parts = TRY(create_parts_from_list(vm, list_format, list));
 
     // 2. Let result be ! ArrayCreate(0).
     auto result = MUST(Array::create(realm, 0));
@@ -233,7 +237,7 @@ Array* format_list_to_parts(VM& vm, ListFormat const& list_format, Vector<Deprec
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 // 13.5.5 StringListFromIterable ( iterable ), https://tc39.es/ecma402/#sec-createstringlistfromiterable

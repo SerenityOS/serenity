@@ -92,7 +92,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM&, Value options);
 ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM&, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(VM&, Value value, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Optional<int>> get_number_option(VM&, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback);
-Vector<PatternPartition> partition_pattern(StringView pattern);
+ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM&, StringView pattern);
 
 template<size_t Size>
 ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object const& options, PropertyKey const& property, StringView const (&values)[Size], StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
