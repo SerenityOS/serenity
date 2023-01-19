@@ -26,13 +26,19 @@ enum class FourCCType {
 };
 
 template<FourCCType type>
-struct DistinctFourCC {
-    u32 value { 0 };
+struct [[gnu::packed]] DistinctFourCC {
+    explicit DistinctFourCC(u32 value)
+        : value(value)
+    {
+    }
+    explicit operator u32() const { return value; }
 
     char c0() const { return value >> 24; }
     char c1() const { return (value >> 16) & 0xff; }
     char c2() const { return (value >> 8) & 0xff; }
     char c3() const { return value & 0xff; }
+
+    u32 value { 0 };
 };
 
 using PreferredCMMType = DistinctFourCC<FourCCType::PreferredCMMType>;     // ICC v4, "7.2.3 Preferred CMM type field"
