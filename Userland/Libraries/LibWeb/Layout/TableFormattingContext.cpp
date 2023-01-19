@@ -416,7 +416,10 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
 
 void TableFormattingContext::position_row_boxes()
 {
-    CSSPixels row_top_offset = 0.0f;
+    auto const& table_state = m_state.get(table_box());
+
+    CSSPixels row_top_offset = table_state.border_top + table_state.padding_top;
+    CSSPixels row_left_offset = table_state.border_left + table_state.padding_left;
     for (size_t y = 0; y < m_rows.size(); y++) {
         auto& row = m_rows[y];
         auto& row_state = m_state.get_mutable(row.box);
@@ -427,16 +430,19 @@ void TableFormattingContext::position_row_boxes()
 
         row_state.set_content_height(row.used_height);
         row_state.set_content_width(row_width);
+        row_state.set_content_x(row_left_offset);
         row_state.set_content_y(row_top_offset);
         row_top_offset += row_state.content_height();
     }
 
-    CSSPixels row_group_top_offset = 0.0f;
+    CSSPixels row_group_top_offset = table_state.border_top + table_state.padding_top;
+    CSSPixels row_group_left_offset = table_state.border_left + table_state.padding_left;
     table_box().for_each_child_of_type<TableRowGroupBox>([&](auto& row_group_box) {
         CSSPixels row_group_height = 0.0f;
         CSSPixels row_group_width = 0.0f;
 
         auto& row_group_box_state = m_state.get_mutable(row_group_box);
+        row_group_box_state.set_content_x(row_group_left_offset);
         row_group_box_state.set_content_y(row_group_top_offset);
 
         row_group_box.template for_each_child_of_type<TableRowBox>([&](auto& row) {
