@@ -414,7 +414,7 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
     }
 }
 
-void TableFormattingContext::position_row_boxes()
+void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
 {
     auto const& table_state = m_state.get(table_box());
 
@@ -456,6 +456,8 @@ void TableFormattingContext::position_row_boxes()
 
         row_group_top_offset += row_group_height;
     });
+
+    total_content_height = max(row_top_offset, row_group_top_offset) - table_state.border_top - table_state.padding_top;
 }
 
 void TableFormattingContext::position_cell_boxes()
@@ -520,7 +522,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     distribute_width_to_columns();
 
     calculate_row_heights(layout_mode);
-    position_row_boxes();
+    position_row_boxes(total_content_height);
     position_cell_boxes();
 
     m_state.get_mutable(table_box()).set_content_height(total_content_height);

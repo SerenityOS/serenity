@@ -404,6 +404,9 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
         // max-content size.
         return calculate_max_content_height(box, available_space.width);
     }
+    if (display.is_table_inside()) {
+        return calculate_max_content_height(box, available_space.height);
+    }
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
     // 10.6.3 Block-level non-replaced elements in normal flow when 'overflow' computes to 'visible'
