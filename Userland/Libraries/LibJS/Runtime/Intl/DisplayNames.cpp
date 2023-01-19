@@ -116,7 +116,7 @@ ThrowCompletionOr<Value> canonical_code_for_display_names(VM& vm, DisplayNames::
 
         // c. Return ! CanonicalizeUnicodeLocaleId(code).
         // NOTE: We TRY this operation only to propagate OOM errors.
-        auto canonicalized_tag = TRY(JS::Intl::canonicalize_unicode_locale_id(vm, *locale_id));
+        auto canonicalized_tag = TRY(canonicalize_unicode_locale_id(vm, *locale_id));
         return PrimitiveString::create(vm, move(canonicalized_tag));
     }
 
