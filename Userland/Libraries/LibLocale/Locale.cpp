@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -933,53 +933,62 @@ DeprecatedString LanguageID::to_deprecated_string() const
     return MUST(to_string()).to_deprecated_string();
 }
 
-DeprecatedString LocaleID::to_deprecated_string() const
+ErrorOr<String> LocaleID::to_string() const
 {
     StringBuilder builder;
 
-    auto append_segment = [&](Optional<DeprecatedString> const& segment) {
+    auto append_segment = [&](Optional<DeprecatedString> const& segment) -> ErrorOr<void> {
         if (!segment.has_value() || segment->is_empty())
-            return;
+            return {};
         if (!builder.is_empty())
-            builder.append('-');
-        builder.append(*segment);
+            TRY(builder.try_append('-'));
+        TRY(builder.try_append(*segment));
+        return {};
     };
 
-    append_segment(language_id.to_deprecated_string());
+    TRY(append_segment(language_id.to_deprecated_string()));
 
     for (auto const& extension : extensions) {
-        extension.visit(
-            [&](LocaleExtension const& ext) {
+        TRY(extension.visit(
+            [&](LocaleExtension const& ext) -> ErrorOr<void> {
                 builder.append("-u"sv);
                 for (auto const& attribute : ext.attributes)
-                    append_segment(attribute);
+                    TRY(append_segment(attribute));
                 for (auto const& keyword : ext.keywords) {
-                    append_segment(keyword.key);
-                    append_segment(keyword.value);
+                    TRY(append_segment(keyword.key));
+                    TRY(append_segment(keyword.value));
                 }
+                return {};
             },
-            [&](TransformedExtension const& ext) {
+            [&](TransformedExtension const& ext) -> ErrorOr<void> {
                 builder.append("-t"sv);
                 if (ext.language.has_value())
-                    append_segment(ext.language->to_deprecated_string());
+                    TRY(append_segment(ext.language->to_deprecated_string()));
                 for (auto const& field : ext.fields) {
-                    append_segment(field.key);
-                    append_segment(field.value);
+                    TRY(append_segment(field.key));
+                    TRY(append_segment(field.value));
                 }
+                return {};
             },
-            [&](OtherExtension const& ext) {
+            [&](OtherExtension const& ext) -> ErrorOr<void> {
                 builder.appendff("-{}", ext.key);
-                append_segment(ext.value);
-            });
+                TRY(append_segment(ext.value));
+                return {};
+            }));
     }
 
     if (!private_use_extensions.is_empty()) {
         builder.append("-x"sv);
         for (auto const& extension : private_use_extensions)
-            append_segment(extension);
+            TRY(append_segment(extension));
     }
 
-    return builder.build();
+    return builder.to_string();
+}
+
+DeprecatedString LocaleID::to_deprecated_string() const
+{
+    return MUST(to_string()).to_deprecated_string();
 }
 
 }

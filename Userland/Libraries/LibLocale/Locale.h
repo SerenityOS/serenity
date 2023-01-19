@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -58,6 +58,7 @@ struct OtherExtension {
 using Extension = AK::Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
+    ErrorOr<String> to_string() const;
     DeprecatedString to_deprecated_string() const;
 
     template<typename ExtensionType>
