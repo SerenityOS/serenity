@@ -53,7 +53,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, collation, "collation"sv);
 
         // 12. Set opt.[[co]] to collation.
-        opt.co = TRY(collation.as_string().deprecated_string());
+        opt.co = TRY(collation.as_string().utf8_string());
     }
 
     // 13. Let numeric be ? GetOption(options, "numeric", boolean, empty, undefined).
@@ -62,14 +62,16 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 14. If numeric is not undefined, then
     //     a. Let numeric be ! ToString(numeric).
     // 15. Set opt.[[kn]] to numeric.
-    if (!numeric.is_undefined())
-        opt.kn = MUST(numeric.to_deprecated_string(vm));
+    if (!numeric.is_undefined()) {
+        // NOTE: We TRY this operation only to propagate OOM errors.
+        opt.kn = TRY(numeric.to_string(vm));
+    }
 
     // 16. Let caseFirst be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.
     auto case_first = TRY(get_option(vm, *options, vm.names.caseFirst, OptionType::String, { "upper"sv, "lower"sv, "false"sv }, Empty {}));
     if (!case_first.is_undefined())
-        opt.kf = TRY(case_first.as_string().deprecated_string());
+        opt.kf = TRY(case_first.as_string().utf8_string());
 
     // 18. Let relevantExtensionKeys be %Collator%.[[RelevantExtensionKeys]].
     auto relevant_extension_keys = Collator::relevant_extension_keys();
@@ -83,7 +85,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 21. Let collation be r.[[co]].
     // 22. If collation is null, let collation be "default".
     // 23. Set collator.[[Collation]] to collation.
-    collator.set_collation(result.co.has_value() ? result.co.release_value() : "default");
+    collator.set_collation(result.co.has_value() ? result.co.release_value() : TRY_OR_THROW_OOM(vm, String::from_utf8("default"sv)));
 
     // 24. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv) && result.kn.has_value()) {

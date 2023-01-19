@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
@@ -35,14 +36,14 @@ public:
 
     virtual ~RelativeTimeFormat() override = default;
 
-    DeprecatedString const& locale() const { return m_locale; }
-    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    String const& locale() const { return m_locale; }
+    void set_locale(String locale) { m_locale = move(locale); }
 
-    DeprecatedString const& data_locale() const { return m_data_locale; }
-    void set_data_locale(DeprecatedString data_locale) { m_data_locale = move(data_locale); }
+    String const& data_locale() const { return m_data_locale; }
+    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
 
-    DeprecatedString const& numbering_system() const { return m_numbering_system; }
-    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
+    String const& numbering_system() const { return m_numbering_system; }
+    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
 
     ::Locale::Style style() const { return m_style; }
     void set_style(StringView style) { m_style = ::Locale::style_from_string(style); }
@@ -63,9 +64,9 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    DeprecatedString m_locale;                         // [[Locale]]
-    DeprecatedString m_data_locale;                    // [[DataLocale]]
-    DeprecatedString m_numbering_system;               // [[NumberingSystem]]
+    String m_locale;                                   // [[Locale]]
+    String m_data_locale;                              // [[DataLocale]]
+    String m_numbering_system;                         // [[NumberingSystem]]
     ::Locale::Style m_style { ::Locale::Style::Long }; // [[Style]]
     Numeric m_numeric { Numeric::Always };             // [[Numeric]]
     NumberFormat* m_number_format { nullptr };         // [[NumberFormat]]

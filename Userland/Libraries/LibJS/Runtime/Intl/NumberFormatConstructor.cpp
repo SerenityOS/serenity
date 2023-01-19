@@ -107,7 +107,7 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 8. Set opt.[[nu]] to numberingSystem.
-        opt.nu = TRY(numbering_system.as_string().deprecated_string());
+        opt.nu = TRY(numbering_system.as_string().utf8_string());
     }
 
     // 9. Let localeData be %NumberFormat%.[[LocaleData]].
@@ -454,7 +454,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     // 14. If style is "currency", then
     if (intl_object.style() == NumberFormat::Style::Currency) {
         // a. Set intlObj.[[Currency]] to the ASCII-uppercase of currency.
-        intl_object.set_currency(TRY(currency.as_string().deprecated_string()).to_uppercase());
+        intl_object.set_currency(TRY_OR_THROW_OOM(vm, TRY(currency.as_string().utf8_string()).to_uppercase()));
 
         // c. Set intlObj.[[CurrencyDisplay]] to currencyDisplay.
         intl_object.set_currency_display(TRY(currency_display.as_string().utf8_string_view()));
@@ -466,7 +466,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
     // 15. If style is "unit", then
     if (intl_object.style() == NumberFormat::Style::Unit) {
         // a. Set intlObj.[[Unit]] to unit.
-        intl_object.set_unit(TRY(unit.as_string().utf8_string_view()));
+        intl_object.set_unit(TRY(unit.as_string().utf8_string()));
 
         // b. Set intlObj.[[UnitDisplay]] to unitDisplay.
         intl_object.set_unit_display(TRY(unit_display.as_string().utf8_string_view()));

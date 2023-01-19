@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
@@ -21,23 +22,23 @@ namespace JS::Intl {
 
 struct LocaleOptions {
     Value locale_matcher;
-    Optional<DeprecatedString> ca; // [[Calendar]]
-    Optional<DeprecatedString> co; // [[Collation]]
-    Optional<DeprecatedString> hc; // [[HourCycle]]
-    Optional<DeprecatedString> kf; // [[CaseFirst]]
-    Optional<DeprecatedString> kn; // [[Numeric]]
-    Optional<DeprecatedString> nu; // [[NumberingSystem]]
+    Optional<String> ca; // [[Calendar]]
+    Optional<String> co; // [[Collation]]
+    Optional<String> hc; // [[HourCycle]]
+    Optional<String> kf; // [[CaseFirst]]
+    Optional<String> kn; // [[Numeric]]
+    Optional<String> nu; // [[NumberingSystem]]
 };
 
 struct LocaleResult {
-    DeprecatedString locale;
-    DeprecatedString data_locale;
-    Optional<DeprecatedString> ca; // [[Calendar]]
-    Optional<DeprecatedString> co; // [[Collation]]
-    Optional<DeprecatedString> hc; // [[HourCycle]]
-    Optional<DeprecatedString> kf; // [[CaseFirst]]
-    Optional<DeprecatedString> kn; // [[Numeric]]
-    Optional<DeprecatedString> nu; // [[NumberingSystem]]
+    String locale;
+    String data_locale;
+    Optional<String> ca; // [[Calendar]]
+    Optional<String> co; // [[Collation]]
+    Optional<String> hc; // [[HourCycle]]
+    Optional<String> kf; // [[CaseFirst]]
+    Optional<String> kn; // [[Numeric]]
+    Optional<String> nu; // [[NumberingSystem]]
 };
 
 struct PatternPartition {
@@ -80,14 +81,14 @@ struct PatternPartitionWithSource : public PatternPartition {
 using StringOrBoolean = Variant<StringView, bool>;
 
 ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_tag(VM&, StringView locale);
-ThrowCompletionOr<DeprecatedString> canonicalize_unicode_locale_id(VM&, ::Locale::LocaleID& locale);
+ThrowCompletionOr<String> canonicalize_unicode_locale_id(VM&, ::Locale::LocaleID& locale);
 bool is_well_formed_currency_code(StringView currency);
 bool is_well_formed_unit_identifier(StringView unit_identifier);
-ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM&, Value locales);
-Optional<DeprecatedString> best_available_locale(StringView locale);
-ThrowCompletionOr<DeprecatedString> insert_unicode_extension_and_canonicalize(VM&, ::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
-ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
-ThrowCompletionOr<Array*> supported_locales(VM&, Vector<DeprecatedString> const& requested_locales, Value options);
+ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM&, Value locales);
+Optional<StringView> best_available_locale(StringView locale);
+ThrowCompletionOr<String> insert_unicode_extension_and_canonicalize(VM&, ::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
+ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
+ThrowCompletionOr<Array*> supported_locales(VM&, Vector<String> const& requested_locales, Value options);
 ThrowCompletionOr<Object*> coerce_options_to_object(VM&, Value options);
 ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM&, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(VM&, Value value, int minimum, int maximum, Optional<int> fallback);

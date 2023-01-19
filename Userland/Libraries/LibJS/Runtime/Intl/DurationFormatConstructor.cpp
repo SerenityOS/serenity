@@ -74,7 +74,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
     // 8. Let opt be the Record { [[localeMatcher]]: matcher, [[nu]]: numberingSystem }.
     LocaleOptions opt {};
     opt.locale_matcher = matcher;
-    opt.nu = numbering_system.is_undefined() ? Optional<DeprecatedString>() : TRY(numbering_system.as_string().deprecated_string());
+    opt.nu = numbering_system.is_undefined() ? Optional<String>() : TRY(numbering_system.as_string().utf8_string());
 
     // 9. Let r be ResolveLocale(%DurationFormat%.[[AvailableLocales]], requestedLocales, opt, %DurationFormat%.[[RelevantExtensionKeys]], %DurationFormat%.[[LocaleData]]).
     auto result = TRY(resolve_locale(vm, requested_locales, opt, DurationFormat::relevant_extension_keys()));

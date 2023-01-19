@@ -41,7 +41,7 @@ static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object cons
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag
-static ThrowCompletionOr<DeprecatedString> apply_options_to_tag(VM& vm, StringView tag, Object const& options)
+static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Object const& options)
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: Type(options) is Object.
@@ -200,7 +200,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
 
     // 7. Let locale be the String value that is tag with any Unicode locale extension sequences removed.
     locale_id->remove_extension_type<::Locale::LocaleExtension>();
-    auto locale = locale_id->to_string().release_value_but_fixme_should_propagate_errors();
+    auto locale = TRY_OR_THROW_OOM(vm, locale_id->to_string());
 
     // 8. Let newExtension be a Unicode BCP 47 U Extension based on attributes and keywords.
     ::Locale::LocaleExtension new_extension { move(attributes), move(keywords) };
@@ -208,7 +208,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
     // 9. If newExtension is not the empty String, then
     if (!new_extension.attributes.is_empty() || !new_extension.keywords.is_empty()) {
         // a. Let locale be ! InsertUnicodeExtensionAndCanonicalize(locale, newExtension).
-        locale = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(TRY(insert_unicode_extension_and_canonicalize(vm, locale_id.release_value(), move(new_extension)))));
+        locale = TRY(insert_unicode_extension_and_canonicalize(vm, locale_id.release_value(), move(new_extension)));
     }
 
     // 10. Set result.[[locale]] to locale.
@@ -262,7 +262,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 6. Let locale be ? OrdinaryCreateFromConstructor(NewTarget, "%Locale.prototype%", internalSlotsList).
     auto locale = TRY(ordinary_create_from_constructor<Locale>(vm, new_target, &Intrinsics::intl_locale_prototype));
 
-    DeprecatedString tag;
+    String tag;
 
     // 7. If Type(tag) is not String or Object, throw a TypeError exception.
     if (!tag_value.is_string() && !tag_value.is_object())
@@ -277,7 +277,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 9. Else,
     else {
         // a. Let tag be ? ToString(tag).
-        tag = TRY(tag_value.to_deprecated_string(vm));
+        tag = TRY(tag_value.to_string(vm));
     }
 
     // 10. Set options to ? CoerceOptionsToObject(options).
@@ -328,28 +328,28 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     auto result = TRY(apply_unicode_extension_to_tag(vm, tag, move(opt), relevant_extension_keys));
 
     // 30. Set locale.[[Locale]] to r.[[locale]].
-    locale->set_locale(result.locale.to_deprecated_string());
+    locale->set_locale(move(result.locale));
     // 31. Set locale.[[Calendar]] to r.[[ca]].
     if (result.ca.has_value())
-        locale->set_calendar(result.ca->to_deprecated_string());
+        locale->set_calendar(result.ca.release_value());
     // 32. Set locale.[[Collation]] to r.[[co]].
     if (result.co.has_value())
-        locale->set_collation(result.co->to_deprecated_string());
+        locale->set_collation(result.co.release_value());
     // 33. Set locale.[[HourCycle]] to r.[[hc]].
     if (result.hc.has_value())
-        locale->set_hour_cycle(result.hc->to_deprecated_string());
+        locale->set_hour_cycle(result.hc.release_value());
 
     // 34. If relevantExtensionKeys contains "kf", then
     if (relevant_extension_keys.span().contains_slow("kf"sv)) {
         // a. Set locale.[[CaseFirst]] to r.[[kf]].
         if (result.kf.has_value())
-            locale->set_case_first(result.kf->to_deprecated_string());
+            locale->set_case_first(result.kf.release_value());
     }
 
     // 35. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv)) {
         // a. If SameValue(r.[[kn]], "true") is true or r.[[kn]] is the empty String, then
-        if (result.kn.has_value() && (same_value(PrimitiveString::create(vm, *result.kn), PrimitiveString::create(vm, "true")) || result.kn->is_empty())) {
+        if (result.kn.has_value() && (result.kn == "true"sv || result.kn->is_empty())) {
             // i. Set locale.[[Numeric]] to true.
             locale->set_numeric(true);
         }
@@ -362,7 +362,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
 
     // 36. Set locale.[[NumberingSystem]] to r.[[nu]].
     if (result.nu.has_value())
-        locale->set_numbering_system(result.nu->to_deprecated_string());
+        locale->set_numbering_system(result.nu.release_value());
 
     // 37. Return locale.
     return locale;
