@@ -680,7 +680,7 @@ ThrowCompletionOr<Optional<int>> get_number_option(VM& vm, Object const& options
 }
 
 // 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
-Vector<PatternPartition> partition_pattern(StringView pattern)
+ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM& vm, StringView pattern)
 {
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
@@ -709,14 +709,14 @@ Vector<PatternPartition> partition_pattern(StringView pattern)
             auto literal = pattern.substring_view(next_index, *begin_index - next_index);
 
             // ii. Append a new Record { [[Type]]: "literal", [[Value]]: literal } as the last element of the list result.
-            result.append({ "literal"sv, literal });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, literal }));
         }
 
         // d. Let p be the substring of pattern from position beginIndex, exclusive, to position endIndex, exclusive.
         auto partition = pattern.substring_view(*begin_index + 1, end_index - *begin_index - 1);
 
         // e. Append a new Record { [[Type]]: p, [[Value]]: undefined } as the last element of the list result.
-        result.append({ partition, {} });
+        TRY_OR_THROW_OOM(vm, result.try_append({ partition, {} }));
 
         // f. Set nextIndex to endIndex + 1.
         next_index = end_index + 1;
@@ -731,7 +731,7 @@ Vector<PatternPartition> partition_pattern(StringView pattern)
         auto literal = pattern.substring_view(next_index);
 
         // b. Append a new Record { [[Type]]: "literal", [[Value]]: literal } as the last element of the list result.
-        result.append({ "literal"sv, literal });
+        TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, literal }));
     }
 
     // 8. Return result.

@@ -277,10 +277,10 @@ enum class RoundingDecision {
 
 int currency_digits(StringView currency);
 FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, MathematicalValue number);
-Vector<PatternPartition> partition_number_pattern(VM&, NumberFormat&, MathematicalValue number);
-Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat&, MathematicalValue const& number, DeprecatedString formatted_string, int exponent);
-DeprecatedString format_numeric(VM&, NumberFormat&, MathematicalValue number);
-Array* format_numeric_to_parts(VM&, NumberFormat&, MathematicalValue number);
+ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM&, NumberFormat&, MathematicalValue number);
+ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM&, NumberFormat&, MathematicalValue const& number, DeprecatedString formatted_string, int exponent);
+ThrowCompletionOr<DeprecatedString> format_numeric(VM&, NumberFormat&, MathematicalValue number);
+ThrowCompletionOr<Array*> format_numeric_to_parts(VM&, NumberFormat&, MathematicalValue number);
 RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 Optional<Variant<StringView, DeprecatedString>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);

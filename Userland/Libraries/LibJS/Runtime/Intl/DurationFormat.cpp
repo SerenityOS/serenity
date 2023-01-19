@@ -336,7 +336,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
 }
 
 // 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
-Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
+ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
     auto& realm = *vm.current_realm();
 
@@ -445,7 +445,8 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                 // 3. Let dataLocaleData be %DurationFormat%.[[LocaleData]].[[<dataLocale>]].
 
                 // 4. Let num be ! FormatNumeric(nf, 𝔽(value)).
-                auto number = format_numeric(vm, *number_format, MathematicalValue(value));
+                // NOTE: We TRY this operation only to propagate OOM errors.
+                auto number = TRY(format_numeric(vm, *number_format, MathematicalValue(value)));
 
                 // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
                 result.append({ unit, number });
@@ -504,7 +505,8 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                 auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
 
                 // 5. Let parts be ! PartitionNumberPattern(nf, 𝔽(value)).
-                auto parts = partition_number_pattern(vm, *number_format, MathematicalValue(value));
+                // NOTE: We TRY this operation only to propagate OOM errors.
+                auto parts = TRY(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
 
                 // 6. Let concat be an empty String.
                 StringBuilder concat;
@@ -564,7 +566,8 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
     }
 
     // 10. Set result to ! CreatePartsFromList(lf, result).
-    auto final_result = create_parts_from_list(*list_format, string_result);
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto final_result = TRY(create_parts_from_list(vm, *list_format, string_result));
 
     // 11. Return result.
     return final_result;

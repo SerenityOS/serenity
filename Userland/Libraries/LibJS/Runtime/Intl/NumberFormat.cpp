@@ -518,7 +518,7 @@ FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, Mathe
 
 // 15.5.4 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-partitionnumberpattern
 // 1.5.4 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnumberpattern
-Vector<PatternPartition> partition_number_pattern(VM& vm, NumberFormat& number_format, MathematicalValue number)
+ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     // 1. Let exponent be 0.
     int exponent = 0;
@@ -575,13 +575,13 @@ Vector<PatternPartition> partition_number_pattern(VM& vm, NumberFormat& number_f
     // 6. Let pattern be GetNumberFormatPattern(numberFormat, x).
     auto pattern = get_number_format_pattern(vm, number_format, number, found_pattern);
     if (!pattern.has_value())
-        return {};
+        return Vector<PatternPartition> {};
 
     // 7. Let result be a new empty List.
     Vector<PatternPartition> result;
 
     // 8. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = pattern->visit([](auto const& p) { return partition_pattern(p); });
+    auto pattern_parts = TRY(pattern->visit([&](auto const& p) { return partition_pattern(vm, p); }));
 
     // 9. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
     for (auto& pattern_part : pattern_parts) {
@@ -597,7 +597,7 @@ Vector<PatternPartition> partition_number_pattern(VM& vm, NumberFormat& number_f
         // c. Else if p is equal to "number", then
         else if (part == "number"sv) {
             // i. Let notationSubParts be PartitionNotationSubPattern(numberFormat, x, n, exponent).
-            auto notation_sub_parts = partition_notation_sub_pattern(number_format, number, formatted_string, exponent);
+            auto notation_sub_parts = TRY(partition_notation_sub_pattern(vm, number_format, number, formatted_string, exponent));
             // ii. Append all elements of notationSubParts to result.
             result.extend(move(notation_sub_parts));
         }
@@ -715,14 +715,14 @@ static Vector<StringView> separate_integer_into_groups(::Locale::NumberGroupings
 
 // 15.5.5 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/ecma402/#sec-partitionnotationsubpattern
 // 1.5.5 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnotationsubpattern
-Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_format, MathematicalValue const& number, DeprecatedString formatted_string, int exponent)
+ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& vm, NumberFormat& number_format, MathematicalValue const& number, DeprecatedString formatted_string, int exponent)
 {
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
 
     auto grouping_sizes = ::Locale::get_number_system_groupings(number_format.data_locale(), number_format.numbering_system());
     if (!grouping_sizes.has_value())
-        return {};
+        return Vector<PatternPartition> {};
 
     // 2. If x is NaN, then
     if (number.is_nan()) {
@@ -739,10 +739,10 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
         // a. Let notationSubPattern be GetNotationSubPattern(numberFormat, exponent).
         auto notation_sub_pattern = get_notation_sub_pattern(number_format, exponent);
         if (!notation_sub_pattern.has_value())
-            return {};
+            return Vector<PatternPartition> {};
 
         // b. Let patternParts be PartitionPattern(notationSubPattern).
-        auto pattern_parts = partition_pattern(*notation_sub_pattern);
+        auto pattern_parts = TRY(partition_pattern(vm, *notation_sub_pattern));
 
         // c. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
         for (auto& pattern_part : pattern_parts) {
@@ -898,11 +898,10 @@ Vector<PatternPartition> partition_notation_sub_pattern(NumberFormat& number_for
 }
 
 // 15.5.6 FormatNumeric ( numberFormat, x ), https://tc39.es/ecma402/#sec-formatnumber
-DeprecatedString format_numeric(VM& vm, NumberFormat& number_format, MathematicalValue number)
+ThrowCompletionOr<DeprecatedString> format_numeric(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
-    // Note: Our implementation of PartitionNumberPattern does not throw.
-    auto parts = partition_number_pattern(vm, number_format, move(number));
+    auto parts = TRY(partition_number_pattern(vm, number_format, move(number)));
 
     // 2. Let result be the empty String.
     StringBuilder result;
@@ -918,13 +917,12 @@ DeprecatedString format_numeric(VM& vm, NumberFormat& number_format, Mathematica
 }
 
 // 15.5.7 FormatNumericToParts ( numberFormat, x ), https://tc39.es/ecma402/#sec-formatnumbertoparts
-Array* format_numeric_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue number)
+ThrowCompletionOr<Array*> format_numeric_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     auto& realm = *vm.current_realm();
 
     // 1. Let parts be ? PartitionNumberPattern(numberFormat, x).
-    // Note: Our implementation of PartitionNumberPattern does not throw.
-    auto parts = partition_number_pattern(vm, number_format, move(number));
+    auto parts = TRY(partition_number_pattern(vm, number_format, move(number)));
 
     // 2. Let result be ! ArrayCreate(0).
     auto result = MUST(Array::create(realm, 0));
@@ -951,7 +949,7 @@ Array* format_numeric_to_parts(VM& vm, NumberFormat& number_format, Mathematical
     }
 
     // 5. Return result.
-    return result;
+    return result.ptr();
 }
 
 static DeprecatedString cut_trailing_zeroes(StringView string, int cut)
@@ -1738,11 +1736,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     Vector<PatternPartitionWithSource> result;
 
     // 3. Let xResult be ? PartitionNumberPattern(numberFormat, x).
-    auto raw_start_result = partition_number_pattern(vm, number_format, move(start));
+    auto raw_start_result = TRY(partition_number_pattern(vm, number_format, move(start)));
     auto start_result = PatternPartitionWithSource::create_from_parent_list(move(raw_start_result));
 
     // 4. Let yResult be ? PartitionNumberPattern(numberFormat, y).
-    auto raw_end_result = partition_number_pattern(vm, number_format, move(end));
+    auto raw_end_result = TRY(partition_number_pattern(vm, number_format, move(end)));
     auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
 
     // 5. If xResult is equal to yResult, then
