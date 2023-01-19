@@ -12,7 +12,6 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
-#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86_64/ASM_wrapper.h>
 #include <Kernel/Arch/x86_64/CPUID.h>

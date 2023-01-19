@@ -19,6 +19,7 @@
 #endif
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/sys/limits.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -26,7 +27,6 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>

@@ -126,7 +126,7 @@ READONLY_AFTER_INIT PhysicalAddress boot_pml4t;
 READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
 READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
-READONLY_AFTER_INIT PageTableEntry* boot_pd_kernel_pt1023;
+READONLY_AFTER_INIT Memory::PageTableEntry* boot_pd_kernel_pt1023;
 READONLY_AFTER_INIT char const* kernel_cmdline;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
@@ -158,7 +158,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     boot_pdpt = PhysicalAddress { boot_info.boot_pdpt };
     boot_pd0 = PhysicalAddress { boot_info.boot_pd0 };
     boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
-    boot_pd_kernel_pt1023 = (PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
+    boot_pd_kernel_pt1023 = (Memory::PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
     kernel_cmdline = (char const*)boot_info.kernel_cmdline;
     multiboot_flags = boot_info.multiboot_flags;
     multiboot_memory_map = (multiboot_memory_map_t*)boot_info.multiboot_memory_map;

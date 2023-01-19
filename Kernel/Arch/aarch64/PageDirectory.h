@@ -7,12 +7,18 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/Badge.h>
+#include <AK/HashMap.h>
+#include <AK/IntrusiveRedBlackTree.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 // 4KiB page size was chosen to make this code slightly simpler
 constexpr u32 GRANULE_SIZE = 0x1000;
@@ -170,5 +176,52 @@ public:
 
     u64 raw[512];
 };
+
+class PageDirectory final : public AtomicRefCounted<PageDirectory> {
+    friend class MemoryManager;
+
+public:
+    static ErrorOr<NonnullLockRefPtr<PageDirectory>> try_create_for_userspace();
+    static NonnullLockRefPtr<PageDirectory> must_create_kernel_page_directory();
+    static LockRefPtr<PageDirectory> find_current();
+
+    ~PageDirectory();
+
+    void allocate_kernel_directory();
+
+    FlatPtr ttbr0() const
+    {
+        return m_root_table->paddr().get();
+    }
+
+    bool is_root_table_initialized() const
+    {
+        return m_root_table;
+    }
+
+    AddressSpace* address_space() { return m_space; }
+    AddressSpace const* address_space() const { return m_space; }
+
+    void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
+
+    RecursiveSpinlock<LockRank::None>& get_lock() { return m_lock; }
+
+    // This has to be public to let the global singleton access the member pointer
+    IntrusiveRedBlackTreeNode<FlatPtr, PageDirectory, RawPtr<PageDirectory>> m_tree_node;
+
+private:
+    PageDirectory();
+    static void register_page_directory(PageDirectory* directory);
+    static void deregister_page_directory(PageDirectory* directory);
+
+    AddressSpace* m_space { nullptr };
+    RefPtr<PhysicalPage> m_root_table;
+    RefPtr<PhysicalPage> m_directory_table;
+    RefPtr<PhysicalPage> m_directory_pages[512];
+    RecursiveSpinlock<LockRank::None> m_lock {};
+};
+
+void activate_kernel_page_directory(PageDirectory const& pgd);
+void activate_page_directory(PageDirectory const& pgd, Thread* current_thread);
 
 }

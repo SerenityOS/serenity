@@ -26,7 +26,7 @@ extern u8 page_tables_phys_end[];
 extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 // physical memory
 constexpr u32 START_OF_NORMAL_MEMORY = 0x00000000;

@@ -27,7 +27,7 @@ extern "C" [[noreturn]] void pre_init()
     initialize_exceptions();
 
     // Next step is to set up page tables and enable the MMU.
-    init_page_tables();
+    Memory::init_page_tables();
 
     // At this point the MMU is enabled, physical memory is identity mapped,
     // and the kernel is also mapped into higher virtual memory. However we are still executing
@@ -49,7 +49,7 @@ extern "C" [[noreturn]] void pre_init()
         : "x0");
 
     // We can now unmap the identity map as everything is running in high virtual memory at this point.
-    unmap_identity_map();
+    Memory::unmap_identity_map();
 
     // Clear the frame pointer (x29) and link register (x30) to make sure the kernel cannot backtrace
     // into this code, and jump to actual init function in the kernel.
