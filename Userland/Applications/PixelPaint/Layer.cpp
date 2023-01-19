@@ -335,16 +335,48 @@ void Layer::set_edit_mode(Layer::EditMode mode)
 
 Optional<Gfx::IntRect> Layer::nonempty_content_bounding_rect() const
 {
+    auto determine_background_color = [](NonnullRefPtr<Gfx::Bitmap> const& bitmap) -> Optional<Gfx::Color> {
+        auto bitmap_size = bitmap->size();
+        auto top_left_pixel = bitmap->get_pixel(0, 0);
+        auto top_right_pixel = bitmap->get_pixel(bitmap_size.width() - 1, 0);
+        auto bottom_left_pixel = bitmap->get_pixel(0, bitmap_size.height() - 1);
+        auto bottom_right_pixel = bitmap->get_pixel(bitmap_size.width() - 1, bitmap_size.height() - 1);
+
+        if (top_left_pixel == top_right_pixel || top_left_pixel == bottom_left_pixel)
+            return top_left_pixel;
+
+        if (bottom_right_pixel == bottom_left_pixel || bottom_right_pixel == top_right_pixel)
+            return top_right_pixel;
+
+        return {};
+    };
+
+    enum class ShrinkMode {
+        Alpha,
+        BackgroundColor
+    };
+
     Optional<int> min_content_y;
     Optional<int> min_content_x;
     Optional<int> max_content_y;
     Optional<int> max_content_x;
-
+    auto background_color = determine_background_color(m_content_bitmap);
+    auto shrink_mode = background_color.has_value() ? ShrinkMode::BackgroundColor : ShrinkMode::Alpha;
     for (int y = 0; y < m_content_bitmap->height(); ++y) {
         for (int x = 0; x < m_content_bitmap->width(); ++x) {
             auto color = m_content_bitmap->get_pixel(x, y);
-            if (color.alpha() == 0)
-                continue;
+            switch (shrink_mode) {
+            case ShrinkMode::BackgroundColor:
+                if (color == background_color)
+                    continue;
+                break;
+            case ShrinkMode::Alpha:
+                if (color.alpha() == 0)
+                    continue;
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
             min_content_x = min(min_content_x.value_or(x), x);
             min_content_y = min(min_content_y.value_or(y), y);
             max_content_x = max(max_content_x.value_or(x), x);
