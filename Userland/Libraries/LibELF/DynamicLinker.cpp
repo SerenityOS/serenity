@@ -17,6 +17,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
 #include <Kernel/API/VirtualMemoryAnnotations.h>
+#include <Kernel/API/prctl_numbers.h>
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/link.h>
 #include <LibC/sys/mman.h>
@@ -677,7 +678,7 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
 
     s_loaders.clear();
 
-    int rc = syscall(SC_annotate_mapping, nullptr);
+    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 1, 0);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }

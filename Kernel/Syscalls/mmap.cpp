@@ -578,17 +578,15 @@ ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int fla
     if (flags == to_underlying(VirtualMemoryRangeFlags::None))
         return EINVAL;
 
+    if (!address)
+        return EINVAL;
+
     if (!Memory::is_user_address(address.vaddr()))
         return EFAULT;
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
         if (space->enforces_syscall_regions() && (flags & to_underlying(VirtualMemoryRangeFlags::SyscallCode)))
             return EPERM;
-
-        if (!address) {
-            space->set_enforces_syscall_regions(true);
-            return 0;
-        }
 
         auto* region = space->find_region_containing(Memory::VirtualRange { address.vaddr(), 1 });
         if (!region)
