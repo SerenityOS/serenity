@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -30,8 +31,8 @@ public:
 
     virtual ~ListFormat() override = default;
 
-    DeprecatedString const& locale() const { return m_locale; }
-    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    String const& locale() const { return m_locale; }
+    void set_locale(String locale) { m_locale = move(locale); }
 
     Type type() const { return m_type; }
     void set_type(StringView type);
@@ -44,7 +45,7 @@ public:
 private:
     explicit ListFormat(Object& prototype);
 
-    DeprecatedString m_locale;                         // [[Locale]]
+    String m_locale;                                   // [[Locale]]
     Type m_type { Type::Invalid };                     // [[Type]]
     ::Locale::Style m_style { ::Locale::Style::Long }; // [[Style]]
 };

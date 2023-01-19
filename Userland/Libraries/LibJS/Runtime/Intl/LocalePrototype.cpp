@@ -69,7 +69,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
         locale->language_id = maximal.release_value();
 
     // 4. Return ! Construct(%Locale%, maximal).
-    return Locale::create(realm, *locale);
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    return TRY(Locale::create(realm, locale.release_value()));
 }
 
 // 14.3.4 Intl.Locale.prototype.minimize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.minimize
@@ -89,7 +90,8 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
         locale->language_id = minimal.release_value();
 
     // 4. Return ! Construct(%Locale%, minimal).
-    return Locale::create(realm, *locale);
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    return TRY(Locale::create(realm, locale.release_value()));
 }
 
 // 14.3.5 Intl.Locale.prototype.toString ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.toString

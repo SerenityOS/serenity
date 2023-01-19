@@ -110,7 +110,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, calendar, "calendar"sv);
 
         // 8. Set opt.[[ca]] to calendar.
-        opt.ca = TRY(calendar.as_string().deprecated_string());
+        opt.ca = TRY(calendar.as_string().utf8_string());
     }
 
     // 9. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
@@ -123,7 +123,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 11. Set opt.[[nu]] to numberingSystem.
-        opt.nu = TRY(numbering_system.as_string().deprecated_string());
+        opt.nu = TRY(numbering_system.as_string().utf8_string());
     }
 
     // 12. Let hour12 be ? GetOption(options, "hour12", boolean, empty, undefined).
@@ -140,7 +140,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 15. Set opt.[[hc]] to hourCycle.
     if (!hour_cycle.is_nullish())
-        opt.hc = TRY(hour_cycle.as_string().deprecated_string());
+        opt.hc = TRY(hour_cycle.as_string().utf8_string());
 
     // 16. Let localeData be %DateTimeFormat%.[[LocaleData]].
     // 17. Let r be ResolveLocale(%DateTimeFormat%.[[AvailableLocales]], requestedLocales, opt, %DateTimeFormat%.[[RelevantExtensionKeys]], localeData).

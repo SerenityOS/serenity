@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Intl/CollatorCompareFunction.h>
 #include <LibJS/Runtime/Object.h>
@@ -45,8 +45,8 @@ public:
 
     virtual ~Collator() override = default;
 
-    DeprecatedString const& locale() const { return m_locale; }
-    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    String const& locale() const { return m_locale; }
+    void set_locale(String locale) { m_locale = move(locale); }
 
     Usage usage() const { return m_usage; }
     void set_usage(StringView usage);
@@ -60,8 +60,8 @@ public:
     void set_case_first(StringView case_first);
     StringView case_first_string() const;
 
-    DeprecatedString const& collation() const { return m_collation; }
-    void set_collation(DeprecatedString collation) { m_collation = move(collation); }
+    String const& collation() const { return m_collation; }
+    void set_collation(String collation) { m_collation = move(collation); }
 
     bool ignore_punctuation() const { return m_ignore_punctuation; }
     void set_ignore_punctuation(bool ignore_punctuation) { m_ignore_punctuation = ignore_punctuation; }
@@ -77,11 +77,11 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    DeprecatedString m_locale;                            // [[Locale]]
+    String m_locale;                                      // [[Locale]]
     Usage m_usage { Usage::Sort };                        // [[Usage]]
     Sensitivity m_sensitivity { Sensitivity::Variant };   // [[Sensitivity]]
     CaseFirst m_case_first { CaseFirst::False };          // [[CaseFirst]]
-    DeprecatedString m_collation;                         // [[Collation]]
+    String m_collation;                                   // [[Collation]]
     bool m_ignore_punctuation { false };                  // [[IgnorePunctuation]]
     bool m_numeric { false };                             // [[Numeric]]
     CollatorCompareFunction* m_bound_compare { nullptr }; // [[BoundCompare]]

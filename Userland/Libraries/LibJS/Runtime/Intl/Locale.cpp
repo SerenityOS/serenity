@@ -14,9 +14,34 @@
 
 namespace JS::Intl {
 
-NonnullGCPtr<Locale> Locale::create(Realm& realm, ::Locale::LocaleID const& locale_id)
+ThrowCompletionOr<NonnullGCPtr<Locale>> Locale::create(Realm& realm, ::Locale::LocaleID locale_id)
 {
-    return realm.heap().allocate<Locale>(realm, locale_id, *realm.intrinsics().intl_locale_prototype());
+    auto locale = realm.heap().allocate<Locale>(realm, *realm.intrinsics().intl_locale_prototype());
+    locale->set_locale(TRY_OR_THROW_OOM(realm.vm(), locale_id.to_string()));
+
+    for (auto& extension : locale_id.extensions) {
+        if (!extension.has<::Locale::LocaleExtension>())
+            continue;
+
+        for (auto& keyword : extension.get<::Locale::LocaleExtension>().keywords) {
+            if (keyword.key == "ca"sv)
+                locale->set_calendar(move(keyword.value));
+            else if (keyword.key == "co"sv)
+                locale->set_collation(move(keyword.value));
+            else if (keyword.key == "hc"sv)
+                locale->set_hour_cycle(move(keyword.value));
+            else if (keyword.key == "kf"sv)
+                locale->set_case_first(move(keyword.value));
+            else if (keyword.key == "kn"sv)
+                locale->set_numeric(keyword.value.is_empty());
+            else if (keyword.key == "nu"sv)
+                locale->set_numbering_system(move(keyword.value));
+        }
+
+        break;
+    }
+
+    return locale;
 }
 
 // 14 Locale Objects, https://tc39.es/ecma402/#locale-objects
@@ -25,37 +50,8 @@ Locale::Locale(Object& prototype)
 {
 }
 
-Locale::Locale(::Locale::LocaleID const& locale_id, Object& prototype)
-    : Object(ConstructWithPrototypeTag::Tag, prototype)
-{
-    set_locale(locale_id.to_deprecated_string());
-
-    for (auto const& extension : locale_id.extensions) {
-        if (!extension.has<::Locale::LocaleExtension>())
-            continue;
-
-        for (auto const& keyword : extension.get<::Locale::LocaleExtension>().keywords) {
-            if (keyword.key == "ca"sv) {
-                set_calendar(keyword.value.to_deprecated_string());
-            } else if (keyword.key == "co"sv) {
-                set_collation(keyword.value.to_deprecated_string());
-            } else if (keyword.key == "hc"sv) {
-                set_hour_cycle(keyword.value.to_deprecated_string());
-            } else if (keyword.key == "kf"sv) {
-                set_case_first(keyword.value.to_deprecated_string());
-            } else if (keyword.key == "kn"sv) {
-                set_numeric(keyword.value.is_empty());
-            } else if (keyword.key == "nu"sv) {
-                set_numbering_system(keyword.value.to_deprecated_string());
-            }
-        }
-
-        break;
-    }
-}
-
 // 1.1.1 CreateArrayFromListOrRestricted ( list , restricted )
-static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<DeprecatedString> restricted)
+static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> list, Optional<String> restricted)
 {
     auto& realm = *vm.current_realm();
 
@@ -75,7 +71,7 @@ static Array* create_array_from_list_or_restricted(VM& vm, Vector<StringView> li
 Array* calendars_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Calendar]].
-    Optional<DeprecatedString> restricted = locale_object.has_calendar() ? locale_object.calendar() : Optional<DeprecatedString> {};
+    Optional<String> restricted = locale_object.has_calendar() ? locale_object.calendar() : Optional<String> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -94,7 +90,7 @@ Array* calendars_of_locale(VM& vm, Locale const& locale_object)
 Array* collations_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[Collation]].
-    Optional<DeprecatedString> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<DeprecatedString> {};
+    Optional<String> restricted = locale_object.has_collation() ? locale_object.collation() : Optional<String> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -113,7 +109,7 @@ Array* collations_of_locale(VM& vm, Locale const& locale_object)
 Array* hour_cycles_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[HourCycle]].
-    Optional<DeprecatedString> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<DeprecatedString> {};
+    Optional<String> restricted = locale_object.has_hour_cycle() ? locale_object.hour_cycle() : Optional<String> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();
@@ -132,7 +128,7 @@ Array* hour_cycles_of_locale(VM& vm, Locale const& locale_object)
 Array* numbering_systems_of_locale(VM& vm, Locale const& locale_object)
 {
     // 1. Let restricted be loc.[[NumberingSystem]].
-    Optional<DeprecatedString> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<DeprecatedString> {};
+    Optional<String> restricted = locale_object.has_numbering_system() ? locale_object.numbering_system() : Optional<String> {};
 
     // 2. Let locale be loc.[[Locale]].
     auto const& locale = locale_object.locale();

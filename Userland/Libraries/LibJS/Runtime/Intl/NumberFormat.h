@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Intl/MathematicalValue.h>
 #include <LibJS/Runtime/Object.h>
@@ -58,11 +59,11 @@ public:
 
     virtual ~NumberFormatBase() override = default;
 
-    DeprecatedString const& locale() const { return m_locale; }
-    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    String const& locale() const { return m_locale; }
+    void set_locale(String locale) { m_locale = move(locale); }
 
-    DeprecatedString const& data_locale() const { return m_data_locale; }
-    void set_data_locale(DeprecatedString data_locale) { m_data_locale = move(data_locale); }
+    String const& data_locale() const { return m_data_locale; }
+    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
 
     int min_integer_digits() const { return m_min_integer_digits; }
     void set_min_integer_digits(int min_integer_digits) { m_min_integer_digits = min_integer_digits; }
@@ -102,8 +103,8 @@ protected:
     explicit NumberFormatBase(Object& prototype);
 
 private:
-    DeprecatedString m_locale;                                                    // [[Locale]]
-    DeprecatedString m_data_locale;                                               // [[DataLocale]]
+    String m_locale;                                                              // [[Locale]]
+    String m_data_locale;                                                         // [[DataLocale]]
     int m_min_integer_digits { 0 };                                               // [[MinimumIntegerDigits]]
     Optional<int> m_min_fraction_digits {};                                       // [[MinimumFractionDigits]]
     Optional<int> m_max_fraction_digits {};                                       // [[MaximumFractionDigits]]
@@ -178,16 +179,16 @@ public:
 
     virtual ~NumberFormat() override = default;
 
-    DeprecatedString const& numbering_system() const { return m_numbering_system; }
-    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
+    String const& numbering_system() const { return m_numbering_system; }
+    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
 
     Style style() const { return m_style; }
     StringView style_string() const;
     void set_style(StringView style);
 
     bool has_currency() const { return m_currency.has_value(); }
-    DeprecatedString const& currency() const { return m_currency.value(); }
-    void set_currency(DeprecatedString currency) { m_currency = move(currency); }
+    String const& currency() const { return m_currency.value(); }
+    void set_currency(String currency) { m_currency = move(currency); }
 
     bool has_currency_display() const { return m_currency_display.has_value(); }
     CurrencyDisplay currency_display() const { return *m_currency_display; }
@@ -201,8 +202,8 @@ public:
     void set_currency_sign(StringView set_currency_sign);
 
     bool has_unit() const { return m_unit.has_value(); }
-    DeprecatedString const& unit() const { return m_unit.value(); }
-    void set_unit(DeprecatedString unit) { m_unit = move(unit); }
+    String const& unit() const { return m_unit.value(); }
+    void set_unit(String unit) { m_unit = move(unit); }
 
     bool has_unit_display() const { return m_unit_display.has_value(); }
     ::Locale::Style unit_display() const { return *m_unit_display; }
@@ -238,14 +239,14 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    DeprecatedString m_locale;                           // [[Locale]]
-    DeprecatedString m_data_locale;                      // [[DataLocale]]
-    DeprecatedString m_numbering_system;                 // [[NumberingSystem]]
+    String m_locale;                                     // [[Locale]]
+    String m_data_locale;                                // [[DataLocale]]
+    String m_numbering_system;                           // [[NumberingSystem]]
     Style m_style { Style::Invalid };                    // [[Style]]
-    Optional<DeprecatedString> m_currency {};            // [[Currency]]
+    Optional<String> m_currency {};                      // [[Currency]]
     Optional<CurrencyDisplay> m_currency_display {};     // [[CurrencyDisplay]]
     Optional<CurrencySign> m_currency_sign {};           // [[CurrencySign]]
-    Optional<DeprecatedString> m_unit {};                // [[Unit]]
+    Optional<String> m_unit {};                          // [[Unit]]
     Optional<::Locale::Style> m_unit_display {};         // [[UnitDisplay]]
     UseGrouping m_use_grouping { false };                // [[UseGrouping]]
     Notation m_notation { Notation::Invalid };           // [[Notation]]

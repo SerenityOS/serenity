@@ -80,7 +80,7 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
 }
 
 // 6.2.3 CanonicalizeUnicodeLocaleId ( locale ), https://tc39.es/ecma402/#sec-canonicalizeunicodelocaleid
-ThrowCompletionOr<DeprecatedString> canonicalize_unicode_locale_id(VM& vm, ::Locale::LocaleID& locale)
+ThrowCompletionOr<String> canonicalize_unicode_locale_id(VM& vm, ::Locale::LocaleID& locale)
 {
     // Note: This implementation differs from the spec in how Step 3 is implemented. The spec assumes
     // the input to this method is a string, and is written such that operations are performed on parts
@@ -118,7 +118,7 @@ ThrowCompletionOr<DeprecatedString> canonicalize_unicode_locale_id(VM& vm, ::Loc
     VERIFY(locale_id.has_value());
 
     // 4. Return localeId.
-    return locale_id->to_deprecated_string();
+    return locale_id.release_value();
 }
 
 // 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-iswellformedcurrencycode
@@ -183,18 +183,18 @@ bool is_well_formed_unit_identifier(StringView unit_identifier)
 }
 
 // 9.2.1 CanonicalizeLocaleList ( locales ), https://tc39.es/ecma402/#sec-canonicalizelocalelist
-ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Value locales)
+ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales)
 {
     auto& realm = *vm.current_realm();
 
     // 1. If locales is undefined, then
     if (locales.is_undefined()) {
         // a. Return a new empty List.
-        return Vector<DeprecatedString> {};
+        return Vector<String> {};
     }
 
     // 2. Let seen be a new empty List.
-    Vector<DeprecatedString> seen;
+    Vector<String> seen;
 
     Object* object = nullptr;
     // 3. If Type(locales) is String or Type(locales) is Object and locales has an [[InitializedLocale]] internal slot, then
@@ -228,9 +228,9 @@ ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Val
 
             // ii. If Type(kValue) is not String or Object, throw a TypeError exception.
             if (!key_value.is_string() && !key_value.is_object())
-                return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrString, key_value.to_string_without_side_effects());
+                return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOrString, key_value);
 
-            DeprecatedString tag;
+            String tag;
 
             // iii. If Type(kValue) is Object and kValue has an [[InitializedLocale]] internal slot, then
             if (key_value.is_object() && is<Locale>(key_value.as_object())) {
@@ -240,7 +240,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Val
             // iv. Else,
             else {
                 // 1. Let tag be ? ToString(kValue).
-                tag = TRY(key_value.to_deprecated_string(vm));
+                tag = TRY(key_value.to_string(vm));
             }
 
             // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
@@ -264,7 +264,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Val
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/ecma402/#sec-bestavailablelocale
-Optional<DeprecatedString> best_available_locale(StringView locale)
+Optional<StringView> best_available_locale(StringView locale)
 {
     // 1. Let candidate be locale.
     StringView candidate = locale;
@@ -290,12 +290,12 @@ Optional<DeprecatedString> best_available_locale(StringView locale)
 }
 
 struct MatcherResult {
-    DeprecatedString locale;
+    String locale;
     Vector<::Locale::Extension> extensions {};
 };
 
 // 9.2.3 LookupMatcher ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-lookupmatcher
-static ThrowCompletionOr<MatcherResult> lookup_matcher(VM& vm, Vector<DeprecatedString> const& requested_locales)
+static ThrowCompletionOr<MatcherResult> lookup_matcher(VM& vm, Vector<String> const& requested_locales)
 {
     // 1. Let result be a new Record.
     MatcherResult result {};
@@ -307,7 +307,7 @@ static ThrowCompletionOr<MatcherResult> lookup_matcher(VM& vm, Vector<Deprecated
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
         auto extensions = locale_id->remove_extension_type<::Locale::LocaleExtension>();
-        auto no_extensions_locale = locale_id->to_deprecated_string();
+        auto no_extensions_locale = TRY_OR_THROW_OOM(vm, locale_id->to_string());
 
         // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -315,7 +315,7 @@ static ThrowCompletionOr<MatcherResult> lookup_matcher(VM& vm, Vector<Deprecated
         // c. If availableLocale is not undefined, then
         if (available_locale.has_value()) {
             // i. Set result.[[locale]] to availableLocale.
-            result.locale = available_locale.release_value();
+            result.locale = TRY_OR_THROW_OOM(vm, String::from_utf8(*available_locale));
 
             // ii. If locale and noExtensionsLocale are not the same String value, then
             if (locale != no_extensions_locale) {
@@ -331,14 +331,14 @@ static ThrowCompletionOr<MatcherResult> lookup_matcher(VM& vm, Vector<Deprecated
 
     // 3. Let defLocale be ! DefaultLocale().
     // 4. Set result.[[locale]] to defLocale.
-    result.locale = ::Locale::default_locale();
+    result.locale = TRY_OR_THROW_OOM(vm, String::from_utf8(::Locale::default_locale()));
 
     // 5. Return result.
     return result;
 }
 
 // 9.2.4 BestFitMatcher ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-bestfitmatcher
-static ThrowCompletionOr<MatcherResult> best_fit_matcher(VM& vm, Vector<DeprecatedString> const& requested_locales)
+static ThrowCompletionOr<MatcherResult> best_fit_matcher(VM& vm, Vector<String> const& requested_locales)
 {
     // The algorithm is implementation dependent, but should produce results that a typical user of the requested locales would
     // perceive as at least as good as those produced by the LookupMatcher abstract operation.
@@ -346,14 +346,14 @@ static ThrowCompletionOr<MatcherResult> best_fit_matcher(VM& vm, Vector<Deprecat
 }
 
 // 9.2.6 InsertUnicodeExtensionAndCanonicalize ( locale, extension ), https://tc39.es/ecma402/#sec-insert-unicode-extension-and-canonicalize
-ThrowCompletionOr<DeprecatedString> insert_unicode_extension_and_canonicalize(VM& vm, ::Locale::LocaleID locale, ::Locale::LocaleExtension extension)
+ThrowCompletionOr<String> insert_unicode_extension_and_canonicalize(VM& vm, ::Locale::LocaleID locale, ::Locale::LocaleExtension extension)
 {
     // Note: This implementation differs from the spec in how the extension is inserted. The spec assumes
     // the input to this method is a string, and is written such that operations are performed on parts
     // of that string. LibUnicode gives us the parsed locale in a structure, so we can mutate that
     // structure directly.
     TRY_OR_THROW_OOM(vm, locale.extensions.try_append(move(extension)));
-    return TRY(canonicalize_unicode_locale_id(vm, locale));
+    return canonicalize_unicode_locale_id(vm, locale);
 }
 
 template<typename T>
@@ -377,7 +377,7 @@ static auto& find_key_in_value(T& value, StringView key)
 }
 
 // 9.2.7 ResolveLocale ( availableLocales, requestedLocales, options, relevantExtensionKeys, localeData ), https://tc39.es/ecma402/#sec-resolvelocale
-ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
+ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
 {
     // 1. Let matcher be options.[[localeMatcher]].
     auto const& matcher = options.locale_matcher;
@@ -434,9 +434,9 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<DeprecatedString> 
         // f. Assert: Type(value) is either String or Null.
         // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
         //       alphabetically, so we get the locale's preferred value from LibUnicode.
-        Optional<DeprecatedString> value;
+        Optional<String> value;
         if (auto preference = ::Locale::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
-            value = *preference;
+            value = TRY_OR_THROW_OOM(vm, String::from_utf8(*preference));
 
         // g. Let supportedExtensionAddition be "".
         Optional<::Locale::Keyword> supported_extension_addition {};
@@ -456,7 +456,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<DeprecatedString> 
                 // a. If keyLocaleData contains requestedValue, then
                 if (key_locale_data.contains_slow(requested_value)) {
                     // i. Let value be requestedValue.
-                    value = requested_value.to_deprecated_string();
+                    value = move(requested_value);
 
                     // ii. Let supportedExtensionAddition be the string-concatenation of "-", key, "-", and value.
                     supported_extension_addition = ::Locale::Keyword { TRY_OR_THROW_OOM(vm, String::from_utf8(key)), move(entry.value) };
@@ -465,7 +465,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<DeprecatedString> 
             // 4. Else if keyLocaleData contains "true", then
             else if (key_locale_data.contains_slow("true"sv)) {
                 // a. Let value be "true".
-                value = "true"sv;
+                value = TRY_OR_THROW_OOM(vm, String::from_utf8("true"sv));
 
                 // b. Let supportedExtensionAddition be the string-concatenation of "-" and key.
                 supported_extension_addition = ::Locale::Keyword { TRY_OR_THROW_OOM(vm, String::from_utf8(key)), {} };
@@ -483,14 +483,12 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<DeprecatedString> 
         if (options_value.has_value()) {
             // 1. Let optionsValue be the string optionsValue after performing the algorithm steps to transform Unicode extension values to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
             // 2. Let optionsValue be the string optionsValue after performing the algorithm steps to replace Unicode extension values with their canonical form per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
-            auto options_value_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(*options_value));
-            TRY_OR_THROW_OOM(vm, ::Locale::canonicalize_unicode_extension_values(key, options_value_string, true));
-            options_value = options_value_string.to_deprecated_string();
+            TRY_OR_THROW_OOM(vm, ::Locale::canonicalize_unicode_extension_values(key, *options_value, true));
 
             // 3. If optionsValue is the empty String, then
             if (options_value->is_empty()) {
                 // a. Let optionsValue be "true".
-                options_value = "true"sv;
+                options_value = TRY_OR_THROW_OOM(vm, String::from_utf8("true"sv));
             }
         }
 
@@ -528,10 +526,10 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<DeprecatedString> 
 }
 
 // 9.2.8 LookupSupportedLocales ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-lookupsupportedlocales
-static ThrowCompletionOr<Vector<DeprecatedString>> lookup_supported_locales(VM& vm, Vector<DeprecatedString> const& requested_locales)
+static ThrowCompletionOr<Vector<String>> lookup_supported_locales(VM& vm, Vector<String> const& requested_locales)
 {
     // 1. Let subset be a new empty List.
-    Vector<DeprecatedString> subset;
+    Vector<String> subset;
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
@@ -540,7 +538,7 @@ static ThrowCompletionOr<Vector<DeprecatedString>> lookup_supported_locales(VM& 
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
         locale_id->remove_extension_type<::Locale::LocaleExtension>();
-        auto no_extensions_locale = locale_id->to_deprecated_string();
+        auto no_extensions_locale = TRY_OR_THROW_OOM(vm, locale_id->to_string());
 
         // b. Let availableLocale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
         auto available_locale = best_available_locale(no_extensions_locale);
@@ -555,7 +553,7 @@ static ThrowCompletionOr<Vector<DeprecatedString>> lookup_supported_locales(VM& 
 }
 
 // 9.2.9 BestFitSupportedLocales ( availableLocales, requestedLocales ), https://tc39.es/ecma402/#sec-bestfitsupportedlocales
-static ThrowCompletionOr<Vector<DeprecatedString>> best_fit_supported_locales(VM& vm, Vector<DeprecatedString> const& requested_locales)
+static ThrowCompletionOr<Vector<String>> best_fit_supported_locales(VM& vm, Vector<String> const& requested_locales)
 {
     // The BestFitSupportedLocales abstract operation returns the subset of the provided BCP 47
     // language priority list requestedLocales for which availableLocales has a matching locale
@@ -567,7 +565,7 @@ static ThrowCompletionOr<Vector<DeprecatedString>> best_fit_supported_locales(VM
 }
 
 // 9.2.10 SupportedLocales ( availableLocales, requestedLocales, options ), https://tc39.es/ecma402/#sec-supportedlocales
-ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> const& requested_locales, Value options)
+ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<String> const& requested_locales, Value options)
 {
     auto& realm = *vm.current_realm();
 
@@ -577,7 +575,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     // 2. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options_object, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
-    Vector<DeprecatedString> supported_locales;
+    Vector<String> supported_locales;
 
     // 3. If matcher is "best fit", then
     if (TRY(matcher.as_string().utf8_string_view()) == "best fit"sv) {
@@ -591,7 +589,7 @@ ThrowCompletionOr<Array*> supported_locales(VM& vm, Vector<DeprecatedString> con
     }
 
     // 5. Return CreateArrayFromList(supportedLocales).
-    return Array::create_from<DeprecatedString>(realm, supported_locales, [&vm](auto& locale) { return PrimitiveString::create(vm, locale); }).ptr();
+    return Array::create_from<String>(realm, supported_locales, [&vm](auto& locale) { return PrimitiveString::create(vm, move(locale)); }).ptr();
 }
 
 // 9.2.12 CoerceOptionsToObject ( options ), https://tc39.es/ecma402/#sec-coerceoptionstoobject

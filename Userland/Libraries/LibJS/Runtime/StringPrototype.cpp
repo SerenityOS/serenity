@@ -901,7 +901,7 @@ static ThrowCompletionOr<String> transform_case(VM& vm, String const& string, Va
 
     // 4. Let noExtensionsLocale be the String value that is requestedLocale with any Unicode locale extension sequences (6.2.1) removed.
     requested_locale->remove_extension_type<Locale::LocaleExtension>();
-    auto no_extensions_locale = requested_locale->to_deprecated_string();
+    auto no_extensions_locale = TRY_OR_THROW_OOM(vm, requested_locale->to_string());
 
     // 5. Let availableLocales be a List with language tags that includes the languages for which the Unicode Character Database contains language sensitive case mappings. Implementations may add additional language tags if they support case mapping for additional locales.
     // 6. Let locale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).

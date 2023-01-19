@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -43,17 +44,17 @@ public:
 
     virtual ~DateTimeFormat() override = default;
 
-    DeprecatedString const& locale() const { return m_locale; }
-    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    String const& locale() const { return m_locale; }
+    void set_locale(String locale) { m_locale = move(locale); }
 
-    DeprecatedString const& data_locale() const { return m_data_locale; }
-    void set_data_locale(DeprecatedString data_locale) { m_data_locale = move(data_locale); }
+    String const& data_locale() const { return m_data_locale; }
+    void set_data_locale(String data_locale) { m_data_locale = move(data_locale); }
 
-    DeprecatedString const& calendar() const { return m_calendar; }
-    void set_calendar(DeprecatedString calendar) { m_calendar = move(calendar); }
+    String const& calendar() const { return m_calendar; }
+    void set_calendar(String calendar) { m_calendar = move(calendar); }
 
-    DeprecatedString const& numbering_system() const { return m_numbering_system; }
-    void set_numbering_system(DeprecatedString numbering_system) { m_numbering_system = move(numbering_system); }
+    String const& numbering_system() const { return m_numbering_system; }
+    void set_numbering_system(String numbering_system) { m_numbering_system = move(numbering_system); }
 
     bool has_hour_cycle() const { return m_hour_cycle.has_value(); }
     ::Locale::HourCycle hour_cycle() const { return *m_hour_cycle; }
@@ -134,9 +135,9 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    DeprecatedString m_locale;                               // [[Locale]]
-    DeprecatedString m_calendar;                             // [[Calendar]]
-    DeprecatedString m_numbering_system;                     // [[NumberingSystem]]
+    String m_locale;                                         // [[Locale]]
+    String m_calendar;                                       // [[Calendar]]
+    String m_numbering_system;                               // [[NumberingSystem]]
     Optional<::Locale::HourCycle> m_hour_cycle;              // [[HourCycle]]
     DeprecatedString m_time_zone;                            // [[TimeZone]]
     Optional<Style> m_date_style;                            // [[DateStyle]]
@@ -144,7 +145,7 @@ private:
     Vector<::Locale::CalendarRangePattern> m_range_patterns; // [[RangePatterns]]
     NativeFunction* m_bound_format { nullptr };              // [[BoundFormat]]
 
-    DeprecatedString m_data_locale;
+    String m_data_locale;
 };
 
 enum class OptionRequired {

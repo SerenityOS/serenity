@@ -105,7 +105,7 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, numbering_system, "numberingSystem"sv);
 
         // 8. Set opt.[[nu]] to numberingSystem.
-        opt.nu = TRY(numbering_system.as_string().deprecated_string());
+        opt.nu = TRY(numbering_system.as_string().utf8_string());
     }
 
     // 9. Let localeData be %RelativeTimeFormat%.[[LocaleData]].
