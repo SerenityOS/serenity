@@ -48,7 +48,7 @@ private:
     HashMap<DeprecatedString, ByteBuffer> m_data;
 };
 
-DeprecatedString guess_mime_type_based_on_filename(StringView);
+StringView guess_mime_type_based_on_filename(StringView);
 
 Optional<DeprecatedString> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes);
 

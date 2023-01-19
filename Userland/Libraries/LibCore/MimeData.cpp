@@ -51,48 +51,48 @@ void MimeData::set_text(DeprecatedString const& text)
     set_data("text/plain", text.to_byte_buffer());
 }
 
-DeprecatedString guess_mime_type_based_on_filename(StringView path)
+StringView guess_mime_type_based_on_filename(StringView path)
 {
     if (path.ends_with(".pbm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑bitmap";
+        return "image/x‑portable‑bitmap"sv;
     if (path.ends_with(".pgm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑graymap";
+        return "image/x‑portable‑graymap"sv;
     if (path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
-        return "image/png";
+        return "image/png"sv;
     if (path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x‑portable‑pixmap";
+        return "image/x‑portable‑pixmap"sv;
     if (path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive))
-        return "image/gif";
+        return "image/gif"sv;
     if (path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive))
-        return "image/bmp";
+        return "image/bmp"sv;
     if (path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/jpeg";
+        return "image/jpeg"sv;
     if (path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive))
-        return "image/x-qoi";
+        return "image/x-qoi"sv;
     if (path.ends_with(".svg"sv, CaseSensitivity::CaseInsensitive))
-        return "image/svg+xml";
+        return "image/svg+xml"sv;
     if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
-        return "text/markdown";
+        return "text/markdown"sv;
     if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
-        return "text/html";
+        return "text/html"sv;
     if (path.ends_with(".css"sv, CaseSensitivity::CaseInsensitive))
-        return "text/css";
+        return "text/css"sv;
     if (path.ends_with(".icc"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".icm"sv, CaseSensitivity::CaseInsensitive))
-        return "application/vnd.iccprofile";
+        return "application/vnd.iccprofile"sv;
     if (path.ends_with(".js"sv, CaseSensitivity::CaseInsensitive))
-        return "application/javascript";
+        return "application/javascript"sv;
     if (path.ends_with(".json"sv, CaseSensitivity::CaseInsensitive))
-        return "application/json";
+        return "application/json"sv;
     if (path.ends_with(".zip"sv, CaseSensitivity::CaseInsensitive))
-        return "application/zip";
+        return "application/zip"sv;
     if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
-        return "text/markdown";
+        return "text/markdown"sv;
     if (path.ends_with("/"sv, CaseSensitivity::CaseInsensitive))
-        return "text/html";
+        return "text/html"sv;
     if (path.ends_with(".csv"sv, CaseSensitivity::CaseInsensitive))
-        return "text/csv";
+        return "text/csv"sv;
     if (path.ends_with(".sheets"sv, CaseSensitivity::CaseInsensitive))
-        return "application/x-sheets+json";
+        return "application/x-sheets+json"sv;
     // FIXME: Share this, TextEditor and HackStudio language detection somehow.
     auto basename = LexicalPath::basename(path);
     if (path.ends_with(".cpp"sv, CaseSensitivity::CaseInsensitive)
@@ -106,8 +106,8 @@ DeprecatedString guess_mime_type_based_on_filename(StringView path)
         || basename == "CMakeLists.txt"
         || basename == ".history"
         || basename == ".shellrc")
-        return "text/plain";
-    return "application/octet-stream";
+        return "text/plain"sv;
+    return "application/octet-stream"sv;
 }
 
 #define ENUMERATE_HEADER_CONTENTS                                                                                                                \
