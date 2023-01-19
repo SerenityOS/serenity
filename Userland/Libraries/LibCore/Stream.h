@@ -102,12 +102,26 @@ public:
     virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);
 
     template<typename T>
+    requires(requires(Stream& stream) { { T::read_from_stream(stream) } -> SameAs<ErrorOr<T>>; })
+    ErrorOr<T> read_value()
+    {
+        return T::read_from_stream(*this);
+    }
+
+    template<typename T>
     requires(Traits<T>::is_trivially_serializable())
     ErrorOr<T> read_value()
     {
         alignas(T) u8 buffer[sizeof(T)] = {};
         TRY(read_entire_buffer({ &buffer, sizeof(buffer) }));
         return bit_cast<T>(buffer);
+    }
+
+    template<typename T>
+    requires(requires(T t, Stream& stream) { { t.write_to_stream(stream) } -> SameAs<ErrorOr<void>>; })
+    ErrorOr<void> write_value(T const& value)
+    {
+        return value.write_to_stream(*this);
     }
 
     template<typename T>
