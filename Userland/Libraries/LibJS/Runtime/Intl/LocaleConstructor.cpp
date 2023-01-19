@@ -6,6 +6,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -17,26 +18,26 @@
 namespace JS::Intl {
 
 struct LocaleAndKeys {
-    DeprecatedString locale;
-    Optional<DeprecatedString> ca;
-    Optional<DeprecatedString> co;
-    Optional<DeprecatedString> hc;
-    Optional<DeprecatedString> kf;
-    Optional<DeprecatedString> kn;
-    Optional<DeprecatedString> nu;
+    String locale;
+    Optional<String> ca;
+    Optional<String> co;
+    Optional<String> hc;
+    Optional<String> kf;
+    Optional<String> kn;
+    Optional<String> nu;
 };
 
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
-static ThrowCompletionOr<Optional<DeprecatedString>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
+static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
 {
     auto option = TRY(get_option(vm, options, property, OptionType::String, values, Empty {}));
     if (option.is_undefined())
-        return Optional<DeprecatedString> {};
+        return Optional<String> {};
 
     if (validator && !validator(TRY(option.as_string().utf8_string_view())))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, option, property);
 
-    return TRY(option.as_string().deprecated_string());
+    return TRY(option.as_string().utf8_string());
 }
 
 // 14.1.2 ApplyOptionsToTag ( tag, options ), https://tc39.es/ecma402/#sec-apply-options-to-tag
@@ -69,7 +70,7 @@ static ThrowCompletionOr<DeprecatedString> apply_options_to_tag(VM& vm, StringVi
     auto canonicalized_tag = JS::Intl::canonicalize_unicode_locale_id(*locale_id);
 
     // 11. Assert: tag matches the unicode_locale_id production.
-    locale_id = ::Locale::parse_unicode_locale_id(canonicalized_tag);
+    locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(canonicalized_tag));
     VERIFY(locale_id.has_value());
 
     // 12. Let languageId be the substring of tag corresponding to the unicode_language_id production.
@@ -109,10 +110,10 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: tag matches the unicode_locale_id production.
-    auto locale_id = ::Locale::parse_unicode_locale_id(tag);
+    auto locale_id = ::Locale::parse_unicode_locale_id(tag).release_value_but_fixme_should_propagate_errors();
     VERIFY(locale_id.has_value());
 
-    Vector<DeprecatedString> attributes;
+    Vector<String> attributes;
     Vector<::Locale::Keyword> keywords;
 
     // 3. If tag contains a substring that is a Unicode locale extension sequence, then
@@ -134,7 +135,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     //     a. Let attributes be a new empty List.
     //     b. Let keywords be a new empty List.
 
-    auto field_from_key = [](LocaleAndKeys& value, StringView key) -> Optional<DeprecatedString>& {
+    auto field_from_key = [](LocaleAndKeys& value, StringView key) -> Optional<String>& {
         if (key == "ca"sv)
             return value.ca;
         if (key == "co"sv)
@@ -156,7 +157,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     // 6. For each element key of relevantExtensionKeys, do
     for (auto const& key : relevant_extension_keys) {
         // a. Let value be undefined.
-        Optional<DeprecatedString> value {};
+        Optional<String> value {};
 
         ::Locale::Keyword* entry = nullptr;
         // b. If keywords contains an element whose [[Key]] is the same as key, then
@@ -188,7 +189,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
             // iv. Else,
             else {
                 // 1. Append the Record { [[Key]]: key, [[Value]]: value } to keywords.
-                keywords.append({ key, *value });
+                keywords.append({ String::from_utf8(key).release_value_but_fixme_should_propagate_errors(), *value });
             }
         }
 
@@ -198,7 +199,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
 
     // 7. Let locale be the String value that is tag with any Unicode locale extension sequences removed.
     locale_id->remove_extension_type<::Locale::LocaleExtension>();
-    auto locale = locale_id->to_deprecated_string();
+    auto locale = locale_id->to_string().release_value_but_fixme_should_propagate_errors();
 
     // 8. Let newExtension be a Unicode BCP 47 U Extension based on attributes and keywords.
     ::Locale::LocaleExtension new_extension { move(attributes), move(keywords) };
@@ -206,7 +207,7 @@ static LocaleAndKeys apply_unicode_extension_to_tag(StringView tag, LocaleAndKey
     // 9. If newExtension is not the empty String, then
     if (!new_extension.attributes.is_empty() || !new_extension.keywords.is_empty()) {
         // a. Let locale be ! InsertUnicodeExtensionAndCanonicalize(locale, newExtension).
-        locale = insert_unicode_extension_and_canonicalize(locale_id.release_value(), move(new_extension));
+        locale = String::from_deprecated_string(insert_unicode_extension_and_canonicalize(locale_id.release_value(), move(new_extension))).release_value_but_fixme_should_propagate_errors();
     }
 
     // 10. Set result.[[locale]] to locale.
@@ -313,7 +314,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     // 24. If kn is not undefined, set kn to ! ToString(kn).
     // 25. Set opt.[[kn]] to kn.
     if (!kn.is_undefined())
-        opt.kn = TRY(kn.to_deprecated_string(vm));
+        opt.kn = TRY(kn.to_string(vm));
 
     // 26. Let numberingSystem be ? GetOption(options, "numberingSystem", string, empty, undefined).
     // 27. If numberingSystem is not undefined, then
@@ -325,22 +326,22 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
     auto result = apply_unicode_extension_to_tag(tag, move(opt), relevant_extension_keys);
 
     // 30. Set locale.[[Locale]] to r.[[locale]].
-    locale->set_locale(move(result.locale));
+    locale->set_locale(result.locale.to_deprecated_string());
     // 31. Set locale.[[Calendar]] to r.[[ca]].
     if (result.ca.has_value())
-        locale->set_calendar(result.ca.release_value());
+        locale->set_calendar(result.ca->to_deprecated_string());
     // 32. Set locale.[[Collation]] to r.[[co]].
     if (result.co.has_value())
-        locale->set_collation(result.co.release_value());
+        locale->set_collation(result.co->to_deprecated_string());
     // 33. Set locale.[[HourCycle]] to r.[[hc]].
     if (result.hc.has_value())
-        locale->set_hour_cycle(result.hc.release_value());
+        locale->set_hour_cycle(result.hc->to_deprecated_string());
 
     // 34. If relevantExtensionKeys contains "kf", then
     if (relevant_extension_keys.span().contains_slow("kf"sv)) {
         // a. Set locale.[[CaseFirst]] to r.[[kf]].
         if (result.kf.has_value())
-            locale->set_case_first(result.kf.release_value());
+            locale->set_case_first(result.kf->to_deprecated_string());
     }
 
     // 35. If relevantExtensionKeys contains "kn", then
@@ -359,7 +360,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> LocaleConstructor::construct(FunctionObj
 
     // 36. Set locale.[[NumberingSystem]] to r.[[nu]].
     if (result.nu.has_value())
-        locale->set_numbering_system(result.nu.release_value());
+        locale->set_numbering_system(result.nu->to_deprecated_string());
 
     // 37. Return locale.
     return locale;

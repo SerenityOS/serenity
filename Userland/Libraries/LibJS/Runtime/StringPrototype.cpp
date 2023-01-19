@@ -890,12 +890,12 @@ static ThrowCompletionOr<String> transform_case(VM& vm, String const& string, Va
     // 2. If requestedLocales is not an empty List, then
     if (!requested_locales.is_empty()) {
         // a. Let requestedLocale be requestedLocales[0].
-        requested_locale = Locale::parse_unicode_locale_id(requested_locales[0]);
+        requested_locale = TRY_OR_THROW_OOM(vm, Locale::parse_unicode_locale_id(requested_locales[0]));
     }
     // 3. Else,
     else {
         // a. Let requestedLocale be ! DefaultLocale().
-        requested_locale = Locale::parse_unicode_locale_id(Locale::default_locale());
+        requested_locale = TRY_OR_THROW_OOM(vm, Locale::parse_unicode_locale_id(Locale::default_locale()));
     }
     VERIFY(requested_locale.has_value());
 

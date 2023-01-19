@@ -1069,6 +1069,7 @@ static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::Buffer
 #include <AK/BinarySearch.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibLocale/DateTimeFormat.h>
@@ -1229,24 +1230,25 @@ static constexpr Array<@type@, @size@> @name@ { {)~~~");
 
     generator.append(R"~~~(
 
-struct CanonicalLanguageID {
-    LanguageID to_unicode_language_id() const
+struct CanonicalLanguageID
+{
+    ErrorOr<LanguageID> to_unicode_language_id() const
     {
         LanguageID language_id {};
-        language_id.variants.ensure_capacity(variants_size);
+        TRY(language_id.variants.try_ensure_capacity(variants_size));
 
-        language_id.language = decode_string(language);
+        language_id.language = TRY(String::from_utf8(decode_string(language)));
         if (script != 0)
-            language_id.script = decode_string(script);
+            language_id.script = TRY(String::from_utf8(decode_string(script)));
         if (region != 0)
-            language_id.region = decode_string(region);
+            language_id.region = TRY(String::from_utf8(decode_string(region)));
         for (size_t i = 0; i < variants_size; ++i)
-            language_id.variants.append(decode_string(variants[i]));
+            language_id.variants.append(TRY(String::from_utf8(decode_string(variants[i]))));
 
         return language_id;
     }
 
-    bool matches_variants(Vector<DeprecatedString> const& other_variants) const {
+    bool matches_variants(Vector<String> const& other_variants) const {
         if (variants_size == 0)
             return true;
         if (other_variants.size() != variants_size)
@@ -1375,7 +1377,7 @@ static LanguageMapping const* resolve_likely_subtag(LanguageID const& language_i
             if (!language_id.script.has_value())
                 continue;
 
-            search_key.language = "und"sv;
+            search_key.language = String::from_utf8("und"sv).release_value_but_fixme_should_propagate_errors();
             search_key.script = *language_id.script;
             break;
 
@@ -1680,9 +1682,9 @@ Optional<CharacterOrder> character_order_for_locale(StringView locale)
 void resolve_complex_language_aliases(LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
-        auto const& key_language = decode_string(map.key.language);
-        auto const& key_script = decode_string(map.key.script);
-        auto const& key_region  = decode_string(map.key.region);
+        auto key_language = decode_string(map.key.language);
+        auto key_script = decode_string(map.key.script);
+        auto key_region  = decode_string(map.key.region);
 
         if ((key_language != language_id.language) && (key_language != "und"sv))
             continue;
@@ -1693,7 +1695,7 @@ void resolve_complex_language_aliases(LanguageID& language_id)
         if (!map.key.matches_variants(language_id.variants))
             continue;
 
-        auto alias = map.alias.to_unicode_language_id();
+        auto alias = map.alias.to_unicode_language_id().release_value_but_fixme_should_propagate_errors();
 
         if (alias.language == "und"sv)
             alias.language = move(language_id.language);
@@ -1718,19 +1720,19 @@ Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
 
     auto maximized = language_id;
 
-    auto const& key_script = decode_string(likely_subtag->key.script);
-    auto const& key_region = decode_string(likely_subtag->key.region);
+    auto key_script = decode_string(likely_subtag->key.script);
+    auto key_region = decode_string(likely_subtag->key.region);
 
-    auto const& alias_language = decode_string(likely_subtag->alias.language);
-    auto const& alias_script = decode_string(likely_subtag->alias.script);
-    auto const& alias_region = decode_string(likely_subtag->alias.region);
+    auto alias_language = decode_string(likely_subtag->alias.language);
+    auto alias_script = decode_string(likely_subtag->alias.script);
+    auto alias_region = decode_string(likely_subtag->alias.region);
 
     if (maximized.language == "und"sv)
-        maximized.language = alias_language;
+        maximized.language = String::from_utf8(alias_language).release_value_but_fixme_should_propagate_errors();
     if (!maximized.script.has_value() || (!key_script.is_empty() && !alias_script.is_empty()))
-        maximized.script = alias_script;
+        maximized.script = String::from_utf8(alias_script).release_value_but_fixme_should_propagate_errors();
     if (!maximized.region.has_value() || (!key_region.is_empty() && !alias_region.is_empty()))
-        maximized.region = alias_region;
+        maximized.region = String::from_utf8(alias_region).release_value_but_fixme_should_propagate_errors();
 
     return maximized;
 }
