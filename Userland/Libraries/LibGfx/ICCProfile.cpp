@@ -86,7 +86,7 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
 // ICC V4, 7.2 Profile header
 struct ICCHeader {
     BigEndian<u32> profile_size;
-    BigEndian<u32> preferred_cmm_type;
+    BigEndian<PreferredCMMType> preferred_cmm_type;
 
     u8 profile_version_major;
     u8 profile_version_minor_bugfix;
@@ -102,14 +102,14 @@ struct ICCHeader {
     BigEndian<PrimaryPlatform> primary_platform;
 
     BigEndian<u32> profile_flags;
-    BigEndian<u32> device_manufacturer;
-    BigEndian<u32> device_model;
+    BigEndian<DeviceManufacturer> device_manufacturer;
+    BigEndian<DeviceModel> device_model;
     BigEndian<u64> device_attributes;
     BigEndian<u32> rendering_intent;
 
     XYZNumber pcs_illuminant;
 
-    BigEndian<u32> profile_creator;
+    BigEndian<Creator> profile_creator;
 
     u8 profile_id[16];
     u8 reserved[28];
@@ -146,9 +146,9 @@ Optional<PreferredCMMType> parse_preferred_cmm_type(ICCHeader const& header)
     // which is not present in the "CMM Signatures" table in that PDF.
 
     // "If no preferred CMM is identified, this field shall be set to zero (00000000h)."
-    if (header.preferred_cmm_type == 0)
+    if (header.preferred_cmm_type == PreferredCMMType { 0 })
         return {};
-    return PreferredCMMType { header.preferred_cmm_type };
+    return header.preferred_cmm_type;
 }
 
 ErrorOr<Version> parse_version(ICCHeader const& header)
@@ -266,9 +266,9 @@ Optional<DeviceManufacturer> parse_device_manufacturer(ICCHeader const& header)
     // has its device manufacturer set to 'none', but https://www.color.org/signatureRegistry/?entityEntry=none-6E6F6E65 does not exist.
 
     // "If not used this field shall be set to zero (00000000h)."
-    if (header.device_manufacturer == 0)
+    if (header.device_manufacturer == DeviceManufacturer { 0 })
         return {};
-    return DeviceManufacturer { header.device_manufacturer };
+    return header.device_manufacturer;
 }
 
 Optional<DeviceModel> parse_device_model(ICCHeader const& header)
@@ -282,9 +282,9 @@ Optional<DeviceModel> parse_device_model(ICCHeader const& header)
     // has its device model set to 'none', but https://www.color.org/signatureRegistry/deviceRegistry?entityEntry=none-6E6F6E65 does not exist.
 
     // "If not used this field shall be set to zero (00000000h)."
-    if (header.device_model == 0)
+    if (header.device_model == DeviceModel { 0 })
         return {};
-    return DeviceModel { header.device_model };
+    return header.device_model;
 }
 
 ErrorOr<DeviceAttributes> parse_device_attributes(ICCHeader const& header)
@@ -335,9 +335,9 @@ Optional<Creator> parse_profile_creator(ICCHeader const& header)
     // For example, .icc files in /System/ColorSync/Profiles on macOS 12.6 set this to 'appl', which is a CMM signature, not a device signature (that one would be 'APPL').
 
     // "If not used this field shall be set to zero (00000000h)."
-    if (header.profile_creator == 0)
+    if (header.profile_creator == Creator { 0 })
         return {};
-    return Creator { header.profile_creator };
+    return header.profile_creator;
 }
 
 template<size_t N>

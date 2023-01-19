@@ -38,6 +38,8 @@ struct [[gnu::packed]] DistinctFourCC {
     char c2() const { return (value >> 8) & 0xff; }
     char c3() const { return value & 0xff; }
 
+    bool operator==(DistinctFourCC b) const { return value == b.value; }
+
     u32 value { 0 };
 };
 
