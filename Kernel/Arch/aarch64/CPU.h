@@ -12,9 +12,14 @@
 namespace Kernel {
 
 void initialize_exceptions();
-void init_page_tables();
-void unmap_identity_map();
 void panic_without_mmu(StringView);
 void dbgln_without_mmu(StringView);
+
+namespace Memory {
+
+void init_page_tables();
+void unmap_identity_map();
+
+}
 
 }

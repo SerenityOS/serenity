@@ -57,13 +57,11 @@ READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;
 READONLY_AFTER_INIT size_t physical_to_virtual_offset;
 // READONLY_AFTER_INIT FlatPtr kernel_mapping_base;
 READONLY_AFTER_INIT FlatPtr kernel_load_base;
-#if ARCH(X86_64)
 READONLY_AFTER_INIT PhysicalAddress boot_pml4t;
-#endif
 READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
 READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
-READONLY_AFTER_INIT Kernel::PageTableEntry* boot_pd_kernel_pt1023;
+READONLY_AFTER_INIT Kernel::Memory::PageTableEntry* boot_pd_kernel_pt1023;
 READONLY_AFTER_INIT char const* kernel_cmdline;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;

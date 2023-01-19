@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/MSR.h>
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
@@ -17,7 +18,6 @@
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Scheduler.h>

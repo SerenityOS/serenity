@@ -30,7 +30,7 @@
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #include <Kernel/ScopedCritical.h>
 
-#include <Kernel/Memory/PageDirectory.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 
 namespace Kernel {

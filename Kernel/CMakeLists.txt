@@ -222,7 +222,6 @@ set(KERNEL_SOURCES
     Memory/AnonymousVMObject.cpp
     Memory/InodeVMObject.cpp
     Memory/MemoryManager.cpp
-    Memory/PageDirectory.cpp
     Memory/PhysicalPage.cpp
     Memory/PhysicalRegion.cpp
     Memory/PhysicalZone.cpp
