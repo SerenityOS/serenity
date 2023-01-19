@@ -165,7 +165,7 @@ void Tab::focus_location_editor()
 
 void Tab::navigate(QString url)
 {
-    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive))
+    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive))
         url = "http://" + url;
     view().load(ak_deprecated_string_from_qstring(url));
 }
