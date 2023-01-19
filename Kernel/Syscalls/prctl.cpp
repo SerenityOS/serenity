@@ -21,6 +21,22 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] F
                 return EINVAL;
             protected_data.dumpable = arg1;
             return 0;
+        case PR_GET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
+            return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
+                return space->enforces_syscall_regions();
+            });
+        case PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
+            if (arg1 != 0 && arg1 != 1)
+                return EINVAL;
+            bool prohibit_new_annotated_syscall_regions = (arg1 == 1);
+            return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
+                if (space->enforces_syscall_regions() && !prohibit_new_annotated_syscall_regions)
+                    return EPERM;
+
+                space->set_enforces_syscall_regions(prohibit_new_annotated_syscall_regions);
+                return 0;
+            });
+            return 0;
         }
         return EINVAL;
     });
