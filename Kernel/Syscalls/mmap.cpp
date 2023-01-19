@@ -575,11 +575,13 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
 ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int flags)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
+    if (flags == to_underlying(VirtualMemoryRangeFlags::None))
+        return EINVAL;
+
+    if (!Memory::is_user_address(address.vaddr()))
+        return EFAULT;
 
     return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
-        if (flags == to_underlying(VirtualMemoryRangeFlags::None))
-            return EINVAL;
-
         if (space->enforces_syscall_regions() && (flags & to_underlying(VirtualMemoryRangeFlags::SyscallCode)))
             return EPERM;
 
@@ -587,9 +589,6 @@ ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int fla
             space->set_enforces_syscall_regions(true);
             return 0;
         }
-
-        if (!Memory::is_user_address(address.vaddr()))
-            return EFAULT;
 
         auto* region = space->find_region_containing(Memory::VirtualRange { address.vaddr(), 1 });
         if (!region)
