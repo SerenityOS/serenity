@@ -144,7 +144,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 16. Let localeData be %DateTimeFormat%.[[LocaleData]].
     // 17. Let r be ResolveLocale(%DateTimeFormat%.[[AvailableLocales]], requestedLocales, opt, %DateTimeFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = TRY(resolve_locale(requested_locales, opt, DateTimeFormat::relevant_extension_keys()));
+    auto result = TRY(resolve_locale(vm, requested_locales, opt, DateTimeFormat::relevant_extension_keys()));
 
     // 18. Set dateTimeFormat.[[Locale]] to r.[[locale]].
     date_time_format.set_locale(move(result.locale));
