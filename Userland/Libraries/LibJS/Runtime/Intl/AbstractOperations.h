@@ -79,16 +79,14 @@ struct PatternPartitionWithSource : public PatternPartition {
 
 using StringOrBoolean = Variant<StringView, bool>;
 
-Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView locale);
-DeprecatedString canonicalize_unicode_locale_id(::Locale::LocaleID& locale);
+ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_tag(VM&, StringView locale);
+ThrowCompletionOr<DeprecatedString> canonicalize_unicode_locale_id(VM&, ::Locale::LocaleID& locale);
 bool is_well_formed_currency_code(StringView currency);
 bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM&, Value locales);
 Optional<DeprecatedString> best_available_locale(StringView locale);
-DeprecatedString insert_unicode_extension_and_canonicalize(::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
-ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
-Vector<DeprecatedString> lookup_supported_locales(Vector<DeprecatedString> const& requested_locales);
-Vector<DeprecatedString> best_fit_supported_locales(Vector<DeprecatedString> const& requested_locales);
+ThrowCompletionOr<DeprecatedString> insert_unicode_extension_and_canonicalize(VM&, ::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
+ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<DeprecatedString> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
 ThrowCompletionOr<Array*> supported_locales(VM&, Vector<DeprecatedString> const& requested_locales, Value options);
 ThrowCompletionOr<Object*> coerce_options_to_object(VM&, Value options);
 ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM&, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback);
