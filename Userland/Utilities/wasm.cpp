@@ -7,7 +7,6 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MemoryStream.h>
 #include <LibLine/Editor.h>
@@ -20,8 +19,8 @@
 #include <unistd.h>
 
 RefPtr<Line::Editor> g_line_editor;
-static auto g_stdout = Core::OutputFileStream::standard_error();
-static Wasm::Printer g_printer { g_stdout };
+static OwnPtr<AK::OutputStream> g_stdout {};
+static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);
 static Wasm::DebuggerBytecodeInterpreter g_interpreter;
@@ -40,7 +39,7 @@ static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& 
     if (interpreter.did_trap()) {
         g_continue = false;
         warnln("Trapped when executing ip={}", ip);
-        g_printer.print(instr);
+        g_printer->print(instr);
         warnln("Trap reason: {}", interpreter.trap_reason());
         const_cast<Wasm::Interpreter&>(interpreter).clear_trap();
     }
@@ -54,13 +53,13 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
     if (always_print_stack)
         config.dump_stack();
     if (always_print_instruction) {
-        g_stdout.write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes());
-        g_printer.print(instr);
+        g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes());
+        g_printer->print(instr);
     }
     if (g_continue)
         return true;
-    g_stdout.write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes());
-    g_printer.print(instr);
+    g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes());
+    g_printer->print(instr);
     DeprecatedString last_command = "";
     for (;;) {
         auto result = g_line_editor->get_line("> ");
@@ -133,7 +132,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                 continue;
             }
             if (what.is_one_of("i", "instr", "instruction")) {
-                g_printer.print(instr);
+                g_printer->print(instr);
                 continue;
             }
             if (what.is_one_of("f", "func", "function")) {
@@ -156,7 +155,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                     continue;
                 }
                 if (auto* fn_value = fn->get_pointer<Wasm::WasmFunction>()) {
-                    g_printer.print(fn_value->code());
+                    g_printer->print(fn_value->code());
                     continue;
                 }
             }
@@ -214,8 +213,8 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             if (!result.values().is_empty())
                 warnln("Returned:");
             for (auto& value : result.values()) {
-                g_stdout.write("  -> "sv.bytes());
-                g_printer.print(value);
+                g_stdout->write("  -> "sv.bytes());
+                g_printer->print(value);
             }
             continue;
         }
@@ -340,9 +339,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!parse_result.has_value())
         return 1;
 
+    auto standard_output = TRY(Core::Stream::File::standard_output());
+    g_stdout = TRY(try_make<Core::Stream::WrapInAKOutputStream>(*standard_output));
+    g_printer = TRY(try_make<Wasm::Printer>(*g_stdout));
+
     if (print && !attempt_instantiate) {
-        auto out_stream = Core::OutputFileStream::standard_output();
-        Wasm::Printer printer(out_stream);
+        Wasm::Printer printer(*g_stdout);
         printer.print(parse_result.value());
     }
 
@@ -450,18 +452,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             pre_interpret_hook(config, ip, instr);
         };
 
-        auto stream = Core::OutputFileStream::standard_output();
         auto print_func = [&](auto const& address) {
             Wasm::FunctionInstance* fn = machine.store().get(address);
-            stream.write(DeprecatedString::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes());
+            g_stdout->write(DeprecatedString::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes());
             if (fn) {
-                stream.write(DeprecatedString::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes());
+                g_stdout->write(DeprecatedString::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes());
                 fn->visit(
                     [&](Wasm::WasmFunction const& func) {
-                        Wasm::Printer printer { stream, 3 };
-                        stream.write("    type:\n"sv.bytes());
+                        Wasm::Printer printer { *g_stdout, 3 };
+                        g_stdout->write("    type:\n"sv.bytes());
                         printer.print(func.type());
-                        stream.write("    code:\n"sv.bytes());
+                        g_stdout->write("    code:\n"sv.bytes());
                         printer.print(func.code());
                     },
                     [](Wasm::HostFunction const&) {});
@@ -525,9 +526,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!result.values().is_empty())
                     warnln("Returned:");
                 for (auto& value : result.values()) {
-                    Wasm::Printer printer { stream };
-                    g_stdout.write("  -> "sv.bytes());
-                    g_printer.print(value);
+                    g_stdout->write("  -> "sv.bytes());
+                    g_printer->print(value);
                 }
             }
         }
