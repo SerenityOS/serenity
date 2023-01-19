@@ -68,7 +68,7 @@ static ThrowCompletionOr<DeprecatedString> apply_options_to_tag(VM& vm, StringVi
 
     // 10. Set tag to ! CanonicalizeUnicodeLocaleId(tag).
     // NOTE: We TRY this operation only to propagate OOM errors.
-    auto canonicalized_tag = TRY(JS::Intl::canonicalize_unicode_locale_id(vm, *locale_id));
+    auto canonicalized_tag = TRY(canonicalize_unicode_locale_id(vm, *locale_id));
 
     // 11. Assert: tag matches the unicode_locale_id production.
     locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(canonicalized_tag));
@@ -103,7 +103,7 @@ static ThrowCompletionOr<DeprecatedString> apply_options_to_tag(VM& vm, StringVi
 
     // 16. Set tag to tag with the substring corresponding to the unicode_language_id production replaced by the string languageId.
     // 17. Return ! CanonicalizeUnicodeLocaleId(tag).
-    return JS::Intl::canonicalize_unicode_locale_id(vm, *locale_id);
+    return canonicalize_unicode_locale_id(vm, *locale_id);
 }
 
 // 14.1.3 ApplyUnicodeExtensionToTag ( tag, options, relevantExtensionKeys ), https://tc39.es/ecma402/#sec-apply-unicode-extension-to-tag

@@ -250,7 +250,7 @@ ThrowCompletionOr<Vector<DeprecatedString>> canonicalize_locale_list(VM& vm, Val
 
             // vi. Let canonicalizedTag be ! CanonicalizeUnicodeLocaleId(tag).
             // NOTE: We TRY this operation only to propagate OOM errors.
-            auto canonicalized_tag = TRY(JS::Intl::canonicalize_unicode_locale_id(vm, *locale_id));
+            auto canonicalized_tag = TRY(canonicalize_unicode_locale_id(vm, *locale_id));
 
             // vii. If canonicalizedTag is not an element of seen, append canonicalizedTag as the last element of seen.
             if (!seen.contains_slow(canonicalized_tag))
@@ -353,7 +353,7 @@ ThrowCompletionOr<DeprecatedString> insert_unicode_extension_and_canonicalize(VM
     // of that string. LibUnicode gives us the parsed locale in a structure, so we can mutate that
     // structure directly.
     TRY_OR_THROW_OOM(vm, locale.extensions.try_append(move(extension)));
-    return TRY(JS::Intl::canonicalize_unicode_locale_id(vm, locale));
+    return TRY(canonicalize_unicode_locale_id(vm, locale));
 }
 
 template<typename T>
