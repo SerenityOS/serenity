@@ -277,6 +277,11 @@ public:
     ThrowCompletionOr(ThrowCompletionOr&&) = default;
     ThrowCompletionOr& operator=(ThrowCompletionOr&&) = default;
 
+    ThrowCompletionOr(OptionalNone value)
+        : m_value(ValueType { value })
+    {
+    }
+
     // Allows implicit construction of ThrowCompletionOr<T> from a type U if T(U) is a supported constructor.
     // Most commonly: Value from Object* or similar, so we can omit the curly braces from "return { TRY(...) };".
     // Disabled for POD types to avoid weird conversion shenanigans.
