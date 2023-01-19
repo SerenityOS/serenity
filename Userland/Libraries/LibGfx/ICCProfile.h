@@ -246,6 +246,8 @@ public:
     static Crypto::Hash::MD5::DigestType compute_id(ReadonlyBytes);
 
 private:
+    ErrorOr<void> read_header(ReadonlyBytes);
+
     u32 m_on_disk_size { 0 };
     Optional<PreferredCMMType> m_preferred_cmm_type;
     Version m_version;
