@@ -948,11 +948,6 @@ ErrorOr<String> LanguageID::to_string() const
     return builder.to_string();
 }
 
-DeprecatedString LanguageID::to_deprecated_string() const
-{
-    return MUST(to_string()).to_deprecated_string();
-}
-
 ErrorOr<String> LocaleID::to_string() const
 {
     StringBuilder builder;
@@ -1004,11 +999,6 @@ ErrorOr<String> LocaleID::to_string() const
     }
 
     return builder.to_string();
-}
-
-DeprecatedString LocaleID::to_deprecated_string() const
-{
-    return MUST(to_string()).to_deprecated_string();
 }
 
 }
