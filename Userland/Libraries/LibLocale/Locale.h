@@ -24,25 +24,25 @@ struct LanguageID {
     bool operator==(LanguageID const&) const = default;
 
     bool is_root { false };
-    Optional<DeprecatedString> language {};
-    Optional<DeprecatedString> script {};
-    Optional<DeprecatedString> region {};
-    Vector<DeprecatedString> variants {};
+    Optional<String> language {};
+    Optional<String> script {};
+    Optional<String> region {};
+    Vector<String> variants {};
 };
 
 struct Keyword {
-    DeprecatedString key {};
-    DeprecatedString value {};
+    String key {};
+    String value {};
 };
 
 struct LocaleExtension {
-    Vector<DeprecatedString> attributes {};
+    Vector<String> attributes {};
     Vector<Keyword> keywords {};
 };
 
 struct TransformedField {
-    DeprecatedString key {};
-    DeprecatedString value {};
+    String key {};
+    String value {};
 };
 
 struct TransformedExtension {
@@ -52,7 +52,7 @@ struct TransformedExtension {
 
 struct OtherExtension {
     char key {};
-    DeprecatedString value {};
+    String value {};
 };
 
 using Extension = AK::Variant<LocaleExtension, TransformedExtension, OtherExtension>;
@@ -79,7 +79,7 @@ struct LocaleID {
 
     LanguageID language_id {};
     Vector<Extension> extensions {};
-    Vector<DeprecatedString> private_use_extensions {};
+    Vector<String> private_use_extensions {};
 };
 
 enum class Style : u8 {
@@ -140,13 +140,13 @@ constexpr bool is_unicode_variant_subtag(StringView subtag)
 
 bool is_type_identifier(StringView);
 
-Optional<LanguageID> parse_unicode_language_id(StringView);
-Optional<LocaleID> parse_unicode_locale_id(StringView);
+ErrorOr<Optional<LanguageID>> parse_unicode_language_id(StringView);
+ErrorOr<Optional<LocaleID>> parse_unicode_locale_id(StringView);
 
-void canonicalize_unicode_extension_values(StringView key, DeprecatedString& value, bool remove_true);
-Optional<DeprecatedString> canonicalize_unicode_locale_id(LocaleID&);
+ErrorOr<void> canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true);
+ErrorOr<Optional<String>> canonicalize_unicode_locale_id(LocaleID&);
 
-DeprecatedString const& default_locale();
+StringView default_locale();
 bool is_locale_available(StringView locale);
 
 Span<StringView const> get_available_keyword_values(StringView key);

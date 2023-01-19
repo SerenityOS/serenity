@@ -109,7 +109,7 @@ static auto find_regional_values_for_locale(StringView locale, GetRegionalValues
 
     auto return_default_values = [&]() { return get_regional_values("001"sv); };
 
-    auto language = parse_unicode_language_id(locale);
+    auto language = parse_unicode_language_id(locale).release_value_but_fixme_should_propagate_errors();
     if (!language.has_value())
         return return_default_values();
 

@@ -29,7 +29,7 @@ Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView local
         quick_sort(variants);
 
         for (size_t i = 0; i < variants.size() - 1; ++i) {
-            if (variants[i].equals_ignoring_case(variants[i + 1]))
+            if (variants[i].equals_ignoring_case(variants[i + 1]).release_value_but_fixme_should_propagate_errors())
                 return true;
         }
 
@@ -39,7 +39,7 @@ Optional<::Locale::LocaleID> is_structurally_valid_language_tag(StringView local
     // IsStructurallyValidLanguageTag returns true if all of the following conditions hold, false otherwise:
 
     // locale can be generated from the EBNF grammar for unicode_locale_id in Unicode Technical Standard #35 LDML § 3.2 Unicode Locale Identifier;
-    auto locale_id = ::Locale::parse_unicode_locale_id(locale);
+    auto locale_id = ::Locale::parse_unicode_locale_id(locale).release_value_but_fixme_should_propagate_errors();
     if (!locale_id.has_value())
         return {};
 
@@ -114,11 +114,11 @@ DeprecatedString canonicalize_unicode_locale_id(::Locale::LocaleID& locale)
 
     // 1. Let localeId be the string locale after performing the algorithm to transform it to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers.
     // 2. Let localeId be the string localeId after performing the algorithm to transform it to canonical form.
-    auto locale_id = ::Locale::canonicalize_unicode_locale_id(locale);
+    auto locale_id = ::Locale::canonicalize_unicode_locale_id(locale).release_value_but_fixme_should_propagate_errors();
     VERIFY(locale_id.has_value());
 
     // 4. Return localeId.
-    return locale_id.release_value();
+    return locale_id->to_deprecated_string();
 }
 
 // 6.3.1 IsWellFormedCurrencyCode ( currency ), https://tc39.es/ecma402/#sec-iswellformedcurrencycode
@@ -301,7 +301,7 @@ static MatcherResult lookup_matcher(Vector<DeprecatedString> const& requested_lo
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
-        auto locale_id = ::Locale::parse_unicode_locale_id(locale);
+        auto locale_id = ::Locale::parse_unicode_locale_id(locale).release_value_but_fixme_should_propagate_errors();
         VERIFY(locale_id.has_value());
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
@@ -453,10 +453,10 @@ ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& r
                 // a. If keyLocaleData contains requestedValue, then
                 if (key_locale_data.contains_slow(requested_value)) {
                     // i. Let value be requestedValue.
-                    value = move(requested_value);
+                    value = requested_value.to_deprecated_string();
 
                     // ii. Let supportedExtensionAddition be the string-concatenation of "-", key, "-", and value.
-                    supported_extension_addition = ::Locale::Keyword { key, move(entry.value) };
+                    supported_extension_addition = ::Locale::Keyword { String::from_utf8(key).release_value_but_fixme_should_propagate_errors(), move(entry.value) };
                 }
             }
             // 4. Else if keyLocaleData contains "true", then
@@ -465,7 +465,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& r
                 value = "true"sv;
 
                 // b. Let supportedExtensionAddition be the string-concatenation of "-" and key.
-                supported_extension_addition = ::Locale::Keyword { key, {} };
+                supported_extension_addition = ::Locale::Keyword { String::from_utf8(key).release_value_but_fixme_should_propagate_errors(), {} };
             }
 
             break;
@@ -480,7 +480,9 @@ ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& r
         if (options_value.has_value()) {
             // 1. Let optionsValue be the string optionsValue after performing the algorithm steps to transform Unicode extension values to canonical syntax per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
             // 2. Let optionsValue be the string optionsValue after performing the algorithm steps to replace Unicode extension values with their canonical form per Unicode Technical Standard #35 LDML § 3.2.1 Canonical Unicode Locale Identifiers, treating key as ukey and optionsValue as uvalue productions.
-            ::Locale::canonicalize_unicode_extension_values(key, *options_value, true);
+            auto options_value_string = String::from_deprecated_string(*options_value).release_value_but_fixme_should_propagate_errors();
+            ::Locale::canonicalize_unicode_extension_values(key, options_value_string, true).release_value_but_fixme_should_propagate_errors();
+            options_value = options_value_string.to_deprecated_string();
 
             // 3. If optionsValue is the empty String, then
             if (options_value->is_empty()) {
@@ -508,7 +510,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(Vector<DeprecatedString> const& r
 
     // 10. If supportedExtension is not "-u", then
     if (!supported_extension.keywords.is_empty()) {
-        auto locale_id = ::Locale::parse_unicode_locale_id(found_locale);
+        auto locale_id = ::Locale::parse_unicode_locale_id(found_locale).release_value_but_fixme_should_propagate_errors();
         VERIFY(locale_id.has_value());
 
         // a. Set foundLocale to InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
@@ -530,7 +532,7 @@ Vector<DeprecatedString> lookup_supported_locales(Vector<DeprecatedString> const
 
     // 2. For each element locale of requestedLocales, do
     for (auto const& locale : requested_locales) {
-        auto locale_id = ::Locale::parse_unicode_locale_id(locale);
+        auto locale_id = ::Locale::parse_unicode_locale_id(locale).release_value_but_fixme_should_propagate_errors();
         VERIFY(locale_id.has_value());
 
         // a. Let noExtensionsLocale be the String value that is locale with any Unicode locale extension sequences removed.
