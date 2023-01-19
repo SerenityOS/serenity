@@ -151,7 +151,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     //
     //        Note we *don't* do this if we are connected to a WebDriver, as the Set URL command may come in very
     //        quickly, and become replaced by this load.
-    if (!webdriver_content_ipc_path.is_empty()) {
+    if (webdriver_content_ipc_path.is_empty()) {
         m_is_history_navigation = true;
         m_view->load("about:blank"sv);
     }
