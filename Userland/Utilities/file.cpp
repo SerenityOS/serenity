@@ -7,7 +7,6 @@
 #include <AK/Vector.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Stream.h>

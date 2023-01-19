@@ -6,7 +6,6 @@
 
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
