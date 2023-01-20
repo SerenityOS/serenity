@@ -5,7 +5,6 @@
  */
 
 #include "Emulator.h"
-#include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
@@ -24,7 +23,6 @@ int main(int argc, char** argv, char** env)
     Vector<StringView> arguments;
     bool pause_on_startup { false };
     DeprecatedString profile_dump_path;
-    FILE* profile_output_file { nullptr };
     bool enable_roi_mode { false };
     bool dump_profile { false };
     unsigned profile_instruction_interval { 0 };
@@ -58,29 +56,29 @@ int main(int argc, char** argv, char** env)
     if (dump_profile && profile_dump_path.is_empty())
         profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
-    OwnPtr<OutputFileStream> profile_stream;
+    OwnPtr<Core::Stream::Stream> profile_stream;
     OwnPtr<NonnullOwnPtrVector<DeprecatedString>> profile_strings;
     OwnPtr<Vector<int>> profile_string_id_map;
 
     if (dump_profile) {
-        profile_output_file = fopen(profile_dump_path.characters(), "w+");
-        if (profile_output_file == nullptr) {
-            char const* error_string = strerror(errno);
-            warnln("Failed to open '{}' for writing: {}", profile_dump_path, error_string);
+        auto profile_stream_or_error = Core::Stream::File::open(profile_dump_path, Core::Stream::OpenMode::Write);
+        if (profile_stream_or_error.is_error()) {
+            warnln("Failed to open '{}' for writing: {}", profile_dump_path, profile_stream_or_error.error());
             return 1;
         }
-        profile_stream = make<OutputFileStream>(profile_output_file);
+        profile_stream = profile_stream_or_error.release_value();
         profile_strings = make<NonnullOwnPtrVector<DeprecatedString>>();
         profile_string_id_map = make<Vector<int>>();
 
-        profile_stream->write_or_error(R"({"events":[)"sv.bytes());
+        profile_stream->write_entire_buffer(R"({"events":[)"sv.bytes()).release_value_but_fixme_should_propagate_errors();
         timeval tv {};
         gettimeofday(&tv, nullptr);
-        profile_stream->write_or_error(
-            DeprecatedString::formatted(
-                R"~({{"type": "process_create", "parent_pid": 1, "executable": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": []}})~",
-                executable_path, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000)
-                .bytes());
+        profile_stream->write_entire_buffer(
+                          DeprecatedString::formatted(
+                              R"~({{"type": "process_create", "parent_pid": 1, "executable": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": []}})~",
+                              executable_path, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000)
+                              .bytes())
+            .release_value_but_fixme_should_propagate_errors();
     }
 
     Vector<DeprecatedString> environment;
@@ -116,13 +114,13 @@ int main(int argc, char** argv, char** env)
     rc = emulator.exec();
 
     if (dump_profile) {
-        emulator.profile_stream().write_or_error("], \"strings\": ["sv.bytes());
+        emulator.profile_stream().write_entire_buffer("], \"strings\": ["sv.bytes()).release_value_but_fixme_should_propagate_errors();
         if (emulator.profiler_strings().size()) {
             for (size_t i = 0; i < emulator.profiler_strings().size() - 1; ++i)
-                emulator.profile_stream().write_or_error(DeprecatedString::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes());
-            emulator.profile_stream().write_or_error(DeprecatedString::formatted("\"{}\"", emulator.profiler_strings().last()).bytes());
+                emulator.profile_stream().write_entire_buffer(DeprecatedString::formatted("\"{}\", ", emulator.profiler_strings().at(i)).bytes()).release_value_but_fixme_should_propagate_errors();
+            emulator.profile_stream().write_entire_buffer(DeprecatedString::formatted("\"{}\"", emulator.profiler_strings().last()).bytes()).release_value_but_fixme_should_propagate_errors();
         }
-        emulator.profile_stream().write_or_error("]}"sv.bytes());
+        emulator.profile_stream().write_entire_buffer("]}"sv.bytes()).release_value_but_fixme_should_propagate_errors();
     }
     return rc;
 }
