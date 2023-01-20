@@ -290,7 +290,7 @@ bool CardStack::make_top_card_visible()
     return false;
 }
 
-void CardStack::push(NonnullRefPtr<Card> card)
+ErrorOr<void> CardStack::push(NonnullRefPtr<Card> card)
 {
     auto top_most_position = m_stack_positions.is_empty() ? m_position : m_stack_positions.last();
 
@@ -306,9 +306,10 @@ void CardStack::push(NonnullRefPtr<Card> card)
 
     card->set_position(top_most_position);
 
-    m_stack.append(card);
-    m_stack_positions.append(top_most_position);
+    TRY(m_stack.try_append(card));
+    TRY(m_stack_positions.try_append(top_most_position));
     calculate_bounding_box();
+    return {};
 }
 
 NonnullRefPtr<Card> CardStack::pop()
@@ -323,15 +324,16 @@ NonnullRefPtr<Card> CardStack::pop()
     return card;
 }
 
-void CardStack::take_all(CardStack& stack)
+ErrorOr<void> CardStack::take_all(CardStack& stack)
 {
     while (!m_stack.is_empty()) {
         auto card = m_stack.take_first();
         m_stack_positions.take_first();
-        stack.push(move(card));
+        TRY(stack.push(move(card)));
     }
 
     calculate_bounding_box();
+    return {};
 }
 
 void CardStack::calculate_bounding_box()

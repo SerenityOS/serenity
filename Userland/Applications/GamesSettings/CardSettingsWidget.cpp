@@ -39,10 +39,10 @@ public:
         TRY(preview->add_stack(point, Cards::CardStack::Type::Normal));
 
         for (size_t i = 0; i < Cards::Card::card_count; ++i)
-            preview->stack_at_location(0).push(TRY(Cards::Card::try_create(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i))));
-        preview->stack_at_location(1).push(TRY(Cards::Card::try_create(Cards::Suit::Spades, Cards::Rank::Ace)));
-        preview->stack_at_location(2).push(TRY(Cards::Card::try_create(Cards::Suit::Hearts, Cards::Rank::Queen)));
-        preview->stack_at_location(3).push(TRY(Cards::Card::try_create(Cards::Suit::Clubs, Cards::Rank::Jack)));
+            TRY(preview->stack_at_location(0).push(TRY(Cards::Card::try_create(Cards::Suit::Diamonds, static_cast<Cards::Rank>(i)))));
+        TRY(preview->stack_at_location(1).push(TRY(Cards::Card::try_create(Cards::Suit::Spades, Cards::Rank::Ace))));
+        TRY(preview->stack_at_location(2).push(TRY(Cards::Card::try_create(Cards::Suit::Hearts, Cards::Rank::Queen))));
+        TRY(preview->stack_at_location(3).push(TRY(Cards::Card::try_create(Cards::Suit::Clubs, Cards::Rank::Jack))));
 
         preview->stack_at_location(0).peek().set_upside_down(true);
         preview->stack_at_location(2).set_highlighted(true);

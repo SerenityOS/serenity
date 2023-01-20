@@ -95,7 +95,7 @@ void Game::perform_undo()
     for (size_t i = 0; i < m_last_move.card_count; i++)
         cards.append(m_last_move.to->pop());
     for (ssize_t i = m_last_move.card_count - 1; i >= 0; i--)
-        m_last_move.from->push(cards[i]);
+        m_last_move.from->push(cards[i]).release_value_but_fixme_should_propagate_errors();
 
     update_score(-1);
 
@@ -162,7 +162,7 @@ void Game::detect_full_stacks()
                 auto original_current_rect = current_pile.bounding_box();
 
                 for (size_t j = 0; j < Card::card_count; j++) {
-                    completed_stack.push(current_pile.pop());
+                    completed_stack.push(current_pile.pop()).release_value_but_fixme_should_propagate_errors();
                 }
 
                 update(original_current_rect);
@@ -384,9 +384,9 @@ void Game::timer_event(Core::TimerEvent&)
             if (current_pile.count() < (cards_to_draw - 1)) {
                 auto card = m_new_deck.take_last();
                 card->set_upside_down(true);
-                current_pile.push(card);
+                current_pile.push(card).release_value_but_fixme_should_propagate_errors();
             } else {
-                current_pile.push(m_new_deck.take_last());
+                current_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
                 ++m_new_game_animation_pile;
             }
 
@@ -397,7 +397,7 @@ void Game::timer_event(Core::TimerEvent&)
 
                 auto& stock_pile = stack_at_location(Stock);
                 while (!m_new_deck.is_empty())
-                    stock_pile.push(m_new_deck.take_last());
+                    stock_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
 
                 update(stock_pile.bounding_box());
 
@@ -414,7 +414,7 @@ void Game::timer_event(Core::TimerEvent&)
             auto& current_pile = stack_at_location(piles.at(m_draw_animation_pile));
             auto card = stock_pile.pop();
             card->set_upside_down(false);
-            current_pile.push(card);
+            current_pile.push(card).release_value_but_fixme_should_propagate_errors();
             update(current_pile.bounding_box());
             ++m_draw_animation_pile;
 

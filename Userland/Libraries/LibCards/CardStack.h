@@ -43,9 +43,9 @@ public:
 
     bool make_top_card_visible(); // Returns true if the card was flipped.
 
-    void push(NonnullRefPtr<Card> card);
+    ErrorOr<void> push(NonnullRefPtr<Card>);
     NonnullRefPtr<Card> pop();
-    void take_all(CardStack&);
+    ErrorOr<void> take_all(CardStack&);
     void rebound_cards();
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
