@@ -657,6 +657,30 @@ TEST_CASE(allocating_memory_stream_offset_of)
     }
 }
 
+TEST_CASE(allocating_memory_stream_offset_of_oob)
+{
+    Core::Stream::AllocatingMemoryStream stream;
+    // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
+    //       So we have to assume some things about the behaviour of this class:
+    //       - The chunk size is 4096 bytes.
+    //       - A chunk is moved to the end when it's fully read from
+    //       - A free chunk is used as-is, no new ones are allocated if one exists.
+
+    // First, fill exactly one chunk.
+    for (size_t i = 0; i < 256; ++i)
+        MUST(stream.write_entire_buffer("AAAAAAAAAAAAAAAA"sv.bytes()));
+
+    // Then discard it all.
+    MUST(stream.discard(4096));
+    // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
+    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
+
+    {
+        auto offset = MUST(stream.offset_of("A"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+}
+
 TEST_CASE(allocating_memory_stream_10kb)
 {
     auto file = MUST(Core::Stream::File::open("/usr/Tests/LibCore/10kb.txt"sv, Core::Stream::OpenMode::Read));
