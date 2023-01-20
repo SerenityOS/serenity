@@ -9,7 +9,6 @@
 #include "MmapRegion.h"
 #include "SimpleRegion.h"
 #include "SoftCPU.h"
-#include <AK/FileStream.h>
 #include <AK/Format.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringUtils.h>
@@ -501,7 +500,7 @@ void Emulator::dump_backtrace()
     dump_backtrace(raw_backtrace());
 }
 
-void Emulator::emit_profile_sample(AK::OutputStream& output)
+void Emulator::emit_profile_sample(Core::Stream::Stream& output)
 {
     if (!is_in_region_of_interest())
         return;
@@ -511,17 +510,17 @@ void Emulator::emit_profile_sample(AK::OutputStream& output)
     builder.appendff(R"~(, {{"type": "sample", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [)~", getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000);
     builder.join(',', raw_backtrace());
     builder.append("]}\n"sv);
-    output.write_or_error(builder.string_view().bytes());
+    output.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
-void Emulator::emit_profile_event(AK::OutputStream& output, StringView event_name, DeprecatedString const& contents)
+void Emulator::emit_profile_event(Core::Stream::Stream& output, StringView event_name, DeprecatedString const& contents)
 {
     StringBuilder builder;
     timeval tv {};
     gettimeofday(&tv, nullptr);
     builder.appendff(R"~(, {{"type": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [], {}}})~", event_name, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000, contents);
     builder.append('\n');
-    output.write_or_error(builder.string_view().bytes());
+    output.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
 DeprecatedString Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)
