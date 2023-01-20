@@ -18,8 +18,7 @@ SettingsDialog::SettingsDialog(QMainWindow* window)
     m_homepage = new QLineEdit(this);
     m_ok_button = new QPushButton("&Save", this);
 
-    m_layout->addWidget(new QLabel("Homepage", this));
-    m_layout->addWidget(m_homepage);
+    m_layout->addRow(new QLabel("HomePage", this), m_homepage);
     m_layout->addWidget(m_ok_button);
 
     m_homepage->setText(s_settings->homepage());
