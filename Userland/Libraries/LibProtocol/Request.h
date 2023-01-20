@@ -9,7 +9,6 @@
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FileStream.h>
 #include <AK/Function.h>
 #include <AK/MemoryStream.h>
 #include <AK/RefCounted.h>
