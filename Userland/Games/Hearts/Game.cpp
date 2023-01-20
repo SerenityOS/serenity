@@ -199,7 +199,7 @@ void Game::setup(DeprecatedString player_name, int hand_number)
         m_passing_button->set_focus(false);
     }
 
-    NonnullRefPtrVector<Card> deck = Cards::create_standard_deck(Cards::Shuffle::Yes);
+    NonnullRefPtrVector<Card> deck = Cards::create_standard_deck(Cards::Shuffle::Yes).release_value_but_fixme_should_propagate_errors();
 
     for (auto& player : m_players) {
         player.hand.ensure_capacity(Card::card_count);

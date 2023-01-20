@@ -168,7 +168,7 @@ void Game::setup(Mode mode)
     if (on_undo_availability_change)
         on_undo_availability_change(false);
 
-    m_new_deck = Cards::create_standard_deck(Cards::Shuffle::Yes);
+    m_new_deck = Cards::create_standard_deck(Cards::Shuffle::Yes).release_value_but_fixme_should_propagate_errors();
 
     clear_moving_cards();
 

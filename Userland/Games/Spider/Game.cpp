@@ -74,7 +74,7 @@ void Game::setup(Mode mode)
         break;
     }
 
-    m_new_deck = Cards::create_deck(0, 0, heart_suits, spade_suits, Cards::Shuffle::Yes);
+    m_new_deck = Cards::create_deck(0, 0, heart_suits, spade_suits, Cards::Shuffle::Yes).release_value_but_fixme_should_propagate_errors();
 
     clear_moving_cards();
 
