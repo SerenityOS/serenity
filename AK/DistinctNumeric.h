@@ -89,6 +89,8 @@ class DistinctNumeric {
     constexpr static Option options { Opts()... };
 
 public:
+    using Type = T;
+
     constexpr DistinctNumeric() = default;
 
     constexpr DistinctNumeric(T value)
