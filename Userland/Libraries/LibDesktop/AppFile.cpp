@@ -150,12 +150,12 @@ Vector<DeprecatedString> AppFile::launcher_protocols() const
     return protocols;
 }
 
-bool AppFile::spawn() const
+bool AppFile::spawn(ReadonlySpan<StringView> arguments) const
 {
     if (!is_valid())
         return false;
 
-    auto pid = Core::Process::spawn(executable(), ReadonlySpan<StringView> {}, working_directory());
+    auto pid = Core::Process::spawn(executable(), arguments, working_directory());
     if (pid.is_error())
         return false;
 
