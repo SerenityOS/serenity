@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Endian.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibPDF/Encoding.h>

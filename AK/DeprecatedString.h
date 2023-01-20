@@ -9,7 +9,6 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
-#include <AK/Stream.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
@@ -337,7 +336,7 @@ struct CaseInsensitiveStringTraits : public Traits<DeprecatedString> {
 
 DeprecatedString escape_html_entities(StringView html);
 
-InputStream& operator>>(InputStream& stream, DeprecatedString& string);
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, DeprecatedString& string);
 
 }
 

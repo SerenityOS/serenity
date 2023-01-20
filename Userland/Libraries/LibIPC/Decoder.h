@@ -9,7 +9,6 @@
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>

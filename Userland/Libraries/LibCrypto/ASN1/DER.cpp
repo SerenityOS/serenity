@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedStream.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -223,7 +224,7 @@ Optional<DecodeError> Decoder::leave()
     return {};
 }
 
-void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
+void pretty_print(Decoder& decoder, DeprecatedOutputStream& stream, int indent)
 {
     while (!decoder.eof()) {
         auto tag = decoder.peek();

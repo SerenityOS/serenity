@@ -7,16 +7,16 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedStream.h>
 #include <AK/LEB128.h>
 #include <AK/MemMem.h>
-#include <AK/Stream.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
-class InputMemoryStream final : public InputStream {
+class DeprecatedInputMemoryStream final : public DeprecatedInputStream {
 public:
-    explicit InputMemoryStream(ReadonlyBytes bytes)
+    explicit DeprecatedInputMemoryStream(ReadonlyBytes bytes)
         : m_bytes(bytes)
     {
     }
@@ -89,9 +89,9 @@ private:
     size_t m_offset { 0 };
 };
 
-class OutputMemoryStream final : public OutputStream {
+class DeprecatedOutputMemoryStream final : public DeprecatedOutputStream {
 public:
-    explicit OutputMemoryStream(Bytes bytes)
+    explicit DeprecatedOutputMemoryStream(Bytes bytes)
         : m_bytes(bytes)
     {
     }
@@ -141,7 +141,6 @@ private:
 }
 
 #if USING_AK_GLOBALLY
-using AK::InputMemoryStream;
-using AK::InputStream;
-using AK::OutputMemoryStream;
+using AK::DeprecatedInputMemoryStream;
+using AK::DeprecatedOutputMemoryStream;
 #endif

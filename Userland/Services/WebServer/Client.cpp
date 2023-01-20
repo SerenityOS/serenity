@@ -9,7 +9,6 @@
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
-#include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>

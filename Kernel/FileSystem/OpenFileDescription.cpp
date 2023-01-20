@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -223,7 +223,7 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
     ErrorOr<void> error;
     u8 stack_buffer[PAGE_SIZE];
     Bytes temp_buffer(stack_buffer, sizeof(stack_buffer));
-    OutputMemoryStream stream { temp_buffer };
+    DeprecatedOutputMemoryStream stream { temp_buffer };
 
     auto flush_stream_to_output_buffer = [&error, &stream, &remaining, &output_buffer]() -> bool {
         if (error.is_error())

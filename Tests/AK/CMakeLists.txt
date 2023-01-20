@@ -18,6 +18,7 @@ set(AK_TEST_SOURCES
     TestCircularDeque.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
+    TestDeprecatedMemoryStream.cpp
     TestDeprecatedString.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
@@ -48,7 +49,6 @@ set(AK_TEST_SOURCES
     TestLexicalPath.cpp
     TestMACAddress.cpp
     TestMemory.cpp
-    TestMemoryStream.cpp
     TestNeverDestroyed.cpp
     TestNonnullRefPtr.cpp
     TestNumberFormat.cpp

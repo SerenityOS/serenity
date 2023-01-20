@@ -6,7 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/MemoryStream.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <LibGfx/BMPLoader.h>
@@ -59,7 +59,7 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
+static Optional<size_t> decode_ico_header(DeprecatedInputMemoryStream& stream)
 {
     ICONDIR header;
     stream >> Bytes { &header, sizeof(header) };
@@ -71,7 +71,7 @@ static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
     return { header.image_count };
 }
 
-static Optional<ICOImageDescriptor> decode_ico_direntry(InputMemoryStream& stream)
+static Optional<ICOImageDescriptor> decode_ico_direntry(DeprecatedInputMemoryStream& stream)
 {
     ICONDIRENTRY entry;
     stream >> Bytes { &entry, sizeof(entry) };
@@ -108,7 +108,7 @@ static size_t find_largest_image(ICOLoadingContext const& context)
 
 static bool load_ico_directory(ICOLoadingContext& context)
 {
-    InputMemoryStream stream { { context.data, context.data_size } };
+    DeprecatedInputMemoryStream stream { { context.data, context.data_size } };
 
     auto image_count = decode_ico_header(stream);
     if (!image_count.has_value() || image_count.value() == 0) {
@@ -187,7 +187,7 @@ bool ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context, Optional
 
 ErrorOr<bool> ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    InputMemoryStream stream { { data.data(), data.size() } };
+    DeprecatedInputMemoryStream stream { { data.data(), data.size() } };
     return decode_ico_header(stream).has_value();
 }
 
@@ -237,7 +237,7 @@ bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool ICOImageDecoderPlugin::initialize()
 {
-    InputMemoryStream stream { { m_context->data, m_context->data_size } };
+    DeprecatedInputMemoryStream stream { { m_context->data, m_context->data_size } };
     return decode_ico_header(stream).has_value();
 }
 

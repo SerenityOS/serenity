@@ -10,7 +10,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/MemoryStream.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/MemoryStream.h>

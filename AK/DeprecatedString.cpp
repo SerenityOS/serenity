@@ -6,6 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedFlyString.h>
+#include <AK/DeprecatedStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
@@ -415,7 +416,7 @@ bool DeprecatedString::operator==(char const* cstring) const
     return view() == cstring;
 }
 
-InputStream& operator>>(InputStream& stream, DeprecatedString& string)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, DeprecatedString& string)
 {
     StringBuilder builder;
 

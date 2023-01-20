@@ -9,6 +9,7 @@
 
 #include <AK/Badge.h>
 #include <AK/CircularBuffer.h>
+#include <AK/DeprecatedStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/EnumBits.h>
 #include <AK/Function.h>
@@ -1071,7 +1072,7 @@ using ReusableUDPSocket = BasicReusableSocket<UDPSocket>;
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
 class WrappedAKInputStream final : public Stream {
 public:
-    WrappedAKInputStream(NonnullOwnPtr<InputStream> stream);
+    WrappedAKInputStream(NonnullOwnPtr<DeprecatedInputStream> stream);
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<void> discard(size_t discarded_bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
@@ -1080,13 +1081,13 @@ public:
     virtual void close() override;
 
 private:
-    NonnullOwnPtr<InputStream> m_stream;
+    NonnullOwnPtr<DeprecatedInputStream> m_stream;
 };
 
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
 class WrappedAKOutputStream final : public Stream {
 public:
-    WrappedAKOutputStream(NonnullOwnPtr<OutputStream> stream);
+    WrappedAKOutputStream(NonnullOwnPtr<DeprecatedOutputStream> stream);
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
     virtual bool is_eof() const override;
@@ -1094,11 +1095,11 @@ public:
     virtual void close() override;
 
 private:
-    NonnullOwnPtr<OutputStream> m_stream;
+    NonnullOwnPtr<DeprecatedOutputStream> m_stream;
 };
 
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
-class WrapInAKInputStream final : public InputStream {
+class WrapInAKInputStream final : public DeprecatedInputStream {
 public:
     WrapInAKInputStream(Core::Stream::Stream& stream);
     virtual size_t read(Bytes) override;
@@ -1111,7 +1112,7 @@ private:
 };
 
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
-class WrapInAKOutputStream final : public OutputStream {
+class WrapInAKOutputStream final : public DeprecatedOutputStream {
 public:
     WrapInAKOutputStream(Core::Stream::Stream& stream);
     virtual size_t write(ReadonlyBytes) override;
