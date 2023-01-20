@@ -231,8 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
     auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 2. Let trimmedString be ! TrimString(inputString, start).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto trimmed_string = TRY(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+    auto trimmed_string = MUST_OR_THROW_OOM(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
     if (trimmed_string.is_empty())
         return js_nan();
 

@@ -581,7 +581,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
     Vector<PatternPartition> result;
 
     // 8. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = TRY(pattern->visit([&](auto const& p) { return partition_pattern(vm, p); }));
+    auto pattern_parts = MUST_OR_THROW_OOM(pattern->visit([&](auto const& p) { return partition_pattern(vm, p); }));
 
     // 9. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
     for (auto& pattern_part : pattern_parts) {
@@ -597,7 +597,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         // c. Else if p is equal to "number", then
         else if (part == "number"sv) {
             // i. Let notationSubParts be PartitionNotationSubPattern(numberFormat, x, n, exponent).
-            auto notation_sub_parts = TRY(partition_notation_sub_pattern(vm, number_format, number, formatted_string, exponent));
+            auto notation_sub_parts = MUST_OR_THROW_OOM(partition_notation_sub_pattern(vm, number_format, number, formatted_string, exponent));
             // ii. Append all elements of notationSubParts to result.
             result.extend(move(notation_sub_parts));
         }
@@ -742,7 +742,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
             return Vector<PatternPartition> {};
 
         // b. Let patternParts be PartitionPattern(notationSubPattern).
-        auto pattern_parts = TRY(partition_pattern(vm, *notation_sub_pattern));
+        auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, *notation_sub_pattern));
 
         // c. For each Record { [[Type]], [[Value]] } patternPart of patternParts, do
         for (auto& pattern_part : pattern_parts) {

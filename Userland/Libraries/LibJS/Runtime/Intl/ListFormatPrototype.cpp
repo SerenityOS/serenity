@@ -46,8 +46,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
     auto string_list = TRY(string_list_from_iterable(vm, list));
 
     // 4. Return ! FormatList(lf, stringList).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto formatted = TRY(format_list(vm, *list_format, string_list));
+    auto formatted = MUST_OR_THROW_OOM(format_list(vm, *list_format, string_list));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -64,8 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
     auto string_list = TRY(string_list_from_iterable(vm, list));
 
     // 4. Return ! FormatListToParts(lf, stringList).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    return TRY(format_list_to_parts(vm, *list_format, string_list));
+    return MUST_OR_THROW_OOM(format_list_to_parts(vm, *list_format, string_list));
 }
 
 // 13.3.5 Intl.ListFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.resolvedoptions

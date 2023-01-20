@@ -445,8 +445,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 // 3. Let dataLocaleData be %DurationFormat%.[[LocaleData]].[[<dataLocale>]].
 
                 // 4. Let num be ! FormatNumeric(nf, 𝔽(value)).
-                // NOTE: We TRY this operation only to propagate OOM errors.
-                auto number = TRY(format_numeric(vm, *number_format, MathematicalValue(value)));
+                auto number = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, MathematicalValue(value)));
 
                 // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
                 result.append({ unit, number });
@@ -505,8 +504,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
 
                 // 5. Let parts be ! PartitionNumberPattern(nf, 𝔽(value)).
-                // NOTE: We TRY this operation only to propagate OOM errors.
-                auto parts = TRY(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
+                auto parts = MUST_OR_THROW_OOM(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
 
                 // 6. Let concat be an empty String.
                 StringBuilder concat;
@@ -566,8 +564,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
     }
 
     // 10. Set result to ! CreatePartsFromList(lf, result).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto final_result = TRY(create_parts_from_list(vm, *list_format, string_result));
+    auto final_result = MUST_OR_THROW_OOM(create_parts_from_list(vm, *list_format, string_result));
 
     // 11. Return result.
     return final_result;

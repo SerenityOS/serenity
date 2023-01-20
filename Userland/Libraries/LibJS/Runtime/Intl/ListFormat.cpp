@@ -49,8 +49,7 @@ StringView ListFormat::type_string() const
 ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM& vm, StringView pattern, Placeables placeables)
 {
     // 1. Let patternParts be ! PartitionPattern(pattern).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto pattern_parts = TRY(partition_pattern(vm, pattern));
+    auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
 
     // 2. Let result be a new empty List.
     Vector<PatternPartition> result {};
@@ -127,7 +126,7 @@ ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM& vm, ListF
         placeables.set("1"sv, move(second));
 
         // f. Return ! DeconstructPattern(pattern, placeables).
-        return deconstruct_pattern(vm, pattern, move(placeables));
+        return MUST_OR_THROW_OOM(deconstruct_pattern(vm, pattern, move(placeables)));
     }
 
     // 4. Let last be a new Record { [[Type]]: "element", [[Value]]: list[size - 1] }.
@@ -173,8 +172,7 @@ ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM& vm, ListF
         placeables.set("1"sv, move(parts));
 
         // g. Set parts to ! DeconstructPattern(pattern, placeables).
-        // NOTE: We TRY this operation only to propagate OOM errors.
-        parts = TRY(deconstruct_pattern(vm, pattern, move(placeables)));
+        parts = MUST_OR_THROW_OOM(deconstruct_pattern(vm, pattern, move(placeables)));
 
         // h. Decrement i by 1.
     } while (i-- != 0);
@@ -187,8 +185,7 @@ ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM& vm, ListF
 ThrowCompletionOr<DeprecatedString> format_list(VM& vm, ListFormat const& list_format, Vector<DeprecatedString> const& list)
 {
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto parts = TRY(create_parts_from_list(vm, list_format, list));
+    auto parts = MUST_OR_THROW_OOM(create_parts_from_list(vm, list_format, list));
 
     // 2. Let result be an empty String.
     StringBuilder result;
@@ -209,8 +206,7 @@ ThrowCompletionOr<Array*> format_list_to_parts(VM& vm, ListFormat const& list_fo
     auto& realm = *vm.current_realm();
 
     // 1. Let parts be ! CreatePartsFromList(listFormat, list).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto parts = TRY(create_parts_from_list(vm, list_format, list));
+    auto parts = MUST_OR_THROW_OOM(create_parts_from_list(vm, list_format, list));
 
     // 2. Let result be ! ArrayCreate(0).
     auto result = MUST(Array::create(realm, 0));

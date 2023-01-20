@@ -43,7 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     auto record = TRY(to_duration_record(vm, vm.argument(0)));
 
     // 4. Let parts be PartitionDurationFormatPattern(df, record).
-    auto parts = TRY(partition_duration_format_pattern(vm, *duration_format, record));
+    auto parts = MUST_OR_THROW_OOM(partition_duration_format_pattern(vm, *duration_format, record));
 
     // 5. Let result be a new empty String.
     StringBuilder result;
@@ -71,7 +71,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format_to_parts)
     auto record = TRY(to_duration_record(vm, vm.argument(0)));
 
     // 4. Let parts be PartitionDurationFormatPattern(df, record).
-    auto parts = TRY(partition_duration_format_pattern(vm, *duration_format, record));
+    auto parts = MUST_OR_THROW_OOM(partition_duration_format_pattern(vm, *duration_format, record));
 
     // 5. Let result be ! ArrayCreate(0).
     auto result = MUST(Array::create(realm, 0));
