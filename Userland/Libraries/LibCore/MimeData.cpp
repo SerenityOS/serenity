@@ -71,6 +71,8 @@ StringView guess_mime_type_based_on_filename(StringView path)
         return "image/x-qoi"sv;
     if (path.ends_with(".svg"sv, CaseSensitivity::CaseInsensitive))
         return "image/svg+xml"sv;
+    if (path.ends_with(".tga"sv, CaseSensitivity::CaseInsensitive))
+        return "image/x-targa"sv;
     if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
         return "text/markdown"sv;
     if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
