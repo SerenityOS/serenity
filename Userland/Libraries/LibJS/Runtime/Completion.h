@@ -10,6 +10,7 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Optional.h>
 #include <AK/Try.h>
+#include <AK/TypeCasts.h>
 #include <AK/Variant.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Value.h>
@@ -28,6 +29,26 @@ namespace JS {
         static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
             "Do not return a reference from a fallible expression");                                 \
         _temporary_result.release_value();                                                           \
+    })
+
+#define MUST_OR_THROW_OOM(expression)                                                                  \
+    ({                                                                                                 \
+        /* Ignore -Wshadow to allow nesting the macro. */                                              \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                               \
+            auto _temporary_result = (expression));                                                    \
+        if (_temporary_result.is_error()) {                                                            \
+            auto _completion = _temporary_result.release_error();                                      \
+                                                                                                       \
+            /* We can't explicitly check for OOM because InternalError does not store the ErrorType */ \
+            VERIFY(_completion.value().has_value());                                                   \
+            VERIFY(_completion.value()->is_object());                                                  \
+            VERIFY(is<JS::InternalError>(_completion.value()->as_object()));                           \
+                                                                                                       \
+            return _completion;                                                                        \
+        }                                                                                              \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,   \
+            "Do not return a reference from a fallible expression");                                   \
+        _temporary_result.release_value();                                                             \
     })
 
 // 6.2.3 The Completion Record Specification Type, https://tc39.es/ecma262/#sec-completion-record-specification-type
