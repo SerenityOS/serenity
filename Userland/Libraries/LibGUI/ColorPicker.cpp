@@ -187,7 +187,7 @@ ColorPicker::ColorPicker(Color color, Window* parent_window, DeprecatedString ti
     : Dialog(parent_window)
     , m_color(color)
 {
-    set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
+    set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv).release_value_but_fixme_should_propagate_errors());
     set_title(title);
     set_resizable(false);
     resize(480, 326);
@@ -552,7 +552,7 @@ ColorField::ColorField(Color color)
 
 void ColorField::create_color_bitmap()
 {
-    m_color_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 256, 256 }).release_value_but_fixme_should_propagate_errors();
+    m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 256, 256 }).release_value_but_fixme_should_propagate_errors();
     auto painter = Gfx::Painter(*m_color_bitmap);
 
     Gfx::HSV hsv;
@@ -678,7 +678,7 @@ void ColorField::resize_event(ResizeEvent&)
 ColorSlider::ColorSlider(double value)
     : m_value(value)
 {
-    m_color_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 32, 360 }).release_value_but_fixme_should_propagate_errors();
+    m_color_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 32, 360 }).release_value_but_fixme_should_propagate_errors();
     auto painter = Gfx::Painter(*m_color_bitmap);
 
     for (int h = 0; h < 360; h++) {

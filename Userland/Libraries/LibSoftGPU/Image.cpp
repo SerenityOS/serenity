@@ -151,7 +151,7 @@ void Image::regenerate_mipmaps()
 
     auto empty_bitmap_for_level = [&](u32 level) -> NonnullRefPtr<Gfx::Bitmap> {
         Gfx::IntSize size = { width_at_level(level), height_at_level(level) };
-        return MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size));
+        return MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size));
     };
     auto copy_image_into_bitmap = [&](u32 level) -> NonnullRefPtr<Gfx::Bitmap> {
         auto bitmap = empty_bitmap_for_level(level);

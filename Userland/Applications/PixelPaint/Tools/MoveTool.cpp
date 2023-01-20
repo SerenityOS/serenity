@@ -207,7 +207,7 @@ ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
     auto const& source_bitmap = layer->content_bitmap();
     auto preview_bitmap_size = editor_rect_size.contains(source_bitmap.size()) ? source_bitmap.size() : editor_rect_size;
 
-    m_cached_preview_bitmap = TRY(Gfx::Bitmap::try_create(source_bitmap.format(), preview_bitmap_size));
+    m_cached_preview_bitmap = TRY(Gfx::Bitmap::create(source_bitmap.format(), preview_bitmap_size));
     GUI::Painter preview_painter(*m_cached_preview_bitmap);
     preview_painter.draw_scaled_bitmap(m_cached_preview_bitmap->rect(), source_bitmap, source_bitmap.rect(), 0.8f, Gfx::Painter::ScalingMode::BilinearBlend);
     Gfx::ContrastFilter preview_filter(0.5f);

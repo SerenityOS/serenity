@@ -10,7 +10,7 @@
 
 static NonnullOwnPtr<GL::GLContext> create_testing_context()
 {
-    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { 1, 1 }));
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 1, 1 }));
     auto context = MUST(GL::create_context(*bitmap));
     GL::make_context_current(context);
     return context;

@@ -189,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
 
-    auto open_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv));
+    auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the nodes context menu.
     auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme(get_absolute_path_to_selected_node(treemapwidget)));
@@ -199,7 +199,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
 
-    auto copy_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv));
+    auto copy_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv));
     auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(treemapwidget));
     });

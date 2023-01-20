@@ -74,13 +74,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         game.reset();
     })));
     static DeprecatedString const pause_text = "&Pause Game"sv;
-    auto const pause_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv));
+    auto const pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
     static DeprecatedString const continue_text = "&Continue Game"sv;
-    auto const continue_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv));
+    auto const continue_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
     TRY(game_menu->try_add_action(GUI::Action::create(pause_text, { Mod_None, Key_Space }, pause_icon, [&](auto& action) {
         if (game.has_timer()) {
             game.pause();
@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             action.set_icon(pause_icon);
         }
     })));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         game.pause();
         auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
         if (dialog->exec() == GUI::Dialog::ExecResult::OK)

@@ -60,7 +60,7 @@ ErrorOr<void> VectorscopeWidget::rebuild_vectorscope_data()
 
 void VectorscopeWidget::rebuild_vectorscope_image()
 {
-    m_vectorscope_image = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+    m_vectorscope_image = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size()));
     m_vectorscope_image->fill(Color::Transparent);
 
     Gfx::Painter base_painter(*m_vectorscope_image);

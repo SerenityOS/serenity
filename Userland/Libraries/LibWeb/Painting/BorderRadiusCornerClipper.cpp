@@ -34,7 +34,7 @@ ErrorOr<BorderRadiusCornerClipper> BorderRadiusCornerClipper::create(PaintContex
         if (!corner_bitmap)
             return Error::from_errno(ENOMEM);
     } else {
-        corner_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size.to_type<int>()));
+        corner_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, corners_bitmap_size.to_type<int>()));
     }
 
     CornerData corner_data {

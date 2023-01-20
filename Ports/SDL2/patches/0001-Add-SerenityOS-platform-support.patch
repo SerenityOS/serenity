@@ -1318,7 +1318,7 @@ index 0000000000000000000000000000000000000000..9c7d4f3f5cedf86ae885330aaf6fae7e
 +
 +static RefPtr<Gfx::Bitmap> create_bitmap_from_surface(SDL_Surface& icon)
 +{
-+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, {icon.w, icon.h});
++    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, {icon.w, icon.h});
 +    if (bitmap_or_error.is_error())
 +        return {};
 +    auto bitmap = bitmap_or_error.release_value();
@@ -1372,7 +1372,7 @@ index 0000000000000000000000000000000000000000..9c7d4f3f5cedf86ae885330aaf6fae7e
 +    dbgln("{}: Creating a new framebuffer of size {}x{}", __FUNCTION__, window->w, window->h);
 +    auto win = SerenityPlatformWindow::from_sdl_window(window);
 +    *format = SDL_PIXELFORMAT_RGB888;
-+    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, {window->w, window->h});
++    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, {window->w, window->h});
 +    if (bitmap_or_error.is_error())
 +        return SDL_OutOfMemory();
 +    win->widget()->m_buffer = bitmap_or_error.release_value();

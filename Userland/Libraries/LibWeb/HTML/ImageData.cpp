@@ -25,7 +25,7 @@ JS::GCPtr<ImageData> ImageData::create_with_size(JS::Realm& realm, int width, in
         return nullptr;
     auto data = JS::NonnullGCPtr<JS::Uint8ClampedArray>(*data_or_error.release_value());
 
-    auto bitmap_or_error = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
+    auto bitmap_or_error = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
     if (bitmap_or_error.is_error())
         return nullptr;
     return realm.heap().allocate<ImageData>(realm, realm, bitmap_or_error.release_value(), move(data));

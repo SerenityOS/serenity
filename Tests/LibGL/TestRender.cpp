@@ -23,7 +23,7 @@
 
 static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height)
 {
-    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }));
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }));
     auto context = MUST(GL::create_context(*bitmap));
     GL::make_context_current(context);
     return context;
@@ -41,7 +41,7 @@ static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView
     }
 
     auto reference_image_path = DeprecatedString::formatted(REFERENCE_IMAGE_DIR "/{}", reference_filename);
-    auto reference_bitmap = MUST(Gfx::Bitmap::try_load_from_file(reference_image_path));
+    auto reference_bitmap = MUST(Gfx::Bitmap::load_from_file(reference_image_path));
     EXPECT_EQ(reference_bitmap->visually_equals(bitmap), true);
 }
 

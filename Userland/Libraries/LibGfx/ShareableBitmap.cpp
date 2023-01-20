@@ -62,7 +62,7 @@ ErrorOr<Gfx::ShareableBitmap> decode(Decoder& decoder)
         palette = TRY(decoder.decode<decltype(palette)>());
 
     auto buffer = TRY(Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width() * scale, bitmap_format), size.height() * scale)));
-    auto bitmap = TRY(Gfx::Bitmap::try_create_with_anonymous_buffer(bitmap_format, move(buffer), size, scale, palette));
+    auto bitmap = TRY(Gfx::Bitmap::create_with_anonymous_buffer(bitmap_format, move(buffer), size, scale, palette));
 
     return Gfx::ShareableBitmap { move(bitmap), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
 }

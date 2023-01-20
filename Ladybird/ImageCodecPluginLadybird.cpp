@@ -22,7 +22,7 @@ static Optional<Web::Platform::DecodedImage> decode_image_with_qt(ReadonlyBytes 
     if (image.isNull())
         return {};
     image = image.convertToFormat(QImage::Format::Format_ARGB32);
-    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(image.width(), image.height())));
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(image.width(), image.height())));
     for (int y = 0; y < image.height(); ++y) {
         memcpy(bitmap->scanline_u8(y), image.scanLine(y), image.width() * 4);
     }

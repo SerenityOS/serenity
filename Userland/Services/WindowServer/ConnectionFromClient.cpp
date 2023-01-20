@@ -750,7 +750,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
             did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
             return;
         }
-        auto backing_store_or_error = Gfx::Bitmap::try_create_with_anonymous_buffer(
+        auto backing_store_or_error = Gfx::Bitmap::create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
             buffer_or_error.release_value(),
             size,
@@ -1165,7 +1165,7 @@ Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen
     }
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
     auto bitmap_size = rect.value_or(Screen::bounding_rect()).size();
-    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
+    if (auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(*bitmap);
         Screen::for_each([&](auto& screen) {
@@ -1217,7 +1217,7 @@ Messages::WindowServer::GetScreenBitmapAroundLocationResponse ConnectionFromClie
         return bitmap_or_error.release_value()->to_shareable_bitmap();
     }
 
-    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
+    if (auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         auto bounding_screen_src_rect = Screen::bounding_rect().intersected(rect);
         Gfx::Painter painter(*bitmap);

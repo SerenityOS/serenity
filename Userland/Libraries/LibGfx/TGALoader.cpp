@@ -285,11 +285,11 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
     RefPtr<Gfx::Bitmap> bitmap;
     switch (bits_per_pixel) {
     case 24:
-        bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRx8888, { m_context->header.width, m_context->header.height }));
+        bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { m_context->header.width, m_context->header.height }));
         break;
 
     case 32:
-        bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { m_context->header.width, m_context->header.height }));
+        bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { m_context->header.width, m_context->header.height }));
         break;
 
     default:

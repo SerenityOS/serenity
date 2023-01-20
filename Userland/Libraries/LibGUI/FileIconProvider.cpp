@@ -70,8 +70,8 @@ static void initialize_if_needed()
 
     auto config = Core::ConfigFile::open("/etc/FileIconProvider.ini").release_value_but_fixme_should_propagate_errors();
 
-    s_symlink_emblem = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem.png"sv).release_value_but_fixme_should_propagate_errors();
-    s_symlink_emblem_small = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem-small.png"sv).release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem = Gfx::Bitmap::load_from_file("/res/icons/symlink-emblem.png"sv).release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem_small = Gfx::Bitmap::load_from_file("/res/icons/symlink-emblem-small.png"sv).release_value_but_fixme_should_propagate_errors();
 
     s_hard_disk_icon = Icon::default_icon("hard-disk"sv);
     s_directory_icon = Icon::default_icon("filetype-folder"sv);

@@ -126,7 +126,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(Core::Stream::Stream& str
     if (height > NumericLimits<int>::max())
         return Error::from_string_literal("Cannot create bitmap for QOI image of valid size, height exceeds maximum Gfx::Bitmap height");
 
-    auto bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { width, height }));
+    auto bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
 
     u8 run = 0;
     Color pixel = { 0, 0, 0, 255 };

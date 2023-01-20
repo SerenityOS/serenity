@@ -28,7 +28,7 @@ void LassoSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
     if (!layer->rect().contains(layer_event.position()))
         return;
 
-    auto selection_bitmap_result = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, layer->content_bitmap().size());
+    auto selection_bitmap_result = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, layer->content_bitmap().size());
     if (selection_bitmap_result.is_error())
         return;
 
@@ -99,7 +99,7 @@ void LassoSelectTool::on_mouseup(Layer*, MouseEvent&)
     auto cropped_selection = cropped_selection_result.release_value();
 
     // We create a bitmap that is bigger by 1 pixel on each side
-    auto lasso_bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (m_bottom_right.x() - m_top_left.x()) + 2, (m_bottom_right.y() - m_top_left.y()) + 2 });
+    auto lasso_bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { (m_bottom_right.x() - m_top_left.x()) + 2, (m_bottom_right.y() - m_top_left.y()) + 2 });
     if (lasso_bitmap_or_error.is_error())
         return;
 

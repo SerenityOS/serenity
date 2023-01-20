@@ -45,7 +45,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     current_cell_label.set_fixed_width(50);
 
     auto& help_button = top_bar.add<GUI::Button>("");
-    help_button.set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
+    help_button.set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors());
     help_button.set_tooltip("Functions Help");
     help_button.set_fixed_size(20, 20);
     help_button.on_click = [&](auto) {
@@ -108,7 +108,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
         }
     });
     m_tab_context_menu->add_action(*m_rename_action);
-    m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         DeprecatedString name;
         if (GUI::InputBox::show(window(), name, "Name for new sheet"sv, "Create sheet"sv) == GUI::Dialog::ExecResult::OK) {
             NonnullRefPtrVector<Sheet> new_sheets;
@@ -119,7 +119,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
 
     setup_tabs(m_workbook->sheets());
 
-    m_new_action = GUI::Action::create("Add New Sheet", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_new_action = GUI::Action::create("Add New Sheet", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         add_sheet();
     });
 
@@ -252,13 +252,13 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_redo_action->set_enabled(false);
 
     m_change_background_color_action = GUI::Action::create(
-        "&Change Background Color", { Mod_Ctrl, Key_B }, Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/bucket.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "&Change Background Color", { Mod_Ctrl, Key_B }, Gfx::Bitmap::load_from_file("/res/icons/pixelpaint/bucket.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             change_cell_static_color_format(Spreadsheet::FormatType::Background);
         },
         window());
 
     m_change_foreground_color_action = GUI::Action::create(
-        "&Change Foreground Color", { Mod_Ctrl, Key_T }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/text-color.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "&Change Foreground Color", { Mod_Ctrl, Key_T }, Gfx::Bitmap::load_from_file("/res/icons/16x16/text-color.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             change_cell_static_color_format(Spreadsheet::FormatType::Foreground);
         },
         window());
@@ -267,7 +267,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_change_foreground_color_action->set_enabled(false);
 
     m_functions_help_action = GUI::Action::create(
-        "&Functions Help", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "&Functions Help", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             if (auto* worksheet_ptr = current_worksheet_if_available()) {
                 auto docs = worksheet_ptr->gather_documentation();
                 auto help_window = Spreadsheet::HelpWindow::the(window());

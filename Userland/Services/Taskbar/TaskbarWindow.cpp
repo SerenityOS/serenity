@@ -83,7 +83,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     (void)TRY(m_task_button_container->try_set_layout<GUI::HorizontalBoxLayout>());
     m_task_button_container->layout()->set_spacing(3);
 
-    m_default_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv));
+    m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
     m_applet_area_container = TRY(main_widget->try_add<GUI::Frame>());
     m_applet_area_container->set_frame_thickness(1);

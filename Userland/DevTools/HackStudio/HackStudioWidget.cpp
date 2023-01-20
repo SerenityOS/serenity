@@ -500,7 +500,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     for (auto& new_file_action : m_new_file_actions) {
         new_file_submenu.add_action(new_file_action);
     }
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv));
     new_file_submenu.set_icon(icon);
     new_file_submenu.add_action(*m_new_plain_file_action);
     new_file_submenu.add_separator();
@@ -519,7 +519,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(DeprecatedString const& label, DeprecatedString const& icon, DeprecatedString const& extension)
 {
-    auto icon_no_shadow = TRY(Gfx::Bitmap::try_load_from_file(icon));
+    auto icon_no_shadow = TRY(Gfx::Bitmap::load_from_file(icon));
     return GUI::Action::create(label, icon_no_shadow, [this, extension](const GUI::Action&) {
         DeprecatedString filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:"sv, "Add new file to project"sv) != GUI::InputBox::ExecResult::OK)
@@ -561,7 +561,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Dep
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/mkdir.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv));
     return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, icon, [this](const GUI::Action&) {
         DeprecatedString directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:"sv, "Add new folder to project"sv) != GUI::InputBox::ExecResult::OK)
@@ -598,7 +598,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_selected_actio
         for (auto& file : files)
             open_file(file);
     });
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     open_selected_action->set_icon(icon);
     open_selected_action->set_enabled(true);
     return open_selected_action;
@@ -705,7 +705,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_project_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hackstudio-project.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/hackstudio-project.png"sv));
     return GUI::Action::create(
         "&Project...", icon,
         [this](const GUI::Action&) {
@@ -856,7 +856,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_ac
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_editor_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/remove-editor.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/remove-editor.png"sv));
     return GUI::Action::create("&Remove Current Editor", { Mod_Alt | Mod_Shift, Key_E }, icon, [this](auto&) {
         if (m_all_editor_wrappers.size() <= 1)
             return;
@@ -870,7 +870,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_edit
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     return GUI::Action::create("&Open Project...", { Mod_Ctrl | Mod_Shift, Key_O }, icon, [this](auto&) {
         auto open_path = GUI::FilePicker::get_open_filepath(window(), "Open project", m_project->root_path(), true);
         if (!open_path.has_value())
@@ -937,7 +937,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_remove_current_terminal_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/remove-terminal.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/remove-terminal.png"sv));
     return GUI::Action::create("Remove &Current Terminal", { Mod_Alt | Mod_Shift, Key_T }, icon, [this](auto&) {
         auto widget = m_action_tab_widget->active_widget();
         if (!widget)
@@ -963,7 +963,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_add_editor_tab_widget_action
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_editor_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/add-editor.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/add-editor.png"sv));
     return GUI::Action::create("Add New &Editor", { Mod_Ctrl | Mod_Alt, Key_E },
         icon,
         [this](auto&) {
@@ -974,7 +974,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_editor_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_terminal_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/hackstudio/add-terminal.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/hackstudio/add-terminal.png"sv));
     return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
         icon,
         [this](auto&) {
@@ -999,7 +999,7 @@ void HackStudioWidget::reveal_action_tab(GUI::Widget& widget)
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_debug_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/debug-run.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"sv));
     return GUI::Action::create("&Debug", icon, [this](auto&) {
         if (!Core::File::exists(get_project_executable_path())) {
             GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error"sv, GUI::MessageBox::Type::Error);
@@ -1298,7 +1298,7 @@ void HackStudioWidget::create_toolbar(GUI::Widget& parent)
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_build_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/build.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/build.png"sv));
     return GUI::Action::create("&Build", { Mod_Ctrl, Key_B }, icon, [this](auto&) {
         if (warn_unsaved_changes("There are unsaved changes, do you want to save before building?") == ContinueDecision::No)
             return;
@@ -1310,7 +1310,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_build_action()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_run_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-run.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/program-run.png"sv));
     return GUI::Action::create("&Run", { Mod_Ctrl, Key_R }, icon, [this](auto&) {
         reveal_action_tab(*m_terminal_wrapper);
         run();
@@ -1415,7 +1415,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
     }
 
     {
-        auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv));
+        auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv));
         new_submenu.set_icon(icon);
     }
     new_submenu.add_action(*m_new_plain_file_action);
@@ -1425,7 +1425,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
     file_menu.add_action(*m_open_action);
     m_recent_projects_submenu = &file_menu.add_submenu("Open &Recent");
     {
-        auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open-recent.png"sv));
+        auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-recent.png"sv));
         m_recent_projects_submenu->set_icon(icon);
     }
     update_recent_projects_submenu();
@@ -1441,7 +1441,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 {
     auto& edit_menu = window.add_menu("&Edit");
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv));
     edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, icon, [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
         m_find_in_files_widget->focus_textbox_and_select_all();
@@ -1524,7 +1524,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
 
     m_no_wrapping_action->set_checked(true);
 
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv));
     m_editor_font_action = GUI::Action::create("Editor &Font...", icon,
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(&window, m_editor_font, false);
@@ -1564,7 +1564,7 @@ void HackStudioWidget::create_help_menu(GUI::Window& window)
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_stop_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/program-stop.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/program-stop.png"sv));
     auto action = GUI::Action::create("&Stop", icon, [this](auto&) {
         if (!Debugger::the().session()) {
             if (auto result = m_terminal_wrapper->kill_running_command(); result.is_error())
@@ -1734,7 +1734,7 @@ void HackStudioWidget::on_cursor_change()
 ErrorOr<void> HackStudioWidget::create_location_history_actions()
 {
     {
-        auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv));
+        auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv));
         m_locations_history_back_action = GUI::Action::create("Go Back", { Mod_Alt | Mod_Shift, Key_Left }, icon, [this](auto&) {
             if (m_locations_history_end_index <= 1)
                 return;
@@ -1751,7 +1751,7 @@ ErrorOr<void> HackStudioWidget::create_location_history_actions()
     }
 
     {
-        auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv));
+        auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv));
         m_locations_history_forward_action = GUI::Action::create("Go Forward", { Mod_Alt | Mod_Shift, Key_Right }, icon, [this](auto&) {
             if (m_locations_history_end_index == m_locations_history.size())
                 return;
@@ -1772,7 +1772,7 @@ ErrorOr<void> HackStudioWidget::create_location_history_actions()
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_configuration_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv));
     return GUI::Action::create("Project Configuration", icon, [&](auto&) {
         auto parent_directory = LexicalPath::dirname(Project::config_file_path);
         auto absolute_config_file_path = LexicalPath::absolute_path(m_project->root_path(), Project::config_file_path);
@@ -1876,7 +1876,7 @@ void HackStudioWidget::for_each_open_file(Function<void(ProjectFile const&)> fun
 
 ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_syntax_highlighting_mode_action()
 {
-    auto icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-cplusplus.png"sv));
+    auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"sv));
     auto action = GUI::Action::create_checkable("&Semantic Highlighting", icon, [this](auto& action) {
         for (auto& editor_wrapper : m_all_editor_wrappers)
             editor_wrapper.editor().set_semantic_syntax_highlighting(action.is_checked());

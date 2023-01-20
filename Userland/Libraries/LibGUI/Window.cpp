@@ -964,7 +964,7 @@ ErrorOr<NonnullOwnPtr<WindowBackingStore>> Window::create_backing_store(Gfx::Int
     auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes, PAGE_SIZE)));
 
     // FIXME: Plumb scale factor here eventually.
-    auto bitmap = TRY(Gfx::Bitmap::try_create_with_anonymous_buffer(format, buffer, size, 1, {}));
+    auto bitmap = TRY(Gfx::Bitmap::create_with_anonymous_buffer(format, buffer, size, 1, {}));
     return make<WindowBackingStore>(bitmap);
 }
 
@@ -987,7 +987,7 @@ void Window::set_icon(Gfx::Bitmap const* icon)
 
     Gfx::IntSize icon_size = icon ? icon->size() : Gfx::IntSize(16, 16);
 
-    m_icon = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, icon_size).release_value_but_fixme_should_propagate_errors();
+    m_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, icon_size).release_value_but_fixme_should_propagate_errors();
     if (icon) {
         Painter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());

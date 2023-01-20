@@ -134,7 +134,7 @@ void TextTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     // Since ImageEditor can be zoomed in/out, we need to be able to render the preview properly scaled
     // GUI::Painter doesn't have a way to draw a font scaled directly, so we draw the text to a bitmap
     // and then scale the bitmap and blit the result to the ImageEditor.
-    auto text_bitmap_result = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { text_width, text_height });
+    auto text_bitmap_result = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { text_width, text_height });
     if (text_bitmap_result.is_error())
         return;
     auto text_bitmap = text_bitmap_result.release_value();

@@ -144,7 +144,7 @@ NonnullRefPtr<Gfx::Bitmap> EraseTool::build_cursor()
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
     int scaled_size = size() * m_scale_last_created_cursor;
 
-    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(scaled_size, scaled_size)).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(scaled_size, scaled_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::IntRect rect { 0, 0, scaled_size, scaled_size };
     Gfx::Painter painter { new_cursor };

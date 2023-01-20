@@ -34,7 +34,7 @@ private:
 Screensaver::Screensaver(int width, int height, int interval)
 {
     on_screensaver_exit = []() { GUI::Application::the()->quit(); };
-    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }).release_value_but_fixme_should_propagate_errors();
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }).release_value_but_fixme_should_propagate_errors();
     srand(time(nullptr));
     stop_timer();
     start_timer(interval);

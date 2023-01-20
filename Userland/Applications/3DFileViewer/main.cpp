@@ -58,7 +58,7 @@ private:
     {
         constexpr u16 RENDER_WIDTH = 640;
         constexpr u16 RENDER_HEIGHT = 480;
-        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
+        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
         m_context = MUST(GL::create_context(*m_bitmap));
 
         start_timer(20);
@@ -335,14 +335,14 @@ bool GLContextWidget::load_file(Core::File& file)
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
     if (Core::File::exists(texture_path)) {
-        auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(texture_path);
+        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_path);
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
         auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), builder.string_view(), Core::OpenMode::ReadOnly);
         if (!response.is_error()) {
             auto texture_file = response.value();
-            auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
+            auto bitmap_or_error = Gfx::Bitmap::load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
             if (!bitmap_or_error.is_error())
                 texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         }

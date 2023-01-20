@@ -56,7 +56,7 @@ void Label::set_icon(Gfx::Bitmap const* icon)
 
 void Label::set_icon_from_path(DeprecatedString const& path)
 {
-    auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
+    auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
     if (maybe_bitmap.is_error()) {
         dbgln("Unable to load bitmap `{}` for label icon", path);
         return;
