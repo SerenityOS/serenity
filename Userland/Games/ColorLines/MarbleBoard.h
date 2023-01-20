@@ -62,7 +62,7 @@ public:
                 result.append(point);
             return IterationDecision::Continue;
         });
-        random_shuffle(result);
+        shuffle(result);
         return result;
     }
 
@@ -334,14 +334,6 @@ private:
             return false;
         set_color_at(marble.position(), marble.color());
         return true;
-    }
-
-    static void random_shuffle(PointArray& points)
-    {
-        // Using Fisher–Yates in-place shuffle
-        if (points.size() > 1)
-            for (size_t i = points.size() - 1; i > 1; --i)
-                swap(points[i], points[get_random_uniform(i + 1)]);
     }
 
     static constexpr int number_of_marbles_to_remove { 5 };
