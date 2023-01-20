@@ -1179,12 +1179,22 @@ bool JPGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool JPGImageDecoderPlugin::sniff()
+bool JPGImageDecoderPlugin::initialize()
 {
-    return m_context->data_size > 3
-        && m_context->data[0] == 0xFF
-        && m_context->data[1] == 0xD8
-        && m_context->data[2] == 0xFF;
+    return true;
+}
+
+ErrorOr<bool> JPGImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    return data.size() > 3
+        && data.data()[0] == 0xFF
+        && data.data()[1] == 0xD8
+        && data.data()[2] == 0xFF;
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPGImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) JPGImageDecoderPlugin(data.data(), data.size()));
 }
 
 bool JPGImageDecoderPlugin::is_animated()

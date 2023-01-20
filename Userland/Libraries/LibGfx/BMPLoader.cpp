@@ -1400,12 +1400,12 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
     return {};
 }
 
-BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, bool is_included_in_ico)
+BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, IncludedInICO is_included_in_ico)
 {
     m_context = make<BMPLoadingContext>();
     m_context->file_bytes = data;
     m_context->file_size = data_size;
-    m_context->is_included_in_ico = is_included_in_ico;
+    m_context->is_included_in_ico = (is_included_in_ico == IncludedInICO::Yes);
 }
 
 BMPImageDecoderPlugin::~BMPImageDecoderPlugin() = default;
@@ -1434,9 +1434,27 @@ bool BMPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool BMPImageDecoderPlugin::sniff()
+bool BMPImageDecoderPlugin::initialize()
 {
     return !decode_bmp_header(*m_context).is_error();
+}
+
+ErrorOr<bool> BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    BMPLoadingContext context;
+    context.file_bytes = data.data();
+    context.file_size = data.size();
+    return !decode_bmp_header(context).is_error();
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> BMPImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size()));
+}
+
+ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_as_included_in_ico(Badge<ICOImageDecoderPlugin>, ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size(), IncludedInICO::Yes));
 }
 
 bool BMPImageDecoderPlugin::sniff_dib()

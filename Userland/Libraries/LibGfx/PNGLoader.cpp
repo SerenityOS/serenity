@@ -913,9 +913,22 @@ bool PNGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool PNGImageDecoderPlugin::sniff()
+bool PNGImageDecoderPlugin::initialize()
 {
     return decode_png_header(*m_context);
+}
+
+ErrorOr<bool> PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    PNGLoadingContext context;
+    context.data = data.data();
+    context.data_size = data.size();
+    return decode_png_header(context);
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size()));
 }
 
 bool PNGImageDecoderPlugin::is_animated()

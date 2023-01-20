@@ -13,14 +13,18 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    Gfx::GIFImageDecoderPlugin gif_decoder(data, size);
-    auto bitmap_or_error = gif_decoder.frame(0);
+    auto decoder_or_error = Gfx::GIFImageDecoderPlugin::create({ data, size });
+    if (decoder_or_error.is_error())
+        return 0;
+    auto decoder = decoder_or_error.release_value();
+    decoder->initialize();
+    auto& gif_decoder = *decoder;
+    auto bitmap_or_error = decoder->frame(0);
     if (!bitmap_or_error.is_error()) {
         auto const& bitmap = bitmap_or_error.value().image;
         // Looks like a valid GIF. Try to load the other frames:
         dbgln_if(GIF_DEBUG, "bitmap size: {}", bitmap->size());
         dbgln_if(GIF_DEBUG, "codec size: {}", gif_decoder.size());
-        dbgln_if(GIF_DEBUG, "is_sniff: {}", gif_decoder.sniff());
         dbgln_if(GIF_DEBUG, "is_animated: {}", gif_decoder.is_animated());
         dbgln_if(GIF_DEBUG, "loop_count: {}", gif_decoder.loop_count());
         dbgln_if(GIF_DEBUG, "frame_count: {}", gif_decoder.frame_count());

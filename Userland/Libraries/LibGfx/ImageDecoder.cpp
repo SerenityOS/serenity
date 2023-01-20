@@ -20,64 +20,58 @@
 
 namespace Gfx {
 
+struct ImagePluginInitializer {
+    ErrorOr<bool> (*sniff)(ReadonlyBytes) = nullptr;
+    ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
+};
+
+static constexpr ImagePluginInitializer s_initializers[] = {
+    { PNGImageDecoderPlugin::sniff, PNGImageDecoderPlugin::create },
+    { GIFImageDecoderPlugin::sniff, GIFImageDecoderPlugin::create },
+    { BMPImageDecoderPlugin::sniff, BMPImageDecoderPlugin::create },
+    { PBMImageDecoderPlugin::sniff, PBMImageDecoderPlugin::create },
+    { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
+    { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
+    { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
+    { JPGImageDecoderPlugin::sniff, JPGImageDecoderPlugin::create },
+    { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
+    { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
+};
+
+struct ImagePluginWithMIMETypeInitializer {
+    ErrorOr<bool> (*validate_before_create)(ReadonlyBytes) = nullptr;
+    ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
+    StringView mime_type;
+};
+
+static constexpr ImagePluginWithMIMETypeInitializer s_initializers_with_mime_type[] = {
+    { TGAImageDecoderPlugin::validate_before_create, TGAImageDecoderPlugin::create, "image/x-targa"sv },
+};
+
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
 {
-    auto* data = bytes.data();
-    auto size = bytes.size();
-    OwnPtr<ImageDecoderPlugin> plugin;
-
-    plugin = make<PNGImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<GIFImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<BMPImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<PBMImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<PGMImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<PPMImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<ICOImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<JPGImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<DDSImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
-    plugin = make<QOIImageDecoderPlugin>(data, size);
-    if (plugin->sniff())
-        return plugin;
-
+    for (auto& plugin : s_initializers) {
+        auto sniff_result = plugin.sniff(bytes).release_value_but_fixme_should_propagate_errors();
+        if (!sniff_result)
+            continue;
+        auto plugin_decoder = plugin.create(bytes).release_value_but_fixme_should_propagate_errors();
+        if (plugin_decoder->initialize())
+            return plugin_decoder;
+    }
     return {};
 }
 
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes)
 {
-    auto* data = bytes.data();
-    auto size = bytes.size();
-    OwnPtr<ImageDecoderPlugin> plugin;
-    if (mime_type == "image/x-targa"sv) {
-        plugin = make<TGAImageDecoderPlugin>(data, size);
-        if (plugin->sniff())
-            return plugin;
+    for (auto& plugin : s_initializers_with_mime_type) {
+        if (plugin.mime_type != mime_type)
+            continue;
+        auto validation_result = plugin.validate_before_create(bytes).release_value_but_fixme_should_propagate_errors();
+        if (!validation_result)
+            continue;
+        auto plugin_decoder = plugin.create(bytes).release_value_but_fixme_should_propagate_errors();
+        if (plugin_decoder->initialize())
+            return plugin_decoder;
     }
     return {};
 }

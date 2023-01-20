@@ -223,10 +223,21 @@ bool QOIImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool QOIImageDecoderPlugin::sniff()
+bool QOIImageDecoderPlugin::initialize()
 {
     InputMemoryStream stream { { m_context->data, m_context->data_size } };
     return !decode_qoi_header(stream).is_error();
+}
+
+ErrorOr<bool> QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    InputMemoryStream stream { { data.data(), data.size() } };
+    return !decode_qoi_header(stream).is_error();
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(data.data(), data.size()));
 }
 
 ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)

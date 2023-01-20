@@ -968,7 +968,7 @@ bool DDSImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool DDSImageDecoderPlugin::sniff()
+bool DDSImageDecoderPlugin::initialize()
 {
     // The header is always at least 128 bytes, so if the file is smaller, it can't be a DDS.
     return m_context->data_size > 128
@@ -976,6 +976,21 @@ bool DDSImageDecoderPlugin::sniff()
         && m_context->data[1] == 0x44
         && m_context->data[2] == 0x53
         && m_context->data[3] == 0x20;
+}
+
+ErrorOr<bool> DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    // The header is always at least 128 bytes, so if the file is smaller, it can't be a DDS.
+    return data.size() > 128
+        && data.data()[0] == 0x44
+        && data.data()[1] == 0x44
+        && data.data()[2] == 0x53
+        && data.data()[3] == 0x20;
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> DDSImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) DDSImageDecoderPlugin(data.data(), data.size()));
 }
 
 bool DDSImageDecoderPlugin::is_animated()

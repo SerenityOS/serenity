@@ -40,13 +40,15 @@ struct QOILoadingContext {
 
 class QOIImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
+    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+
     virtual ~QOIImageDecoderPlugin() override = default;
-    QOIImageDecoderPlugin(u8 const*, size_t);
 
     virtual IntSize size() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
-    virtual bool sniff() override;
+    virtual bool initialize() override;
     virtual bool is_animated() override { return false; }
     virtual size_t loop_count() override { return 0; }
     virtual size_t frame_count() override { return 1; }
@@ -55,6 +57,8 @@ public:
 private:
     ErrorOr<void> decode_header_and_update_context(InputMemoryStream&);
     ErrorOr<void> decode_image_and_update_context(InputMemoryStream&);
+
+    QOIImageDecoderPlugin(u8 const*, size_t);
 
     OwnPtr<QOILoadingContext> m_context;
 };
