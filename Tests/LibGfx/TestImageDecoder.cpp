@@ -58,11 +58,11 @@ TEST_CASE(test_gif)
 TEST_CASE(test_not_ico)
 {
     auto file = Core::MappedFile::map("/res/graphics/buggie.png"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::ICOImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
+    EXPECT_EQ(MUST(Gfx::ICOImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), false);
     auto plugin_decoder_or_error = Gfx::ICOImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
     EXPECT(!plugin_decoder_or_error.is_error());
     auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    EXPECT_EQ(plugin_decoder->initialize(), false);
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
