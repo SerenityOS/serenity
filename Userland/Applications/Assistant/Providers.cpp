@@ -34,7 +34,8 @@ void AppResult::activate() const
         exit(1);
     }
 
-    m_app_file->spawn();
+    auto arguments_list = m_arguments.split_view(' ');
+    m_app_file->spawn(arguments_list.span());
 }
 
 void CalculatorResult::activate() const
@@ -68,12 +69,15 @@ void AppProvider::query(DeprecatedString const& query, Function<void(NonnullRefP
     NonnullRefPtrVector<Result> results;
 
     Desktop::AppFile::for_each([&](NonnullRefPtr<Desktop::AppFile> app_file) {
-        auto match_result = fuzzy_match(query, app_file->name());
+        auto query_and_arguments = query.split_limit(' ', 2);
+        auto app_name = query_and_arguments.is_empty() ? query : query_and_arguments[0];
+        auto arguments = query_and_arguments.size() < 2 ? DeprecatedString::empty() : query_and_arguments[1];
+        auto match_result = fuzzy_match(app_name, app_file->name());
         if (!match_result.matched)
             return;
 
         auto icon = GUI::FileIconProvider::icon_for_executable(app_file->executable());
-        results.append(adopt_ref(*new AppResult(icon.bitmap_for_size(16), app_file->name(), {}, app_file, match_result.score)));
+        results.append(adopt_ref(*new AppResult(icon.bitmap_for_size(16), app_file->name(), {}, app_file, arguments, match_result.score)));
     });
 
     on_complete(move(results));

@@ -52,9 +52,10 @@ private:
 
 class AppResult final : public Result {
 public:
-    AppResult(RefPtr<Gfx::Bitmap> bitmap, DeprecatedString title, DeprecatedString tooltip, NonnullRefPtr<Desktop::AppFile> af, int score)
+    AppResult(RefPtr<Gfx::Bitmap> bitmap, DeprecatedString title, DeprecatedString tooltip, NonnullRefPtr<Desktop::AppFile> af, DeprecatedString arguments, int score)
         : Result(move(title), move(tooltip), score)
         , m_app_file(move(af))
+        , m_arguments(move(arguments))
         , m_bitmap(move(bitmap))
     {
     }
@@ -65,6 +66,7 @@ public:
 
 private:
     NonnullRefPtr<Desktop::AppFile> m_app_file;
+    DeprecatedString m_arguments;
     RefPtr<Gfx::Bitmap> m_bitmap;
 };
 
