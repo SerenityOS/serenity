@@ -52,10 +52,11 @@ Gfx::IntRect CardGame::moving_cards_bounds() const
     return m_moving_cards.first().rect().united(m_moving_cards.last().rect());
 }
 
-void CardGame::pick_up_cards_from_stack(Cards::CardStack& stack, Gfx::IntPoint click_location, CardStack::MovementRule movement_rule)
+ErrorOr<void> CardGame::pick_up_cards_from_stack(Cards::CardStack& stack, Gfx::IntPoint click_location, CardStack::MovementRule movement_rule)
 {
-    stack.add_all_grabbed_cards(click_location, m_moving_cards, movement_rule);
+    TRY(stack.add_all_grabbed_cards(click_location, m_moving_cards, movement_rule));
     m_moving_cards_source_stack = stack;
+    return {};
 }
 
 RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule movement_rule) const

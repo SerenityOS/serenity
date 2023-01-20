@@ -272,7 +272,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                         update(top_card.rect());
                     }
                 } else if (!is_moving_cards()) {
-                    pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Same);
+                    pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Same).release_value_but_fixme_should_propagate_errors();
                     m_mouse_down_location = click_location;
                     // When the user wants to automatically move cards, do not go into the drag mode.
                     if (event.button() != GUI::MouseButton::Secondary)
