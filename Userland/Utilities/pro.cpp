@@ -6,7 +6,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/FileStream.h>
 #include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
