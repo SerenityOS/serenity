@@ -65,6 +65,12 @@ public:
     {
     }
 
+    TGAReader(ReadonlyBytes data, size_t index)
+        : m_data(move(data))
+        , m_index(index)
+    {
+    }
+
     ALWAYS_INLINE u8 read_u8()
     {
         u8 value = m_data[m_index];
@@ -265,13 +271,25 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
     if (color_map > 1)
         return Error::from_string_literal("TGAImageDecoderPlugin: Invalid color map type");
 
+    if (m_context->bitmap) {
+        return ImageFrameDescriptor { m_context->bitmap, 0 };
+    } else {
+        // NOTE: Just to be on the safe side, if m_context->bitmap is nullptr, then
+        // just re-construct the reader object. This will ensure that if the bitmap
+        // was set as volatile and therefore it is gone, we can always re-generate it
+        // with a new call to this method!
+        VERIFY(m_context->reader);
+        m_context->reader = make<TGAReader>(m_context->reader->data(), sizeof(TGAHeader));
+    }
+
+    RefPtr<Gfx::Bitmap> bitmap;
     switch (bits_per_pixel) {
     case 24:
-        m_context->bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRx8888, { m_context->header.width, m_context->header.height }));
+        bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRx8888, { m_context->header.width, m_context->header.height }));
         break;
 
     case 32:
-        m_context->bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { m_context->header.width, m_context->header.height }));
+        bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRA8888, { m_context->header.width, m_context->header.height }));
         break;
 
     default:
@@ -303,7 +321,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
                 auto actual_col = col;
                 if (x_origin > width)
                     actual_col = width - 1 - col;
-                m_context->bitmap->scanline(actual_row)[actual_col] = pixel.data;
+                bitmap->scanline(actual_row)[actual_col] = pixel.data;
             }
         }
         break;
@@ -325,7 +343,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
                 auto actual_col = col;
                 if (x_origin > width)
                     actual_col = width - 1 - col;
-                m_context->bitmap->scanline(actual_row)[actual_col] = pixel.data;
+                bitmap->scanline(actual_row)[actual_col] = pixel.data;
                 if (packet_type.raw && (current_pixel_index + 1) < max_pixel_index)
                     pixel = m_context->reader->read_pixel(bits_per_pixel);
             }
@@ -338,7 +356,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index)
         return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB or CompressedRGB data type");
     }
 
-    VERIFY(m_context->bitmap);
+    m_context->bitmap = bitmap;
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 }
