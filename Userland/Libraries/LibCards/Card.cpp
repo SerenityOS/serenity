@@ -80,16 +80,9 @@ ErrorOr<NonnullRefPtrVector<Card>> create_deck(unsigned full_club_suit_count, un
     TRY(add_cards_for_suit(Cards::Suit::Spades, full_spade_suit_count));
 
     if (shuffle == Shuffle::Yes)
-        shuffle_deck(deck);
+        AK::shuffle(deck);
 
     return deck;
-}
-
-void shuffle_deck(NonnullRefPtrVector<Card>& deck)
-{
-    auto iteration_count = deck.size() * 4;
-    for (auto i = 0u; i < iteration_count; ++i)
-        deck.append(deck.take(get_random_uniform(deck.size())));
 }
 
 }
