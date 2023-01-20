@@ -115,7 +115,17 @@ struct ICCHeader {
     u8 reserved[28];
 };
 static_assert(sizeof(ICCHeader) == 128);
+}
 
+// ICC V4, 7.3 Tag table, Table 24 - Tag table structure
+struct Detail::TagTableEntry {
+    BigEndian<TagSignature> tag_signature;
+    BigEndian<u32> offset_to_beginning_of_tag_data_element;
+    BigEndian<u32> size_of_tag_data_element;
+};
+static_assert(sizeof(Detail::TagTableEntry) == 12);
+
+namespace {
 ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
 {
     // ICC v4, 7.2.2 Profile size field
@@ -539,14 +549,79 @@ ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
     return {};
 }
 
+ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::TagTableEntry const& entry)
+{
+    if (entry.offset_to_beginning_of_tag_data_element + entry.size_of_tag_data_element > bytes.size())
+        return Error::from_string_literal("ICC::Profile: Tag data out of bounds");
+
+    auto tag_bytes = bytes.slice(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+
+    // ICC v4, 9 Tag definitions
+    // ICC v4, 9.1 General
+    // "All tags, including private tags, have as their first four bytes a tag signature to identify to profile readers
+    //  what kind of data is contained within a tag."
+    if (tag_bytes.size() < sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: Not enough data for tag type");
+    auto tag_type = *bit_cast<BigEndian<TagTypeSignature> const*>(tag_bytes.data());
+
+    switch ((u32)(TagTypeSignature)tag_type) {
+    default:
+        // FIXME: optionally ignore tags of unknown type
+        return adopt_ref(*new UnknownTagData(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element, tag_type));
+    }
+}
+
+ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
+{
+    // ICC v4, 7.3 Tag table
+    // ICC v4, 7.3.1 Overview
+    // "The tag table acts as a table of contents for the tags and an index into the tag data element in the profiles. It
+    //  shall consist of a 4-byte entry that contains a count of the number of tags in the table followed by a series of 12-
+    //  byte entries with one entry for each tag. The tag table therefore contains 4+12n bytes where n is the number of
+    //  tags contained in the profile. The entries for the tags within the table are not required to be in any particular
+    //  order nor are they required to match the sequence of tag data element within the profile.
+    //  Each 12-byte tag entry following the tag count shall consist of a 4-byte tag signature, a 4-byte offset to define
+    //  the beginning of the tag data element, and a 4-byte entry identifying the length of the tag data element in bytes.
+    //  [...]
+    //  The tag table shall define a contiguous sequence of unique tag elements, with no gaps between the last byte
+    //  of any tag data element referenced from the tag table (inclusive of any necessary additional pad bytes required
+    //  to reach a four-byte boundary) and the byte offset of the following tag element, or the end of the file.
+    //  Duplicate tag signatures shall not be included in the tag table.
+    //  Tag data elements shall not partially overlap, so there shall be no part of any tag data element that falls within
+    //  the range defined for another tag in the tag table.
+    //  The tag table may contain multiple tags signatures that all reference the same tag data element offset, allowing
+    //  efficient reuse of tag data elements. In such cases, both the offset and size of the tag data elements in the tag
+    //  table shall be the same."
+
+    ReadonlyBytes tag_table_bytes = bytes.slice(sizeof(ICCHeader));
+
+    if (tag_table_bytes.size() < sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: Not enough data for tag count");
+    auto tag_count = *bit_cast<BigEndian<u32> const*>(tag_table_bytes.data());
+
+    tag_table_bytes = tag_table_bytes.slice(sizeof(u32));
+    if (tag_table_bytes.size() < tag_count * sizeof(Detail::TagTableEntry))
+        return Error::from_string_literal("ICC::Profile: Not enough data for tag table entries");
+    auto tag_table_entries = bit_cast<Detail::TagTableEntry const*>(tag_table_bytes.data());
+
+    for (u32 i = 0; i < tag_count; ++i) {
+        // FIXME: optionally ignore tags with unknown signature
+        // FIXME: dedupe identical offset/sizes
+        auto tag_data = TRY(read_tag(bytes, tag_table_entries[i]));
+        // "Duplicate tag signatures shall not be included in the tag table."
+        if (TRY(m_tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
+            return Error::from_string_literal("ICC::Profile: duplicate tag signature");
+    }
+
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
     TRY(profile->read_header(bytes));
-
     bytes = bytes.trim(profile->on_disk_size());
-    bytes = bytes.slice(sizeof(ICCHeader));
-    // FIXME: Read tag table.
+    TRY(profile->read_tag_table(bytes));
 
     return profile;
 }
