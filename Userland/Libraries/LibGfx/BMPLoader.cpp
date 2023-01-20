@@ -1205,7 +1205,7 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
     const u32 width = abs(context.dib.core.width);
     const u32 height = !context.is_included_in_ico ? context.dib.core.height : (context.dib.core.height / 2);
 
-    context.bitmap = TRY(Bitmap::try_create(format, { static_cast<int>(width), static_cast<int>(height) }));
+    context.bitmap = TRY(Bitmap::create(format, { static_cast<int>(width), static_cast<int>(height) }));
 
     ByteBuffer rle_buffer;
     ReadonlyBytes bytes { context.file_bytes + context.data_offset, context.file_size - context.data_offset };

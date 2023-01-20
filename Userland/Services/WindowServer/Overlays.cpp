@@ -107,7 +107,7 @@ void RectangularOverlay::render(Gfx::Painter& painter, Screen const& screen)
     auto scale_factor = screen.scale_factor();
     auto* bitmap = m_rendered_bitmaps->find_bitmap(scale_factor);
     if (!bitmap) {
-        auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect().size(), scale_factor);
+        auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect().size(), scale_factor);
         if (bitmap_or_error.is_error())
             return;
         auto new_bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
@@ -298,7 +298,7 @@ void DndOverlay::update_rect()
 
 RefPtr<Gfx::Bitmap> DndOverlay::create_bitmap(int scale_factor)
 {
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect().size(), scale_factor);
+    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect().size(), scale_factor);
     if (bitmap_or_error.is_error())
         return {};
     auto new_bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();

@@ -103,12 +103,12 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
 
     // We won't actually write to the clipping_bitmap, so casting away the const is okay.
     auto clipping_data = const_cast<u8*>(data.data());
-    auto clipping_bitmap_or_error = Gfx::Bitmap::try_create_wrapper(bitmap_format, { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping_data);
+    auto clipping_bitmap_or_error = Gfx::Bitmap::create_wrapper(bitmap_format, { (int)width.value(), (int)height.value() }, scale.value(), pitch.value(), clipping_data);
     if (clipping_bitmap_or_error.is_error())
         return nullptr;
     auto clipping_bitmap = clipping_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
+    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { (int)width.value(), (int)height.value() }, scale.value());
     if (bitmap_or_error.is_error())
         return nullptr;
     auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();

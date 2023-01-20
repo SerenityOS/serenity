@@ -119,7 +119,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     Vector<DeprecatedString> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = TRY(GUI::Menu::try_create("\xE2\x9A\xA1")); // HIGH VOLTAGE SIGN
 
-    system_menu->add_action(GUI::Action::create("&About SerenityOS", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&About SerenityOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);
     }));
 
@@ -154,7 +154,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         auto& category_menu = parent_menu->add_submenu(child_category);
         auto category_icon_path = category_icons->read_entry("16x16", category);
         if (!category_icon_path.is_empty()) {
-            auto icon_or_error = Gfx::Bitmap::try_load_from_file(category_icon_path);
+            auto icon_or_error = Gfx::Bitmap::load_from_file(category_icon_path);
             if (!icon_or_error.is_error())
                 category_menu.set_icon(icon_or_error.release_value());
         }
@@ -221,7 +221,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     g_themes_group.set_unchecking_allowed(false);
 
     g_themes_menu = &system_menu->add_submenu("&Themes");
-    g_themes_menu->set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/themes.png"sv)));
+    g_themes_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/themes.png"sv)));
 
     g_themes = TRY(Gfx::list_installed_system_themes());
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
@@ -254,15 +254,15 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         }
     };
 
-    system_menu->add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-settings.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Settings"sv);
     }));
 
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("&Help", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-help.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&Help", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-help.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/Help"sv);
     }));
-    system_menu->add_action(GUI::Action::create("&Run...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-run.png"sv)), [](auto&) {
+    system_menu->add_action(GUI::Action::create("&Run...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-run.png"sv)), [](auto&) {
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
         auto home_directory = Core::StandardPaths::home_directory();
@@ -280,7 +280,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         posix_spawn_file_actions_destroy(&spawn_actions);
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("E&xit...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/power.png"sv)), [](auto&) {
+    system_menu->add_action(GUI::Action::create("E&xit...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [](auto&) {
         auto command = ShutdownDialog::show();
 
         if (command.size() == 0)

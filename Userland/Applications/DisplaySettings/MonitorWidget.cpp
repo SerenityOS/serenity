@@ -19,8 +19,8 @@ namespace DisplaySettings {
 MonitorWidget::MonitorWidget()
 {
     m_desktop_resolution = GUI::Desktop::the().rect().size();
-    m_monitor_bitmap = Gfx::Bitmap::try_load_from_file("/res/graphics/monitor.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_desktop_bitmap = Gfx::Bitmap::try_create(m_monitor_bitmap->format(), { 280, 158 }).release_value_but_fixme_should_propagate_errors();
+    m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/graphics/monitor.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_desktop_bitmap = Gfx::Bitmap::create(m_monitor_bitmap->format(), { 280, 158 }).release_value_but_fixme_should_propagate_errors();
     m_monitor_rect = { { 12, 13 }, m_desktop_bitmap->size() };
     set_fixed_size(304, 201);
 }
@@ -34,7 +34,7 @@ bool MonitorWidget::set_wallpaper(DeprecatedString path)
         [path](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
             if (path.is_empty())
                 return Error::from_errno(ENOENT);
-            return Gfx::Bitmap::try_load_from_file(path);
+            return Gfx::Bitmap::load_from_file(path);
         },
 
         [this, path](ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap_or_error) -> ErrorOr<void> {
@@ -155,7 +155,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         // Render text label scaled with scale factor to hint at its effect.
         // FIXME: Once bitmaps have intrinsic scale factors, we could create a bitmap with an intrinsic scale factor of m_desktop_scale_factor
         // and that should give us the same effect with less code.
-        auto text_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize { painter.font().width(displayed_resolution_string) + 1, painter.font().glyph_height() + 1 });
+        auto text_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize { painter.font().width(displayed_resolution_string) + 1, painter.font().glyph_height() + 1 });
         GUI::Painter text_painter(*text_bitmap);
         text_painter.set_font(painter.font());
 

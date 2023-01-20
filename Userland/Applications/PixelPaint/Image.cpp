@@ -147,7 +147,7 @@ ErrorOr<void> Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
 {
-    auto bitmap = TRY(Gfx::Bitmap::try_create(format, m_size));
+    auto bitmap = TRY(Gfx::Bitmap::create(format, m_size));
     GUI::Painter painter(bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
     return bitmap;

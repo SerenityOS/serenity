@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::Int
     if (size.width() > 16384 || size.height() > 16384)
         return Error::from_string_literal("Layer size too large");
 
-    auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size));
+    auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size));
     return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, move(bitmap), move(name)));
 }
 
@@ -134,7 +134,7 @@ RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
     }
     auto selection_rect = selection.bounding_rect();
 
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
+    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
     if (bitmap_or_error.is_error())
         return nullptr;
     auto result = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
@@ -238,7 +238,7 @@ ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, G
     auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
     auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);
 
-    auto resized_content_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size));
+    auto resized_content_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_size));
     {
         Gfx::Painter painter(resized_content_bitmap);
 
@@ -250,7 +250,7 @@ ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, G
     }
 
     if (m_mask_bitmap) {
-        auto dst = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, new_size));
+        auto dst = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_size));
         Gfx::Painter painter(dst);
 
         if (scaling_mode == Gfx::Painter::ScalingMode::None) {
@@ -290,7 +290,7 @@ void Layer::update_cached_bitmap()
     }
 
     if (m_cached_display_bitmap.ptr() == m_content_bitmap.ptr() || m_cached_display_bitmap->size() != size()) {
-        m_cached_display_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+        m_cached_display_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size()));
     }
 
     // FIXME: This can probably be done nicer
@@ -307,7 +307,7 @@ void Layer::update_cached_bitmap()
 
 void Layer::create_mask()
 {
-    m_mask_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size()));
+    m_mask_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size()));
     m_mask_bitmap->fill(Gfx::Color::White);
     update_cached_bitmap();
 }

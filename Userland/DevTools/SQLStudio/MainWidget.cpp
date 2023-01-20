@@ -63,7 +63,7 @@ MainWidget::MainWidget()
 {
     load_from_gml(sql_studio_gml).release_value_but_fixme_should_propagate_errors();
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         open_new_script();
     });
 
@@ -149,7 +149,7 @@ MainWidget::MainWidget()
         update_editor_actions(editor);
     });
 
-    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         auto database_name = m_databases_combo_box->text().trim_whitespace();
         if (database_name.is_empty())
             return;
@@ -171,7 +171,7 @@ MainWidget::MainWidget()
         }
     });
 
-    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
         read_next_sql_statement_of_editor();

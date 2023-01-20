@@ -692,7 +692,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
 
             auto output_rect = page_client.screen_rect();
-            auto output_bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, output_rect.size().to_type<int>()));
+            auto output_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, output_rect.size().to_type<int>()));
 
             page_client.paint(output_rect, output_bitmap);
 

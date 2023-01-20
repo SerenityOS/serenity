@@ -61,13 +61,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& constants_menu = window->add_menu("&Constants");
     auto const power = Crypto::NumberTheory::Power("10"_bigint, "10"_bigint);
 
-    constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
         widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(31415926535), power });
     }));
-    constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
         widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(27182818284), power });
     }));
-    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
+    constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
         widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
 
@@ -102,7 +102,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     widget->set_rounding_custom(round_custom, format);
 
-    auto shrink_action = GUI::Action::create("&Shrink...", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-cut.png"sv)), [&](auto&) {
+    auto shrink_action = GUI::Action::create("&Shrink...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"sv)), [&](auto&) {
         unsigned shrink_length = widget->rounding_length();
 
         if (RoundingDialog::show(window, "Choose shrinking length"sv, shrink_length) == GUI::Dialog::ExecResult::OK) {

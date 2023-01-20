@@ -463,7 +463,7 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
             if (tmp_it != s_tmp_bitmap_cache.end())
                 tmp_it->value = nullptr;
 
-            auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, frame_rect_including_shadow.size(), scale);
+            auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, frame_rect_including_shadow.size(), scale);
             if (bitmap_or_error.is_error()) {
                 s_tmp_bitmap_cache.remove(scale);
                 dbgln("Could not create bitmap of size {}: {}", frame_rect_including_shadow.size(), bitmap_or_error.error());
@@ -487,14 +487,14 @@ void WindowFrame::PerScaleRenderedCache::render(WindowFrame& frame, Screen& scre
 
     if (!m_top_bottom || m_top_bottom->width() != frame_rect_including_shadow.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale) {
         if (top_bottom_height > 0)
-            m_top_bottom = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { frame_rect_including_shadow.width(), top_bottom_height }, scale).release_value_but_fixme_should_propagate_errors();
+            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { frame_rect_including_shadow.width(), top_bottom_height }, scale).release_value_but_fixme_should_propagate_errors();
         else
             m_top_bottom = nullptr;
         m_shadow_dirty = true;
     }
     if (!m_left_right || m_left_right->height() != frame_rect_including_shadow.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale) {
         if (left_right_width > 0)
-            m_left_right = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { left_right_width, frame_rect_including_shadow.height() }, scale).release_value_but_fixme_should_propagate_errors();
+            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { left_right_width, frame_rect_including_shadow.height() }, scale).release_value_but_fixme_should_propagate_errors();
         else
             m_left_right = nullptr;
         m_shadow_dirty = true;

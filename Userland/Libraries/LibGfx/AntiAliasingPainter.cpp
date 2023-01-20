@@ -364,7 +364,7 @@ void AntiAliasingPainter::draw_ellipse(IntRect const& a_rect, Color color, int t
     auto color_no_alpha = color;
     color_no_alpha.set_alpha(255);
     auto outline_ellipse_bitmap = ({
-        auto bitmap = Bitmap::try_create(BitmapFormat::BGRA8888, a_rect.size());
+        auto bitmap = Bitmap::create(BitmapFormat::BGRA8888, a_rect.size());
         if (bitmap.is_error())
             return warnln("Failed to allocate temporary bitmap for antialiased outline ellipse!");
         bitmap.release_value();

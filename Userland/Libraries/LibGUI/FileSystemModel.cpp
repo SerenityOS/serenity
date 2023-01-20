@@ -633,8 +633,8 @@ static HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> s_thumbnail_cache;
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
-    auto bitmap = TRY(Gfx::Bitmap::try_load_from_file(path));
-    auto thumbnail = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { 32, 32 }));
+    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path));
+    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 32, 32 }));
 
     double scale = min(32 / (double)bitmap->width(), 32 / (double)bitmap->height());
     auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());

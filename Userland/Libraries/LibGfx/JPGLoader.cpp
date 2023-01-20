@@ -967,7 +967,7 @@ static void ycbcr_to_rgb(JPGLoadingContext const& context, Vector<Macroblock>& m
 
 static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macroblock> const& macroblocks)
 {
-    context.bitmap = TRY(Bitmap::try_create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
+    context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
 
     for (u32 y = context.frame.height - 1; y < context.frame.height; y--) {
         const u32 block_row = y / 8;

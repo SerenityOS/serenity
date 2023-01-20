@@ -189,7 +189,7 @@ NonnullRefPtr<Gfx::Bitmap> BrushTool::build_cursor()
     m_scale_last_created_cursor = m_editor ? m_editor->scale() : 1;
     auto scaled_size = size() * m_scale_last_created_cursor;
     auto containing_box_size = 2 * scaled_size;
-    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(containing_box_size, containing_box_size)).release_value_but_fixme_should_propagate_errors();
+    NonnullRefPtr<Gfx::Bitmap> new_cursor = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize(containing_box_size, containing_box_size)).release_value_but_fixme_should_propagate_errors();
 
     Gfx::Painter painter { new_cursor };
     Gfx::AntiAliasingPainter aa_painter { painter };

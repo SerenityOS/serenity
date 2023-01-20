@@ -57,7 +57,7 @@ void PolygonalSelectTool::process_polygon()
 
     // We create a bitmap that is bigger by 1 pixel on each side (+2) and need to account for the 0 indexed
     // pixel positions (+1) so we make the bitmap size the delta of x/y min/max + 3.
-    auto polygon_bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { (max_x_seen - min_x_seen) + 3, (max_y_seen - min_y_seen) + 3 });
+    auto polygon_bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { (max_x_seen - min_x_seen) + 3, (max_y_seen - min_y_seen) + 3 });
     if (polygon_bitmap_or_error.is_error())
         return;
 

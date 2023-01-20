@@ -345,7 +345,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto kill_action = GUI::Action::create(
-        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/kill.png"sv)), [&](const GUI::Action&) {
+        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -356,7 +356,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto stop_action = GUI::Action::create(
-        "&Stop Process", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop-hand.png"sv)), [&](const GUI::Action&) {
+        "&Stop Process", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -367,7 +367,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto continue_action = GUI::Action::create(
-        "&Continue Process", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/continue.png"sv)), [&](const GUI::Action&) {
+        "&Continue Process", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGCONT);
@@ -376,7 +376,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile_action = GUI::Action::create(
         "&Profile Process", { Mod_Ctrl, Key_P },
-        TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv)), [&](auto&) {
+        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv)), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;

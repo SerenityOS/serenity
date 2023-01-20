@@ -25,7 +25,7 @@ void PathRasterizer::draw_path(Gfx::Path& path)
 
 RefPtr<Gfx::Bitmap> PathRasterizer::accumulate()
 {
-    auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, m_size);
+    auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
     if (bitmap_or_error.is_error())
         return {};
     auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();

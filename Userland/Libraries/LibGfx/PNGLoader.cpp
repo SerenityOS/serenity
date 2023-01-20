@@ -574,7 +574,7 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = TRY(Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
+    context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     return unfilter(context);
 }
 
@@ -669,7 +669,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         }
     }
 
-    subimage_context.bitmap = TRY(Bitmap::try_create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
+    subimage_context.bitmap = TRY(Bitmap::create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
     TRY(unfilter(subimage_context));
 
     // Copy the subimage data into the main image according to the pass pattern
@@ -684,7 +684,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
 static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
-    context.bitmap = TRY(Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
+    context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     for (int pass = 1; pass <= 7; ++pass)
         TRY(decode_adam7_pass(context, streamer, pass));
     return {};

@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(game_menu->try_add_separator());
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         if (widget->board().game_result() == Chess::Board::Result::NotFinished) {
             if (widget->resign() < 0)
                 return;
@@ -127,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup board_theme_action_group;
     board_theme_action_group.set_exclusive(true);
     auto board_theme_menu = TRY(style_menu->try_add_submenu("Board Theme"));
-    board_theme_menu->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/chess/mini-board.png"sv).release_value_but_fixme_should_propagate_errors());
+    board_theme_menu->set_icon(Gfx::Bitmap::load_from_file("/res/icons/chess/mini-board.png"sv).release_value_but_fixme_should_propagate_errors());
 
     for (auto const& theme : { "Beige", "Green", "Blue" }) {
         auto action = GUI::Action::create_checkable(theme, [&](auto& action) {

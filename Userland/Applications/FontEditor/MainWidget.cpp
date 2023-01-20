@@ -92,7 +92,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
 ErrorOr<void> MainWidget::create_actions()
 {
-    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-font.png"sv)), [&](auto&) {
+    m_new_action = GUI::Action::create("&New Font...", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-font.png"sv)), [&](auto&) {
         if (!request_close())
             return;
         auto new_font_wizard = NewFontDialog::construct(window());
@@ -175,7 +175,7 @@ ErrorOr<void> MainWidget::create_actions()
         update_statusbar();
     });
 
-    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
+    m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
         if (!m_font_preview_window) {
             if (auto maybe_window = create_preview_window(); maybe_window.is_error())
                 show_error(maybe_window.error(), "Creating preview window failed"sv);
@@ -241,7 +241,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_show_system_emoji_action->set_checked(show_system_emoji);
     m_show_system_emoji_action->set_status_tip("Show or hide system emoji");
 
-    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
+    m_go_to_glyph_action = GUI::Action::create("&Go to Glyph...", { Mod_Ctrl, Key_G }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         DeprecatedString input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv) == GUI::InputBox::ExecResult::OK && !input.is_empty()) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
@@ -256,12 +256,12 @@ ErrorOr<void> MainWidget::create_actions()
     });
     m_go_to_glyph_action->set_status_tip("Go to the specified code point");
 
-    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
+    m_previous_glyph_action = GUI::Action::create("Pre&vious Glyph", { Mod_Alt, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
         m_glyph_map_widget->select_previous_existing_glyph();
     });
     m_previous_glyph_action->set_status_tip("Seek the previous visible glyph");
 
-    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
+    m_next_glyph_action = GUI::Action::create("&Next Glyph", { Mod_Alt, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
         m_glyph_map_widget->select_next_existing_glyph();
     });
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
@@ -289,12 +289,12 @@ ErrorOr<void> MainWidget::create_actions()
     m_glyph_editor_scale_actions.add_action(*m_scale_fifteen_action);
     m_glyph_editor_scale_actions.set_exclusive(true);
 
-    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/pixelpaint/pen.png"sv)), [&](auto&) {
+    m_paint_glyph_action = GUI::Action::create_checkable("Paint Glyph", { Mod_Ctrl, KeyCode::Key_J }, TRY(Gfx::Bitmap::load_from_file("/res/icons/pixelpaint/pen.png"sv)), [&](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Paint);
     });
     m_paint_glyph_action->set_checked(true);
 
-    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/selection-move.png"sv)), [&](auto&) {
+    m_move_glyph_action = GUI::Action::create_checkable("Move Glyph", { Mod_Ctrl, KeyCode::Key_K }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/selection-move.png"sv)), [&](auto&) {
         m_glyph_editor_widget->set_mode(GlyphEditorWidget::Move);
     });
 
@@ -310,15 +310,15 @@ ErrorOr<void> MainWidget::create_actions()
         m_glyph_editor_widget->rotate_90(Gfx::RotationDirection::Clockwise);
     });
 
-    m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)), [&](auto&) {
+    m_flip_horizontal_action = GUI::Action::create("Flip Horizontally", { Mod_Ctrl | Mod_Shift, Key_Q }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-flip-horizontal.png"sv)), [&](auto&) {
         m_glyph_editor_widget->flip(Gfx::Orientation::Horizontal);
     });
 
-    m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)), [&](auto&) {
+    m_flip_vertical_action = GUI::Action::create("Flip Vertically", { Mod_Ctrl | Mod_Shift, Key_W }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-flip-vertical.png"sv)), [&](auto&) {
         m_glyph_editor_widget->flip(Gfx::Orientation::Vertical);
     });
 
-    m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
+    m_copy_text_action = GUI::Action::create("Copy as Te&xt", { Mod_Ctrl, Key_T }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
         StringBuilder builder;
         auto selection = m_glyph_map_widget->selection().normalized();
         for (auto code_point = selection.start(); code_point < selection.start() + selection.size(); ++code_point) {
@@ -709,7 +709,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_action(*m_show_system_emoji_action));
     TRY(view_menu->try_add_separator());
     auto scale_menu = TRY(view_menu->try_add_submenu("&Scale"));
-    scale_menu->set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/scale.png"sv)));
+    scale_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)));
     TRY(scale_menu->try_add_action(*m_scale_five_action));
     TRY(scale_menu->try_add_action(*m_scale_ten_action));
     TRY(scale_menu->try_add_action(*m_scale_fifteen_action));

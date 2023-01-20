@@ -19,7 +19,7 @@ namespace Cards {
 ErrorOr<NonnullRefPtr<GUI::Action>> make_cards_settings_action(GUI::Window* parent)
 {
     auto action = GUI::Action::create(
-        "&Cards Settings", {}, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/games.png"sv)), [parent](auto&) {
+        "&Cards Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/games.png"sv)), [parent](auto&) {
             GUI::Process::spawn_or_show_error(parent, "/bin/GamesSettings"sv, Array { "--open-tab", "cards" });
         },
         parent);

@@ -215,7 +215,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(editor->go_to_line_action()));
     TRY(edit_menu->try_add_separator());
 
-    auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
+    auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(editor->text());
         if (!formatted_gml_or_error.is_error()) {
             editor->replace_all_text_without_resetting_undo_stack(formatted_gml_or_error.release_value());

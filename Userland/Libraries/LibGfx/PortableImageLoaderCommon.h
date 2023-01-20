@@ -175,7 +175,7 @@ static bool read_max_val(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool create_bitmap(TContext& context)
 {
-    auto bitmap_or_error = Bitmap::try_create(BitmapFormat::BGRx8888, { context.width, context.height });
+    auto bitmap_or_error = Bitmap::create(BitmapFormat::BGRx8888, { context.width, context.height });
     if (bitmap_or_error.is_error()) {
         context.state = TContext::State::Error;
         return false;

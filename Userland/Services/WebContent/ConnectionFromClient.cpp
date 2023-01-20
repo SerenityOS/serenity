@@ -464,7 +464,7 @@ Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient:
     auto const& content_size = m_page_host->content_size();
     Web::DevicePixelRect rect { { 0, 0 }, content_size };
 
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
     m_page_host->paint(rect, *bitmap);
 
     return { bitmap->to_shareable_bitmap() };

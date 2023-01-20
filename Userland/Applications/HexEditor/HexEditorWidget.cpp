@@ -98,7 +98,7 @@ HexEditorWidget::HexEditorWidget()
         m_editor->update();
     };
 
-    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         DeprecatedString value;
         if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
             auto file_size = value.to_uint();
@@ -166,7 +166,7 @@ HexEditorWidget::HexEditorWidget()
     });
     m_redo_action->set_enabled(false);
 
-    m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
         bool find_all = false;
         if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecResult::OK) {
@@ -203,7 +203,7 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    m_goto_offset_action = GUI::Action::create("&Go to Offset ...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
+    m_goto_offset_action = GUI::Action::create("&Go to Offset ...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         int new_offset;
         auto result = GoToOffsetDialog::show(
             window(),
@@ -226,17 +226,17 @@ HexEditorWidget::HexEditorWidget()
         set_search_results_visible(action.is_checked());
     });
 
-    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/hex.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/hex.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     });
     m_copy_hex_action->set_enabled(false);
 
-    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_text_action = GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     });
     m_copy_text_action->set_enabled(false);
 
-    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/c.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    m_copy_as_c_code_action = GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/c.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     });
     m_copy_as_c_code_action->set_enabled(false);
@@ -412,7 +412,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
     edit_menu.add_action(*m_copy_as_c_code_action);
     edit_menu.add_separator();
     edit_menu.add_action(*m_find_action);
-    edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
             GUI::MessageBox::show(&window, "Nothing to search for"sv, "Not found"sv, GUI::MessageBox::Type::Warning);
             return;
@@ -427,7 +427,7 @@ void HexEditorWidget::initialize_menubar(GUI::Window& window)
         m_last_found_index = result.value();
     }));
 
-    edit_menu.add_action(GUI::Action::create("Find All &Strings", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Find All &Strings", { Mod_Ctrl | Mod_Shift, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
         int min_length = 4;
         auto matches = m_editor->find_all_strings(min_length);
         m_search_results->set_model(*new SearchResultsModel(move(matches)));
