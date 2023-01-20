@@ -63,6 +63,19 @@ inline void shuffle(Collection& collection)
     }
 }
 
+// shuffle() implementation for NonnullPtrVector, since its operator[] returns a reference to the pointed-at value
+// instead of the pointer itself.
+template<typename Collection>
+requires(requires(Collection collection) { collection.ptr_at(0); })
+inline void shuffle(Collection& collection)
+{
+    // Fisher-Yates shuffle
+    for (size_t i = collection.size() - 1; i >= 1; --i) {
+        size_t j = get_random_uniform(i + 1);
+        AK::swap(collection.ptr_at(i), collection.ptr_at(j));
+    }
+}
+
 }
 
 #if USING_AK_GLOBALLY
