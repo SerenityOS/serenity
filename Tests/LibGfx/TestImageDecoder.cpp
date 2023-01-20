@@ -48,7 +48,7 @@ TEST_CASE(test_gif)
     EXPECT_EQ(plugin_decoder->initialize(), true);
 
     EXPECT(plugin_decoder->frame_count());
-    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
     auto frame = plugin_decoder->frame(1).release_value_but_fixme_should_propagate_errors();
