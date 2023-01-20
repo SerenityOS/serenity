@@ -88,7 +88,7 @@ void CardGame::drop_cards_on_stack(Cards::CardStack& stack, CardStack::MovementR
     VERIFY(stack.is_allowed_to_push(m_moving_cards.at(0), m_moving_cards.size(), movement_rule));
     for (auto& to_intersect : moving_cards()) {
         mark_intersecting_stacks_dirty(to_intersect);
-        stack.push(to_intersect);
+        stack.push(to_intersect).release_value_but_fixme_should_propagate_errors();
         (void)moving_cards_source_stack()->pop();
     }
 

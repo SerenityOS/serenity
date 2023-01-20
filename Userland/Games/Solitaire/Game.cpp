@@ -70,9 +70,9 @@ void Game::timer_event(Core::TimerEvent&)
             if (current_pile.count() < m_new_game_animation_pile) {
                 auto card = m_new_deck.take_last();
                 card->set_upside_down(true);
-                current_pile.push(card);
+                current_pile.push(card).release_value_but_fixme_should_propagate_errors();
             } else {
-                current_pile.push(m_new_deck.take_last());
+                current_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
                 ++m_new_game_animation_pile;
             }
 
@@ -81,7 +81,7 @@ void Game::timer_event(Core::TimerEvent&)
             if (m_new_game_animation_pile == piles.size()) {
                 auto& stock_pile = stack_at_location(Stock);
                 while (!m_new_deck.is_empty())
-                    stock_pile.push(m_new_deck.take_last());
+                    stock_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
 
                 update(stock_pile.bounding_box());
 
@@ -404,13 +404,13 @@ void Game::draw_cards()
         NonnullRefPtrVector<Card> moved_cards;
         while (!play.is_empty()) {
             auto card = play.pop();
-            stock.push(card);
+            stock.push(card).release_value_but_fixme_should_propagate_errors();
             moved_cards.prepend(card);
         }
 
         while (!waste.is_empty()) {
             auto card = waste.pop();
-            stock.push(card);
+            stock.push(card).release_value_but_fixme_should_propagate_errors();
             moved_cards.prepend(card);
         }
 
@@ -424,7 +424,7 @@ void Game::draw_cards()
         update(stock.bounding_box());
     } else {
         auto play_bounding_box = play.bounding_box();
-        play.take_all(waste);
+        play.take_all(waste).release_value_but_fixme_should_propagate_errors();
 
         size_t cards_to_draw = 0;
         switch (m_mode) {
@@ -445,7 +445,7 @@ void Game::draw_cards()
         for (size_t i = 0; (i < cards_to_draw) && !stock.is_empty(); ++i) {
             auto card = stock.pop();
             cards_drawn.prepend(card);
-            play.push(move(card));
+            play.push(move(card)).release_value_but_fixme_should_propagate_errors();
         }
 
         remember_move_for_undo(stock, play, cards_drawn);
@@ -466,7 +466,7 @@ void Game::pop_waste_to_play_stack()
     if (play.is_empty() && !waste.is_empty()) {
         auto card = waste.pop();
         moving_cards().append(card);
-        play.push(move(card));
+        play.push(move(card)).release_value_but_fixme_should_propagate_errors();
     }
 }
 
@@ -490,7 +490,7 @@ bool Game::attempt_to_move_card_to_foundations(CardStack& from)
             auto card = from.pop();
 
             mark_intersecting_stacks_dirty(card);
-            foundation.push(card);
+            foundation.push(card).release_value_but_fixme_should_propagate_errors();
 
             NonnullRefPtrVector<Card> moved_card;
             moved_card.append(card);
@@ -612,12 +612,12 @@ void Game::perform_undo()
     if (m_last_move.from->type() == CardStack::Type::Play && m_mode == Mode::SingleCardDraw) {
         auto& waste = stack_at_location(Waste);
         if (!m_last_move.from->is_empty())
-            waste.push(m_last_move.from->pop());
+            waste.push(m_last_move.from->pop()).release_value_but_fixme_should_propagate_errors();
     }
 
     for (auto& to_intersect : m_last_move.cards) {
         mark_intersecting_stacks_dirty(to_intersect);
-        m_last_move.from->push(to_intersect);
+        m_last_move.from->push(to_intersect).release_value_but_fixme_should_propagate_errors();
         (void)m_last_move.to->pop();
     }
 
@@ -632,7 +632,7 @@ void Game::perform_undo()
             }
         }
         for (auto& card : cards_popped) {
-            play.push(card);
+            play.push(card).release_value_but_fixme_should_propagate_errors();
         }
     }
 
