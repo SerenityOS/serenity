@@ -33,7 +33,8 @@ static Optional<DeprecatedString> image_details(DeprecatedString const& descript
         return {};
 
     auto& mapped_file = *file_or_error.value();
-    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes_with_known_path(path, mapped_file.bytes());
+    auto mime_type = Core::guess_mime_type_based_on_filename(path);
+    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file.bytes(), mime_type);
     if (!image_decoder)
         return {};
 

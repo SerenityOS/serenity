@@ -16,6 +16,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
@@ -143,7 +144,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_file(StringView path, int s
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::try_load_from_fd_and_close(int fd, StringView path)
 {
     auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
-    if (auto decoder = ImageDecoder::try_create_for_raw_bytes_with_known_path(path, file->bytes())) {
+    auto mime_type = Core::guess_mime_type_based_on_filename(path);
+    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(file->bytes(), mime_type)) {
         auto frame = TRY(decoder->frame(0));
         if (auto& bitmap = frame.image)
             return bitmap.release_nonnull();

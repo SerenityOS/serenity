@@ -37,19 +37,14 @@ static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder
     }
 }
 
-static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<StringView> known_path, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
+static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<DeprecatedString> const& known_mime_type, bool& is_animated, u32& loop_count, Vector<Gfx::ShareableBitmap>& bitmaps, Vector<u32>& durations)
 {
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
     VERIFY(!is_animated);
     VERIFY(loop_count == 0);
 
-    RefPtr<Gfx::ImageDecoder> decoder;
-    if (known_path.has_value())
-        decoder = Gfx::ImageDecoder::try_create_for_raw_bytes_with_known_path(known_path.value(), ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() });
-    else
-        decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() });
-
+    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
     if (!decoder) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not find suitable image decoder plugin for data");
         return;
@@ -62,7 +57,7 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
     decode_image_to_bitmaps_and_durations_with_decoder(*decoder, bitmaps, durations);
 }
 
-Messages::ImageDecoderServer::DecodeImageWithKnownPathResponse ConnectionFromClient::decode_image_with_known_path(DeprecatedString const& path, Core::AnonymousBuffer const& encoded_buffer)
+Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer, Optional<DeprecatedString> const& mime_type)
 {
     if (!encoded_buffer.is_valid()) {
         dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
@@ -73,22 +68,7 @@ Messages::ImageDecoderServer::DecodeImageWithKnownPathResponse ConnectionFromCli
     u32 loop_count = 0;
     Vector<Gfx::ShareableBitmap> bitmaps;
     Vector<u32> durations;
-    decode_image_to_details(encoded_buffer, path.substring_view(0), is_animated, loop_count, bitmaps, durations);
-    return { is_animated, loop_count, bitmaps, durations };
-}
-
-Messages::ImageDecoderServer::DecodeImageResponse ConnectionFromClient::decode_image(Core::AnonymousBuffer const& encoded_buffer)
-{
-    if (!encoded_buffer.is_valid()) {
-        dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
-        return nullptr;
-    }
-
-    bool is_animated = false;
-    u32 loop_count = 0;
-    Vector<Gfx::ShareableBitmap> bitmaps;
-    Vector<u32> durations;
-    decode_image_to_details(encoded_buffer, {}, is_animated, loop_count, bitmaps, durations);
+    decode_image_to_details(encoded_buffer, mime_type, is_animated, loop_count, bitmaps, durations);
     return { is_animated, loop_count, bitmaps, durations };
 }
 

@@ -6,6 +6,7 @@
  */
 
 #include <LibCore/MappedFile.h>
+#include <LibCore/MimeData.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -76,7 +77,8 @@ void ImageWidget::load_from_file(StringView path)
         return;
 
     auto& mapped_file = *file_or_error.value();
-    m_image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes_with_known_path(path, mapped_file.bytes());
+    auto mime_type = Core::guess_mime_type_based_on_filename(path);
+    m_image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file.bytes(), mime_type);
     VERIFY(m_image_decoder);
 
     auto frame = m_image_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
