@@ -245,13 +245,12 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
             }
 
             // v. If ! IsStructurallyValidLanguageTag(tag) is false, throw a RangeError exception.
-            auto locale_id = TRY(is_structurally_valid_language_tag(vm, tag));
+            auto locale_id = MUST_OR_THROW_OOM(is_structurally_valid_language_tag(vm, tag));
             if (!locale_id.has_value())
                 return vm.throw_completion<RangeError>(ErrorType::IntlInvalidLanguageTag, tag);
 
             // vi. Let canonicalizedTag be ! CanonicalizeUnicodeLocaleId(tag).
-            // NOTE: We TRY this operation only to propagate OOM errors.
-            auto canonicalized_tag = TRY(canonicalize_unicode_locale_id(vm, *locale_id));
+            auto canonicalized_tag = MUST_OR_THROW_OOM(canonicalize_unicode_locale_id(vm, *locale_id));
 
             // vii. If canonicalizedTag is not an element of seen, append canonicalizedTag as the last element of seen.
             if (!seen.contains_slow(canonicalized_tag))
@@ -354,7 +353,7 @@ ThrowCompletionOr<String> insert_unicode_extension_and_canonicalize(VM& vm, ::Lo
     // of that string. LibUnicode gives us the parsed locale in a structure, so we can mutate that
     // structure directly.
     TRY_OR_THROW_OOM(vm, locale.extensions.try_append(move(extension)));
-    return canonicalize_unicode_locale_id(vm, locale);
+    return MUST_OR_THROW_OOM(canonicalize_unicode_locale_id(vm, locale));
 }
 
 template<typename T>
@@ -387,14 +386,12 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
     // 2. If matcher is "lookup", then
     if (matcher.is_string() && (TRY(matcher.as_string().utf8_string_view()) == "lookup"sv)) {
         // a. Let r be ! LookupMatcher(availableLocales, requestedLocales).
-        // NOTE: We TRY this operation only to propagate OOM errors.
-        matcher_result = TRY(lookup_matcher(vm, requested_locales));
+        matcher_result = MUST_OR_THROW_OOM(lookup_matcher(vm, requested_locales));
     }
     // 3. Else,
     else {
         // a. Let r be ! BestFitMatcher(availableLocales, requestedLocales).
-        // NOTE: We TRY this operation only to propagate OOM errors.
-        matcher_result = TRY(best_fit_matcher(vm, requested_locales));
+        matcher_result = MUST_OR_THROW_OOM(best_fit_matcher(vm, requested_locales));
     }
 
     // 4. Let foundLocale be r.[[locale]].
@@ -516,7 +513,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
         VERIFY(locale_id.has_value());
 
         // a. Set foundLocale to InsertUnicodeExtensionAndCanonicalize(foundLocale, supportedExtension).
-        found_locale = TRY(insert_unicode_extension_and_canonicalize(vm, locale_id.release_value(), move(supported_extension)));
+        found_locale = MUST_OR_THROW_OOM(insert_unicode_extension_and_canonicalize(vm, locale_id.release_value(), move(supported_extension)));
     }
 
     // 11. Set result.[[locale]] to foundLocale.

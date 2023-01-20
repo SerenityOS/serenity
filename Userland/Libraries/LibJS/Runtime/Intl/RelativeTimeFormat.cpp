@@ -174,8 +174,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto patterns = find_patterns_for_tense_or_number(tense);
 
     // 20. Let fv be ! PartitionNumberPattern(relativeTimeFormat.[[NumberFormat]], value).
-    // NOTE: We TRY this operation only to propagate OOM errors.
-    auto value_partitions = TRY(partition_number_pattern(vm, relative_time_format.number_format(), Value(value)));
+    auto value_partitions = MUST_OR_THROW_OOM(partition_number_pattern(vm, relative_time_format.number_format(), Value(value)));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).
     auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
@@ -186,14 +185,14 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
         return Vector<PatternPartitionWithUnit> {};
 
     // 23. Return ! MakePartsList(pattern, unit, fv).
-    return make_parts_list(vm, pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions));
+    return MUST_OR_THROW_OOM(make_parts_list(vm, pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions)));
 }
 
 // 17.5.3 MakePartsList ( pattern, unit, parts ), https://tc39.es/ecma402/#sec-makepartslist
 ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, StringView pattern, StringView unit, Vector<PatternPartition> parts)
 {
     // 1. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = TRY(partition_pattern(vm, pattern));
+    auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
 
     // 2. Let result be a new empty List.
     Vector<PatternPartitionWithUnit> result;
