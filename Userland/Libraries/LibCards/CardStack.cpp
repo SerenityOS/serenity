@@ -121,7 +121,7 @@ void CardStack::rebound_cards()
         card.set_position(m_stack_positions.at(card_index++));
 }
 
-void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
+ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
 {
     VERIFY(grabbed.is_empty());
 
@@ -129,9 +129,9 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPt
         auto& top_card = peek();
         if (top_card.rect().contains(click_location)) {
             top_card.set_moving(true);
-            grabbed.append(top_card);
+            TRY(grabbed.try_append(top_card));
         }
-        return;
+        return {};
     }
 
     RefPtr<Card> last_intersect;
@@ -144,22 +144,22 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPt
             last_intersect = card;
         } else if (!last_intersect.is_null()) {
             if (grabbed.is_empty()) {
-                grabbed.append(*last_intersect);
+                TRY(grabbed.try_append(*last_intersect));
                 last_intersect->set_moving(true);
             }
 
             if (card.is_upside_down()) {
                 grabbed.clear();
-                return;
+                return {};
             }
 
             card.set_moving(true);
-            grabbed.append(card);
+            TRY(grabbed.try_append(card));
         }
     }
 
     if (grabbed.is_empty() && !last_intersect.is_null()) {
-        grabbed.append(*last_intersect);
+        TRY(grabbed.try_append(*last_intersect));
         last_intersect->set_moving(true);
     }
 
@@ -198,6 +198,8 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPt
         }
         grabbed.clear();
     }
+
+    return {};
 }
 
 bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, MovementRule movement_rule) const

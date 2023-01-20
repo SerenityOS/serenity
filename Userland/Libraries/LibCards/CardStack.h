@@ -49,7 +49,7 @@ public:
     void rebound_cards();
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
-    void add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
+    ErrorOr<void> add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
 
     bool preview_card(Gfx::IntPoint click_location);
     void clear_card_preview();

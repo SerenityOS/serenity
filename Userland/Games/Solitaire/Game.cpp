@@ -266,7 +266,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     if (event.button() == GUI::MouseButton::Secondary) {
                         preview_card(to_check, click_location);
                     } else {
-                        pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Alternating);
+                        pick_up_cards_from_stack(to_check, click_location, Cards::CardStack::MovementRule::Alternating).release_value_but_fixme_should_propagate_errors();
                         m_mouse_down_location = click_location;
                         m_mouse_down = true;
                     }
