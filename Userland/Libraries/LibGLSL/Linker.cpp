@@ -11,7 +11,7 @@ namespace GLSL {
 ErrorOr<NonnullOwnPtr<LinkedShader>> Linker::link(Vector<ObjectFile const*> const&)
 {
     // FIXME: implement this function
-    m_messages = TRY(String::from_utf8(""sv));
+    m_messages = {};
 
     GPU::IR::Shader shader;
 

@@ -489,7 +489,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 3. If form is undefined, let f be "NFC".
     if (auto form_value = vm.argument(0); form_value.is_undefined()) {
-        form = TRY_OR_THROW_OOM(vm, String::from_utf8("NFC"sv));
+        form = String::from_utf8_short_string("NFC"sv);
     }
     // 4. Else, let f be ? ToString(form).
     else {
