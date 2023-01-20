@@ -169,11 +169,6 @@ String::String(NonnullRefPtr<Detail::StringData> data)
 {
 }
 
-String::String(ShortString short_string)
-    : m_short_string(short_string)
-{
-}
-
 String::String(String const& other)
     : m_data(other.m_data)
 {
@@ -207,7 +202,7 @@ String& String::operator=(String const& other)
     return *this;
 }
 
-String::~String()
+void String::destroy_string()
 {
     if (!is_short_string())
         m_data->unref();
