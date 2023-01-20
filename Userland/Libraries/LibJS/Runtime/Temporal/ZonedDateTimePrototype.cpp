@@ -1281,6 +1281,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_year_month)
     auto* fields = TRY(prepare_temporal_fields(vm, *temporal_date_time, field_names, Vector<StringView> {}));
 
     // 9. Return ? CalendarYearMonthFromFields(calendar, fields).
+    // 10. NOTE: The call to CalendarYearMonthFromFields is necessary in order to create a PlainYearMonth object with the [[ISOYear]], [[ISOMonth]], and [[ISODay]] internal slots set correctly.
     return TRY(calendar_year_month_from_fields(vm, calendar, *fields));
 }
 
@@ -1310,6 +1311,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_plain_month_day)
     auto* fields = TRY(prepare_temporal_fields(vm, *temporal_date_time, field_names, Vector<StringView> {}));
 
     // 9. Return ? CalendarMonthDayFromFields(calendar, fields).
+    // 10. NOTE: The call to CalendarMonthDayFromFields is necessary in order to create a PlainYearMonth object with the [[ISOYear]], [[ISOMonth]], and [[ISODay]] internal slots set correctly.
     return TRY(calendar_month_day_from_fields(vm, calendar, *fields));
 }
 
