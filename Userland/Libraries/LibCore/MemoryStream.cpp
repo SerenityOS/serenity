@@ -219,7 +219,7 @@ ErrorOr<Optional<size_t>> AllocatingMemoryStream::offset_of(ReadonlyBytes needle
     }
 
     // Trimming is done first to ensure that we don't unintentionally shift around if the first and last chunks are the same.
-    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(chunk_count * chunk_size - m_write_offset);
+    search_spans[chunk_count - 1] = search_spans[chunk_count - 1].trim(m_write_offset % chunk_size);
     search_spans[0] = search_spans[0].slice(m_read_offset);
 
     return AK::memmem(search_spans.begin(), search_spans.end(), needle);
