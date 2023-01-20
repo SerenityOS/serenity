@@ -15,9 +15,9 @@
 
 namespace AK::Detail {
 
-class Stream {
+class DeprecatedStream {
 public:
-    virtual ~Stream() { VERIFY(!has_any_error()); }
+    virtual ~DeprecatedStream() { VERIFY(!has_any_error()); }
 
     virtual bool has_recoverable_error() const { return m_recoverable_error; }
     virtual bool has_fatal_error() const { return m_fatal_error; }
@@ -60,7 +60,7 @@ private:
 
 namespace AK {
 
-class InputStream : public virtual Detail::Stream {
+class DeprecatedInputStream : public virtual Detail::DeprecatedStream {
 public:
     // Reads at least one byte unless none are requested or none are available. Does nothing
     // and returns zero if there is already an error.
@@ -81,52 +81,52 @@ public:
     virtual bool discard_or_error(size_t count) = 0;
 };
 
-class OutputStream : public virtual Detail::Stream {
+class DeprecatedOutputStream : public virtual Detail::DeprecatedStream {
 public:
     virtual size_t write(ReadonlyBytes) = 0;
     virtual bool write_or_error(ReadonlyBytes) = 0;
 };
 
-class DuplexStream
-    : public InputStream
-    , public OutputStream {
+class DeprecatedDuplexStream
+    : public DeprecatedInputStream
+    , public DeprecatedOutputStream {
 };
 
-inline InputStream& operator>>(InputStream& stream, Bytes bytes)
+inline DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, Bytes bytes)
 {
     stream.read_or_error(bytes);
     return stream;
 }
-inline OutputStream& operator<<(OutputStream& stream, ReadonlyBytes bytes)
+inline DeprecatedOutputStream& operator<<(DeprecatedOutputStream& stream, ReadonlyBytes bytes)
 {
     stream.write_or_error(bytes);
     return stream;
 }
 
 template<typename T>
-InputStream& operator>>(InputStream& stream, LittleEndian<T>& value)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, LittleEndian<T>& value)
 {
     return stream >> Bytes { &value.m_value, sizeof(value.m_value) };
 }
 template<typename T>
-OutputStream& operator<<(OutputStream& stream, LittleEndian<T> value)
+DeprecatedOutputStream& operator<<(DeprecatedOutputStream& stream, LittleEndian<T> value)
 {
     return stream << ReadonlyBytes { &value.m_value, sizeof(value.m_value) };
 }
 
 template<typename T>
-InputStream& operator>>(InputStream& stream, BigEndian<T>& value)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, BigEndian<T>& value)
 {
     return stream >> Bytes { &value.m_value, sizeof(value.m_value) };
 }
 template<typename T>
-OutputStream& operator<<(OutputStream& stream, BigEndian<T> value)
+DeprecatedOutputStream& operator<<(DeprecatedOutputStream& stream, BigEndian<T> value)
 {
     return stream << ReadonlyBytes { &value.m_value, sizeof(value.m_value) };
 }
 
 template<typename T>
-InputStream& operator>>(InputStream& stream, Optional<T>& value)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, Optional<T>& value)
 {
     T temporary;
     stream >> temporary;
@@ -135,13 +135,13 @@ InputStream& operator>>(InputStream& stream, Optional<T>& value)
 }
 
 template<Integral I>
-InputStream& operator>>(InputStream& stream, I& value)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, I& value)
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
 template<Integral I>
-OutputStream& operator<<(OutputStream& stream, I value)
+DeprecatedOutputStream& operator<<(DeprecatedOutputStream& stream, I value)
 {
     stream.write_or_error({ &value, sizeof(value) });
     return stream;
@@ -150,13 +150,13 @@ OutputStream& operator<<(OutputStream& stream, I value)
 #ifndef KERNEL
 
 template<FloatingPoint F>
-InputStream& operator>>(InputStream& stream, F& value)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, F& value)
 {
     stream.read_or_error({ &value, sizeof(value) });
     return stream;
 }
 template<FloatingPoint F>
-OutputStream& operator<<(OutputStream& stream, F value)
+DeprecatedOutputStream& operator<<(DeprecatedOutputStream& stream, F value)
 {
     stream.write_or_error({ &value, sizeof(value) });
     return stream;

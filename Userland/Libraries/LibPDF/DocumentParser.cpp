@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
 #include <LibCore/BitStream.h>
 #include <LibCore/MemoryStream.h>

@@ -5,7 +5,6 @@
  */
 
 #include "Answer.h"
-#include <AK/Stream.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
 #include <time.h>

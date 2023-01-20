@@ -7,10 +7,10 @@
 
 #include <AK/Bitmap.h>
 #include <AK/Checked.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
-#include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
@@ -212,7 +212,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_byte_buffer(ByteBu
 /// - image data (= actual size * u8)
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_bytes(ReadonlyBytes bytes)
 {
-    InputMemoryStream stream { bytes };
+    DeprecatedInputMemoryStream stream { bytes };
     size_t actual_size;
     unsigned width;
     unsigned height;
@@ -260,7 +260,7 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
 {
     // FIXME: Somehow handle possible OOM situation here.
     auto buffer = ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(ARGB32) * palette_size(m_format) + size_in_bytes()).release_value_but_fixme_should_propagate_errors();
-    OutputMemoryStream stream { buffer };
+    DeprecatedOutputMemoryStream stream { buffer };
 
     auto write = [&]<typename T>(T value) {
         if (stream.write({ &value, sizeof(T) }) != sizeof(T))

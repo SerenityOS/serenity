@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
-#include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/BitStream.h>

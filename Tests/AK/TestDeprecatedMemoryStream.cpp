@@ -7,13 +7,13 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
-#include <AK/MemoryStream.h>
+#include <AK/DeprecatedMemoryStream.h>
 
 TEST_CASE(read_an_integer)
 {
     u32 expected = 0x01020304, actual;
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
+    DeprecatedInputMemoryStream stream { { &expected, sizeof(expected) } };
     stream >> actual;
 
     EXPECT(!stream.has_any_error() && stream.eof());
@@ -24,7 +24,7 @@ TEST_CASE(read_a_bool)
 {
     bool expected = true, actual;
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
+    DeprecatedInputMemoryStream stream { { &expected, sizeof(expected) } };
     stream >> actual;
 
     EXPECT(!stream.has_any_error() && stream.eof());
@@ -35,7 +35,7 @@ TEST_CASE(read_a_double)
 {
     double expected = 3.141592653589793, actual;
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
+    DeprecatedInputMemoryStream stream { { &expected, sizeof(expected) } };
     stream >> actual;
 
     EXPECT(!stream.has_any_error() && stream.eof());
@@ -47,7 +47,7 @@ TEST_CASE(recoverable_error)
     u32 expected = 0x01020304, actual = 0;
     u64 to_large_value = 0;
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
+    DeprecatedInputMemoryStream stream { { &expected, sizeof(expected) } };
 
     EXPECT(!stream.has_any_error() && !stream.eof());
     stream >> to_large_value;
@@ -66,7 +66,7 @@ TEST_CASE(chain_stream_operator)
     Array<u8, 4> const expected { 0, 1, 2, 3 };
     Array<u8, 4> actual;
 
-    InputMemoryStream stream { expected };
+    DeprecatedInputMemoryStream stream { expected };
 
     stream >> actual[0] >> actual[1] >> actual[2] >> actual[3];
     EXPECT(!stream.has_any_error() && stream.eof());
@@ -83,7 +83,7 @@ TEST_CASE(seeking_slicing_offset)
 
     Array<u8, 4> actual0 {}, actual1 {}, actual2 {};
 
-    InputMemoryStream stream { input };
+    DeprecatedInputMemoryStream stream { input };
 
     stream >> actual0;
     EXPECT(!stream.has_any_error() && !stream.eof());
@@ -103,7 +103,7 @@ TEST_CASE(seeking_slicing_offset)
 TEST_CASE(read_endian_values)
 {
     Array<u8, 8> const input { 0, 1, 2, 3, 4, 5, 6, 7 };
-    InputMemoryStream stream { input };
+    DeprecatedInputMemoryStream stream { input };
 
     LittleEndian<u32> value1;
     BigEndian<u32> value2;
@@ -116,7 +116,7 @@ TEST_CASE(read_endian_values)
 TEST_CASE(new_output_memory_stream)
 {
     Array<u8, 16> buffer;
-    OutputMemoryStream stream { buffer };
+    DeprecatedOutputMemoryStream stream { buffer };
 
     EXPECT_EQ(stream.size(), 0u);
     EXPECT_EQ(stream.remaining(), 16u);

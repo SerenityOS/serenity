@@ -119,7 +119,7 @@ private:
 };
 
 template<typename StreamType, size_t Size>
-requires(IsBaseOf<OutputStream, StreamType>) class Buffered<StreamType, Size> : public OutputStream {
+requires(IsBaseOf<DeprecatedOutputStream, StreamType>) class Buffered<StreamType, Size> : public DeprecatedOutputStream {
     AK_MAKE_NONCOPYABLE(Buffered);
 
 public:

@@ -704,7 +704,7 @@ ErrorOr<int> LocalSocket::release_fd()
     return fd;
 }
 
-WrappedAKInputStream::WrappedAKInputStream(NonnullOwnPtr<InputStream> stream)
+WrappedAKInputStream::WrappedAKInputStream(NonnullOwnPtr<DeprecatedInputStream> stream)
     : m_stream(move(stream))
 {
 }
@@ -746,7 +746,7 @@ void WrappedAKInputStream::close()
 {
 }
 
-WrappedAKOutputStream::WrappedAKOutputStream(NonnullOwnPtr<OutputStream> stream)
+WrappedAKOutputStream::WrappedAKOutputStream(NonnullOwnPtr<DeprecatedOutputStream> stream)
     : m_stream(move(stream))
 {
 }

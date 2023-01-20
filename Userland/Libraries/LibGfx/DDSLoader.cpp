@@ -5,10 +5,10 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
-#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
@@ -454,7 +454,7 @@ static size_t bits_per_pixel(DXGIFormat format)
     }
 }
 
-static void decode_dx5_alpha_block(InputMemoryStream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
+static void decode_dx5_alpha_block(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
 {
     LittleEndian<u8> color0 {}, color1 {};
     LittleEndian<u8> code0 {}, code1 {}, code2 {}, code3 {}, code4 {}, code5 {};
@@ -517,7 +517,7 @@ static void decode_dx5_alpha_block(InputMemoryStream& stream, DDSLoadingContext&
     }
 }
 
-static void decode_dx3_alpha_block(InputMemoryStream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
+static void decode_dx3_alpha_block(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
 {
     LittleEndian<u8> a0 {}, a1 {}, a2 {}, a3 {}, a4 {}, a5 {}, a6 {}, a7 {};
 
@@ -565,7 +565,7 @@ static void unpack_rbg_565(u32 rgb, u8* output)
     output[3] = 255;
 }
 
-static void decode_color_block(InputMemoryStream& stream, DDSLoadingContext& context, bool dxt1, u64 bitmap_x, u64 bitmap_y)
+static void decode_color_block(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, bool dxt1, u64 bitmap_x, u64 bitmap_y)
 {
     LittleEndian<u8> c0_low {}, c0_high {}, c1_low {}, c1_high {};
     LittleEndian<u8> codes_0 {}, codes_1 {}, codes_2 {}, codes_3 {};
@@ -621,7 +621,7 @@ static void decode_color_block(InputMemoryStream& stream, DDSLoadingContext& con
     }
 }
 
-static void decode_dxt(InputMemoryStream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
+static void decode_dxt(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
 {
     if (format == DXGI_FORMAT_BC1_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
@@ -643,7 +643,7 @@ static void decode_dxt(InputMemoryStream& stream, DDSLoadingContext& context, DX
         }
     }
 }
-static void decode_bitmap(InputMemoryStream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
+static void decode_bitmap(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
 {
     Vector<u32> dxt_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
     if (dxt_formats.contains_slow(format)) {
@@ -698,7 +698,7 @@ static size_t get_minimum_bytes_for_mipmap(DXGIFormat format, u64 width, u64 hei
 
 static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 {
-    InputMemoryStream stream({ context.data, context.data_size });
+    DeprecatedInputMemoryStream stream({ context.data, context.data_size });
 
     // All valid DDS files are at least 128 bytes long.
     if (stream.remaining() < 128) {
