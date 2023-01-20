@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <AK/Format.h>
+#include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
@@ -23,6 +24,8 @@ enum class FourCCType {
     DeviceManufacturer,
     DeviceModel,
     Creator,
+    TagSignature,
+    TagTypeSignature,
 };
 
 template<FourCCType type>
@@ -47,6 +50,8 @@ using PreferredCMMType = DistinctFourCC<FourCCType::PreferredCMMType>;     // IC
 using DeviceManufacturer = DistinctFourCC<FourCCType::DeviceManufacturer>; // ICC v4, "7.2.12 Device manufacturer field"
 using DeviceModel = DistinctFourCC<FourCCType::DeviceModel>;               // ICC v4, "7.2.13 Device model field"
 using Creator = DistinctFourCC<FourCCType::Creator>;                       // ICC v4, "7.2.17 Profile creator field"
+using TagSignature = DistinctFourCC<FourCCType::TagSignature>;             // ICC v4, "9.2 Tag listing"
+using TagTypeSignature = DistinctFourCC<FourCCType::TagTypeSignature>;     // ICC v4, "10 Tag type definitions"
 
 // ICC v4, 7.2.4 Profile version field
 class Version {
@@ -219,6 +224,38 @@ struct XYZ {
     double z { 0 };
 };
 
+class TagData : public RefCounted<TagData> {
+public:
+    u32 offset() const { return m_offset; }
+    u32 size() const { return m_size; }
+    TagTypeSignature type() const { return m_type; }
+
+protected:
+    TagData(u32 offset, u32 size, TagTypeSignature type)
+        : m_offset(offset)
+        , m_size(size)
+        , m_type(type)
+    {
+    }
+
+private:
+    u32 m_offset;
+    u32 m_size;
+    TagTypeSignature m_type;
+};
+
+class UnknownTagData : public TagData {
+public:
+    UnknownTagData(u32 offset, u32 size, TagTypeSignature type)
+        : TagData(offset, size, type)
+    {
+    }
+};
+
+namespace Detail {
+struct TagTableEntry;
+}
+
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
@@ -245,8 +282,17 @@ public:
 
     static Crypto::Hash::MD5::DigestType compute_id(ReadonlyBytes);
 
+    template<typename Callback>
+    void for_each_tag(Callback callback) const
+    {
+        for (auto const& tag : m_tag_table)
+            callback(tag.key, tag.value);
+    }
+
 private:
     ErrorOr<void> read_header(ReadonlyBytes);
+    ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes, Detail::TagTableEntry const&);
+    ErrorOr<void> read_tag_table(ReadonlyBytes);
 
     u32 m_on_disk_size { 0 };
     Optional<PreferredCMMType> m_preferred_cmm_type;
@@ -264,6 +310,8 @@ private:
     XYZ m_pcs_illuminant;
     Optional<Creator> m_creator;
     Optional<Crypto::Hash::MD5::DigestType> m_id;
+
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> m_tag_table;
 };
 
 }
@@ -296,6 +344,19 @@ struct Formatter<Gfx::ICC::XYZ> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ICC::XYZ const& xyz)
     {
         return Formatter<FormatString>::format(builder, "X = {}, Y = {}, Z = {}"sv, xyz.x, xyz.y, xyz.z);
+    }
+};
+
+template<Gfx::ICC::FourCCType Type>
+struct Traits<Gfx::ICC::DistinctFourCC<Type>> : public GenericTraits<Gfx::ICC::DistinctFourCC<Type>> {
+    static unsigned hash(Gfx::ICC::DistinctFourCC<Type> const& key)
+    {
+        return int_hash(key.value);
+    }
+
+    static bool equals(Gfx::ICC::DistinctFourCC<Type> const& a, Gfx::ICC::DistinctFourCC<Type> const& b)
+    {
+        return a == b;
     }
 };
 }

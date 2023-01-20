@@ -73,5 +73,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("{} trailing bytes after profile data", profile_disk_size - profile->on_disk_size());
     }
 
+    outln("");
+
+    outln("tags:");
+    profile->for_each_tag([](auto tag_signature, auto tag_data) {
+        outln("{}: {}, offset {}, size {}", tag_signature, tag_data->type(), tag_data->offset(), tag_data->size());
+    });
+
     return 0;
 }
