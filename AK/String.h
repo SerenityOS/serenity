@@ -37,13 +37,31 @@ public:
     String& operator=(String&&);
     String& operator=(String const&);
 
-    ~String();
+    constexpr ~String()
+    {
+        if (!is_constant_evaluated())
+            destroy_string();
+    }
 
     // Creates an empty (zero-length) String.
     String();
 
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
+
+    // Creates a new String from a short sequence of UTF-8 encoded code points. If the provided string
+    // does not fit in the short string storage, a compilation error will be emitted.
+    static consteval String from_utf8_short_string(StringView string)
+    {
+        VERIFY(string.length() <= MAX_SHORT_STRING_BYTE_COUNT);
+
+        ShortString short_string;
+        for (size_t i = 0; i < string.length(); ++i)
+            short_string.storage[i] = string.characters_without_null_termination()[i];
+        short_string.byte_count_and_short_string_flag = (string.length() << 1) | SHORT_STRING_FLAG;
+
+        return String { short_string };
+    }
 
     // Creates a new String by case-transforming this String. Using these methods require linking LibUnicode into your application.
     ErrorOr<String> to_lowercase(Optional<StringView> const& locale = {}) const;
@@ -160,7 +178,13 @@ private:
     };
 
     explicit String(NonnullRefPtr<Detail::StringData>);
-    explicit String(ShortString);
+
+    explicit constexpr String(ShortString short_string)
+        : m_short_string(short_string)
+    {
+    }
+
+    void destroy_string();
 
     union {
         ShortString m_short_string;

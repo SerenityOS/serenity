@@ -34,15 +34,25 @@ TEST_CASE(move_assignment)
 TEST_CASE(short_strings)
 {
 #ifdef AK_ARCH_64_BIT
-    auto string = MUST(String::from_utf8("abcdefg"sv));
-    EXPECT_EQ(string.is_short_string(), true);
-    EXPECT_EQ(string.bytes().size(), 7u);
-    EXPECT_EQ(string.bytes_as_string_view(), "abcdefg"sv);
+    auto string1 = MUST(String::from_utf8("abcdefg"sv));
+    EXPECT_EQ(string1.is_short_string(), true);
+    EXPECT_EQ(string1.bytes().size(), 7u);
+    EXPECT_EQ(string1.bytes_as_string_view(), "abcdefg"sv);
+
+    constexpr auto string2 = String::from_utf8_short_string("abcdefg"sv);
+    EXPECT_EQ(string2.is_short_string(), true);
+    EXPECT_EQ(string2.bytes().size(), 7u);
+    EXPECT_EQ(string2, string1);
 #else
-    auto string = MUST(String::from_utf8("abc"sv));
-    EXPECT_EQ(string.is_short_string(), true);
-    EXPECT_EQ(string.bytes().size(), 3u);
-    EXPECT_EQ(string.bytes_as_string_view(), "abc"sv);
+    auto string1 = MUST(String::from_utf8("abc"sv));
+    EXPECT_EQ(string1.is_short_string(), true);
+    EXPECT_EQ(string1.bytes().size(), 3u);
+    EXPECT_EQ(string1.bytes_as_string_view(), "abc"sv);
+
+    constexpr auto string2 = String::from_utf8_short_string("abc"sv);
+    EXPECT_EQ(string2.is_short_string(), true);
+    EXPECT_EQ(string2.bytes().size(), 3u);
+    EXPECT_EQ(string2, string1);
 #endif
 }
 
