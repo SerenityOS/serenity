@@ -455,12 +455,9 @@ static inline ErrorOr<u16> read_be_word(InputMemoryStream& stream)
     return tmp;
 }
 
-static inline Marker read_marker_at_cursor(InputMemoryStream& stream)
+static inline ErrorOr<Marker> read_marker_at_cursor(InputMemoryStream& stream)
 {
-    auto result = read_be_word(stream);
-    if (result.is_error())
-        return JPG_INVALID;
-    u16 marker = result.release_value();
+    auto marker = TRY(read_be_word(stream));
     if (is_valid_marker(marker))
         return marker;
     if (marker != 0xFFFF)
@@ -468,7 +465,8 @@ static inline Marker read_marker_at_cursor(InputMemoryStream& stream)
     u8 next;
     do {
         stream >> next;
-        if (stream.handle_any_error() || next == 0x00)
+        TRY(stream.try_handle_any_error());
+        if (next == 0x00)
             return JPG_INVALID;
     } while (next == 0xFF);
     marker = 0xFF00 | (u16)next;
@@ -1030,15 +1028,13 @@ static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macrobloc
 
 static ErrorOr<void> parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
 {
-    auto marker = read_marker_at_cursor(stream);
-    TRY(stream.try_handle_any_error());
+    auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPG_SOI) {
         dbgln_if(JPG_DEBUG, "{}: SOI not found: {:x}!", stream.offset(), marker);
         return Error::from_string_literal("SOI not found");
     }
     for (;;) {
-        marker = read_marker_at_cursor(stream);
-        TRY(stream.try_handle_any_error());
+        marker = TRY(read_marker_at_cursor(stream));
 
         // Set frame type if the marker marks a new frame.
         if (marker >= 0xFFC0 && marker <= 0xFFCF) {
