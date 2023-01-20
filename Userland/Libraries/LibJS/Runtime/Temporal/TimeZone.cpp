@@ -352,8 +352,8 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
     return offset_nanoseconds;
 }
 
-// 11.6.9 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
-ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
+// 11.6.9 GetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetstringfor
+ThrowCompletionOr<String> get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
 {
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));

@@ -86,8 +86,8 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY(to_temporal_instant(vm, vm.argument(0)));
 
-    // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-    auto offset_string = TRY(builtin_time_zone_get_offset_string_for(vm, time_zone, *instant));
+    // 4. Return ? GetOffsetStringFor(timeZone, instant).
+    auto offset_string = TRY(get_offset_string_for(vm, time_zone, *instant));
     return PrimitiveString::create(vm, move(offset_string));
 }
 

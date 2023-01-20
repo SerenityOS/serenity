@@ -693,8 +693,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::offset_getter)
     // 3. Let instant be ! CreateTemporalInstant(zonedDateTime.[[Nanoseconds]]).
     auto* instant = MUST(create_temporal_instant(vm, zoned_date_time->nanoseconds()));
 
-    // 4. Return ? BuiltinTimeZoneGetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
-    auto offset_string = TRY(builtin_time_zone_get_offset_string_for(vm, &zoned_date_time->time_zone(), *instant));
+    // 4. Return ? GetOffsetStringFor(zonedDateTime.[[TimeZone]], instant).
+    auto offset_string = TRY(get_offset_string_for(vm, &zoned_date_time->time_zone(), *instant));
     return PrimitiveString::create(vm, move(offset_string));
 }
 
@@ -1339,8 +1339,8 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
     // 7. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, calendar).
     auto* date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *instant, calendar));
 
-    // 8. Let offset be ? BuiltinTimeZoneGetOffsetStringFor(timeZone, instant).
-    auto offset = TRY(builtin_time_zone_get_offset_string_for(vm, &time_zone, *instant));
+    // 8. Let offset be ? GetOffsetStringFor(timeZone, instant).
+    auto offset = TRY(get_offset_string_for(vm, &time_zone, *instant));
 
     // 9. Perform ! CreateDataPropertyOrThrow(fields, "calendar", calendar).
     MUST(fields->create_data_property_or_throw(vm.names.calendar, Value(&calendar)));
