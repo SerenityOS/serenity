@@ -50,7 +50,7 @@ ErrorOr<void> Program::attach_shader(Shader& shader)
 
 ErrorOr<void> Program::link(GPU::Device& device)
 {
-    m_info_log = TRY(String::from_utf8(""sv));
+    m_info_log = String {};
 
     GLSL::Linker linker;
 

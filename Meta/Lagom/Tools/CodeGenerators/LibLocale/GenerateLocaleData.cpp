@@ -1377,7 +1377,7 @@ static LanguageMapping const* resolve_likely_subtag(LanguageID const& language_i
             if (!language_id.script.has_value())
                 continue;
 
-            search_key.language = String::from_utf8("und"sv).release_value_but_fixme_should_propagate_errors();
+            search_key.language = String::from_utf8_short_string("und"sv);
             search_key.script = *language_id.script;
             break;
 
