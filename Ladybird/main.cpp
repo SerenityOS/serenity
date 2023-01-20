@@ -8,6 +8,7 @@
 #include "Settings.h"
 #include "Utilities.h"
 #include "WebContentView.h"
+#include <AK/OwnPtr.h>
 #include <Browser/CookieJar.h>
 #include <Browser/Database.h>
 #include <LibCore/ArgsParser.h>
@@ -20,7 +21,7 @@
 #include <LibSQL/SQLClient.h>
 #include <QApplication>
 
-Browser::Settings* s_settings;
+AK::OwnPtr<Browser::Settings> s_settings;
 
 static ErrorOr<void> handle_attached_debugger()
 {
@@ -98,8 +99,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto cookie_jar = TRY(Browser::CookieJar::create(*database));
 
+    s_settings = adopt_own_if_nonnull(new Browser::Settings());
     BrowserWindow window(cookie_jar, webdriver_content_ipc_path);
-    s_settings = new Browser::Settings(&window);
     window.setWindowTitle("Ladybird");
     window.resize(800, 600);
     window.show();

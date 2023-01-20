@@ -8,9 +8,9 @@
 
 namespace Browser {
 
-Settings::Settings(QObject* parent)
+Settings::Settings()
 {
-    m_qsettings = new QSettings("Serenity", "Ladybird", parent);
+    m_qsettings = new QSettings("Serenity", "Ladybird", this);
 }
 
 QString Settings::homepage()
@@ -21,6 +21,16 @@ QString Settings::homepage()
 void Settings::set_homepage(QString const& homepage)
 {
     m_qsettings->setValue("homepage", homepage);
+}
+
+QString Settings::new_tab_page()
+{
+    return m_qsettings->value("new_tab_page", "about:blank").toString();
+}
+
+void Settings::set_new_tab_page(QString const& page)
+{
+    m_qsettings->setValue("new_tab_page", page);
 }
 
 }

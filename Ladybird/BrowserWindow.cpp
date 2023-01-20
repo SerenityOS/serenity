@@ -305,7 +305,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     });
 
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
-        new_tab("about:blank", Activate::Yes);
+        new_tab(s_settings->new_tab_page(), Activate::Yes);
     });
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
         new SettingsDialog(this);
@@ -319,8 +319,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
-    // We need to load *something* to make the JS console usable.
-    new_tab("about:blank", Activate::Yes);
+    new_tab(s_settings->new_tab_page(), Activate::Yes);
 
     setCentralWidget(m_tabs_container);
 }
