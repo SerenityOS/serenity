@@ -14,6 +14,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Bitmap.h>
@@ -167,8 +168,8 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
 
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = ImageDecoderClient::Client::try_create().release_value_but_fixme_should_propagate_errors();
-
-    auto decoded_image_or_error = client->decode_image_with_known_path(path, mapped_file.bytes());
+    auto mime_type = Core::guess_mime_type_based_on_filename(path);
+    auto decoded_image_or_error = client->decode_image(mapped_file.bytes(), mime_type);
     if (!decoded_image_or_error.has_value()) {
         show_error();
         return;

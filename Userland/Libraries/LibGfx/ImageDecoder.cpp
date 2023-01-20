@@ -69,21 +69,12 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
     return {};
 }
 
-RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes)
+static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes)
 {
-    OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes);
-    if (!plugin)
-        return {};
-    return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
-}
-
-static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_path(StringView path, ReadonlyBytes bytes)
-{
-    LexicalPath lexical_mapped_file_path(path);
     auto* data = bytes.data();
     auto size = bytes.size();
     OwnPtr<ImageDecoderPlugin> plugin;
-    if (lexical_mapped_file_path.extension() == "tga"sv) {
+    if (mime_type == "image/x-targa"sv) {
         plugin = make<TGAImageDecoderPlugin>(data, size);
         if (plugin->sniff())
             return plugin;
@@ -91,11 +82,18 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_kn
     return {};
 }
 
-RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes_with_known_path(StringView path, ReadonlyBytes bytes)
+RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes, Optional<DeprecatedString> mime_type)
 {
-    OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin_with_known_path(path, bytes);
-    if (!plugin)
-        return try_create_for_raw_bytes(bytes);
+    OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes);
+    if (!plugin) {
+        if (mime_type.has_value()) {
+            plugin = probe_and_sniff_for_appropriate_plugin_with_known_mime_type(mime_type.value(), bytes);
+            if (!plugin)
+                return {};
+        } else {
+            return {};
+        }
+    }
     return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
 }
 
