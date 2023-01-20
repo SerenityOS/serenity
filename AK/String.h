@@ -23,6 +23,13 @@ namespace Detail {
 class StringData;
 }
 
+// FIXME: Remove this when Apple Clang fully supports consteval.
+#if defined(AK_OS_MACOS)
+#    define AK_SHORT_STRING_CONSTEVAL constexpr
+#else
+#    define AK_SHORT_STRING_CONSTEVAL consteval
+#endif
+
 // String is a strongly owned sequence of Unicode code points encoded as UTF-8.
 // The data may or may not be heap-allocated, and may or may not be reference counted.
 // There is no guarantee that the underlying bytes are null-terminated.
@@ -51,7 +58,7 @@ public:
 
     // Creates a new String from a short sequence of UTF-8 encoded code points. If the provided string
     // does not fit in the short string storage, a compilation error will be emitted.
-    static consteval String from_utf8_short_string(StringView string)
+    static AK_SHORT_STRING_CONSTEVAL String from_utf8_short_string(StringView string)
     {
         VERIFY(string.length() <= MAX_SHORT_STRING_BYTE_COUNT);
 
