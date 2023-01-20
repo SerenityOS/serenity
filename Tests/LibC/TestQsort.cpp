@@ -38,15 +38,6 @@ static int calc_payload_for_pos(size_t pos)
     return pos ^ (pos << 8) ^ (pos << 16) ^ (pos << 24);
 }
 
-static void shuffle_vec(Vector<SortableObject>& test_objects)
-{
-    for (size_t i = 0; i < test_objects.size() * 3; ++i) {
-        auto i1 = get_random_uniform(test_objects.size());
-        auto i2 = get_random_uniform(test_objects.size());
-        swap(test_objects[i1], test_objects[i2]);
-    }
-}
-
 TEST_CASE(quick_sort)
 {
     // Generate vector of SortableObjects in sorted order, with payloads determined by their sorted positions
@@ -56,7 +47,7 @@ TEST_CASE(quick_sort)
     }
     for (size_t i = 0; i < NUM_RUNS; i++) {
         // Shuffle the vector, then sort it again
-        shuffle_vec(test_objects);
+        shuffle(test_objects);
         qsort(test_objects.data(), test_objects.size(), sizeof(SortableObject), compare_sortable_object);
         // Check that the objects are sorted by key
         for (auto i = 0u; i + 1 < test_objects.size(); ++i) {
