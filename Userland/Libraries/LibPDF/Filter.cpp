@@ -269,9 +269,14 @@ ErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 
 ErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
-    Gfx::JPGImageDecoderPlugin decoder(bytes.data(), bytes.size());
-    auto frame = TRY(decoder.frame(0));
-    return frame.image->serialize_to_byte_buffer();
+    if (Gfx::JPGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() }).release_value_but_fixme_should_propagate_errors()) {
+        auto decoder = Gfx::JPGImageDecoderPlugin::create({ bytes.data(), bytes.size() }).release_value_but_fixme_should_propagate_errors();
+        if (decoder->initialize()) {
+            auto frame = TRY(decoder->frame(0));
+            return frame.image->serialize_to_byte_buffer();
+        }
+    }
+    return AK::Error::from_string_literal("Not a JPG image!");
 };
 
 ErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)

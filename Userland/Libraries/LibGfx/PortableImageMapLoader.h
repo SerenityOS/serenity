@@ -49,6 +49,9 @@ struct PortableImageMapLoadingContext {
 template<typename TContext>
 class PortableImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
+    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+
     PortableImageDecoderPlugin(u8 const*, size_t);
     virtual ~PortableImageDecoderPlugin() override = default;
 
@@ -57,8 +60,7 @@ public:
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
 
-    virtual bool sniff() override;
-
+    virtual bool initialize() override;
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
@@ -108,7 +110,7 @@ bool PortableImageDecoderPlugin<TContext>::set_nonvolatile(bool& was_purged)
 }
 
 template<typename TContext>
-bool PortableImageDecoderPlugin<TContext>::sniff()
+bool PortableImageDecoderPlugin<TContext>::initialize()
 {
     using Context = TContext;
     if (m_context->data_size < 2)
@@ -118,6 +120,28 @@ bool PortableImageDecoderPlugin<TContext>::sniff()
         return true;
 
     if (m_context->data[0] == 'P' && m_context->data[1] == Context::FormatDetails::binary_magic_number)
+        return true;
+
+    return false;
+}
+
+template<typename TContext>
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(data.data(), data.size()));
+}
+
+template<typename TContext>
+ErrorOr<bool> PortableImageDecoderPlugin<TContext>::sniff(ReadonlyBytes data)
+{
+    using Context = TContext;
+    if (data.size() < 2)
+        return false;
+
+    if (data.data()[0] == 'P' && data.data()[1] == Context::FormatDetails::ascii_magic_number)
+        return true;
+
+    if (data.data()[0] == 'P' && data.data()[1] == Context::FormatDetails::binary_magic_number)
         return true;
 
     return false;

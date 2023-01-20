@@ -212,9 +212,26 @@ bool TGAImageDecoderPlugin::decode_tga_header()
     return true;
 }
 
-bool TGAImageDecoderPlugin::sniff()
+bool TGAImageDecoderPlugin::initialize()
 {
     return decode_tga_header();
+}
+
+ErrorOr<bool> TGAImageDecoderPlugin::validate_before_create(ReadonlyBytes data)
+{
+    if (data.size() < sizeof(TGAHeader))
+        return false;
+    TGAHeader const& header = *reinterpret_cast<TGAHeader const*>(data.data());
+    if (header.data_type_code == TGADataType::UncompressedRGB && data.size() < (header.width * header.height * (header.bits_per_pixel / 8)))
+        return false;
+    if (header.bits_per_pixel < 8 || header.bits_per_pixel > 32)
+        return false;
+    return true;
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) TGAImageDecoderPlugin(data.data(), data.size()));
 }
 
 bool TGAImageDecoderPlugin::is_animated()

@@ -614,10 +614,21 @@ bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->frame_buffer->set_nonvolatile(was_purged);
 }
 
-bool GIFImageDecoderPlugin::sniff()
+bool GIFImageDecoderPlugin::initialize()
 {
     InputMemoryStream stream { { m_context->data, m_context->data_size } };
     return !decode_gif_header(stream).is_error();
+}
+
+ErrorOr<bool> GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    InputMemoryStream stream { { data.data(), data.size() } };
+    return !decode_gif_header(stream).is_error();
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> GIFImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) GIFImageDecoderPlugin(data.data(), data.size()));
 }
 
 bool GIFImageDecoderPlugin::is_animated()
