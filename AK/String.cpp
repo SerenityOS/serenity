@@ -208,12 +208,6 @@ void String::destroy_string()
         m_data->unref();
 }
 
-String::String()
-{
-    // This is an empty string, it's always short and zero-length.
-    m_short_string.byte_count_and_short_string_flag = SHORT_STRING_FLAG;
-}
-
 ErrorOr<String> String::from_utf8(StringView view)
 {
     if (view.length() <= MAX_SHORT_STRING_BYTE_COUNT) {
