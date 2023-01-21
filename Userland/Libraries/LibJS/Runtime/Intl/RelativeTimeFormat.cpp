@@ -148,7 +148,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
             VERIFY(patterns.size() == 1);
 
             // i. Let result be patterns.[[<valueString>]].
-            auto result = patterns[0].pattern.to_deprecated_string();
+            auto result = TRY_OR_THROW_OOM(vm, String::from_utf8(patterns[0].pattern));
 
             // ii. Return a List containing the Record { [[Type]]: "literal", [[Value]]: result }.
             return Vector<PatternPartitionWithUnit> { { "literal"sv, move(result) } };

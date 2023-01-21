@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -53,9 +52,9 @@ private:
 using Placeables = HashMap<StringView, Variant<PatternPartition, Vector<PatternPartition>>>;
 
 ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM&, StringView pattern, Placeables);
-ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
-ThrowCompletionOr<DeprecatedString> format_list(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
-ThrowCompletionOr<Array*> format_list_to_parts(VM&, ListFormat const&, Vector<DeprecatedString> const& list);
-ThrowCompletionOr<Vector<DeprecatedString>> string_list_from_iterable(VM&, Value iterable);
+ThrowCompletionOr<Vector<PatternPartition>> create_parts_from_list(VM&, ListFormat const&, Vector<String> const& list);
+ThrowCompletionOr<String> format_list(VM&, ListFormat const&, Vector<String> const& list);
+ThrowCompletionOr<Array*> format_list_to_parts(VM&, ListFormat const&, Vector<String> const& list);
+ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM&, Value iterable);
 
 }

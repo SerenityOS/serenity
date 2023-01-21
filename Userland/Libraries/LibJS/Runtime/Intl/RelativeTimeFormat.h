@@ -74,7 +74,7 @@ private:
 };
 
 struct PatternPartitionWithUnit : public PatternPartition {
-    PatternPartitionWithUnit(StringView type, DeprecatedString value, StringView unit_string = {})
+    PatternPartitionWithUnit(StringView type, String value, StringView unit_string = {})
         : PatternPartition(type, move(value))
         , unit(unit_string)
     {

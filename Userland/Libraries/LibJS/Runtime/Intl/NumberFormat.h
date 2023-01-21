@@ -292,7 +292,7 @@ ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM&, Value value
 NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode, bool is_negative);
 RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
-Vector<PatternPartitionWithSource> format_approximately(NumberFormat&, Vector<PatternPartitionWithSource> result);
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM&, NumberFormat&, Vector<PatternPartitionWithSource> result);
 Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result);
 ThrowCompletionOr<DeprecatedString> format_numeric_range(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
