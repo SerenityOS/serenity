@@ -12,6 +12,7 @@
 #include "WebAssemblyTableObject.h"
 #include "WebAssemblyTablePrototype.h"
 #include <AK/ScopeGuard.h>
+#include <LibCore/MemoryStream.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -118,13 +119,8 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
     } else {
         return vm.throw_completion<JS::TypeError>("Not a BufferSource");
     }
-    InputMemoryStream stream { data };
-    auto module_result = Wasm::Module::parse(stream);
-    ScopeGuard drain_errors {
-        [&] {
-            stream.handle_any_error();
-        }
-    };
+    auto stream = Core::Stream::FixedMemoryStream::construct(data).release_value_but_fixme_should_propagate_errors();
+    auto module_result = Wasm::Module::parse(*stream);
     if (module_result.is_error()) {
         // FIXME: Throw CompileError instead.
         return vm.throw_completion<JS::TypeError>(Wasm::parse_error_to_deprecated_string(module_result.error()));
