@@ -584,7 +584,7 @@ static ErrorOr<void> transform_unicode_locale_id_to_canonical_syntax(LocaleID& l
         for (auto& variant : language_id.variants)
             variant = TRY(variant.to_lowercase());
 
-        resolve_complex_language_aliases(language_id);
+        TRY(resolve_complex_language_aliases(language_id));
 
         if (auto alias = resolve_language_alias(*language_id.language); alias.has_value()) {
             auto language_alias = TRY(parse_unicode_language_id(*alias));
@@ -606,7 +606,7 @@ static ErrorOr<void> transform_unicode_locale_id_to_canonical_syntax(LocaleID& l
 
         if (language_id.region.has_value()) {
             if (auto alias = resolve_territory_alias(*language_id.region); alias.has_value())
-                language_id.region = TRY(String::from_deprecated_string(resolve_most_likely_territory_alias(language_id, *alias)));
+                language_id.region = TRY(resolve_most_likely_territory_alias(language_id, *alias));
         }
 
         quick_sort(language_id.variants);
@@ -824,14 +824,14 @@ Optional<StringView> __attribute__((weak)) get_locale_short_date_field_mapping(S
 Optional<StringView> __attribute__((weak)) get_locale_narrow_date_field_mapping(StringView, StringView) { return {}; }
 
 // https://www.unicode.org/reports/tr35/tr35-39/tr35-general.html#Display_Name_Elements
-Optional<DeprecatedString> format_locale_for_display(StringView locale, LocaleID locale_id)
+ErrorOr<Optional<String>> format_locale_for_display(StringView locale, LocaleID locale_id)
 {
     auto language_id = move(locale_id.language_id);
     VERIFY(language_id.language.has_value());
 
     auto patterns = get_locale_display_patterns(locale);
     if (!patterns.has_value())
-        return {};
+        return OptionalNone {};
 
     auto primary_tag = get_locale_language_mapping(locale, *language_id.language).value_or(*language_id.language);
     Optional<StringView> script;
@@ -842,19 +842,26 @@ Optional<DeprecatedString> format_locale_for_display(StringView locale, LocaleID
     if (language_id.region.has_value())
         region = get_locale_territory_mapping(locale, *language_id.region).value_or(*language_id.region);
 
-    Optional<DeprecatedString> secondary_tag;
+    Optional<String> secondary_tag;
 
-    if (script.has_value() && region.has_value())
-        secondary_tag = patterns->locale_separator.replace("{0}"sv, *script, ReplaceMode::FirstOnly).replace("{1}"sv, *region, ReplaceMode::FirstOnly);
-    else if (script.has_value())
-        secondary_tag = *script;
-    else if (region.has_value())
-        secondary_tag = *region;
+    if (script.has_value() && region.has_value()) {
+        secondary_tag = TRY(String::from_utf8(patterns->locale_separator));
+        secondary_tag = TRY(secondary_tag->replace("{0}"sv, *script, ReplaceMode::FirstOnly));
+        secondary_tag = TRY(secondary_tag->replace("{1}"sv, *region, ReplaceMode::FirstOnly));
+    } else if (script.has_value()) {
+        secondary_tag = TRY(String::from_utf8(*script));
+    } else if (region.has_value()) {
+        secondary_tag = TRY(String::from_utf8(*region));
+    }
 
     if (!secondary_tag.has_value())
-        return primary_tag;
+        return String::from_utf8(primary_tag);
 
-    return patterns->locale_pattern.replace("{0}"sv, primary_tag, ReplaceMode::FirstOnly).replace("{1}"sv, *secondary_tag, ReplaceMode::FirstOnly);
+    auto result = TRY(String::from_utf8(patterns->locale_pattern));
+    result = TRY(result.replace("{0}"sv, primary_tag, ReplaceMode::FirstOnly));
+    result = TRY(result.replace("{1}"sv, *secondary_tag, ReplaceMode::FirstOnly));
+
+    return result;
 }
 
 Optional<ListPatterns> __attribute__((weak)) get_locale_list_patterns(StringView, StringView, Style) { return {}; }
@@ -866,10 +873,10 @@ Optional<StringView> __attribute__((weak)) resolve_territory_alias(StringView) {
 Optional<StringView> __attribute__((weak)) resolve_script_tag_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_variant_alias(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) resolve_subdivision_alias(StringView) { return {}; }
-void __attribute__((weak)) resolve_complex_language_aliases(LanguageID&) { }
-Optional<LanguageID> __attribute__((weak)) add_likely_subtags(LanguageID const&) { return {}; }
+ErrorOr<void> __attribute__((weak)) resolve_complex_language_aliases(LanguageID&) { return {}; }
+ErrorOr<Optional<LanguageID>> __attribute__((weak)) add_likely_subtags(LanguageID const&) { return OptionalNone {}; }
 
-Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
+ErrorOr<Optional<LanguageID>> remove_likely_subtags(LanguageID const& language_id)
 {
     // https://www.unicode.org/reports/tr35/#Likely_Subtags
     auto return_language_and_variants = [](auto language, auto variants) {
@@ -878,9 +885,9 @@ Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
     };
 
     // 1. First get max = AddLikelySubtags(inputLocale). If an error is signaled, return it.
-    auto maximized = add_likely_subtags(language_id);
+    auto maximized = TRY(add_likely_subtags(language_id));
     if (!maximized.has_value())
-        return {};
+        return OptionalNone {};
 
     // 2. Remove the variants from max.
     auto variants = move(maximized->variants);
@@ -892,38 +899,38 @@ Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id)
 
     // 4. Then for trial in {languagemax, languagemax_regionmax, languagemax_scriptmax}:
     //    If AddLikelySubtags(trial) = max, then return trial + variants.
-    auto run_trial = [&](Optional<String> language, Optional<String> script, Optional<String> region) -> Optional<LanguageID> {
+    auto run_trial = [&](Optional<String> language, Optional<String> script, Optional<String> region) -> ErrorOr<Optional<LanguageID>> {
         LanguageID trial { .language = move(language), .script = move(script), .region = move(region) };
 
-        if (add_likely_subtags(trial) == maximized)
+        if (TRY(add_likely_subtags(trial)) == maximized)
             return return_language_and_variants(move(trial), move(variants));
-        return {};
+        return OptionalNone {};
     };
 
-    if (auto trial = run_trial(language_max, {}, {}); trial.has_value())
+    if (auto trial = TRY(run_trial(language_max, {}, {})); trial.has_value())
         return trial;
-    if (auto trial = run_trial(language_max, {}, region_max); trial.has_value())
+    if (auto trial = TRY(run_trial(language_max, {}, region_max)); trial.has_value())
         return trial;
-    if (auto trial = run_trial(language_max, script_max, {}); trial.has_value())
+    if (auto trial = TRY(run_trial(language_max, script_max, {})); trial.has_value())
         return trial;
 
     // 5. If you do not get a match, return max + variants.
     return return_language_and_variants(maximized.release_value(), move(variants));
 }
 
-Optional<DeprecatedString> __attribute__((weak)) resolve_most_likely_territory(LanguageID const&) { return {}; }
+ErrorOr<Optional<String>> __attribute__((weak)) resolve_most_likely_territory(LanguageID const&) { return OptionalNone {}; }
 
-DeprecatedString resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias)
+ErrorOr<String> resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias)
 {
     auto aliases = territory_alias.split_view(' ');
 
     if (aliases.size() > 1) {
-        auto territory = resolve_most_likely_territory(language_id);
+        auto territory = TRY(resolve_most_likely_territory(language_id));
         if (territory.has_value() && aliases.contains_slow(*territory))
             return territory.release_value();
     }
 
-    return aliases[0].to_deprecated_string();
+    return String::from_utf8(aliases[0]);
 }
 
 ErrorOr<String> LanguageID::to_string() const

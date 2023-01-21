@@ -1679,7 +1679,7 @@ Optional<CharacterOrder> character_order_for_locale(StringView locale)
     return {};
 }
 
-void resolve_complex_language_aliases(LanguageID& language_id)
+ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id)
 {
     for (auto const& map : s_complex_alias) {
         auto key_language = decode_string(map.key.language);
@@ -1695,7 +1695,7 @@ void resolve_complex_language_aliases(LanguageID& language_id)
         if (!map.key.matches_variants(language_id.variants))
             continue;
 
-        auto alias = map.alias.to_unicode_language_id().release_value_but_fixme_should_propagate_errors();
+        auto alias = TRY(map.alias.to_unicode_language_id());
 
         if (alias.language == "und"sv)
             alias.language = move(language_id.language);
@@ -1709,14 +1709,16 @@ void resolve_complex_language_aliases(LanguageID& language_id)
         language_id = move(alias);
         break;
     }
+
+    return {};
 }
 
-Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
+ErrorOr<Optional<LanguageID>> add_likely_subtags(LanguageID const& language_id)
 {
     // https://www.unicode.org/reports/tr35/#Likely_Subtags
     auto const* likely_subtag = resolve_likely_subtag(language_id);
     if (likely_subtag == nullptr)
-        return {};
+        return OptionalNone {};
 
     auto maximized = language_id;
 
@@ -1728,20 +1730,20 @@ Optional<LanguageID> add_likely_subtags(LanguageID const& language_id)
     auto alias_region = decode_string(likely_subtag->alias.region);
 
     if (maximized.language == "und"sv)
-        maximized.language = String::from_utf8(alias_language).release_value_but_fixme_should_propagate_errors();
+        maximized.language = TRY(String::from_utf8(alias_language));
     if (!maximized.script.has_value() || (!key_script.is_empty() && !alias_script.is_empty()))
-        maximized.script = String::from_utf8(alias_script).release_value_but_fixme_should_propagate_errors();
+        maximized.script = TRY(String::from_utf8(alias_script));
     if (!maximized.region.has_value() || (!key_region.is_empty() && !alias_region.is_empty()))
-        maximized.region = String::from_utf8(alias_region).release_value_but_fixme_should_propagate_errors();
+        maximized.region = TRY(String::from_utf8(alias_region));
 
     return maximized;
 }
 
-Optional<DeprecatedString> resolve_most_likely_territory(LanguageID const& language_id)
+ErrorOr<Optional<String>> resolve_most_likely_territory(LanguageID const& language_id)
 {
     if (auto const* likely_subtag = resolve_likely_subtag(language_id); likely_subtag != nullptr)
-        return decode_string(likely_subtag->alias.region);
-    return {};
+        return String::from_utf8(decode_string(likely_subtag->alias.region));
+    return OptionalNone {};
 }
 
 }

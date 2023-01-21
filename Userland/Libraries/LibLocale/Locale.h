@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -178,7 +177,7 @@ Vector<StringView> get_keywords_for_locale(StringView locale, StringView key);
 Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
-Optional<DeprecatedString> format_locale_for_display(StringView locale, LocaleID locale_id);
+ErrorOr<Optional<String>> format_locale_for_display(StringView locale, LocaleID locale_id);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
@@ -203,12 +202,12 @@ Optional<StringView> resolve_territory_alias(StringView territory);
 Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 Optional<StringView> resolve_variant_alias(StringView variant);
 Optional<StringView> resolve_subdivision_alias(StringView subdivision);
-void resolve_complex_language_aliases(LanguageID& language_id);
+ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id);
 
-Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
-Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
+ErrorOr<Optional<LanguageID>> add_likely_subtags(LanguageID const& language_id);
+ErrorOr<Optional<LanguageID>> remove_likely_subtags(LanguageID const& language_id);
 
-Optional<DeprecatedString> resolve_most_likely_territory(LanguageID const& language_id);
-DeprecatedString resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
+ErrorOr<Optional<String>> resolve_most_likely_territory(LanguageID const& language_id);
+ErrorOr<String> resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
 
 }

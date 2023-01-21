@@ -114,7 +114,7 @@ static auto find_regional_values_for_locale(StringView locale, GetRegionalValues
         return return_default_values();
 
     if (!language->region.has_value())
-        language = add_likely_subtags(*language);
+        language = add_likely_subtags(*language).release_value_but_fixme_should_propagate_errors();
     if (!language.has_value() || !language->region.has_value())
         return return_default_values();
 
