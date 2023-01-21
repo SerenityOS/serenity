@@ -11,6 +11,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/MemoryStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibDebug/DebugInfo.h>
 
 namespace Debug::Dwarf {
@@ -337,7 +338,7 @@ void DwarfInfo::build_cached_dies() const
         m_cached_dies_by_range.insert(range.start_address, DIEAndRange { die, range });
         m_cached_dies_by_offset.insert(die.offset(), die);
     };
-    auto get_ranges_of_die = [this](DIE const& die) -> Vector<DIERange> {
+    auto get_ranges_of_die = [this](DIE const& die) -> ErrorOr<Vector<DIERange>> {
         auto ranges = die.get_attribute(Attribute::Ranges);
         if (ranges.has_value()) {
             size_t offset;
@@ -353,15 +354,19 @@ void DwarfInfo::build_cached_dies() const
 
             Vector<DIERange> entries;
             if (die.compilation_unit().dwarf_version() == 5) {
-                AddressRangesV5 address_ranges(debug_range_lists_data(), offset, die.compilation_unit());
-                address_ranges.for_each_range([&entries](auto range) {
+                auto range_lists_stream = TRY(Core::Stream::FixedMemoryStream::construct(debug_range_lists_data()));
+                TRY(range_lists_stream->seek(offset));
+                AddressRangesV5 address_ranges(move(range_lists_stream), die.compilation_unit());
+                TRY(address_ranges.for_each_range([&entries](auto range) {
                     entries.empend(range.start, range.end);
-                });
+                }));
             } else {
-                AddressRangesV4 address_ranges(debug_ranges_data(), offset, die.compilation_unit());
-                address_ranges.for_each_range([&entries](auto range) {
+                auto ranges_stream = TRY(Core::Stream::FixedMemoryStream::construct(debug_ranges_data()));
+                TRY(ranges_stream->seek(offset));
+                AddressRangesV4 address_ranges(move(ranges_stream), die.compilation_unit());
+                TRY(address_ranges.for_each_range([&entries](auto range) {
                     entries.empend(range.start, range.end);
-                });
+                }));
             }
             return entries;
         }
@@ -370,7 +375,7 @@ void DwarfInfo::build_cached_dies() const
         auto end = die.get_attribute(Attribute::HighPc);
 
         if (!start.has_value() || !end.has_value())
-            return {};
+            return Vector<DIERange> {};
 
         VERIFY(start->type() == Dwarf::AttributeValue::Type::Address);
 
@@ -383,14 +388,14 @@ void DwarfInfo::build_cached_dies() const
         else
             range_end = start->as_addr() + end->as_unsigned();
 
-        return { DIERange { start.value().as_addr(), range_end } };
+        return Vector<DIERange> { DIERange { start.value().as_addr(), range_end } };
     };
 
     // If we simply use a lambda, type deduction fails because it's used recursively.
     Function<void(DIE const& die)> insert_to_cache_recursively;
     insert_to_cache_recursively = [&](DIE const& die) {
         if (die.offset() == 0 || die.parent_offset().has_value()) {
-            auto ranges = get_ranges_of_die(die);
+            auto ranges = get_ranges_of_die(die).release_value_but_fixme_should_propagate_errors();
             for (auto& range : ranges) {
                 insert_to_cache(die, range);
             }

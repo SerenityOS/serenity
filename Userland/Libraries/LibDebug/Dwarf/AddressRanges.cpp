@@ -6,34 +6,34 @@
 
 #include "AddressRanges.h"
 #include "DwarfTypes.h"
+#include <AK/LEB128.h>
+#include <LibCore/Stream.h>
 
 namespace Debug::Dwarf {
 
-AddressRangesV5::AddressRangesV5(ReadonlyBytes range_lists_data, size_t offset, CompilationUnit const& compilation_unit)
-    : m_range_lists_stream(range_lists_data)
+AddressRangesV5::AddressRangesV5(NonnullOwnPtr<Core::Stream::Stream> range_lists_stream, CompilationUnit const& compilation_unit)
+    : m_range_lists_stream(move(range_lists_stream))
     , m_compilation_unit(compilation_unit)
 {
-    m_range_lists_stream.seek(offset);
 }
 
-void AddressRangesV5::for_each_range(Function<void(Range)> callback)
+ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
 {
     // Dwarf version 5, section 2.17.3 "Non-Contiguous Address Ranges"
 
+    Core::Stream::WrapInAKInputStream wrapped_range_lists_stream { *m_range_lists_stream };
+
     Optional<FlatPtr> current_base_address;
-    while (!m_range_lists_stream.eof() && !m_range_lists_stream.has_any_error()) {
-        u8 entry_type;
-        m_range_lists_stream >> entry_type;
+    while (!m_range_lists_stream->is_eof()) {
+        auto entry_type = TRY(m_range_lists_stream->read_value<u8>());
         switch (static_cast<RangeListEntryType>(entry_type)) {
         case RangeListEntryType::BaseAddress: {
-            FlatPtr base;
-            m_range_lists_stream >> base;
-            current_base_address = base;
+            current_base_address = TRY(m_range_lists_stream->read_value<FlatPtr>());
             break;
         }
         case RangeListEntryType::BaseAddressX: {
             FlatPtr index;
-            m_range_lists_stream.read_LEB128_unsigned(index);
+            LEB128::read_unsigned(wrapped_range_lists_stream, index);
             current_base_address = m_compilation_unit.get_address(index);
             break;
         }
@@ -43,68 +43,66 @@ void AddressRangesV5::for_each_range(Function<void(Range)> callback)
                 base_address = m_compilation_unit.base_address();
             }
 
-            if (!base_address.has_value()) {
-                dbgln("expected base_address for rangelist");
-                return;
-            }
+            if (!base_address.has_value())
+                return Error::from_string_literal("Expected base_address for rangelist");
 
             size_t start_offset, end_offset;
-            m_range_lists_stream.read_LEB128_unsigned(start_offset);
-            m_range_lists_stream.read_LEB128_unsigned(end_offset);
+            LEB128::read_unsigned(wrapped_range_lists_stream, start_offset);
+            LEB128::read_unsigned(wrapped_range_lists_stream, end_offset);
             callback(Range { start_offset + *base_address, end_offset + *base_address });
             break;
         }
         case RangeListEntryType::StartLength: {
-            FlatPtr start;
-            m_range_lists_stream >> start;
+            auto start = TRY(m_range_lists_stream->read_value<FlatPtr>());
             size_t length;
-            m_range_lists_stream.read_LEB128_unsigned(length);
+            LEB128::read_unsigned(wrapped_range_lists_stream, length);
             callback(Range { start, start + length });
             break;
         }
         case RangeListEntryType::StartXEndX: {
             size_t start, end;
-            m_range_lists_stream.read_LEB128_unsigned(start);
-            m_range_lists_stream.read_LEB128_unsigned(end);
+            LEB128::read_unsigned(wrapped_range_lists_stream, start);
+            LEB128::read_unsigned(wrapped_range_lists_stream, end);
             callback(Range { m_compilation_unit.get_address(start), m_compilation_unit.get_address(end) });
             break;
         }
         case RangeListEntryType::StartXLength: {
             size_t start, length;
-            m_range_lists_stream.read_LEB128_unsigned(start);
-            m_range_lists_stream.read_LEB128_unsigned(length);
+            LEB128::read_unsigned(wrapped_range_lists_stream, start);
+            LEB128::read_unsigned(wrapped_range_lists_stream, length);
             auto start_addr = m_compilation_unit.get_address(start);
             callback(Range { start_addr, start_addr + length });
             break;
         }
         case RangeListEntryType::EndOfList:
-            return;
+            return {};
         default:
             dbgln("unsupported range list entry type: 0x{:x}", entry_type);
-            return;
+            return Error::from_string_literal("Unsupported range list entry type");
         }
     }
+
+    return {};
 }
 
-AddressRangesV4::AddressRangesV4(ReadonlyBytes ranges_data, size_t offset, CompilationUnit const& compilation_unit)
-    : m_ranges_stream(ranges_data)
+AddressRangesV4::AddressRangesV4(NonnullOwnPtr<Core::Stream::Stream> ranges_stream, CompilationUnit const& compilation_unit)
+    : m_ranges_stream(move(ranges_stream))
     , m_compilation_unit(compilation_unit)
 {
-    m_ranges_stream.seek(offset);
 }
 
-void AddressRangesV4::for_each_range(Function<void(Range)> callback)
+ErrorOr<void> AddressRangesV4::for_each_range(Function<void(Range)> callback)
 {
     // Dwarf version 4, section 2.17.3 "Non-Contiguous Address Ranges"
 
     Optional<FlatPtr> current_base_address;
-    while (!m_ranges_stream.eof() && !m_ranges_stream.has_any_error()) {
-        FlatPtr begin, end;
-        m_ranges_stream >> begin >> end;
+    while (!m_ranges_stream->is_eof()) {
+        auto begin = TRY(m_ranges_stream->read_value<FlatPtr>());
+        auto end = TRY(m_ranges_stream->read_value<FlatPtr>());
 
         if (begin == 0 && end == 0) {
             // end of list entry
-            return;
+            return {};
         } else if (begin == explode_byte(0xff)) {
             current_base_address = end;
         } else {
@@ -112,6 +110,8 @@ void AddressRangesV4::for_each_range(Function<void(Range)> callback)
             callback({ base + begin, base + end });
         }
     }
+
+    return {};
 }
 
 }
