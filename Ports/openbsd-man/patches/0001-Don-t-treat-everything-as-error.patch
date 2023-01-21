@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Sat, 21 Jan 2023 14:33:20 +0200
+Subject: [PATCH] Don't treat everything as error
+
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 5ddac5f069d973716aa886700a49cfc14a1303b1..d47928a56294cdbfd1f5ad55507fb4be92adf8fb 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2,7 +2,7 @@ PREFIX ?= /usr/local
+ ETCDIR ?= $(PREFIX)/etc
+ MANDIR ?= $(PREFIX)/share/man
+ 
+-CFLAGS += -O2 -Wall -Werror
++CFLAGS += -O2 -Wall
+ SRCS = $(shell find -type f -name '*.c')
+ OBJS = $(SRCS:.c=.o)
+ 
