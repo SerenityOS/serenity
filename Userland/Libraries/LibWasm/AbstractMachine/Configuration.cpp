@@ -87,8 +87,7 @@ void Configuration::dump_stack()
 {
     auto print_value = []<typename... Ts>(CheckedFormatString<Ts...> format, Ts... vs) {
         Core::Stream::AllocatingMemoryStream memory_stream;
-        Core::Stream::WrapInAKOutputStream wrapped_memory_stream { memory_stream };
-        Printer { wrapped_memory_stream }.print(vs...);
+        Printer { memory_stream }.print(vs...);
         auto buffer = ByteBuffer::create_uninitialized(memory_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
         memory_stream.read_entire_buffer(buffer).release_value_but_fixme_should_propagate_errors();
         dbgln(format.view(), StringView(buffer).trim_whitespace());

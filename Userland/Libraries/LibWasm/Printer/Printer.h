@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibCore/Stream.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {
@@ -17,7 +18,7 @@ DeprecatedString instruction_name(OpCode const& opcode);
 Optional<OpCode> instruction_from_name(StringView name);
 
 struct Printer {
-    explicit Printer(OutputStream& stream, size_t initial_indent = 0)
+    explicit Printer(Core::Stream::Stream& stream, size_t initial_indent = 0)
         : m_stream(stream)
         , m_indent(initial_indent)
     {
@@ -68,10 +69,10 @@ private:
     {
         StringBuilder builder;
         builder.appendff(fmt.view(), forward<Args>(args)...);
-        m_stream.write_or_error(builder.string_view().bytes());
+        m_stream.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
     }
 
-    OutputStream& m_stream;
+    Core::Stream::Stream& m_stream;
     size_t m_indent { 0 };
 };
 
