@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
@@ -37,14 +38,22 @@ NonnullRefPtr<VM> VM::create(OwnPtr<CustomData> custom_data)
     return adopt_ref(*new VM(move(custom_data)));
 }
 
+template<u32... code_points>
+static constexpr auto make_single_ascii_character_strings(IndexSequence<code_points...>)
+{
+    return AK::Array { (String::from_code_point(code_points))... };
+}
+
+static constexpr auto single_ascii_character_strings = make_single_ascii_character_strings(MakeIndexSequence<128>());
+
 VM::VM(OwnPtr<CustomData> custom_data)
     : m_heap(*this)
     , m_custom_data(move(custom_data))
 {
     m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String {});
-    for (size_t i = 0; i < 128; ++i) {
-        m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::formatted("{:c}", i));
-    }
+
+    for (size_t i = 0; i < single_ascii_character_strings.size(); ++i)
+        m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(single_ascii_character_strings[i]);
 
     // Default hook implementations. These can be overridden by the host, for example, LibWeb overrides the default hooks to place promise jobs on the microtask queue.
     host_promise_rejection_tracker = [this](Promise& promise, Promise::RejectionOperation operation) {
