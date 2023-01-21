@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("          device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
     outln("      data color space: {}", Gfx::ICC::data_color_space_name(profile->data_color_space()));
     outln("      connection space: {}", Gfx::ICC::profile_connection_space_name(profile->connection_space()));
-    outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()).to_deprecated_string());
+    outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()));
     outln("      primary platform: {}", Gfx::ICC::primary_platform_name(profile->primary_platform()));
 
     auto flags = profile->flags();
