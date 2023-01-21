@@ -4,11 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICCProfile.h>
+
+template<class T>
+static ErrorOr<String> hyperlink(URL const& target, T const& label)
+{
+    return String::formatted("\033]8;;{}\033\\{}\033]8;;\033\\", target, label);
+}
 
 template<class T>
 static void out_optional(char const* label, Optional<T> optional)
@@ -48,8 +55,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (auto color_management_module_bits = flags.color_management_module_bits())
         outln("                            CMM bits: 0x{:04x}", color_management_module_bits);
 
-    out_optional("   device manufacturer", profile->device_manufacturer());
-    out_optional("          device model", profile->device_model());
+    out_optional("   device manufacturer", TRY(profile->device_manufacturer().map([](auto device_manufacturer) {
+        return hyperlink(device_manufacturer_url(device_manufacturer), device_manufacturer);
+    })));
+    out_optional("          device model", TRY(profile->device_model().map([](auto device_model) {
+        return hyperlink(device_model_url(device_model), device_model);
+    })));
 
     auto device_attributes = profile->device_attributes();
     outln("     device attributes: 0x{:016x}", device_attributes.bits());

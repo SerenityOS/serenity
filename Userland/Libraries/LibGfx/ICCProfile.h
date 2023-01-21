@@ -12,6 +12,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <AK/URL.h>
 #include <LibCrypto/Hash/MD5.h>
 
 namespace Gfx::ICC {
@@ -52,6 +53,9 @@ using DeviceModel = DistinctFourCC<FourCCType::DeviceModel>;               // IC
 using Creator = DistinctFourCC<FourCCType::Creator>;                       // ICC v4, "7.2.17 Profile creator field"
 using TagSignature = DistinctFourCC<FourCCType::TagSignature>;             // ICC v4, "9.2 Tag listing"
 using TagTypeSignature = DistinctFourCC<FourCCType::TagTypeSignature>;     // ICC v4, "10 Tag type definitions"
+
+URL device_manufacturer_url(DeviceManufacturer);
+URL device_model_url(DeviceModel);
 
 // ICC v4, 7.2.4 Profile version field
 class Version {
