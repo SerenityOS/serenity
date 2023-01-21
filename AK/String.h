@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/CharacterTypes.h>
 #include <AK/Concepts.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
@@ -16,6 +18,7 @@
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#include <AK/UnicodeUtils.h>
 #include <AK/Vector.h>
 
 namespace AK {
@@ -70,6 +73,22 @@ public:
         for (size_t i = 0; i < string.length(); ++i)
             short_string.storage[i] = string.characters_without_null_termination()[i];
         short_string.byte_count_and_short_string_flag = (string.length() << 1) | SHORT_STRING_FLAG;
+
+        return String { short_string };
+    }
+
+    // Creates a new String from a single code point.
+    static constexpr String from_code_point(u32 code_point)
+    {
+        VERIFY(is_unicode(code_point));
+
+        ShortString short_string;
+        size_t i = 0;
+
+        auto length = UnicodeUtils::code_point_to_utf8(code_point, [&](auto byte) {
+            short_string.storage[i++] = static_cast<u8>(byte);
+        });
+        short_string.byte_count_and_short_string_flag = (length << 1) | SHORT_STRING_FLAG;
 
         return String { short_string };
     }

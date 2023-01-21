@@ -4,9 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// This is included first on purpose. We specifically do not want LibTest to override VERIFY here so
+// that we can actually test that some String factory methods cause a crash with invalid input.
+#include <AK/String.h>
+
 #include <LibTest/TestCase.h>
 
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
@@ -62,6 +65,26 @@ TEST_CASE(long_strings)
     EXPECT_EQ(string.is_short_string(), false);
     EXPECT_EQ(string.bytes().size(), 8u);
     EXPECT_EQ(string.bytes_as_string_view(), "abcdefgh"sv);
+}
+
+TEST_CASE(from_code_points)
+{
+    for (u32 code_point = 0; code_point < 0x80; ++code_point) {
+        auto string = String::from_code_point(code_point);
+
+        auto ch = static_cast<char>(code_point);
+        StringView view { &ch, 1 };
+
+        EXPECT_EQ(string, view);
+    }
+
+    auto string = String::from_code_point(0x10ffff);
+    EXPECT_EQ(string, "\xF4\x8F\xBF\xBF"sv);
+
+    EXPECT_CRASH("Creating a string from an invalid code point", [] {
+        String::from_code_point(0xffffffff);
+        return Test::Crash::Failure::DidNotCrash;
+    });
 }
 
 TEST_CASE(substring)
