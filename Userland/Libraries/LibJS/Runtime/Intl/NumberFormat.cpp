@@ -607,7 +607,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let plusSignSymbol be the ILND String representing the plus sign.
             auto plus_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PlusSign).value_or("+"sv);
             // ii. Append a new Record { [[Type]]: "plusSign", [[Value]]: plusSignSymbol } as the last element of result.
-            result.append({ "plusSign"sv, plus_sign_symbol });
+            result.append({ "plusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(plus_sign_symbol)) });
         }
 
         // e. Else if p is equal to "minusSign", then
@@ -615,7 +615,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let minusSignSymbol be the ILND String representing the minus sign.
             auto minus_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign).value_or("-"sv);
             // ii. Append a new Record { [[Type]]: "minusSign", [[Value]]: minusSignSymbol } as the last element of result.
-            result.append({ "minusSign"sv, minus_sign_symbol });
+            result.append({ "minusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) });
         }
 
         // f. Else if p is equal to "percentSign" and numberFormat.[[Style]] is "percent", then
@@ -623,7 +623,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let percentSignSymbol be the ILND String representing the percent sign.
             auto percent_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PercentSign).value_or("%"sv);
             // ii. Append a new Record { [[Type]]: "percentSign", [[Value]]: percentSignSymbol } as the last element of result.
-            result.append({ "percentSign"sv, percent_sign_symbol });
+            result.append({ "percentSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(percent_sign_symbol)) });
         }
 
         // g. Else if p is equal to "unitPrefix" and numberFormat.[[Style]] is "unit", then
@@ -640,7 +640,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             auto unit_identifier = found_pattern.identifiers[*identifier_index];
 
             // iv. Append a new Record { [[Type]]: "unit", [[Value]]: mu } as the last element of result.
-            result.append({ "unit"sv, unit_identifier });
+            result.append({ "unit"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(unit_identifier)) });
         }
 
         // i. Else if p is equal to "currencyCode" and numberFormat.[[Style]] is "currency", then
@@ -651,7 +651,8 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         //       currency code during GetNumberFormatPattern so that we do not have to do currency
         //       display / plurality lookups more than once.
         else if ((part == "currency"sv) && (number_format.style() == NumberFormat::Style::Currency)) {
-            result.append({ "currency"sv, number_format.resolve_currency_display() });
+            auto currency = number_format.resolve_currency_display();
+            result.append({ "currency"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(currency)) });
         }
 
         // l. Else,
@@ -727,12 +728,12 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
     // 2. If x is NaN, then
     if (number.is_nan()) {
         // a. Append a new Record { [[Type]]: "nan", [[Value]]: n } as the last element of result.
-        result.append({ "nan"sv, move(formatted_string) });
+        result.append({ "nan"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_string)) });
     }
     // 3. Else if x is a non-finite Number, then
     else if (number.is_positive_infinity() || number.is_negative_infinity()) {
         // a. Append a new Record { [[Type]]: "infinity", [[Value]]: n } as the last element of result.
-        result.append({ "infinity"sv, move(formatted_string) });
+        result.append({ "infinity"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_string)) });
     }
     // 4. Else,
     else {
@@ -797,7 +798,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 // 6. If the numberFormat.[[UseGrouping]] is false, then
                 if (number_format.use_grouping() == NumberFormat::UseGrouping::False) {
                     // a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
-                    result.append({ "integer"sv, integer });
+                    result.append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer)) });
                 }
                 // 7. Else,
                 else {
@@ -816,12 +817,12 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                         auto integer_group = groups.take_first();
 
                         // ii. Append a new Record { [[Type]]: "integer", [[Value]]: integerGroup } as the last element of result.
-                        result.append({ "integer"sv, integer_group });
+                        result.append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer_group)) });
 
                         // iii. If groups List is not empty, then
                         if (!groups.is_empty()) {
                             // i. Append a new Record { [[Type]]: "group", [[Value]]: groupSepSymbol } as the last element of result.
-                            result.append({ "group"sv, group_sep_symbol });
+                            result.append({ "group"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(group_sep_symbol)) });
                         }
                     }
                 }
@@ -831,9 +832,9 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     // a. Let decimalSepSymbol be the ILND String representing the decimal separator.
                     auto decimal_sep_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Decimal).value_or("."sv);
                     // b. Append a new Record { [[Type]]: "decimal", [[Value]]: decimalSepSymbol } as the last element of result.
-                    result.append({ "decimal"sv, decimal_sep_symbol });
+                    result.append({ "decimal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_sep_symbol)) });
                     // c. Append a new Record { [[Type]]: "fraction", [[Value]]: fraction } as the last element of result.
-                    result.append({ "fraction"sv, fraction.release_value() });
+                    result.append({ "fraction"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(*fraction)) });
                 }
             }
             // iv. Else if p is equal to "compactSymbol", then
@@ -848,14 +849,14 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 auto compact_identifier = number_format.compact_format().identifiers[*identifier_index];
 
                 // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactSymbol } as the last element of result.
-                result.append({ "compact"sv, compact_identifier });
+                result.append({ "compact"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(compact_identifier)) });
             }
             // vi. Else if p is equal to "scientificSeparator", then
             else if (part == "scientificSeparator"sv) {
                 // 1. Let scientificSeparator be the ILND String representing the exponent separator.
                 auto scientific_separator = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Exponential).value_or("E"sv);
                 // 2. Append a new Record { [[Type]]: "exponentSeparator", [[Value]]: scientificSeparator } as the last element of result.
-                result.append({ "exponentSeparator"sv, scientific_separator });
+                result.append({ "exponentSeparator"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(scientific_separator)) });
             }
             // vii. Else if p is equal to "scientificExponent", then
             else if (part == "scientificExponent"sv) {
@@ -865,7 +866,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     auto minus_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign).value_or("-"sv);
 
                     // b. Append a new Record { [[Type]]: "exponentMinusSign", [[Value]]: minusSignSymbol } as the last element of result.
-                    result.append({ "exponentMinusSign"sv, minus_sign_symbol });
+                    result.append({ "exponentMinusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) });
 
                     // c. Let exponent be -exponent.
                     exponent *= -1;
@@ -880,7 +881,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 exponent_result.formatted_string = ::Locale::replace_digits_for_number_system(number_format.numbering_system(), exponent_result.formatted_string);
 
                 // 3. Append a new Record { [[Type]]: "exponentInteger", [[Value]]: exponentResult.[[FormattedString]] } as the last element of result.
-                result.append({ "exponentInteger"sv, move(exponent_result.formatted_string) });
+                result.append({ "exponentInteger"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(exponent_result.formatted_string)) });
             }
             // viii. Else,
             else {
@@ -1746,7 +1747,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     // 5. If xResult is equal to yResult, then
     if (start_result == end_result) {
         // a. Let appxResult be ? FormatApproximately(numberFormat, xResult).
-        auto approximate_result = format_approximately(number_format, move(start_result));
+        auto approximate_result = TRY(format_approximately(vm, number_format, move(start_result)));
 
         // b. For each r in appxResult, do
         for (auto& result : approximate_result) {
@@ -1774,7 +1775,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     // 9. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
     PatternPartitionWithSource part;
     part.type = "literal"sv;
-    part.value = range_separator.value_or(range_separator_symbol);
+    part.value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(range_separator.value_or(range_separator_symbol)));
     part.source = "shared"sv;
     result.append(move(part));
 
@@ -1792,7 +1793,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
 }
 
 // 1.5.20 FormatApproximately ( numberFormat, result ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatapproximately
-Vector<PatternPartitionWithSource> format_approximately(NumberFormat& number_format, Vector<PatternPartitionWithSource> result)
+ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM& vm, NumberFormat& number_format, Vector<PatternPartitionWithSource> result)
 {
     // 1. Let i be an index into result, determined by an implementation-defined algorithm based on numberFormat and result.
     // 2. Let approximatelySign be an ILND String value used to signify that a number is approximate.
@@ -1801,7 +1802,7 @@ Vector<PatternPartitionWithSource> format_approximately(NumberFormat& number_for
     // 3. Insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
     PatternPartitionWithSource partition;
     partition.type = "approximatelySign"sv;
-    partition.value = approximately_sign;
+    partition.value = TRY_OR_THROW_OOM(vm, String::from_utf8(approximately_sign));
 
     result.insert_before_matching(move(partition), [](auto const& part) {
         return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);

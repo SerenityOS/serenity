@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Span.h>
 #include <AK/String.h>
 #include <AK/Variant.h>
@@ -44,14 +43,14 @@ struct LocaleResult {
 struct PatternPartition {
     PatternPartition() = default;
 
-    PatternPartition(StringView type_string, DeprecatedString value_string)
+    PatternPartition(StringView type_string, String value_string)
         : type(type_string)
         , value(move(value_string))
     {
     }
 
     StringView type;
-    DeprecatedString value;
+    String value;
 };
 
 struct PatternPartitionWithSource : public PatternPartition {

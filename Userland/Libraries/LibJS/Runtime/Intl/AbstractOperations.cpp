@@ -705,7 +705,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM& vm, StringView
             auto literal = pattern.substring_view(next_index, *begin_index - next_index);
 
             // ii. Append a new Record { [[Type]]: "literal", [[Value]]: literal } as the last element of the list result.
-            TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, literal }));
+            TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(literal)) }));
         }
 
         // d. Let p be the substring of pattern from position beginIndex, exclusive, to position endIndex, exclusive.
@@ -727,7 +727,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM& vm, StringView
         auto literal = pattern.substring_view(next_index);
 
         // b. Append a new Record { [[Type]]: "literal", [[Value]]: literal } as the last element of the list result.
-        TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, literal }));
+        TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(literal)) }));
     }
 
     // 8. Return result.

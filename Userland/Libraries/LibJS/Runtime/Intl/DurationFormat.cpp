@@ -448,7 +448,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 auto number = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, MathematicalValue(value)));
 
                 // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
-                result.append({ unit, number });
+                result.append({ unit, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(number)) });
 
                 // 6. If unit is "hours" or "minutes", then
                 if (unit.is_one_of("hours"sv, "minutes"sv)) {
@@ -484,7 +484,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                         auto separator = ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator).value_or(":"sv);
 
                         // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
-                        result.append({ "literal"sv, separator });
+                        result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) });
                     }
                 }
             }
@@ -516,7 +516,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 }
 
                 // 8. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
-                result.append({ unit, concat.build() });
+                result.append({ unit, TRY_OR_THROW_OOM(vm, concat.to_string()) });
             }
         }
     }
@@ -546,17 +546,17 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right
-    Vector<DeprecatedString> string_result;
+    Vector<String> string_result;
     bool merge = false;
     for (size_t i = 0; i < result.size(); ++i) {
         auto const& part = result[i];
         if (part.type == "literal") {
-            string_result.last() = DeprecatedString::formatted("{}{}", string_result.last(), part.value);
+            string_result.last() = TRY_OR_THROW_OOM(vm, String::formatted("{}{}", string_result.last(), part.value));
             merge = true;
             continue;
         }
         if (merge) {
-            string_result.last() = DeprecatedString::formatted("{}{}", string_result.last(), part.value);
+            string_result.last() = TRY_OR_THROW_OOM(vm, String::formatted("{}{}", string_result.last(), part.value));
             merge = false;
             continue;
         }
