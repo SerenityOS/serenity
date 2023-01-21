@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 RefPtr<Line::Editor> g_line_editor;
-static OwnPtr<AK::OutputStream> g_stdout {};
+static OwnPtr<Core::Stream::Stream> g_stdout {};
 static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);
@@ -53,12 +53,12 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
     if (always_print_stack)
         config.dump_stack();
     if (always_print_instruction) {
-        g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes());
+        g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes()).release_value_but_fixme_should_propagate_errors();
         g_printer->print(instr);
     }
     if (g_continue)
         return true;
-    g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes());
+    g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes()).release_value_but_fixme_should_propagate_errors();
     g_printer->print(instr);
     DeprecatedString last_command = "";
     for (;;) {
@@ -213,7 +213,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             if (!result.values().is_empty())
                 warnln("Returned:");
             for (auto& value : result.values()) {
-                g_stdout->write("  -> "sv.bytes());
+                g_stdout->write("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
                 g_printer->print(value);
             }
             continue;
@@ -339,8 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!parse_result.has_value())
         return 1;
 
-    auto standard_output = TRY(Core::Stream::File::standard_output());
-    g_stdout = TRY(try_make<Core::Stream::WrapInAKOutputStream>(*standard_output));
+    g_stdout = TRY(Core::Stream::File::standard_output());
     g_printer = TRY(try_make<Wasm::Printer>(*g_stdout));
 
     if (print && !attempt_instantiate) {
@@ -400,8 +399,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         bool first = true;
                         for (auto& argument : arguments) {
                             Core::Stream::AllocatingMemoryStream stream;
-                            Core::Stream::WrapInAKOutputStream wrapped_stream { stream };
-                            Wasm::Printer { wrapped_stream }.print(argument);
+                            Wasm::Printer { stream }.print(argument);
                             if (first)
                                 first = false;
                             else
@@ -454,15 +452,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto print_func = [&](auto const& address) {
             Wasm::FunctionInstance* fn = machine.store().get(address);
-            g_stdout->write(DeprecatedString::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes());
+            g_stdout->write(DeprecatedString::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes()).release_value_but_fixme_should_propagate_errors();
             if (fn) {
-                g_stdout->write(DeprecatedString::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes());
+                g_stdout->write(DeprecatedString::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes()).release_value_but_fixme_should_propagate_errors();
                 fn->visit(
                     [&](Wasm::WasmFunction const& func) {
                         Wasm::Printer printer { *g_stdout, 3 };
-                        g_stdout->write("    type:\n"sv.bytes());
+                        g_stdout->write("    type:\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
                         printer.print(func.type());
-                        g_stdout->write("    code:\n"sv.bytes());
+                        g_stdout->write("    code:\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
                         printer.print(func.code());
                     },
                     [](Wasm::HostFunction const&) {});
@@ -526,7 +524,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!result.values().is_empty())
                     warnln("Returned:");
                 for (auto& value : result.values()) {
-                    g_stdout->write("  -> "sv.bytes());
+                    g_stdout->write("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
                     g_printer->print(value);
                 }
             }
