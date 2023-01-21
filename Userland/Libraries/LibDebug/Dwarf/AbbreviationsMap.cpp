@@ -7,7 +7,8 @@
 #include "AbbreviationsMap.h"
 #include "DwarfInfo.h"
 
-#include <AK/MemoryStream.h>
+#include <AK/LEB128.h>
+#include <LibCore/MemoryStream.h>
 
 namespace Debug::Dwarf {
 
@@ -15,27 +16,27 @@ AbbreviationsMap::AbbreviationsMap(DwarfInfo const& dwarf_info, u32 offset)
     : m_dwarf_info(dwarf_info)
     , m_offset(offset)
 {
-    populate_map();
+    populate_map().release_value_but_fixme_should_propagate_errors();
 }
 
-void AbbreviationsMap::populate_map()
+ErrorOr<void> AbbreviationsMap::populate_map()
 {
-    InputMemoryStream abbreviation_stream(m_dwarf_info.abbreviation_data());
-    abbreviation_stream.discard_or_error(m_offset);
+    auto abbreviation_stream = TRY(Core::Stream::FixedMemoryStream::construct(m_dwarf_info.abbreviation_data()));
+    TRY(abbreviation_stream->discard(m_offset));
+    Core::Stream::WrapInAKInputStream wrapped_abbreviation_stream { *abbreviation_stream };
 
-    while (!abbreviation_stream.eof()) {
+    while (!abbreviation_stream->is_eof()) {
         size_t abbreviation_code = 0;
-        abbreviation_stream.read_LEB128_unsigned(abbreviation_code);
+        LEB128::read_unsigned(wrapped_abbreviation_stream, abbreviation_code);
         // An abbreviation code of 0 marks the end of the
         // abbreviations for a given compilation unit
         if (abbreviation_code == 0)
             break;
 
         size_t tag {};
-        abbreviation_stream.read_LEB128_unsigned(tag);
+        LEB128::read_unsigned(wrapped_abbreviation_stream, tag);
 
-        u8 has_children = 0;
-        abbreviation_stream >> has_children;
+        auto has_children = TRY(abbreviation_stream->read_value<u8>());
 
         AbbreviationEntry abbreviation_entry {};
         abbreviation_entry.tag = static_cast<EntryTag>(tag);
@@ -45,15 +46,15 @@ void AbbreviationsMap::populate_map()
         do {
             size_t attribute_value = 0;
             size_t form_value = 0;
-            abbreviation_stream.read_LEB128_unsigned(attribute_value);
-            abbreviation_stream.read_LEB128_unsigned(form_value);
+            LEB128::read_unsigned(wrapped_abbreviation_stream, attribute_value);
+            LEB128::read_unsigned(wrapped_abbreviation_stream, form_value);
 
             current_attribute_specification.attribute = static_cast<Attribute>(attribute_value);
             current_attribute_specification.form = static_cast<AttributeDataForm>(form_value);
 
             if (current_attribute_specification.form == AttributeDataForm::ImplicitConst) {
                 ssize_t data_value;
-                abbreviation_stream.read_LEB128_signed(data_value);
+                LEB128::read_unsigned(wrapped_abbreviation_stream, data_value);
                 current_attribute_specification.value = data_value;
             }
 
@@ -64,6 +65,8 @@ void AbbreviationsMap::populate_map()
 
         m_entries.set(static_cast<u32>(abbreviation_code), move(abbreviation_entry));
     }
+
+    return {};
 }
 
 AbbreviationsMap::AbbreviationEntry const* AbbreviationsMap::get(u32 code) const
