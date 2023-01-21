@@ -41,7 +41,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
     : m_heap(*this)
     , m_custom_data(move(custom_data))
 {
-    m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::empty());
+    m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String {});
     for (size_t i = 0; i < 128; ++i) {
         m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::formatted("{:c}", i));
     }

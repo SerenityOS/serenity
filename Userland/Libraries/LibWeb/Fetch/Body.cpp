@@ -153,7 +153,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
     }
 
     // 2. Let promise be a promise resolved with an empty byte sequence.
-    auto promise = WebIDL::create_resolved_promise(realm, JS::PrimitiveString::create(vm, DeprecatedString::empty()));
+    auto promise = WebIDL::create_resolved_promise(realm, JS::PrimitiveString::create(vm, String {}));
 
     // 3. If object’s body is non-null, then set promise to the result of fully reading body as promise given object’s body.
     auto const& body = object.body_impl();
