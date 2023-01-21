@@ -365,7 +365,7 @@ ErrorOr<Optional<Crypto::Hash::MD5::DigestType>> parse_profile_id(ICCHeader cons
     // ICC v4, 7.2.18 Profile ID field
     // "A profile ID field value of zero (00h) shall indicate that a profile ID has not been calculated."
     if (all_bytes_are_zero(header.profile_id))
-        return Optional<Crypto::Hash::MD5::DigestType> {};
+        return OptionalNone {};
 
     Crypto::Hash::MD5::DigestType id;
     static_assert(sizeof(id.data) == sizeof(header.profile_id));
