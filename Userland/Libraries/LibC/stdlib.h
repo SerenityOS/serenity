@@ -103,4 +103,6 @@ int unlockpt(int fd);
 int posix_memalign(void**, size_t alignment, size_t size);
 __attribute__((malloc, alloc_size(2), alloc_align(1))) void* aligned_alloc(size_t alignment, size_t size);
 
+extern char const* __progname;
+
 __END_DECLS

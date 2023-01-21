@@ -538,8 +538,7 @@ int putenv(char* new_var)
     return 0;
 }
 
-static char const* __progname = NULL;
-
+char const* __progname = NULL;
 char const* getprogname()
 {
     return __progname;
