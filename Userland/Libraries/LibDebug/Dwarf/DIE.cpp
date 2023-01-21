@@ -8,7 +8,8 @@
 #include "CompilationUnit.h"
 #include "DwarfInfo.h"
 #include <AK/ByteBuffer.h>
-#include <AK/MemoryStream.h>
+#include <AK/LEB128.h>
+#include <LibCore/MemoryStream.h>
 
 namespace Debug::Dwarf {
 
@@ -22,10 +23,12 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
 {
     m_offset = offset;
 
-    InputMemoryStream stream(m_compilation_unit.dwarf_info().debug_info_data());
-    stream.discard_or_error(m_offset);
-    stream.read_LEB128_unsigned(m_abbreviation_code);
-    m_data_offset = stream.offset();
+    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
+    // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
+    TRY(stream->seek(m_offset));
+    Core::Stream::WrapInAKInputStream wrapped_stream { *stream };
+    LEB128::read_unsigned(wrapped_stream, m_abbreviation_code);
+    m_data_offset = TRY(stream->tell());
 
     if (m_abbreviation_code == 0) {
         // An abbreviation code of 0 ( = null DIE entry) means the end of a chain of siblings
@@ -39,24 +42,25 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
 
         // We iterate the attributes data only to calculate this DIE's size
         for (auto& attribute_spec : abbreviation_info->attribute_specifications) {
-            TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit));
+            TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, *stream, &m_compilation_unit));
         }
     }
-    m_size = stream.offset() - m_offset;
+    m_size = TRY(stream->tell()) - m_offset;
     m_parent_offset = parent_offset;
     return {};
 }
 
 ErrorOr<Optional<AttributeValue>> DIE::get_attribute(Attribute const& attribute) const
 {
-    InputMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data() };
-    stream.discard_or_error(m_data_offset);
+    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
+    // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
+    TRY(stream->seek(m_data_offset));
 
     auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
     VERIFY(abbreviation_info);
 
     for (auto const& attribute_spec : abbreviation_info->attribute_specifications) {
-        auto value = TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit));
+        auto value = TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, *stream, &m_compilation_unit));
         if (attribute_spec.attribute == attribute) {
             return value;
         }

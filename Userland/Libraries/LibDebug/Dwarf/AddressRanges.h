@@ -9,7 +9,6 @@
 #include "CompilationUnit.h"
 #include <AK/Forward.h>
 #include <AK/Function.h>
-#include <AK/MemoryStream.h>
 #include <AK/Noncopyable.h>
 #include <LibCore/Stream.h>
 

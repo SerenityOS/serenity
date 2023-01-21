@@ -7,7 +7,6 @@
 #include "DebugInfo.h"
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
-#include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
 #include <LibDebug/Dwarf/CompilationUnit.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>
