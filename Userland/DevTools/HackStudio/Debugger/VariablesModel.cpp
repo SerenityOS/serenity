@@ -168,7 +168,7 @@ RefPtr<VariablesModel> VariablesModel::create(Debug::ProcessInspector& inspector
     auto lib = inspector.library_at(regs.ip());
     if (!lib)
         return nullptr;
-    auto variables = lib->debug_info->get_variables_in_current_scope(regs);
+    auto variables = lib->debug_info->get_variables_in_current_scope(regs).release_value_but_fixme_should_propagate_errors();
     return adopt_ref(*new VariablesModel(inspector, move(variables), regs));
 }
 

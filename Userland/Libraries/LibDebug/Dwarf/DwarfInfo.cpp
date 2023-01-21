@@ -29,7 +29,7 @@ DwarfInfo::DwarfInfo(ELF::Image const& elf)
     m_debug_addr_data = section_data(".debug_addr"sv);
     m_debug_ranges_data = section_data(".debug_ranges"sv);
 
-    populate_compilation_units();
+    populate_compilation_units().release_value_but_fixme_should_propagate_errors();
 }
 
 DwarfInfo::~DwarfInfo() = default;
@@ -42,10 +42,10 @@ ReadonlyBytes DwarfInfo::section_data(StringView section_name) const
     return section->bytes();
 }
 
-void DwarfInfo::populate_compilation_units()
+ErrorOr<void> DwarfInfo::populate_compilation_units()
 {
     if (!m_debug_info_data.data())
-        return;
+        return {};
 
     InputMemoryStream debug_info_stream { m_debug_info_data };
     InputMemoryStream line_info_stream { m_debug_line_data };
@@ -77,20 +77,22 @@ void DwarfInfo::populate_compilation_units()
     }
 
     VERIFY(line_info_stream.eof());
+    return {};
 }
 
-AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
+ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
     InputMemoryStream& debug_info_stream, CompilationUnit const* unit) const
 {
     AttributeValue value;
     value.m_form = form;
     value.m_compilation_unit = unit;
 
-    auto assign_raw_bytes_value = [&](size_t length) {
+    auto assign_raw_bytes_value = [&](size_t length) -> ErrorOr<void> {
         value.m_data.as_raw_bytes = { debug_info_data().offset_pointer(debug_info_stream.offset()), length };
 
         debug_info_stream.discard_or_error(length);
         VERIFY(!debug_info_stream.has_any_error());
+        return {};
     };
 
     switch (form) {
@@ -170,7 +172,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
     }
     case AttributeDataForm::Data16: {
         value.m_type = AttributeValue::Type::RawBytes;
-        assign_raw_bytes_value(16);
+        TRY(assign_raw_bytes_value(16));
         VERIFY(!debug_info_stream.has_any_error());
         break;
     }
@@ -193,7 +195,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         debug_info_stream.read_LEB128_unsigned(length);
         VERIFY(!debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::DwarfExpression;
-        assign_raw_bytes_value(length);
+        TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::String: {
@@ -210,7 +212,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         u8 length;
         debug_info_stream >> length;
         VERIFY(!debug_info_stream.has_any_error());
-        assign_raw_bytes_value(length);
+        TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::Block2: {
@@ -218,7 +220,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         u16 length;
         debug_info_stream >> length;
         VERIFY(!debug_info_stream.has_any_error());
-        assign_raw_bytes_value(length);
+        TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::Block4: {
@@ -226,7 +228,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         u32 length;
         debug_info_stream >> length;
         VERIFY(!debug_info_stream.has_any_error());
-        assign_raw_bytes_value(length);
+        TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::Block: {
@@ -234,7 +236,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         size_t length;
         debug_info_stream.read_LEB128_unsigned(length);
         VERIFY(!debug_info_stream.has_any_error());
-        assign_raw_bytes_value(length);
+        TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::LineStrP: {
@@ -332,21 +334,21 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
     return value;
 }
 
-void DwarfInfo::build_cached_dies() const
+ErrorOr<void> DwarfInfo::build_cached_dies() const
 {
     auto insert_to_cache = [this](DIE const& die, DIERange const& range) {
         m_cached_dies_by_range.insert(range.start_address, DIEAndRange { die, range });
         m_cached_dies_by_offset.insert(die.offset(), die);
     };
     auto get_ranges_of_die = [this](DIE const& die) -> ErrorOr<Vector<DIERange>> {
-        auto ranges = die.get_attribute(Attribute::Ranges);
+        auto ranges = TRY(die.get_attribute(Attribute::Ranges));
         if (ranges.has_value()) {
             size_t offset;
             if (ranges->form() == AttributeDataForm::SecOffset) {
                 offset = ranges->as_unsigned();
             } else {
                 auto index = ranges->as_unsigned();
-                auto base = die.compilation_unit().range_lists_base();
+                auto base = TRY(die.compilation_unit().range_lists_base());
                 // FIXME: This assumes that the format is DWARf32
                 auto offsets = debug_range_lists_data().slice(base);
                 offset = ByteReader::load32(offsets.offset_pointer(index * sizeof(u32))) + base;
@@ -371,8 +373,8 @@ void DwarfInfo::build_cached_dies() const
             return entries;
         }
 
-        auto start = die.get_attribute(Attribute::LowPc);
-        auto end = die.get_attribute(Attribute::HighPc);
+        auto start = TRY(die.get_attribute(Attribute::LowPc));
+        auto end = TRY(die.get_attribute(Attribute::HighPc));
 
         if (!start.has_value() || !end.has_value())
             return Vector<DIERange> {};
@@ -384,40 +386,44 @@ void DwarfInfo::build_cached_dies() const
 
         uint32_t range_end = 0;
         if (end->form() == Dwarf::AttributeDataForm::Addr)
-            range_end = end->as_addr();
+            range_end = TRY(end->as_addr());
         else
-            range_end = start->as_addr() + end->as_unsigned();
+            range_end = TRY(start->as_addr()) + end->as_unsigned();
 
-        return Vector<DIERange> { DIERange { start.value().as_addr(), range_end } };
+        return Vector<DIERange> { DIERange { TRY(start.value().as_addr()), range_end } };
     };
 
     // If we simply use a lambda, type deduction fails because it's used recursively.
-    Function<void(DIE const& die)> insert_to_cache_recursively;
-    insert_to_cache_recursively = [&](DIE const& die) {
+    Function<ErrorOr<void>(DIE const& die)> insert_to_cache_recursively;
+    insert_to_cache_recursively = [&](DIE const& die) -> ErrorOr<void> {
         if (die.offset() == 0 || die.parent_offset().has_value()) {
-            auto ranges = get_ranges_of_die(die).release_value_but_fixme_should_propagate_errors();
+            auto ranges = TRY(get_ranges_of_die(die));
             for (auto& range : ranges) {
                 insert_to_cache(die, range);
             }
         }
-        die.for_each_child([&](DIE const& child) {
+        TRY(die.for_each_child([&](DIE const& child) -> ErrorOr<void> {
             if (!child.is_null()) {
-                insert_to_cache_recursively(child);
+                TRY(insert_to_cache_recursively(child));
             }
-        });
+            return {};
+        }));
+        return {};
     };
 
-    for_each_compilation_unit([&](CompilationUnit const& compilation_unit) {
-        insert_to_cache_recursively(compilation_unit.root_die());
-    });
+    TRY(for_each_compilation_unit([&](CompilationUnit const& compilation_unit) -> ErrorOr<void> {
+        TRY(insert_to_cache_recursively(compilation_unit.root_die()));
+        return {};
+    }));
 
     m_built_cached_dies = true;
+    return {};
 }
 
-Optional<DIE> DwarfInfo::get_die_at_address(FlatPtr address) const
+ErrorOr<Optional<DIE>> DwarfInfo::get_die_at_address(FlatPtr address) const
 {
     if (!m_built_cached_dies)
-        build_cached_dies();
+        TRY(build_cached_dies());
 
     auto iter = m_cached_dies_by_range.find_largest_not_above_iterator(address);
     while (!iter.is_end() && !iter.is_begin() && iter->range.end_address < address) {
@@ -425,23 +431,23 @@ Optional<DIE> DwarfInfo::get_die_at_address(FlatPtr address) const
     }
 
     if (iter.is_end())
-        return {};
+        return Optional<DIE> {};
 
     if (iter->range.start_address > address || iter->range.end_address < address) {
-        return {};
+        return Optional<DIE> {};
     }
 
     return iter->die;
 }
 
-Optional<DIE> DwarfInfo::get_cached_die_at_offset(FlatPtr offset) const
+ErrorOr<Optional<DIE>> DwarfInfo::get_cached_die_at_offset(FlatPtr offset) const
 {
     if (!m_built_cached_dies)
-        build_cached_dies();
+        TRY(build_cached_dies());
 
     auto* die = m_cached_dies_by_offset.find(offset);
     if (!die)
-        return {};
+        return Optional<DIE> {};
     return *die;
 }
 

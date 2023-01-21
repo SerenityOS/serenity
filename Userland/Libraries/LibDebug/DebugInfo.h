@@ -90,7 +90,7 @@ public:
         Vector<Dwarf::DIE> dies_of_variables;
     };
 
-    NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(PtraceRegisters const&) const;
+    ErrorOr<NonnullOwnPtrVector<VariableInfo>> get_variables_in_current_scope(PtraceRegisters const&) const;
 
     Optional<SourcePosition> get_source_position(FlatPtr address) const;
 
@@ -98,7 +98,7 @@ public:
         Optional<SourcePosition> source_position;
         Vector<SourcePosition> inline_chain;
     };
-    SourcePositionWithInlines get_source_position_with_inlines(FlatPtr address) const;
+    ErrorOr<SourcePositionWithInlines> get_source_position_with_inlines(FlatPtr address) const;
 
     struct SourcePositionAndAddress {
         DeprecatedString file;
@@ -113,15 +113,15 @@ public:
     Optional<VariablesScope> get_containing_function(FlatPtr address) const;
 
 private:
-    void prepare_variable_scopes();
-    void prepare_lines();
-    void parse_scopes_impl(Dwarf::DIE const& die);
-    OwnPtr<VariableInfo> create_variable_info(Dwarf::DIE const& variable_die, PtraceRegisters const&, u32 address_offset = 0) const;
+    ErrorOr<void> prepare_variable_scopes();
+    ErrorOr<void> prepare_lines();
+    ErrorOr<void> parse_scopes_impl(Dwarf::DIE const& die);
+    ErrorOr<OwnPtr<VariableInfo>> create_variable_info(Dwarf::DIE const& variable_die, PtraceRegisters const&, u32 address_offset = 0) const;
     static bool is_variable_tag_supported(Dwarf::EntryTag const& tag);
-    void add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegisters const& regs, DebugInfo::VariableInfo* parent_variable) const;
+    ErrorOr<void> add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegisters const& regs, DebugInfo::VariableInfo* parent_variable) const;
 
-    Optional<Dwarf::LineProgram::DirectoryAndFile> get_source_path_of_inline(Dwarf::DIE const&) const;
-    Optional<uint32_t> get_line_of_inline(Dwarf::DIE const&) const;
+    ErrorOr<Optional<Dwarf::LineProgram::DirectoryAndFile>> get_source_path_of_inline(Dwarf::DIE const&) const;
+    ErrorOr<Optional<uint32_t>> get_line_of_inline(Dwarf::DIE const&) const;
 
     ELF::Image const& m_elf;
     DeprecatedString m_source_root;
