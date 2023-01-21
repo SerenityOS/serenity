@@ -52,7 +52,10 @@ public:
     }
 
     // Creates an empty (zero-length) String.
-    String();
+    constexpr String()
+        : String(ShortString { SHORT_STRING_FLAG, {} })
+    {
+    }
 
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
