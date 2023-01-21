@@ -18,13 +18,13 @@ LineProgram::LineProgram(DwarfInfo& dwarf_info, InputMemoryStream& stream)
     , m_stream(stream)
 {
     m_unit_offset = m_stream.offset();
-    parse_unit_header();
-    parse_source_directories();
-    parse_source_files();
-    run_program();
+    parse_unit_header().release_value_but_fixme_should_propagate_errors();
+    parse_source_directories().release_value_but_fixme_should_propagate_errors();
+    parse_source_files().release_value_but_fixme_should_propagate_errors();
+    run_program().release_value_but_fixme_should_propagate_errors();
 }
 
-void LineProgram::parse_unit_header()
+ErrorOr<void> LineProgram::parse_unit_header()
 {
     m_stream >> m_unit_header;
 
@@ -32,9 +32,10 @@ void LineProgram::parse_unit_header()
     VERIFY(m_unit_header.opcode_base() <= sizeof(m_unit_header.std_opcode_lengths) / sizeof(m_unit_header.std_opcode_lengths[0]) + 1);
 
     dbgln_if(DWARF_DEBUG, "unit length: {}", m_unit_header.length());
+    return {};
 }
 
-void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type)
+ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type)
 {
     if (m_unit_header.version() >= 5) {
         u8 path_entry_format_count = 0;
@@ -58,10 +59,10 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
         for (size_t i = 0; i < paths_count; i++) {
             PathEntry entry;
             for (auto& format_description : format_descriptions) {
-                auto value = m_dwarf_info.get_attribute_value(format_description.form, 0, m_stream);
+                auto value = TRY(m_dwarf_info.get_attribute_value(format_description.form, 0, m_stream));
                 switch (format_description.type) {
                 case ContentType::Path:
-                    entry.path = value.as_string();
+                    entry.path = TRY(value.as_string());
                     break;
                 case ContentType::DirectoryIndex:
                     entry.directory_index = value.as_unsigned();
@@ -96,30 +97,35 @@ void LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, 
     }
 
     VERIFY(!m_stream.has_any_error());
+    return {};
 }
 
-void LineProgram::parse_source_directories()
+ErrorOr<void> LineProgram::parse_source_directories()
 {
     if (m_unit_header.version() < 5) {
         m_source_directories.append(".");
     }
 
-    parse_path_entries([this](PathEntry& entry) {
+    TRY(parse_path_entries([this](PathEntry& entry) {
         m_source_directories.append(entry.path);
     },
-        PathListType::Directories);
+        PathListType::Directories));
+
+    return {};
 }
 
-void LineProgram::parse_source_files()
+ErrorOr<void> LineProgram::parse_source_files()
 {
     if (m_unit_header.version() < 5) {
         m_source_files.append({ ".", 0 });
     }
 
-    parse_path_entries([this](PathEntry& entry) {
+    TRY(parse_path_entries([this](PathEntry& entry) {
         m_source_files.append({ entry.path, entry.directory_index });
     },
-        PathListType::Filenames);
+        PathListType::Filenames));
+
+    return {};
 }
 
 void LineProgram::append_to_line_info()
@@ -149,7 +155,7 @@ void LineProgram::reset_registers()
     m_is_statement = m_unit_header.default_is_stmt() == 1;
 }
 
-void LineProgram::handle_extended_opcode()
+ErrorOr<void> LineProgram::handle_extended_opcode()
 {
     size_t length = 0;
     m_stream.read_LEB128_unsigned(length);
@@ -179,8 +185,10 @@ void LineProgram::handle_extended_opcode()
         dbgln("Encountered unknown sub opcode {} at stream offset {:p}", sub_opcode, m_stream.offset());
         VERIFY_NOT_REACHED();
     }
+
+    return {};
 }
-void LineProgram::handle_standard_opcode(u8 opcode)
+ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
 {
     switch (opcode) {
     case StandardOpcodes::Copy: {
@@ -256,6 +264,8 @@ void LineProgram::handle_standard_opcode(u8 opcode)
         dbgln("Unhandled LineProgram opcode {}", opcode);
         VERIFY_NOT_REACHED();
     }
+
+    return {};
 }
 void LineProgram::handle_special_opcode(u8 opcode)
 {
@@ -277,7 +287,7 @@ void LineProgram::handle_special_opcode(u8 opcode)
     m_prologue_end = false;
 }
 
-void LineProgram::run_program()
+ErrorOr<void> LineProgram::run_program()
 {
     reset_registers();
 
@@ -288,13 +298,15 @@ void LineProgram::run_program()
         dbgln_if(DWARF_DEBUG, "{:p}: opcode: {}", m_stream.offset() - 1, opcode);
 
         if (opcode == 0) {
-            handle_extended_opcode();
+            TRY(handle_extended_opcode());
         } else if (opcode >= 1 && opcode <= 12) {
-            handle_standard_opcode(opcode);
+            TRY(handle_standard_opcode(opcode));
         } else {
             handle_special_opcode(opcode);
         }
     }
+
+    return {};
 }
 
 LineProgram::DirectoryAndFile LineProgram::get_directory_and_file(size_t file_index) const

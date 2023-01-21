@@ -105,7 +105,7 @@ Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, Incl
 
     Vector<Debug::DebugInfo::SourcePosition> positions;
     if (include_source_positions == IncludeSourcePosition::Yes) {
-        auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address);
+        auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address).release_value_but_fixme_should_propagate_errors();
 
         for (auto& position : source_position_with_inlines.inline_chain) {
             if (!positions.contains_slow(position))

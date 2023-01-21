@@ -133,19 +133,19 @@ public:
     bool looks_like_embedded_resource() const;
 
 private:
-    void parse_unit_header();
-    void parse_source_directories();
-    void parse_source_files();
-    void run_program();
+    ErrorOr<void> parse_unit_header();
+    ErrorOr<void> parse_source_directories();
+    ErrorOr<void> parse_source_files();
+    ErrorOr<void> run_program();
 
     void append_to_line_info();
     void reset_registers();
 
-    void handle_extended_opcode();
-    void handle_standard_opcode(u8 opcode);
+    ErrorOr<void> handle_extended_opcode();
+    ErrorOr<void> handle_standard_opcode(u8 opcode);
     void handle_special_opcode(u8 opcode);
 
-    void parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type);
+    ErrorOr<void> parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type);
 
     enum StandardOpcodes {
         Copy = 1,

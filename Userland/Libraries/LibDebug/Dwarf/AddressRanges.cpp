@@ -34,13 +34,13 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
         case RangeListEntryType::BaseAddressX: {
             FlatPtr index;
             LEB128::read_unsigned(wrapped_range_lists_stream, index);
-            current_base_address = m_compilation_unit.get_address(index);
+            current_base_address = TRY(m_compilation_unit.get_address(index));
             break;
         }
         case RangeListEntryType::OffsetPair: {
             Optional<FlatPtr> base_address = current_base_address;
             if (!base_address.has_value()) {
-                base_address = m_compilation_unit.base_address();
+                base_address = TRY(m_compilation_unit.base_address());
             }
 
             if (!base_address.has_value())
@@ -63,14 +63,14 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
             size_t start, end;
             LEB128::read_unsigned(wrapped_range_lists_stream, start);
             LEB128::read_unsigned(wrapped_range_lists_stream, end);
-            callback(Range { m_compilation_unit.get_address(start), m_compilation_unit.get_address(end) });
+            callback(Range { TRY(m_compilation_unit.get_address(start)), TRY(m_compilation_unit.get_address(end)) });
             break;
         }
         case RangeListEntryType::StartXLength: {
             size_t start, length;
             LEB128::read_unsigned(wrapped_range_lists_stream, start);
             LEB128::read_unsigned(wrapped_range_lists_stream, length);
-            auto start_addr = m_compilation_unit.get_address(start);
+            auto start_addr = TRY(m_compilation_unit.get_address(start));
             callback(Range { start_addr, start_addr + length });
             break;
         }
@@ -106,7 +106,7 @@ ErrorOr<void> AddressRangesV4::for_each_range(Function<void(Range)> callback)
         } else if (begin == explode_byte(0xff)) {
             current_base_address = end;
         } else {
-            FlatPtr base = current_base_address.value_or(m_compilation_unit.base_address().value_or(0));
+            FlatPtr base = current_base_address.value_or(TRY(m_compilation_unit.base_address()).value_or(0));
             callback({ base + begin, base + end });
         }
     }

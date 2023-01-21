@@ -33,10 +33,10 @@ public:
     Type type() const { return m_type; }
     AttributeDataForm form() const { return m_form; }
 
-    FlatPtr as_addr() const;
+    ErrorOr<FlatPtr> as_addr() const;
     u64 as_unsigned() const { return m_data.as_unsigned; }
     i64 as_signed() const { return m_data.as_signed; }
-    char const* as_string() const;
+    ErrorOr<char const*> as_string() const;
     bool as_bool() const { return m_data.as_bool; }
     ReadonlyBytes as_raw_bytes() const { return m_data.as_raw_bytes; }
 

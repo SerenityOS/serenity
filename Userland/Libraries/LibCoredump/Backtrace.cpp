@@ -121,7 +121,7 @@ void Backtrace::add_entry(Reader const& coredump, FlatPtr ip)
     }
 
     auto function_name = object_info->debug_info->elf().symbolicate(ip - region->region_start);
-    auto source_position = object_info->debug_info->get_source_position_with_inlines(ip - region->region_start);
+    auto source_position = object_info->debug_info->get_source_position_with_inlines(ip - region->region_start).release_value_but_fixme_should_propagate_errors();
     m_entries.append({ ip, object_name, function_name, source_position });
 }
 
