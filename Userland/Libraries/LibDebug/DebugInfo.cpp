@@ -231,7 +231,7 @@ static ErrorOr<void> parse_variable_location(Dwarf::DIE const& variable_die, Deb
         break;
     case Dwarf::AttributeValue::Type::DwarfExpression: {
         auto expression_bytes = location_info.value().as_raw_bytes();
-        auto value = Dwarf::Expression::evaluate(expression_bytes, regs);
+        auto value = TRY(Dwarf::Expression::evaluate(expression_bytes, regs));
 
         if (value.type != Dwarf::Expression::Type::None) {
             VERIFY(value.type == Dwarf::Expression::Type::UnsignedInteger);
