@@ -8,9 +8,9 @@
 #include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
-#include <AK/MemoryStream.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
+#include <LibCore/MemoryStream.h>
 #include <LibGfx/JPGLoader.h>
 
 #define JPG_INVALID 0X0000
@@ -447,25 +447,16 @@ static inline bool is_valid_marker(const Marker marker)
     return false;
 }
 
-static inline ErrorOr<u16> read_be_word(InputMemoryStream& stream)
+static inline ErrorOr<Marker> read_marker_at_cursor(Core::Stream::Stream& stream)
 {
-    BigEndian<u16> tmp;
-    stream >> tmp;
-    TRY(stream.try_handle_any_error());
-    return tmp;
-}
-
-static inline ErrorOr<Marker> read_marker_at_cursor(InputMemoryStream& stream)
-{
-    auto marker = TRY(read_be_word(stream));
+    u16 marker = TRY(stream.read_value<BigEndian<u16>>());
     if (is_valid_marker(marker))
         return marker;
     if (marker != 0xFFFF)
         return JPG_INVALID;
     u8 next;
     do {
-        stream >> next;
-        TRY(stream.try_handle_any_error());
+        next = TRY(stream.read_value<u8>());
         if (next == 0x00)
             return JPG_INVALID;
     } while (next == 0xFF);
@@ -473,27 +464,23 @@ static inline ErrorOr<Marker> read_marker_at_cursor(InputMemoryStream& stream)
     return is_valid_marker(marker) ? marker : JPG_INVALID;
 }
 
-static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::FrameDecoded) {
-        dbgln_if(JPG_DEBUG, "{}: SOS found before reading a SOF!", stream.offset());
+        dbgln_if(JPG_DEBUG, "{}: SOS found before reading a SOF!", TRY(stream.tell()));
         return Error::from_string_literal("SOS found before reading a SOF");
     }
 
-    u16 bytes_to_read = TRY(read_be_word(stream)) - 2;
-    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
-    u8 component_count = 0;
-    stream >> component_count;
-    TRY(stream.try_handle_any_error());
+    u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+    u8 component_count = TRY(stream.read_value<u8>());
     if (component_count != context.component_count) {
-        dbgln_if(JPG_DEBUG, "{}: Unsupported number of components: {}!", stream.offset(), component_count);
+        dbgln_if(JPG_DEBUG, "{}: Unsupported number of components: {}!", TRY(stream.tell()), component_count);
         return Error::from_string_literal("Unsupported number of components");
     }
 
     for (int i = 0; i < component_count; i++) {
-        u8 component_id = 0;
-        stream >> component_id;
-        TRY(stream.try_handle_any_error());
+        u8 component_id = TRY(stream.read_value<u8>());
 
         auto& component = context.components[i];
         if (component.id != component_id) {
@@ -501,15 +488,13 @@ static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingCon
             return Error::from_string_literal("JPEG decode failed (component.id != component_id)");
         }
 
-        u8 table_ids = 0;
-        stream >> table_ids;
-        TRY(stream.try_handle_any_error());
+        u8 table_ids = TRY(stream.read_value<u8>());
 
         component.dc_destination_id = table_ids >> 4;
         component.ac_destination_id = table_ids & 0x0F;
 
         if (context.dc_tables.size() != context.ac_tables.size()) {
-            dbgln_if(JPG_DEBUG, "{}: DC & AC table count mismatch!", stream.offset());
+            dbgln_if(JPG_DEBUG, "{}: DC & AC table count mismatch!", TRY(stream.tell()));
             return Error::from_string_literal("DC & AC table count mismatch");
         }
 
@@ -524,19 +509,14 @@ static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingCon
         }
     }
 
-    u8 spectral_selection_start = 0;
-    stream >> spectral_selection_start;
-    TRY(stream.try_handle_any_error());
-    u8 spectral_selection_end = 0;
-    stream >> spectral_selection_end;
-    TRY(stream.try_handle_any_error());
-    u8 successive_approximation = 0;
-    stream >> successive_approximation;
-    TRY(stream.try_handle_any_error());
+    u8 spectral_selection_start = TRY(stream.read_value<u8>());
+    u8 spectral_selection_end = TRY(stream.read_value<u8>());
+    u8 successive_approximation = TRY(stream.read_value<u8>());
+
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
         dbgln_if(JPG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
-            stream.offset(),
+            TRY(stream.tell()),
             spectral_selection_start,
             spectral_selection_end,
             successive_approximation);
@@ -545,35 +525,33 @@ static ErrorOr<void> read_start_of_scan(InputMemoryStream& stream, JPGLoadingCon
     return {};
 }
 
-static ErrorOr<void> read_reset_marker(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_reset_marker(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
-    u16 bytes_to_read = TRY(read_be_word(stream)) - 2;
+    u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     if (bytes_to_read != 2) {
-        dbgln_if(JPG_DEBUG, "{}: Malformed reset marker found!", stream.offset());
+        dbgln_if(JPG_DEBUG, "{}: Malformed reset marker found!", TRY(stream.tell()));
         return Error::from_string_literal("Malformed reset marker found");
     }
-    context.dc_reset_interval = TRY(read_be_word(stream));
+    context.dc_reset_interval = TRY(stream.read_value<BigEndian<u16>>());
     return {};
 }
 
-static ErrorOr<void> read_huffman_table(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
-    i32 bytes_to_read = TRY(read_be_word(stream));
-    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
+    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
         HuffmanTableSpec table;
-        u8 table_info = 0;
-        stream >> table_info;
-        TRY(stream.try_handle_any_error());
+        u8 table_info = TRY(stream.read_value<u8>());
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unrecognized huffman table: {}!", stream.offset(), table_type);
+            dbgln_if(JPG_DEBUG, "{}: Unrecognized huffman table: {}!", TRY(stream.tell()), table_type);
             return Error::from_string_literal("Unrecognized huffman table");
         }
         if (table_destination_id > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Invalid huffman table destination id: {}!", stream.offset(), table_destination_id);
+            dbgln_if(JPG_DEBUG, "{}: Invalid huffman table destination id: {}!", TRY(stream.tell()), table_destination_id);
             return Error::from_string_literal("Invalid huffman table destination id");
         }
 
@@ -583,9 +561,7 @@ static ErrorOr<void> read_huffman_table(InputMemoryStream& stream, JPGLoadingCon
 
         // Read code counts. At each index K, the value represents the number of K+1 bit codes in this header.
         for (int i = 0; i < 16; i++) {
-            u8 count = 0;
-            stream >> count;
-            TRY(stream.try_handle_any_error());
+            u8 count = TRY(stream.read_value<u8>());
             total_codes += count;
             table.code_counts[i] = count;
         }
@@ -594,13 +570,9 @@ static ErrorOr<void> read_huffman_table(InputMemoryStream& stream, JPGLoadingCon
 
         // Read symbols. Read X bytes, where X is the sum of the counts of codes read in the previous step.
         for (u32 i = 0; i < total_codes; i++) {
-            u8 symbol = 0;
-            stream >> symbol;
-            TRY(stream.try_handle_any_error());
+            u8 symbol = TRY(stream.read_value<u8>());
             table.symbols.append(symbol);
         }
-
-        TRY(stream.try_handle_any_error());
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
         huffman_table.set(table.destination_id, table);
@@ -610,7 +582,7 @@ static ErrorOr<void> read_huffman_table(InputMemoryStream& stream, JPGLoadingCon
     }
 
     if (bytes_to_read != 0) {
-        dbgln_if(JPG_DEBUG, "{}: Extra bytes detected in huffman header!", stream.offset());
+        dbgln_if(JPG_DEBUG, "{}: Extra bytes detected in huffman header!", TRY(stream.tell()));
         return Error::from_string_literal("Extra bytes detected in huffman header");
     }
     return {};
@@ -645,29 +617,28 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
-static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
     if (context.state == JPGLoadingContext::FrameDecoded) {
-        dbgln_if(JPG_DEBUG, "{}: SOF repeated!", stream.offset());
+        dbgln_if(JPG_DEBUG, "{}: SOF repeated!", TRY(stream.tell()));
         return Error::from_string_literal("SOF repeated");
     }
 
-    i32 bytes_to_read = TRY(read_be_word(stream));
+    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
 
     bytes_to_read -= 2;
-    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
 
-    stream >> context.frame.precision;
-    TRY(stream.try_handle_any_error());
+    context.frame.precision = TRY(stream.read_value<u8>());
     if (context.frame.precision != 8) {
-        dbgln_if(JPG_DEBUG, "{}: SOF precision != 8!", stream.offset());
+        dbgln_if(JPG_DEBUG, "{}: SOF precision != 8!", TRY(stream.tell()));
         return Error::from_string_literal("SOF precision != 8");
     }
 
-    context.frame.height = TRY(read_be_word(stream));
-    context.frame.width = TRY(read_be_word(stream));
+    context.frame.height = TRY(stream.read_value<BigEndian<u16>>());
+    context.frame.width = TRY(stream.read_value<BigEndian<u16>>());
     if (!context.frame.width || !context.frame.height) {
-        dbgln_if(JPG_DEBUG, "{}: ERROR! Image height: {}, Image width: {}!", stream.offset(), context.frame.height, context.frame.width);
+        dbgln_if(JPG_DEBUG, "{}: ERROR! Image height: {}, Image width: {}!", TRY(stream.tell()), context.frame.height, context.frame.width);
         return Error::from_string_literal("Image frame height of width null");
     }
 
@@ -678,22 +649,17 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
 
     set_macroblock_metadata(context);
 
-    stream >> context.component_count;
-    TRY(stream.try_handle_any_error());
+    context.component_count = TRY(stream.read_value<u8>());
     if (context.component_count != 1 && context.component_count != 3) {
-        dbgln_if(JPG_DEBUG, "{}: Unsupported number of components in SOF: {}!", stream.offset(), context.component_count);
+        dbgln_if(JPG_DEBUG, "{}: Unsupported number of components in SOF: {}!", TRY(stream.tell()), context.component_count);
         return Error::from_string_literal("Unsupported number of components in SOF");
     }
 
     for (u8 i = 0; i < context.component_count; i++) {
         ComponentSpec component;
+        component.id = TRY(stream.read_value<u8>());
 
-        stream >> component.id;
-        TRY(stream.try_handle_any_error());
-
-        u8 subsample_factors = 0;
-        stream >> subsample_factors;
-        TRY(stream.try_handle_any_error());
+        u8 subsample_factors = TRY(stream.read_value<u8>());
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
 
@@ -708,7 +674,7 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
                 dbgln_if(JPG_DEBUG, "{}: Unsupported luma subsampling factors: horizontal: {}, vertical: {}",
-                    stream.offset(),
+                    TRY(stream.tell()),
                     component.hsample_factor,
                     component.vsample_factor);
                 return Error::from_string_literal("Unsupported luma subsampling factors");
@@ -716,17 +682,16 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
         } else {
             if (component.hsample_factor != 1 || component.vsample_factor != 1) {
                 dbgln_if(JPG_DEBUG, "{}: Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
-                    stream.offset(),
+                    TRY(stream.tell()),
                     component.hsample_factor,
                     component.vsample_factor);
                 return Error::from_string_literal("Unsupported chroma subsampling factors");
             }
         }
 
-        stream >> component.qtable_id;
-        TRY(stream.try_handle_any_error());
+        component.qtable_id = TRY(stream.read_value<u8>());
         if (component.qtable_id > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", stream.offset(), component.qtable_id);
+            dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", TRY(stream.tell()), component.qtable_id);
             return Error::from_string_literal("Unsupported quantization table id");
         }
 
@@ -736,52 +701,46 @@ static ErrorOr<void> read_start_of_frame(InputMemoryStream& stream, JPGLoadingCo
     return {};
 }
 
-static ErrorOr<void> read_quantization_table(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
-    i32 bytes_to_read = TRY(read_be_word(stream)) - 2;
-    TRY(ensure_bounds_okay(stream.offset(), bytes_to_read, context.data_size));
+    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
     while (bytes_to_read > 0) {
-        u8 info_byte = 0;
-        stream >> info_byte;
-        TRY(stream.try_handle_any_error());
+        u8 info_byte = TRY(stream.read_value<u8>());
         u8 element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported unit hint in quantization table: {}!", stream.offset(), element_unit_hint);
+            dbgln_if(JPG_DEBUG, "{}: Unsupported unit hint in quantization table: {}!", TRY(stream.tell()), element_unit_hint);
             return Error::from_string_literal("Unsupported unit hint in quantization table");
         }
         u8 table_id = info_byte & 0x0F;
         if (table_id > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", stream.offset(), table_id);
+            dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", TRY(stream.tell()), table_id);
             return Error::from_string_literal("Unsupported quantization table id");
         }
         u32* table = table_id == 0 ? context.luma_table : context.chroma_table;
         for (int i = 0; i < 64; i++) {
             if (element_unit_hint == 0) {
-                u8 tmp = 0;
-                stream >> tmp;
-                TRY(stream.try_handle_any_error());
+                u8 tmp = TRY(stream.read_value<u8>());
                 table[zigzag_map[i]] = tmp;
             } else {
-                table[zigzag_map[i]] = TRY(read_be_word(stream));
+                table[zigzag_map[i]] = TRY(stream.read_value<BigEndian<u16>>());
             }
         }
-        TRY(stream.try_handle_any_error());
 
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
     }
     if (bytes_to_read != 0) {
-        dbgln_if(JPG_DEBUG, "{}: Invalid length for one or more quantization tables!", stream.offset());
+        dbgln_if(JPG_DEBUG, "{}: Invalid length for one or more quantization tables!", TRY(stream.tell()));
         return Error::from_string_literal("Invalid length for one or more quantization tables");
     }
 
     return {};
 }
 
-static ErrorOr<void> skip_marker_with_length(InputMemoryStream& stream)
+static ErrorOr<void> skip_marker_with_length(Core::Stream::Stream& stream)
 {
-    u16 bytes_to_skip = TRY(read_be_word(stream)) - 2;
-    stream.discard_or_error(bytes_to_skip);
-    TRY(stream.try_handle_any_error());
+    u16 bytes_to_skip = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    TRY(stream.discard(bytes_to_skip));
     return {};
 }
 
@@ -1026,11 +985,11 @@ static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macrobloc
     return {};
 }
 
-static ErrorOr<void> parse_header(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> parse_header(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPG_SOI) {
-        dbgln_if(JPG_DEBUG, "{}: SOI not found: {:x}!", stream.offset(), marker);
+        dbgln_if(JPG_DEBUG, "{}: SOI not found: {:x}!", TRY(stream.tell()), marker);
         return Error::from_string_literal("SOI not found");
     }
     for (;;) {
@@ -1056,7 +1015,7 @@ static ErrorOr<void> parse_header(InputMemoryStream& stream, JPGLoadingContext& 
         case JPG_RST7:
         case JPG_SOI:
         case JPG_EOI:
-            dbgln_if(JPG_DEBUG, "{}: Unexpected marker {:x}!", stream.offset(), marker);
+            dbgln_if(JPG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Unexpected marker");
         case JPG_SOF0:
             TRY(read_start_of_frame(stream, context));
@@ -1075,7 +1034,7 @@ static ErrorOr<void> parse_header(InputMemoryStream& stream, JPGLoadingContext& 
             return read_start_of_scan(stream, context);
         default:
             if (auto result = skip_marker_with_length(stream); result.is_error()) {
-                dbgln_if(JPG_DEBUG, "{}: Error skipping marker: {:x}!", stream.offset(), marker);
+                dbgln_if(JPG_DEBUG, "{}: Error skipping marker: {:x}!", TRY(stream.tell()), marker);
                 return result.release_error();
             }
             break;
@@ -1085,27 +1044,20 @@ static ErrorOr<void> parse_header(InputMemoryStream& stream, JPGLoadingContext& 
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(InputMemoryStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> scan_huffman_stream(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
 {
     u8 last_byte;
-    u8 current_byte = 0;
-    stream >> current_byte;
-    TRY(stream.try_handle_any_error());
+    u8 current_byte = TRY(stream.read_value<u8>());
 
     for (;;) {
         last_byte = current_byte;
-        stream >> current_byte;
-        if (stream.handle_any_error()) {
-            dbgln_if(JPG_DEBUG, "{}: EOI not found!", stream.offset());
-            return Error::from_string_literal("EOI not found");
-        }
+        current_byte = TRY(stream.read_value<u8>());
 
         if (last_byte == 0xFF) {
             if (current_byte == 0xFF)
                 continue;
             if (current_byte == 0x00) {
-                stream >> current_byte;
-                TRY(stream.try_handle_any_error());
+                current_byte = TRY(stream.read_value<u8>());
                 context.huffman_stream.stream.append(last_byte);
                 continue;
             }
@@ -1114,11 +1066,10 @@ static ErrorOr<void> scan_huffman_stream(InputMemoryStream& stream, JPGLoadingCo
                 return {};
             if (marker >= JPG_RST0 && marker <= JPG_RST7) {
                 context.huffman_stream.stream.append(marker);
-                stream >> current_byte;
-                TRY(stream.try_handle_any_error());
+                current_byte = TRY(stream.read_value<u8>());
                 continue;
             }
-            dbgln_if(JPG_DEBUG, "{}: Invalid marker: {:x}!", stream.offset(), marker);
+            dbgln_if(JPG_DEBUG, "{}: Invalid marker: {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Invalid marker");
         } else {
             context.huffman_stream.stream.append(last_byte);
@@ -1130,10 +1081,10 @@ static ErrorOr<void> scan_huffman_stream(InputMemoryStream& stream, JPGLoadingCo
 
 static ErrorOr<void> decode_jpg(JPGLoadingContext& context)
 {
-    InputMemoryStream stream { { context.data, context.data_size } };
+    auto stream = TRY(Core::Stream::FixedMemoryStream::construct({ context.data, context.data_size }));
 
-    TRY(parse_header(stream, context));
-    TRY(scan_huffman_stream(stream, context));
+    TRY(parse_header(*stream, context));
+    TRY(scan_huffman_stream(*stream, context));
     auto macroblocks = TRY(decode_huffman_stream(context));
     dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
