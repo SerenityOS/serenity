@@ -29,7 +29,7 @@ void NumberFormatFunction::initialize(Realm& realm)
 
     Base::initialize(realm);
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-    define_direct_property(vm.names.name, PrimitiveString::create(vm, DeprecatedString::empty()), Attribute::Configurable);
+    define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
 }
 
 ThrowCompletionOr<Value> NumberFormatFunction::call()
