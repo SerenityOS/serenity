@@ -14,6 +14,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>
+#include <LibCore/Stream.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibELF/Image.h>
 
@@ -42,7 +43,7 @@ public:
     ErrorOr<void> for_each_compilation_unit(Callback) const;
 
     ErrorOr<AttributeValue> get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
-        InputMemoryStream& debug_info_stream, CompilationUnit const* unit = nullptr) const;
+        Core::Stream::SeekableStream& debug_info_stream, CompilationUnit const* unit = nullptr) const;
 
     ErrorOr<Optional<DIE>> get_die_at_address(FlatPtr) const;
 

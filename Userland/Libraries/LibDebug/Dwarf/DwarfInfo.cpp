@@ -10,7 +10,7 @@
 #include "CompilationUnit.h"
 
 #include <AK/ByteReader.h>
-#include <AK/MemoryStream.h>
+#include <AK/LEB128.h>
 #include <LibCore/MemoryStream.h>
 #include <LibDebug/DebugInfo.h>
 
@@ -47,59 +47,54 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
     if (!m_debug_info_data.data())
         return {};
 
-    InputMemoryStream debug_info_stream { m_debug_info_data };
-    InputMemoryStream line_info_stream { m_debug_line_data };
+    auto debug_info_stream = TRY(Core::Stream::FixedMemoryStream::construct(m_debug_info_data));
+    auto line_info_stream = TRY(Core::Stream::FixedMemoryStream::construct(m_debug_line_data));
 
-    while (!debug_info_stream.eof()) {
-        auto unit_offset = debug_info_stream.offset();
-        CompilationUnitHeader compilation_unit_header {};
+    while (!debug_info_stream->is_eof()) {
+        auto unit_offset = TRY(debug_info_stream->tell());
 
-        debug_info_stream >> compilation_unit_header;
+        auto compilation_unit_header = TRY(CompilationUnitHeader::read_from_stream(*debug_info_stream));
         VERIFY(compilation_unit_header.common.version <= 5);
         VERIFY(compilation_unit_header.address_size() == sizeof(FlatPtr));
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
 
-        auto line_program = make<LineProgram>(*this, line_info_stream);
+        auto line_program = make<LineProgram>(*this, *line_info_stream);
 
         // HACK: Clang generates line programs for embedded resource assembly files, but not compile units.
         // Meaning that for graphical applications, some line info data would be unread, triggering the assertion below.
         // As a fix, we don't create compilation units for line programs that come from resource files.
 #if defined(AK_COMPILER_CLANG)
         if (line_program->looks_like_embedded_resource()) {
-            debug_info_stream.seek(unit_offset);
+            TRY(debug_info_stream->seek(unit_offset));
         } else
 #endif
         {
             m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header, move(line_program)));
-            debug_info_stream.discard_or_error(length_after_header);
+            TRY(debug_info_stream->discard(length_after_header));
         }
     }
 
-    VERIFY(line_info_stream.eof());
+    VERIFY(line_info_stream->is_eof());
     return {};
 }
 
 ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
-    InputMemoryStream& debug_info_stream, CompilationUnit const* unit) const
+    Core::Stream::SeekableStream& debug_info_stream, CompilationUnit const* unit) const
 {
     AttributeValue value;
     value.m_form = form;
     value.m_compilation_unit = unit;
 
     auto assign_raw_bytes_value = [&](size_t length) -> ErrorOr<void> {
-        value.m_data.as_raw_bytes = { debug_info_data().offset_pointer(debug_info_stream.offset()), length };
-
-        debug_info_stream.discard_or_error(length);
-        VERIFY(!debug_info_stream.has_any_error());
+        value.m_data.as_raw_bytes = { debug_info_data().offset_pointer(TRY(debug_info_stream.tell())), length };
+        TRY(debug_info_stream.discard(length));
         return {};
     };
 
     switch (form) {
     case AttributeDataForm::StringPointer: {
-        u32 offset;
-        debug_info_stream >> offset;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto offset = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::String;
 
         auto strings_data = debug_strings_data();
@@ -107,65 +102,55 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
         break;
     }
     case AttributeDataForm::Data1: {
-        u8 data;
-        debug_info_stream >> data;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto data = TRY(debug_info_stream.read_value<u8>());
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data2: {
-        u16 data;
-        debug_info_stream >> data;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto data = TRY(debug_info_stream.read_value<u16>());
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_signed = data;
         break;
     }
     case AttributeDataForm::Addr: {
-        FlatPtr address;
-        debug_info_stream >> address;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto address = TRY(debug_info_stream.read_value<FlatPtr>());
         value.m_type = AttributeValue::Type::Address;
         value.m_data.as_addr = address;
         break;
     }
     case AttributeDataForm::SData: {
         i64 data;
-        debug_info_stream.read_LEB128_signed(data);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_signed(wrapped_debug_info_stream, data);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::SignedNumber;
         value.m_data.as_signed = data;
         break;
     }
     case AttributeDataForm::UData: {
         u64 data;
-        debug_info_stream.read_LEB128_unsigned(data);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_unsigned(wrapped_debug_info_stream, data);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::SecOffset: {
-        u32 data;
-        debug_info_stream >> data;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto data = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::SecOffset;
         value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data4: {
-        u32 data;
-        debug_info_stream >> data;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto data = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = data;
         break;
     }
     case AttributeDataForm::Data8: {
-        u64 data;
-        debug_info_stream >> data;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto data = TRY(debug_info_stream.read_value<u64>());
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = data;
         break;
@@ -173,13 +158,10 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     case AttributeDataForm::Data16: {
         value.m_type = AttributeValue::Type::RawBytes;
         TRY(assign_raw_bytes_value(16));
-        VERIFY(!debug_info_stream.has_any_error());
         break;
     }
     case AttributeDataForm::Ref4: {
-        u32 data;
-        debug_info_stream >> data;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto data = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::DieReference;
         VERIFY(unit);
         value.m_data.as_unsigned = data + unit->offset();
@@ -192,57 +174,49 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     }
     case AttributeDataForm::ExprLoc: {
         size_t length;
-        debug_info_stream.read_LEB128_unsigned(length);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_unsigned(wrapped_debug_info_stream, length);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::DwarfExpression;
         TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::String: {
-        DeprecatedString str;
-        u32 str_offset = debug_info_stream.offset();
-        debug_info_stream >> str;
-        VERIFY(!debug_info_stream.has_any_error());
+        u32 str_offset = TRY(debug_info_stream.tell());
         value.m_type = AttributeValue::Type::String;
         value.m_data.as_string = bit_cast<char const*>(debug_info_data().offset_pointer(str_offset));
+        TRY(debug_info_stream.discard(strlen(value.m_data.as_string) + 1));
         break;
     }
     case AttributeDataForm::Block1: {
         value.m_type = AttributeValue::Type::RawBytes;
-        u8 length;
-        debug_info_stream >> length;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto length = TRY(debug_info_stream.read_value<u8>());
         TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::Block2: {
         value.m_type = AttributeValue::Type::RawBytes;
-        u16 length;
-        debug_info_stream >> length;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto length = TRY(debug_info_stream.read_value<u16>());
         TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::Block4: {
         value.m_type = AttributeValue::Type::RawBytes;
-        u32 length;
-        debug_info_stream >> length;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto length = TRY(debug_info_stream.read_value<u32>());
         TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::Block: {
         value.m_type = AttributeValue::Type::RawBytes;
         size_t length;
-        debug_info_stream.read_LEB128_unsigned(length);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_unsigned(wrapped_debug_info_stream, length);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         TRY(assign_raw_bytes_value(length));
         break;
     }
     case AttributeDataForm::LineStrP: {
-        u32 offset;
-        debug_info_stream >> offset;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto offset = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::String;
 
         auto strings_data = debug_line_strings_data();
@@ -256,73 +230,64 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
         break;
     }
     case AttributeDataForm::StrX1: {
-        u8 index;
-        debug_info_stream >> index;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto index = TRY(debug_info_stream.read_value<u8>());
         value.m_type = AttributeValue::Type::String;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::StrX2: {
-        u16 index;
-        debug_info_stream >> index;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto index = TRY(debug_info_stream.read_value<u16>());
         value.m_type = AttributeValue::Type::String;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::StrX4: {
-        u32 index;
-        debug_info_stream >> index;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto index = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::String;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::StrX: {
         size_t index;
-        debug_info_stream.read_LEB128_unsigned(index);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_unsigned(wrapped_debug_info_stream, index);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::String;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::AddrX1: {
-        u8 index;
-        debug_info_stream >> index;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto index = TRY(debug_info_stream.read_value<u8>());
         value.m_type = AttributeValue::Type::Address;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::AddrX2: {
-        u16 index;
-        debug_info_stream >> index;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto index = TRY(debug_info_stream.read_value<u16>());
         value.m_type = AttributeValue::Type::Address;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::AddrX4: {
-        u32 index;
-        debug_info_stream >> index;
-        VERIFY(!debug_info_stream.has_any_error());
+        auto index = TRY(debug_info_stream.read_value<u32>());
         value.m_type = AttributeValue::Type::Address;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::AddrX: {
         size_t index;
-        debug_info_stream.read_LEB128_unsigned(index);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_unsigned(wrapped_debug_info_stream, index);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::Address;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::RngListX: {
         size_t index;
-        debug_info_stream.read_LEB128_unsigned(index);
-        VERIFY(!debug_info_stream.has_any_error());
+        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
+        LEB128::read_unsigned(wrapped_debug_info_stream, index);
+        VERIFY(!wrapped_debug_info_stream.has_any_error());
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = index;
         break;

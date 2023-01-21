@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Stream.h>
 #include <AK/Types.h>
+#include <LibCore/Stream.h>
 
 namespace Debug::Dwarf {
 
@@ -53,17 +53,18 @@ struct [[gnu::packed]] CompilationUnitHeader {
     }
     u32 abbrev_offset() const { return (common.version <= 4) ? v4.abbrev_offset : v5.abbrev_offset; }
     u8 address_size() const { return (common.version <= 4) ? v4.address_size : v5.address_size; }
-};
 
-inline InputStream& operator>>(InputStream& stream, CompilationUnitHeader& header)
-{
-    stream.read_or_error(Bytes { &header.common, sizeof(header.common) });
-    if (header.common.version <= 4)
-        stream.read_or_error(Bytes { &header.v4, sizeof(header.v4) });
-    else
-        stream.read_or_error(Bytes { &header.v5, sizeof(header.v5) });
-    return stream;
-}
+    static ErrorOr<CompilationUnitHeader> read_from_stream(Core::Stream::Stream& stream)
+    {
+        CompilationUnitHeader header;
+        TRY(stream.read_entire_buffer(Bytes { &header.common, sizeof(header.common) }));
+        if (header.common.version <= 4)
+            TRY(stream.read_entire_buffer(Bytes { &header.v4, sizeof(header.v4) }));
+        else
+            TRY(stream.read_entire_buffer(Bytes { &header.v5, sizeof(header.v5) }));
+        return header;
+    }
+};
 
 enum class EntryTag : u16 {
     None = 0,
