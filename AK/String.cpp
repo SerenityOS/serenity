@@ -275,6 +275,20 @@ ErrorOr<Vector<String>> String::split_limit(u32 separator, size_t limit, SplitBe
     return result;
 }
 
+Optional<size_t> String::find_byte_offset(u32 code_point, size_t from_byte_offset) const
+{
+    auto code_points = this->code_points();
+    if (from_byte_offset >= code_points.byte_length())
+        return {};
+
+    for (auto it = code_points.iterator_at_byte_offset(from_byte_offset); it != code_points.end(); ++it) {
+        if (*it == code_point)
+            return code_points.byte_offset_of(it);
+    }
+
+    return {};
+}
+
 bool String::operator==(String const& other) const
 {
     if (is_short_string())
