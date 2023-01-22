@@ -315,3 +315,45 @@ TEST_CASE(split)
         EXPECT_EQ(parts[2], "ω"sv);
     }
 }
+
+TEST_CASE(find_byte_offset)
+{
+    {
+        String string {};
+        auto index = string.find_byte_offset(0);
+        EXPECT(!index.has_value());
+    }
+    {
+        auto string = MUST(String::from_utf8("foo"sv));
+
+        auto index1 = string.find_byte_offset('f');
+        EXPECT_EQ(index1, 0u);
+
+        auto index2 = string.find_byte_offset('o');
+        EXPECT_EQ(index2, 1u);
+
+        auto index3 = string.find_byte_offset('o', *index2 + 1);
+        EXPECT_EQ(index3, 2u);
+
+        auto index4 = string.find_byte_offset('b');
+        EXPECT(!index4.has_value());
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto index1 = string.find_byte_offset(0x03C9U);
+        EXPECT_EQ(index1, 0u);
+
+        auto index2 = string.find_byte_offset(0x03A3u);
+        EXPECT_EQ(index2, 2u);
+
+        auto index3 = string.find_byte_offset(0x03C9U, 2);
+        EXPECT_EQ(index3, 4u);
+
+        auto index4 = string.find_byte_offset(0x03A3u, 4);
+        EXPECT_EQ(index4, 6u);
+
+        auto index5 = string.find_byte_offset(0x03C9U, 6);
+        EXPECT_EQ(index5, 8u);
+    }
+}

@@ -127,6 +127,8 @@ public:
     ErrorOr<Vector<String>> split_limit(u32 separator, size_t limit, SplitBehavior = SplitBehavior::Nothing) const;
     ErrorOr<Vector<String>> split(u32 separator, SplitBehavior = SplitBehavior::Nothing) const;
 
+    Optional<size_t> find_byte_offset(u32 code_point, size_t from_byte_offset = 0) const;
+
     [[nodiscard]] bool operator==(String const&) const;
     [[nodiscard]] bool operator!=(String const& other) const { return !(*this == other); }
 
