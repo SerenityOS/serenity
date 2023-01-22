@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -20,6 +20,7 @@
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -342,9 +343,7 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
 
 ErrorOr<int> run_in_desktop_mode()
 {
-    constexpr char const* process_name = "FileManager (Desktop)";
-    set_process_name(process_name, strlen(process_name));
-    pthread_setname_np(pthread_self(), process_name);
+    (void)Core::Process::set_name("FileManager (Desktop)"sv, Core::Process::SetThreadName::Yes);
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Desktop Manager");
