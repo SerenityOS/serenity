@@ -6,6 +6,7 @@
 
 #include <AK/Endian.h>
 #include <LibGfx/ICCProfile.h>
+#include <LibTextCodec/Decoder.h>
 #include <math.h>
 #include <time.h>
 
@@ -549,6 +550,68 @@ static ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
     return {};
 }
 
+ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.15 multiLocalizedUnicodeType
+    VERIFY(tag_type(bytes) == MultiLocalizedUnicodeTagData::Type);
+    TRY(check_reserved(bytes));
+
+    // "Multiple strings within this tag may share storage locations. For example, en/US and en/UK can refer to the
+    //  same string data."
+    // This implementation makes redudant string copies in that case.
+    // Most of the time, this costs just a few bytes, so that seems ok.
+
+    if (bytes.size() < 4 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType has not enough data");
+
+    // Table 54 — multiLocalizedUnicodeType
+    u32 number_of_records = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
+    u32 record_size = *bit_cast<BigEndian<u32> const*>(bytes.data() + 12);
+
+    // "The fourth field of this tag, the record size, should contain the value 12, which corresponds to the size in bytes
+    // of each record. Any code that needs to access the nth record should determine the record’s offset by multiplying
+    // n by the contents of this size field and adding 16. This minor extra effort allows for future expansion of the record
+    // encoding, should the need arise, without having to define a new tag type."
+    if (record_size < 12)
+        return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType record size too small");
+    if (bytes.size() < 16 + number_of_records * record_size)
+        return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType not enough data for records");
+
+    Vector<Record> records;
+    TRY(records.try_resize(number_of_records));
+
+    // "For the definition of language codes and country codes, see respectively
+    //  ISO 639-1 and ISO 3166-1. The Unicode strings in storage should be encoded as 16-bit big-endian, UTF-16BE,
+    //  and should not be NULL terminated."
+    auto& utf_16be_decoder = *TextCodec::decoder_for("utf-16be");
+
+    struct RawRecord {
+        BigEndian<u16> language_code;
+        BigEndian<u16> country_code;
+        BigEndian<u32> string_length_in_bytes;
+        BigEndian<u32> string_offset_in_bytes;
+    };
+
+    for (u32 i = 0; i < number_of_records; ++i) {
+        size_t offset = 16 + i * record_size;
+        RawRecord record = *bit_cast<RawRecord const*>(bytes.data() + offset);
+
+        records[i].iso_639_1_language_code = record.language_code;
+        records[i].iso_3166_1_country_code = record.country_code;
+
+        if (record.string_length_in_bytes % 2 != 0)
+            return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType odd UTF-16 byte length");
+
+        if (record.string_offset_in_bytes + record.string_length_in_bytes > bytes.size())
+            return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType string offset out of bounds");
+
+        StringView utf_16be_data { bytes.data() + record.string_offset_in_bytes, record.string_length_in_bytes };
+        records[i].text = TRY(String::from_deprecated_string(utf_16be_decoder.to_utf8(utf_16be_data)));
+    }
+
+    return adopt_ref(*new MultiLocalizedUnicodeTagData(offset, size, move(records)));
+}
+
 ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.24 textType
@@ -619,6 +682,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
 
     auto type = tag_type(tag_bytes);
     switch (type) {
+    case MultiLocalizedUnicodeTagData::Type:
+        return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case TextTagData::Type:
         return TextTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     default:
