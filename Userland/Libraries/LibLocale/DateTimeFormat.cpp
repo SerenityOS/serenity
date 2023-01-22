@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -290,7 +290,7 @@ static Optional<DeprecatedString> format_time_zone_offset(StringView locale, Cal
     }
 
     // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
-    auto result = replace_digits_for_number_system(*number_system, builder.build());
+    auto result = replace_digits_for_number_system(*number_system, builder.build()).release_value_but_fixme_should_propagate_errors();
     return formats->gmt_format.replace("{0}"sv, result, ReplaceMode::FirstOnly);
 }
 

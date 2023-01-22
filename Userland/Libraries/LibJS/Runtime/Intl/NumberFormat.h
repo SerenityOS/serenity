@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
@@ -262,7 +261,7 @@ private:
 };
 
 struct FormatResult {
-    DeprecatedString formatted_string;        // [[FormattedString]]
+    String formatted_string;                  // [[FormattedString]]
     MathematicalValue rounded_number { 0.0 }; // [[RoundedNumber]]
 };
 
@@ -277,16 +276,16 @@ enum class RoundingDecision {
 };
 
 int currency_digits(StringView currency);
-FormatResult format_numeric_to_string(NumberFormatBase const& intl_object, MathematicalValue number);
+ThrowCompletionOr<FormatResult> format_numeric_to_string(VM&, NumberFormatBase const& intl_object, MathematicalValue number);
 ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM&, NumberFormat&, MathematicalValue number);
-ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM&, NumberFormat&, MathematicalValue const& number, DeprecatedString formatted_string, int exponent);
-ThrowCompletionOr<DeprecatedString> format_numeric(VM&, NumberFormat&, MathematicalValue number);
+ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM&, NumberFormat&, MathematicalValue const& number, String formatted_string, int exponent);
+ThrowCompletionOr<String> format_numeric(VM&, NumberFormat&, MathematicalValue number);
 ThrowCompletionOr<Array*> format_numeric_to_parts(VM&, NumberFormat&, MathematicalValue number);
-RawFormatResult to_raw_precision(MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
-RawFormatResult to_raw_fixed(MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
-Optional<Variant<StringView, DeprecatedString>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);
+ThrowCompletionOr<RawFormatResult> to_raw_precision(VM&, MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
+ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM&, MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode);
+ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_pattern(VM&, NumberFormat&, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern);
 Optional<StringView> get_notation_sub_pattern(NumberFormat&, int exponent);
-int compute_exponent(NumberFormat&, MathematicalValue number);
+ThrowCompletionOr<int> compute_exponent(VM&, NumberFormat&, MathematicalValue number);
 int compute_exponent_for_magnitude(NumberFormat&, int magnitude);
 ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM&, Value value);
 NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode, bool is_negative);
@@ -294,7 +293,7 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM&, NumberFormat&, Vector<PatternPartitionWithSource> result);
 Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result);
-ThrowCompletionOr<DeprecatedString> format_numeric_range(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
+ThrowCompletionOr<String> format_numeric_range(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM&, NumberFormat&, MathematicalValue start, MathematicalValue end);
 
 }
