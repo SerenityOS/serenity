@@ -288,7 +288,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 void Game::move_focused_cards(CardStack& stack)
 {
     auto card_count = moving_cards().size();
-    drop_cards_on_stack(stack, Cards::CardStack::MovementRule::Any);
+    drop_cards_on_stack(stack, Cards::CardStack::MovementRule::Any).release_value_but_fixme_should_propagate_errors();
     bool was_visible = moving_cards_source_stack()->is_empty() || !moving_cards_source_stack()->peek().is_upside_down();
     remember_move_for_undo(*moving_cards_source_stack(), stack, card_count, was_visible);
     update_score(-1);

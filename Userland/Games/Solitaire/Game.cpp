@@ -297,7 +297,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         auto& stack = *target_stack;
         remember_move_for_undo(*moving_cards_source_stack(), stack, moving_cards());
 
-        drop_cards_on_stack(stack, Cards::CardStack::MovementRule::Alternating);
+        drop_cards_on_stack(stack, Cards::CardStack::MovementRule::Alternating).release_value_but_fixme_should_propagate_errors();
 
         if (moving_cards_source_stack()->type() == CardStack::Type::Play)
             pop_waste_to_play_stack();

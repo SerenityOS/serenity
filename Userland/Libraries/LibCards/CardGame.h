@@ -44,7 +44,7 @@ public:
     RefPtr<CardStack> moving_cards_source_stack() const { return m_moving_cards_source_stack; }
     void pick_up_cards_from_stack(CardStack&, Gfx::IntPoint click_location, CardStack::MovementRule);
     RefPtr<CardStack> find_stack_to_drop_on(CardStack::MovementRule) const;
-    void drop_cards_on_stack(CardStack&, CardStack::MovementRule);
+    ErrorOr<void> drop_cards_on_stack(CardStack&, CardStack::MovementRule);
     void clear_moving_cards();
 
     bool is_previewing_card() const { return !m_previewed_card_stack.is_null(); }
