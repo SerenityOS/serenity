@@ -93,6 +93,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("tags:");
     profile->for_each_tag([](auto tag_signature, auto tag_data) {
         outln("{}: {}, offset {}, size {}", tag_signature, tag_data->type(), tag_data->offset(), tag_data->size());
+
+        if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
+            outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
+        }
     });
 
     return 0;
