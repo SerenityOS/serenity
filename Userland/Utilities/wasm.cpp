@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 RefPtr<Line::Editor> g_line_editor;
-static OwnPtr<Core::Stream::Stream> g_stdout {};
+static OwnPtr<AK::Stream> g_stdout {};
 static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);

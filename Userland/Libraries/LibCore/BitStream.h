@@ -22,7 +22,7 @@ namespace Core::Stream {
 
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in big-endian order from another stream.
-class BigEndianInputBitStream : public Stream {
+class BigEndianInputBitStream : public AK::Stream {
 public:
     static ErrorOr<NonnullOwnPtr<BigEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
     {
@@ -131,7 +131,7 @@ private:
 
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in little-endian order from another stream.
-class LittleEndianInputBitStream : public Stream {
+class LittleEndianInputBitStream : public AK::Stream {
 public:
     static ErrorOr<NonnullOwnPtr<LittleEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
     {
@@ -240,7 +240,7 @@ private:
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits
 /// in big-endian order to another stream.
-class BigEndianOutputBitStream : public Stream {
+class BigEndianOutputBitStream : public AK::Stream {
 public:
     static ErrorOr<NonnullOwnPtr<BigEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
     {
@@ -323,7 +323,7 @@ private:
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits
 /// in little-endian order to another stream.
-class LittleEndianOutputBitStream : public Stream {
+class LittleEndianOutputBitStream : public AK::Stream {
 public:
     static ErrorOr<NonnullOwnPtr<LittleEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
     {

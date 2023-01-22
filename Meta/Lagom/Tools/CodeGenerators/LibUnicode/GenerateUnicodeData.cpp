@@ -450,7 +450,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
 
 static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
-    TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
+    TRY(file.seek(0, SeekMode::SetPosition));
     Array<u8, 1024> buffer;
 
     auto append_alias = [&](auto alias, auto value) {
@@ -646,7 +646,7 @@ static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file,
         unicode_data.block_display_names.append({ code_point_range, index });
     }
 
-    TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
+    TRY(file.seek(0, SeekMode::SetPosition));
 
     return {};
 }

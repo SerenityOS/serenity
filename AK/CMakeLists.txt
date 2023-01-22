@@ -19,6 +19,7 @@ set(AK_SOURCES
     NumberFormat.cpp
     Random.cpp
     StackInfo.cpp
+    Stream.cpp
     String.cpp
     StringBuilder.cpp
     StringFloatingPointConversions.cpp

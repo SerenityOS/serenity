@@ -66,7 +66,7 @@ struct [[gnu::packed]] LineProgramUnitHeader32 {
     u8 line_range() const { return (common.version <= 4) ? v4.line_range : v5.line_range; }
     u8 opcode_base() const { return (common.version <= 4) ? v4.opcode_base : v5.opcode_base; }
 
-    static ErrorOr<LineProgramUnitHeader32> read_from_stream(Core::Stream::Stream& stream)
+    static ErrorOr<LineProgramUnitHeader32> read_from_stream(AK::Stream& stream)
     {
         LineProgramUnitHeader32 header;
         TRY(stream.read_entire_buffer(Bytes { &header.common, sizeof(header.common) }));
@@ -109,7 +109,7 @@ class LineProgram {
     AK_MAKE_NONMOVABLE(LineProgram);
 
 public:
-    explicit LineProgram(DwarfInfo& dwarf_info, Core::Stream::SeekableStream& stream);
+    explicit LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream);
 
     struct LineInfo {
         FlatPtr address { 0 };
@@ -174,7 +174,7 @@ private:
     static constexpr u16 MAX_DWARF_VERSION = 5;
 
     DwarfInfo& m_dwarf_info;
-    Core::Stream::SeekableStream& m_stream;
+    SeekableStream& m_stream;
 
     size_t m_unit_offset { 0 };
     LineProgramUnitHeader32 m_unit_header {};

@@ -459,7 +459,7 @@ static inline bool is_valid_marker(const Marker marker)
     return false;
 }
 
-static inline ErrorOr<Marker> read_marker_at_cursor(Core::Stream::Stream& stream)
+static inline ErrorOr<Marker> read_marker_at_cursor(AK::Stream& stream)
 {
     u16 marker = TRY(stream.read_value<BigEndian<u16>>());
     if (is_valid_marker(marker))
@@ -476,7 +476,7 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Core::Stream::Stream& stream
     return is_valid_marker(marker) ? marker : JPG_INVALID;
 }
 
-static ErrorOr<void> read_start_of_scan(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::FrameDecoded) {
         dbgln_if(JPG_DEBUG, "{}: SOS found before reading a SOF!", TRY(stream.tell()));
@@ -537,7 +537,7 @@ static ErrorOr<void> read_start_of_scan(Core::Stream::SeekableStream& stream, JP
     return {};
 }
 
-static ErrorOr<void> read_reset_marker(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_reset_marker(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     if (bytes_to_read != 2) {
@@ -548,7 +548,7 @@ static ErrorOr<void> read_reset_marker(Core::Stream::SeekableStream& stream, JPG
     return {};
 }
 
-static ErrorOr<void> read_huffman_table(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -600,7 +600,7 @@ static ErrorOr<void> read_huffman_table(Core::Stream::SeekableStream& stream, JP
     return {};
 }
 
-static ErrorOr<void> read_icc_profile(Core::Stream::SeekableStream& stream, JPGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPGLoadingContext& context, int bytes_to_read)
 {
     if (bytes_to_read <= 2)
         return Error::from_string_literal("icc marker too small");
@@ -658,7 +658,7 @@ static ErrorOr<void> read_icc_profile(Core::Stream::SeekableStream& stream, JPGL
     return {};
 }
 
-static ErrorOr<void> read_app_marker(Core::Stream::SeekableStream& stream, JPGLoadingContext& context, int app_marker_number)
+static ErrorOr<void> read_app_marker(SeekableStream& stream, JPGLoadingContext& context, int app_marker_number)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -718,7 +718,7 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
-static ErrorOr<void> read_start_of_frame(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     if (context.state == JPGLoadingContext::FrameDecoded) {
         dbgln_if(JPG_DEBUG, "{}: SOF repeated!", TRY(stream.tell()));
@@ -802,7 +802,7 @@ static ErrorOr<void> read_start_of_frame(Core::Stream::SeekableStream& stream, J
     return {};
 }
 
-static ErrorOr<void> read_quantization_table(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -838,7 +838,7 @@ static ErrorOr<void> read_quantization_table(Core::Stream::SeekableStream& strea
     return {};
 }
 
-static ErrorOr<void> skip_marker_with_length(Core::Stream::Stream& stream)
+static ErrorOr<void> skip_marker_with_length(AK::Stream& stream)
 {
     u16 bytes_to_skip = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(stream.discard(bytes_to_skip));
@@ -1086,7 +1086,7 @@ static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macrobloc
     return {};
 }
 
-static ErrorOr<void> parse_header(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPG_SOI) {
@@ -1163,7 +1163,7 @@ static ErrorOr<void> parse_header(Core::Stream::SeekableStream& stream, JPGLoadi
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     u8 last_byte;
     u8 current_byte = TRY(stream.read_value<u8>());

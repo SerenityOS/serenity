@@ -38,9 +38,9 @@ struct Flags {
     static constexpr u8 MAX = FTEXT | FHCRC | FEXTRA | FNAME | FCOMMENT;
 };
 
-class GzipDecompressor final : public Core::Stream::Stream {
+class GzipDecompressor final : public AK::Stream {
 public:
-    GzipDecompressor(NonnullOwnPtr<Core::Stream::Stream>);
+    GzipDecompressor(NonnullOwnPtr<AK::Stream>);
     ~GzipDecompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -56,7 +56,7 @@ public:
 private:
     class Member {
     public:
-        static ErrorOr<NonnullOwnPtr<Member>> construct(BlockHeader header, Core::Stream::Stream&);
+        static ErrorOr<NonnullOwnPtr<Member>> construct(BlockHeader header, AK::Stream&);
 
         BlockHeader m_header;
         NonnullOwnPtr<DeflateDecompressor> m_stream;
@@ -70,7 +70,7 @@ private:
     Member const& current_member() const { return *m_current_member; }
     Member& current_member() { return *m_current_member; }
 
-    NonnullOwnPtr<Core::Stream::Stream> m_input_stream;
+    NonnullOwnPtr<AK::Stream> m_input_stream;
     u8 m_partial_header[sizeof(BlockHeader)];
     size_t m_partial_header_offset { 0 };
     OwnPtr<Member> m_current_member {};
@@ -78,9 +78,9 @@ private:
     bool m_eof { false };
 };
 
-class GzipCompressor final : public Core::Stream::Stream {
+class GzipCompressor final : public AK::Stream {
 public:
-    GzipCompressor(MaybeOwned<Core::Stream::Stream>);
+    GzipCompressor(MaybeOwned<AK::Stream>);
 
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
@@ -91,7 +91,7 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes);
 
 private:
-    MaybeOwned<Core::Stream::Stream> m_output_stream;
+    MaybeOwned<AK::Stream> m_output_stream;
 };
 
 }

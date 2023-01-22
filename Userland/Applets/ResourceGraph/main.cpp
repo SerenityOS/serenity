@@ -148,7 +148,7 @@ private:
     {
         if (file) {
             // Seeking to the beginning causes a data refresh!
-            TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
+            TRY(file->seek(0, SeekMode::SetPosition));
         } else {
             file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
         }

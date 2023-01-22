@@ -172,7 +172,7 @@ RefPtr<Gfx::Bitmap> Image::copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream> stream, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<AK::Stream> stream, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(compose_bitmap(bitmap_format));
@@ -183,7 +183,7 @@ ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream> stre
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<Core::Stream::Stream> stream, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<AK::Stream> stream, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(compose_bitmap(bitmap_format));
@@ -193,7 +193,7 @@ ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<Core::Stream::Stream> stre
     return {};
 }
 
-ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Core::Stream::Stream> stream) const
+ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<AK::Stream> stream) const
 {
     auto bitmap = TRY(compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 

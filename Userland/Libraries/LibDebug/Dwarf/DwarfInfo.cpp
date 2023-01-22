@@ -80,7 +80,7 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
 }
 
 ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
-    Core::Stream::SeekableStream& debug_info_stream, CompilationUnit const* unit) const
+    SeekableStream& debug_info_stream, CompilationUnit const* unit) const
 {
     AttributeValue value;
     value.m_form = form;

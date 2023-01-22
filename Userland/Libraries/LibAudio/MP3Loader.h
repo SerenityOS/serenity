@@ -22,7 +22,7 @@ struct ScaleFactorBand;
 
 class MP3LoaderPlugin : public LoaderPlugin {
 public:
-    explicit MP3LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
+    explicit MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
     virtual ~MP3LoaderPlugin() = default;
 
     static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(StringView path);

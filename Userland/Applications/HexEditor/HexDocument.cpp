@@ -64,7 +64,7 @@ bool HexDocumentMemory::write_to_file(NonnullRefPtr<Core::File> file)
     if (!file->write(m_buffer.data(), m_buffer.size()))
         return false;
     for (auto& change : m_changes) {
-        file->seek(change.key, Core::SeekMode::SetPosition);
+        file->seek(change.key, SeekMode::SetPosition);
         file->write(&change.value, 1);
     }
     return true;
@@ -79,7 +79,7 @@ HexDocumentFile::HexDocumentFile(NonnullRefPtr<Core::File> file)
 void HexDocumentFile::write_to_file()
 {
     for (auto& change : m_changes) {
-        m_file->seek(change.key, Core::SeekMode::SetPosition);
+        m_file->seek(change.key, SeekMode::SetPosition);
         m_file->write(&change.value, 1);
     }
     clear_changes();
@@ -105,7 +105,7 @@ bool HexDocumentFile::write_to_file(NonnullRefPtr<Core::File> file)
     }
 
     for (auto& change : m_changes) {
-        file->seek(change.key, Core::SeekMode::SetPosition);
+        file->seek(change.key, SeekMode::SetPosition);
         file->write(&change.value, 1);
     }
 
@@ -149,12 +149,12 @@ void HexDocumentFile::set_file(NonnullRefPtr<Core::File> file)
     m_file = file;
 
     off_t size = 0;
-    if (!file->seek(0, Core::SeekMode::FromEndPosition, &size)) {
+    if (!file->seek(0, SeekMode::FromEndPosition, &size)) {
         m_file_size = 0;
     } else {
         m_file_size = size;
     }
-    file->seek(0, Core::SeekMode::SetPosition);
+    file->seek(0, SeekMode::SetPosition);
 
     clear_changes();
     // make sure the next get operation triggers a read
@@ -169,7 +169,7 @@ NonnullRefPtr<Core::File> HexDocumentFile::file() const
 void HexDocumentFile::ensure_position_in_buffer(size_t position)
 {
     if (position < m_buffer_file_pos || position >= m_buffer_file_pos + m_buffer.size()) {
-        m_file->seek(position, Core::SeekMode::SetPosition);
+        m_file->seek(position, SeekMode::SetPosition);
         m_file->read(m_buffer.data(), m_buffer.size());
         m_buffer_file_pos = position;
     }

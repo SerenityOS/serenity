@@ -188,13 +188,13 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(MaybeOwned<Core::Stream::Stream> stream)
+ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(MaybeOwned<AK::Stream> stream)
 {
     auto output_buffer = TRY(CircularBuffer::create_empty(32 * KiB));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateDecompressor(move(stream), move(output_buffer))));
 }
 
-DeflateDecompressor::DeflateDecompressor(MaybeOwned<Core::Stream::Stream> stream, CircularBuffer output_buffer)
+DeflateDecompressor::DeflateDecompressor(MaybeOwned<AK::Stream> stream, CircularBuffer output_buffer)
     : m_input_stream(make<Core::Stream::LittleEndianInputBitStream>(move(stream)))
     , m_output_buffer(move(output_buffer))
 {
@@ -446,7 +446,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<DeflateCompressor>> DeflateCompressor::construct(MaybeOwned<Core::Stream::Stream> stream, CompressionLevel compression_level)
+ErrorOr<NonnullOwnPtr<DeflateCompressor>> DeflateCompressor::construct(MaybeOwned<AK::Stream> stream, CompressionLevel compression_level)
 {
     auto bit_stream = TRY(Core::Stream::LittleEndianOutputBitStream::construct(move(stream)));
     auto deflate_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateCompressor(move(bit_stream), compression_level)));
@@ -1017,7 +1017,7 @@ ErrorOr<void> DeflateCompressor::final_flush()
 ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, CompressionLevel compression_level)
 {
     auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
-    auto deflate_stream = TRY(DeflateCompressor::construct(MaybeOwned<Core::Stream::Stream>(*output_stream), compression_level));
+    auto deflate_stream = TRY(DeflateCompressor::construct(MaybeOwned<AK::Stream>(*output_stream), compression_level));
 
     TRY(deflate_stream->write_entire_buffer(bytes));
     TRY(deflate_stream->final_flush());

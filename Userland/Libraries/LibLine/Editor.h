@@ -393,7 +393,7 @@ private:
     }
 
     void recalculate_origin();
-    ErrorOr<void> reposition_cursor(Core::Stream::Stream&, bool to_end = false);
+    ErrorOr<void> reposition_cursor(AK::Stream&, bool to_end = false);
 
     struct CodepointRange {
         size_t start { 0 };

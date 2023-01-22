@@ -26,7 +26,7 @@ static ErrorOr<bool> format_file(StringView path, bool inplace)
     if (inplace && !read_from_stdin) {
         if (formatted_gml == contents)
             return true;
-        TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
+        TRY(file->seek(0, SeekMode::SetPosition));
         TRY(file->truncate(0));
         TRY(file->write(formatted_gml.bytes()));
     } else {

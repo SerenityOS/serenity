@@ -104,9 +104,9 @@ private:
 
 /// Wraps a stream to silently ignore writes when the condition isn't true.
 template<typename ConditionT>
-class ConditionalOutputStream final : public Core::Stream::Stream {
+class ConditionalOutputStream final : public AK::Stream {
 public:
-    ConditionalOutputStream(ConditionT&& condition, MaybeOwned<Core::Stream::Stream> stream)
+    ConditionalOutputStream(ConditionT&& condition, MaybeOwned<AK::Stream> stream)
         : m_stream(move(stream))
         , m_condition(condition)
     {
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    MaybeOwned<Core::Stream::Stream> m_stream;
+    MaybeOwned<AK::Stream> m_stream;
     ConditionT m_condition;
 };
 

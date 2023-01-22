@@ -32,7 +32,7 @@ public:
 
     Emulator(DeprecatedString const& executable_path, Vector<StringView> const& arguments, Vector<DeprecatedString> const& environment);
 
-    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, Core::Stream::Stream* profile_stream, NonnullOwnPtrVector<DeprecatedString>* profiler_strings, Vector<int>* profiler_string_id_map)
+    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, AK::Stream* profile_stream, NonnullOwnPtrVector<DeprecatedString>* profiler_strings, Vector<int>* profiler_string_id_map)
     {
         m_is_profiling = should_dump_profile;
         m_profile_instruction_interval = instruction_interval;
@@ -46,7 +46,7 @@ public:
         m_is_in_region_of_interest = value;
     }
 
-    Core::Stream::Stream& profile_stream() { return *m_profile_stream; }
+    AK::Stream& profile_stream() { return *m_profile_stream; }
     NonnullOwnPtrVector<DeprecatedString>& profiler_strings() { return *m_profiler_strings; }
     Vector<int>& profiler_string_id_map() { return *m_profiler_string_id_map; }
 
@@ -139,8 +139,8 @@ private:
 
     void send_signal(int);
 
-    void emit_profile_sample(Core::Stream::Stream&);
-    void emit_profile_event(Core::Stream::Stream&, StringView event_name, DeprecatedString const& contents);
+    void emit_profile_sample(AK::Stream&);
+    void emit_profile_event(AK::Stream&, StringView event_name, DeprecatedString const& contents);
 
     int virt$accept4(FlatPtr);
     u32 virt$allocate_tls(FlatPtr, size_t);
@@ -295,7 +295,7 @@ private:
 
     RangeAllocator m_range_allocator;
 
-    Core::Stream::Stream* m_profile_stream { nullptr };
+    AK::Stream* m_profile_stream { nullptr };
     Vector<int>* m_profiler_string_id_map { nullptr };
     NonnullOwnPtrVector<DeprecatedString>* m_profiler_strings { nullptr };
 

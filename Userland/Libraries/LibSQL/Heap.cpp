@@ -142,9 +142,9 @@ ErrorOr<void> Heap::seek_block(u32 block)
     }
 
     if (block == m_end_of_file)
-        TRY(m_file->seek(0, Core::Stream::SeekMode::FromEndPosition));
+        TRY(m_file->seek(0, SeekMode::FromEndPosition));
     else
-        TRY(m_file->seek(block * BLOCKSIZE, Core::Stream::SeekMode::SetPosition));
+        TRY(m_file->seek(block * BLOCKSIZE, SeekMode::SetPosition));
 
     return {};
 }

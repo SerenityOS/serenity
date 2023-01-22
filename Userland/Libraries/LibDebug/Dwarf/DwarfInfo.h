@@ -43,7 +43,7 @@ public:
     ErrorOr<void> for_each_compilation_unit(Callback) const;
 
     ErrorOr<AttributeValue> get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
-        Core::Stream::SeekableStream& debug_info_stream, CompilationUnit const* unit = nullptr) const;
+        SeekableStream& debug_info_stream, CompilationUnit const* unit = nullptr) const;
 
     ErrorOr<Optional<DIE>> get_die_at_address(FlatPtr) const;
 

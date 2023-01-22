@@ -37,7 +37,7 @@ public:
     int fd() const { return m_fd; }
     bool stop();
 
-    void stream_into(Core::Stream::Stream&);
+    void stream_into(AK::Stream&);
 
     bool should_buffer_all_input() const { return m_should_buffer_all_input; }
     /// Note: Will override `on_finish', and `on_headers_received', and expects `on_buffered_request_finish' to be set!
@@ -74,12 +74,12 @@ private:
     };
 
     struct InternalStreamData {
-        InternalStreamData(NonnullOwnPtr<Core::Stream::Stream> stream)
+        InternalStreamData(NonnullOwnPtr<AK::Stream> stream)
             : read_stream(move(stream))
         {
         }
 
-        NonnullOwnPtr<Core::Stream::Stream> read_stream;
+        NonnullOwnPtr<AK::Stream> read_stream;
         RefPtr<Core::Notifier> read_notifier;
         bool success;
         u32 total_size { 0 };

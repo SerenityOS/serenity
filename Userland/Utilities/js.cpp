@@ -84,7 +84,7 @@ static DeprecatedString s_history_path = DeprecatedString::formatted("{}/.js-his
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
-static ErrorOr<void> print(JS::Value value, Core::Stream::Stream& stream)
+static ErrorOr<void> print(JS::Value value, AK::Stream& stream)
 {
     JS::PrintContext print_context { .vm = *g_vm, .stream = stream, .strip_ansi = s_strip_ansi };
     return JS::print(value, print_context);

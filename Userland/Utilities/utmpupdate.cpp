@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         json.remove(tty_name);
     }
 
-    TRY(file->seek(0, Core::Stream::SeekMode::SetPosition));
+    TRY(file->seek(0, SeekMode::SetPosition));
     TRY(file->truncate(0));
     TRY(file->write(json.to_deprecated_string().bytes()));
 

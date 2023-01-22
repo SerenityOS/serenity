@@ -86,7 +86,7 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
     return buf;
 }
 
-Job::Job(HttpRequest&& request, Core::Stream::Stream& output_stream)
+Job::Job(HttpRequest&& request, AK::Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(move(request))
 {

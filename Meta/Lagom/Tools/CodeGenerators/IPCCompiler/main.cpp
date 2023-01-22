@@ -338,7 +338,7 @@ public:)~~~");
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Core::Stream::Stream& stream, Core::Stream::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(AK::Stream& stream, Core::Stream::LocalSocket& socket)
     {
         IPC::Decoder decoder { stream, socket };)~~~");
 

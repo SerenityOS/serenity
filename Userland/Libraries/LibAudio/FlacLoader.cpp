@@ -25,7 +25,7 @@
 
 namespace Audio {
 
-FlacLoaderPlugin::FlacLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream)
+FlacLoaderPlugin::FlacLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
     : LoaderPlugin(move(stream))
 {
 }
@@ -60,7 +60,7 @@ MaybeLoaderError FlacLoaderPlugin::initialize()
 // 11.5 STREAM
 MaybeLoaderError FlacLoaderPlugin::parse_header()
 {
-    auto bit_input = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*m_stream)));
+    auto bit_input = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
 
     // A mixture of VERIFY and the non-crashing TRY().
 #define FLAC_VERIFY(check, category, msg)                                                                                                     \
@@ -79,7 +79,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     auto streaminfo = TRY(next_meta_block(*bit_input));
     FLAC_VERIFY(streaminfo.type == FlacMetadataBlockType::STREAMINFO, LoaderError::Category::Format, "First block must be STREAMINFO");
     auto streaminfo_data_memory = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(streaminfo.data.bytes()));
-    auto streaminfo_data = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*streaminfo_data_memory)));
+    auto streaminfo_data = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*streaminfo_data_memory)));
 
     // 11.10 METADATA_BLOCK_STREAMINFO
     m_min_block_size = LOADER_TRY(streaminfo_data->read_bits<u16>(16));
@@ -150,7 +150,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 {
     auto memory_stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(block.data.bytes()));
-    auto picture_block_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
+    auto picture_block_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
 
     PictureData picture {};
 
@@ -159,12 +159,12 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     auto const mime_string_length = LOADER_TRY(picture_block_bytes->read_bits(32));
     // Note: We are seeking before reading the value to ensure that we stayed inside buffer's size.
     auto offset_before_seeking = memory_stream->offset();
-    LOADER_TRY(memory_stream->seek(mime_string_length, Core::Stream::SeekMode::FromCurrentPosition));
+    LOADER_TRY(memory_stream->seek(mime_string_length, SeekMode::FromCurrentPosition));
     picture.mime_string = { block.data.bytes().data() + offset_before_seeking, (size_t)mime_string_length };
 
     auto const description_string_length = LOADER_TRY(picture_block_bytes->read_bits(32));
     offset_before_seeking = memory_stream->offset();
-    LOADER_TRY(memory_stream->seek(description_string_length, Core::Stream::SeekMode::FromCurrentPosition));
+    LOADER_TRY(memory_stream->seek(description_string_length, SeekMode::FromCurrentPosition));
     picture.description_string = Vector<u32> { Span<u32> { reinterpret_cast<u32*>(block.data.bytes().data() + offset_before_seeking), (size_t)description_string_length } };
 
     picture.width = LOADER_TRY(picture_block_bytes->read_bits(32));
@@ -175,7 +175,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 
     auto const picture_size = LOADER_TRY(picture_block_bytes->read_bits(32));
     offset_before_seeking = memory_stream->offset();
-    LOADER_TRY(memory_stream->seek(picture_size, Core::Stream::SeekMode::FromCurrentPosition));
+    LOADER_TRY(memory_stream->seek(picture_size, SeekMode::FromCurrentPosition));
     picture.data = Vector<u8> { Span<u8> { block.data.bytes().data() + offset_before_seeking, (size_t)picture_size } };
 
     m_pictures.append(move(picture));
@@ -187,7 +187,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
 {
     auto memory_stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(block.data.bytes()));
-    auto seektable_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
+    auto seektable_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
     for (size_t i = 0; i < block.length / 18; ++i) {
         // 11.14. SEEKPOINT
         FlacSeekPoint seekpoint {
@@ -259,7 +259,7 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
     // No seektable or no fitting entry: Perform normal forward read
     if (!maybe_target_seekpoint.has_value()) {
         if (sample_index < m_loaded_samples) {
-            LOADER_TRY(m_stream->seek(m_data_start_location, Core::Stream::SeekMode::SetPosition));
+            LOADER_TRY(m_stream->seek(m_data_start_location, SeekMode::SetPosition));
             m_loaded_samples = 0;
         }
         auto to_read = sample_index - m_loaded_samples;
@@ -279,7 +279,7 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
 
         dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}, sample count {}", target_seekpoint.sample_index, target_seekpoint.byte_offset, target_seekpoint.num_samples);
         auto position = target_seekpoint.byte_offset + m_data_start_location;
-        if (m_stream->seek(static_cast<i64>(position), Core::Stream::SeekMode::SetPosition).is_error())
+        if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
             return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
 
         auto remaining_samples_after_seekpoint = sample_index - m_data_start_location;
@@ -333,7 +333,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
         }                                                                                                                                         \
     } while (0)
 
-    auto bit_stream = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*m_stream)));
+    auto bit_stream = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
 
     // TODO: Check the CRC-16 checksum (and others) by keeping track of read data
 

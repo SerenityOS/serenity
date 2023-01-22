@@ -89,17 +89,17 @@ TEST_CASE(file_seeking_around)
 
     StringView buffer_contents { buffer.bytes() };
 
-    EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(500, SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
-    EXPECT(!file->seek(234, Core::Stream::SeekMode::FromCurrentPosition).is_error());
+    EXPECT(!file->seek(234, SeekMode::FromCurrentPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 750ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents2);
 
-    EXPECT(!file->seek(-105, Core::Stream::SeekMode::FromEndPosition).is_error());
+    EXPECT(!file->seek(-105, SeekMode::FromEndPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 8597ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents3);
@@ -122,7 +122,7 @@ TEST_CASE(file_adopt_fd)
 
     StringView buffer_contents { buffer.bytes() };
 
-    EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(500, SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
@@ -428,14 +428,14 @@ TEST_CASE(buffered_long_file_read)
     auto file = maybe_buffered_file.release_value();
 
     auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
-    EXPECT(!file->seek(255, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(255, SeekMode::SetPosition).is_error());
     EXPECT(file->can_read_line().release_value());
     auto maybe_line = file->read_line(buffer);
     EXPECT(!maybe_line.is_error());
     EXPECT_EQ(maybe_line.value().length(), 4095ul); // 4095 bytes on the third line
 
     // Testing that buffering with seeking works properly
-    EXPECT(!file->seek(365, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(365, SeekMode::SetPosition).is_error());
     auto maybe_after_seek_line = file->read_line(buffer);
     EXPECT(!maybe_after_seek_line.is_error());
     EXPECT_EQ(maybe_after_seek_line.value().length(), 3985ul); // 4095 - 110
@@ -499,7 +499,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek seven characters forward.
     {
-        auto current_offset = buffered_file->seek(7, Core::Stream::SeekMode::FromCurrentPosition).release_value();
+        auto current_offset = buffered_file->seek(7, SeekMode::FromCurrentPosition).release_value();
         EXPECT_EQ(current_offset, 9ul);
     }
 
@@ -513,7 +513,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek five characters backwards.
     {
-        auto current_offset = buffered_file->seek(-5, Core::Stream::SeekMode::FromCurrentPosition).release_value();
+        auto current_offset = buffered_file->seek(-5, SeekMode::FromCurrentPosition).release_value();
         EXPECT_EQ(current_offset, 5ul);
     }
 
@@ -527,7 +527,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek back to the beginning.
     {
-        auto current_offset = buffered_file->seek(0, Core::Stream::SeekMode::SetPosition).release_value();
+        auto current_offset = buffered_file->seek(0, SeekMode::SetPosition).release_value();
         EXPECT_EQ(current_offset, 0ul);
     }
 
@@ -541,7 +541,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek beyond the buffer size, which should invalidate the buffer.
     {
-        auto current_offset = buffered_file->seek(12, Core::Stream::SeekMode::SetPosition).release_value();
+        auto current_offset = buffered_file->seek(12, SeekMode::SetPosition).release_value();
         EXPECT_EQ(current_offset, 12ul);
     }
 
@@ -697,7 +697,7 @@ TEST_CASE(allocating_memory_stream_10kb)
 
     EXPECT_EQ(stream.used_buffer_size(), file_size);
 
-    MUST(file->seek(0, Core::Stream::SeekMode::SetPosition));
+    MUST(file->seek(0, SeekMode::SetPosition));
 
     // Check the stream contents when reading back.
     size_t offset = 0;
@@ -727,8 +727,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(Core::Stream::LittleEndianOutputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
-    auto bit_read_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
+    auto bit_write_stream = MUST(Core::Stream::LittleEndianOutputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
+    auto bit_read_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {
@@ -783,8 +783,8 @@ TEST_CASE(big_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(Core::Stream::BigEndianOutputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
-    auto bit_read_stream = MUST(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
+    auto bit_write_stream = MUST(Core::Stream::BigEndianOutputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
+    auto bit_read_stream = MUST(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {
