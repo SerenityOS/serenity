@@ -14,7 +14,7 @@ namespace Audio {
 DSP::MDCT<12> MP3LoaderPlugin::s_mdct_12;
 DSP::MDCT<36> MP3LoaderPlugin::s_mdct_36;
 
-MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream)
+MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
     : LoaderPlugin(move(stream))
 {
 }
@@ -41,7 +41,7 @@ Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Byte
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    m_bitstream = LOADER_TRY(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*m_stream)));
+    m_bitstream = LOADER_TRY(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
 
     TRY(synchronize());
 
@@ -55,7 +55,7 @@ MaybeLoaderError MP3LoaderPlugin::initialize()
 
     TRY(build_seek_table());
 
-    LOADER_TRY(m_stream->seek(0, Core::Stream::SeekMode::SetPosition));
+    LOADER_TRY(m_stream->seek(0, SeekMode::SetPosition));
 
     return {};
 }
@@ -76,7 +76,7 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
 {
     for (auto const& seek_entry : m_seek_table) {
         if (seek_entry.get<1>() >= position) {
-            LOADER_TRY(m_stream->seek(seek_entry.get<0>(), Core::Stream::SeekMode::SetPosition));
+            LOADER_TRY(m_stream->seek(seek_entry.get<0>(), SeekMode::SetPosition));
             m_loaded_samples = seek_entry.get<1>();
             break;
         }
@@ -140,7 +140,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
     m_bitstream->align_to_byte_boundary();
 
     while (!synchronize().is_error()) {
-        auto const frame_pos = -2 + LOADER_TRY(m_stream->seek(0, Core::Stream::SeekMode::FromCurrentPosition));
+        auto const frame_pos = -2 + LOADER_TRY(m_stream->seek(0, SeekMode::FromCurrentPosition));
 
         auto error_or_header = read_header();
         if (error_or_header.is_error() || error_or_header.value().id != 1 || error_or_header.value().layer != 3) {
@@ -152,7 +152,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
         if (frame_count % 10 == 0)
             m_seek_table.append({ frame_pos, sample_count });
 
-        LOADER_TRY(m_stream->seek(error_or_header.value().frame_size - 6, Core::Stream::SeekMode::FromCurrentPosition));
+        LOADER_TRY(m_stream->seek(error_or_header.value().frame_size - 6, SeekMode::FromCurrentPosition));
 
         // TODO: This is just here to clear the bitstream buffer.
         // Bitstream should have a method to sync its state to the underlying stream.
@@ -242,7 +242,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     TRY(m_bit_reservoir.discard(old_reservoir_size - frame.main_data_begin));
 
-    auto reservoir_stream = TRY(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(m_bit_reservoir)));
+    auto reservoir_stream = TRY(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(m_bit_reservoir)));
 
     for (size_t granule_index = 0; granule_index < 2; granule_index++) {
         for (size_t channel_index = 0; channel_index < header.channel_count(); channel_index++) {

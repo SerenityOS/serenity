@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
     if (seek_to.has_value())
-        TRY(file->seek(seek_to.value(), Core::Stream::SeekMode::SetPosition));
+        TRY(file->seek(seek_to.value(), SeekMode::SetPosition));
 
     auto print_line = [](Bytes line) {
         VERIFY(line.size() <= LINE_LENGTH_BYTES);

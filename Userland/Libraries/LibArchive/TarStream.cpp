@@ -51,7 +51,7 @@ ErrorOr<size_t> TarFileStream::write(ReadonlyBytes)
     return Error::from_errno(EBADF);
 }
 
-ErrorOr<NonnullOwnPtr<TarInputStream>> TarInputStream::construct(NonnullOwnPtr<Core::Stream::Stream> stream)
+ErrorOr<NonnullOwnPtr<TarInputStream>> TarInputStream::construct(NonnullOwnPtr<AK::Stream> stream)
 {
     auto tar_stream = TRY(adopt_nonnull_own_or_enomem(new (nothrow) TarInputStream(move(stream))));
 
@@ -60,7 +60,7 @@ ErrorOr<NonnullOwnPtr<TarInputStream>> TarInputStream::construct(NonnullOwnPtr<C
     return tar_stream;
 }
 
-TarInputStream::TarInputStream(NonnullOwnPtr<Core::Stream::Stream> stream)
+TarInputStream::TarInputStream(NonnullOwnPtr<AK::Stream> stream)
     : m_stream(move(stream))
 {
 }
@@ -136,7 +136,7 @@ TarFileStream TarInputStream::file_contents()
     return TarFileStream(*this);
 }
 
-TarOutputStream::TarOutputStream(MaybeOwned<Core::Stream::Stream> stream)
+TarOutputStream::TarOutputStream(MaybeOwned<AK::Stream> stream)
     : m_stream(move(stream))
 {
 }

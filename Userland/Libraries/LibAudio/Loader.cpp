@@ -11,7 +11,7 @@
 
 namespace Audio {
 
-LoaderPlugin::LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream)
+LoaderPlugin::LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
     : m_stream(move(stream))
 {
 }

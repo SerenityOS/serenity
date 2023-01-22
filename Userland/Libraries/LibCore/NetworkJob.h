@@ -52,7 +52,7 @@ public:
     }
 
 protected:
-    NetworkJob(Core::Stream::Stream&);
+    NetworkJob(AK::Stream&);
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
     void did_progress(Optional<u32> total_size, u32 downloaded);
@@ -61,7 +61,7 @@ protected:
 
 private:
     RefPtr<NetworkResponse> m_response;
-    Core::Stream::Stream& m_output_stream;
+    AK::Stream& m_output_stream;
     Error m_error { Error::None };
 };
 

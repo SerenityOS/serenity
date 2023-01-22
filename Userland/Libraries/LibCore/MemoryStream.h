@@ -49,7 +49,7 @@ private:
 
 /// A stream class that allows for writing to an automatically allocating memory area
 /// and reading back the written data afterwards.
-class AllocatingMemoryStream final : public Stream {
+class AllocatingMemoryStream final : public AK::Stream {
 public:
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;

@@ -53,19 +53,19 @@ TEST_CASE(file_get_read_position)
         }
 
         off_t offset = 0;
-        VERIFY(file->seek(0, Core::SeekMode::FromCurrentPosition, &offset));
+        VERIFY(file->seek(0, SeekMode::FromCurrentPosition, &offset));
         EXPECT_EQ(offset, static_cast<off_t>(i + step_size));
     }
 
     {
         off_t offset = 0;
-        VERIFY(file->seek(0, Core::SeekMode::FromEndPosition, &offset));
+        VERIFY(file->seek(0, SeekMode::FromEndPosition, &offset));
         EXPECT_EQ(offset, 10240);
     }
 
     {
         off_t offset = 0;
-        VERIFY(file->seek(0, Core::SeekMode::SetPosition, &offset));
+        VERIFY(file->seek(0, SeekMode::SetPosition, &offset));
         EXPECT_EQ(offset, 0);
     }
 }

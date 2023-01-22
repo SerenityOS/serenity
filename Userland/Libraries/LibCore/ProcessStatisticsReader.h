@@ -72,7 +72,7 @@ struct AllProcessesStatistics {
 
 class ProcessStatisticsReader {
 public:
-    static ErrorOr<AllProcessesStatistics> get_all(Core::Stream::SeekableStream&, bool include_usernames = true);
+    static ErrorOr<AllProcessesStatistics> get_all(SeekableStream&, bool include_usernames = true);
     static ErrorOr<AllProcessesStatistics> get_all(bool include_usernames = true);
 
 private:

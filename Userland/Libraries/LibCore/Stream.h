@@ -17,6 +17,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/Result.h>
 #include <AK/Span.h>
+#include <AK/Stream.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
 #include <LibCore/Notifier.h>
@@ -27,119 +28,6 @@
 
 namespace Core::Stream {
 
-/// The base, abstract class for stream operations. This class defines the
-/// operations one can perform on every stream in LibCore.
-/// Operations without a sensible default that are unsupported by an implementation
-/// of a Stream should return EBADF as an error.
-class Stream {
-public:
-    /// Reads into a buffer, with the maximum size being the size of the buffer.
-    /// The amount of bytes read can be smaller than the size of the buffer.
-    /// Returns either the bytes that were read, or an errno in the case of
-    /// failure.
-    virtual ErrorOr<Bytes> read(Bytes) = 0;
-    /// Tries to fill the entire buffer through reading. Returns whether the
-    /// buffer was filled without an error.
-    virtual ErrorOr<void> read_entire_buffer(Bytes);
-    /// Reads the stream until EOF, storing the contents into a ByteBuffer which
-    /// is returned once EOF is encountered. The block size determines the size
-    /// of newly allocated chunks while reading.
-    virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096);
-    /// Discards the given number of bytes from the stream. As this is usually used
-    /// as an efficient version of `read_entire_buffer`, it returns an error
-    /// if reading failed or if not all bytes could be discarded.
-    /// Unless specifically overwritten, this just uses read() to read into an
-    /// internal stack-based buffer.
-    virtual ErrorOr<void> discard(size_t discarded_bytes);
-
-    /// Tries to write the entire contents of the buffer. It is possible for
-    /// less than the full buffer to be written. Returns either the amount of
-    /// bytes written into the stream, or an errno in the case of failure.
-    virtual ErrorOr<size_t> write(ReadonlyBytes) = 0;
-    /// Same as write, but does not return until either the entire buffer
-    /// contents are written or an error occurs.
-    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);
-
-    template<typename T>
-    requires(requires(Stream& stream) { { T::read_from_stream(stream) } -> SameAs<ErrorOr<T>>; })
-    ErrorOr<T> read_value()
-    {
-        return T::read_from_stream(*this);
-    }
-
-    template<typename T>
-    requires(Traits<T>::is_trivially_serializable())
-    ErrorOr<T> read_value()
-    {
-        alignas(T) u8 buffer[sizeof(T)] = {};
-        TRY(read_entire_buffer({ &buffer, sizeof(buffer) }));
-        return bit_cast<T>(buffer);
-    }
-
-    template<typename T>
-    requires(requires(T t, Stream& stream) { { t.write_to_stream(stream) } -> SameAs<ErrorOr<void>>; })
-    ErrorOr<void> write_value(T const& value)
-    {
-        return value.write_to_stream(*this);
-    }
-
-    template<typename T>
-    requires(Traits<T>::is_trivially_serializable())
-    ErrorOr<void> write_value(T const& value)
-    {
-        return write_entire_buffer({ &value, sizeof(value) });
-    }
-
-    /// Returns whether the stream has reached the end of file. For sockets,
-    /// this most likely means that the protocol has disconnected (in the case
-    /// of TCP). For seekable streams, this means the end of the file. Note that
-    /// is_eof will only return true _after_ a read with 0 length, so this
-    /// method should be called after a read.
-    virtual bool is_eof() const = 0;
-
-    virtual bool is_open() const = 0;
-    virtual void close() = 0;
-
-    virtual ~Stream()
-    {
-    }
-
-protected:
-    /// Provides a default implementation of read_until_eof that works for streams
-    /// that behave like POSIX file descriptors. expected_file_size can be
-    /// passed as a heuristic for what the Stream subclass expects the file
-    /// content size to be in order to reduce allocations (does not affect
-    /// actual reading).
-    ErrorOr<ByteBuffer> read_until_eof_impl(size_t block_size, size_t expected_file_size = 0);
-};
-
-enum class SeekMode {
-    SetPosition,
-    FromCurrentPosition,
-    FromEndPosition,
-};
-
-/// Adds seekability to Core::Stream. Classes inheriting from SeekableStream
-/// will be seekable to any point in the stream.
-class SeekableStream : public Stream {
-public:
-    /// Seeks to the given position in the given mode. Returns either the
-    /// current position of the file, or an errno in the case of an error.
-    virtual ErrorOr<size_t> seek(i64 offset, SeekMode) = 0;
-    /// Returns the current position of the file, or an errno in the case of
-    /// an error.
-    virtual ErrorOr<size_t> tell() const;
-    /// Returns the total size of the stream, or an errno in the case of an
-    /// error. May not preserve the original position on the stream on failure.
-    virtual ErrorOr<size_t> size();
-    /// Shrinks or extends the stream to the given size. Returns an errno in
-    /// the case of an error.
-    virtual ErrorOr<void> truncate(off_t length) = 0;
-    /// Seeks until after the given amount of bytes to be discarded instead of
-    /// reading and discarding everything manually;
-    virtual ErrorOr<void> discard(size_t discarded_bytes) override;
-};
-
 enum class PreventSIGPIPE {
     No,
     Yes,
@@ -147,7 +35,7 @@ enum class PreventSIGPIPE {
 
 /// The Socket class is the base class for all concrete BSD-style socket
 /// classes. Sockets are non-seekable streams which can be read byte-wise.
-class Socket : public Stream {
+class Socket : public AK::Stream {
 public:
     Socket(Socket&&) = default;
     Socket& operator=(Socket&&) = default;
@@ -577,7 +465,7 @@ private:
 // Buffered stream wrappers
 
 template<typename T>
-concept StreamLike = IsBaseOf<Stream, T>;
+concept StreamLike = IsBaseOf<AK::Stream, T>;
 template<typename T>
 concept SeekableStreamLike = IsBaseOf<SeekableStream, T>;
 template<typename T>
@@ -1028,7 +916,7 @@ using ReusableTCPSocket = BasicReusableSocket<TCPSocket>;
 using ReusableUDPSocket = BasicReusableSocket<UDPSocket>;
 
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
-class WrappedAKInputStream final : public Stream {
+class WrappedAKInputStream final : public AK::Stream {
 public:
     WrappedAKInputStream(NonnullOwnPtr<DeprecatedInputStream> stream);
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -1043,7 +931,7 @@ private:
 };
 
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
-class WrappedAKOutputStream final : public Stream {
+class WrappedAKOutputStream final : public AK::Stream {
 public:
     WrappedAKOutputStream(NonnullOwnPtr<DeprecatedOutputStream> stream);
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -1059,25 +947,25 @@ private:
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
 class WrapInAKInputStream final : public DeprecatedInputStream {
 public:
-    WrapInAKInputStream(Core::Stream::Stream& stream);
+    WrapInAKInputStream(AK::Stream& stream);
     virtual size_t read(Bytes) override;
     virtual bool unreliable_eof() const override;
     virtual bool read_or_error(Bytes) override;
     virtual bool discard_or_error(size_t count) override;
 
 private:
-    Core::Stream::Stream& m_stream;
+    AK::Stream& m_stream;
 };
 
 // Note: This is only a temporary hack, to break up the task of moving away from AK::Stream into smaller parts.
 class WrapInAKOutputStream final : public DeprecatedOutputStream {
 public:
-    WrapInAKOutputStream(Core::Stream::Stream& stream);
+    WrapInAKOutputStream(AK::Stream& stream);
     virtual size_t write(ReadonlyBytes) override;
     virtual bool write_or_error(ReadonlyBytes) override;
 
 private:
-    Core::Stream::Stream& m_stream;
+    AK::Stream& m_stream;
 };
 
 }

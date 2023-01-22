@@ -59,11 +59,11 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
 AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, InstructionPointer, Arithmetic, Comparison, Flags, Increment);
 
-ParseError with_eof_check(Core::Stream::Stream const& stream, ParseError error_if_not_eof);
+ParseError with_eof_check(AK::Stream const& stream, ParseError error_if_not_eof);
 
 template<typename T>
 struct GenericIndexParser {
-    static ParseResult<T> parse(Core::Stream::Stream& stream)
+    static ParseResult<T> parse(AK::Stream& stream)
     {
         size_t value;
         Core::Stream::WrapInAKInputStream wrapped_stream { stream };
@@ -73,9 +73,9 @@ struct GenericIndexParser {
     }
 };
 
-class ReconsumableStream : public Core::Stream::Stream {
+class ReconsumableStream : public AK::Stream {
 public:
-    explicit ReconsumableStream(Core::Stream::Stream& stream)
+    explicit ReconsumableStream(AK::Stream& stream)
         : m_stream(stream)
     {
     }
@@ -133,13 +133,13 @@ private:
         m_stream.close();
     }
 
-    Core::Stream::Stream& m_stream;
+    AK::Stream& m_stream;
     Vector<u8, 8> m_buffer;
 };
 
-class ConstrainedStream : public Core::Stream::Stream {
+class ConstrainedStream : public AK::Stream {
 public:
-    explicit ConstrainedStream(Core::Stream::Stream& stream, size_t size)
+    explicit ConstrainedStream(AK::Stream& stream, size_t size)
         : m_stream(stream)
         , m_bytes_left(size)
     {
@@ -182,7 +182,7 @@ private:
         m_stream.close();
     }
 
-    Core::Stream::Stream& m_stream;
+    AK::Stream& m_stream;
     size_t m_bytes_left { 0 };
 };
 
@@ -211,7 +211,7 @@ public:
     auto is_numeric() const { return !is_reference(); }
     auto kind() const { return m_kind; }
 
-    static ParseResult<ValueType> parse(Core::Stream::Stream& stream);
+    static ParseResult<ValueType> parse(AK::Stream& stream);
 
     static DeprecatedString kind_name(Kind kind)
     {
@@ -250,7 +250,7 @@ public:
 
     auto const& types() const { return m_types; }
 
-    static ParseResult<ResultType> parse(Core::Stream::Stream& stream);
+    static ParseResult<ResultType> parse(AK::Stream& stream);
 
 private:
     Vector<ValueType> m_types;
@@ -268,7 +268,7 @@ public:
     auto& parameters() const { return m_parameters; }
     auto& results() const { return m_results; }
 
-    static ParseResult<FunctionType> parse(Core::Stream::Stream& stream);
+    static ParseResult<FunctionType> parse(AK::Stream& stream);
 
 private:
     Vector<ValueType> m_parameters;
@@ -287,7 +287,7 @@ public:
     auto min() const { return m_min; }
     auto& max() const { return m_max; }
 
-    static ParseResult<Limits> parse(Core::Stream::Stream& stream);
+    static ParseResult<Limits> parse(AK::Stream& stream);
 
 private:
     u32 m_min { 0 };
@@ -304,7 +304,7 @@ public:
 
     auto& limits() const { return m_limits; }
 
-    static ParseResult<MemoryType> parse(Core::Stream::Stream& stream);
+    static ParseResult<MemoryType> parse(AK::Stream& stream);
 
 private:
     Limits m_limits;
@@ -323,7 +323,7 @@ public:
     auto& limits() const { return m_limits; }
     auto& element_type() const { return m_element_type; }
 
-    static ParseResult<TableType> parse(Core::Stream::Stream& stream);
+    static ParseResult<TableType> parse(AK::Stream& stream);
 
 private:
     ValueType m_element_type;
@@ -342,7 +342,7 @@ public:
     auto& type() const { return m_type; }
     auto is_mutable() const { return m_is_mutable; }
 
-    static ParseResult<GlobalType> parse(Core::Stream::Stream& stream);
+    static ParseResult<GlobalType> parse(AK::Stream& stream);
 
 private:
     ValueType m_type;
@@ -388,7 +388,7 @@ public:
         return m_type_index;
     }
 
-    static ParseResult<BlockType> parse(Core::Stream::Stream& stream);
+    static ParseResult<BlockType> parse(AK::Stream& stream);
 
 private:
     Kind m_kind { Empty };
@@ -452,7 +452,7 @@ public:
     {
     }
 
-    static ParseResult<Vector<Instruction>> parse(Core::Stream::Stream& stream, InstructionPointer& ip);
+    static ParseResult<Vector<Instruction>> parse(AK::Stream& stream, InstructionPointer& ip);
 
     auto& opcode() const { return m_opcode; }
     auto& arguments() const { return m_arguments; }
@@ -499,7 +499,7 @@ public:
     auto& name() const { return m_name; }
     auto& contents() const { return m_contents; }
 
-    static ParseResult<CustomSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<CustomSection> parse(AK::Stream& stream);
 
 private:
     DeprecatedString m_name;
@@ -517,7 +517,7 @@ public:
 
     auto& types() const { return m_types; }
 
-    static ParseResult<TypeSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<TypeSection> parse(AK::Stream& stream);
 
 private:
     Vector<FunctionType> m_types;
@@ -539,7 +539,7 @@ public:
         auto& name() const { return m_name; }
         auto& description() const { return m_description; }
 
-        static ParseResult<Import> parse(Core::Stream::Stream& stream);
+        static ParseResult<Import> parse(AK::Stream& stream);
 
     private:
         template<typename T>
@@ -566,7 +566,7 @@ public:
 
     auto& imports() const { return m_imports; }
 
-    static ParseResult<ImportSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<ImportSection> parse(AK::Stream& stream);
 
 private:
     Vector<Import> m_imports;
@@ -583,7 +583,7 @@ public:
 
     auto& types() const { return m_types; }
 
-    static ParseResult<FunctionSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<FunctionSection> parse(AK::Stream& stream);
 
 private:
     Vector<TypeIndex> m_types;
@@ -600,7 +600,7 @@ public:
 
         auto& type() const { return m_type; }
 
-        static ParseResult<Table> parse(Core::Stream::Stream& stream);
+        static ParseResult<Table> parse(AK::Stream& stream);
 
     private:
         TableType m_type;
@@ -616,7 +616,7 @@ public:
 
     auto& tables() const { return m_tables; };
 
-    static ParseResult<TableSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<TableSection> parse(AK::Stream& stream);
 
 private:
     Vector<Table> m_tables;
@@ -633,7 +633,7 @@ public:
 
         auto& type() const { return m_type; }
 
-        static ParseResult<Memory> parse(Core::Stream::Stream& stream);
+        static ParseResult<Memory> parse(AK::Stream& stream);
 
     private:
         MemoryType m_type;
@@ -649,7 +649,7 @@ public:
 
     auto& memories() const { return m_memories; }
 
-    static ParseResult<MemorySection> parse(Core::Stream::Stream& stream);
+    static ParseResult<MemorySection> parse(AK::Stream& stream);
 
 private:
     Vector<Memory> m_memories;
@@ -664,7 +664,7 @@ public:
 
     auto& instructions() const { return m_instructions; }
 
-    static ParseResult<Expression> parse(Core::Stream::Stream& stream);
+    static ParseResult<Expression> parse(AK::Stream& stream);
 
 private:
     Vector<Instruction> m_instructions;
@@ -683,7 +683,7 @@ public:
         auto& type() const { return m_type; }
         auto& expression() const { return m_expression; }
 
-        static ParseResult<Global> parse(Core::Stream::Stream& stream);
+        static ParseResult<Global> parse(AK::Stream& stream);
 
     private:
         GlobalType m_type;
@@ -700,7 +700,7 @@ public:
 
     auto& entries() const { return m_entries; }
 
-    static ParseResult<GlobalSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<GlobalSection> parse(AK::Stream& stream);
 
 private:
     Vector<Global> m_entries;
@@ -722,7 +722,7 @@ public:
         auto& name() const { return m_name; }
         auto& description() const { return m_description; }
 
-        static ParseResult<Export> parse(Core::Stream::Stream& stream);
+        static ParseResult<Export> parse(AK::Stream& stream);
 
     private:
         DeprecatedString m_name;
@@ -738,7 +738,7 @@ public:
 
     auto& entries() const { return m_entries; }
 
-    static ParseResult<ExportSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<ExportSection> parse(AK::Stream& stream);
 
 private:
     Vector<Export> m_entries;
@@ -755,7 +755,7 @@ public:
 
         auto& index() const { return m_index; }
 
-        static ParseResult<StartFunction> parse(Core::Stream::Stream& stream);
+        static ParseResult<StartFunction> parse(AK::Stream& stream);
 
     private:
         FunctionIndex m_index;
@@ -770,7 +770,7 @@ public:
 
     auto& function() const { return m_function; }
 
-    static ParseResult<StartSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<StartSection> parse(AK::Stream& stream);
 
 private:
     StartFunction m_function;
@@ -789,43 +789,43 @@ public:
 
     struct SegmentType0 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType0> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType0> parse(AK::Stream& stream);
 
         Vector<FunctionIndex> function_indices;
         Active mode;
     };
     struct SegmentType1 {
-        static ParseResult<SegmentType1> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType1> parse(AK::Stream& stream);
 
         Vector<FunctionIndex> function_indices;
     };
     struct SegmentType2 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType2> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType2> parse(AK::Stream& stream);
     };
     struct SegmentType3 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType3> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType3> parse(AK::Stream& stream);
     };
     struct SegmentType4 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType4> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType4> parse(AK::Stream& stream);
     };
     struct SegmentType5 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType5> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType5> parse(AK::Stream& stream);
     };
     struct SegmentType6 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType6> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType6> parse(AK::Stream& stream);
     };
     struct SegmentType7 {
         // FIXME: Implement me!
-        static ParseResult<SegmentType7> parse(Core::Stream::Stream& stream);
+        static ParseResult<SegmentType7> parse(AK::Stream& stream);
     };
 
     struct Element {
-        static ParseResult<Element> parse(Core::Stream::Stream&);
+        static ParseResult<Element> parse(AK::Stream&);
 
         ValueType type;
         Vector<Expression> init;
@@ -841,7 +841,7 @@ public:
 
     auto& segments() const { return m_segments; }
 
-    static ParseResult<ElementSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<ElementSection> parse(AK::Stream& stream);
 
 private:
     Vector<Element> m_segments;
@@ -859,7 +859,7 @@ public:
     auto n() const { return m_n; }
     auto& type() const { return m_type; }
 
-    static ParseResult<Locals> parse(Core::Stream::Stream& stream);
+    static ParseResult<Locals> parse(AK::Stream& stream);
 
 private:
     u32 m_n { 0 };
@@ -880,7 +880,7 @@ public:
         auto& locals() const { return m_locals; }
         auto& body() const { return m_body; }
 
-        static ParseResult<Func> parse(Core::Stream::Stream& stream);
+        static ParseResult<Func> parse(AK::Stream& stream);
 
     private:
         Vector<Locals> m_locals;
@@ -897,7 +897,7 @@ public:
         auto size() const { return m_size; }
         auto& func() const { return m_func; }
 
-        static ParseResult<Code> parse(Core::Stream::Stream& stream);
+        static ParseResult<Code> parse(AK::Stream& stream);
 
     private:
         u32 m_size { 0 };
@@ -913,7 +913,7 @@ public:
 
     auto& functions() const { return m_functions; }
 
-    static ParseResult<CodeSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<CodeSection> parse(AK::Stream& stream);
 
 private:
     Vector<Code> m_functions;
@@ -940,7 +940,7 @@ public:
 
         auto& value() const { return m_value; }
 
-        static ParseResult<Data> parse(Core::Stream::Stream& stream);
+        static ParseResult<Data> parse(AK::Stream& stream);
 
     private:
         Value m_value;
@@ -955,7 +955,7 @@ public:
 
     auto& data() const { return m_data; }
 
-    static ParseResult<DataSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<DataSection> parse(AK::Stream& stream);
 
 private:
     Vector<Data> m_data;
@@ -972,7 +972,7 @@ public:
 
     auto& count() const { return m_count; }
 
-    static ParseResult<DataCountSection> parse(Core::Stream::Stream& stream);
+    static ParseResult<DataCountSection> parse(AK::Stream& stream);
 
 private:
     Optional<u32> m_count;
@@ -1067,7 +1067,7 @@ public:
     StringView validation_error() const { return *m_validation_error; }
     void set_validation_error(DeprecatedString error) { m_validation_error = move(error); }
 
-    static ParseResult<Module> parse(Core::Stream::Stream& stream);
+    static ParseResult<Module> parse(AK::Stream& stream);
 
 private:
     bool populate_sections();

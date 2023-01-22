@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        NonnullOwnPtr<Core::Stream::Stream> input_stream = TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
+        NonnullOwnPtr<AK::Stream> input_stream = TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
 
         if (gzip)
             input_stream = make<Compress::GzipDecompressor>(move(input_stream));
@@ -206,7 +206,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        NonnullOwnPtr<Core::Stream::Stream> output_stream = TRY(Core::Stream::File::standard_output());
+        NonnullOwnPtr<AK::Stream> output_stream = TRY(Core::Stream::File::standard_output());
 
         if (!archive_file.is_empty())
             output_stream = TRY(Core::Stream::File::open(archive_file, Core::Stream::OpenMode::Write));

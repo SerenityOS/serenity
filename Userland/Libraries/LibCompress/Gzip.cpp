@@ -38,9 +38,9 @@ bool BlockHeader::supported_by_implementation() const
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, Core::Stream::Stream& stream)
+ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, AK::Stream& stream)
 {
-    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<Core::Stream::Stream>(stream)));
+    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<AK::Stream>(stream)));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) Member(header, move(deflate_stream))));
 }
 
@@ -50,7 +50,7 @@ GzipDecompressor::Member::Member(BlockHeader header, NonnullOwnPtr<DeflateDecomp
 {
 }
 
-GzipDecompressor::GzipDecompressor(NonnullOwnPtr<Core::Stream::Stream> stream)
+GzipDecompressor::GzipDecompressor(NonnullOwnPtr<AK::Stream> stream)
     : m_input_stream(move(stream))
 {
 }
@@ -186,7 +186,7 @@ ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
     return Error::from_errno(EBADF);
 }
 
-GzipCompressor::GzipCompressor(MaybeOwned<Core::Stream::Stream> stream)
+GzipCompressor::GzipCompressor(MaybeOwned<AK::Stream> stream)
     : m_output_stream(move(stream))
 {
 }
@@ -236,7 +236,7 @@ void GzipCompressor::close()
 ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
 {
     auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
-    GzipCompressor gzip_stream { MaybeOwned<Core::Stream::Stream>(*output_stream) };
+    GzipCompressor gzip_stream { MaybeOwned<AK::Stream>(*output_stream) };
 
     TRY(gzip_stream.write_entire_buffer(bytes));
 

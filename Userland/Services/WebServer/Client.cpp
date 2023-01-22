@@ -175,7 +175,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     return true;
 }
 
-ErrorOr<void> Client::send_response(Core::Stream::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
+ErrorOr<void> Client::send_response(AK::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);

@@ -44,7 +44,7 @@ private:
 
         virtual void set_should_buffer_all_input(bool) override { }
         virtual bool stop() override { return false; }
-        virtual void stream_into(Core::Stream::Stream&) override { }
+        virtual void stream_into(AK::Stream&) override { }
 
         void did_finish();
 

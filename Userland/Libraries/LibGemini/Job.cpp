@@ -15,7 +15,7 @@
 
 namespace Gemini {
 
-Job::Job(GeminiRequest const& request, Core::Stream::Stream& output_stream)
+Job::Job(GeminiRequest const& request, AK::Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(request)
 {

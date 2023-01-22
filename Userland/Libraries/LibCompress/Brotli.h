@@ -13,8 +13,8 @@
 
 namespace Compress {
 
+using AK::Stream;
 using Core::Stream::LittleEndianInputBitStream;
-using Core::Stream::Stream;
 
 class BrotliDecompressionStream : public Stream {
 public:

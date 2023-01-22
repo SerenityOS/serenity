@@ -14,7 +14,7 @@
 
 static ErrorOr<void> tail_from_pos(Core::Stream::File& file, off_t startline)
 {
-    TRY(file.seek(startline + 1, Core::Stream::SeekMode::SetPosition));
+    TRY(file.seek(startline + 1, SeekMode::SetPosition));
     auto buffer = TRY(file.read_until_eof());
     out("{}", StringView { buffer });
     return {};
@@ -24,13 +24,13 @@ static ErrorOr<off_t> find_seek_pos(Core::Stream::File& file, int wanted_lines)
 {
     // Rather than reading the whole file, start at the end and work backwards,
     // stopping when we've found the number of lines we want.
-    off_t pos = TRY(file.seek(0, Core::Stream::SeekMode::FromEndPosition));
+    off_t pos = TRY(file.seek(0, SeekMode::FromEndPosition));
 
     off_t end = pos;
     int lines = 0;
 
     for (; pos >= 0; pos--) {
-        TRY(file.seek(pos, Core::Stream::SeekMode::SetPosition));
+        TRY(file.seek(pos, SeekMode::SetPosition));
 
         if (file.is_eof())
             break;
@@ -102,7 +102,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(tail_from_pos(*f, pos));
 
     if (follow) {
-        TRY(f->seek(0, Core::Stream::SeekMode::FromEndPosition));
+        TRY(f->seek(0, SeekMode::FromEndPosition));
 
         Core::EventLoop event_loop;
         auto watcher = TRY(Core::FileWatcher::create());
@@ -118,7 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto bytes = buffer_or_error.value().bytes();
                 out("{}", StringView { bytes });
 
-                auto potential_error = f->seek(0, Core::Stream::SeekMode::FromEndPosition);
+                auto potential_error = f->seek(0, SeekMode::FromEndPosition);
                 if (potential_error.is_error()) {
                     auto error = potential_error.error();
                     warnln(error.string_literal());

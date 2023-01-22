@@ -57,7 +57,7 @@ int main(int argc, char** argv, char** env)
     if (dump_profile && profile_dump_path.is_empty())
         profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
-    OwnPtr<Core::Stream::Stream> profile_stream;
+    OwnPtr<AK::Stream> profile_stream;
     OwnPtr<NonnullOwnPtrVector<DeprecatedString>> profile_strings;
     OwnPtr<Vector<int>> profile_string_id_map;
 
