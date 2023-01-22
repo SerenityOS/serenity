@@ -257,6 +257,29 @@ public:
     }
 };
 
+// ICC v4, 10.15 multiLocalizedUnicodeType
+class MultiLocalizedUnicodeTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D6C7563 }; // 'mluc'
+
+    static ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    struct Record {
+        u16 iso_639_1_language_code;
+        u16 iso_3166_1_country_code;
+        String text;
+    };
+
+    MultiLocalizedUnicodeTagData(u32 offset, u32 size, Vector<Record> records)
+        : TagData(offset, size, Type)
+        , m_records(move(records))
+    {
+    }
+
+private:
+    Vector<Record> m_records;
+};
+
 // ICC v4, 10.24 textType
 class TextTagData : public TagData {
 public:
