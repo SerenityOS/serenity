@@ -107,9 +107,11 @@ public:
 
     // Creates a substring with a deep copy of the specified data window.
     ErrorOr<String> substring_from_byte_offset(size_t start, size_t byte_count) const;
+    ErrorOr<String> substring_from_byte_offset(size_t start) const;
 
     // Creates a substring that strongly references the origin superstring instead of making a deep copy of the data.
     ErrorOr<String> substring_from_byte_offset_with_shared_superstring(size_t start, size_t byte_count) const;
+    ErrorOr<String> substring_from_byte_offset_with_shared_superstring(size_t start) const;
 
     // Returns an iterable view over the Unicode code points.
     [[nodiscard]] Utf8View code_points() const;
