@@ -45,7 +45,7 @@ public:
 
     void push(NonnullRefPtr<Card> card);
     NonnullRefPtr<Card> pop();
-    void move_to_stack(CardStack&);
+    void take_all(CardStack&);
     void rebound_cards();
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
