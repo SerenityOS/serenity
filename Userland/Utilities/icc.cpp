@@ -94,7 +94,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     profile->for_each_tag([](auto tag_signature, auto tag_data) {
         outln("{}: {}, offset {}, size {}", tag_signature, tag_data->type(), tag_data->offset(), tag_data->size());
 
-        if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
+        if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
+            auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
+            for (auto& record : multi_localized_unicode.records()) {
+                outln("    {:c}{:c}/{:c}{:c}: \"{}\"",
+                    record.iso_639_1_language_code >> 8, record.iso_639_1_language_code & 0xff,
+                    record.iso_3166_1_country_code >> 8, record.iso_3166_1_country_code & 0xff,
+                    record.text);
+            }
+        } else if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
             outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
         }
     });
