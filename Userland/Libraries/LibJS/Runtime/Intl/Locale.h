@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
@@ -81,12 +82,12 @@ struct WeekInfo {
     Vector<u8> weekend;    // [[Weekend]]
 };
 
-Array* calendars_of_locale(VM&, Locale const&);
-Array* collations_of_locale(VM&, Locale const& locale);
-Array* hour_cycles_of_locale(VM&, Locale const& locale);
-Array* numbering_systems_of_locale(VM&, Locale const&);
-Array* time_zones_of_locale(VM&, StringView region);
-StringView character_direction_of_locale(Locale const&);
-WeekInfo week_info_of_locale(Locale const&);
+ThrowCompletionOr<NonnullGCPtr<Array>> calendars_of_locale(VM&, Locale const&);
+ThrowCompletionOr<NonnullGCPtr<Array>> collations_of_locale(VM&, Locale const& locale);
+ThrowCompletionOr<NonnullGCPtr<Array>> hour_cycles_of_locale(VM&, Locale const& locale);
+ThrowCompletionOr<NonnullGCPtr<Array>> numbering_systems_of_locale(VM&, Locale const&);
+ThrowCompletionOr<NonnullGCPtr<Array>> time_zones_of_locale(VM&, StringView region);
+ThrowCompletionOr<StringView> character_direction_of_locale(VM&, Locale const&);
+ThrowCompletionOr<WeekInfo> week_info_of_locale(VM&, Locale const&);
 
 }

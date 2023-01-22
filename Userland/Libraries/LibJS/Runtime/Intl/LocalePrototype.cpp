@@ -221,11 +221,11 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 // 1.4.17 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
 // 1.4.18 get Intl.Locale.prototype.hourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.hourCycles
 // 1.4.19 get Intl.Locale.prototype.numberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.numberingSystems
-#define __JS_ENUMERATE(keyword)                           \
-    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)   \
-    {                                                     \
-        auto* locale_object = TRY(typed_this_object(vm)); \
-        return keyword##_of_locale(vm, *locale_object);   \
+#define __JS_ENUMERATE(keyword)                                            \
+    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)                    \
+    {                                                                      \
+        auto* locale_object = TRY(typed_this_object(vm));                  \
+        return MUST_OR_THROW_OOM(keyword##_of_locale(vm, *locale_object)); \
     }
 JS_ENUMERATE_LOCALE_INFO_PROPERTIES
 #undef __JS_ENUMERATE
@@ -245,7 +245,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
         return js_undefined();
 
     // 5. Return ! TimeZonesOfLocale(loc).
-    return time_zones_of_locale(vm, locale->language_id.region.value());
+    return MUST_OR_THROW_OOM(time_zones_of_locale(vm, locale->language_id.region.value()));
 }
 
 // 1.4.21 get Intl.Locale.prototype.textInfo, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.textInfo
@@ -261,7 +261,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
     auto info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let dir be ! CharacterDirectionOfLocale(loc).
-    auto direction = character_direction_of_locale(*locale_object);
+    auto direction = MUST_OR_THROW_OOM(character_direction_of_locale(vm, *locale_object));
 
     // 5. Perform ! CreateDataPropertyOrThrow(info, "direction", dir).
     MUST(info->create_data_property_or_throw(vm.names.direction, PrimitiveString::create(vm, direction)));
@@ -283,7 +283,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
     auto info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let wi be ! WeekInfoOfLocale(loc).
-    auto week_info = week_info_of_locale(*locale_object);
+    auto week_info = MUST_OR_THROW_OOM(week_info_of_locale(vm, *locale_object));
 
     // 5. Let we be ! CreateArrayFromList( wi.[[Weekend]] ).
     auto weekend = Array::create_from<u8>(realm, week_info.weekend, [](auto day) { return Value(day); });
