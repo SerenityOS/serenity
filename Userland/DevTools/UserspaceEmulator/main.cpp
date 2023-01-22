@@ -11,6 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibCore/Process.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <serenity.h>
@@ -98,20 +99,15 @@ int main(int argc, char** argv, char** env)
     StringBuilder builder;
     builder.append("(UE) "sv);
     builder.append(LexicalPath::basename(arguments[0]));
-    if (set_process_name(builder.string_view().characters_without_null_termination(), builder.string_view().length()) < 0) {
-        perror("set_process_name");
-        return 1;
-    }
-    int rc = pthread_setname_np(pthread_self(), builder.to_deprecated_string().characters());
-    if (rc != 0) {
-        reportln("pthread_setname_np: {}"sv, strerror(rc));
+    if (auto result = Core::Process::set_name(builder.string_view(), Core::Process::SetThreadName::Yes); result.is_error()) {
+        reportln("Core::Process::set_name: {}"sv, result.error());
         return 1;
     }
 
     if (pause_on_startup)
         emulator.pause();
 
-    rc = emulator.exec();
+    int rc = emulator.exec();
 
     if (dump_profile) {
         emulator.profile_stream().write_entire_buffer("], \"strings\": ["sv.bytes()).release_value_but_fixme_should_propagate_errors();
