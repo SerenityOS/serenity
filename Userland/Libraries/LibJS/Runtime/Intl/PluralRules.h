@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/NumberFormat.h>
@@ -31,7 +30,7 @@ private:
     ::Locale::PluralForm m_type { ::Locale::PluralForm::Cardinal }; // [[Type]]
 };
 
-::Locale::PluralOperands get_operands(DeprecatedString const& string);
+::Locale::PluralOperands get_operands(StringView string);
 ::Locale::PluralCategory plural_rule_select(StringView locale, ::Locale::PluralForm type, Value number, ::Locale::PluralOperands operands);
 ::Locale::PluralCategory resolve_plural(PluralRules const&, Value number);
 ::Locale::PluralCategory resolve_plural(NumberFormatBase const& number_format, ::Locale::PluralForm type, Value number);
