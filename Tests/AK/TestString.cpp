@@ -357,3 +357,81 @@ TEST_CASE(find_byte_offset)
         EXPECT_EQ(index5, 8u);
     }
 }
+
+TEST_CASE(repeated)
+{
+    {
+        auto string1 = MUST(String::repeated('a', 0));
+        EXPECT(string1.is_short_string());
+        EXPECT(string1.is_empty());
+
+        auto string2 = MUST(String::repeated(0x03C9U, 0));
+        EXPECT(string2.is_short_string());
+        EXPECT(string2.is_empty());
+
+        auto string3 = MUST(String::repeated(0x10300, 0));
+        EXPECT(string3.is_short_string());
+        EXPECT(string3.is_empty());
+    }
+    {
+        auto string1 = MUST(String::repeated('a', 1));
+        EXPECT(string1.is_short_string());
+        EXPECT_EQ(string1.bytes_as_string_view().length(), 1u);
+        EXPECT_EQ(string1, "a"sv);
+
+        auto string2 = MUST(String::repeated(0x03C9U, 1));
+        EXPECT(string2.is_short_string());
+        EXPECT_EQ(string2.bytes_as_string_view().length(), 2u);
+        EXPECT_EQ(string2, "ω"sv);
+
+        auto string3 = MUST(String::repeated(0x10300, 1));
+#ifdef AK_ARCH_64_BIT
+        EXPECT(string3.is_short_string());
+#else
+        EXPECT(!string3.is_short_string());
+#endif
+        EXPECT_EQ(string3.bytes_as_string_view().length(), 4u);
+        EXPECT_EQ(string3, "𐌀"sv);
+    }
+    {
+        auto string1 = MUST(String::repeated('a', 3));
+        EXPECT(string1.is_short_string());
+        EXPECT_EQ(string1.bytes_as_string_view().length(), 3u);
+        EXPECT_EQ(string1, "aaa"sv);
+
+        auto string2 = MUST(String::repeated(0x03C9U, 3));
+#ifdef AK_ARCH_64_BIT
+        EXPECT(string2.is_short_string());
+#else
+        EXPECT(!string2.is_short_string());
+#endif
+        EXPECT_EQ(string2.bytes_as_string_view().length(), 6u);
+        EXPECT_EQ(string2, "ωωω"sv);
+
+        auto string3 = MUST(String::repeated(0x10300, 3));
+        EXPECT(!string3.is_short_string());
+        EXPECT_EQ(string3.bytes_as_string_view().length(), 12u);
+        EXPECT_EQ(string3, "𐌀𐌀𐌀"sv);
+    }
+    {
+        auto string1 = MUST(String::repeated('a', 10));
+        EXPECT(!string1.is_short_string());
+        EXPECT_EQ(string1.bytes_as_string_view().length(), 10u);
+        EXPECT_EQ(string1, "aaaaaaaaaa"sv);
+
+        auto string2 = MUST(String::repeated(0x03C9U, 10));
+        EXPECT(!string2.is_short_string());
+        EXPECT_EQ(string2.bytes_as_string_view().length(), 20u);
+        EXPECT_EQ(string2, "ωωωωωωωωωω"sv);
+
+        auto string3 = MUST(String::repeated(0x10300, 10));
+        EXPECT(!string3.is_short_string());
+        EXPECT_EQ(string3.bytes_as_string_view().length(), 40u);
+        EXPECT_EQ(string3, "𐌀𐌀𐌀𐌀𐌀𐌀𐌀𐌀𐌀𐌀"sv);
+    }
+
+    EXPECT_CRASH("Creating a string from an invalid code point", [] {
+        (void)String::repeated(0xffffffff, 1);
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Checked.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
@@ -219,6 +220,44 @@ ErrorOr<String> String::from_utf8(StringView view)
     }
     auto data = TRY(Detail::StringData::from_utf8(view.characters_without_null_termination(), view.length()));
     return String { move(data) };
+}
+
+ErrorOr<String> String::repeated(u32 code_point, size_t count)
+{
+    VERIFY(is_unicode(code_point));
+
+    Array<u8, 4> code_point_as_utf8;
+    size_t i = 0;
+
+    size_t code_point_byte_length = UnicodeUtils::code_point_to_utf8(code_point, [&](auto byte) {
+        code_point_as_utf8[i++] = static_cast<u8>(byte);
+    });
+
+    auto copy_to_buffer = [&](u8* buffer) {
+        if (code_point_byte_length == 1) {
+            memset(buffer, code_point_as_utf8[0], count);
+            return;
+        }
+
+        for (i = 0; i < count; ++i)
+            memcpy(buffer + (i * code_point_byte_length), code_point_as_utf8.data(), code_point_byte_length);
+    };
+
+    auto total_byte_count = code_point_byte_length * count;
+
+    if (total_byte_count <= MAX_SHORT_STRING_BYTE_COUNT) {
+        ShortString short_string;
+        copy_to_buffer(short_string.storage);
+        short_string.byte_count_and_short_string_flag = (total_byte_count << 1) | SHORT_STRING_FLAG;
+
+        return String { short_string };
+    }
+
+    u8* buffer = nullptr;
+    auto new_string_data = TRY(Detail::StringData::create_uninitialized(total_byte_count, buffer));
+    copy_to_buffer(buffer);
+
+    return String { move(new_string_data) };
 }
 
 StringView String::bytes_as_string_view() const
