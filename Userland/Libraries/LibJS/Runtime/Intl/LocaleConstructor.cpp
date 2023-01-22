@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
@@ -110,7 +109,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: tag matches the unicode_locale_id production.
-    auto locale_id = ::Locale::parse_unicode_locale_id(tag).release_value_but_fixme_should_propagate_errors();
+    auto locale_id = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(tag));
     VERIFY(locale_id.has_value());
 
     Vector<String> attributes;
@@ -189,7 +188,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
             // iv. Else,
             else {
                 // 1. Append the Record { [[Key]]: key, [[Value]]: value } to keywords.
-                keywords.append({ String::from_utf8(key).release_value_but_fixme_should_propagate_errors(), *value });
+                keywords.append({ TRY_OR_THROW_OOM(vm, String::from_utf8(key)), *value });
             }
         }
 
