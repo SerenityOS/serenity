@@ -109,7 +109,7 @@ StringData::~StringData()
 
 constexpr size_t allocation_size_for_string_data(size_t length)
 {
-    return sizeof(StringData) + (sizeof(char) * length) + sizeof(char);
+    return sizeof(StringData) + (sizeof(char) * length);
 }
 
 ErrorOr<NonnullRefPtr<StringData>> StringData::create_uninitialized(size_t byte_count, u8*& buffer)
