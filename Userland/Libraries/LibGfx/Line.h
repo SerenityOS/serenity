@@ -129,8 +129,35 @@ public:
     Point<T> const& a() const { return m_a; }
     Point<T> const& b() const { return m_b; }
 
+    Line<T> rotated(float radians)
+    {
+        Gfx::AffineTransform rotation_transform;
+        rotation_transform.rotate_radians(radians);
+
+        Line<T> line = *this;
+        line.set_a(line.a().transformed(rotation_transform));
+        line.set_b(line.b().transformed(rotation_transform));
+        return line;
+    }
+
     void set_a(Point<T> const& a) { m_a = a; }
     void set_b(Point<T> const& b) { m_b = b; }
+
+    Line<T> scaled(T sx, T sy) const
+    {
+        Line<T> line = *this;
+        line.set_a(line.a().scaled(sx, sy));
+        line.set_b(line.b().scaled(sx, sy));
+        return line;
+    }
+
+    Line<T> translated(Point<T> const& delta) const
+    {
+        Line<T> line = *this;
+        line.set_a(line.a().translated(delta));
+        line.set_b(line.b().translated(delta));
+        return line;
+    }
 
     template<typename U>
     requires(!IsSame<T, U>)
