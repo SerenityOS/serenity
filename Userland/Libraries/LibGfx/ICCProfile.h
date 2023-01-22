@@ -276,6 +276,8 @@ public:
     {
     }
 
+    Vector<Record> const& records() const { return m_records; }
+
 private:
     Vector<Record> m_records;
 };
