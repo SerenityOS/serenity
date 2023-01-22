@@ -424,7 +424,7 @@ void Game::draw_cards()
         update(stock.bounding_box());
     } else {
         auto play_bounding_box = play.bounding_box();
-        play.move_to_stack(waste);
+        play.take_all(waste);
 
         size_t cards_to_draw = 0;
         switch (m_mode) {

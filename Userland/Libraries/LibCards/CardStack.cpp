@@ -323,7 +323,7 @@ NonnullRefPtr<Card> CardStack::pop()
     return card;
 }
 
-void CardStack::move_to_stack(CardStack& stack)
+void CardStack::take_all(CardStack& stack)
 {
     while (!m_stack.is_empty()) {
         auto card = m_stack.take_first();
