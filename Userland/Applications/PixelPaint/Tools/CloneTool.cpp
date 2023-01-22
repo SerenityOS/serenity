@@ -176,15 +176,14 @@ Optional<Gfx::IntRect> CloneTool::sample_marker_rect()
     if (!m_sample_location.has_value())
         return {};
 
-    auto sample_pos = m_editor->content_to_frame_position(m_sample_location.value());
-    // We don't want the marker to be a single pixel and hide the color.
     auto offset = AK::max(2, size() / 2);
-    return Gfx::IntRect {
-        (int)sample_pos.x() - offset,
-        (int)sample_pos.y() - offset,
+    Gfx::IntRect content_rect = {
+        m_sample_location.value().x() - offset,
+        m_sample_location.value().y() - offset,
         offset * 2,
         offset * 2
     };
+    return m_editor->content_to_frame_rect(content_rect).to_type<int>();
 }
 
 void CloneTool::update_sample_marker(Optional<Gfx::IntRect> old_rect)
