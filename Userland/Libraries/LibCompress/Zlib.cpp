@@ -69,13 +69,13 @@ u32 ZlibDecompressor::checksum()
     return m_checksum;
 }
 
-ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream, ZlibCompressionLevel compression_level)
+ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(MaybeOwned<Core::Stream::Stream> stream, ZlibCompressionLevel compression_level)
 {
     // Zlib only defines Deflate as a compression method.
     auto compression_method = ZlibCompressionMethod::Deflate;
 
     // FIXME: Find a way to compress with Deflate's "Best" compression level.
-    auto compressor_stream = TRY(DeflateCompressor::construct(Core::Stream::Handle(*stream), static_cast<DeflateCompressor::CompressionLevel>(compression_level)));
+    auto compressor_stream = TRY(DeflateCompressor::construct(MaybeOwned(*stream), static_cast<DeflateCompressor::CompressionLevel>(compression_level)));
 
     auto zlib_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) ZlibCompressor(move(stream), move(compressor_stream))));
     TRY(zlib_compressor->write_header(compression_method, compression_level));
@@ -83,7 +83,7 @@ ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(Core::Stream::H
     return zlib_compressor;
 }
 
-ZlibCompressor::ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream)
+ZlibCompressor::ZlibCompressor(MaybeOwned<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream)
     : m_output_stream(move(stream))
     , m_compressor(move(compressor_stream))
 {
@@ -164,7 +164,7 @@ ErrorOr<void> ZlibCompressor::finish()
 ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompressionLevel compression_level)
 {
     auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
-    auto zlib_stream = TRY(ZlibCompressor::construct(Core::Stream::Handle<Core::Stream::Stream>(*output_stream), compression_level));
+    auto zlib_stream = TRY(ZlibCompressor::construct(MaybeOwned<Core::Stream::Stream>(*output_stream), compression_level));
 
     TRY(zlib_stream->write_entire_buffer(bytes));
 

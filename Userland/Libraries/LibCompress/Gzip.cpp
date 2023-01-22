@@ -40,7 +40,7 @@ bool BlockHeader::supported_by_implementation() const
 
 ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, Core::Stream::Stream& stream)
 {
-    auto deflate_stream = TRY(DeflateDecompressor::construct(Core::Stream::Handle<Core::Stream::Stream>(stream)));
+    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<Core::Stream::Stream>(stream)));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) Member(header, move(deflate_stream))));
 }
 
@@ -186,7 +186,7 @@ ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
     return Error::from_errno(EBADF);
 }
 
-GzipCompressor::GzipCompressor(Core::Stream::Handle<Core::Stream::Stream> stream)
+GzipCompressor::GzipCompressor(MaybeOwned<Core::Stream::Stream> stream)
     : m_output_stream(move(stream))
 {
 }
@@ -207,7 +207,7 @@ ErrorOr<size_t> GzipCompressor::write(ReadonlyBytes bytes)
     header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
     header.operating_system = 3; // unix
     TRY(m_output_stream->write_entire_buffer({ &header, sizeof(header) }));
-    auto compressed_stream = TRY(DeflateCompressor::construct(Core::Stream::Handle(*m_output_stream)));
+    auto compressed_stream = TRY(DeflateCompressor::construct(MaybeOwned(*m_output_stream)));
     TRY(compressed_stream->write_entire_buffer(bytes));
     TRY(compressed_stream->final_flush());
     Crypto::Checksum::CRC32 crc32;
@@ -236,7 +236,7 @@ void GzipCompressor::close()
 ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
 {
     auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
-    GzipCompressor gzip_stream { Core::Stream::Handle<Core::Stream::Stream>(*output_stream) };
+    GzipCompressor gzip_stream { MaybeOwned<Core::Stream::Stream>(*output_stream) };
 
     TRY(gzip_stream.write_entire_buffer(bytes));
 

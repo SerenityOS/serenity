@@ -74,7 +74,7 @@ public:
     friend CompressedBlock;
     friend UncompressedBlock;
 
-    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(Core::Stream::Handle<Core::Stream::Stream> stream);
+    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(MaybeOwned<Core::Stream::Stream> stream);
     ~DeflateDecompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -86,7 +86,7 @@ public:
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream, CircularBuffer buffer);
+    DeflateDecompressor(MaybeOwned<Core::Stream::Stream> stream, CircularBuffer buffer);
 
     ErrorOr<u32> decode_length(u32);
     ErrorOr<u32> decode_distance(u32);
@@ -100,7 +100,7 @@ private:
         UncompressedBlock m_uncompressed_block;
     };
 
-    Core::Stream::Handle<Core::Stream::LittleEndianInputBitStream> m_input_stream;
+    MaybeOwned<Core::Stream::LittleEndianInputBitStream> m_input_stream;
     CircularBuffer m_output_buffer;
 };
 
@@ -139,7 +139,7 @@ public:
         BEST // WARNING: this one can take an unreasonable amount of time!
     };
 
-    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(Core::Stream::Handle<Core::Stream::Stream>, CompressionLevel = CompressionLevel::GOOD);
+    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(MaybeOwned<Core::Stream::Stream>, CompressionLevel = CompressionLevel::GOOD);
     ~DeflateCompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
