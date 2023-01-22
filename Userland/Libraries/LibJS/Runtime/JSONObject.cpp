@@ -350,10 +350,15 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_array(VM& vm, Str
 // 25.5.2.2 QuoteJSONString ( value ), https://tc39.es/ecma262/#sec-quotejsonstring
 DeprecatedString JSONObject::quote_json_string(DeprecatedString string)
 {
+    // 1. Let product be the String value consisting solely of the code unit 0x0022 (QUOTATION MARK).
     StringBuilder builder;
     builder.append('"');
+
+    // 2. For each code point C of StringToCodePoints(value), do
     auto utf_view = Utf8View(string);
     for (auto code_point : utf_view) {
+        // a. If C is listed in the “Code Point” column of Table 70, then
+        // i. Set product to the string-concatenation of product and the escape sequence for C as specified in the “Escape Sequence” column of the corresponding row.
         switch (code_point) {
         case '\b':
             builder.append("\\b"sv);
@@ -377,14 +382,23 @@ DeprecatedString JSONObject::quote_json_string(DeprecatedString string)
             builder.append("\\\\"sv);
             break;
         default:
+            // b. Else if C has a numeric value less than 0x0020 (SPACE), or if C has the same numeric value as a leading surrogate or trailing surrogate, then
             if (code_point < 0x20 || Utf16View::is_high_surrogate(code_point) || Utf16View::is_low_surrogate(code_point)) {
+                // i. Let unit be the code unit whose numeric value is that of C.
+                // ii. Set product to the string-concatenation of product and UnicodeEscape(unit).
                 builder.appendff("\\u{:04x}", code_point);
-            } else {
+            }
+            // c. Else,
+            else {
+                // i. Set product to the string-concatenation of product and UTF16EncodeCodePoint(C).
                 builder.append_code_point(code_point);
             }
         }
     }
+    // 3. Set product to the string-concatenation of product and the code unit 0x0022 (QUOTATION MARK).
     builder.append('"');
+
+    // 4. Return product.
     return builder.to_deprecated_string();
 }
 
