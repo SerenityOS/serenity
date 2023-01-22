@@ -532,6 +532,48 @@ DeviceAttributes::DeviceAttributes(u64 bits)
 {
 }
 
+static TagTypeSignature tag_type(ReadonlyBytes tag_bytes)
+{
+    VERIFY(tag_bytes.size() >= sizeof(u32));
+    return *bit_cast<BigEndian<TagTypeSignature> const*>(tag_bytes.data());
+}
+
+static ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
+{
+    if (tag_bytes.size() < 2 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: Not enough data for tag reserved field");
+
+    if (*bit_cast<BigEndian<u32> const*>(tag_bytes.data() + sizeof(u32)) != 0)
+        return Error::from_string_literal("ICC::Profile: tag reserved field not 0");
+
+    return {};
+}
+
+ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.24 textType
+    VERIFY(tag_type(bytes) == TextTagData::Type);
+    TRY(check_reserved(bytes));
+
+    // "The textType is a simple text structure that contains a 7-bit ASCII text string. The length of the string is obtained
+    //  by subtracting 8 from the element size portion of the tag itself. This string shall be terminated with a 00h byte."
+    u32 length = bytes.size() - 8;
+
+    u8 const* text_data = bytes.data() + 8;
+    for (u32 i = 0; i < length; ++i) {
+        if (text_data[i] >= 128)
+            return Error::from_string_literal("ICC::Profile: textType data not 7-byte ASCII");
+    }
+
+    if (length == 0)
+        return Error::from_string_literal("ICC::Profile: textType too short for \\0 byte");
+
+    if (text_data[length - 1] != '\0')
+        return Error::from_string_literal("ICC::Profile: textType data not \\0-terminated");
+
+    return adopt_ref(*new TextTagData(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1)))));
+}
+
 ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(ICCHeader))
@@ -574,12 +616,14 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
     //  what kind of data is contained within a tag."
     if (tag_bytes.size() < sizeof(u32))
         return Error::from_string_literal("ICC::Profile: Not enough data for tag type");
-    auto tag_type = *bit_cast<BigEndian<TagTypeSignature> const*>(tag_bytes.data());
 
-    switch ((u32)(TagTypeSignature)tag_type) {
+    auto type = tag_type(tag_bytes);
+    switch (type) {
+    case TextTagData::Type:
+        return TextTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     default:
         // FIXME: optionally ignore tags of unknown type
-        return adopt_ref(*new UnknownTagData(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element, tag_type));
+        return adopt_ref(*new UnknownTagData(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element, type));
     }
 }
 
