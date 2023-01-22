@@ -383,7 +383,7 @@ DeprecatedString JSONObject::quote_json_string(DeprecatedString string)
             break;
         default:
             // b. Else if C has a numeric value less than 0x0020 (SPACE), or if C has the same numeric value as a leading surrogate or trailing surrogate, then
-            if (code_point < 0x20 || Utf16View::is_high_surrogate(code_point) || Utf16View::is_low_surrogate(code_point)) {
+            if (code_point < 0x20 || is_unicode_surrogate(code_point)) {
                 // i. Let unit be the code unit whose numeric value is that of C.
                 // ii. Set product to the string-concatenation of product and UnicodeEscape(unit).
                 builder.appendff("\\u{:04x}", code_point);

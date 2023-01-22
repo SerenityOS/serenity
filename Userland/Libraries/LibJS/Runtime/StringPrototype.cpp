@@ -121,7 +121,7 @@ CodePoint code_point_at(Utf16View const& string, size_t position)
     auto code_point = static_cast<u32>(first);
 
     // 5. If first is not a leading surrogate or trailing surrogate, then
-    if (!Utf16View::is_high_surrogate(first) && !Utf16View::is_low_surrogate(first)) {
+    if (!is_unicode_surrogate(first)) {
         // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
         return { false, code_point, 1 };
     }
