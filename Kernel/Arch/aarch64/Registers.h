@@ -700,11 +700,11 @@ static_assert(sizeof(SCTLR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
 // MIDR_EL1, Main ID Register
 struct alignas(u64) MIDR_EL1 {
-    int Revision : 4;
-    int PartNum : 12;
-    int Architecture : 4;
-    int Variant : 4;
-    int Implementer : 8;
+    u8 Revision : 4;
+    u16 PartNum : 12;
+    u8 Architecture : 4;
+    u8 Variant : 4;
+    u8 Implementer : 8;
     int : 32;
 
     static inline MIDR_EL1 read()
