@@ -83,17 +83,19 @@ RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule moveme
     return closest_stack;
 }
 
-void CardGame::drop_cards_on_stack(Cards::CardStack& stack, CardStack::MovementRule movement_rule)
+ErrorOr<void> CardGame::drop_cards_on_stack(Cards::CardStack& stack, CardStack::MovementRule movement_rule)
 {
     VERIFY(stack.is_allowed_to_push(m_moving_cards.at(0), m_moving_cards.size(), movement_rule));
     for (auto& to_intersect : moving_cards()) {
         mark_intersecting_stacks_dirty(to_intersect);
-        stack.push(to_intersect).release_value_but_fixme_should_propagate_errors();
+        TRY(stack.push(to_intersect));
         (void)moving_cards_source_stack()->pop();
     }
 
     update(moving_cards_source_stack()->bounding_box());
     update(stack.bounding_box());
+
+    return {};
 }
 
 void CardGame::clear_moving_cards()
