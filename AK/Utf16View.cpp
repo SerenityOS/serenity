@@ -276,6 +276,20 @@ u32 Utf16CodePointIterator::operator*() const
 {
     VERIFY(m_remaining_code_units > 0);
 
+    // rfc2781, 2.2 Decoding UTF-16
+    // 1) If W1 < 0xD800 or W1 > 0xDFFF, the character value U is the value
+    //    of W1. Terminate.
+    // 2) Determine if W1 is between 0xD800 and 0xDBFF. If not, the sequence
+    //    is in error and no valid character can be obtained using W1.
+    //    Terminate.
+    // 3) If there is no W2 (that is, the sequence ends with W1), or if W2
+    //    is not between 0xDC00 and 0xDFFF, the sequence is in error.
+    //    Terminate.
+    // 4) Construct a 20-bit unsigned integer U', taking the 10 low-order
+    //    bits of W1 as its 10 high-order bits and the 10 low-order bits of
+    //    W2 as its 10 low-order bits.
+    // 5) Add 0x10000 to U' to obtain the character value U. Terminate.
+
     if (Utf16View::is_high_surrogate(*m_ptr)) {
         if ((m_remaining_code_units > 1) && Utf16View::is_low_surrogate(*(m_ptr + 1)))
             return Utf16View::decode_surrogate_pair(*m_ptr, *(m_ptr + 1));
