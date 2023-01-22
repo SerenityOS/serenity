@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Checked.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/Value.h>
@@ -87,7 +88,7 @@ public:
     bool is_positive() const;
     bool is_zero() const;
 
-    DeprecatedString to_deprecated_string() const;
+    ThrowCompletionOr<String> to_string(VM&) const;
     Value to_value(VM&) const;
 
 private:

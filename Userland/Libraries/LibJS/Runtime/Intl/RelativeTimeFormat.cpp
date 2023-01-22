@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -177,7 +177,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto value_partitions = MUST_OR_THROW_OOM(partition_number_pattern(vm, relative_time_format.number_format(), Value(value)));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).
-    auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
+    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, relative_time_format.plural_rules(), Value(value)));
 
     // 22. Let pattern be po.[[<pr>]].
     auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality; });

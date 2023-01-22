@@ -624,7 +624,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             auto formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format3, Value(value)));
 
             // iv. Append a new Record { [[Type]]: "fractionalSecond", [[Value]]: fv } as the last element of result.
-            result.append({ "fractionalSecond"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_value)) });
+            result.append({ "fractionalSecond"sv, move(formatted_value) });
         }
 
         // d. Else if p is equal to "dayPeriod", then
@@ -705,13 +705,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // viii. If f is "numeric", then
             case ::Locale::CalendarPatternStyle::Numeric:
                 // 1. Let fv be FormatNumeric(nf, v).
-                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, Value(value)));
+                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, Value(value))).to_deprecated_string();
                 break;
 
             // ix. Else if f is "2-digit", then
             case ::Locale::CalendarPatternStyle::TwoDigit:
                 // 1. Let fv be FormatNumeric(nf2, v).
-                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format2, Value(value)));
+                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format2, Value(value))).to_deprecated_string();
 
                 // 2. If the "length" property of fv is greater than 2, let fv be the substring of fv containing the last two characters.
                 // NOTE: The first length check here isn't enough, but lets us avoid UTF-16 transcoding when the formatted value is ASCII.
