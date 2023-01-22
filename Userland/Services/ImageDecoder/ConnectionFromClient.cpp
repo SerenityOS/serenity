@@ -41,8 +41,6 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
 {
     VERIFY(bitmaps.size() == 0);
     VERIFY(durations.size() == 0);
-    VERIFY(!is_animated);
-    VERIFY(loop_count == 0);
 
     auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type);
     if (!decoder) {
@@ -54,6 +52,8 @@ static void decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer,
         dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");
         return;
     }
+    is_animated = decoder->is_animated();
+    loop_count = decoder->loop_count();
     decode_image_to_bitmaps_and_durations_with_decoder(*decoder, bitmaps, durations);
 }
 
