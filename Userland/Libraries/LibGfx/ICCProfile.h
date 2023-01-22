@@ -12,6 +12,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCrypto/Hash/MD5.h>
 
@@ -31,11 +32,11 @@ enum class FourCCType {
 
 template<FourCCType type>
 struct [[gnu::packed]] DistinctFourCC {
-    explicit DistinctFourCC(u32 value)
+    constexpr explicit DistinctFourCC(u32 value)
         : value(value)
     {
     }
-    explicit operator u32() const { return value; }
+    constexpr operator u32() const { return value; }
 
     char c0() const { return value >> 24; }
     char c1() const { return (value >> 16) & 0xff; }
@@ -254,6 +255,26 @@ public:
         : TagData(offset, size, type)
     {
     }
+};
+
+// ICC v4, 10.24 textType
+class TextTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x74657874 }; // 'text'
+
+    static ErrorOr<NonnullRefPtr<TextTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    TextTagData(u32 offset, u32 size, String text)
+        : TagData(offset, size, Type)
+        , m_text(move(text))
+    {
+    }
+
+    // Guaranteed to be 7-bit ASCII.
+    String const& text() const { return m_text; }
+
+private:
+    String m_text;
 };
 
 namespace Detail {
