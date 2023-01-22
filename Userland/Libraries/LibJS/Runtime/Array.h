@@ -8,12 +8,14 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Concepts.h>
 #include <AK/Function.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
@@ -23,6 +25,7 @@ class Array : public Object {
 public:
     static ThrowCompletionOr<NonnullGCPtr<Array>> create(Realm&, u64 length, Object* prototype = nullptr);
     static NonnullGCPtr<Array> create_from(Realm&, Vector<Value> const&);
+
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
     static NonnullGCPtr<Array> create_from(Realm& realm, Span<T const> elements, Function<Value(T const&)> map_fn)
@@ -31,6 +34,19 @@ public:
         values.ensure_capacity(elements.size());
         for (auto const& element : elements)
             values.append(map_fn(element));
+
+        return Array::create_from(realm, values);
+    }
+
+    // Non-standard but equivalent to CreateArrayFromList.
+    template<typename T, FallibleFunction<T const&> Callback>
+    static ThrowCompletionOr<NonnullGCPtr<Array>> try_create_from(VM& vm, Realm& realm, Span<T const> elements, Callback map_fn)
+    {
+        auto values = MarkedVector<Value> { realm.heap() };
+        TRY_OR_THROW_OOM(vm, values.try_ensure_capacity(elements.size()));
+
+        for (auto const& element : elements)
+            TRY_OR_THROW_OOM(vm, values.try_append(TRY(map_fn(element))));
 
         return Array::create_from(realm, values);
     }
