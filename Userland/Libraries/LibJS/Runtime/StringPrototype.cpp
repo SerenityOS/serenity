@@ -110,23 +110,41 @@ static bool is_string_well_formed_unicode(Utf16View string)
 // 11.1.4 CodePointAt ( string, position ), https://tc39.es/ecma262/#sec-codepointat
 CodePoint code_point_at(Utf16View const& string, size_t position)
 {
+    // 1. Let size be the length of string.
+    // 2. Assert: position ≥ 0 and position < size.
     VERIFY(position < string.length_in_code_units());
 
+    // 3. Let first be the code unit at index position within string.
     auto first = string.code_unit_at(position);
+
+    // 4. Let cp be the code point whose numeric value is that of first.
     auto code_point = static_cast<u32>(first);
 
-    if (!Utf16View::is_high_surrogate(first) && !Utf16View::is_low_surrogate(first))
+    // 5. If first is not a leading surrogate or trailing surrogate, then
+    if (!Utf16View::is_high_surrogate(first) && !Utf16View::is_low_surrogate(first)) {
+        // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
         return { false, code_point, 1 };
+    }
 
-    if (Utf16View::is_low_surrogate(first) || (position + 1 == string.length_in_code_units()))
+    // 6. If first is a trailing surrogate or position + 1 = size, then
+    if (Utf16View::is_low_surrogate(first) || (position + 1 == string.length_in_code_units())) {
+        // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
         return { true, code_point, 1 };
+    }
 
+    // 7. Let second be the code unit at index position + 1 within string.
     auto second = string.code_unit_at(position + 1);
 
-    if (!Utf16View::is_low_surrogate(second))
+    // 8. If second is not a trailing surrogate, then
+    if (!Utf16View::is_low_surrogate(second)) {
+        // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
         return { true, code_point, 1 };
+    }
 
+    // 9. Set cp to UTF16SurrogatePairToCodePoint(first, second).
     code_point = Utf16View::decode_surrogate_pair(first, second);
+
+    // 10. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 2, [[IsUnpairedSurrogate]]: false }.
     return { false, code_point, 2 };
 }
 
