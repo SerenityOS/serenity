@@ -22,8 +22,36 @@ namespace Video::VP9 {
 // - 9.3.2: Probability selection based on context and often the node of the tree.
 // - 9.3.4: Counting each syntax element when it is read.
 
+class TreeSelection {
+public:
+    union TreeSelectionValue {
+        int const* m_tree;
+        int m_value;
+    };
+
+    constexpr TreeSelection(int const* values)
+        : m_is_single_value(false)
+        , m_value { .m_tree = values }
+    {
+    }
+
+    constexpr TreeSelection(int value)
+        : m_is_single_value(true)
+        , m_value { .m_value = value }
+    {
+    }
+
+    bool is_single_value() const { return m_is_single_value; }
+    int single_value() const { return m_value.m_value; }
+    int const* tree() const { return m_value.m_tree; }
+
+private:
+    bool m_is_single_value;
+    TreeSelectionValue m_value;
+};
+
 template<typename OutputType>
-inline ErrorOr<OutputType> parse_tree(BitStream& bit_stream, TreeParser::TreeSelection tree_selection, Function<u8(u8)> const& probability_getter)
+inline ErrorOr<OutputType> parse_tree(BitStream& bit_stream, TreeSelection tree_selection, Function<u8(u8)> const& probability_getter)
 {
     // 9.3.3: The tree decoding function.
     if (tree_selection.is_single_value())
@@ -47,7 +75,7 @@ inline void increment_counter(u8& counter)
 ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, PartitionContextView above_partition_context, PartitionContextView left_partition_context, u32 row, u32 column, bool frame_is_intra)
 {
     // Tree array
-    TreeParser::TreeSelection tree = { PartitionSplit };
+    TreeSelection tree = { PartitionSplit };
     if (has_rows && has_columns)
         tree = { partition_tree };
     else if (has_rows)
@@ -91,7 +119,7 @@ ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stre
     // FIXME: This should use a struct for the above and left contexts.
 
     // Tree
-    TreeParser::TreeSelection tree = { intra_mode_tree };
+    TreeSelection tree = { intra_mode_tree };
 
     // Probabilities
     PredictionMode above_mode, left_mode;
@@ -119,7 +147,7 @@ ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stre
 ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, PredictionMode y_mode)
 {
     // Tree
-    TreeParser::TreeSelection tree = { intra_mode_tree };
+    TreeSelection tree = { intra_mode_tree };
 
     // Probabilities
     u8 const* probabilities = probability_table.kf_uv_mode_prob()[to_underlying(y_mode)];
@@ -132,7 +160,7 @@ ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BitStream& bit_stream,
 ErrorOr<PredictionMode> TreeParser::parse_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, BlockSubsize mi_size)
 {
     // Tree
-    TreeParser::TreeSelection tree = { intra_mode_tree };
+    TreeSelection tree = { intra_mode_tree };
 
     // Probabilities
     auto context = size_group_lookup[mi_size];
@@ -146,7 +174,7 @@ ErrorOr<PredictionMode> TreeParser::parse_intra_mode(BitStream& bit_stream, Prob
 ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
 {
     // Tree
-    TreeParser::TreeSelection tree = { intra_mode_tree };
+    TreeSelection tree = { intra_mode_tree };
 
     // Probabilities
     u8 const* probabilities = probability_table.y_mode_probs()[0];
@@ -159,7 +187,7 @@ ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BitStream& bit_stream, 
 ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, PredictionMode y_mode)
 {
     // Tree
-    TreeParser::TreeSelection tree = { intra_mode_tree };
+    TreeSelection tree = { intra_mode_tree };
 
     // Probabilities
     u8 const* probabilities = probability_table.uv_mode_probs()[to_underlying(y_mode)];
@@ -187,7 +215,7 @@ ErrorOr<bool> TreeParser::parse_segment_id_predicted(BitStream& bit_stream, Arra
 ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 mode_context_for_ref_frame_0)
 {
     // Tree
-    TreeParser::TreeSelection tree = { inter_mode_tree };
+    TreeSelection tree = { inter_mode_tree };
 
     // Probabilities
     u8 const* probabilities = probability_table.inter_mode_probs()[mode_context_for_ref_frame_0];
@@ -202,7 +230,7 @@ ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& b
     // FIXME: Above and left context should be provided by a struct.
 
     // Tree
-    TreeParser::TreeSelection tree = { interp_filter_tree };
+    TreeSelection tree = { interp_filter_tree };
 
     // Probabilities
     // NOTE: SWITCHABLE_FILTERS is not used in the spec for this function. Therefore, the number
@@ -240,7 +268,7 @@ ErrorOr<TransformSize> TreeParser::parse_tx_size(BitStream& bit_stream, Probabil
     // FIXME: Above and left contexts should be in structs.
 
     // Tree
-    TreeParser::TreeSelection tree { tx_size_8_tree };
+    TreeSelection tree { tx_size_8_tree };
     if (max_tx_size == Transform_16x16)
         tree = { tx_size_16_tree };
     if (max_tx_size == Transform_32x32)
@@ -598,7 +626,7 @@ ErrorOr<u8> TreeParser::parse_motion_vector_class0_fr(BitStream& bit_stream, Pro
 
 ErrorOr<bool> TreeParser::parse_motion_vector_class0_hp(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
 {
-    TreeParser::TreeSelection tree { 1 };
+    TreeSelection tree { 1 };
     if (use_hp)
         tree = { binary_tree };
     auto value = TRY(parse_tree<bool>(bit_stream, tree, [&](u8) { return probability_table.mv_class0_hp_prob()[component]; }));
@@ -622,7 +650,7 @@ ErrorOr<u8> TreeParser::parse_motion_vector_fr(BitStream& bit_stream, Probabilit
 
 ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
 {
-    TreeParser::TreeSelection tree { 1 };
+    TreeSelection tree { 1 };
     if (use_hp)
         tree = { binary_tree };
     auto value = TRY(parse_tree<u8>(bit_stream, tree, [&](u8) { return probability_table.mv_hp_prob()[component]; }));
