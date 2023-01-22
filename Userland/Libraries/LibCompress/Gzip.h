@@ -80,7 +80,7 @@ private:
 
 class GzipCompressor final : public Core::Stream::Stream {
 public:
-    GzipCompressor(Core::Stream::Handle<Core::Stream::Stream>);
+    GzipCompressor(MaybeOwned<Core::Stream::Stream>);
 
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
@@ -91,7 +91,7 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes);
 
 private:
-    Core::Stream::Handle<Core::Stream::Stream> m_output_stream;
+    MaybeOwned<Core::Stream::Stream> m_output_stream;
 };
 
 }

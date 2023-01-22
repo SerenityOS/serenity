@@ -8,6 +8,7 @@
 #include <AK/Base64.h>
 #include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
+#include <AK/MaybeOwned.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>
 #include <AK/URL.h>
@@ -105,7 +106,7 @@ private:
 template<typename ConditionT>
 class ConditionalOutputStream final : public Core::Stream::Stream {
 public:
-    ConditionalOutputStream(ConditionT&& condition, Core::Stream::Handle<Core::Stream::Stream> stream)
+    ConditionalOutputStream(ConditionT&& condition, MaybeOwned<Core::Stream::Stream> stream)
         : m_stream(move(stream))
         , m_condition(condition)
     {
@@ -140,7 +141,7 @@ public:
     }
 
 private:
-    Core::Stream::Handle<Core::Stream::Stream> m_stream;
+    MaybeOwned<Core::Stream::Stream> m_stream;
     ConditionT m_condition;
 };
 

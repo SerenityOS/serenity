@@ -5,6 +5,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/MaybeOwned.h>
 #include <AK/String.h>
 #include <LibCore/BitStream.h>
 #include <LibCore/EventLoop.h>
@@ -726,8 +727,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(Core::Stream::LittleEndianOutputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
-    auto bit_read_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
+    auto bit_write_stream = MUST(Core::Stream::LittleEndianOutputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
+    auto bit_read_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {
@@ -782,8 +783,8 @@ TEST_CASE(big_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(Core::Stream::BigEndianOutputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
-    auto bit_read_stream = MUST(Core::Stream::BigEndianInputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
+    auto bit_write_stream = MUST(Core::Stream::BigEndianOutputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
+    auto bit_read_stream = MUST(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<Core::Stream::Stream>(*memory_stream)));
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {

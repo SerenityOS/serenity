@@ -136,7 +136,7 @@ TarFileStream TarInputStream::file_contents()
     return TarFileStream(*this);
 }
 
-TarOutputStream::TarOutputStream(Core::Stream::Handle<Core::Stream::Stream> stream)
+TarOutputStream::TarOutputStream(MaybeOwned<Core::Stream::Stream> stream)
     : m_stream(move(stream))
 {
 }

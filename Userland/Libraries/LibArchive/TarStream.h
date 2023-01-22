@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/MaybeOwned.h>
 #include <AK/Span.h>
 #include <LibArchive/Tar.h>
 #include <LibCore/Stream.h>
@@ -58,14 +59,14 @@ private:
 
 class TarOutputStream {
 public:
-    TarOutputStream(Core::Stream::Handle<Core::Stream::Stream>);
+    TarOutputStream(MaybeOwned<Core::Stream::Stream>);
     ErrorOr<void> add_file(StringView path, mode_t, ReadonlyBytes);
     ErrorOr<void> add_link(StringView path, mode_t, StringView);
     ErrorOr<void> add_directory(StringView path, mode_t);
     ErrorOr<void> finish();
 
 private:
-    Core::Stream::Handle<Core::Stream::Stream> m_stream;
+    MaybeOwned<Core::Stream::Stream> m_stream;
     bool m_finished { false };
 
     friend class TarFileStream;

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/MaybeOwned.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/Span.h>
@@ -62,7 +63,7 @@ private:
 
 class ZlibCompressor : public Core::Stream::Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(Core::Stream::Handle<Core::Stream::Stream>, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(MaybeOwned<Core::Stream::Stream>, ZlibCompressionLevel = ZlibCompressionLevel::Default);
     ~ZlibCompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -75,11 +76,11 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
 
 private:
-    ZlibCompressor(Core::Stream::Handle<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream);
+    ZlibCompressor(MaybeOwned<Core::Stream::Stream> stream, NonnullOwnPtr<Core::Stream::Stream> compressor_stream);
     ErrorOr<void> write_header(ZlibCompressionMethod, ZlibCompressionLevel);
 
     bool m_finished { false };
-    Core::Stream::Handle<Core::Stream::Stream> m_output_stream;
+    MaybeOwned<Core::Stream::Stream> m_output_stream;
     NonnullOwnPtr<Core::Stream::Stream> m_compressor;
     Crypto::Checksum::Adler32 m_adler32_checksum;
 };
