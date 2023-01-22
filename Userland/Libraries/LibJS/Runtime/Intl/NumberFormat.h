@@ -248,7 +248,7 @@ private:
     Optional<CurrencySign> m_currency_sign {};           // [[CurrencySign]]
     Optional<String> m_unit {};                          // [[Unit]]
     Optional<::Locale::Style> m_unit_display {};         // [[UnitDisplay]]
-    UseGrouping m_use_grouping { false };                // [[UseGrouping]]
+    UseGrouping m_use_grouping { UseGrouping::False };   // [[UseGrouping]]
     Notation m_notation { Notation::Invalid };           // [[Notation]]
     Optional<CompactDisplay> m_compact_display {};       // [[CompactDisplay]]
     SignDisplay m_sign_display { SignDisplay::Invalid }; // [[SignDisplay]]
