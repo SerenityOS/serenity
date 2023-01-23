@@ -318,7 +318,7 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radius_data;
 }
 
-Optional<Gfx::IntRect> PaintableBox::clip_rect() const
+Optional<CSSPixelRect> PaintableBox::clip_rect() const
 {
     if (!m_clip_rect.has_value()) {
         if (containing_block() && containing_block()->paint_box())
@@ -329,9 +329,9 @@ Optional<Gfx::IntRect> PaintableBox::clip_rect() const
 
         if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
             if (m_clip_rect.has_value()) {
-                m_clip_rect->intersect(absolute_padding_box_rect().to_type<float>().to_rounded<int>());
+                m_clip_rect->intersect(absolute_padding_box_rect());
             } else {
-                m_clip_rect = absolute_padding_box_rect().to_type<float>().to_rounded<int>();
+                m_clip_rect = absolute_padding_box_rect();
             }
         }
     }
@@ -352,7 +352,7 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     auto clip_overflow = [&] {
         if (!m_clipping_overflow) {
             context.painter().save();
-            context.painter().add_clip_rect(*clip_rect);
+            context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
             m_clipping_overflow = true;
         }
     };
@@ -364,7 +364,7 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(context, clip_rect->to_type<DevicePixels>(), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
