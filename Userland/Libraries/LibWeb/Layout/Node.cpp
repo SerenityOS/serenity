@@ -65,8 +65,10 @@ bool Node::can_contain_boxes_with_position_absolute() const
 static Box const* nearest_ancestor_capable_of_forming_a_containing_block(Node const& node)
 {
     for (auto const* ancestor = node.parent(); ancestor; ancestor = ancestor->parent()) {
-        if (ancestor->is_block_container())
+        if (ancestor->is_block_container()
+            || ancestor->display().is_flex_inside()) {
             return verify_cast<Box>(ancestor);
+        }
     }
     return nullptr;
 }
