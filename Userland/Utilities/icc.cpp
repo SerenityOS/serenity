@@ -102,6 +102,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     record.iso_3166_1_country_code >> 8, record.iso_3166_1_country_code & 0xff,
                     record.text);
             }
+        } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
+            // This tag can contain arbitrarily many fixed-point numbers, but in practice it's
+            // exclusively used for the 'chad' tag, where it always contains 9 values that
+            // represent a 3x3 matrix.  So print the values in groups of 3.
+            auto& fixed_array = static_cast<Gfx::ICC::S15Fixed16ArrayTagData&>(*tag_data);
+            out("    [");
+            int i = 0;
+            for (auto value : fixed_array.values()) {
+                if (i > 0) {
+                    out(",");
+                    if (i % 3 == 0) {
+                        outln();
+                        out("     ");
+                    }
+                }
+                out(" {}", value);
+                i++;
+            }
+            outln(" ]");
         } else if (tag_data->type() == Gfx::ICC::TextDescriptionTagData::Type) {
             auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData&>(*tag_data);
             outln("    ascii: \"{}\"", text_description.ascii_description());

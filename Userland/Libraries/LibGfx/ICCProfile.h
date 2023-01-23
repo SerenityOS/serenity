@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/FixedPoint.h>
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
@@ -280,6 +281,27 @@ public:
 
 private:
     Vector<Record> m_records;
+};
+
+// ICC v4, 10.22 s15Fixed16ArrayType
+class S15Fixed16ArrayTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x73663332 }; // 'sf32'
+
+    using S15Fixed16 = FixedPoint<16, i32>;
+
+    static ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    S15Fixed16ArrayTagData(u32 offset, u32 size, Vector<S15Fixed16, 9> values)
+        : TagData(offset, size, Type)
+        , m_values(move(values))
+    {
+    }
+
+    Vector<S15Fixed16, 9> const& values() const { return m_values; }
+
+private:
+    Vector<S15Fixed16, 9> m_values;
 };
 
 // ICC v2, 6.5.17 textDescriptionType
