@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibCore/Stream.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/ImageDecoder.h>
 
@@ -31,8 +32,7 @@ struct QOILoadingContext {
         Error,
     };
     State state { State::NotDecoded };
-    u8 const* data { nullptr };
-    size_t data_size { 0 };
+    OwnPtr<Core::Stream::Stream> stream {};
     QOIHeader header {};
     RefPtr<Bitmap> bitmap;
     Optional<Error> error;
@@ -55,12 +55,17 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
 
 private:
-    ErrorOr<void> decode_header_and_update_context(InputMemoryStream&);
-    ErrorOr<void> decode_image_and_update_context(InputMemoryStream&);
+    ErrorOr<void> decode_header_and_update_context(Core::Stream::Stream&);
+    ErrorOr<void> decode_image_and_update_context(Core::Stream::Stream&);
 
-    QOIImageDecoderPlugin(u8 const*, size_t);
+    QOIImageDecoderPlugin(NonnullOwnPtr<Core::Stream::Stream>);
 
     OwnPtr<QOILoadingContext> m_context;
 };
 
 }
+
+template<>
+struct AK::Traits<Gfx::QOIHeader> : public GenericTraits<Gfx::QOIHeader> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
