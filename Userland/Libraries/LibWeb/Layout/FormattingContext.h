@@ -102,7 +102,7 @@ protected:
 
     static CSSPixels tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&);
     static CSSPixels tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&);
-    CSSPixels compute_auto_height_for_block_formatting_context_root(BlockContainer const&) const;
+    CSSPixels compute_auto_height_for_block_formatting_context_root(Box const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 

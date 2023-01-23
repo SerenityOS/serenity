@@ -387,7 +387,7 @@ static bool margins_collapse_through(Box const& box, LayoutState& state)
 CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space)
 {
     if (creates_block_formatting_context(box)) {
-        return compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box));
+        return compute_auto_height_for_block_formatting_context_root(box);
     }
 
     auto const& box_state = m_state.get(box);

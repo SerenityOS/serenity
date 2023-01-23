@@ -275,7 +275,7 @@ static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSS
 }
 
 // https://www.w3.org/TR/CSS22/visudet.html#root-height
-CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_root(BlockContainer const& root) const
+CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_root(Box const& root) const
 {
     // 10.6.7 'Auto' heights for block formatting context roots
     Optional<CSSPixels> top;
@@ -716,7 +716,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         top = CSS::Length::make_px(static_position.y());
 
         // and finally apply rule number three below.
-        height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+        height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
         solve_for_bottom();
     }
 
@@ -761,7 +761,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
                 return;
 
             // then the height is based on the Auto heights for block formatting context roots,
-            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
 
             // and solve for top.
             solve_for_top();
@@ -783,7 +783,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
                 return;
 
             // then the height is based on the Auto heights for block formatting context roots,
-            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
 
             // and solve for bottom.
             solve_for_bottom();
