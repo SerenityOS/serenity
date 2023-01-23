@@ -74,6 +74,13 @@ public:
         return value;
     }
 
+    static constexpr This create_raw(Underlying value)
+    {
+        This t {};
+        t.raw() = value;
+        return t;
+    }
+
     constexpr Underlying raw() const
     {
         return m_value;
@@ -377,13 +384,6 @@ private:
             raw_value |= m_value & radix_mask;
 
         return FixedPoint<P, U>::create_raw(raw_value);
-    }
-
-    static This create_raw(Underlying value)
-    {
-        This t {};
-        t.raw() = value;
-        return t;
     }
 
     Underlying m_value;
