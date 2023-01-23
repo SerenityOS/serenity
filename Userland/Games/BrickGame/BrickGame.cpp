@@ -246,6 +246,7 @@ class Bricks final {
 public:
     enum class GameState {
         Active,
+        Paused,
         GameOver
     };
 
@@ -281,16 +282,38 @@ public:
         return m_well[pos] || m_block[pos];
     }
 
-    [[nodiscard]] RenderRequest rotate_left() { return set_current_block(Block(m_block).rotate_left()); }
+    [[nodiscard]] RenderRequest rotate_left()
+    {
+        if (paused())
+            return RenderRequest::SkipRender;
+        return set_current_block(Block(m_block).rotate_left());
+    }
 
-    [[nodiscard]] RenderRequest rotate_right() { return set_current_block(Block(m_block).rotate_right()); }
+    [[nodiscard]] RenderRequest rotate_right()
+    {
+        if (paused())
+            return RenderRequest::SkipRender;
+        return set_current_block(Block(m_block).rotate_right());
+    }
 
-    [[nodiscard]] RenderRequest move_left() { return set_current_block(Block(m_block).move_left()); }
+    [[nodiscard]] RenderRequest move_left()
+    {
+        if (paused())
+            return RenderRequest::SkipRender;
+        return set_current_block(Block(m_block).move_left());
+    }
 
-    [[nodiscard]] RenderRequest move_right() { return set_current_block(Block(m_block).move_right()); }
+    [[nodiscard]] RenderRequest move_right()
+    {
+        if (paused())
+            return RenderRequest::SkipRender;
+        return set_current_block(Block(m_block).move_right());
+    }
 
     [[nodiscard]] RenderRequest move_down()
     {
+        if (paused())
+            return RenderRequest::SkipRender;
         auto const block = Block(m_block).move_down();
         if (block.has_collision(m_well)) {
             m_block.place_into(m_well);
@@ -304,6 +327,8 @@ public:
 
     RenderRequest move_down_fast()
     {
+        if (paused())
+            return RenderRequest::SkipRender;
         for (auto block = m_block;; block.move_down()) {
             if (block.has_collision(m_well)) {
                 m_block.place_into(m_well);
@@ -318,6 +343,8 @@ public:
 
     [[nodiscard]] RenderRequest update()
     {
+        if (paused())
+            return RenderRequest::SkipRender;
         auto const current_level { m_level };
         for (size_t i = 0; i < s_level_map.size(); i++) {
             if (m_score < s_level_map[i].m_score)
@@ -342,6 +369,16 @@ public:
         m_next_block.random_shape();
         m_last_update = Time::now_realtime();
         m_state = GameState::Active;
+    }
+
+    void toggle_pause()
+    {
+        if (m_state == GameState::GameOver)
+            return;
+        else if (m_state == GameState::Active)
+            m_state = GameState::Paused;
+        else
+            m_state = GameState::Active;
     }
 
 private:
@@ -386,6 +423,8 @@ private:
 
     RenderRequest check_and_remove_full_rows()
     {
+        if (paused())
+            return RenderRequest::SkipRender;
         auto const number_of_removed_rows { m_well.check_and_remove_full_rows() };
         switch (number_of_removed_rows) {
         case 0:
@@ -407,6 +446,8 @@ private:
         }
         return RenderRequest::RequestUpdate;
     }
+
+    bool paused() { return m_state == GameState::Paused; }
 };
 
 BrickGame::BrickGame(StringView app_name)
@@ -428,6 +469,19 @@ void BrickGame::reset()
     m_brick_game->add_new_block();
     // A new game must always succeed to start, otherwise it is not fun to play
     VERIFY(m_brick_game->state() == Bricks::GameState::Active);
+    update();
+}
+
+void BrickGame::toggle_pause()
+{
+    if (m_state == GameState::Active) {
+        m_state = GameState::Paused;
+        stop_timer();
+    } else {
+        m_state = GameState::Active;
+        start_timer(15); // 66.6ms
+    }
+    m_brick_game->toggle_pause();
     update();
 }
 
@@ -512,7 +566,7 @@ void BrickGame::paint_text(GUI::Painter& painter, int row, DeprecatedString cons
 void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
 {
     painter.fill_rect(rect, m_back_color);
-    if (m_state == GameState::Active) {
+    if (m_state == GameState::Active || m_state == GameState::Paused) {
         // TODO: optimize repainting
         painter.draw_rect(rect.inflated(-4, -4), m_front_color);
 
@@ -545,6 +599,10 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
         paint_text(painter, 0, DeprecatedString::formatted("Score: {}", m_brick_game->score()));
         paint_text(painter, 1, DeprecatedString::formatted("Level: {}", m_brick_game->level()));
         paint_text(painter, 4, DeprecatedString::formatted("Hi-Score: {}", m_high_score));
+
+        if (m_state == GameState::Paused)
+            paint_text(painter, 8, DeprecatedString::formatted("*Paused*"));
+
         paint_text(painter, 12, "Next:");
 
         auto const hint_rect = Gfx::IntRect {

@@ -18,6 +18,7 @@ public:
     virtual ~BrickGame() override = default;
 
     void reset();
+    void toggle_pause();
 
 private:
     BrickGame(StringView app_name);
@@ -32,6 +33,7 @@ private:
 
     enum class GameState {
         Idle = 0,
+        Paused,
         Active
     };
 
