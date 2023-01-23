@@ -1146,8 +1146,13 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     return *cache.max_content_width;
 }
 
+// https://www.w3.org/TR/css-sizing-3/#min-content-block-size
 CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
+    // For block containers, tables, and inline boxes, this is equivalent to the max-content block size.
+    if (box.is_block_container() || box.is_table())
+        return calculate_max_content_height(box, available_width);
+
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
 
