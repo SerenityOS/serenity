@@ -224,6 +224,8 @@ private:
     u64 m_bits = 0;
 };
 
+using S15Fixed16 = FixedPoint<16, i32>;
+
 struct XYZ {
     double x { 0 };
     double y { 0 };
@@ -313,12 +315,99 @@ private:
     Vector<Record> m_records;
 };
 
+// ICC v4, 10.18 parametricCurveType
+class ParametricCurveTagData : public TagData {
+public:
+    // Table 68 — parametricCurveType function type encoding
+    enum class FunctionType {
+        // Y = X**g
+        Type0,
+
+        // Y = (a*X + b)**g       if X >= -b/a
+        //   = 0                  else
+        Type1,
+        CIE_122_1966 = Type1,
+
+        // Y = (a*X + b)**g + c   if X >= -b/a
+        //   = c                  else
+        Type2,
+        IEC_61966_1 = Type2,
+
+        // Y = (a*X + b)**g       if X >= d
+        //   =  c*X               else
+        Type3,
+        IEC_61966_2_1 = Type3,
+        sRGB = Type3,
+
+        // Y = (a*X + b)**g + e   if X >= d
+        //   =  c*X + f           else
+        Type4,
+    };
+
+    // "The domain and range of each function shall be [0,0 1,0]. Any function value outside the range shall be clipped
+    //  to the range of the function."
+    // "NOTE 1 The parameters selected for a parametric curve can result in complex or undefined values for the input range
+    //  used. This can occur, for example, if d < -b/a. In such cases the behaviour of the curve is undefined."
+
+    static constexpr TagTypeSignature Type { 0x70617261 }; // 'para'
+
+    static ErrorOr<NonnullRefPtr<ParametricCurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    ParametricCurveTagData(u32 offset, u32 size, FunctionType function_type, Array<S15Fixed16, 7> parameters)
+        : TagData(offset, size, Type)
+        , m_function_type(function_type)
+        , m_parameters(move(parameters))
+    {
+    }
+
+    FunctionType function_type() const { return m_function_type; }
+
+    static unsigned parameter_count(FunctionType);
+
+    S15Fixed16 g() const { return m_parameters[0]; }
+    S15Fixed16 a() const
+    {
+        VERIFY(function_type() >= FunctionType::Type1);
+        return m_parameters[1];
+    }
+    S15Fixed16 b() const
+    {
+        VERIFY(function_type() >= FunctionType::Type1);
+        return m_parameters[2];
+    }
+    S15Fixed16 c() const
+    {
+        VERIFY(function_type() >= FunctionType::Type2);
+        return m_parameters[3];
+    }
+    S15Fixed16 d() const
+    {
+        VERIFY(function_type() >= FunctionType::Type3);
+        return m_parameters[4];
+    }
+    S15Fixed16 e() const
+    {
+        VERIFY(function_type() >= FunctionType::Type4);
+        return m_parameters[5];
+    }
+    S15Fixed16 f() const
+    {
+        VERIFY(function_type() >= FunctionType::Type4);
+        return m_parameters[6];
+    }
+
+private:
+    FunctionType m_function_type;
+
+    // Contains, in this order, g a b c d e f.
+    // Not all FunctionTypes use all parameters.
+    Array<S15Fixed16, 7> m_parameters;
+};
+
 // ICC v4, 10.22 s15Fixed16ArrayType
 class S15Fixed16ArrayTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x73663332 }; // 'sf32'
-
-    using S15Fixed16 = FixedPoint<16, i32>;
 
     static ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 

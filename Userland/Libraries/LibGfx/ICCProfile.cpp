@@ -635,6 +635,58 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     return adopt_ref(*new MultiLocalizedUnicodeTagData(offset, size, move(records)));
 }
 
+unsigned ParametricCurveTagData::parameter_count(FunctionType function_type)
+{
+    switch (function_type) {
+    case FunctionType::Type0:
+        return 1;
+    case FunctionType::Type1:
+        return 3;
+    case FunctionType::Type2:
+        return 4;
+    case FunctionType::Type3:
+        return 5;
+    case FunctionType::Type4:
+        return 7;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.18 parametricCurveType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    // "The parametricCurveType describes a one-dimensional curve by specifying one of a predefined set of functions
+    //  using the parameters."
+
+    if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16))
+        return Error::from_string_literal("ICC::Profile: parametricCurveType has not enough data");
+
+    u16 raw_function_type = *bit_cast<BigEndian<u16> const*>(bytes.data() + 8);
+    u16 reserved = *bit_cast<BigEndian<u16> const*>(bytes.data() + 10);
+    if (reserved != 0)
+        return Error::from_string_literal("ICC::Profile: parametricCurveType reserved u16 after function type not 0");
+
+    if (raw_function_type > 4)
+        return Error::from_string_literal("ICC::Profile: parametricCurveType unknown function type");
+
+    FunctionType function_type = (FunctionType)raw_function_type;
+    unsigned count = parameter_count(function_type);
+
+    if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16) + count * sizeof(s15Fixed16Number))
+        return Error::from_string_literal("ICC::Profile: parametricCurveType has not enough data for parameters");
+
+    BigEndian<s15Fixed16Number> const* raw_parameters = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 12);
+    Array<S15Fixed16, 7> parameters;
+    parameters.fill(0);
+    for (unsigned i = 0; i < count; ++i)
+        parameters[i] = S15Fixed16::create_raw(raw_parameters[i]);
+
+    return adopt_ref(*new ParametricCurveTagData(offset, size, function_type, move(parameters)));
+}
+
 ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.22 s15Fixed16ArrayType
@@ -897,6 +949,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
         return CurveTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+    case ParametricCurveTagData::Type:
+        return ParametricCurveTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
         return S15Fixed16ArrayTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case TextDescriptionTagData::Type:
