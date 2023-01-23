@@ -625,14 +625,10 @@
 
 namespace PDF {
 
-struct CharDescriptor {
-    DeprecatedString name;
-    u32 code_point;
-};
-
 class Encoding : public RefCounted<Encoding> {
 public:
-    static PDFErrorOr<NonnullRefPtr<Encoding>> create(HashMap<u16, CharDescriptor> descriptors);
+    using CharCodeType = u8;
+    static NonnullRefPtr<Encoding> create();
     static PDFErrorOr<NonnullRefPtr<Encoding>> from_object(Document*, NonnullRefPtr<Object> const&);
 
     static NonnullRefPtr<Encoding> standard_encoding();
@@ -642,17 +638,14 @@ public:
     static NonnullRefPtr<Encoding> symbol_encoding();
     static NonnullRefPtr<Encoding> zapf_encoding();
 
-    HashMap<u16, CharDescriptor> const& descriptors() const { return m_descriptors; }
-    HashMap<DeprecatedString, u16> const& name_mapping() const { return m_name_mapping; }
+    HashMap<DeprecatedString, CharCodeType> const& name_mapping() const { return m_name_mapping; }
 
     u16 get_char_code(DeprecatedString const&) const;
-    CharDescriptor const& get_char_code_descriptor(u16 char_code) const;
-
-    bool should_map_to_bullet(u16 char_code) const;
+    void set(CharCodeType char_code, DeprecatedFlyString const& glyph_name);
 
 protected:
-    HashMap<u16, CharDescriptor> m_descriptors;
-    HashMap<DeprecatedString, u16> m_name_mapping;
+    HashMap<CharCodeType, DeprecatedFlyString> m_descriptors;
+    HashMap<DeprecatedString, CharCodeType> m_name_mapping;
 
     bool m_windows { false };
 };

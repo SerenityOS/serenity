@@ -11,15 +11,9 @@
 
 namespace PDF {
 
-PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::create(HashMap<u16, CharDescriptor> descriptors)
+NonnullRefPtr<Encoding> Encoding::create()
 {
-    auto encoding = adopt_ref(*new Encoding());
-    encoding->m_descriptors = descriptors;
-
-    for (auto& descriptor : descriptors)
-        encoding->m_name_mapping.set(descriptor.value.name, descriptor.value.code_point);
-
-    return encoding;
+    return adopt_ref(*new Encoding());
 }
 
 PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, NonnullRefPtr<Object> const& obj)
@@ -49,8 +43,8 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
 
     auto encoding = adopt_ref(*new Encoding());
 
-    encoding->m_descriptors = base_encoding->descriptors();
-    encoding->m_name_mapping = base_encoding->name_mapping();
+    encoding->m_descriptors = base_encoding->m_descriptors;
+    encoding->m_name_mapping = base_encoding->m_name_mapping;
 
     auto differences_array = TRY(dict->get_array(document, CommonNames::Differences));
 
@@ -66,8 +60,7 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
             VERIFY(!first);
             auto& object = item.get<NonnullRefPtr<Object>>();
             auto name = object->cast<NameObject>()->name();
-
-            encoding->m_descriptors.set(current_code_point, { name, base_encoding->m_name_mapping.ensure(name) });
+            encoding->set(current_code_point, name);
             current_code_point++;
         }
     }
@@ -75,13 +68,18 @@ PDFErrorOr<NonnullRefPtr<Encoding>> Encoding::from_object(Document* document, No
     return encoding;
 }
 
+void Encoding::set(CharCodeType char_code, DeprecatedFlyString const& glyph_name)
+{
+    m_descriptors.set(char_code, glyph_name);
+    m_name_mapping.set(glyph_name, char_code);
+}
+
 NonnullRefPtr<Encoding> Encoding::standard_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(name, standard_code, mac_code, win_code, pdf_code) \
-    encoding->m_descriptors.set(standard_code, { #name, 0 });        \
-    encoding->m_name_mapping.set(#name, standard_code);
+    encoding->set(standard_code, #name);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -94,8 +92,7 @@ NonnullRefPtr<Encoding> Encoding::mac_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(name, standard_code, mac_code, win_code, pdf_code) \
-    encoding->m_descriptors.set(mac_code, { #name, 0 });             \
-    encoding->m_name_mapping.set(#name, mac_code);
+    encoding->set(mac_code, #name);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -108,13 +105,20 @@ NonnullRefPtr<Encoding> Encoding::windows_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(name, standard_code, mac_code, win_code, pdf_code) \
-    encoding->m_descriptors.set(win_code, { #name, 0 });             \
-    encoding->m_name_mapping.set(#name, win_code);
+    encoding->set(win_code, #name);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
-        encoding->m_windows = true;
-    }
 
+        // PDF Annex D table D.2, note 3:
+        // In WinAnsiEncoding, all unused codes greater than 40 (octal) map to the bullet character. However, only
+        // code 225 (octal) shall be specifically assigned to the bullet character; other codes are subject to future re-assignment.
+        //
+        // Since CharCodeType is u8 *and* we need to include 255, we iterate in reverse order to have more readable code.
+        for (CharCodeType char_code = 255; char_code > 040; char_code--) {
+            if (!encoding->m_descriptors.contains(char_code))
+                encoding->set(char_code, "bullet");
+        }
+    }
     return encoding;
 }
 
@@ -123,8 +127,7 @@ NonnullRefPtr<Encoding> Encoding::pdf_doc_encoding()
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
 #define ENUMERATE(name, standard_code, mac_code, win_code, pdf_code) \
-    encoding->m_descriptors.set(pdf_code, { #name, 0 });             \
-    encoding->m_name_mapping.set(#name, pdf_code);
+    encoding->set(pdf_code, #name);
         ENUMERATE_LATIN_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -136,9 +139,8 @@ NonnullRefPtr<Encoding> Encoding::symbol_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(name, code)                        \
-    encoding->m_descriptors.set(code, { #name, 0 }); \
-    encoding->m_name_mapping.set(#name, code);
+#define ENUMERATE(name, code) \
+    encoding->set(code, #name);
         ENUMERATE_SYMBOL_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
@@ -150,19 +152,12 @@ NonnullRefPtr<Encoding> Encoding::zapf_encoding()
 {
     static NonnullRefPtr<Encoding> encoding = adopt_ref(*new Encoding());
     if (encoding->m_descriptors.is_empty()) {
-#define ENUMERATE(name, code)                        \
-    encoding->m_descriptors.set(code, { #name, 0 }); \
-    encoding->m_name_mapping.set(#name, code);
+#define ENUMERATE(name, code) \
+    encoding->set(code, #name);
         ENUMERATE_ZAPF_DINGBATS_CHARACTER_SET(ENUMERATE)
 #undef ENUMERATE
     }
-
     return encoding;
-}
-
-CharDescriptor const& Encoding::get_char_code_descriptor(u16 char_code) const
-{
-    return const_cast<Encoding*>(this)->m_descriptors.ensure(char_code);
 }
 
 u16 Encoding::get_char_code(DeprecatedString const& name) const
@@ -171,14 +166,6 @@ u16 Encoding::get_char_code(DeprecatedString const& name) const
     if (code_iterator != m_name_mapping.end())
         return code_iterator->value;
     return 0;
-}
-
-bool Encoding::should_map_to_bullet(u16 char_code) const
-{
-    // PDF Annex D table D.2, note 3:
-    // In WinAnsiEncoding, all unused codes greater than 40 (octal) map to the bullet character. However, only
-    // code 225 (octal) shall be specifically assigned to the bullet character; other codes are subject to future re-assignment.
-    return m_windows && char_code > 040 && !m_descriptors.contains(char_code);
 }
 
 }

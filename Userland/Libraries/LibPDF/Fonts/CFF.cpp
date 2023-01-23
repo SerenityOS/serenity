@@ -121,19 +121,19 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         }
         cff->set_encoding(move(encoding));
     } else {
-        HashMap<u16, CharDescriptor> descriptors;
+        auto encoding = Encoding::create();
         for (size_t i = 0; i < glyphs.size(); i++) {
             if (i == 0) {
                 TRY(cff->add_glyph(0, move(glyphs[0])));
-                descriptors.set(0, CharDescriptor { ".notdef", 0 });
+                encoding->set(0, ".notdef");
                 continue;
             }
             auto code = encoding_codes[i - 1];
             auto char_name = charset[i - 1];
             TRY(cff->add_glyph(code, move(glyphs[i])));
-            descriptors.set(code, CharDescriptor { char_name, code });
+            encoding->set(code, char_name);
         }
-        cff->set_encoding(TRY(Encoding::create(descriptors)));
+        cff->set_encoding(move(encoding));
     }
 
     return cff;

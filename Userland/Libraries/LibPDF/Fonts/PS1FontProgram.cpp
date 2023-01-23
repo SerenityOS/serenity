@@ -36,19 +36,18 @@ PDFErrorOr<NonnullRefPtr<Type1FontProgram>> PS1FontProgram::create(ReadonlyBytes
         if (TRY(parse_word(reader)) == "StandardEncoding") {
             font_program->set_encoding(Encoding::standard_encoding());
         } else {
-            HashMap<u16, CharDescriptor> descriptors;
-
+            auto encoding = Encoding::create();
             while (reader.remaining()) {
                 auto word = TRY(parse_word(reader));
                 if (word == "readonly") {
                     break;
                 } else if (word == "dup") {
-                    u32 char_code = TRY(parse_int(reader));
+                    u8 char_code = TRY(parse_int(reader));
                     auto name = TRY(parse_word(reader));
-                    descriptors.set(char_code, { name.starts_with('/') ? name.substring_view(1) : name.view(), char_code });
+                    encoding->set(char_code, name.starts_with('/') ? name.substring_view(1) : name.view());
                 }
             }
-            font_program->set_encoding(TRY(Encoding::create(descriptors)));
+            font_program->set_encoding(move(encoding));
         }
     }
 
