@@ -55,6 +55,8 @@ public:
     GradientLine(int gradient_length, Span<ColorStop const> color_stops, Optional<float> repeat_length, UsePremultipliedAlpha use_premultiplied_alpha = UsePremultipliedAlpha::Yes)
         : m_repeating { repeat_length.has_value() }
         , m_start_offset { round_to<int>((m_repeating ? color_stops.first().position : 0.0f) * gradient_length) }
+        , m_color_stops { color_stops }
+        , m_use_premultiplied_alpha { use_premultiplied_alpha }
     {
         // Avoid generating excessive amounts of colors when the not enough shades to fill that length.
         auto necessary_length = min<int>((color_stops.size() - 1) * 255, gradient_length);
@@ -62,14 +64,6 @@ public:
         // Note: color_count will be < gradient_length for repeating gradients.
         auto color_count = round_to<int>(repeat_length.value_or(1.0f) * necessary_length);
         m_gradient_line_colors.resize(color_count);
-
-        auto color_blend = [&](Color a, Color b, float amount) {
-            // Note: color.mixed_with() performs premultiplied alpha mixing when necessary as defined in:
-            // https://drafts.csswg.org/css-images/#coloring-gradient-line
-            if (use_premultiplied_alpha == UsePremultipliedAlpha::Yes)
-                return a.mixed_with(b, amount);
-            return a.interpolate(b, amount);
-        };
 
         for (int loc = 0; loc < color_count; loc++) {
             auto relative_loc = float(loc + m_start_offset) / necessary_length;
@@ -85,9 +79,22 @@ public:
         }
     }
 
+    Color color_blend(Color a, Color b, float amount) const
+    {
+        // Note: color.mixed_with() performs premultiplied alpha mixing when necessary as defined in:
+        // https://drafts.csswg.org/css-images/#coloring-gradient-line
+        if (m_use_premultiplied_alpha == UsePremultipliedAlpha::Yes)
+            return a.mixed_with(b, amount);
+        return a.interpolate(b, amount);
+    };
+
     Color get_color(i64 index) const
     {
-        return m_gradient_line_colors[clamp(index, 0, m_gradient_line_colors.size() - 1)];
+        if (index < 0)
+            return m_color_stops.first().color;
+        if (index >= static_cast<i64>(m_gradient_line_colors.size()))
+            return m_color_stops.last().color;
+        return m_gradient_line_colors[index];
     }
 
     Color sample_color(float loc) const
@@ -106,7 +113,7 @@ public:
         auto color = get_color(repeat_wrap_if_required(int_loc));
         // Blend between the two neighbouring colors (this fixes some nasty aliasing issues at small angles)
         if (blend >= 0.004f)
-            color = color.mixed_with(get_color(repeat_wrap_if_required(int_loc + 1)), blend);
+            color = color_blend(color, get_color(repeat_wrap_if_required(int_loc + 1)), blend);
         return color;
     }
 
@@ -123,11 +130,13 @@ public:
     }
 
 private:
-    bool m_repeating;
-    int m_start_offset;
+    bool m_repeating { false };
+    int m_start_offset { 0 };
     float m_sample_scale { 1 };
-    Vector<Color, 1024> m_gradient_line_colors;
+    Span<ColorStop const> m_color_stops {};
+    UsePremultipliedAlpha m_use_premultiplied_alpha { UsePremultipliedAlpha::Yes };
 
+    Vector<Color, 1024> m_gradient_line_colors;
     bool m_requires_blending = false;
 };
 
@@ -385,7 +394,7 @@ void CanvasRadialGradientPaintStyle::paint(IntRect physical_bounding_box, PaintF
     }
 
     // This is just an approximate upperbound (the gradient line class will shorten this if necessary).
-    int gradient_length = center_dist + end_radius + start_radius;
+    int gradient_length = AK::ceil(center_dist + end_radius + start_radius);
     GradientLine gradient_line(gradient_length, color_stops(), repeat_length(), UsePremultipliedAlpha::No);
 
     auto radius2 = end_radius * end_radius;
