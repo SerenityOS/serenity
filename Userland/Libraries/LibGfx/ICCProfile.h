@@ -282,6 +282,39 @@ private:
     Vector<Record> m_records;
 };
 
+// ICC v2, 6.5.17 textDescriptionType
+class TextDescriptionTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x64657363 }; // 'desc'
+
+    static ErrorOr<NonnullRefPtr<TextDescriptionTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    TextDescriptionTagData(u32 offset, u32 size, String ascii_description, u32 unicode_language_code, Optional<String> unicode_description, Optional<String> macintosh_description)
+        : TagData(offset, size, Type)
+        , m_ascii_description(move(ascii_description))
+        , m_unicode_language_code(unicode_language_code)
+        , m_unicode_description(move(unicode_description))
+        , m_macintosh_description(move(macintosh_description))
+    {
+    }
+
+    // Guaranteed to be 7-bit ASCII.
+    String const& ascii_description() const { return m_ascii_description; }
+
+    u32 unicode_language_code() const { return m_unicode_language_code; }
+    Optional<String> const& unicode_description() const { return m_unicode_description; }
+
+    Optional<String> const& macintosh_description() const { return m_macintosh_description; }
+
+private:
+    String m_ascii_description;
+
+    u32 m_unicode_language_code { 0 };
+    Optional<String> m_unicode_description;
+
+    Optional<String> m_macintosh_description;
+};
+
 // ICC v4, 10.24 textType
 class TextTagData : public TagData {
 public:
