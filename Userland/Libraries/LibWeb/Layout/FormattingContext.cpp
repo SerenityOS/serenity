@@ -151,7 +151,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
         return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
 
     if (child_display.is_grid_inside()) {
-        return make<GridFormattingContext>(state, verify_cast<BlockContainer>(child_box), this);
+        return make<GridFormattingContext>(state, child_box, this);
     }
 
     VERIFY(is_block_formatting_context());

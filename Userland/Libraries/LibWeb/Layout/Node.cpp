@@ -66,7 +66,8 @@ static Box const* nearest_ancestor_capable_of_forming_a_containing_block(Node co
 {
     for (auto const* ancestor = node.parent(); ancestor; ancestor = ancestor->parent()) {
         if (ancestor->is_block_container()
-            || ancestor->display().is_flex_inside()) {
+            || ancestor->display().is_flex_inside()
+            || ancestor->display().is_grid_inside()) {
             return verify_cast<Box>(ancestor);
         }
     }

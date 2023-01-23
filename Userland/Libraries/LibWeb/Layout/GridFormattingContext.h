@@ -7,8 +7,6 @@
 #pragma once
 
 #include <LibWeb/CSS/Length.h>
-#include <LibWeb/Layout/BlockFormattingContext.h>
-#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
 
 namespace Web::Layout {
@@ -31,9 +29,9 @@ private:
     Vector<Vector<bool>> m_occupation_grid;
 };
 
-class GridFormattingContext final : public BlockFormattingContext {
+class GridFormattingContext final : public FormattingContext {
 public:
-    explicit GridFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
+    explicit GridFormattingContext(LayoutState&, Box const& grid_container, FormattingContext* parent);
     ~GridFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const& available_space) override;

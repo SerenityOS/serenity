@@ -21,6 +21,7 @@ public:
         Block,
         Inline,
         Flex,
+        Grid,
         Table,
         SVG,
     };

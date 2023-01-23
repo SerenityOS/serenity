@@ -10,8 +10,8 @@
 
 namespace Web::Layout {
 
-GridFormattingContext::GridFormattingContext(LayoutState& state, BlockContainer const& block_container, FormattingContext* parent)
-    : BlockFormattingContext(state, block_container, parent)
+GridFormattingContext::GridFormattingContext(LayoutState& state, Box const& grid_container, FormattingContext* parent)
+    : FormattingContext(Type::Grid, state, grid_container, parent)
 {
 }
 
