@@ -34,50 +34,42 @@ static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
     return header;
 }
 
-static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream, Color pixel)
+static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream, u8 first_byte, Color pixel)
 {
-    u8 bytes[4];
+    VERIFY(first_byte == QOI_OP_RGB);
+    u8 bytes[3];
     stream >> Bytes { &bytes, array_size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGB chunk");
-    VERIFY(bytes[0] == QOI_OP_RGB);
 
     // The alpha value remains unchanged from the previous pixel.
-    return Color { bytes[1], bytes[2], bytes[3], pixel.alpha() };
+    return Color { bytes[0], bytes[1], bytes[2], pixel.alpha() };
 }
 
-static ErrorOr<Color> decode_qoi_op_rgba(InputMemoryStream& stream)
+static ErrorOr<Color> decode_qoi_op_rgba(InputMemoryStream& stream, u8 first_byte)
 {
-    u8 bytes[5];
+    VERIFY(first_byte == QOI_OP_RGBA);
+    u8 bytes[4];
     stream >> Bytes { &bytes, array_size(bytes) };
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGBA chunk");
-    VERIFY(bytes[0] == QOI_OP_RGBA);
-    return Color { bytes[1], bytes[2], bytes[3], bytes[4] };
+    return Color { bytes[0], bytes[1], bytes[2], bytes[3] };
 }
 
-static ErrorOr<u8> decode_qoi_op_index(InputMemoryStream& stream)
+static ErrorOr<u8> decode_qoi_op_index(InputMemoryStream&, u8 first_byte)
 {
-    u8 byte;
-    stream >> byte;
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_INDEX chunk");
-    VERIFY((byte & QOI_MASK_2) == QOI_OP_INDEX);
-    u8 index = byte & ~QOI_MASK_2;
+    VERIFY((first_byte & QOI_MASK_2) == QOI_OP_INDEX);
+    u8 index = first_byte & ~QOI_MASK_2;
     VERIFY(index <= 63);
     return index;
 }
 
-static ErrorOr<Color> decode_qoi_op_diff(InputMemoryStream& stream, Color pixel)
+static ErrorOr<Color> decode_qoi_op_diff(InputMemoryStream&, u8 first_byte, Color pixel)
 {
-    u8 byte;
-    stream >> byte;
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_DIFF chunk");
-    VERIFY((byte & QOI_MASK_2) == QOI_OP_DIFF);
-    u8 dr = (byte & 0b00110000) >> 4;
-    u8 dg = (byte & 0b00001100) >> 2;
-    u8 db = (byte & 0b00000011);
+    VERIFY((first_byte & QOI_MASK_2) == QOI_OP_DIFF);
+    u8 dr = (first_byte & 0b00110000) >> 4;
+    u8 dg = (first_byte & 0b00001100) >> 2;
+    u8 db = (first_byte & 0b00000011);
     VERIFY(dr <= 3 && dg <= 3 && db <= 3);
 
     // Values are stored as unsigned integers with a bias of 2.
@@ -89,16 +81,16 @@ static ErrorOr<Color> decode_qoi_op_diff(InputMemoryStream& stream, Color pixel)
     };
 }
 
-static ErrorOr<Color> decode_qoi_op_luma(InputMemoryStream& stream, Color pixel)
+static ErrorOr<Color> decode_qoi_op_luma(InputMemoryStream& stream, u8 first_byte, Color pixel)
 {
-    u8 bytes[2];
-    stream >> Bytes { &bytes, array_size(bytes) };
+    VERIFY((first_byte & QOI_MASK_2) == QOI_OP_LUMA);
+    u8 byte;
+    stream >> byte;
     if (stream.handle_any_error())
         return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_LUMA chunk");
-    VERIFY((bytes[0] & QOI_MASK_2) == QOI_OP_LUMA);
-    u8 diff_green = (bytes[0] & ~QOI_MASK_2);
-    u8 dr_dg = (bytes[1] & 0b11110000) >> 4;
-    u8 db_dg = (bytes[1] & 0b00001111);
+    u8 diff_green = (first_byte & ~QOI_MASK_2);
+    u8 dr_dg = (byte & 0b11110000) >> 4;
+    u8 db_dg = (byte & 0b00001111);
 
     // Values are stored as unsigned integers with a bias of 32 for the green channel and a bias of 8 for the red and blue channel.
     return Color {
@@ -109,14 +101,10 @@ static ErrorOr<Color> decode_qoi_op_luma(InputMemoryStream& stream, Color pixel)
     };
 }
 
-static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream& stream)
+static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream&, u8 first_byte)
 {
-    u8 byte;
-    stream >> byte;
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RUN chunk");
-    VERIFY((byte & QOI_MASK_2) == QOI_OP_RUN);
-    u8 run = byte & ~QOI_MASK_2;
+    VERIFY((first_byte & QOI_MASK_2) == QOI_OP_RUN);
+    u8 run = first_byte & ~QOI_MASK_2;
 
     // The run-length is stored with a bias of -1.
     run += 1;
@@ -161,21 +149,22 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
             if (run > 0)
                 --run;
             if (run == 0) {
-                u8 tag = stream.peek_or_error();
+                u8 first_byte;
+                stream.read_or_error({ &first_byte, sizeof(first_byte) });
                 if (stream.handle_any_error())
-                    return Error::from_string_literal("Invalid QOI image: end of stream while reading chunk tag");
-                if (tag == QOI_OP_RGB)
-                    pixel = TRY(decode_qoi_op_rgb(stream, pixel));
-                else if (tag == QOI_OP_RGBA)
-                    pixel = TRY(decode_qoi_op_rgba(stream));
-                else if ((tag & QOI_MASK_2) == QOI_OP_INDEX)
-                    pixel = previous_pixels[TRY(decode_qoi_op_index(stream))];
-                else if ((tag & QOI_MASK_2) == QOI_OP_DIFF)
-                    pixel = TRY(decode_qoi_op_diff(stream, pixel));
-                else if ((tag & QOI_MASK_2) == QOI_OP_LUMA)
-                    pixel = TRY(decode_qoi_op_luma(stream, pixel));
-                else if ((tag & QOI_MASK_2) == QOI_OP_RUN)
-                    run = TRY(decode_qoi_op_run(stream));
+                    return Error::from_string_literal("Invalid QOI image: end of stream while reading the first chunk byte");
+                if (first_byte == QOI_OP_RGB)
+                    pixel = TRY(decode_qoi_op_rgb(stream, first_byte, pixel));
+                else if (first_byte == QOI_OP_RGBA)
+                    pixel = TRY(decode_qoi_op_rgba(stream, first_byte));
+                else if ((first_byte & QOI_MASK_2) == QOI_OP_INDEX)
+                    pixel = previous_pixels[TRY(decode_qoi_op_index(stream, first_byte))];
+                else if ((first_byte & QOI_MASK_2) == QOI_OP_DIFF)
+                    pixel = TRY(decode_qoi_op_diff(stream, first_byte, pixel));
+                else if ((first_byte & QOI_MASK_2) == QOI_OP_LUMA)
+                    pixel = TRY(decode_qoi_op_luma(stream, first_byte, pixel));
+                else if ((first_byte & QOI_MASK_2) == QOI_OP_RUN)
+                    run = TRY(decode_qoi_op_run(stream, first_byte));
                 else
                     return Error::from_string_literal("Invalid QOI image: unknown chunk tag");
             }
