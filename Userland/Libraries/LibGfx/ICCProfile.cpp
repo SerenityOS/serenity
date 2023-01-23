@@ -769,7 +769,7 @@ ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes,
     u8 const* text_data = bytes.data() + 8;
     for (u32 i = 0; i < length; ++i) {
         if (text_data[i] >= 128)
-            return Error::from_string_literal("ICC::Profile: textType data not 7-byte ASCII");
+            return Error::from_string_literal("ICC::Profile: textType data not 7-bit ASCII");
     }
 
     if (length == 0)
