@@ -24,6 +24,12 @@ public:
             return CSS::Display::from_short(CSS::Display::Short::InlineTable);
         return CSS::Display::from_short(CSS::Display::Short::Table);
     }
+
+private:
+    virtual bool is_table() const override { return true; }
 };
+
+template<>
+inline bool Node::fast_is<TableBox>() const { return is_table(); }
 
 }
