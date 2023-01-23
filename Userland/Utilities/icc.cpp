@@ -110,6 +110,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             out_optional("    macintosh", MUST(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
         } else if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
             outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
+        } else if (tag_data->type() == Gfx::ICC::XYZTagData::Type) {
+            for (auto& xyz : static_cast<Gfx::ICC::XYZTagData&>(*tag_data).xyzs())
+                outln("    {}", xyz);
         }
     });
 
