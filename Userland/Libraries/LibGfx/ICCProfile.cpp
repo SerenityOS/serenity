@@ -553,7 +553,7 @@ static ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
 ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.15 multiLocalizedUnicodeType
-    VERIFY(tag_type(bytes) == MultiLocalizedUnicodeTagData::Type);
+    VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
     // "Multiple strings within this tag may share storage locations. For example, en/US and en/UK can refer to the
@@ -627,7 +627,7 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
     //  systems. The 7-bit ASCII description is to be an invariant, nonlocalizable name for consistent reference.
     //  It is preferred that both the Unicode and ScriptCode structures be properly localized."
 
-    VERIFY(tag_type(bytes) == TextDescriptionTagData::Type);
+    VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
     // 7-bit ASCII
@@ -759,7 +759,7 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
 ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.24 textType
-    VERIFY(tag_type(bytes) == TextTagData::Type);
+    VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
     // "The textType is a simple text structure that contains a 7-bit ASCII text string. The length of the string is obtained
@@ -784,7 +784,7 @@ ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes,
 ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.31 XYZType
-    VERIFY(tag_type(bytes) == XYZTagData::Type);
+    VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
     // "The XYZType contains an array of three encoded values for PCSXYZ, CIEXYZ, or nCIEXYZ values. The
