@@ -20,11 +20,6 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    BlockContainer* previous_sibling() { return verify_cast<BlockContainer>(Node::previous_sibling()); }
-    BlockContainer const* previous_sibling() const { return verify_cast<BlockContainer>(Node::previous_sibling()); }
-    BlockContainer* next_sibling() { return verify_cast<BlockContainer>(Node::next_sibling()); }
-    BlockContainer const* next_sibling() const { return verify_cast<BlockContainer>(Node::next_sibling()); }
-
     bool is_scrollable() const;
     CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
     void set_scroll_offset(CSSPixelPoint);
