@@ -534,7 +534,7 @@ public:
 
 private:
     ErrorOr<void> read_header(ReadonlyBytes);
-    ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes, Detail::TagTableEntry const&);
+    ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element);
     ErrorOr<void> read_tag_table(ReadonlyBytes);
 
     u32 m_on_disk_size { 0 };
