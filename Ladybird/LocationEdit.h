@@ -10,10 +10,14 @@
 
 #include <QLineEdit>
 
-class Tab;
-
 class LocationEdit final : public QLineEdit {
     Q_OBJECT
 public:
-    explicit LocationEdit(Tab*);
+    explicit LocationEdit(QWidget*);
+
+private:
+    virtual void focusInEvent(QFocusEvent* event) override;
+    virtual void focusOutEvent(QFocusEvent* event) override;
+
+    void highlight_location();
 };
