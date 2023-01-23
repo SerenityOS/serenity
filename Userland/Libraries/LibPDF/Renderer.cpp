@@ -742,21 +742,12 @@ void Renderer::show_text(DeprecatedString const& string)
     auto original_position = glyph_position;
 
     for (auto char_code : string.bytes()) {
-        auto code_point = text_state().font->char_code_to_code_point(char_code);
         auto char_width = text_state().font->get_char_width(char_code);
         auto glyph_width = char_width * font_size;
-
-        if (code_point != 0x20)
-            text_state().font->draw_glyph(m_painter, glyph_position, glyph_width, char_code, state().paint_color);
-
+        text_state().font->draw_glyph(m_painter, glyph_position, glyph_width, char_code, state().paint_color);
         auto tx = glyph_width;
         tx += text_state().character_spacing;
-
-        if (code_point == ' ')
-            tx += text_state().word_spacing;
-
         tx *= text_state().horizontal_scaling;
-
         glyph_position += { tx, 0.0f };
     }
 

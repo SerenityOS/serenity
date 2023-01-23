@@ -25,7 +25,6 @@ public:
     Type1Font(Data);
     ~Type1Font() override = default;
 
-    u32 char_code_to_code_point(u16 char_code) const override;
     float get_char_width(u16 char_code) const override;
 
     void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) override;

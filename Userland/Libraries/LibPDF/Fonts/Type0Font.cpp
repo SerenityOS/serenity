@@ -77,11 +77,6 @@ Type0Font::Type0Font(CIDSystemInfo const& system_info, HashMap<u16, u16> const& 
 {
 }
 
-u32 Type0Font::char_code_to_code_point(u16 char_code) const
-{
-    return char_code;
-}
-
 float Type0Font::get_char_width(u16 char_code) const
 {
     u16 width;
