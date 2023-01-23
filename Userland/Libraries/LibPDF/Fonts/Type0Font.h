@@ -24,7 +24,6 @@ public:
     Type0Font(CIDSystemInfo const&, HashMap<u16, u16> const& widths, u16 missing_width);
     ~Type0Font() override = default;
 
-    u32 char_code_to_code_point(u16 char_code) const override;
     float get_char_width(u16 char_code) const override;
 
     void draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u32, Color) override {};

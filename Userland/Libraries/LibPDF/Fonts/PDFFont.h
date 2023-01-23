@@ -39,7 +39,6 @@ public:
 
     virtual ~PDFFont() = default;
 
-    virtual u32 char_code_to_code_point(u16 char_code) const = 0;
     virtual float get_char_width(u16 char_code) const = 0;
 
     virtual void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) = 0;

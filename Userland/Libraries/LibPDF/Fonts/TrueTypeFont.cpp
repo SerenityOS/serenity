@@ -43,18 +43,6 @@ TrueTypeFont::TrueTypeFont(PDFFont::CommonData data)
     m_is_standard_font = m_data.is_standard_font;
 }
 
-u32 TrueTypeFont::char_code_to_code_point(u16 char_code) const
-{
-    if (m_data.to_unicode)
-        TODO();
-
-    if (m_data.encoding->should_map_to_bullet(char_code))
-        return 8226; // Bullet.
-
-    auto descriptor = m_data.encoding->get_char_code_descriptor(char_code);
-    return descriptor.code_point;
-}
-
 float TrueTypeFont::get_char_width(u16 char_code) const
 {
     u16 width;
