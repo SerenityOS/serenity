@@ -5,7 +5,7 @@
  */
 
 #include <AK/Endian.h>
-#include <AK/MemoryStream.h>
+#include <LibCore/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/QOILoader.h>
 
@@ -21,12 +21,9 @@ static constexpr u8 QOI_OP_RUN = 0b11000000;
 static constexpr u8 QOI_MASK_2 = 0b11000000;
 static constexpr u8 END_MARKER[] = { 0, 0, 0, 0, 0, 0, 0, 1 };
 
-static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
+static ErrorOr<QOIHeader> decode_qoi_header(Core::Stream::Stream& stream)
 {
-    QOIHeader header;
-    stream >> Bytes { &header, sizeof(header) };
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading header");
+    auto header = TRY(stream.read_value<QOIHeader>());
     if (StringView { header.magic, array_size(header.magic) } != QOI_MAGIC)
         return Error::from_string_literal("Invalid QOI image: incorrect header magic");
     header.width = AK::convert_between_host_and_big_endian(header.width);
@@ -34,29 +31,25 @@ static ErrorOr<QOIHeader> decode_qoi_header(InputMemoryStream& stream)
     return header;
 }
 
-static ErrorOr<Color> decode_qoi_op_rgb(InputMemoryStream& stream, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_rgb(Core::Stream::Stream& stream, u8 first_byte, Color pixel)
 {
     VERIFY(first_byte == QOI_OP_RGB);
     u8 bytes[3];
-    stream >> Bytes { &bytes, array_size(bytes) };
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGB chunk");
+    TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
 
     // The alpha value remains unchanged from the previous pixel.
     return Color { bytes[0], bytes[1], bytes[2], pixel.alpha() };
 }
 
-static ErrorOr<Color> decode_qoi_op_rgba(InputMemoryStream& stream, u8 first_byte)
+static ErrorOr<Color> decode_qoi_op_rgba(Core::Stream::Stream& stream, u8 first_byte)
 {
     VERIFY(first_byte == QOI_OP_RGBA);
     u8 bytes[4];
-    stream >> Bytes { &bytes, array_size(bytes) };
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_RGBA chunk");
+    TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
     return Color { bytes[0], bytes[1], bytes[2], bytes[3] };
 }
 
-static ErrorOr<u8> decode_qoi_op_index(InputMemoryStream&, u8 first_byte)
+static ErrorOr<u8> decode_qoi_op_index(Core::Stream::Stream&, u8 first_byte)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_INDEX);
     u8 index = first_byte & ~QOI_MASK_2;
@@ -64,7 +57,7 @@ static ErrorOr<u8> decode_qoi_op_index(InputMemoryStream&, u8 first_byte)
     return index;
 }
 
-static ErrorOr<Color> decode_qoi_op_diff(InputMemoryStream&, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_diff(Core::Stream::Stream&, u8 first_byte, Color pixel)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_DIFF);
     u8 dr = (first_byte & 0b00110000) >> 4;
@@ -81,13 +74,10 @@ static ErrorOr<Color> decode_qoi_op_diff(InputMemoryStream&, u8 first_byte, Colo
     };
 }
 
-static ErrorOr<Color> decode_qoi_op_luma(InputMemoryStream& stream, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_luma(Core::Stream::Stream& stream, u8 first_byte, Color pixel)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_LUMA);
-    u8 byte;
-    stream >> byte;
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading QOI_OP_LUMA chunk");
+    auto byte = TRY(stream.read_value<u8>());
     u8 diff_green = (first_byte & ~QOI_MASK_2);
     u8 dr_dg = (byte & 0b11110000) >> 4;
     u8 db_dg = (byte & 0b00001111);
@@ -101,7 +91,7 @@ static ErrorOr<Color> decode_qoi_op_luma(InputMemoryStream& stream, u8 first_byt
     };
 }
 
-static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream&, u8 first_byte)
+static ErrorOr<u8> decode_qoi_op_run(Core::Stream::Stream&, u8 first_byte)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_RUN);
     u8 run = first_byte & ~QOI_MASK_2;
@@ -117,20 +107,18 @@ static ErrorOr<u8> decode_qoi_op_run(InputMemoryStream&, u8 first_byte)
     return run;
 }
 
-static ErrorOr<void> decode_qoi_end_marker(InputMemoryStream& stream)
+static ErrorOr<void> decode_qoi_end_marker(Core::Stream::Stream& stream)
 {
     u8 bytes[array_size(END_MARKER)];
-    stream >> Bytes { &bytes, array_size(bytes) };
-    if (stream.handle_any_error())
-        return Error::from_string_literal("Invalid QOI image: end of stream while reading end marker");
-    if (!stream.eof())
+    TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
+    if (!stream.is_eof())
         return Error::from_string_literal("Invalid QOI image: expected end of stream but more bytes are available");
     if (memcmp(&END_MARKER, &bytes, array_size(bytes)) != 0)
         return Error::from_string_literal("Invalid QOI image: incorrect end marker");
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream, u32 width, u32 height)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(Core::Stream::Stream& stream, u32 width, u32 height)
 {
     // FIXME: Why is Gfx::Bitmap's size signed? Makes no sense whatsoever.
     if (width > NumericLimits<int>::max())
@@ -149,10 +137,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
             if (run > 0)
                 --run;
             if (run == 0) {
-                u8 first_byte;
-                stream.read_or_error({ &first_byte, sizeof(first_byte) });
-                if (stream.handle_any_error())
-                    return Error::from_string_literal("Invalid QOI image: end of stream while reading the first chunk byte");
+                auto first_byte = TRY(stream.read_value<u8>());
                 if (first_byte == QOI_OP_RGB)
                     pixel = TRY(decode_qoi_op_rgb(stream, first_byte, pixel));
                 else if (first_byte == QOI_OP_RGBA)
@@ -177,20 +162,18 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(InputMemoryStream& stream
     return { move(bitmap) };
 }
 
-QOIImageDecoderPlugin::QOIImageDecoderPlugin(u8 const* data, size_t size)
+QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Core::Stream::Stream> stream)
 {
     m_context = make<QOILoadingContext>();
-    m_context->data = data;
-    m_context->data_size = size;
+    m_context->stream = move(stream);
 }
 
 IntSize QOIImageDecoderPlugin::size()
 {
     if (m_context->state < QOILoadingContext::State::HeaderDecoded) {
-        InputMemoryStream stream { { m_context->data, m_context->data_size } };
         // FIXME: This is a weird API (inherited from ImageDecoderPlugin), should probably propagate errors by returning ErrorOr<IntSize>.
         //        For the time being, ignore the result and rely on the context's state.
-        (void)decode_header_and_update_context(stream);
+        (void)decode_header_and_update_context(*m_context->stream);
     }
 
     if (m_context->state == QOILoadingContext::State::Error)
@@ -214,19 +197,19 @@ bool QOIImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool QOIImageDecoderPlugin::initialize()
 {
-    InputMemoryStream stream { { m_context->data, m_context->data_size } };
-    return !decode_qoi_header(stream).is_error();
+    return !decode_header_and_update_context(*m_context->stream).is_error();
 }
 
 ErrorOr<bool> QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    InputMemoryStream stream { { data.data(), data.size() } };
-    return !decode_qoi_header(stream).is_error();
+    auto stream = TRY(Core::Stream::FixedMemoryStream::construct({ data.data(), data.size() }));
+    return !decode_qoi_header(*stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(data.data(), data.size()));
+    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(data));
+    return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream)));
 }
 
 ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
@@ -235,13 +218,10 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
         return Error::from_string_literal("Invalid frame index");
 
     if (m_context->state == QOILoadingContext::State::NotDecoded) {
-        InputMemoryStream stream { { m_context->data, m_context->data_size } };
-        TRY(decode_header_and_update_context(stream));
-        TRY(decode_image_and_update_context(stream));
+        TRY(decode_header_and_update_context(*m_context->stream));
+        TRY(decode_image_and_update_context(*m_context->stream));
     } else if (m_context->state == QOILoadingContext::State::HeaderDecoded) {
-        InputMemoryStream stream { { m_context->data, m_context->data_size } };
-        VERIFY(stream.discard_or_error(sizeof(m_context->header)));
-        TRY(decode_image_and_update_context(stream));
+        TRY(decode_image_and_update_context(*m_context->stream));
     }
 
     if (m_context->state == QOILoadingContext::State::ImageDecoded) {
@@ -254,7 +234,7 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
     return *m_context->error;
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(InputMemoryStream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(Core::Stream::Stream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::HeaderDecoded);
     auto error_or_header = decode_qoi_header(stream);
@@ -268,7 +248,7 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(InputMemor
     return {};
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(InputMemoryStream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(Core::Stream::Stream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::ImageDecoded);
     auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height);
