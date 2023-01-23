@@ -813,7 +813,7 @@ ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u
     //  number of sets of values is determined from the size of the tag."
     size_t byte_size = bytes.size() - 8;
     if (byte_size % sizeof(XYZNumber) != 0)
-        return Error::from_string_literal("ICC::Profile: XYZType wrong size");
+        return Error::from_string_literal("ICC::Profile: XYZType has wrong size");
 
     size_t xyz_count = byte_size / sizeof(XYZNumber);
     XYZNumber const* raw_xyzs = bit_cast<XYZNumber const*>(bytes.data() + 8);
