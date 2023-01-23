@@ -919,12 +919,12 @@ ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::TagTableEntry const& entry)
+ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
 {
-    if (entry.offset_to_beginning_of_tag_data_element + entry.size_of_tag_data_element > bytes.size())
+    if (offset_to_beginning_of_tag_data_element + size_of_tag_data_element > bytes.size())
         return Error::from_string_literal("ICC::Profile: Tag data out of bounds");
 
-    auto tag_bytes = bytes.slice(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+    auto tag_bytes = bytes.slice(offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
 
     // ICC v4, 9 Tag definitions
     // ICC v4, 9.1 General
@@ -936,22 +936,22 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
     auto type = tag_type(tag_bytes);
     switch (type) {
     case CurveTagData::Type:
-        return CurveTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return CurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
-        return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case ParametricCurveTagData::Type:
-        return ParametricCurveTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return ParametricCurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
-        return S15Fixed16ArrayTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return S15Fixed16ArrayTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextDescriptionTagData::Type:
-        return TextDescriptionTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return TextDescriptionTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextTagData::Type:
-        return TextTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return TextTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case XYZTagData::Type:
-        return XYZTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+        return XYZTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     default:
         // FIXME: optionally ignore tags of unknown type
-        return adopt_ref(*new UnknownTagData(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element, type));
+        return adopt_ref(*new UnknownTagData(offset_to_beginning_of_tag_data_element, size_of_tag_data_element, type));
     }
 }
 
@@ -991,7 +991,7 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
     for (u32 i = 0; i < tag_count; ++i) {
         // FIXME: optionally ignore tags with unknown signature
         // FIXME: dedupe identical offset/sizes
-        auto tag_data = TRY(read_tag(bytes, tag_table_entries[i]));
+        auto tag_data = TRY(read_tag(bytes, tag_table_entries[i].offset_to_beginning_of_tag_data_element, tag_table_entries[i].size_of_tag_data_element));
         // "Duplicate tag signatures shall not be included in the tag table."
         if (TRY(m_tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("ICC::Profile: duplicate tag signature");
