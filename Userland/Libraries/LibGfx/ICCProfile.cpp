@@ -116,17 +116,7 @@ struct ICCHeader {
     u8 reserved[28];
 };
 static_assert(sizeof(ICCHeader) == 128);
-}
 
-// ICC V4, 7.3 Tag table, Table 24 - Tag table structure
-struct Detail::TagTableEntry {
-    BigEndian<TagSignature> tag_signature;
-    BigEndian<u32> offset_to_beginning_of_tag_data_element;
-    BigEndian<u32> size_of_tag_data_element;
-};
-static_assert(sizeof(Detail::TagTableEntry) == 12);
-
-namespace {
 ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
 {
     // ICC v4, 7.2.2 Profile size field
@@ -983,10 +973,18 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
         return Error::from_string_literal("ICC::Profile: Not enough data for tag count");
     auto tag_count = *bit_cast<BigEndian<u32> const*>(tag_table_bytes.data());
 
+    // ICC V4, 7.3 Tag table, Table 24 - Tag table structure
+    struct TagTableEntry {
+        BigEndian<TagSignature> tag_signature;
+        BigEndian<u32> offset_to_beginning_of_tag_data_element;
+        BigEndian<u32> size_of_tag_data_element;
+    };
+    static_assert(sizeof(TagTableEntry) == 12);
+
     tag_table_bytes = tag_table_bytes.slice(sizeof(u32));
-    if (tag_table_bytes.size() < tag_count * sizeof(Detail::TagTableEntry))
+    if (tag_table_bytes.size() < tag_count * sizeof(TagTableEntry))
         return Error::from_string_literal("ICC::Profile: Not enough data for tag table entries");
-    auto tag_table_entries = bit_cast<Detail::TagTableEntry const*>(tag_table_bytes.data());
+    auto tag_table_entries = bit_cast<TagTableEntry const*>(tag_table_bytes.data());
 
     for (u32 i = 0; i < tag_count; ++i) {
         // FIXME: optionally ignore tags with unknown signature

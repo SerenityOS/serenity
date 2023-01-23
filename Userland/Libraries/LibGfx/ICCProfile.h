@@ -495,10 +495,6 @@ private:
     Vector<XYZ, 1> m_xyzs;
 };
 
-namespace Detail {
-struct TagTableEntry;
-}
-
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
