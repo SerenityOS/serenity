@@ -612,6 +612,28 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     return adopt_ref(*new MultiLocalizedUnicodeTagData(offset, size, move(records)));
 }
 
+ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.22 s15Fixed16ArrayType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    // "This type represents an array of generic 4-byte (32-bit) fixed point quantity. The number of values is determined
+    //  from the size of the tag."
+    size_t byte_size = bytes.size() - 8;
+    if (byte_size % sizeof(s15Fixed16Number) != 0)
+        return Error::from_string_literal("ICC::Profile: s15Fixed16ArrayType has wrong size");
+
+    size_t count = byte_size / sizeof(s15Fixed16Number);
+    BigEndian<s15Fixed16Number> const* raw_values = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 8);
+    Vector<S15Fixed16, 9> values;
+    TRY(values.try_resize(count));
+    for (size_t i = 0; i < count; ++i)
+        values[i] = S15Fixed16::create_raw(raw_values[i]);
+
+    return adopt_ref(*new S15Fixed16ArrayTagData(offset, size, move(values)));
+}
+
 ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v2, 6.5.17 textDescriptionType
@@ -850,6 +872,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
     switch (type) {
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+    case S15Fixed16ArrayTagData::Type:
+        return S15Fixed16ArrayTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case TextDescriptionTagData::Type:
         return TextDescriptionTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case TextTagData::Type:
