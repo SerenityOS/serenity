@@ -104,8 +104,8 @@ public:
     bool is_flex_item() const { return m_is_flex_item; }
     void set_flex_item(bool b) { m_is_flex_item = b; }
 
-    BlockContainer const* containing_block() const;
-    BlockContainer* containing_block() { return const_cast<BlockContainer*>(const_cast<Node const*>(this)->containing_block()); }
+    Box const* containing_block() const;
+    Box* containing_block() { return const_cast<Box*>(const_cast<Node const*>(this)->containing_block()); }
 
     bool establishes_stacking_context() const;
 

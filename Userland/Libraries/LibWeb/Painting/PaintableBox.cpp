@@ -75,14 +75,9 @@ void PaintableBox::set_content_size(CSSPixelSize size)
 CSSPixelPoint PaintableBox::effective_offset() const
 {
     CSSPixelPoint offset;
-    if (m_containing_line_box_fragment.has_value()) {
-
-        // FIXME: This is a hack to deal with situations where the layout tree has been garbage collected.
-        //        We could avoid this by making the paintable tree garbage collected as well.
-        if (!containing_block() || !containing_block()->paint_box())
-            return offset;
-
-        auto const& fragment = containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+    if (containing_block() && m_containing_line_box_fragment.has_value()) {
+        auto& paintable_with_lines = *verify_cast<PaintableWithLines>(containing_block()->paint_box());
+        auto const& fragment = paintable_with_lines.line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
         offset = fragment.offset();
     } else {
         offset = m_offset;

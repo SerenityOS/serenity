@@ -62,26 +62,36 @@ bool Node::can_contain_boxes_with_position_absolute() const
     return computed_values().position() != CSS::Position::Static || is<InitialContainingBlock>(*this);
 }
 
-BlockContainer const* Node::containing_block() const
+static Box const* nearest_ancestor_capable_of_forming_a_containing_block(Node const& node)
+{
+    for (auto const* ancestor = node.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor->is_block_container())
+            return verify_cast<Box>(ancestor);
+    }
+    return nullptr;
+}
+
+Box const* Node::containing_block() const
 {
     if (is<TextNode>(*this))
-        return first_ancestor_of_type<BlockContainer>();
+        return nearest_ancestor_capable_of_forming_a_containing_block(*this);
 
     auto position = computed_values().position();
 
+    // https://drafts.csswg.org/css-position-3/#absolute-cb
     if (position == CSS::Position::Absolute) {
-        auto* ancestor = parent();
+        auto const* ancestor = parent();
         while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
             ancestor = ancestor->parent();
-        while (ancestor && (!is<BlockContainer>(*ancestor) || ancestor->is_anonymous()))
-            ancestor = ancestor->containing_block();
+        while (ancestor && ancestor->is_anonymous())
+            ancestor = nearest_ancestor_capable_of_forming_a_containing_block(*ancestor);
         return static_cast<BlockContainer const*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
         return &root();
 
-    return first_ancestor_of_type<BlockContainer>();
+    return nearest_ancestor_capable_of_forming_a_containing_block(*this);
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
@@ -158,7 +168,9 @@ void Node::set_needs_display()
         return;
     if (!containing_block->paint_box())
         return;
-    containing_block->paint_box()->for_each_fragment([&](auto& fragment) {
+    if (!is<Painting::PaintableWithLines>(*containing_block->paint_box()))
+        return;
+    static_cast<Painting::PaintableWithLines const&>(*containing_block->paint_box()).for_each_fragment([&](auto& fragment) {
         if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
             browsing_context().set_needs_display(fragment.absolute_rect());
         }
@@ -173,13 +185,15 @@ CSSPixelPoint Node::box_type_agnostic_position() const
     VERIFY(is_inline());
     CSSPixelPoint position;
     if (auto* block = containing_block()) {
-        block->paint_box()->for_each_fragment([&](auto& fragment) {
-            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.absolute_rect().location();
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
+        if (is<Painting::PaintableWithLines>(*block)) {
+            static_cast<Painting::PaintableWithLines const&>(*block->paint_box()).for_each_fragment([&](auto& fragment) {
+                if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+                    position = fragment.absolute_rect().location();
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        }
     }
     return position;
 }

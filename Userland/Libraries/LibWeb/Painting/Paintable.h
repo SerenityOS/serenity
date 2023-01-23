@@ -121,7 +121,7 @@ public:
 
     void set_needs_display() const { const_cast<Layout::Node&>(*m_layout_node).set_needs_display(); }
 
-    Layout::BlockContainer const* containing_block() const
+    Layout::Box const* containing_block() const
     {
         if (!m_containing_block.has_value())
             m_containing_block = m_layout_node->containing_block();
@@ -141,7 +141,7 @@ protected:
 
 private:
     JS::NonnullGCPtr<Layout::Node> m_layout_node;
-    Optional<JS::GCPtr<Layout::BlockContainer>> mutable m_containing_block;
+    Optional<JS::GCPtr<Layout::Box>> mutable m_containing_block;
 };
 
 inline DOM::Node* HitTestResult::dom_node()
