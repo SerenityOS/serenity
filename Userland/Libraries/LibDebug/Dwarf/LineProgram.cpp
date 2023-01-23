@@ -27,7 +27,7 @@ LineProgram::LineProgram(DwarfInfo& dwarf_info, Core::Stream::SeekableStream& st
 
 ErrorOr<void> LineProgram::parse_unit_header()
 {
-    m_unit_header = TRY(LineProgramUnitHeader32::read_from_stream(m_stream));
+    m_unit_header = TRY(m_stream.read_value<LineProgramUnitHeader32>());
 
     VERIFY(m_unit_header.version() >= MIN_DWARF_VERSION && m_unit_header.version() <= MAX_DWARF_VERSION);
     VERIFY(m_unit_header.opcode_base() <= sizeof(m_unit_header.std_opcode_lengths) / sizeof(m_unit_header.std_opcode_lengths[0]) + 1);

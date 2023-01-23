@@ -53,7 +53,7 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
     while (!debug_info_stream->is_eof()) {
         auto unit_offset = TRY(debug_info_stream->tell());
 
-        auto compilation_unit_header = TRY(CompilationUnitHeader::read_from_stream(*debug_info_stream));
+        auto compilation_unit_header = TRY(debug_info_stream->read_value<CompilationUnitHeader>());
         VERIFY(compilation_unit_header.common.version <= 5);
         VERIFY(compilation_unit_header.address_size() == sizeof(FlatPtr));
 
