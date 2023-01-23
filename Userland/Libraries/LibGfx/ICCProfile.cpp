@@ -781,6 +781,28 @@ ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes,
     return adopt_ref(*new TextTagData(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1)))));
 }
 
+ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.31 XYZType
+    VERIFY(tag_type(bytes) == XYZTagData::Type);
+    TRY(check_reserved(bytes));
+
+    // "The XYZType contains an array of three encoded values for PCSXYZ, CIEXYZ, or nCIEXYZ values. The
+    //  number of sets of values is determined from the size of the tag."
+    size_t byte_size = bytes.size() - 8;
+    if (byte_size % sizeof(XYZNumber) != 0)
+        return Error::from_string_literal("ICC::Profile: XYZType wrong size");
+
+    size_t xyz_count = byte_size / sizeof(XYZNumber);
+    XYZNumber const* raw_xyzs = bit_cast<XYZNumber const*>(bytes.data() + 8);
+    Vector<XYZ, 1> xyzs;
+    TRY(xyzs.try_resize(xyz_count));
+    for (size_t i = 0; i < xyz_count; ++i)
+        xyzs[i] = (XYZ)raw_xyzs[i];
+
+    return adopt_ref(*new XYZTagData(offset, size, move(xyzs)));
+}
+
 ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(ICCHeader))
@@ -832,6 +854,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
         return TextDescriptionTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case TextTagData::Type:
         return TextTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+    case XYZTagData::Type:
+        return XYZTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     default:
         // FIXME: optionally ignore tags of unknown type
         return adopt_ref(*new UnknownTagData(entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element, type));

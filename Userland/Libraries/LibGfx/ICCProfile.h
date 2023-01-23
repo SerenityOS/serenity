@@ -335,6 +335,25 @@ private:
     String m_text;
 };
 
+// ICC v4, 10.31 XYZType
+class XYZTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x58595A20 }; // 'XYZ '
+
+    static ErrorOr<NonnullRefPtr<XYZTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    XYZTagData(u32 offset, u32 size, Vector<XYZ, 1> xyzs)
+        : TagData(offset, size, Type)
+        , m_xyzs(move(xyzs))
+    {
+    }
+
+    Vector<XYZ, 1> const& xyzs() const { return m_xyzs; }
+
+private:
+    Vector<XYZ, 1> m_xyzs;
+};
+
 namespace Detail {
 struct TagTableEntry;
 }
