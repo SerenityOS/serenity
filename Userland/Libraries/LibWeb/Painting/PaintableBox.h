@@ -98,7 +98,7 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    Optional<Gfx::IntRect> clip_rect() const;
+    Optional<CSSPixelRect> clip_rect() const;
 
     void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
     void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
@@ -157,7 +157,7 @@ private:
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;
 
-    Optional<Gfx::IntRect> mutable m_clip_rect;
+    Optional<CSSPixelRect> mutable m_clip_rect;
 
     mutable bool m_clipping_overflow { false };
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
