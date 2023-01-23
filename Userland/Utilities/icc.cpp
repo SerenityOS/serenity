@@ -94,7 +94,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     profile->for_each_tag([](auto tag_signature, auto tag_data) {
         outln("{}: {}, offset {}, size {}", tag_signature, tag_data->type(), tag_data->offset(), tag_data->size());
 
-        if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
+        if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
+            auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
+            if (curve.values().is_empty()) {
+                outln("    identity curve");
+            } else if (curve.values().size() == 1) {
+                outln("    gamma: {}", FixedPoint<8, u16>::create_raw(curve.values()[0]));
+            } else {
+                // FIXME: Maybe print the actual points if -v is passed?
+                outln("    curve with {} points", curve.values().size());
+            }
+        } else if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
             auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
             for (auto& record : multi_localized_unicode.records()) {
                 outln("    {:c}{:c}/{:c}{:c}: \"{}\"",

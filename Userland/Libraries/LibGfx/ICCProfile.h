@@ -258,6 +258,36 @@ public:
     }
 };
 
+// ICC v4, 10.6 curveType
+class CurveTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x63757276 }; // 'curv'
+
+    static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    CurveTagData(u32 offset, u32 size, Vector<u16> values)
+        : TagData(offset, size, Type)
+        , m_values(move(values))
+    {
+    }
+
+    // "The curveType embodies a one-dimensional function which maps an input value in the domain of the function
+    //  to an output value in the range of the function. The domain and range values are in the range of 0,0 to 1,0.
+    //  - When n is equal to 0, an identity response is assumed.
+    //  - When n is equal to 1, then the curve value shall be interpreted as a gamma value, encoded as a
+    //    u8Fixed8Number. Gamma shall be interpreted as the exponent in the equation y = pow(x,γ) and not as an inverse.
+    //  - When n is greater than 1, the curve values (which embody a sampled one-dimensional function) shall be
+    //    defined as follows:
+    //    - The first entry represents the input value 0,0, the last entry represents the input value 1,0, and intermediate
+    //      entries are uniformly spaced using an increment of 1,0/(n-1). These entries are encoded as uInt16Numbers
+    //      (i.e. the values represented by the entries, which are in the range 0,0 to 1,0 are encoded in the range 0 to
+    //      65 535). Function values between the entries shall be obtained through linear interpolation."
+    Vector<u16> const& values() const { return m_values; }
+
+private:
+    Vector<u16> m_values;
+};
+
 // ICC v4, 10.15 multiLocalizedUnicodeType
 class MultiLocalizedUnicodeTagData : public TagData {
 public:

@@ -550,6 +550,29 @@ static ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
     return {};
 }
 
+ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.6 curveType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 3 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: curveType has not enough data for count");
+    u32 count = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
+
+    if (bytes.size() < 3 * sizeof(u32) + count * sizeof(u16))
+        return Error::from_string_literal("ICC::Profile: curveType has not enough data for curve points");
+
+    BigEndian<u16> const* raw_values = bit_cast<BigEndian<u16> const*>(bytes.data() + 12);
+    Vector<u16> values;
+    TRY(values.try_resize(count));
+
+    for (u32 i = 0; i < count; ++i)
+        values[i] = raw_values[i];
+
+    return adopt_ref(*new CurveTagData(offset, size, move(values)));
+}
+
 ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.15 multiLocalizedUnicodeType
@@ -870,6 +893,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
 
     auto type = tag_type(tag_bytes);
     switch (type) {
+    case CurveTagData::Type:
+        return CurveTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
