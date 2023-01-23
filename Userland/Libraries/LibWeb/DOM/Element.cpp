@@ -826,14 +826,14 @@ double Element::scroll_top() const
         return window->scroll_y();
 
     // 8. If the element does not have any associated box, return zero and terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
-    auto const* block_container = static_cast<Layout::BlockContainer const*>(layout_node());
+    auto const* box = static_cast<Layout::Box const*>(layout_node());
 
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    return block_container->scroll_offset().y().value();
+    return box->scroll_offset().y().value();
 }
 
 double Element::scroll_left() const
@@ -868,14 +868,14 @@ double Element::scroll_left() const
         return window->scroll_x();
 
     // 8. If the element does not have any associated box, return zero and terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
-    auto const* block_container = static_cast<Layout::BlockContainer const*>(layout_node());
+    auto const* box = static_cast<Layout::Box const*>(layout_node());
 
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    return block_container->scroll_offset().x().value();
+    return box->scroll_offset().x().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -927,20 +927,20 @@ void Element::set_scroll_left(double x)
     }
 
     // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return;
 
-    auto* block_container = static_cast<Layout::BlockContainer*>(layout_node());
-    if (!block_container->is_scrollable())
+    auto* box = static_cast<Layout::Box*>(layout_node());
+    if (!box->is_scrollable())
         return;
 
     // FIXME: or the element has no overflow.
 
     // 11. Scroll the element to x,scrollTop, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
-    auto scroll_offset = block_container->scroll_offset();
+    auto scroll_offset = box->scroll_offset();
     scroll_offset.set_x(static_cast<float>(x));
-    block_container->set_scroll_offset(scroll_offset);
+    box->set_scroll_offset(scroll_offset);
 }
 
 void Element::set_scroll_top(double y)
@@ -991,20 +991,20 @@ void Element::set_scroll_top(double y)
     }
 
     // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return;
 
-    auto* block_container = static_cast<Layout::BlockContainer*>(layout_node());
-    if (!block_container->is_scrollable())
+    auto* box = static_cast<Layout::Box*>(layout_node());
+    if (!box->is_scrollable())
         return;
 
     // FIXME: or the element has no overflow.
 
     // 11. Scroll the element to scrollLeft,y, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
-    auto scroll_offset = block_container->scroll_offset();
+    auto scroll_offset = box->scroll_offset();
     scroll_offset.set_y(static_cast<float>(y));
-    block_container->set_scroll_offset(scroll_offset);
+    box->set_scroll_offset(scroll_offset);
 }
 
 int Element::scroll_width() const

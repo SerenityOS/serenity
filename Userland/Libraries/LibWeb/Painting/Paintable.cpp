@@ -36,16 +36,13 @@ Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandle
 bool Paintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
     if (auto* containing_block = this->containing_block()) {
-        if (!containing_block->is_block_container())
+        if (!containing_block->is_scrollable())
             return false;
-        auto* scroll_container = static_cast<Layout::BlockContainer const*>(containing_block);
-        if (!scroll_container->is_scrollable())
-            return false;
-        auto new_offset = scroll_container->scroll_offset();
+        auto new_offset = containing_block->scroll_offset();
         new_offset.translate_by(wheel_delta_x, wheel_delta_y);
         // FIXME: This const_cast is gross.
         // FIXME: Scroll offset shouldn't live in the layout tree.
-        const_cast<Layout::BlockContainer*>(scroll_container)->set_scroll_offset(new_offset);
+        const_cast<Layout::Box*>(containing_block)->set_scroll_offset(new_offset);
         return true;
     }
 

@@ -29,6 +29,21 @@ Box::~Box()
 {
 }
 
+bool Box::is_scrollable() const
+{
+    // FIXME: Support horizontal scroll as well (overflow-x)
+    return computed_values().overflow_y() == CSS::Overflow::Scroll;
+}
+
+void Box::set_scroll_offset(CSSPixelPoint offset)
+{
+    // FIXME: If there is horizontal and vertical scroll ignore only part of the new offset
+    if (offset.y() < 0 || m_scroll_offset == offset)
+        return;
+    m_scroll_offset = offset;
+    set_needs_display();
+}
+
 void Box::set_needs_display()
 {
     if (paint_box())

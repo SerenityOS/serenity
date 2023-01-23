@@ -20,18 +20,12 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    bool is_scrollable() const;
-    CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
-    void set_scroll_offset(CSSPixelPoint);
-
     Painting::PaintableWithLines const* paint_box() const;
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_block_container() const final { return true; }
-
-    CSSPixelPoint m_scroll_offset;
 };
 
 template<>

@@ -41,12 +41,18 @@ public:
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
+    bool is_scrollable() const;
+    CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
+    void set_scroll_offset(CSSPixelPoint);
+
 protected:
     Box(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     Box(DOM::Document&, DOM::Node*, CSS::ComputedValues);
 
 private:
     virtual bool is_box() const final { return true; }
+
+    CSSPixelPoint m_scroll_offset;
 };
 
 template<>
