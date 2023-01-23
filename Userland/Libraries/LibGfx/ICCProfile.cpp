@@ -612,6 +612,150 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     return adopt_ref(*new MultiLocalizedUnicodeTagData(offset, size, move(records)));
 }
 
+ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v2, 6.5.17 textDescriptionType
+    // textDescriptionType is no longer in the V4 spec.
+    // In both the V2 and V4 specs, 'desc' is a required tag. In V4, it has type multiLocalizedUnicodeType,
+    // but in V2 it has type textDescriptionType. Since 'desc' is required, this type is present in every
+    // V2 icc file, and there are still many V2 files in use. So textDescriptionType is here to stay for now.
+    // It's a very 90s type, preceding universal adoption of Unicode.
+
+    // "The textDescriptionType is a complex structure that contains three types of text description structures:
+    //  7-bit ASCII, Unicode and ScriptCode. Since no single standard method for specifying localizable character
+    //  sets exists across the major platform vendors, including all three provides access for the major operating
+    //  systems. The 7-bit ASCII description is to be an invariant, nonlocalizable name for consistent reference.
+    //  It is preferred that both the Unicode and ScriptCode structures be properly localized."
+
+    VERIFY(tag_type(bytes) == TextDescriptionTagData::Type);
+    TRY(check_reserved(bytes));
+
+    // 7-bit ASCII
+
+    // "ASCII: The count is the length of the string in bytes including the null terminator."
+    if (bytes.size() < 3 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII size");
+    u32 ascii_description_length = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
+
+    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII description");
+
+    u8 const* ascii_description_data = bytes.data() + 3 * sizeof(u32);
+    for (u32 i = 0; i < ascii_description_length; ++i) {
+        if (ascii_description_data[i] >= 128)
+            return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description not 7-bit ASCII");
+    }
+
+    if (ascii_description_length == 0)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description length does not include trailing \\0");
+
+    if (ascii_description_data[ascii_description_length - 1] != '\0')
+        return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description not \\0-terminated");
+
+    StringView ascii_description { ascii_description_data, ascii_description_length - 1 };
+
+    // Unicode
+
+    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode metadata");
+
+    // "Because the Unicode language code and Unicode count immediately follow the ASCII description,
+    //  their alignment is not correct when the ASCII count is not a multiple of four"
+    // So we can't use BigEndian<u32> here.
+    u8 const* cursor = ascii_description_data + ascii_description_length;
+    u32 unicode_language_code = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
+    cursor += 4;
+
+    // "Unicode: The count is the number of characters including a Unicode null where a character is always two bytes."
+    // This implies UCS-2.
+    u32 unicode_description_length = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
+    cursor += 4;
+
+    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32) + 2 * unicode_description_length)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode description");
+
+    u8 const* unicode_description_data = cursor;
+    cursor += 2 * unicode_description_length;
+    for (u32 i = 0; i < unicode_description_length; ++i) {
+        u16 code_point = (u16)(unicode_description_data[2 * i] << 8) | (u16)unicode_description_data[2 * i + 1];
+        if (is_unicode_surrogate(code_point))
+            return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description is not valid UCS-2");
+    }
+
+    // If Unicode is not native on the platform, then the Unicode language code and Unicode count should be
+    // filled in as 0, with no data placed in the Unicode localizable profile description area.
+    Optional<String> unicode_description;
+    if (unicode_description_length > 0) {
+        u16 last_code_point = (u16)(unicode_description_data[2 * (unicode_description_length - 1)] << 8) | (u16)unicode_description_data[2 * (unicode_description_length - 1) + 1];
+        if (last_code_point != 0)
+            return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description not \\0-terminated");
+
+        StringView utf_16be_data { unicode_description_data, 2 * (unicode_description_length - 1) };
+        unicode_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("utf-16be")->to_utf8(utf_16be_data)));
+    }
+
+    // ScriptCode
+
+    // What is a script code? It's an old, obsolete mac thing. It looks like it's documented in
+    // https://developer.apple.com/library/archive/documentation/mac/pdf/Text.pdf
+    // "Script Codes, Language Codes, and Region Codes 1", PDF page 82.
+    // I haven't found a complete explanation though. PDF page 84 suggests that:
+    // - There are 16 script codes
+    // - 0 is Roman, 1 is Japanese, 2 is Chinese, 3 is Korean, 9 is Devanagari
+    // Roman uses https://en.wikipedia.org/wiki/Mac_OS_Roman as encoding (also on page 89),
+    // and "All non-Roman script systems include Roman as a subscript" (page 87).
+
+    // Aha, "Script Codes 6" on page 676 has the complete list! There are 32 of them.
+    // The document mentions that each script code possibly has its own encoding, but I haven't found
+    // details on the encodings for script codes other than 0 (which uses Mac OS Roman).
+    // http://www.kreativekorp.com/charset/encoding/ has an unofficial list of old Mac OS encodings,
+    // but it's not clear to me which script codes map to which encoding.
+
+    // From here on, quotes are from the ICC spec on textDescriptionType again.
+
+    // "The ScriptCode code is misaligned when the ASCII count is odd."
+    // So don't use BigEndian<u16> here.
+    u16 scriptcode_code = (u16)(cursor[0] << 8) | (u32)cursor[1];
+    cursor += 2;
+
+    // "ScriptCode: The count is the length of the string in bytes including the terminating null."
+    u8 macintosh_description_length = *cursor;
+    cursor += 1;
+
+    if (macintosh_description_length > 67)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode description too long");
+
+    u8 const* macintosh_description_data = cursor;
+
+    // "If Scriptcode is not native on the platform, then the ScriptCode code and ScriptCode count should be filled
+    // in as 0. The 67-byte localizable Macintosh profile description should be filled with 0’s."
+    Optional<String> macintosh_description;
+    if (macintosh_description_length > 0) {
+        // ScriptCode is old-timey and a complicated to fully support. Lightroom Classic does write the ScriptCode section of textDescriptionType.
+        // But supporting only ASCII MacRoman is good enough for those files, and easy to implement, so let's do only that for now.
+        if (scriptcode_code == 0) { // MacRoman
+            if (macintosh_description_data[macintosh_description_length - 1] != '\0')
+                return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode not \\0-terminated");
+
+            bool is_ascii = true;
+            for (u32 i = 0; i < macintosh_description_length; ++i) {
+                if (macintosh_description_data[i] >= 128)
+                    is_ascii = false;
+            }
+
+            if (is_ascii) {
+                macintosh_description = TRY(String::from_utf8(StringView { macintosh_description_data, (size_t)macintosh_description_length - 1 }));
+            } else {
+                dbgln("TODO: ICCProfile textDescriptionType non-ASCII MacRoman");
+            }
+        } else {
+            dbgln("TODO: ICCProfile textDescriptionType ScriptCode {}, length {}", scriptcode_code, macintosh_description_length);
+        }
+    }
+
+    return adopt_ref(*new TextDescriptionTagData(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description)));
+}
+
 ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.24 textType
@@ -684,6 +828,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, Detail::T
     switch (type) {
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
+    case TextDescriptionTagData::Type:
+        return TextDescriptionTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     case TextTagData::Type:
         return TextTagData::from_bytes(tag_bytes, entry.offset_to_beginning_of_tag_data_element, entry.size_of_tag_data_element);
     default:

@@ -18,7 +18,7 @@ static ErrorOr<String> hyperlink(URL const& target, T const& label)
 }
 
 template<class T>
-static void out_optional(char const* label, Optional<T> optional)
+static void out_optional(char const* label, Optional<T> const& optional)
 {
     out("{}: ", label);
     if (optional.has_value())
@@ -102,6 +102,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     record.iso_3166_1_country_code >> 8, record.iso_3166_1_country_code & 0xff,
                     record.text);
             }
+        } else if (tag_data->type() == Gfx::ICC::TextDescriptionTagData::Type) {
+            auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData&>(*tag_data);
+            outln("    ascii: \"{}\"", text_description.ascii_description());
+            out_optional("    unicode", MUST(text_description.unicode_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
+            outln("    unicode language code: 0x{}", text_description.unicode_language_code());
+            out_optional("    macintosh", MUST(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
         } else if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
             outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
         }
