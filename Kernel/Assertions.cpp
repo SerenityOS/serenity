@@ -1,24 +1,18 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Konrad <konrad@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/Processor.h>
+#include <Kernel/Assertions.h>
+#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
+#include <Kernel/Thread.h>
 
 using namespace Kernel;
-
-void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
-{
-    asm volatile("cli");
-    critical_dmesgln("ASSERTION FAILED: {}", msg);
-    critical_dmesgln("{}:{} in {}", file, line, func);
-
-    abort();
-}
 
 [[noreturn]] void abort()
 {
@@ -35,8 +29,18 @@ void __assertion_failed(char const* msg, char const* file, unsigned line, char c
     PANIC("Aborted");
 }
 
+void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
+{
+    Processor::disable_interrupts();
+
+    critical_dmesgln("ASSERTION FAILED: {}", msg);
+    critical_dmesgln("{}:{} in {}", file, line, func);
+
+    abort();
+}
+
 [[noreturn]] void _abort()
 {
-    asm volatile("ud2");
+    Processor::undefined_behaviour();
     __builtin_unreachable();
 }

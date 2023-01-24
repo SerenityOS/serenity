@@ -168,6 +168,11 @@ public:
         Aarch64::DAIF::set_I();
     }
 
+    ALWAYS_INLINE static void undefined_behaviour()
+    {
+        asm volatile("udf 0");
+    }
+
     void check_invoke_scheduler();
     void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
 

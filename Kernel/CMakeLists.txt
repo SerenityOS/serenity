@@ -17,6 +17,7 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
+    Assertions.cpp
     Arch/PageFault.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
@@ -252,6 +253,7 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
+    Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessGroup.cpp
@@ -401,7 +403,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
-        Panic.cpp
     )
 
     set(KERNEL_SOURCES
@@ -414,7 +415,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
@@ -464,7 +464,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
-        Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
