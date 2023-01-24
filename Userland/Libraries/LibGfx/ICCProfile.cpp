@@ -962,10 +962,7 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
     //  to reach a four-byte boundary) and the byte offset of the following tag element, or the end of the file.
     //  Duplicate tag signatures shall not be included in the tag table.
     //  Tag data elements shall not partially overlap, so there shall be no part of any tag data element that falls within
-    //  the range defined for another tag in the tag table.
-    //  The tag table may contain multiple tags signatures that all reference the same tag data element offset, allowing
-    //  efficient reuse of tag data elements. In such cases, both the offset and size of the tag data elements in the tag
-    //  table shall be the same."
+    //  the range defined for another tag in the tag table."
 
     ReadonlyBytes tag_table_bytes = bytes.slice(sizeof(ICCHeader));
 
@@ -986,10 +983,22 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
         return Error::from_string_literal("ICC::Profile: Not enough data for tag table entries");
     auto tag_table_entries = bit_cast<TagTableEntry const*>(tag_table_bytes.data());
 
+    // "The tag table may contain multiple tags signatures that all reference the same tag data element offset, allowing
+    //  efficient reuse of tag data elements."
+    HashMap<u32, NonnullRefPtr<TagData>> offset_to_tag_data;
+
     for (u32 i = 0; i < tag_count; ++i) {
         // FIXME: optionally ignore tags with unknown signature
-        // FIXME: dedupe identical offset/sizes
-        auto tag_data = TRY(read_tag(bytes, tag_table_entries[i].offset_to_beginning_of_tag_data_element, tag_table_entries[i].size_of_tag_data_element));
+
+        // Dedupe identical offset/sizes.
+        NonnullRefPtr<TagData> tag_data = TRY(offset_to_tag_data.try_ensure(tag_table_entries[i].offset_to_beginning_of_tag_data_element, [=, this]() {
+            return read_tag(bytes, tag_table_entries[i].offset_to_beginning_of_tag_data_element, tag_table_entries[i].size_of_tag_data_element);
+        }));
+
+        // "In such cases, both the offset and size of the tag data elements in the tag table shall be the same."
+        if (tag_data->size() != tag_table_entries[i].size_of_tag_data_element)
+            return Error::from_string_literal("ICC::Profile: two tags have same offset but different sizes");
+
         // "Duplicate tag signatures shall not be included in the tag table."
         if (TRY(m_tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("ICC::Profile: duplicate tag signature");
