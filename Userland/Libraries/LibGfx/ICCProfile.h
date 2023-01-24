@@ -114,7 +114,7 @@ URL device_model_url(DeviceModel);
     TAG(viewingCondDescTag, 0x76756564 /* 'vued' */)                \
     TAG(viewingConditionsTag, 0x76696577 /* 'view' */)
 
-#define TAG(name, id) constexpr TagSignature name { id };
+#define TAG(name, id) constexpr inline TagSignature name { id };
 ENUMERATE_TAG_SIGNATURES(TAG)
 #undef TAG
 
