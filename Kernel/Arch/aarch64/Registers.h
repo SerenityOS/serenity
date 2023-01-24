@@ -697,6 +697,28 @@ struct alignas(u64) SCTLR_EL1 {
 };
 static_assert(sizeof(SCTLR_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0601/2022-12/AArch64-Registers/TPIDR-EL0--EL0-Read-Write-Software-Thread-ID-Register?lang=en
+// TPIDR_EL0, Read/Write Software Thread ID Register
+struct alignas(u64) TPIDR_EL0 {
+    u64 value : 64;
+
+    static inline TPIDR_EL0 read()
+    {
+        TPIDR_EL0 thread_id_register;
+
+        asm("mrs %[value], TPIDR_EL0"
+            : [value] "=r"(thread_id_register));
+
+        return thread_id_register;
+    }
+
+    static inline void write(FlatPtr value)
+    {
+        asm("msr TPIDR_EL0, %[value]" ::[value] "r"(value));
+    }
+};
+static_assert(sizeof(TPIDR_EL0) == 8);
+
 // https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
 // MIDR_EL1, Main ID Register
 struct alignas(u64) MIDR_EL1 {
