@@ -5,14 +5,13 @@
  */
 
 #include <Kernel/Arch/DebugOutput.h>
-#include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #include <Kernel/Arch/x86_64/IO.h>
 
 namespace Kernel {
 
 static constexpr u16 serial_com1_io_port = 0x3F8;
 
-void bochs_debug_output(char ch)
+void platform_debug_output(char ch)
 {
     IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 }

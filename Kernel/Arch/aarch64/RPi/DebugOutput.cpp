@@ -9,9 +9,14 @@
 
 namespace Kernel {
 
-void debug_output(char ch)
+void platform_debug_output(char ch)
 {
     RPi::UART::the().send(ch);
+}
+
+void debug_output(char ch)
+{
+    platform_debug_output(ch);
 }
 
 }

@@ -8,11 +8,6 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/DebugOutput.h>
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
-#elif ARCH(AARCH64)
-#    include <Kernel/Arch/aarch64/RPi/UART.h>
-#endif
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/PCISerialDevice.h>
@@ -54,11 +49,9 @@ static void critical_console_out(char ch)
     if (s_serial_debug_enabled)
         serial_putch(ch);
 
-#if ARCH(X86_64)
     // No need to output things to the real ConsoleDevice as no one is likely
     // to read it (because we are in a fatal situation, so only print things and halt)
-    bochs_debug_output(ch);
-#endif
+    platform_debug_output(ch);
 
     // We emit chars directly to the string. this is necessary in few cases,
     // especially when we want to avoid any memory allocations...
@@ -79,11 +72,7 @@ static void console_out(char ch)
     if (DeviceManagement::the().is_console_device_attached()) {
         DeviceManagement::the().console_device().put_char(ch);
     } else {
-#if ARCH(X86_64)
-        bochs_debug_output(ch);
-#elif ARCH(AARCH64)
-        Kernel::RPi::UART::the().send(ch);
-#endif
+        platform_debug_output(ch);
     }
     if (ConsoleManagement::is_initialized()) {
         ConsoleManagement::the().debug_tty()->emit_char(ch);
@@ -105,11 +94,7 @@ static inline void internal_dbgputch(char ch)
 {
     if (s_serial_debug_enabled)
         serial_putch(ch);
-#if ARCH(X86_64)
-    bochs_debug_output(ch);
-#elif ARCH(AARCH64)
-    Kernel::RPi::UART::the().send(ch);
-#endif
+    platform_debug_output(ch);
 }
 
 extern "C" void dbgputchar(char ch)
