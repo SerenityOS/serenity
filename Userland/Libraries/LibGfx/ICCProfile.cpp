@@ -834,17 +834,7 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
             if (macintosh_description_data[macintosh_description_length - 1] != '\0')
                 return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode not \\0-terminated");
 
-            bool is_ascii = true;
-            for (u32 i = 0; i < macintosh_description_length; ++i) {
-                if (macintosh_description_data[i] >= 128)
-                    is_ascii = false;
-            }
-
-            if (is_ascii) {
-                macintosh_description = TRY(String::from_utf8(StringView { macintosh_description_data, (size_t)macintosh_description_length - 1 }));
-            } else {
-                dbgln("TODO: ICCProfile textDescriptionType non-ASCII MacRoman");
-            }
+            macintosh_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("x-mac-roman")->to_utf8({ macintosh_description_data, (size_t)macintosh_description_length - 1 })));
         } else {
             dbgln("TODO: ICCProfile textDescriptionType ScriptCode {}, length {}", scriptcode_code, macintosh_description_length);
         }
