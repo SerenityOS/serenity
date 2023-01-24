@@ -346,6 +346,20 @@ void TableFormattingContext::distribute_width_to_columns()
     if (columns_total_used_width() < available_width) {
         expand_columns_to_fill_available_width(ColumnType::Percent);
     }
+
+    if (columns_total_used_width() < available_width) {
+        // NOTE: if all columns got their max width and there is still width to distribute left
+        // it should be assigned to columns proportionally to their max width
+        CSSPixels grid_max = 0.0f;
+        for (auto& column : m_columns) {
+            grid_max += column.max_width;
+        }
+
+        auto width_to_distribute = available_width - columns_total_used_width();
+        for (auto& column : m_columns) {
+            column.used_width += width_to_distribute * column.max_width / grid_max;
+        }
+    }
 }
 
 void TableFormattingContext::determine_intrisic_size_of_table_container(AvailableSpace const& available_space)
