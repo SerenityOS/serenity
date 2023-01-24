@@ -289,6 +289,9 @@ void TableFormattingContext::distribute_width_to_columns()
             }
         }
 
+        if (total_preferred_width_increment == 0)
+            return;
+
         for (auto& column : m_columns) {
             if (column.type == column_type) {
                 CSSPixels preferred_width_increment = column_preferred_width(column) - column.min_width;
