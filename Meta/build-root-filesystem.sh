@@ -50,9 +50,8 @@ if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     mkdir -p mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
     $CP --preserve=timestamps -r "$TOOLCHAIN_DIR"/include/c++ mnt/usr/include
     $CP --preserve=timestamps -r "$TOOLCHAIN_DIR"/include/"$SERENITY_ARCH"-pc-serenity/c++ mnt/usr/include/"$SERENITY_ARCH"-pc-serenity
-elif [ "$SERENITY_ARCH" != "aarch64" ]; then
-    $CP --preserve=timestamps "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libgcc_s.so mnt/usr/lib
-    $CP --preserve=timestamps "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/libstdc++.a mnt/usr/lib
+else
+    $CP --preserve=timestamps -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/lib/* mnt/usr/lib
     $CP --preserve=timestamps -r "$SERENITY_SOURCE_DIR"/Toolchain/Local/"$SERENITY_ARCH"/"$SERENITY_ARCH"-pc-serenity/include/c++ mnt/usr/include
 fi
 
