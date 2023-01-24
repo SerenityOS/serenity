@@ -313,24 +313,8 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radius_data;
 }
 
-Optional<CSSPixelRect> PaintableBox::clip_rect() const
+Optional<Gfx::IntRect> PaintableBox::clip_rect() const
 {
-    if (!m_clip_rect.has_value()) {
-        if (containing_block() && containing_block()->paint_box())
-            m_clip_rect = containing_block()->paint_box()->clip_rect();
-
-        auto overflow_x = computed_values().overflow_x();
-        auto overflow_y = computed_values().overflow_y();
-
-        if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
-            if (m_clip_rect.has_value()) {
-                m_clip_rect->intersect(absolute_padding_box_rect());
-            } else {
-                m_clip_rect = absolute_padding_box_rect();
-            }
-        }
-    }
-
     return m_clip_rect;
 }
 
@@ -339,27 +323,36 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
 
-    // FIXME: Support more overflow variations.
-    auto clip_rect = this->clip_rect();
+    auto clip_rect = context.painter().clip_rect();
+    if (containing_block() && containing_block()->paint_box()) {
+        if (containing_block()->paint_box()->clip_rect().has_value()) {
+            clip_rect = *containing_block()->paint_box()->clip_rect();
+        }
+    }
+    context.painter().set_clip_rect(clip_rect);
+
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
     auto clip_overflow = [&] {
         if (!m_clipping_overflow) {
             context.painter().save();
-            context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
+            context.painter().add_clip_rect(context.rounded_device_rect(absolute_padding_box_rect()).to_type<int>());
             m_clipping_overflow = true;
         }
     };
 
-    if (clip_rect.has_value()) {
+    // FIXME: Support more overflow variations.
+    if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
         clip_overflow();
     }
+
+    m_clip_rect = context.painter().clip_rect();
 
     if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(absolute_padding_box_rect()), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
