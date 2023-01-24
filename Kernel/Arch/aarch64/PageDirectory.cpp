@@ -19,30 +19,42 @@
 
 namespace Kernel::Memory {
 
-void PageDirectory::register_page_directory(PageDirectory*)
+struct TTBR0Map {
+    SpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
+};
+
+static Singleton<TTBR0Map> s_ttbr0_map;
+
+void PageDirectory::register_page_directory(PageDirectory* directory)
 {
-    dbgln("FIXME: PageDirectory: Actually implement registering a page directory!");
+    s_ttbr0_map->map.with([&](auto& map) {
+        map.insert(directory->ttbr0(), *directory);
+    });
 }
 
-void PageDirectory::deregister_page_directory(PageDirectory*)
+void PageDirectory::deregister_page_directory(PageDirectory* directory)
 {
-    TODO_AARCH64();
+    s_ttbr0_map->map.with([&](auto& map) {
+        map.remove(directory->ttbr0());
+    });
 }
 
 LockRefPtr<PageDirectory> PageDirectory::find_current()
 {
-    TODO_AARCH64();
-    return nullptr;
+    return s_ttbr0_map->map.with([&](auto& map) {
+        return map.find(Aarch64::Asm::get_ttbr0_el1());
+    });
 }
 
-void activate_kernel_page_directory(PageDirectory const&)
+void activate_kernel_page_directory(PageDirectory const& page_directory)
 {
-    dbgln("FIXME: PageDirectory: Actually implement activating a kernel page directory!");
+    Aarch64::Asm::set_ttbr0_el1(page_directory.ttbr0());
 }
 
-void activate_page_directory(PageDirectory const&, Thread*)
+void activate_page_directory(PageDirectory const& page_directory, Thread* current_thread)
 {
-    TODO_AARCH64();
+    current_thread->regs().ttbr0_el1 = page_directory.ttbr0();
+    Aarch64::Asm::set_ttbr0_el1(page_directory.ttbr0());
 }
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()
