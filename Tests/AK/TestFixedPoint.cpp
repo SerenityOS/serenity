@@ -150,4 +150,9 @@ TEST_CASE(formatter)
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<4>(123.456)), "123.4375"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<4>(-123.456)), "-123.4375"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16> {}), "0"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.1)), "0.09999"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.02)), "0.019989"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.003)), "0.00299"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.0004)), "0.000396"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.0000000005)), "0"sv);
 }

@@ -389,6 +389,15 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
         auto fraction = (scale * fraction_value) / fraction_one; // TODO: overflows
         if (is_negative)
             fraction = scale - fraction;
+
+        size_t leading_zeroes = 0;
+        {
+            auto scale_tmp = scale / 10;
+            for (; fraction < scale_tmp; ++leading_zeroes) {
+                scale_tmp /= 10;
+            }
+        }
+
         while (fraction != 0 && fraction % 10 == 0)
             fraction /= 10;
 
@@ -402,14 +411,20 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
             }
         }
 
+        if (visible_precision == 0)
+            leading_zeroes = 0;
+
         if (zero_pad || visible_precision > 0)
             TRY(string_builder.try_append('.'));
+
+        if (leading_zeroes > 0)
+            TRY(format_builder.put_u64(0, base, false, false, true, Align::Right, leading_zeroes));
 
         if (visible_precision > 0)
             TRY(format_builder.put_u64(fraction, base, false, upper_case, true, Align::Right, visible_precision));
 
-        if (zero_pad && (precision - visible_precision) > 0)
-            TRY(format_builder.put_u64(0, base, false, false, true, Align::Right, precision - visible_precision));
+        if (zero_pad && (precision - leading_zeroes - visible_precision) > 0)
+            TRY(format_builder.put_u64(0, base, false, false, true, Align::Right, precision - leading_zeroes - visible_precision));
     }
 
     TRY(put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill));
