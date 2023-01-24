@@ -100,8 +100,7 @@ void Processor::initialize()
 [[noreturn]] void Processor::halt()
 {
     disable_interrupts();
-    for (;;)
-        asm volatile("wfi");
+    Aarch64::Asm::halt();
 }
 
 void Processor::flush_tlb_local(VirtualAddress, size_t)
