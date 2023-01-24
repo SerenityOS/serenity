@@ -339,8 +339,7 @@ DeprecatedString UTF16LEDecoder::to_utf8(StringView input)
 
 void Latin1Decoder::process(StringView input, Function<void(u32)> on_code_point)
 {
-    for (size_t i = 0; i < input.length(); ++i) {
-        u8 ch = input[i];
+    for (auto ch : input) {
         // Latin1 is the same as the first 256 Unicode code_points, so no mapping is needed, just utf-8 encoding.
         on_code_point(ch);
     }
