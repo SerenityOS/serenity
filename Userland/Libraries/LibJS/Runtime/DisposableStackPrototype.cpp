@@ -100,7 +100,8 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::use)
         }
         // d. Else,
         // i. Perform ? AddDisposableResource(disposableStack, value, sync-dispose, method).
-        add_disposable_resource(vm, disposable_stack->disposable_resource_stack(), value, Environment::InitializeBindingHint::SyncDispose, method);
+        // FIXME: Fairly sure this can't fail, see https://github.com/tc39/proposal-explicit-resource-management/pull/142
+        MUST(add_disposable_resource(vm, disposable_stack->disposable_resource_stack(), value, Environment::InitializeBindingHint::SyncDispose, method));
     }
 
     // 5. Return value.
