@@ -91,8 +91,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("");
 
     outln("tags:");
-    profile->for_each_tag([](auto tag_signature, auto tag_data) {
+    HashMap<Gfx::ICC::TagData*, Gfx::ICC::TagSignature> tag_data_to_first_signature;
+    profile->for_each_tag([&tag_data_to_first_signature](auto tag_signature, auto tag_data) {
         outln("{}: {}, offset {}, size {}", tag_signature, tag_data->type(), tag_data->offset(), tag_data->size());
+
+        // Print tag data only the first time it's seen.
+        // (Different sigatures can refer to the same data.)
+        auto it = tag_data_to_first_signature.find(tag_data);
+        if (it != tag_data_to_first_signature.end()) {
+            outln("    (see {} above)", it->value);
+            return;
+        }
+        tag_data_to_first_signature.set(tag_data, tag_signature);
 
         if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
             auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
