@@ -391,6 +391,18 @@ URL device_model_url(DeviceModel device_model)
         device_model.c0(), device_model.c1(), device_model.c2(), device_model.c3(), device_model.value));
 }
 
+Optional<StringView> tag_signature_spec_name(TagSignature tag_signature)
+{
+    switch (tag_signature) {
+#define TAG(name, id) \
+    case name:        \
+        return #name##sv;
+        ENUMERATE_TAG_SIGNATURES(TAG)
+#undef TAG
+    }
+    return {};
+}
+
 StringView device_class_name(DeviceClass device_class)
 {
     switch (device_class) {
