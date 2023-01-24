@@ -350,6 +350,7 @@ set(KERNEL_SOURCES
     UserOrKernelBuffer.cpp
     WaitQueue.cpp
     WorkQueue.cpp
+    kprintf.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
@@ -400,7 +401,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
-        kprintf.cpp
         Panic.cpp
     )
 

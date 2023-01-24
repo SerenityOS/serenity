@@ -10,6 +10,8 @@
 #include <Kernel/Arch/DebugOutput.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/UART.h>
 #endif
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
@@ -79,6 +81,8 @@ static void console_out(char ch)
     } else {
 #if ARCH(X86_64)
         bochs_debug_output(ch);
+#elif ARCH(AARCH64)
+        Kernel::RPi::UART::the().send(ch);
 #endif
     }
     if (ConsoleManagement::is_initialized()) {
@@ -103,6 +107,8 @@ static inline void internal_dbgputch(char ch)
         serial_putch(ch);
 #if ARCH(X86_64)
     bochs_debug_output(ch);
+#elif ARCH(AARCH64)
+    Kernel::RPi::UART::the().send(ch);
 #endif
 }
 
