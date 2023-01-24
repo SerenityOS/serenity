@@ -127,9 +127,7 @@ void TableFormattingContext::compute_table_measures()
         if (!computed_values.min_width().is_auto())
             min_width = max(min_width, computed_values.min_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
 
-        // NOTE: percentage column width cannot be used because it cannot be resolved correctly
-        // when final table width is not known yet
-        CSSPixels max_width = !computed_values.width().is_length() ? max_content_width.value() : width;
+        CSSPixels max_width = computed_values.width().is_auto() ? max_content_width.value() : width;
         if (!computed_values.max_width().is_none())
             max_width = min(max_width, computed_values.max_width().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box));
 
@@ -142,11 +140,7 @@ void TableFormattingContext::compute_table_measures()
         }
 
         cell.min_width = min_width + cell_intrinsic_offsets;
-        if (!computed_values.width().is_percentage()) {
-            cell.max_width = max(max(width, min_width), max_width) + cell_intrinsic_offsets;
-        } else {
-            cell.max_width = max(min_width, max_width) + cell_intrinsic_offsets;
-        }
+        cell.max_width = max(max(width, min_width), max_width) + cell_intrinsic_offsets;
 
         max_cell_column_span = max(max_cell_column_span, cell.column_span);
     }
