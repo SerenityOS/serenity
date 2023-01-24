@@ -10,7 +10,6 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/WindowTheme.h>
-#include <Services/Taskbar/TaskbarWindow.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Event.h>
@@ -978,10 +977,7 @@ void WindowFrame::latch_window_to_screen_edge(ResizeDirection resize_direction)
     auto window_rect = m_window.rect();
     auto frame_rect = rect();
     auto& screen = Screen::closest_to_rect(window_rect);
-    auto screen_rect = screen.rect();
-
-    if (screen.is_main_screen())
-        screen_rect.shrink(0, 0, TaskbarWindow::taskbar_height(), 0);
+    auto screen_rect = WindowManager::the().desktop_rect(screen);
 
     if (resize_direction == ResizeDirection::UpLeft
         || resize_direction == ResizeDirection::Up

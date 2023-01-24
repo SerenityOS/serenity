@@ -1958,10 +1958,7 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
     VERIFY(tile_type != WindowTileType::None);
 
     auto& screen = Screen::closest_to_rect(window.frame().rect());
-    Gfx::IntRect rect = screen.rect();
-
-    if (screen.is_main_screen())
-        rect.set_height(rect.height() - TaskbarWindow::taskbar_height());
+    auto rect = desktop_rect(screen);
 
     if (tile_type == WindowTileType::Maximized) {
         auto border_thickness = palette().window_border_thickness();
@@ -2181,9 +2178,10 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desir
     Gfx::IntPoint point;
     if (overlap_window) {
         auto& screen = Screen::closest_to_location(desired);
+        auto available_rect = desktop_rect(screen);
         point = overlap_window->position() + shift;
         point = { point.x() % screen.width(),
-            (point.y() >= (screen.height() - (screen.is_main_screen() ? TaskbarWindow::taskbar_height() : 0)))
+            (point.y() >= available_rect.height())
                 ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
                 : point.y() };
     } else {
