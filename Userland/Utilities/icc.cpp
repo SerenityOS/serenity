@@ -93,7 +93,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("tags:");
     HashMap<Gfx::ICC::TagData*, Gfx::ICC::TagSignature> tag_data_to_first_signature;
     profile->for_each_tag([&tag_data_to_first_signature](auto tag_signature, auto tag_data) {
-        outln("{}: {}, offset {}, size {}", tag_signature, tag_data->type(), tag_data->offset(), tag_data->size());
+        if (auto name = tag_signature_spec_name(tag_signature); name.has_value())
+            out("{} ({}): ", *name, tag_signature);
+        else
+            out("Unknown tag ({}): ", tag_signature);
+        outln("type {}, offset {}, size {}", tag_data->type(), tag_data->offset(), tag_data->size());
 
         // Print tag data only the first time it's seen.
         // (Different sigatures can refer to the same data.)
