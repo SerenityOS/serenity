@@ -589,10 +589,15 @@ public:
             callback(tag.key, tag.value);
     }
 
+    // Only versions 2 and 4 are in use.
+    bool is_v2() const { return version().major_version() == 2; }
+    bool is_v4() const { return version().major_version() == 4; }
+
 private:
     ErrorOr<void> read_header(ReadonlyBytes);
     ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element);
     ErrorOr<void> read_tag_table(ReadonlyBytes);
+    ErrorOr<void> check_required_tags();
 
     u32 m_on_disk_size { 0 };
     Optional<PreferredCMMType> m_preferred_cmm_type;
