@@ -1849,7 +1849,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const&
     if (is_row_layout()) {
         return calculate_min_content_width(item.box);
     }
-    return calculate_min_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : AvailableSize::make_indefinite());
+    return calculate_min_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : m_available_space_for_items->cross);
 }
 
 CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
@@ -1857,7 +1857,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const&
     if (is_row_layout()) {
         return calculate_max_content_width(item.box);
     }
-    return calculate_max_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : AvailableSize::make_indefinite());
+    return calculate_max_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : m_available_space_for_items->cross);
 }
 
 CSSPixels FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
@@ -1875,7 +1875,7 @@ CSSPixels FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const
 CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
-        return calculate_min_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : AvailableSize::make_indefinite());
+        return calculate_min_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : m_available_space_for_items->main);
     }
     return calculate_min_content_width(item.box);
 }
@@ -1883,7 +1883,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const
 CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
-        return calculate_max_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : AvailableSize::make_indefinite());
+        return calculate_max_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : m_available_space_for_items->main);
     }
     return calculate_max_content_width(item.box);
 }
