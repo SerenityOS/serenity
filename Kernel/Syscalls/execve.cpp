@@ -467,7 +467,7 @@ void Process::clear_signal_handlers_for_exec()
 }
 
 ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
-    LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
+    LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -657,10 +657,10 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
 
     // We enter a critical section here because we don't want to get interrupted between do_exec()
     // and Processor::assume_context() or the next context switch.
-    // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
+    // If we used an InterruptDisabler that calls enable_interrupts() on exit, we might timer tick'd too soon in exec().
     Processor::enter_critical();
-    prev_flags = cpu_flags();
-    cli();
+    previous_interrupts_state = processor_interrupts_state();
+    Processor::disable_interrupts();
 
     // NOTE: Be careful to not trigger any page faults below!
 
@@ -841,7 +841,7 @@ ErrorOr<LockRefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_execu
     return nullptr;
 }
 
-ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, u32& prev_flags, int recursion_depth)
+ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -879,7 +879,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
         auto shebang_path = TRY(shebang_words.first().try_clone());
         arguments.ptr_at(0) = move(path);
         TRY(arguments.try_prepend(move(shebang_words)));
-        return exec(move(shebang_path), move(arguments), move(environment), new_main_thread, prev_flags, ++recursion_depth);
+        return exec(move(shebang_path), move(arguments), move(environment), new_main_thread, previous_interrupts_state, ++recursion_depth);
     }
 
     // #2) ELF32 for i386
@@ -894,7 +894,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
     }
 
     auto interpreter_description = TRY(find_elf_interpreter_for_executable(path->view(), *main_program_header, nread, metadata.size));
-    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, prev_flags, *main_program_header);
+    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header);
 }
 
 ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*> user_params)
@@ -903,7 +903,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
     TRY(require_promise(Pledge::exec));
 
     Thread* new_main_thread = nullptr;
-    u32 prev_flags = 0;
+    InterruptsState previous_interrupts_state = InterruptsState::Enabled;
 
     // NOTE: Be extremely careful with allocating any kernel memory in this function.
     //       On success, the kernel stack will be lost.
@@ -945,7 +945,7 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         NonnullOwnPtrVector<KString> environment;
         TRY(copy_user_strings(params.environment, environment));
 
-        TRY(exec(move(path), move(arguments), move(environment), new_main_thread, prev_flags));
+        TRY(exec(move(path), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
     }
 
     // NOTE: If we're here, the exec has succeeded and we've got a new executable image!
@@ -964,15 +964,21 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         VERIFY(Processor::in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
+#if ARCH(X86_64)
+        FlatPtr prev_flags = previous_interrupts_state == InterruptsState::Enabled ? 0x200 : 0;
         Processor::assume_context(*current_thread, prev_flags);
         VERIFY_NOT_REACHED();
+#elif ARCH(AARCH64)
+        TODO_AARCH64();
+#else
+#    error Unknown architecture
+#endif
     }
 
     // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns
     //       a userspace process directly (such as /bin/SystemServer on startup)
 
-    if (prev_flags & 0x200)
-        sti();
+    restore_processor_interrupts_state(previous_interrupts_state);
     Processor::leave_critical();
     return 0;
 }
