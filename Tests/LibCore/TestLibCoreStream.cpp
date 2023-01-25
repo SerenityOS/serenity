@@ -9,7 +9,6 @@
 #include <AK/String.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/Timer.h>
@@ -593,90 +592,4 @@ TEST_CASE(buffered_tcp_socket_read)
     EXPECT(!maybe_second_received_line.is_error());
     auto second_received_line = maybe_second_received_line.value();
     EXPECT_EQ(second_received_line, second_line);
-}
-
-// Allocating memory stream tests
-
-TEST_CASE(allocating_memory_stream_empty)
-{
-    Core::Stream::AllocatingMemoryStream stream;
-
-    EXPECT_EQ(stream.used_buffer_size(), 0ul);
-
-    {
-        Array<u8, 32> array;
-        auto read_bytes = MUST(stream.read(array));
-        EXPECT_EQ(read_bytes.size(), 0ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("test"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-}
-
-TEST_CASE(allocating_memory_stream_offset_of)
-{
-    Core::Stream::AllocatingMemoryStream stream;
-    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
-
-    {
-        auto offset = MUST(stream.offset_of(" "sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 4ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("W"sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 0ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of(")"sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 22ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("-"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-
-    MUST(stream.discard(1));
-
-    {
-        auto offset = MUST(stream.offset_of("W"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("e"sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 0ul);
-    }
-}
-
-TEST_CASE(allocating_memory_stream_offset_of_oob)
-{
-    Core::Stream::AllocatingMemoryStream stream;
-    // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
-    //       So we have to assume some things about the behaviour of this class:
-    //       - The chunk size is 4096 bytes.
-    //       - A chunk is moved to the end when it's fully read from
-    //       - A free chunk is used as-is, no new ones are allocated if one exists.
-
-    // First, fill exactly one chunk.
-    for (size_t i = 0; i < 256; ++i)
-        MUST(stream.write_entire_buffer("AAAAAAAAAAAAAAAA"sv.bytes()));
-
-    // Then discard it all.
-    MUST(stream.discard(4096));
-    // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
-    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
-
-    {
-        auto offset = MUST(stream.offset_of("A"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
 }

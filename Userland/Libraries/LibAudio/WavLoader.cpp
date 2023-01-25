@@ -10,9 +10,9 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
+#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/Try.h>
-#include <LibCore/MemoryStream.h>
 
 namespace Audio {
 
@@ -35,7 +35,7 @@ Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Stri
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Bytes buffer)
 {
-    auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(buffer));
+    auto stream = LOADER_TRY(FixedMemoryStream::construct(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -115,7 +115,7 @@ static ErrorOr<double> read_sample(AK::Stream& stream)
 LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
 {
     FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
-    auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(move(data)));
+    auto stream = LOADER_TRY(FixedMemoryStream::construct(move(data)));
 
     switch (m_sample_format) {
     case PcmSampleFormat::Uint8:

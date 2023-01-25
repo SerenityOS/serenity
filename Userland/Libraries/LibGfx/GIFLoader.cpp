@@ -11,9 +11,9 @@
 #include <AK/Error.h>
 #include <AK/IntegralMath.h>
 #include <AK/Memory.h>
+#include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Try.h>
-#include <LibCore/MemoryStream.h>
 #include <LibGfx/GIFLoader.h>
 #include <string.h>
 
@@ -381,7 +381,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
     if (context.data_size < 32)
         return Error::from_string_literal("Size too short for GIF frame descriptors");
 
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(ReadonlyBytes { context.data, context.data_size }));
+    auto stream = TRY(FixedMemoryStream::construct(ReadonlyBytes { context.data, context.data_size }));
 
     TRY(decode_gif_header(*stream));
 
@@ -565,7 +565,7 @@ bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool GIFImageDecoderPlugin::initialize()
 {
-    auto stream_or_error = Core::Stream::FixedMemoryStream::construct(ReadonlyBytes { m_context->data, m_context->data_size });
+    auto stream_or_error = FixedMemoryStream::construct(ReadonlyBytes { m_context->data, m_context->data_size });
     if (stream_or_error.is_error())
         return false;
     return !decode_gif_header(*stream_or_error.value()).is_error();
@@ -573,7 +573,7 @@ bool GIFImageDecoderPlugin::initialize()
 
 ErrorOr<bool> GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(data));
+    auto stream = TRY(FixedMemoryStream::construct(data));
     return !decode_gif_header(*stream).is_error();
 }
 

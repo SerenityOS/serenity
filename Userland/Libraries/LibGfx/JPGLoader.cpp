@@ -5,14 +5,15 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
+#include <AK/MemoryStream.h>
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
-#include <LibCore/MemoryStream.h>
 #include <LibGfx/JPGLoader.h>
 
 #define JPG_INVALID 0X0000
@@ -198,7 +199,7 @@ struct JPGLoadingContext {
     HuffmanStreamState huffman_stream;
     i32 previous_dc_values[3] = { 0 };
     MacroblockMeta mblock_meta;
-    OwnPtr<Core::Stream::FixedMemoryStream> stream;
+    OwnPtr<FixedMemoryStream> stream;
 
     Optional<ICCMultiChunkState> icc_multi_chunk_state;
     Optional<ByteBuffer> icc_data;
@@ -1201,7 +1202,7 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingC
 static ErrorOr<void> decode_header(JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::HeaderDecoded) {
-        context.stream = TRY(Core::Stream::FixedMemoryStream::construct({ context.data, context.data_size }));
+        context.stream = TRY(FixedMemoryStream::construct({ context.data, context.data_size }));
 
         if (auto result = parse_header(*context.stream, context); result.is_error()) {
             context.state = JPGLoadingContext::State::Error;

@@ -586,7 +586,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::Stream::LocalSocket& socket)
     {
-        auto stream = TRY(Core::Stream::FixedMemoryStream::construct(buffer));
+        auto stream = TRY(FixedMemoryStream::construct(buffer));
         auto message_endpoint_magic = TRY(stream->read_value<u32>());)~~~");
     generator.append(R"~~~(
 
@@ -768,10 +768,10 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
     }
 
     generator.appendln(R"~~~(#include <AK/Error.h>
+#include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
 #include <AK/Utf8View.h>
-#include <LibCore/MemoryStream.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>

@@ -11,7 +11,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/LEB128.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <LibDebug/DebugInfo.h>
 
 namespace Debug::Dwarf {
@@ -47,8 +47,8 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
     if (!m_debug_info_data.data())
         return {};
 
-    auto debug_info_stream = TRY(Core::Stream::FixedMemoryStream::construct(m_debug_info_data));
-    auto line_info_stream = TRY(Core::Stream::FixedMemoryStream::construct(m_debug_line_data));
+    auto debug_info_stream = TRY(FixedMemoryStream::construct(m_debug_info_data));
+    auto line_info_stream = TRY(FixedMemoryStream::construct(m_debug_line_data));
 
     while (!debug_info_stream->is_eof()) {
         auto unit_offset = TRY(debug_info_stream->tell());
@@ -321,14 +321,14 @@ ErrorOr<void> DwarfInfo::build_cached_dies() const
 
             Vector<DIERange> entries;
             if (die.compilation_unit().dwarf_version() == 5) {
-                auto range_lists_stream = TRY(Core::Stream::FixedMemoryStream::construct(debug_range_lists_data()));
+                auto range_lists_stream = TRY(FixedMemoryStream::construct(debug_range_lists_data()));
                 TRY(range_lists_stream->seek(offset));
                 AddressRangesV5 address_ranges(move(range_lists_stream), die.compilation_unit());
                 TRY(address_ranges.for_each_range([&entries](auto range) {
                     entries.empend(range.start, range.end);
                 }));
             } else {
-                auto ranges_stream = TRY(Core::Stream::FixedMemoryStream::construct(debug_ranges_data()));
+                auto ranges_stream = TRY(FixedMemoryStream::construct(debug_ranges_data()));
                 TRY(ranges_stream->seek(offset));
                 AddressRangesV4 address_ranges(move(ranges_stream), die.compilation_unit());
                 TRY(address_ranges.for_each_range([&entries](auto range) {

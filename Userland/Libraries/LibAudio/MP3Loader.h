@@ -9,8 +9,8 @@
 #include "Loader.h"
 #include "MP3Types.h"
 #include <AK/BitStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibDSP/MDCT.h>
 
@@ -73,7 +73,7 @@ private:
     AK::Optional<MP3::MP3Frame> m_current_frame;
     u32 m_current_frame_read;
     OwnPtr<BigEndianInputBitStream> m_bitstream;
-    Core::Stream::AllocatingMemoryStream m_bit_reservoir;
+    AllocatingMemoryStream m_bit_reservoir;
 };
 
 }

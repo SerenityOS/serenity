@@ -5,7 +5,7 @@
  */
 
 #include <AK/Endian.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/QOILoader.h>
 
@@ -202,13 +202,13 @@ bool QOIImageDecoderPlugin::initialize()
 
 ErrorOr<bool> QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct({ data.data(), data.size() }));
+    auto stream = TRY(FixedMemoryStream::construct({ data.data(), data.size() }));
     return !decode_qoi_header(*stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(data));
+    auto stream = TRY(FixedMemoryStream::construct(data));
     return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream)));
 }
 

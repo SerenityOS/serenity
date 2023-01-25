@@ -5,13 +5,13 @@
  */
 
 #include <AK/BitStream.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <LibTest/TestCase.h>
 
 // Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
 TEST_CASE(little_endian_bit_stream_input_output_match)
 {
-    auto memory_stream = make<Core::Stream::AllocatingMemoryStream>();
+    auto memory_stream = make<AllocatingMemoryStream>();
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
@@ -67,7 +67,7 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 // Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
 TEST_CASE(big_endian_bit_stream_input_output_match)
 {
-    auto memory_stream = make<Core::Stream::AllocatingMemoryStream>();
+    auto memory_stream = make<AllocatingMemoryStream>();
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.

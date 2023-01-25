@@ -8,9 +8,9 @@
 
 #include <AK/Array.h>
 #include <AK/BitStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/Random.h>
 #include <LibCompress/Deflate.h>
-#include <LibCore/MemoryStream.h>
 #include <cstring>
 
 TEST_CASE(canonical_code_simple)
@@ -28,7 +28,7 @@ TEST_CASE(canonical_code_simple)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = MUST(Core::Stream::FixedMemoryStream::construct(input));
+    auto memory_stream = MUST(FixedMemoryStream::construct(input));
     auto bit_stream = MUST(LittleEndianInputBitStream::construct(move(memory_stream)));
 
     for (size_t idx = 0; idx < 9; ++idx)
@@ -48,7 +48,7 @@ TEST_CASE(canonical_code_complex)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = MUST(Core::Stream::FixedMemoryStream::construct(input));
+    auto memory_stream = MUST(FixedMemoryStream::construct(input));
     auto bit_stream = MUST(LittleEndianInputBitStream::construct(move(memory_stream)));
 
     for (size_t idx = 0; idx < 12; ++idx)

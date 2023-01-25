@@ -9,6 +9,7 @@
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
+#include <AK/MemoryStream.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
@@ -16,7 +17,6 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
@@ -336,7 +336,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     builder.append("</html>\n"sv);
 
     auto response = builder.to_deprecated_string();
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(response.bytes()));
+    auto stream = TRY(FixedMemoryStream::construct(response.bytes()));
     return send_response(*stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
 }
 

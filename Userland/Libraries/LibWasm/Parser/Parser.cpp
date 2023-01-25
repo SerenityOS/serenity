@@ -6,9 +6,9 @@
 
 #include <AK/Debug.h>
 #include <AK/LEB128.h>
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopeLogger.h>
-#include <LibCore/MemoryStream.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {
@@ -261,7 +261,7 @@ ParseResult<BlockType> BlockType::parse(AK::Stream& stream)
         return BlockType {};
 
     {
-        auto value_stream = Core::Stream::FixedMemoryStream::construct(ReadonlyBytes { &kind, 1 }).release_value_but_fixme_should_propagate_errors();
+        auto value_stream = FixedMemoryStream::construct(ReadonlyBytes { &kind, 1 }).release_value_but_fixme_should_propagate_errors();
         if (auto value_type = ValueType::parse(*value_stream); !value_type.is_error())
             return BlockType { value_type.release_value() };
     }

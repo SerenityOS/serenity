@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/Printer/Printer.h>
@@ -86,7 +86,7 @@ Result Configuration::execute(Interpreter& interpreter)
 void Configuration::dump_stack()
 {
     auto print_value = []<typename... Ts>(CheckedFormatString<Ts...> format, Ts... vs) {
-        Core::Stream::AllocatingMemoryStream memory_stream;
+        AllocatingMemoryStream memory_stream;
         Printer { memory_stream }.print(vs...);
         auto buffer = ByteBuffer::create_uninitialized(memory_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
         memory_stream.read_entire_buffer(buffer).release_value_but_fixme_should_propagate_errors();
