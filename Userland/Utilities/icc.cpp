@@ -130,27 +130,27 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& parametric_curve = static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data);
             switch (parametric_curve.function_type()) {
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
-                outln("  Y = X**{}", parametric_curve.g());
+                outln("    Y = X**{}", parametric_curve.g());
                 break;
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
-                outln("  Y = ({}*X + {})**{}   if X >= -{}/{}",
+                outln("    Y = ({}*X + {})**{}   if X >= -{}/{}",
                     parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
-                outln("  Y = 0                                else");
+                outln("    Y = 0                                else");
                 break;
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
-                outln("  Y = ({}*X + {})**{} + {}   if X >= -{}/{}",
+                outln("    Y = ({}*X + {})**{} + {}   if X >= -{}/{}",
                     parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
-                outln("  Y =  {}                                    else", parametric_curve.c());
+                outln("    Y =  {}                                    else", parametric_curve.c());
                 break;
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
-                outln("  Y = ({}*X + {})**{}   if X >= {}",
+                outln("    Y = ({}*X + {})**{}   if X >= {}",
                     parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
-                outln("  Y =  {}*X                        else", parametric_curve.c());
+                outln("    Y =  {}*X                        else", parametric_curve.c());
                 break;
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
-                outln("  Y = ({}*X + {})**{} + {}   if X >= {}",
+                outln("    Y = ({}*X + {})**{} + {}   if X >= {}",
                     parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
-                outln("  Y =  {}*X + {}                             else", parametric_curve.c(), parametric_curve.f());
+                outln("    Y =  {}*X + {}                             else", parametric_curve.c(), parametric_curve.f());
                 break;
             }
         } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
