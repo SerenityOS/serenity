@@ -261,6 +261,7 @@ set(KERNEL_SOURCES
     Scheduler.cpp
     ScopedCritical.cpp
     StdLib.cpp
+    Syscall.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
@@ -402,7 +403,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Interrupts/SpuriousInterruptHandler.cpp
         kprintf.cpp
         Panic.cpp
-        Syscall.cpp
     )
 
     set(KERNEL_SOURCES
