@@ -272,6 +272,7 @@ set(KERNEL_SOURCES
     Syscalls/disown.cpp
     Syscalls/dup2.cpp
     Syscalls/emuctl.cpp
+    Syscalls/execve.cpp
     Syscalls/exit.cpp
     Syscalls/faccessat.cpp
     Syscalls/fallocate.cpp
@@ -402,7 +403,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         kprintf.cpp
         Panic.cpp
         Syscall.cpp
-        Syscalls/execve.cpp
     )
 
     set(KERNEL_SOURCES

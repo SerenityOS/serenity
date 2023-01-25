@@ -16,11 +16,6 @@ namespace Kernel {
 
 ProcessID g_init_pid { 0 };
 
-ErrorOr<void> Process::exec(NonnullOwnPtr<KString>, NonnullOwnPtrVector<KString>, NonnullOwnPtrVector<KString>, Thread*&, u32&, int)
-{
-    TODO_AARCH64();
-}
-
 }
 
 // Delay.cpp
