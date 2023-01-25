@@ -50,6 +50,7 @@ set(AK_TEST_SOURCES
     TestLexicalPath.cpp
     TestMACAddress.cpp
     TestMemory.cpp
+    TestMemoryStream.cpp
     TestNeverDestroyed.cpp
     TestNonnullRefPtr.cpp
     TestNumberFormat.cpp

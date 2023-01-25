@@ -25,7 +25,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>

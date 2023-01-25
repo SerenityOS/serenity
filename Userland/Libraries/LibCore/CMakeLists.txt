@@ -13,7 +13,6 @@ set(SOURCES
     IODevice.cpp
     LockFile.cpp
     MappedFile.cpp
-    MemoryStream.cpp
     MimeData.cpp
     NetworkJob.cpp
     Notifier.cpp

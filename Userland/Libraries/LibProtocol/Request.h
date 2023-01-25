@@ -10,9 +10,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
+#include <AK/MemoryStream.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Stream.h>
 #include <LibIPC/Forward.h>
@@ -68,7 +68,7 @@ private:
     bool m_should_buffer_all_input { false };
 
     struct InternalBufferedData {
-        Core::Stream::AllocatingMemoryStream payload_stream;
+        AllocatingMemoryStream payload_stream;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
         Optional<u32> response_code;
     };

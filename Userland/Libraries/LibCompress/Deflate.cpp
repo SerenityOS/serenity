@@ -10,7 +10,7 @@
 #include <AK/BinaryHeap.h>
 #include <AK/BinarySearch.h>
 #include <AK/BitStream.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <string.h>
 
 #include <LibCompress/Deflate.h>
@@ -317,9 +317,9 @@ void DeflateDecompressor::close()
 
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
+    auto memory_stream = TRY(FixedMemoryStream::construct(bytes));
     auto deflate_stream = TRY(DeflateDecompressor::construct(move(memory_stream)));
-    Core::Stream::AllocatingMemoryStream output_stream;
+    AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!deflate_stream->is_eof()) {
@@ -1017,7 +1017,7 @@ ErrorOr<void> DeflateCompressor::final_flush()
 
 ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, CompressionLevel compression_level)
 {
-    auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
+    auto output_stream = TRY(try_make<AllocatingMemoryStream>());
     auto deflate_stream = TRY(DeflateCompressor::construct(MaybeOwned<AK::Stream>(*output_stream), compression_level));
 
     TRY(deflate_stream->write_entire_buffer(bytes));

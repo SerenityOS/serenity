@@ -5,11 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/FixedArray.h>
 #include <AK/MemMem.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 
-namespace Core::Stream {
+namespace AK {
 
 FixedMemoryStream::FixedMemoryStream(Bytes bytes)
     : m_bytes(bytes)

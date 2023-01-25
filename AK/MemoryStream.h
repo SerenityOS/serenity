@@ -6,14 +6,11 @@
 
 #pragma once
 
-#include <AK/Error.h>
-#include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/Span.h>
-#include <AK/TypedTransfer.h>
-#include <LibCore/Stream.h>
+#include <AK/Stream.h>
+#include <AK/Vector.h>
 
-namespace Core::Stream {
+namespace AK {
 
 /// A stream class that allows for reading/writing on a preallocated memory area
 /// using a single read/write head.
@@ -49,7 +46,7 @@ private:
 
 /// A stream class that allows for writing to an automatically allocating memory area
 /// and reading back the written data afterwards.
-class AllocatingMemoryStream final : public AK::Stream {
+class AllocatingMemoryStream final : public Stream {
 public:
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
@@ -77,3 +74,8 @@ private:
 };
 
 }
+
+#if USING_AK_GLOBALLY
+using AK::AllocatingMemoryStream;
+using AK::FixedMemoryStream;
+#endif

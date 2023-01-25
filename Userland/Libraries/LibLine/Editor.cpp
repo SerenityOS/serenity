@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
+#include <AK/MemoryStream.h>
 #include <AK/RedBlackTree.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -20,7 +21,6 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -1329,7 +1329,7 @@ ErrorOr<void> Editor::cleanup()
 
 ErrorOr<void> Editor::refresh_display()
 {
-    Core::Stream::AllocatingMemoryStream output_stream;
+    AllocatingMemoryStream output_stream;
     ScopeGuard flush_stream {
         [&] {
             m_shown_lines = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);

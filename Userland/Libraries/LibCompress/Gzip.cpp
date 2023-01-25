@@ -8,8 +8,8 @@
 #include <LibCompress/Gzip.h>
 
 #include <AK/DeprecatedString.h>
+#include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/MemoryStream.h>
 
 namespace Compress {
 
@@ -164,9 +164,9 @@ Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes
 
 ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
+    auto memory_stream = TRY(FixedMemoryStream::construct(bytes));
     auto gzip_stream = make<GzipDecompressor>(move(memory_stream));
-    Core::Stream::AllocatingMemoryStream output_stream;
+    AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!gzip_stream->is_eof()) {
@@ -235,7 +235,7 @@ void GzipCompressor::close()
 
 ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
 {
-    auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
+    auto output_stream = TRY(try_make<AllocatingMemoryStream>());
     GzipCompressor gzip_stream { MaybeOwned<AK::Stream>(*output_stream) };
 
     TRY(gzip_stream.write_entire_buffer(bytes));

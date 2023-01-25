@@ -11,6 +11,7 @@
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
@@ -20,7 +21,6 @@
 #include <LibAudio/FlacTypes.h>
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Resampler.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 
 namespace Audio {
@@ -42,7 +42,7 @@ Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(St
 
 Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(Bytes buffer)
 {
-    auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(buffer));
+    auto stream = LOADER_TRY(FixedMemoryStream::construct(buffer));
     auto loader = make<FlacLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -78,7 +78,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     // Receive the streaminfo block
     auto streaminfo = TRY(next_meta_block(*bit_input));
     FLAC_VERIFY(streaminfo.type == FlacMetadataBlockType::STREAMINFO, LoaderError::Category::Format, "First block must be STREAMINFO");
-    auto streaminfo_data_memory = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(streaminfo.data.bytes()));
+    auto streaminfo_data_memory = LOADER_TRY(FixedMemoryStream::construct(streaminfo.data.bytes()));
     auto streaminfo_data = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*streaminfo_data_memory)));
 
     // 11.10 METADATA_BLOCK_STREAMINFO
@@ -149,7 +149,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 // 11.19. METADATA_BLOCK_PICTURE
 MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 {
-    auto memory_stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(block.data.bytes()));
+    auto memory_stream = LOADER_TRY(FixedMemoryStream::construct(block.data.bytes()));
     auto picture_block_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
 
     PictureData picture {};
@@ -186,7 +186,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 // 11.13. METADATA_BLOCK_SEEKTABLE
 MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
 {
-    auto memory_stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(block.data.bytes()));
+    auto memory_stream = LOADER_TRY(FixedMemoryStream::construct(block.data.bytes()));
     auto seektable_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
     for (size_t i = 0; i < block.length / 18; ++i) {
         // 11.14. SEEKPOINT

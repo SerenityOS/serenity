@@ -5,12 +5,12 @@
  */
 
 #include <AK/IntegralMath.h>
+#include <AK/MemoryStream.h>
 #include <AK/Span.h>
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
-#include <LibCore/MemoryStream.h>
 
 namespace Compress {
 
@@ -163,7 +163,7 @@ ErrorOr<void> ZlibCompressor::finish()
 
 ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompressionLevel compression_level)
 {
-    auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
+    auto output_stream = TRY(try_make<AllocatingMemoryStream>());
     auto zlib_stream = TRY(ZlibCompressor::construct(MaybeOwned<AK::Stream>(*output_stream), compression_level));
 
     TRY(zlib_stream->write_entire_buffer(bytes));
