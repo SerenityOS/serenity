@@ -164,7 +164,7 @@ ErrorOr<DeviceClass> parse_device_class(ICCHeader const& header)
 {
     // ICC v4, 7.2.5 Profile/device class field
     switch (header.profile_device_class) {
-    case DeviceClass::InputDevce:
+    case DeviceClass::InputDevice:
     case DeviceClass::DisplayDevice:
     case DeviceClass::OutputDevice:
     case DeviceClass::DeviceLink:
@@ -406,8 +406,8 @@ Optional<StringView> tag_signature_spec_name(TagSignature tag_signature)
 StringView device_class_name(DeviceClass device_class)
 {
     switch (device_class) {
-    case DeviceClass::InputDevce:
-        return "InputDevce"sv;
+    case DeviceClass::InputDevice:
+        return "InputDevice"sv;
     case DeviceClass::DisplayDevice:
         return "DisplayDevice"sv;
     case DeviceClass::OutputDevice:
@@ -1071,10 +1071,11 @@ ErrorOr<void> Profile::check_required_tags()
         // FIXME: Check for chromaticAdaptationTag after figuring out when exactly it needs to be present.
     }
 
-    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, [&](auto& key) { return m_tag_table.contains(key); }); };
+    auto has_tag = [&](auto& tag) { return m_tag_table.contains(tag); };
+    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
 
     switch (device_class()) {
-    case DeviceClass::InputDevce: {
+    case DeviceClass::InputDevice: {
         // ICC v4, 8.3 Input profiles
         // "8.3.1 General
         //  Input profiles are generally used with devices such as scanners and digital cameras. The types of profiles
@@ -1095,13 +1096,13 @@ ErrorOr<void> Profile::check_required_tags()
         //  8.3.4 Monochrome Input profiles
         //  In addition to the tags listed in 8.2, a monochrome Input profile shall contain the following tag:
         //  - grayTRCTag (see 9.2.29).
-        bool has_n_component_lut_based_tags = m_tag_table.contains(AToB0Tag);
+        bool has_n_component_lut_based_tags = has_tag(AToB0Tag);
         bool has_three_component_matrix_based_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
-        bool has_monochrome_tags = m_tag_table.contains(grayTRCTag);
+        bool has_monochrome_tags = has_tag(grayTRCTag);
         if (!has_n_component_lut_based_tags && !has_three_component_matrix_based_tags && !has_monochrome_tags)
-            return Error::from_string_literal("ICC::Profile: InputDevce required tags are missing");
+            return Error::from_string_literal("ICC::Profile: InputDevice required tags are missing");
         if (!has_n_component_lut_based_tags && has_three_component_matrix_based_tags && connection_space() != ColorSpace::PCSXYZ)
-            return Error::from_string_literal("ICC::Profile: InputDevce three-component matrix-based profile must use PCSXYZ");
+            return Error::from_string_literal("ICC::Profile: InputDevice three-component matrix-based profile must use PCSXYZ");
         break;
     }
     case DeviceClass::DisplayDevice: {
@@ -1128,7 +1129,7 @@ ErrorOr<void> Profile::check_required_tags()
         //  - grayTRCTag (see 9.2.29)."
         bool has_n_component_lut_based_tags = has_all_tags(Array { AToB0Tag, BToA0Tag });
         bool has_three_component_matrix_based_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
-        bool has_monochrome_tags = m_tag_table.contains(grayTRCTag);
+        bool has_monochrome_tags = has_tag(grayTRCTag);
         if (!has_n_component_lut_based_tags && !has_three_component_matrix_based_tags && !has_monochrome_tags)
             return Error::from_string_literal("ICC::Profile: DisplayDevice required tags are missing");
         if (!has_n_component_lut_based_tags && has_three_component_matrix_based_tags && connection_space() != ColorSpace::PCSXYZ)
@@ -1158,7 +1159,7 @@ ErrorOr<void> Profile::check_required_tags()
         if (is_v4() && is_xCLR(connection_space()))
             required_n_component_lut_based_tags.append(colorantTableTag);
         bool has_n_component_lut_based_tags = has_all_tags(required_n_component_lut_based_tags);
-        bool has_monochrome_tags = m_tag_table.contains(grayTRCTag);
+        bool has_monochrome_tags = has_tag(grayTRCTag);
         if (!has_n_component_lut_based_tags && !has_monochrome_tags)
             return Error::from_string_literal("ICC::Profile: OutputDevice required tags are missing");
         break;
@@ -1202,14 +1203,14 @@ ErrorOr<void> Profile::check_required_tags()
         // "In addition to the tags listed in 8.2, an Abstract profile shall contain the following tag:
         //  - AToB0Tag (see 9.2.1).
         //  [...] Abstract profiles cannot be embedded in images."
-        if (!m_tag_table.contains(AToB0Tag))
+        if (!has_tag(AToB0Tag))
             return Error::from_string_literal("ICC::Profile: Abstract required AToB0Tag is missing");
         break;
     case DeviceClass::NamedColor:
         // ICC v4, 8.9 NamedColor profile
         // "In addition to the tags listed in 8.2, a NamedColor profile shall contain the following tag:
         //  - namedColor2Tag (see 9.2.35)."
-        if (!m_tag_table.contains(namedColor2Tag))
+        if (!has_tag(namedColor2Tag))
             return Error::from_string_literal("ICC::Profile: NamedColor required namedColor2Tag is missing");
         break;
     }
