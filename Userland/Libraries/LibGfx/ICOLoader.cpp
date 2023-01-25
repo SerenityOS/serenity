@@ -6,7 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedMemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <LibGfx/BMPLoader.h>
@@ -36,6 +36,22 @@ struct ICONDIRENTRY {
 };
 static_assert(AssertSize<ICONDIRENTRY, 16>());
 
+};
+
+template<>
+class AK::Traits<Gfx::ICONDIR> : public GenericTraits<Gfx::ICONDIR> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Gfx::ICONDIRENTRY> : public GenericTraits<Gfx::ICONDIRENTRY> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+namespace Gfx {
+
 struct ICOImageDescriptor {
     u16 width;
     u16 height;
@@ -59,23 +75,17 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-static ErrorOr<size_t> decode_ico_header(DeprecatedInputMemoryStream& stream)
+static ErrorOr<size_t> decode_ico_header(AK::Stream& stream)
 {
-    ICONDIR header;
-    stream >> Bytes { &header, sizeof(header) };
-    TRY(stream.try_handle_any_error());
-
+    auto header = TRY(stream.read_value<ICONDIR>());
     if (header.must_be_0 != 0 || header.must_be_1 != 1)
         return Error::from_string_literal("Invalid ICO header");
     return { header.image_count };
 }
 
-static ErrorOr<ICOImageDescriptor> decode_ico_direntry(DeprecatedInputMemoryStream& stream)
+static ErrorOr<ICOImageDescriptor> decode_ico_direntry(AK::Stream& stream)
 {
-    ICONDIRENTRY entry;
-    stream >> Bytes { &entry, sizeof(entry) };
-    TRY(stream.try_handle_any_error());
-
+    auto entry = TRY(stream.read_value<ICONDIRENTRY>());
     ICOImageDescriptor desc = { entry.width, entry.height, entry.bits_per_pixel, entry.offset, entry.size, nullptr };
     if (desc.width == 0)
         desc.width = 256;
@@ -106,14 +116,14 @@ static size_t find_largest_image(ICOLoadingContext const& context)
 
 static ErrorOr<void> load_ico_directory(ICOLoadingContext& context)
 {
-    DeprecatedInputMemoryStream stream { { context.data, context.data_size } };
+    auto stream = TRY(FixedMemoryStream::construct({ context.data, context.data_size }));
 
-    auto image_count = TRY(decode_ico_header(stream));
+    auto image_count = TRY(decode_ico_header(*stream));
     if (image_count == 0)
         return Error::from_string_literal("ICO file has no images");
 
     for (size_t i = 0; i < image_count; ++i) {
-        auto desc = TRY(decode_ico_direntry(stream));
+        auto desc = TRY(decode_ico_direntry(*stream));
         if (desc.offset + desc.size < desc.offset // detect integer overflow
             || (desc.offset + desc.size) > context.data_size) {
             dbgln_if(ICO_DEBUG, "load_ico_directory: offset: {} size: {} doesn't fit in ICO size: {}", desc.offset, desc.size, context.data_size);
@@ -173,8 +183,8 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context,
 
 ErrorOr<bool> ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    DeprecatedInputMemoryStream stream { { data.data(), data.size() } };
-    return !decode_ico_header(stream).is_error();
+    auto stream = TRY(FixedMemoryStream::construct(data));
+    return !decode_ico_header(*stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data)
@@ -223,8 +233,10 @@ bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool ICOImageDecoderPlugin::initialize()
 {
-    DeprecatedInputMemoryStream stream { { m_context->data, m_context->data_size } };
-    return !decode_ico_header(stream).is_error();
+    auto stream_or_error = FixedMemoryStream::construct(ReadonlyBytes { m_context->data, m_context->data_size });
+    if (stream_or_error.is_error())
+        return false;
+    return !decode_ico_header(*stream_or_error.value()).is_error();
 }
 
 bool ICOImageDecoderPlugin::is_animated()
