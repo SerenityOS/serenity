@@ -24,14 +24,12 @@ struct RegisterState {
     FlatPtr userspace_sp() const { return sp_el0; }
     void set_userspace_sp(FlatPtr value)
     {
-        (void)value;
-        TODO_AARCH64();
+        sp_el0 = value;
     }
     FlatPtr ip() const { return elr_el1; }
     void set_ip(FlatPtr value)
     {
-        (void)value;
-        TODO_AARCH64();
+        elr_el1 = value;
     }
     FlatPtr bp() const { return x[29]; }
 

@@ -22,6 +22,7 @@ struct ThreadRegisters {
     FlatPtr ip() const { return elr_el1; }
     void set_ip(FlatPtr value) { elr_el1 = value; }
 
+    FlatPtr sp() const { return sp_el0; }
     void set_sp(FlatPtr value) { sp_el0 = value; }
 
     void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)

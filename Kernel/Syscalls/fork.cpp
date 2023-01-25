@@ -146,8 +146,15 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
         child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
 #elif ARCH(AARCH64)
-    (void)regs;
-    TODO_AARCH64();
+    auto& child_regs = child_first_thread->m_regs;
+    child_regs.x[0] = 0; // fork() returns 0 in the child :^)
+    for (auto i = 1; i < 31; i++)
+        child_regs.x[i] = regs.x[i];
+    child_regs.set_sp(regs.userspace_sp());
+    child_regs.set_ip(regs.ip());
+
+    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:p} with stack {:p}",
+        child_regs.ip(), child_regs.sp());
 #else
 #    error Unknown architecture
 #endif
