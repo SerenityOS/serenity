@@ -28,8 +28,8 @@ namespace Detail {
 class StringData;
 }
 
-// FIXME: Remove this when Apple Clang fully supports consteval.
-#if defined(AK_OS_MACOS)
+// FIXME: Remove this when Apple Clang and OpenBSD Clang fully supports consteval.
+#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD)
 #    define AK_SHORT_STRING_CONSTEVAL constexpr
 #else
 #    define AK_SHORT_STRING_CONSTEVAL consteval
