@@ -688,3 +688,12 @@ if (ENABLE_FUZZERS)
 else()
     export_components("${CMAKE_BINARY_DIR}/components.ini")
 endif()
+
+if (NOT "$ENV{LAGOM_TARGET}" STREQUAL "")
+    add_custom_target(run-lagom-target
+        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}" "$<TARGET_FILE:$ENV{LAGOM_TARGET}>" $ENV{LAGOM_ARGS}
+        DEPENDS "$<TARGET_FILE:$ENV{LAGOM_TARGET}>"
+        USES_TERMINAL
+        VERBATIM
+    )
+endif()
