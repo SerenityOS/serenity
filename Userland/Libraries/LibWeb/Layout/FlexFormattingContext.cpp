@@ -1849,7 +1849,8 @@ CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const&
     if (is_row_layout()) {
         return calculate_min_content_width(item.box);
     }
-    return calculate_min_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : m_available_space_for_items->cross);
+    auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
+    return calculate_min_content_height(item.box, available_space.width);
 }
 
 CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const& item) const
@@ -1857,31 +1858,31 @@ CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const&
     if (is_row_layout()) {
         return calculate_max_content_width(item.box);
     }
-    return calculate_max_content_height(item.box, item.cross_size.has_value() ? AvailableSize::make_definite(item.cross_size.value()) : m_available_space_for_items->cross);
+    auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
+    return calculate_max_content_height(item.box, available_space.width);
 }
 
 CSSPixels FlexFormattingContext::calculate_fit_content_main_size(FlexItem const& item) const
 {
+    auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
     if (is_row_layout())
-        return calculate_fit_content_width(item.box, m_available_space_for_items->space);
-    if (item.cross_size.has_value())
-        return calculate_fit_content_height(item.box, AvailableSpace(AvailableSize::make_definite(item.cross_size.value()), m_available_space_for_items->space.height));
-    return calculate_fit_content_height(item.box, m_available_space_for_items->space);
+        return calculate_fit_content_width(item.box, available_space);
+    return calculate_fit_content_height(item.box, available_space);
 }
 
 CSSPixels FlexFormattingContext::calculate_fit_content_cross_size(FlexItem const& item) const
 {
+    auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
     if (!is_row_layout())
-        return calculate_fit_content_width(item.box, m_available_space_for_items->space);
-    if (item.main_size.has_value())
-        return calculate_fit_content_height(item.box, AvailableSpace(AvailableSize::make_definite(item.main_size.value()), m_available_space_for_items->space.height));
-    return calculate_fit_content_height(item.box, m_available_space_for_items->space);
+        return calculate_fit_content_width(item.box, available_space);
+    return calculate_fit_content_height(item.box, available_space);
 }
 
 CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
-        return calculate_min_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : m_available_space_for_items->main);
+        auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
+        return calculate_min_content_height(item.box, available_space.width);
     }
     return calculate_min_content_width(item.box);
 }
@@ -1889,7 +1890,8 @@ CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const
 CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
-        return calculate_max_content_height(item.box, item.main_size.has_value() ? AvailableSize::make_definite(item.main_size.value()) : m_available_space_for_items->main);
+        auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
+        return calculate_max_content_height(item.box, available_space.width);
     }
     return calculate_max_content_width(item.box);
 }
