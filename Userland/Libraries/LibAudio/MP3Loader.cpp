@@ -41,7 +41,7 @@ Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Byte
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    m_bitstream = LOADER_TRY(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
+    m_bitstream = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
 
     TRY(synchronize());
 
@@ -242,7 +242,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     TRY(m_bit_reservoir.discard(old_reservoir_size - frame.main_data_begin));
 
-    auto reservoir_stream = TRY(Core::Stream::BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(m_bit_reservoir)));
+    auto reservoir_stream = TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(m_bit_reservoir)));
 
     for (size_t granule_index = 0; granule_index < 2; granule_index++) {
         for (size_t channel_index = 0; channel_index < header.channel_count(); channel_index++) {
@@ -418,7 +418,7 @@ Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const
     return exponents;
 }
 
-ErrorOr<size_t, LoaderError> MP3LoaderPlugin::read_scale_factors(MP3::MP3Frame& frame, Core::Stream::BigEndianInputBitStream& reservoir, size_t granule_index, size_t channel_index)
+ErrorOr<size_t, LoaderError> MP3LoaderPlugin::read_scale_factors(MP3::MP3Frame& frame, BigEndianInputBitStream& reservoir, size_t granule_index, size_t channel_index)
 {
     auto& channel = frame.channels[channel_index];
     auto const& granule = channel.granules[granule_index];
@@ -486,7 +486,7 @@ ErrorOr<size_t, LoaderError> MP3LoaderPlugin::read_scale_factors(MP3::MP3Frame& 
     return bits_read;
 }
 
-MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, Core::Stream::BigEndianInputBitStream& reservoir, size_t granule_index, size_t channel_index, size_t granule_bits_read)
+MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEndianInputBitStream& reservoir, size_t granule_index, size_t channel_index, size_t granule_bits_read)
 {
     auto const exponents = calculate_frame_exponents(frame, granule_index, channel_index);
     auto& granule = frame.channels[channel_index].granules[granule_index];

@@ -8,16 +8,14 @@
 
 #include "FlacTypes.h"
 #include "Loader.h"
+#include <AK/BitStream.h>
 #include <AK/Error.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
-#include <LibCore/BitStream.h>
 #include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 
 namespace Audio {
-
-using Core::Stream::BigEndianInputBitStream;
 
 // Experimentally determined to be a decent buffer size on i686:
 // 4K (the default) is slightly worse, and 64K is much worse.

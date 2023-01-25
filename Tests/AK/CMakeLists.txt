@@ -10,6 +10,7 @@ set(AK_TEST_SOURCES
     TestBinarySearch.cpp
     TestBitCast.cpp
     TestBitmap.cpp
+    TestBitStream.cpp
     TestBuiltinWrappers.cpp
     TestByteBuffer.cpp
     TestCharacterTypes.cpp

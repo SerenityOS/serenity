@@ -9,9 +9,10 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Endian.h>
+#include <AK/Forward.h>
+#include <AK/MaybeOwned.h>
 #include <AK/Vector.h>
 #include <LibCompress/DeflateTables.h>
-#include <LibCore/BitStream.h>
 #include <LibCore/Stream.h>
 
 namespace Compress {
@@ -19,8 +20,8 @@ namespace Compress {
 class CanonicalCode {
 public:
     CanonicalCode() = default;
-    ErrorOr<u32> read_symbol(Core::Stream::LittleEndianInputBitStream&) const;
-    ErrorOr<void> write_symbol(Core::Stream::LittleEndianOutputBitStream&, u32) const;
+    ErrorOr<u32> read_symbol(LittleEndianInputBitStream&) const;
+    ErrorOr<void> write_symbol(LittleEndianOutputBitStream&, u32) const;
 
     static CanonicalCode const& fixed_literal_codes();
     static CanonicalCode const& fixed_distance_codes();
@@ -100,7 +101,7 @@ private:
         UncompressedBlock m_uncompressed_block;
     };
 
-    MaybeOwned<Core::Stream::LittleEndianInputBitStream> m_input_stream;
+    MaybeOwned<LittleEndianInputBitStream> m_input_stream;
     CircularBuffer m_output_buffer;
 };
 
@@ -152,7 +153,7 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, CompressionLevel = CompressionLevel::GOOD);
 
 private:
-    DeflateCompressor(NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream>, CompressionLevel = CompressionLevel::GOOD);
+    DeflateCompressor(NonnullOwnPtr<LittleEndianOutputBitStream>, CompressionLevel = CompressionLevel::GOOD);
 
     Bytes pending_block() { return { m_rolling_window + block_size, block_size }; }
 
@@ -184,7 +185,7 @@ private:
     bool m_finished { false };
     CompressionLevel m_compression_level;
     CompressionConstants m_compression_constants;
-    NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream> m_output_stream;
+    NonnullOwnPtr<LittleEndianOutputBitStream> m_output_stream;
 
     u8 m_rolling_window[window_size];
     size_t m_pending_block_size { 0 };

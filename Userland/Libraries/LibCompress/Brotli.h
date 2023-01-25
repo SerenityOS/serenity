@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include <AK/BitStream.h>
 #include <AK/CircularQueue.h>
 #include <AK/FixedArray.h>
-#include <LibCore/BitStream.h>
 #include <LibCore/Stream.h>
 
 namespace Compress {
 
+using AK::LittleEndianInputBitStream;
 using AK::Stream;
-using Core::Stream::LittleEndianInputBitStream;
 
 class BrotliDecompressionStream : public Stream {
 public:
