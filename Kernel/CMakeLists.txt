@@ -276,6 +276,7 @@ set(KERNEL_SOURCES
     Syscalls/faccessat.cpp
     Syscalls/fallocate.cpp
     Syscalls/fcntl.cpp
+    Syscalls/fork.cpp
     Syscalls/fsync.cpp
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
@@ -402,7 +403,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Panic.cpp
         Syscall.cpp
         Syscalls/execve.cpp
-        Syscalls/fork.cpp
     )
 
     set(KERNEL_SOURCES
