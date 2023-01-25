@@ -314,6 +314,7 @@ set(KERNEL_SOURCES
     Syscalls/sendfd.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
+    Syscalls/sigaction.cpp
     Syscalls/socket.cpp
     Syscalls/stat.cpp
     Syscalls/statvfs.cpp
@@ -402,7 +403,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Syscall.cpp
         Syscalls/execve.cpp
         Syscalls/fork.cpp
-        Syscalls/sigaction.cpp
     )
 
     set(KERNEL_SOURCES
