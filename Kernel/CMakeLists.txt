@@ -292,6 +292,7 @@ set(KERNEL_SOURCES
     Syscalls/lseek.cpp
     Syscalls/mkdir.cpp
     Syscalls/mknod.cpp
+    Syscalls/mmap.cpp
     Syscalls/mount.cpp
     Syscalls/open.cpp
     Syscalls/perf_event.cpp
@@ -401,7 +402,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Syscall.cpp
         Syscalls/execve.cpp
         Syscalls/fork.cpp
-        Syscalls/mmap.cpp
         Syscalls/sigaction.cpp
     )
 
