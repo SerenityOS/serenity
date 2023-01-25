@@ -85,7 +85,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     auto stack_ptr = registers.userspace_sp();
 
     // Stack state (created by the signal trampoline):
-    // saved_ax, ucontext, signal_info, fpu_state?.
+    // return_value, ucontext, signal_info, fpu_state?.
 
 #if ARCH(X86_64)
     // The FPU state is at the top here, pop it off and restore it.
@@ -101,7 +101,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     auto ucontext = TRY(copy_typed_from_user<__ucontext>(stack_ptr));
     stack_ptr += sizeof(__ucontext);
 
-    auto saved_ax = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
+    auto return_value = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
 
     Thread::current()->m_signal_mask = ucontext.uc_sigmask;
     Thread::current()->m_currently_handled_signal = 0;
@@ -116,7 +116,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& register
     registers.rsp = sp;
 #endif
 
-    return saved_ax;
+    return return_value;
 }
 
 ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)
