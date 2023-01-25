@@ -7,22 +7,15 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/Concepts.h>
-#include <AK/Error.h>
 #include <AK/MaybeOwned.h>
-#include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/Span.h>
-#include <AK/StdLibExtraDetails.h>
-#include <AK/Types.h>
-#include <LibCore/Stream.h>
+#include <AK/Stream.h>
 
-namespace Core::Stream {
+namespace AK {
 
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in big-endian order from another stream.
-class BigEndianInputBitStream : public AK::Stream {
+class BigEndianInputBitStream : public Stream {
 public:
     static ErrorOr<NonnullOwnPtr<BigEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
     {
@@ -131,7 +124,7 @@ private:
 
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in little-endian order from another stream.
-class LittleEndianInputBitStream : public AK::Stream {
+class LittleEndianInputBitStream : public Stream {
 public:
     static ErrorOr<NonnullOwnPtr<LittleEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
     {
@@ -240,7 +233,7 @@ private:
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits
 /// in big-endian order to another stream.
-class BigEndianOutputBitStream : public AK::Stream {
+class BigEndianOutputBitStream : public Stream {
 public:
     static ErrorOr<NonnullOwnPtr<BigEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
     {
@@ -323,7 +316,7 @@ private:
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits
 /// in little-endian order to another stream.
-class LittleEndianOutputBitStream : public AK::Stream {
+class LittleEndianOutputBitStream : public Stream {
 public:
     static ErrorOr<NonnullOwnPtr<LittleEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
     {

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/BitStream.h>
 #include <AK/Span.h>
 
 namespace Audio::MP3::Tables::Huffman {
@@ -105,7 +106,7 @@ struct HuffmanDecodeResult {
 };
 
 template<typename T>
-HuffmanDecodeResult<T> huffman_decode(Core::Stream::BigEndianInputBitStream& bitstream, Span<HuffmanNode<T> const> tree, size_t max_bits_to_read)
+HuffmanDecodeResult<T> huffman_decode(BigEndianInputBitStream& bitstream, Span<HuffmanNode<T> const> tree, size_t max_bits_to_read)
 {
     HuffmanNode<T> const* node = &tree[0];
     size_t bits_read = 0;
