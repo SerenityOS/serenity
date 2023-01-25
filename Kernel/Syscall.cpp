@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/API/Syscall.h>
+#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
@@ -15,59 +16,9 @@
 #include <Kernel/Sections.h>
 #include <Kernel/ThreadTracer.h>
 
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/Interrupts.h>
-#endif
-
 namespace Kernel {
 
-extern "C" void syscall_handler(TrapFrame*) __attribute__((used));
-extern "C" void syscall_asm_entry();
-
-NEVER_INLINE NAKED void syscall_asm_entry()
-{
-    // clang-format off
-#if ARCH(X86_64)
-    asm(
-        "    pushq $0x0\n"
-        "    pushq %r15\n"
-        "    pushq %r14\n"
-        "    pushq %r13\n"
-        "    pushq %r12\n"
-        "    pushq %r11\n"
-        "    pushq %r10\n"
-        "    pushq %r9\n"
-        "    pushq %r8\n"
-        "    pushq %rax\n"
-        "    pushq %rcx\n"
-        "    pushq %rdx\n"
-        "    pushq %rbx\n"
-        "    pushq %rsp\n"
-        "    pushq %rbp\n"
-        "    pushq %rsi\n"
-        "    pushq %rdi\n"
-        "    pushq %rsp \n" /* set TrapFrame::regs */
-        "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"
-        "    movq %rsp, %rdi \n"
-        "    cld\n"
-        "    call enter_trap_no_irq \n"
-        "    movq %rsp, %rdi \n"
-        "    call syscall_handler\n"
-        "    jmp common_trap_exit \n");
-#endif
-    // clang-format on
-}
-
 namespace Syscall {
-
-static ErrorOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4);
-
-UNMAP_AFTER_INIT void initialize()
-{
-#if ARCH(X86_64)
-    register_user_callable_interrupt_handler(syscall_vector, syscall_asm_entry);
-#endif
-}
 
 using Handler = auto(Process::*)(FlatPtr, FlatPtr, FlatPtr, FlatPtr) -> ErrorOr<FlatPtr>;
 using HandlerWithRegisterState = auto(Process::*)(RegisterState&) -> ErrorOr<FlatPtr>;
@@ -143,6 +94,7 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
 
 }
 
+extern "C" NEVER_INLINE void syscall_handler(TrapFrame* trap);
 NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
 #if ARCH(X86_64)

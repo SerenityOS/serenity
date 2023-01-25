@@ -4,9 +4,18 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86_64/DescriptorTable.h>
 #include <Kernel/Arch/x86_64/Processor.h>
+#include <Kernel/Assertions.h>
+#include <Kernel/Panic.h>
+#include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
+#include <Kernel/Thread.h>
+#include <Kernel/ThreadTracer.h>
+
+using namespace Kernel;
 
 extern "C" void syscall_entry();
 extern "C" [[gnu::naked]] void syscall_entry()
