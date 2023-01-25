@@ -413,7 +413,7 @@ void signal_trampoline_dummy()
         // Current stack state is just saved_rax, ucontext, signal_info, fpu_state.
         // syscall SC_sigreturn
         "mov rax, %P0\n"
-        "int 0x82\n"
+        "syscall\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax"
