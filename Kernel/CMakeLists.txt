@@ -301,6 +301,7 @@ set(KERNEL_SOURCES
     Syscalls/prctl.cpp
     Syscalls/process.cpp
     Syscalls/profiling.cpp
+    Syscalls/ptrace.cpp
     Syscalls/purge.cpp
     Syscalls/read.cpp
     Syscalls/readlink.cpp
@@ -401,7 +402,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Syscalls/execve.cpp
         Syscalls/fork.cpp
         Syscalls/mmap.cpp
-        Syscalls/ptrace.cpp
         Syscalls/sigaction.cpp
     )
 
