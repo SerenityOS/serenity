@@ -421,4 +421,9 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     Processor::restore_critical(in_critical);
 }
 
+StringView Processor::platform_string()
+{
+    return "aarch64"sv;
+}
+
 }

@@ -279,6 +279,8 @@ public:
     void enter_trap(TrapFrame& trap, bool raise_irq);
     void exit_trap(TrapFrame& trap);
 
+    static StringView platform_string();
+
 private:
     Processor(Processor const&) = delete;
 
