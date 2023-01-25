@@ -94,7 +94,7 @@ public:
     }
 
     ALWAYS_INLINE Result(Error error)
-        : m_error(static_cast<SQLErrorCode>(error.code()))
+        : m_error(SQLErrorCode::InternalError)
         , m_error_message(error.string_literal())
     {
     }
