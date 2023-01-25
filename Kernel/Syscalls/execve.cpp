@@ -685,10 +685,9 @@ ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_progr
     new_main_thread->reset_fpu_state();
 
     auto& regs = new_main_thread->m_regs;
-    regs.cs = GDT_SELECTOR_CODE3 | 3;
-    regs.rip = load_result.entry_eip;
-    regs.rsp = new_userspace_sp;
-    regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
+    address_space().with([&](auto& space) {
+        regs.set_exec_state(load_result.entry_eip, new_userspace_sp, *space);
+    });
 
     {
         TemporaryChange profiling_disabler(m_profiling, was_profiling);

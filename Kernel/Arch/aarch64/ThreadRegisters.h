@@ -33,6 +33,14 @@ struct ThreadRegisters {
         set_ip(entry_ip);
         x[0] = entry_data;
     }
+
+    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
+    {
+        (void)entry_ip;
+        (void)userspace_sp;
+        (void)space;
+        TODO_AARCH64();
+    }
 };
 
 }

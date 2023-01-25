@@ -79,6 +79,14 @@ struct ThreadRegisters {
         set_ip(entry_ip);
         rdi = entry_data; // entry function argument is expected to be in regs.rdi
     }
+
+    void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
+    {
+        cs = GDT_SELECTOR_CODE3 | 3;
+        rip = entry_ip;
+        rsp = userspace_sp;
+        cr3 = space.page_directory().cr3();
+    }
 };
 
 }
