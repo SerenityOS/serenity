@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -290,12 +290,19 @@ void do_unzip_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::
 
 void show_properties(DeprecatedString const& container_dir_path, DeprecatedString const& path, Vector<DeprecatedString> const& selected, GUI::Window* window)
 {
-    RefPtr<PropertiesWindow> properties;
+    ErrorOr<RefPtr<PropertiesWindow>> properties_or_error = nullptr;
     if (selected.is_empty()) {
-        properties = window->add<PropertiesWindow>(path, true);
+        properties_or_error = window->try_add<PropertiesWindow>(path, true);
     } else {
-        properties = window->add<PropertiesWindow>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
+        properties_or_error = window->try_add<PropertiesWindow>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
     }
+
+    if (properties_or_error.is_error()) {
+        GUI::MessageBox::show(window, "Could not show properties"sv, "Properties Error"sv, GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    auto properties = properties_or_error.release_value();
     properties->on_close = [properties = properties.ptr()] {
         properties->remove_from_parent();
     };
