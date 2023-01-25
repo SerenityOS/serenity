@@ -1019,12 +1019,212 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
     return {};
 }
 
+static bool is_xCLR(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::TwoColor:
+    case ColorSpace::ThreeColor:
+    case ColorSpace::FourColor:
+    case ColorSpace::FiveColor:
+    case ColorSpace::SixColor:
+    case ColorSpace::SevenColor:
+    case ColorSpace::EightColor:
+    case ColorSpace::NineColor:
+    case ColorSpace::TenColor:
+    case ColorSpace::ElevenColor:
+    case ColorSpace::TwelveColor:
+    case ColorSpace::ThirteenColor:
+    case ColorSpace::FourteenColor:
+    case ColorSpace::FifteenColor:
+        return true;
+    default:
+        return false;
+    }
+}
+
+ErrorOr<void> Profile::check_required_tags()
+{
+    // ICC v4, 8 Required tags
+
+    // ICC v4, 8.2 Common requirements
+    // "With the exception of DeviceLink profiles, all profiles shall contain the following tags:
+    //  - profileDescriptionTag (see 9.2.41);
+    //  - copyrightTag (see 9.2.21);
+    //  - mediaWhitePointTag (see 9.2.34);
+    //  - chromaticAdaptationTag, when the measurement data used to calculate the profile was specified for an
+    //    adopted white with a chromaticity different from that of the PCS adopted white (see 9.2.15).
+    //  NOTE A DeviceLink profile is not required to have either a mediaWhitePointTag or a chromaticAdaptationTag."
+    // profileDescriptionTag, copyrightTag are required for DeviceLink too (see ICC v4, 8.6 DeviceLink profile).
+    // profileDescriptionTag, copyrightTag, mediaWhitePointTag are required in ICC v2 as well.
+    // chromaticAdaptationTag isn't required in v2 profiles as far as I can tell.
+
+    if (!m_tag_table.contains(profileDescriptionTag))
+        return Error::from_string_literal("ICC::Profile: required profileDescriptionTag is missing");
+
+    if (!m_tag_table.contains(copyrightTag))
+        return Error::from_string_literal("ICC::Profile: required copyrightTag is missing");
+
+    if (device_class() != DeviceClass::DeviceLink) {
+        if (!m_tag_table.contains(mediaWhitePointTag))
+            return Error::from_string_literal("ICC::Profile: required mediaWhitePointTag is missing");
+
+        // FIXME: Check for chromaticAdaptationTag after figuring out when exactly it needs to be present.
+    }
+
+    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, [&](auto& key) { return m_tag_table.contains(key); }); };
+
+    switch (device_class()) {
+    case DeviceClass::InputDevce: {
+        // ICC v4, 8.3 Input profiles
+        // "8.3.1 General
+        //  Input profiles are generally used with devices such as scanners and digital cameras. The types of profiles
+        //  available for use as Input profiles are N-component LUT-based, Three-component matrix-based, and
+        //  monochrome.
+        //  8.3.2 N-component LUT-based Input profiles
+        //  In addition to the tags listed in 8.2 an N-component LUT-based Input profile shall contain the following tag:
+        //  - AToB0Tag (see 9.2.1).
+        //  8.3.3 Three-component matrix-based Input profiles
+        //  In addition to the tags listed in 8.2, a three-component matrix-based Input profile shall contain the following tags:
+        //  - redMatrixColumnTag (see 9.2.44);
+        //  - greenMatrixColumnTag (see 9.2.30);
+        //  - blueMatrixColumnTag (see 9.2.4);
+        //  - redTRCTag (see 9.2.45);
+        //  - greenTRCTag (see 9.2.31);
+        //  - blueTRCTag (see 9.2.5).
+        //  [...] Only the PCSXYZ encoding can be used with matrix/TRC models.
+        //  8.3.4 Monochrome Input profiles
+        //  In addition to the tags listed in 8.2, a monochrome Input profile shall contain the following tag:
+        //  - grayTRCTag (see 9.2.29).
+        bool has_n_component_lut_based_tags = m_tag_table.contains(AToB0Tag);
+        bool has_three_component_matrix_based_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
+        bool has_monochrome_tags = m_tag_table.contains(grayTRCTag);
+        if (!has_n_component_lut_based_tags && !has_three_component_matrix_based_tags && !has_monochrome_tags)
+            return Error::from_string_literal("ICC::Profile: InputDevce required tags are missing");
+        if (!has_n_component_lut_based_tags && has_three_component_matrix_based_tags && connection_space() != ColorSpace::PCSXYZ)
+            return Error::from_string_literal("ICC::Profile: InputDevce three-component matrix-based profile must use PCSXYZ");
+        break;
+    }
+    case DeviceClass::DisplayDevice: {
+        // ICC v4, 8.4 Display profiles
+        // "8.4.1 General
+        //  This class of profiles represents display devices such as monitors. The types of profiles available for use as
+        //  Display profiles are N-component LUT-based, Three-component matrix-based, and monochrome.
+        //  8.4.2 N-Component LUT-based Display profiles
+        //  In addition to the tags listed in 8.2 an N-component LUT-based Input profile shall contain the following tags:
+        //  - AToB0Tag (see 9.2.1);
+        //  - BToA0Tag (see 9.2.6).
+        //  8.4.3 Three-component matrix-based Display profiles
+        //  In addition to the tags listed in 8.2, a three-component matrix-based Display profile shall contain the following
+        //  tags:
+        //  - redMatrixColumnTag (see 9.2.44);
+        //  - greenMatrixColumnTag (see 9.2.30);
+        //  - blueMatrixColumnTag (see 9.2.4);
+        //  - redTRCTag (see 9.2.45);
+        //  - greenTRCTag (see 9.2.31);
+        //  - blueTRCTag (see 9.2.5).
+        // [...] Only the PCSXYZ encoding can be used with matrix/TRC models.
+        //  8.4.4 Monochrome Display profiles
+        //  In addition to the tags listed in 8.2 a monochrome Display profile shall contain the following tag:
+        //  - grayTRCTag (see 9.2.29)."
+        bool has_n_component_lut_based_tags = has_all_tags(Array { AToB0Tag, BToA0Tag });
+        bool has_three_component_matrix_based_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
+        bool has_monochrome_tags = m_tag_table.contains(grayTRCTag);
+        if (!has_n_component_lut_based_tags && !has_three_component_matrix_based_tags && !has_monochrome_tags)
+            return Error::from_string_literal("ICC::Profile: DisplayDevice required tags are missing");
+        if (!has_n_component_lut_based_tags && has_three_component_matrix_based_tags && connection_space() != ColorSpace::PCSXYZ)
+            return Error::from_string_literal("ICC::Profile: DisplayDevice three-component matrix-based profile must use PCSXYZ");
+        break;
+    }
+    case DeviceClass::OutputDevice: {
+        // ICC v4, 8.5 Output profiles
+        // "8.5.1 General
+        //  Output profiles are used to support devices such as printers and film recorders. The types of profiles available
+        //  for use as Output profiles are N-component LUT-based and Monochrome.
+        //  8.5.2 N-component LUT-based Output profiles
+        //  In addition to the tags listed in 8.2 an N-component LUT-based Output profile shall contain the following tags:
+        //  - AToB0Tag (see 9.2.1);
+        //  - AToB1Tag (see 9.2.2);
+        //  - AToB2Tag (see 9.2.3);
+        //  - BToA0Tag (see 9.2.6);
+        //  - BToA1Tag (see 9.2.7);
+        //  - BToA2Tag (see 9.2.8);
+        //  - gamutTag (see 9.2.28);
+        //  - colorantTableTag (see 9.2.18), for the xCLR colour spaces (see 7.2.6)
+        //  8.5.3 Monochrome Output profiles
+        //  In addition to the tags listed in 8.2 a monochrome Output profile shall contain the following tag:
+        //  - grayTRCTag (see 9.2.29)."
+        // The colorantTableTag requirement is new in v4.
+        Vector<TagSignature, 8> required_n_component_lut_based_tags = { AToB0Tag, AToB1Tag, AToB2Tag, BToA0Tag, BToA1Tag, BToA2Tag, gamutTag };
+        if (is_v4() && is_xCLR(connection_space()))
+            required_n_component_lut_based_tags.append(colorantTableTag);
+        bool has_n_component_lut_based_tags = has_all_tags(required_n_component_lut_based_tags);
+        bool has_monochrome_tags = m_tag_table.contains(grayTRCTag);
+        if (!has_n_component_lut_based_tags && !has_monochrome_tags)
+            return Error::from_string_literal("ICC::Profile: OutputDevice required tags are missing");
+        break;
+    }
+    case DeviceClass::DeviceLink: {
+        // ICC v4, 8.6 DeviceLink profile
+        // "A DeviceLink profile shall contain the following tags:
+        //  - profileDescriptionTag (see 9.2.41);
+        //  - copyrightTag (see 9.2.21);
+        //  - profileSequenceDescTag (see 9.2.42);
+        //  - AToB0Tag (see 9.2.1);
+        //  - colorantTableTag (see 9.2.18) which is required only if the data colour space field is xCLR, where x is
+        //    hexadecimal 2 to F (see 7.2.6);
+        //  - colorantTableOutTag (see 9.2.19), required only if the PCS field is xCLR, where x is hexadecimal 2 to F
+        //    (see 7.2.6)"
+        // profileDescriptionTag and copyrightTag are already checked above, in the code for section 8.2.
+        Vector<TagSignature, 4> required_tags = { profileSequenceDescTag, AToB0Tag };
+        if (is_v4() && is_xCLR(connection_space())) { // This requirement is new in v4.
+            required_tags.append(colorantTableTag);
+            required_tags.append(colorantTableOutTag);
+        }
+        if (!has_all_tags(required_tags))
+            return Error::from_string_literal("ICC::Profile: DeviceLink required tags are missing");
+        // "The data colour space field (see 7.2.6) in the DeviceLink profile will be the same as the data colour space field
+        //  of the first profile in the sequence used to construct the device link. The PCS field (see 7.2.7) will be the same
+        //  as the data colour space field of the last profile in the sequence."
+        // FIXME: Check that if profileSequenceDescType parsing is implemented.
+        break;
+    }
+    case DeviceClass::ColorSpace:
+        // ICC v4, 8.7 ColorSpace profile
+        // "In addition to the tags listed in 8.2, a ColorSpace profile shall contain the following tags:
+        //  - BToA0Tag (see 9.2.6);
+        //  - AToB0Tag (see 9.2.1).
+        //  [...] ColorSpace profiles may be embedded in images."
+        if (!has_all_tags(Array { AToB0Tag, BToA0Tag }))
+            return Error::from_string_literal("ICC::Profile: ColorSpace required tags are missing");
+        break;
+    case DeviceClass::Abstract:
+        // ICC v4, 8.8 Abstract profile
+        // "In addition to the tags listed in 8.2, an Abstract profile shall contain the following tag:
+        //  - AToB0Tag (see 9.2.1).
+        //  [...] Abstract profiles cannot be embedded in images."
+        if (!m_tag_table.contains(AToB0Tag))
+            return Error::from_string_literal("ICC::Profile: Abstract required AToB0Tag is missing");
+        break;
+    case DeviceClass::NamedColor:
+        // ICC v4, 8.9 NamedColor profile
+        // "In addition to the tags listed in 8.2, a NamedColor profile shall contain the following tag:
+        //  - namedColor2Tag (see 9.2.35)."
+        if (!m_tag_table.contains(namedColor2Tag))
+            return Error::from_string_literal("ICC::Profile: NamedColor required namedColor2Tag is missing");
+        break;
+    }
+
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
     TRY(profile->read_header(bytes));
     bytes = bytes.trim(profile->on_disk_size());
     TRY(profile->read_tag_table(bytes));
+
+    TRY(profile->check_required_tags());
 
     return profile;
 }
