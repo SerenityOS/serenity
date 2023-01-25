@@ -1218,6 +1218,341 @@ ErrorOr<void> Profile::check_required_tags()
     return {};
 }
 
+ErrorOr<void> Profile::check_tag_types()
+{
+    // This uses m_tag_table.get() even for tags that are guaranteed to exist after check_required_tags()
+    // so that the two functions can be called in either order.
+
+    // ICC v4, 9.2.1 AToB0Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
+    // FIXME
+
+    // ICC v4, 9.2.2 AToB1Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
+    // FIXME
+
+    // ICC v4, 9.2.3 AToB2Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
+    // FIXME
+
+    // ICC v4, 9.2.4 blueMatrixColumnTag
+    // "Permitted tag types: XYZType
+    //  This tag contains the third column in the matrix used in matrix/TRC transforms."
+    // (Called blueColorantTag in the v2 spec, otherwise identical there.)
+    if (auto type = m_tag_table.get(blueMatrixColumnTag); type.has_value()) {
+        if (type.value()->type() != XYZTagData::Type)
+            return Error::from_string_literal("ICC::Profile: blueMatrixColumnTag has unexpected type");
+        if (static_cast<XYZTagData const&>(*type.value()).xyzs().size() != 1)
+            return Error::from_string_literal("ICC::Profile: blueMatrixColumnTag has unexpected size");
+    }
+
+    // ICC v4, 9.2.5 blueTRCTag
+    // "Permitted tag types: curveType or parametricCurveType"
+    // ICC v2, 6.4.5 blueTRCTag
+    // "Tag Type: curveType"
+    if (auto type = m_tag_table.get(blueTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+        return Error::from_string_literal("ICC::Profile: blueTRCTag has unexpected type");
+
+    // ICC v4, 9.2.6 BToA0Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.7 BToA1Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.8 BToA2Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.9 BToD0Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.10 BToD1Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.11 BToD2Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.12 BToD3Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.13 calibrationDateTimeTag
+    // "Permitted tag types: dateTimeType"
+    // FIXME
+
+    // ICC v4, 9.2.14 charTargetTag
+    // "Permitted tag types: textType"
+    if (auto type = m_tag_table.get(charTargetTag); type.has_value() && type.value()->type() != TextTagData::Type)
+        return Error::from_string_literal("ICC::Profile: charTargetTag has unexpected type");
+
+    // ICC v4, 9.2.15 chromaticAdaptationTag
+    // "Permitted tag types: s15Fixed16ArrayType [...]
+    //  Such a 3 x 3 chromatic adaptation matrix is organized as a 9-element array"
+    if (auto type = m_tag_table.get(chromaticAdaptationTag); type.has_value()) {
+        if (type.value()->type() != S15Fixed16ArrayTagData::Type)
+            return Error::from_string_literal("ICC::Profile: chromaticAdaptationTag has unexpected type");
+        if (static_cast<S15Fixed16ArrayTagData const&>(*type.value()).values().size() != 9)
+            return Error::from_string_literal("ICC::Profile: chromaticAdaptationTag has unexpected size");
+    }
+
+    // ICC v4, 9.2.16 chromaticityTag
+    // "Permitted tag types: chromaticityType"
+    // FIXME
+
+    // ICC v4, 9.2.17 cicpTag
+    // "Permitted tag types: cicpType"
+    // FIXME
+
+    // ICC v4, 9.2.18 colorantOrderTag
+    // "Permitted tag types: colorantOrderType"
+    // FIXME
+
+    // ICC v4, 9.2.19 colorantTableTag
+    // "Permitted tag types: colorantTableType"
+    // FIXME
+
+    // ICC v4, 9.2.20 colorantTableOutTag
+    // "Permitted tag types: colorantTableType"
+    // FIXME
+
+    // ICC v4, 9.2.21 colorimetricIntentImageStateTag
+    // "Permitted tag types: signatureType"
+    // FIXME
+
+    // ICC v4, 9.2.22 copyrightTag
+    // "Permitted tag types: multiLocalizedUnicodeType"
+    // ICC v2, 6.4.13 copyrightTag
+    // "Tag Type: textType"
+    if (auto type = m_tag_table.get(copyrightTag); type.has_value()) {
+        // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
+        // that still uses the v2 'text' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
+        // FIXME: File a bug for that and add id-based quirk instead.
+        // if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
+        // return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v4 type");
+        if (is_v2() && type.value()->type() != TextTagData::Type)
+            return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v2 type");
+    }
+
+    // ICC v4, 9.2.23 deviceMfgDescTag
+    // "Permitted tag types: multiLocalizedUnicodeType"
+    // ICC v2, 6.4.15 deviceMfgDescTag
+    // "Tag Type: textDescriptionType"
+    if (auto type = m_tag_table.get(deviceMfgDescTag); type.has_value()) {
+        if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
+            return Error::from_string_literal("ICC::Profile: deviceMfgDescTag has unexpected v4 type");
+        if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
+            return Error::from_string_literal("ICC::Profile: deviceMfgDescTag has unexpected v2 type");
+    }
+
+    // ICC v4, 9.2.24 deviceModelDescTag
+    // "Permitted tag types: multiLocalizedUnicodeType"
+    // ICC v2, 6.4.16 deviceModelDescTag
+    // "Tag Type: textDescriptionType"
+    if (auto type = m_tag_table.get(deviceModelDescTag); type.has_value()) {
+        if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
+            return Error::from_string_literal("ICC::Profile: deviceModelDescTag has unexpected v4 type");
+        if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
+            return Error::from_string_literal("ICC::Profile: deviceModelDescTag has unexpected v2 type");
+    }
+
+    // ICC v4, 9.2.25 DToB0Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.26 DToB1Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.27 DToB2Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.28 DToB3Tag
+    // "Permitted tag types: multiProcessElementsType"
+    // FIXME
+
+    // ICC v4, 9.2.29 gamutTag
+    // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.30 grayTRCTag
+    // "Permitted tag types: curveType or parametricCurveType"
+    // ICC v2, 6.4.19 grayTRCTag
+    // "Tag Type: curveType"
+    if (auto type = m_tag_table.get(grayTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+        return Error::from_string_literal("ICC::Profile: grayTRCTag has unexpected type");
+
+    // ICC v4, 9.2.31 greenMatrixColumnTag
+    // "Permitted tag types: XYZType
+    //  This tag contains the second column in the matrix, which is used in matrix/TRC transforms."
+    // (Called greenColorantTag in the v2 spec, otherwise identical there.)
+    if (auto type = m_tag_table.get(greenMatrixColumnTag); type.has_value()) {
+        if (type.value()->type() != XYZTagData::Type)
+            return Error::from_string_literal("ICC::Profile: greenMatrixColumnTag has unexpected type");
+        if (static_cast<XYZTagData const&>(*type.value()).xyzs().size() != 1)
+            return Error::from_string_literal("ICC::Profile: greenMatrixColumnTag has unexpected size");
+    }
+
+    // ICC v4, 9.2.32 greenTRCTag
+    // "Permitted tag types: curveType or parametricCurveType"
+    // ICC v2, 6.4.21 greenTRCTag
+    // "Tag Type: curveType"
+    if (auto type = m_tag_table.get(greenTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+        return Error::from_string_literal("ICC::Profile: greenTRCTag has unexpected type");
+
+    // ICC v4, 9.2.33 luminanceTag
+    // "Permitted tag types: XYZType"
+    //  This tag contains the absolute luminance of emissive devices in candelas per square metre as described by the
+    //  Y channel.
+    //  NOTE The X and Z values are set to zero."
+    // ICC v2, 6.4.22 luminanceTag
+    // "Absolute luminance of emissive devices in candelas per square meter as described by the Y channel. The
+    //  X and Z channels are ignored in all cases."
+    if (auto type = m_tag_table.get(luminanceTag); type.has_value()) {
+        if (type.value()->type() != XYZTagData::Type)
+            return Error::from_string_literal("ICC::Profile: luminanceTag has unexpected type");
+        auto& xyz_type = static_cast<XYZTagData const&>(*type.value());
+        if (xyz_type.xyzs().size() != 1)
+            return Error::from_string_literal("ICC::Profile: luminanceTag has unexpected size");
+        if (is_v4() && xyz_type.xyzs()[0].x != 0)
+            return Error::from_string_literal("ICC::Profile: luminanceTag.x unexpectedly not 0");
+        if (is_v4() && xyz_type.xyzs()[0].z != 0)
+            return Error::from_string_literal("ICC::Profile: luminanceTag.z unexpectedly not 0");
+    }
+
+    // ICC v4, 9.2.34 measurementTag
+    // "Permitted tag types: measurementType"
+    // FIXME
+
+    // ICC v4, 9.2.35 metadataTag
+    // "Permitted tag types: dictType"
+    // FIXME
+
+    // ICC v4, 9.2.36 mediaWhitePointTag
+    // "Permitted tag types: XYZType
+    //  This tag, which is used for generating the ICC-absolute colorimetric intent, specifies the chromatically adapted
+    //  nCIEXYZ tristimulus values of the media white point. When the measurement data used to create the profile
+    //  were specified relative to an adopted white with a chromaticity different from that of the PCS adopted white, the
+    //  media white point nCIEXYZ values shall be adapted to be relative to the PCS adopted white chromaticity using
+    //  the chromaticAdaptationTag matrix, before recording in the tag. For capture devices, the media white point is
+    //  the encoding maximum white for the capture encoding. For displays, the values specified shall be those of the
+    //  PCS illuminant as defined in 7.2.16.
+    //  See Clause 6 and Annex A for a more complete description of the use of the media white point."
+    // ICC v2, 6.4.25 mediaWhitePointTag
+    // "This tag specifies the media white point and is used for generating ICC-absolute colorimetric intent. See
+    //  Annex A for a more complete description of its use."
+    if (auto type = m_tag_table.get(mediaWhitePointTag); type.has_value()) {
+        if (type.value()->type() != XYZTagData::Type)
+            return Error::from_string_literal("ICC::Profile: mediaWhitePointTag has unexpected type");
+        auto& xyz_type = static_cast<XYZTagData const&>(*type.value());
+        if (xyz_type.xyzs().size() != 1)
+            return Error::from_string_literal("ICC::Profile: mediaWhitePointTag has unexpected size");
+
+        // V4 requires "For displays, the values specified shall be those of the PCS illuminant".
+        // But in practice that's not always true. For example, on macOS 13.1, '/System/Library/ColorSync/Profiles/DCI(P3) RGB.icc'
+        // has these values in the header: 0000F6D6 00010000 0000D32D
+        // but these values in the tag:    0000F6D5 00010000 0000D32C
+        // These are close, but not equal.
+        // FIXME: File bug for these, and add id-based quirk instead.
+        // if (is_v4() && device_class() == DeviceClass::DisplayDevice && xyz_type.xyzs()[0] != pcs_illuminant())
+        // return Error::from_string_literal("ICC::Profile: mediaWhitePointTag for displays should be equal to PCS illuminant");
+    }
+
+    // ICC v4, 9.2.37 namedColor2Tag
+    // "Permitted tag types: namedColor2Type"
+    // FIXME
+
+    // ICC v4, 9.2.38 outputResponseTag
+    // "Permitted tag types: responseCurveSet16Type"
+    // FIXME
+
+    // ICC v4, 9.2.39 perceptualRenderingIntentGamutTag
+    // "Permitted tag types: signatureType"
+    // FIXME
+
+    // ICC v4, 9.2.40 preview0Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutAToBType or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.41 preview1Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.42 preview2Tag
+    // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
+    // FIXME
+
+    // ICC v4, 9.2.43 profileDescriptionTag
+    // "Permitted tag types: multiLocalizedUnicodeType"
+    // ICC v2, 6.4.32 profileDescriptionTag
+    // "Tag Type: textDescriptionType"
+    if (auto type = m_tag_table.get(profileDescriptionTag); type.has_value()) {
+        // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
+        // that still uses the v2 'desc' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
+        // FIXME: File a bug for that and add id-based quirk instead.
+        // if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
+        // return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v4 type");
+        if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
+            return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v2 type");
+    }
+
+    // ICC v4, 9.2.44 profileSequenceDescTag
+    // "Permitted tag types: profileSequenceDescType"
+    // FIXME
+
+    // ICC v4, 9.2.45 profileSequenceIdentifierTag
+    // "Permitted tag types: profileSequenceIdentifierType"
+    // FIXME
+
+    // ICC v4, 9.2.46 redMatrixColumnTag
+    // "Permitted tag types: XYZType
+    //  This tag contains the first column in the matrix, which is used in matrix/TRC transforms."
+    // (Called redColorantTag in the v2 spec, otherwise identical there.)
+    if (auto type = m_tag_table.get(redMatrixColumnTag); type.has_value()) {
+        if (type.value()->type() != XYZTagData::Type)
+            return Error::from_string_literal("ICC::Profile: redMatrixColumnTag has unexpected type");
+        if (static_cast<XYZTagData const&>(*type.value()).xyzs().size() != 1)
+            return Error::from_string_literal("ICC::Profile: redMatrixColumnTag has unexpected size");
+    }
+
+    // ICC v4, 9.2.47 redTRCTag
+    // "Permitted tag types: curveType or parametricCurveType"
+    // ICC v2, 6.4.41 redTRCTag
+    // "Tag Type: curveType"
+    if (auto type = m_tag_table.get(redTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+        return Error::from_string_literal("ICC::Profile: redTRCTag has unexpected type");
+
+    // ICC v4, 9.2.48 saturationRenderingIntentGamutTag
+    // "Permitted tag types: signatureType"
+    // FIXME
+
+    // ICC v4, 9.2.49 technologyTag
+    // "Permitted tag types: signatureType"
+    // FIXME
+
+    // ICC v4, 9.2.50 viewingCondDescTag
+    // "Permitted tag types: multiLocalizedUnicodeType"
+    // ICC v2, 6.4.46 viewingCondDescTag
+    // "Tag Type: textDescriptionType"
+    if (auto type = m_tag_table.get(viewingCondDescTag); type.has_value()) {
+        if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
+            return Error::from_string_literal("ICC::Profile: viewingCondDescTag has unexpected v4 type");
+        if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
+            return Error::from_string_literal("ICC::Profile: viewingCondDescTag has unexpected v2 type");
+    }
+
+    // ICC v4, 9.2.51 viewingConditionsTag
+    // "Permitted tag types: viewingConditionsType"
+    // FIXME
+
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = adopt_ref(*new Profile());
@@ -1226,6 +1561,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     TRY(profile->read_tag_table(bytes));
 
     TRY(profile->check_required_tags());
+    TRY(profile->check_tag_types());
 
     return profile;
 }
