@@ -59,24 +59,22 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-static Optional<size_t> decode_ico_header(DeprecatedInputMemoryStream& stream)
+static ErrorOr<size_t> decode_ico_header(DeprecatedInputMemoryStream& stream)
 {
     ICONDIR header;
     stream >> Bytes { &header, sizeof(header) };
-    if (stream.handle_any_error())
-        return {};
+    TRY(stream.try_handle_any_error());
 
     if (header.must_be_0 != 0 || header.must_be_1 != 1)
-        return {};
+        return Error::from_string_literal("Invalid ICO header");
     return { header.image_count };
 }
 
-static Optional<ICOImageDescriptor> decode_ico_direntry(DeprecatedInputMemoryStream& stream)
+static ErrorOr<ICOImageDescriptor> decode_ico_direntry(DeprecatedInputMemoryStream& stream)
 {
     ICONDIRENTRY entry;
     stream >> Bytes { &entry, sizeof(entry) };
-    if (stream.handle_any_error())
-        return {};
+    TRY(stream.try_handle_any_error());
 
     ICOImageDescriptor desc = { entry.width, entry.height, entry.bits_per_pixel, entry.offset, entry.size, nullptr };
     if (desc.width == 0)
@@ -106,89 +104,77 @@ static size_t find_largest_image(ICOLoadingContext const& context)
     return largest_index;
 }
 
-static bool load_ico_directory(ICOLoadingContext& context)
+static ErrorOr<void> load_ico_directory(ICOLoadingContext& context)
 {
     DeprecatedInputMemoryStream stream { { context.data, context.data_size } };
 
-    auto image_count = decode_ico_header(stream);
-    if (!image_count.has_value() || image_count.value() == 0) {
-        return false;
-    }
+    auto image_count = TRY(decode_ico_header(stream));
+    if (image_count == 0)
+        return Error::from_string_literal("ICO file has no images");
 
-    for (size_t i = 0; i < image_count.value(); ++i) {
-        auto maybe_desc = decode_ico_direntry(stream);
-        if (!maybe_desc.has_value()) {
-            dbgln_if(ICO_DEBUG, "load_ico_directory: error loading entry: {}", i);
-            return false;
-        }
-
-        auto& desc = maybe_desc.value();
+    for (size_t i = 0; i < image_count; ++i) {
+        auto desc = TRY(decode_ico_direntry(stream));
         if (desc.offset + desc.size < desc.offset // detect integer overflow
             || (desc.offset + desc.size) > context.data_size) {
             dbgln_if(ICO_DEBUG, "load_ico_directory: offset: {} size: {} doesn't fit in ICO size: {}", desc.offset, desc.size, context.data_size);
-            return false;
+            return Error::from_string_literal("ICO size too large");
         }
         dbgln_if(ICO_DEBUG, "load_ico_directory: index {} width: {} height: {} offset: {} size: {}", i, desc.width, desc.height, desc.offset, desc.size);
-        context.images.append(desc);
+        TRY(context.images.try_append(desc));
     }
     context.largest_index = find_largest_image(context);
     context.state = ICOLoadingContext::State::DirectoryDecoded;
-    return true;
+    return {};
 }
 
-bool ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
+ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 {
-    if (context.state < ICOLoadingContext::State::DirectoryDecoded) {
-        if (!load_ico_directory(context)) {
-            context.state = ICOLoadingContext::State::Error;
-            return false;
-        }
-        context.state = ICOLoadingContext::State::DirectoryDecoded;
-    }
+    if (context.state < ICOLoadingContext::State::DirectoryDecoded)
+        TRY(load_ico_directory(context));
+
     size_t real_index = context.largest_index;
     if (index.has_value())
         real_index = index.value();
-    if (real_index >= context.images.size()) {
-        return false;
-    }
+    if (real_index >= context.images.size())
+        return Error::from_string_literal("Index out of bounds");
 
     ICOImageDescriptor& desc = context.images[real_index];
-    if (PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size }).release_value_but_fixme_should_propagate_errors()) {
-        auto png_decoder = PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }).release_value_but_fixme_should_propagate_errors();
+    if (TRY(PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size }))) {
+        auto png_decoder = TRY(PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }));
         if (png_decoder->initialize()) {
-            auto decoded_png_frame = png_decoder->frame(0);
-            if (decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
+            auto decoded_png_frame = TRY(png_decoder->frame(0));
+            if (!decoded_png_frame.image) {
                 dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
-                return false;
+                return Error::from_string_literal("Encoded image not null");
             }
-            desc.bitmap = decoded_png_frame.value().image;
-            return true;
+            desc.bitmap = decoded_png_frame.image;
+            return {};
         }
-        return false;
+        return Error::from_string_literal("Couldn't initialize PNG Decoder");
     } else {
-        auto bmp_decoder = BMPImageDecoderPlugin::create_as_included_in_ico({}, { context.data + desc.offset, desc.size }).release_value_but_fixme_should_propagate_errors();
+        auto bmp_decoder = TRY(BMPImageDecoderPlugin::create_as_included_in_ico({}, { context.data + desc.offset, desc.size }));
         // NOTE: We don't initialize a BMP decoder in the usual way, but rather
         // we just create an object and try to sniff for a frame when it's included
         // inside an ICO image.
         if (bmp_decoder->sniff_dib()) {
-            auto decoded_bmp_frame = bmp_decoder->frame(0);
-            if (decoded_bmp_frame.is_error() || !decoded_bmp_frame.value().image) {
+            auto decoded_bmp_frame = TRY(bmp_decoder->frame(0));
+            if (!decoded_bmp_frame.image) {
                 dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load BMP encoded image index: {}", real_index);
-                return false;
+                return Error::from_string_literal("Encoded image not null");
             }
-            desc.bitmap = decoded_bmp_frame.value().image;
+            desc.bitmap = decoded_bmp_frame.image;
         } else {
             dbgln_if(ICO_DEBUG, "load_ico_bitmap: encoded image not supported at index: {}", real_index);
-            return false;
+            return Error::from_string_literal("Encoded image not supported");
         }
-        return true;
+        return {};
     }
 }
 
 ErrorOr<bool> ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     DeprecatedInputMemoryStream stream { { data.data(), data.size() } };
-    return decode_ico_header(stream).has_value();
+    return !decode_ico_header(stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data)
@@ -212,7 +198,7 @@ IntSize ICOImageDecoderPlugin::size()
     }
 
     if (m_context->state < ICOLoadingContext::State::DirectoryDecoded) {
-        if (!load_ico_directory(*m_context)) {
+        if (!load_ico_directory(*m_context).is_error()) {
             m_context->state = ICOLoadingContext::State::Error;
             return {};
         }
@@ -238,7 +224,7 @@ bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 bool ICOImageDecoderPlugin::initialize()
 {
     DeprecatedInputMemoryStream stream { { m_context->data, m_context->data_size } };
-    return decode_ico_header(stream).has_value();
+    return !decode_ico_header(stream).is_error();
 }
 
 bool ICOImageDecoderPlugin::is_animated()
@@ -266,8 +252,8 @@ ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index)
 
     if (m_context->state < ICOLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
-        bool success = load_ico_bitmap(*m_context, {});
-        if (!success) {
+        auto maybe_error = load_ico_bitmap(*m_context, {});
+        if (maybe_error.is_error()) {
             m_context->state = ICOLoadingContext::State::Error;
             return Error::from_string_literal("ICOImageDecoderPlugin: Decoding failed");
         }
