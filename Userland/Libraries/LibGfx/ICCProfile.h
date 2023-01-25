@@ -291,6 +291,8 @@ struct XYZ {
     double x { 0 };
     double y { 0 };
     double z { 0 };
+
+    bool operator==(const XYZ&) const = default;
 };
 
 class TagData : public RefCounted<TagData> {
@@ -598,6 +600,7 @@ private:
     ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element);
     ErrorOr<void> read_tag_table(ReadonlyBytes);
     ErrorOr<void> check_required_tags();
+    ErrorOr<void> check_tag_types();
 
     u32 m_on_disk_size { 0 };
     Optional<PreferredCMMType> m_preferred_cmm_type;
