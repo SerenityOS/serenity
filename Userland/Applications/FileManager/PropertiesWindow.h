@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,10 +19,12 @@ class PropertiesWindow final : public GUI::Window {
     C_OBJECT(PropertiesWindow);
 
 public:
+    static ErrorOr<NonnullRefPtr<PropertiesWindow>> try_create(DeprecatedString const& path, bool disable_rename, Window* parent = nullptr);
     virtual ~PropertiesWindow() override = default;
 
 private:
-    PropertiesWindow(DeprecatedString const& path, bool disable_rename, Window* parent = nullptr);
+    PropertiesWindow(DeprecatedString const& path, Window* parent = nullptr);
+    ErrorOr<void> create_widgets(bool disable_rename);
 
     struct PropertyValuePair {
         DeprecatedString property;
@@ -58,8 +60,8 @@ private:
         return "Unknown";
     }
 
-    GUI::Button& make_button(DeprecatedString, GUI::Widget& parent);
-    void setup_permission_checkboxes(GUI::CheckBox& box_read, GUI::CheckBox& box_write, GUI::CheckBox& box_execute, PermissionMasks masks, mode_t mode);
+    static ErrorOr<NonnullRefPtr<GUI::Button>> make_button(DeprecatedString, GUI::Widget& parent);
+    ErrorOr<void> setup_permission_checkboxes(GUI::CheckBox& box_read, GUI::CheckBox& box_write, GUI::CheckBox& box_execute, PermissionMasks masks, mode_t mode);
     void permission_changed(mode_t mask, bool set);
     bool apply_changes();
     void update();
