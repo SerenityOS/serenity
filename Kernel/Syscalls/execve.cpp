@@ -7,6 +7,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -152,6 +153,10 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     regs.rdi = argv_entries.size();
     regs.rsi = argv;
     regs.rdx = envp;
+#elif ARCH(AARCH64)
+    regs.x[0] = argv_entries.size();
+    regs.x[1] = argv;
+    regs.x[2] = envp;
 #else
 #    error Unknown architecture
 #endif
@@ -717,8 +722,14 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
         { ELF::AuxiliaryValue::EGid, (long)egid.value() },
 
         { ELF::AuxiliaryValue::Platform, Processor::platform_string() },
-        // FIXME: This is platform specific
+    // FIXME: This is platform specific
+#if ARCH(X86_64)
         { ELF::AuxiliaryValue::HwCap, (long)CPUID(1).edx() },
+#elif ARCH(AARCH64)
+        { ELF::AuxiliaryValue::HwCap, (long)0 },
+#else
+#    error "Unknown architecture"
+#endif
 
         { ELF::AuxiliaryValue::ClockTick, (long)TimeManagement::the().ticks_per_second() },
 
