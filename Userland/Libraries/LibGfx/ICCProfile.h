@@ -141,7 +141,7 @@ private:
 
 // ICC v4, 7.2.5 Profile/device class field
 enum class DeviceClass : u32 {
-    InputDevce = 0x73636E72,    // 'scnr'
+    InputDevice = 0x73636E72,   // 'scnr'
     DisplayDevice = 0x6D6E7472, // 'mntr'
     OutputDevice = 0x70727472,  // 'prtr'
     DeviceLink = 0x6C696E6B,    // 'link'
