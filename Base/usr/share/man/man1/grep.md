@@ -5,7 +5,7 @@ grep
 ## Synopsis
 
 ```sh
-$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
+$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [--after-context NUM] [--before-context NUM] [--context NUM] [file...]
 ```
 
 ## Options:
@@ -24,6 +24,9 @@ $ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-
 * `-I`: Ignore binary files (same as --binary-mode skip)
 * `--color WHEN`: When to use colored output for the matching text ([auto], never, always)
 * `-c`, `--count`: Output line count instead of line contents
+* `-A NUM`, `--after-context NUM`: Print NUM lines of trailing context
+* `-B NUM`, `--before-context NUM`: Print NUM lines of leading context
+* `-C NUM`, `--context NUM`: Print NUM lines of output context
 
 ## Arguments:
 
