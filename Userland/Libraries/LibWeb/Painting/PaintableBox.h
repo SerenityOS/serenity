@@ -114,8 +114,8 @@ public:
     DOM::Document const& document() const { return layout_box().document(); }
     DOM::Document& document() { return layout_box().document(); }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
-    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void apply_clip_overflow_rect(PaintContext&, PaintPhase) const override;
+    virtual void clear_clip_overflow_rect(PaintContext&, PaintPhase) const override;
 
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 

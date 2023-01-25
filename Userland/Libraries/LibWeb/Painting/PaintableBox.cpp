@@ -318,7 +318,7 @@ Optional<Gfx::IntRect> PaintableBox::clip_rect() const
     return m_clip_rect;
 }
 
-void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
 {
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
@@ -364,7 +364,7 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     }
 }
 
-void PaintableBox::after_children_paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
 {
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;

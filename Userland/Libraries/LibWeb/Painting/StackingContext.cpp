@@ -71,8 +71,10 @@ static PaintPhase to_paint_phase(StackingContext::StackingContextPaintPhase phas
 
 void StackingContext::paint_descendants(PaintContext& context, Layout::Node const& box, StackingContextPaintPhase phase) const
 {
-    if (auto* paintable = box.paintable())
+    if (auto* paintable = box.paintable()) {
         paintable->before_children_paint(context, to_paint_phase(phase));
+        paintable->apply_clip_overflow_rect(context, to_paint_phase(phase));
+    }
 
     box.for_each_child([&](auto& child) {
         // If `child` establishes its own stacking context, skip over it.
@@ -124,8 +126,10 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
         }
     });
 
-    if (auto* paintable = box.paintable())
+    if (auto* paintable = box.paintable()) {
+        paintable->clear_clip_overflow_rect(context, to_paint_phase(phase));
         paintable->after_children_paint(context, to_paint_phase(phase));
+    }
 }
 
 void StackingContext::paint_internal(PaintContext& context) const
@@ -137,12 +141,20 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     auto paint_child = [&](auto* child) {
         auto parent = child->m_box.parent();
-        auto* paintable = parent ? parent->paintable() : nullptr;
-        if (paintable)
-            paintable->before_children_paint(context, PaintPhase::Foreground);
+        auto* parent_paintable = parent ? parent->paintable() : nullptr;
+        if (parent_paintable)
+            parent_paintable->before_children_paint(context, PaintPhase::Foreground);
+        auto containing_block = child->m_box.containing_block();
+        auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
+        if (containing_block_paintable)
+            containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
+
         child->paint(context);
-        if (paintable)
-            paintable->after_children_paint(context, PaintPhase::Foreground);
+
+        if (parent_paintable)
+            parent_paintable->after_children_paint(context, PaintPhase::Foreground);
+        if (containing_block_paintable)
+            containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
     };
 
     // Draw positioned descendants with negative z-indices (step 3)
@@ -178,9 +190,13 @@ void StackingContext::paint_internal(PaintContext& context) const
         // but no stacking context of its own.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
         auto parent = paint_box.layout_node().parent();
-        auto* paintable = parent ? parent->paintable() : nullptr;
-        if (paintable)
-            paintable->before_children_paint(context, PaintPhase::Foreground);
+        auto* parent_paintable = parent ? parent->paintable() : nullptr;
+        if (parent_paintable)
+            parent_paintable->before_children_paint(context, PaintPhase::Foreground);
+        auto containing_block = paint_box.layout_node().containing_block();
+        auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
+        if (containing_block_paintable)
+            containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
         paint_node(paint_box.layout_box(), context, PaintPhase::Background);
         paint_node(paint_box.layout_box(), context, PaintPhase::Border);
         paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::BackgroundAndBorders);
@@ -191,8 +207,10 @@ void StackingContext::paint_internal(PaintContext& context) const
         paint_node(paint_box.layout_box(), context, PaintPhase::FocusOutline);
         paint_node(paint_box.layout_box(), context, PaintPhase::Overlay);
         paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::FocusAndOverlay);
-        if (paintable)
-            paintable->after_children_paint(context, PaintPhase::Foreground);
+        if (parent_paintable)
+            parent_paintable->after_children_paint(context, PaintPhase::Foreground);
+        if (containing_block_paintable)
+            containing_block_paintable->clear_clip_overflow_rect(context, PaintPhase::Foreground);
 
         return TraversalDecision::Continue;
     });
