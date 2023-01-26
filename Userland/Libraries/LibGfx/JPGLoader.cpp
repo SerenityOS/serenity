@@ -1178,4 +1178,9 @@ ErrorOr<ImageFrameDescriptor> JPGImageDecoderPlugin::frame(size_t index)
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
+ErrorOr<Optional<ReadonlyBytes>> JPGImageDecoderPlugin::icc_data()
+{
+    return OptionalNone {};
+}
+
 }
