@@ -49,7 +49,7 @@ private:
     Gfx::FloatLine m_gradient_end_line;
 
     void reset();
-    void draw_gradient(GUI::Painter&, bool with_guidelines = false, const Gfx::FloatPoint drawing_offset = { 0.0f, 0.0f }, float scale = 1);
+    void draw_gradient(GUI::Painter&, bool with_guidelines = false, const Gfx::FloatPoint drawing_offset = { 0.0f, 0.0f }, float scale = 1, Optional<Gfx::IntRect const&> gradient_clip = {});
     void rasterize_gradient();
     void calculate_gradient_lines();
     void update_gradient_end_and_derive_start(Gfx::IntPoint const);
