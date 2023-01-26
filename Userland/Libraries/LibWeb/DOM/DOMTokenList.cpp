@@ -229,7 +229,7 @@ DeprecatedString DOMTokenList::value() const
 {
     StringBuilder builder;
     builder.join(' ', m_token_set);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-set-value%E2%91%A2

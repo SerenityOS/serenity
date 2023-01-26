@@ -273,7 +273,7 @@ DeprecatedString DateTime::to_deprecated_string(StringView format) const
         }
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& string)

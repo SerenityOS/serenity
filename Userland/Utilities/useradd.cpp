@@ -142,7 +142,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         builder.append("$5$"sv);
         builder.append(TRY(encode_base64({ random_data, sizeof(random_data) })));
 
-        return builder.build();
+        return builder.to_deprecated_string();
     };
 
     char* hash = crypt(password.characters(), TRY(get_salt()).characters());

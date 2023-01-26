@@ -118,11 +118,6 @@ DeprecatedString StringBuilder::to_deprecated_string() const
     return DeprecatedString((char const*)data(), length());
 }
 
-DeprecatedString StringBuilder::build() const
-{
-    return to_deprecated_string();
-}
-
 ErrorOr<String> StringBuilder::to_string() const
 {
     return String::from_utf8(string_view());

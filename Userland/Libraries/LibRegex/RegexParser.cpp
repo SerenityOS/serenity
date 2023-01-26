@@ -598,7 +598,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             number_builder.append(consume().value());
         }
 
-        auto maybe_minimum = number_builder.build().to_uint();
+        auto maybe_minimum = number_builder.to_deprecated_string().to_uint();
         if (!maybe_minimum.has_value())
             return set_error(Error::InvalidBraceContent);
 
@@ -627,7 +627,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_repetition_symbol(ByteCode& byteco
             number_builder.append(consume().value());
         }
         if (!number_builder.is_empty()) {
-            auto value = number_builder.build().to_uint();
+            auto value = number_builder.to_deprecated_string().to_uint();
             if (!value.has_value() || minimum > value.value() || *value > s_maximum_repetition_count)
                 return set_error(Error::InvalidBraceContent);
 
@@ -2530,7 +2530,7 @@ DeprecatedFlyString ECMA262Parser::read_capture_group_specifier(bool take_starti
         builder.append_code_point(code_point);
     }
 
-    DeprecatedFlyString name = builder.build();
+    DeprecatedFlyString name = builder.to_deprecated_string();
     if (!hit_end || name.is_empty())
         set_error(Error::InvalidNameForCaptureGroup);
 

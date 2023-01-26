@@ -50,7 +50,7 @@ TEST_CASE(overlong_realpath)
     expected.append({ tmp_dir, strlen(tmp_dir) });
 
     // But first, demonstrate the functionality at a reasonable depth:
-    auto expected_str = expected.build();
+    auto expected_str = expected.to_deprecated_string();
     check_result("getwd", expected_str, getwd(static_cast<char*>(calloc(1, PATH_MAX))));
     check_result("getcwd", expected_str, getcwd(nullptr, 0));
     check_result("realpath", expected_str, realpath(".", nullptr));
@@ -74,7 +74,7 @@ TEST_CASE(overlong_realpath)
     outln("cwd should now be ridiculously large");
 
     // Evaluate
-    expected_str = expected.build();
+    expected_str = expected.to_deprecated_string();
 
     check_result("getwd", {}, getwd(static_cast<char*>(calloc(1, PATH_MAX))));
     check_result("getcwd", expected_str, getcwd(nullptr, 0));

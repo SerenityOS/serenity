@@ -266,14 +266,14 @@ DeprecatedString Text::render_to_html() const
 {
     StringBuilder builder;
     m_node->render_to_html(builder);
-    return builder.build().trim(" \n\t"sv);
+    return builder.to_deprecated_string().trim(" \n\t"sv);
 }
 
 DeprecatedString Text::render_for_terminal() const
 {
     StringBuilder builder;
     m_node->render_for_terminal(builder);
-    return builder.build().trim(" \n\t"sv);
+    return builder.to_deprecated_string().trim(" \n\t"sv);
 }
 
 RecursionDecision Text::walk(Visitor& visitor) const
@@ -323,7 +323,7 @@ Vector<Text::Token> Text::tokenize(StringView str)
             return;
 
         tokens.append({
-            current_token.build(),
+            current_token.to_deprecated_string(),
             left_flanking,
             right_flanking,
             punct_before,
@@ -627,7 +627,7 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
 
         if (*iterator == ")"sv) {
             tokens = iterator;
-            return make<LinkNode>(is_image, move(link_text), address.build().trim_whitespace(), image_width, image_height);
+            return make<LinkNode>(is_image, move(link_text), address.to_deprecated_string().trim_whitespace(), image_width, image_height);
         }
 
         address.append(iterator->data);

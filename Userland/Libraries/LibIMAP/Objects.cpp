@@ -41,7 +41,7 @@ DeprecatedString FetchCommand::DataItem::Section::serialize() const
             first = false;
         }
         headers_builder.append(')');
-        return headers_builder.build();
+        return headers_builder.to_deprecated_string();
     }
     case SectionType::Text:
         return "TEXT";
@@ -57,7 +57,7 @@ DeprecatedString FetchCommand::DataItem::Section::serialize() const
         if (ends_with_mime) {
             sb.append(".MIME"sv);
         }
-        return sb.build();
+        return sb.to_deprecated_string();
     }
     }
     VERIFY_NOT_REACHED();
@@ -82,7 +82,7 @@ DeprecatedString FetchCommand::DataItem::serialize() const
             sb.appendff("<{}.{}>", start, octets);
         }
 
-        return sb.build();
+        return sb.to_deprecated_string();
     }
     case DataItemType::BodyStructure:
         return "BODYSTRUCTURE";
@@ -111,7 +111,7 @@ DeprecatedString FetchCommand::serialize()
         first = false;
     }
 
-    return AK::DeprecatedString::formatted("{} ({})", sequence_builder.build(), data_items_builder.build());
+    return AK::DeprecatedString::formatted("{} ({})", sequence_builder.to_deprecated_string(), data_items_builder.to_deprecated_string());
 }
 DeprecatedString serialize_astring(StringView string)
 {
@@ -164,7 +164,7 @@ DeprecatedString SearchKey::serialize() const
                 sb.append(item->serialize());
                 first = false;
             }
-            return sb.build();
+            return sb.to_deprecated_string();
         },
         [&](Seen const&) { return DeprecatedString("SEEN"); },
         [&](SentBefore const& x) { return DeprecatedString::formatted("SENTBEFORE {}", x.date.to_deprecated_string("%d-%b-%Y"sv)); },

@@ -745,7 +745,7 @@ DeprecatedString Sheet::generate_inline_documentation_for(StringView function, s
     }
 
     builder.append(')');
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Position::to_cell_identifier(Sheet const& sheet) const

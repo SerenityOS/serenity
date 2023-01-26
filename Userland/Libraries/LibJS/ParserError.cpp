@@ -32,7 +32,7 @@ DeprecatedString ParserError::source_location_hint(StringView source, char const
     for (size_t i = 0; i < position.value().column - 1; ++i)
         builder.append(spacer);
     builder.append(indicator);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

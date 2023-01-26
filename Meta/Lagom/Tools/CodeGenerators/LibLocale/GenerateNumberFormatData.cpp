@@ -86,7 +86,7 @@ struct AK::Formatter<NumberFormat> : Formatter<FormatString> {
             format.zero_format_index,
             format.positive_format_index,
             format.negative_format_index,
-            identifier_indices.build());
+            identifier_indices.to_deprecated_string());
     }
 };
 
@@ -718,7 +718,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.build();
+        return builder.to_deprecated_string();
     };
 
     while (numbers_iterator.has_next()) {

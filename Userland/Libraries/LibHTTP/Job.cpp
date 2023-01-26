@@ -371,7 +371,7 @@ void Job::on_socket_connected()
                 builder.append(existing_value.value());
                 builder.append(',');
                 builder.append(value);
-                m_headers.set(name, builder.build());
+                m_headers.set(name, builder.to_deprecated_string());
             } else {
                 m_headers.set(name, value);
             }

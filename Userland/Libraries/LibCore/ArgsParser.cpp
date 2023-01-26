@@ -77,7 +77,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     }
     long_options.append({ 0, 0, 0, 0 });
 
-    DeprecatedString short_options = short_options_builder.build();
+    auto short_options = short_options_builder.to_deprecated_string();
 
     while (true) {
         int c = getopt_long(argc, argv, short_options.characters(), long_options.data(), nullptr);

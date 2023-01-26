@@ -55,7 +55,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     }
 
     // 7. Return result.
-    return PrimitiveString::create(vm, result.build());
+    return PrimitiveString::create(vm, result.to_deprecated_string());
 }
 
 // 1.4.4 Intl.DurationFormat.prototype.formatToParts ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.formatToParts

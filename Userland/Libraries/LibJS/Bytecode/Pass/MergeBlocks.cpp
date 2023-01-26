@@ -142,7 +142,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
             builder.append(entry->name());
         }
 
-        auto new_block = BasicBlock::create(builder.build(), size);
+        auto new_block = BasicBlock::create(builder.to_deprecated_string(), size);
         auto& block = *new_block;
         auto first_successor_position = replace_blocks(successors, *new_block);
         VERIFY(first_successor_position.has_value());

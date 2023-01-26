@@ -518,7 +518,7 @@ Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
             builder.append(".com"sv);
         }
     }
-    DeprecatedString final_text = builder.to_deprecated_string();
+    auto final_text = builder.to_deprecated_string();
 
     auto url = url_from_user_input(final_text);
     return url;

@@ -372,7 +372,7 @@ void Editor::insert(const u32 cp)
 {
     StringBuilder builder;
     builder.append(Utf32View(&cp, 1));
-    auto str = builder.build();
+    auto str = builder.to_deprecated_string();
     if (m_pending_chars.try_append(str.characters(), str.length()).is_error())
         return;
 
@@ -1750,7 +1750,7 @@ DeprecatedString Style::to_deprecated_string() const
 
     builder.append('}');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 ErrorOr<void> VT::apply_style(Style const& style, Core::Stream::Stream& stream, bool is_starting)
@@ -2182,7 +2182,7 @@ DeprecatedString Editor::line(size_t up_to_index) const
 {
     StringBuilder builder;
     builder.append(Utf32View { m_buffer.data(), min(m_buffer.size(), up_to_index) });
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 void Editor::remove_at_index(size_t index)

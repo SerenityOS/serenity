@@ -112,7 +112,7 @@ public:
     StringCollector() = default;
     virtual ~StringCollector() = default;
 
-    DeprecatedString build() { return m_builder.build(); }
+    DeprecatedString build() { return m_builder.to_deprecated_string(); }
 
     static DeprecatedString from(Markdown::Heading const& heading)
     {

@@ -413,7 +413,7 @@ static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const
             VERIFY(nwritten > 0);
         }
     }
-    return encoded_builder.build();
+    return encoded_builder.to_deprecated_string();
 }
 
 // 19.2.6.1.2 Decode ( string, reservedSet ), https://tc39.es/ecma262/#sec-decode
@@ -471,7 +471,7 @@ static ThrowCompletionOr<DeprecatedString> decode(VM& vm, DeprecatedString const
     }
     if (expected_continuation_bytes > 0)
         return vm.throw_completion<URIError>(ErrorType::URIMalformed);
-    return decoded_builder.build();
+    return decoded_builder.to_deprecated_string();
 }
 
 // 19.2.6.4 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
@@ -521,7 +521,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
         }
         escaped.appendff("%u{:04X}", code_point);
     }
-    return PrimitiveString::create(vm, escaped.build());
+    return PrimitiveString::create(vm, escaped.to_deprecated_string());
 }
 
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
@@ -543,7 +543,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
         }
         unescaped.append_code_point(code_point);
     }
-    return PrimitiveString::create(vm, unescaped.build());
+    return PrimitiveString::create(vm, unescaped.to_deprecated_string());
 }
 
 }

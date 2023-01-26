@@ -95,7 +95,7 @@ DeprecatedString Error::stack_string() const
         }
     }
 
-    return stack_string_builder.build();
+    return stack_string_builder.to_deprecated_string();
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)              \

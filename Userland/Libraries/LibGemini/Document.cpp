@@ -25,7 +25,7 @@ DeprecatedString Document::render_to_html() const
     }
     html_builder.append("</body>"sv);
     html_builder.append("</html>"sv);
-    return html_builder.build();
+    return html_builder.to_deprecated_string();
 }
 
 NonnullRefPtr<Document> Document::parse(StringView lines, const URL& url)

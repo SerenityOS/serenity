@@ -345,7 +345,7 @@ RefPtr<AST::Node> Shell::immediate_split(AST::ImmediateExpression& invoking_node
             StringBuilder builder;
             for (auto code_point : Utf8View { value }) {
                 builder.append_code_point(code_point);
-                split_strings.append(builder.build());
+                split_strings.append(builder.to_deprecated_string());
                 builder.clear();
             }
         } else {

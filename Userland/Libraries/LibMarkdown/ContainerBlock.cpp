@@ -37,7 +37,7 @@ DeprecatedString ContainerBlock::render_to_html(bool tight) const
         }
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Vector<DeprecatedString> ContainerBlock::render_lines_for_terminal(size_t view_width) const
@@ -97,7 +97,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
     auto flush_paragraph = [&] {
         if (paragraph_text.is_empty())
             return;
-        auto paragraph = make<Paragraph>(Text::parse(paragraph_text.build()));
+        auto paragraph = make<Paragraph>(Text::parse(paragraph_text.to_deprecated_string()));
         blocks.append(move(paragraph));
         paragraph_text.clear();
     };

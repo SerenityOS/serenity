@@ -386,7 +386,7 @@ WebIDL::ExceptionOr<void> Document::write(Vector<DeprecatedString> const& string
     StringBuilder builder;
     builder.join(""sv, strings);
 
-    return run_the_document_write_steps(builder.build());
+    return run_the_document_write_steps(builder.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
@@ -396,7 +396,7 @@ WebIDL::ExceptionOr<void> Document::writeln(Vector<DeprecatedString> const& stri
     builder.join(""sv, strings);
     builder.append("\n"sv);
 
-    return run_the_document_write_steps(builder.build());
+    return run_the_document_write_steps(builder.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps

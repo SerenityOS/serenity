@@ -35,7 +35,7 @@ DeprecatedString Document::render_to_html(StringView extra_head_contents) const
 </body>
 </html>)~~~"sv);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Document::render_to_inline_html() const
@@ -51,7 +51,7 @@ DeprecatedString Document::render_for_terminal(size_t view_width) const
         builder.append("\n"sv);
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 RecursionDecision Document::walk(Visitor& visitor) const

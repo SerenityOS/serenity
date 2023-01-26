@@ -421,7 +421,7 @@ private:
                 for (auto& e : match.capture_group_matches[0])
                     result.append(e.view.string_view());
 
-                return result.build();
+                return result.to_deprecated_string();
             }
         }
 

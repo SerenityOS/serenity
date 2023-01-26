@@ -83,7 +83,7 @@ void Parser::parse_response_done()
     }
 
     consume("\r\n"sv);
-    m_response.m_response_text = response_data.build();
+    m_response.m_response_text = response_data.to_deprecated_string();
 }
 
 void Parser::consume(StringView x)

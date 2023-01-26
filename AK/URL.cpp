@@ -348,7 +348,7 @@ DeprecatedString URL::serialize_origin() const
     builder.append(m_host);
     if (m_port.has_value())
         builder.appendff(":{}", *m_port);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const

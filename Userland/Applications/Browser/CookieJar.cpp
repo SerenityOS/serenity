@@ -88,7 +88,7 @@ DeprecatedString CookieJar::get_cookie(const URL& url, Web::Cookie::Source sourc
         builder.appendff("{}={}", cookie.name, cookie.value);
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 void CookieJar::set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source)
@@ -150,7 +150,7 @@ void CookieJar::dump_cookies()
         builder.appendff("\t{}SameSite{} = {:s}\n", attribute_color, no_color, Web::Cookie::same_site_to_string(cookie.same_site));
     });
 
-    dbgln("{} cookies stored\n{}", total_cookies, builder.build());
+    dbgln("{} cookies stored\n{}", total_cookies, builder.to_deprecated_string());
 }
 
 Vector<Web::Cookie::Cookie> CookieJar::get_all_cookies()

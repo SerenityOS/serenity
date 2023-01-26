@@ -34,7 +34,7 @@ static DeprecatedString build_header_string(Vector<char const*> const& command, 
     builder.appendff("Every {}.{}s: \x1b[1m", interval.tv_sec, interval.tv_usec / 100000);
     builder.join(' ', command);
     builder.append("\x1b[0m"sv);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 static DeprecatedString build_header_string(Vector<char const*> const& command, Vector<DeprecatedString> const& filenames)
@@ -43,7 +43,7 @@ static DeprecatedString build_header_string(Vector<char const*> const& command, 
     builder.appendff("Every time any of {} changes: \x1b[1m", filenames);
     builder.join(' ', command);
     builder.append("\x1b[0m"sv);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 static struct timeval get_current_time()

@@ -57,7 +57,7 @@ public:
     }
 
     StringView as_string_view() const { return m_builder.string_view(); }
-    DeprecatedString as_string() const { return m_builder.build(); }
+    DeprecatedString as_string() const { return m_builder.to_deprecated_string(); }
 
     void append(StringView pattern)
     {

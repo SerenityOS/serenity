@@ -2816,7 +2816,7 @@ void HTMLTokenizer::insert_input_at_insertion_point(DeprecatedString const& inpu
     builder.append(m_decoded_input.substring(0, m_insertion_point.position));
     builder.append(input);
     builder.append(m_decoded_input.substring(m_insertion_point.position));
-    m_decoded_input = builder.build();
+    m_decoded_input = builder.to_deprecated_string();
 
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.iterator_at_byte_offset(utf8_iterator_byte_offset);

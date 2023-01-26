@@ -48,7 +48,7 @@ static ErrorOr<DeprecatedString> sem_name_to_path(char const* name)
     StringBuilder builder;
     TRY(builder.try_append(sem_path_prefix));
     TRY(builder.try_append(name_view));
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 struct NamedSemaphore {

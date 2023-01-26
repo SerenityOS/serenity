@@ -86,7 +86,7 @@ static ErrorOr<DeprecatedString> decode_html_entities(StringView const& str)
 
         start = entity_end.value() + 1;
     }
-    return decoded_str.build();
+    return decoded_str.to_deprecated_string();
 }
 
 static ErrorOr<ApprovalDate> parse_approval_date(StringView const& str)

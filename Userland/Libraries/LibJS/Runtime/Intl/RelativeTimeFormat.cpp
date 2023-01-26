@@ -237,7 +237,7 @@ ThrowCompletionOr<DeprecatedString> format_relative_time(VM& vm, RelativeTimeFor
     }
 
     // 4. Return result.
-    return result.build();
+    return result.to_deprecated_string();
 }
 
 // 17.5.5 FormatRelativeTimeToParts ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts

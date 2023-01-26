@@ -79,7 +79,7 @@ public:
         StringBuilder builder;
         builder.append("HMAC-"sv);
         builder.append(m_inner_hasher.class_name());
-        return builder.build();
+        return builder.to_deprecated_string();
     }
 #endif
 
