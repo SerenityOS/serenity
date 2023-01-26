@@ -41,7 +41,7 @@ endpoint WebDriverClient {
     get_element_rect(DeprecatedString element_id) => (Web::WebDriver::Response response)
     is_element_enabled(DeprecatedString element_id) => (Web::WebDriver::Response response)
     get_computed_role(DeprecatedString element_id) => (Web::WebDriver::Response response)
-    click(DeprecatedString element_id) => (Web::WebDriver::Response response)
+    element_click(DeprecatedString element_id) => (Web::WebDriver::Response response)
     get_source() => (Web::WebDriver::Response response)
     execute_script(JsonValue payload) => (Web::WebDriver::Response response)
     execute_async_script(JsonValue payload) => (Web::WebDriver::Response response)
