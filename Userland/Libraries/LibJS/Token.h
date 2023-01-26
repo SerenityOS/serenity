@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 
@@ -181,9 +181,9 @@ class Token {
 public:
     Token() = default;
 
-    Token(TokenType type, DeprecatedString message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
+    Token(TokenType type, String message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
         : m_type(type)
-        , m_message(message)
+        , m_message(move(message))
         , m_trivia(trivia)
         , m_original_value(value)
         , m_value(value)
@@ -200,7 +200,7 @@ public:
     char const* name() const;
     static char const* name(TokenType);
 
-    DeprecatedString const& message() const { return m_message; }
+    String const& message() const { return m_message; }
     StringView trivia() const { return m_trivia; }
     StringView original_value() const { return m_original_value; }
     StringView value() const
@@ -246,7 +246,7 @@ public:
 
 private:
     TokenType m_type { TokenType::Invalid };
-    DeprecatedString m_message;
+    String m_message;
     StringView m_trivia;
     StringView m_original_value;
     Variant<Empty, StringView, DeprecatedFlyString> m_value {};
