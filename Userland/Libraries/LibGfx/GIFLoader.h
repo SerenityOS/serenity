@@ -28,6 +28,7 @@ public:
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
     GIFImageDecoderPlugin(u8 const*, size_t);

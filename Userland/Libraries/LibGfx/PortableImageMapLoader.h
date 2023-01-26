@@ -65,6 +65,7 @@ public:
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
     OwnPtr<TContext> m_context;
@@ -183,4 +184,11 @@ ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t
     VERIFY(m_context->bitmap);
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
+
+template<typename TContext>
+ErrorOr<Optional<ReadonlyBytes>> PortableImageDecoderPlugin<TContext>::icc_data()
+{
+    return OptionalNone {};
+}
+
 }
