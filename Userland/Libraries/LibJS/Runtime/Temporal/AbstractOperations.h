@@ -57,14 +57,14 @@ struct TemporalInstant {
     u16 millisecond;
     u16 microsecond;
     u16 nanosecond;
-    Optional<DeprecatedString> time_zone_offset;
+    Optional<String> time_zone_offset;
 };
 
 struct TemporalDate {
     i32 year;
     u8 month;
     u8 day;
-    Optional<DeprecatedString> calendar;
+    Optional<String> calendar;
 };
 
 struct TemporalTime {
@@ -74,27 +74,27 @@ struct TemporalTime {
     u16 millisecond;
     u16 microsecond;
     u16 nanosecond;
-    Optional<DeprecatedString> calendar = {};
+    Optional<String> calendar = {};
 };
 
 struct TemporalTimeZone {
     bool z;
-    Optional<DeprecatedString> offset_string;
-    Optional<DeprecatedString> name;
+    Optional<String> offset_string;
+    Optional<String> name;
 };
 
 struct TemporalYearMonth {
     i32 year;
     u8 month;
     u8 day;
-    Optional<DeprecatedString> calendar = {};
+    Optional<String> calendar = {};
 };
 
 struct TemporalMonthDay {
     Optional<i32> year;
     u8 month;
     u8 day;
-    Optional<DeprecatedString> calendar = {};
+    Optional<String> calendar = {};
 };
 
 struct ISODateTime {
@@ -108,7 +108,7 @@ struct ISODateTime {
     u16 microsecond;
     u16 nanosecond;
     TemporalTimeZone time_zone { .z = false, .offset_string = {}, .name = {} };
-    Optional<DeprecatedString> calendar = {};
+    Optional<String> calendar = {};
 };
 
 struct SecondsStringPrecision {
