@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,7 +48,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> TimeZoneConstructor::construct(FunctionO
     auto& vm = this->vm();
 
     // 2. Set identifier to ? ToString(identifier).
-    auto identifier = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto identifier = TRY(vm.argument(0).to_string(vm));
 
     // 3. If IsTimeZoneOffsetString(identifier) is false, then
     if (!is_time_zone_offset_string(identifier)) {
@@ -59,11 +59,11 @@ ThrowCompletionOr<NonnullGCPtr<Object>> TimeZoneConstructor::construct(FunctionO
         }
 
         // b. Set identifier to ! CanonicalizeTimeZoneName(identifier).
-        identifier = canonicalize_time_zone_name(identifier);
+        identifier = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, identifier));
     }
 
     // 4. Return ? CreateTemporalTimeZone(identifier, NewTarget).
-    return *TRY(create_temporal_time_zone(vm, identifier, &new_target));
+    return *TRY(create_temporal_time_zone(vm, identifier.to_deprecated_string(), &new_target));
 }
 
 // 11.3.2 Temporal.TimeZone.from ( item ), https://tc39.es/proposal-temporal/#sec-temporal.timezone.from
