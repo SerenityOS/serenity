@@ -578,27 +578,27 @@ ThrowCompletionOr<String> maybe_format_calendar_annotation(VM& vm, Object const*
     auto calendar_id = TRY(Value(calendar_object).to_string(vm));
 
     // 4. Return FormatCalendarAnnotation(calendarID, showCalendar).
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(format_calendar_annotation(calendar_id, show_calendar)));
+    return format_calendar_annotation(vm, calendar_id, show_calendar);
 }
 
 // 12.2.28 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
-DeprecatedString format_calendar_annotation(StringView id, StringView show_calendar)
+ThrowCompletionOr<String> format_calendar_annotation(VM& vm, StringView id, StringView show_calendar)
 {
     VERIFY(show_calendar == "auto"sv || show_calendar == "always"sv || show_calendar == "never"sv || show_calendar == "critical"sv);
 
     // 1. If showCalendar is "never", return the empty String.
     if (show_calendar == "never"sv)
-        return DeprecatedString::empty();
+        return String {};
 
     // 2. If showCalendar is "auto" and id is "iso8601", return the empty String.
     if (show_calendar == "auto"sv && id == "iso8601"sv)
-        return DeprecatedString::empty();
+        return String {};
 
     // 3. If showCalendar is "critical", let flag be "!"; else, let flag be the empty String.
     auto flag = show_calendar == "critical"sv ? "!"sv : ""sv;
 
     // 4. Return the string-concatenation of "[", flag, "u-ca=", id, and "]".
-    return DeprecatedString::formatted("[{}u-ca={}]", flag, id);
+    return TRY_OR_THROW_OOM(vm, String::formatted("[{}u-ca={}]", flag, id));
 }
 
 // 12.2.29 CalendarEquals ( one, two ), https://tc39.es/proposal-temporal/#sec-temporal-calendarequals
