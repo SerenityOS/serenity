@@ -230,17 +230,17 @@ StringView negate_temporal_rounding_mode(StringView rounding_mode)
 }
 
 // 13.8 ToTemporalOffset ( options, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
-ThrowCompletionOr<DeprecatedString> to_temporal_offset(VM& vm, Object const* options, DeprecatedString const& fallback)
+ThrowCompletionOr<String> to_temporal_offset(VM& vm, Object const* options, StringView fallback)
 {
     // 1. If options is undefined, return fallback.
     if (options == nullptr)
-        return fallback;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8(fallback));
 
     // 2. Return ? GetOption(options, "offset", "string", « "prefer", "use", "ignore", "reject" », fallback).
-    auto option = TRY(get_option(vm, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, fallback.view()));
+    auto option = TRY(get_option(vm, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, fallback));
 
     VERIFY(option.is_string());
-    return TRY(option.as_string().deprecated_string());
+    return option.as_string().utf8_string();
 }
 
 // 13.9 ToCalendarNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tocalendarnameoption

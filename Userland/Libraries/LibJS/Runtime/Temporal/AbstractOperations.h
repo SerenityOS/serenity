@@ -139,7 +139,7 @@ ThrowCompletionOr<String> to_temporal_overflow(VM&, Object const* options);
 ThrowCompletionOr<String> to_temporal_disambiguation(VM&, Object const* options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(VM&, Object const& normalized_options, StringView fallback);
 StringView negate_temporal_rounding_mode(StringView rounding_mode);
-ThrowCompletionOr<DeprecatedString> to_temporal_offset(VM&, Object const* options, DeprecatedString const& fallback);
+ThrowCompletionOr<String> to_temporal_offset(VM&, Object const* options, StringView fallback);
 ThrowCompletionOr<DeprecatedString> to_calendar_name_option(VM&, Object const& normalized_options);
 ThrowCompletionOr<DeprecatedString> to_time_zone_name_option(VM&, Object const& normalized_options);
 ThrowCompletionOr<DeprecatedString> to_show_offset_option(VM&, Object const& normalized_options);
