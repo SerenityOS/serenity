@@ -216,12 +216,14 @@ void GradientTool::rasterize_gradient()
 {
     if (!has_gradient_start_end())
         return;
+    auto layer = m_editor->active_layer();
+    if (!layer)
+        return;
 
-    GUI::Painter painter(m_editor->active_layer()->get_scratch_edited_bitmap());
+    GUI::Painter painter(layer->get_scratch_edited_bitmap());
     draw_gradient(painter);
-
-    m_editor->did_complete_action("Gradient Tool"sv);
-
+    layer->did_modify_bitmap(layer->get_scratch_edited_bitmap().rect());
+    m_editor->did_complete_action(tool_name());
     reset();
 }
 
