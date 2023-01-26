@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -349,11 +349,11 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, name);
 
             // ii. Set name to ! CanonicalizeTimeZoneName(name).
-            name = canonicalize_time_zone_name(name);
+            name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(canonicalize_time_zone_name(name.to_deprecated_string())));
         }
 
         // c. Return ! CreateTemporalTimeZone(name).
-        return MUST(create_temporal_time_zone(vm, name));
+        return MUST(create_temporal_time_zone(vm, name.to_deprecated_string()));
     }
 
     // 5. If parseResult.[[Z]] is true, return ! CreateTemporalTimeZone("UTC").
@@ -361,7 +361,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
         return MUST(create_temporal_time_zone(vm, "UTC"sv));
 
     // 6. Return ! CreateTemporalTimeZone(parseResult.[[OffsetString]]).
-    return MUST(create_temporal_time_zone(vm, *parse_result.offset_string));
+    return MUST(create_temporal_time_zone(vm, parse_result.offset_string->to_deprecated_string()));
 }
 
 // 11.6.8 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor

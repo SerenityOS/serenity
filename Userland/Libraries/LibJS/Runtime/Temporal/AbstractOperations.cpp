@@ -657,11 +657,11 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
                     return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
                 // 2. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
-                time_zone_name = canonicalize_time_zone_name(*time_zone_name);
+                time_zone_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(canonicalize_time_zone_name(time_zone_name->to_deprecated_string())));
             }
 
             // ii. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
-            time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
+            time_zone = MUST(create_temporal_time_zone(vm, time_zone_name->to_deprecated_string()));
 
             // iii. If result.[[TimeZone]].[[Z]] is true, then
             if (result.time_zone.z) {
@@ -1322,7 +1322,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         auto name = parse_result.time_zone_identifier;
 
         // b. Set timeZoneResult.[[Name]] to CodePointsToString(name).
-        time_zone_result.name = *name;
+        time_zone_result.name = TRY_OR_THROW_OOM(vm, String::from_utf8(*name));
     }
 
     // 21. If parseResult contains a UTCDesignator Parse Node, then
@@ -1338,12 +1338,12 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
             auto offset = parse_result.time_zone_numeric_utc_offset;
 
             // ii. Set timeZoneResult.[[OffsetString]] to CodePointsToString(offset).
-            time_zone_result.offset_string = *offset;
+            time_zone_result.offset_string = TRY_OR_THROW_OOM(vm, String::from_utf8(*offset));
         }
     }
 
     // 23. Let calendar be undefined.
-    Optional<DeprecatedString> calendar;
+    Optional<String> calendar;
 
     // 24. For each Annotation Parse Node annotation contained within parseResult, do
     for (auto const& annotation : parse_result.annotations) {
@@ -1358,7 +1358,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
                 auto const& value = annotation.value;
 
                 // 2. Let calendar be CodePointsToString(value).
-                calendar = value;
+                calendar = TRY_OR_THROW_OOM(vm, String::from_utf8(value));
             }
         }
         // c. Else,
@@ -1385,12 +1385,12 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, StringV
     auto result = TRY(parse_iso_date_time(vm, *parse_result));
 
     // 3. Let offsetString be result.[[TimeZone]].[[OffsetString]].
-    Optional<DeprecatedString> offset_string = result.time_zone.offset_string;
+    auto offset_string = result.time_zone.offset_string;
 
     // 4. If result.[[TimeZone]].[[Z]] is true, then
     if (result.time_zone.z) {
         // a. Set offsetString to "+00:00".
-        offset_string = "+00:00"sv;
+        offset_string = TRY_OR_THROW_OOM(vm, String::from_utf8("+00:00"sv));
     }
 
     // 6. Assert: offsetString is not undefined.
@@ -1428,7 +1428,7 @@ ThrowCompletionOr<String> parse_temporal_calendar_string(VM& vm, StringView iso_
             return TRY_OR_THROW_OOM(vm, String::from_utf8("iso8601"sv));
         // c. Else, return calendar.
         else
-            return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(*calendar));
+            return calendar.release_value();
     }
     // 3. Else,
     else {
@@ -1686,7 +1686,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, Stri
     // 2. If parseResult is a Parse Node, then
     if (parse_result.has_value()) {
         // a. Return the Record { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: timeZoneString }.
-        return TemporalTimeZone { .z = false, .offset_string = {}, .name = time_zone_string };
+        return TemporalTimeZone { .z = false, .offset_string = {}, .name = TRY_OR_THROW_OOM(vm, String::from_utf8(time_zone_string)) };
     }
 
     // 3. Let result be ? ParseISODateTime(timeZoneString).

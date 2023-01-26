@@ -130,7 +130,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 
     Object* calendar = nullptr;
     Object* time_zone = nullptr;
-    Optional<DeprecatedString> offset_string;
+    Optional<String> offset_string;
     ISODateTime result;
 
     // 5. If Type(item) is Object, then
@@ -203,7 +203,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
             // ii. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
-            time_zone_name = canonicalize_time_zone_name(*time_zone_name);
+            time_zone_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(canonicalize_time_zone_name(time_zone_name->to_deprecated_string())));
         }
 
         // g. Let offsetString be result.[[TimeZone]].[[OffsetString]].
@@ -221,7 +221,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         }
 
         // j. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
-        time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
+        time_zone = MUST(create_temporal_time_zone(vm, time_zone_name->to_deprecated_string()));
 
         // k. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
         auto temporal_calendar_like = result.calendar.has_value()
