@@ -1655,7 +1655,7 @@ ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(VM& vm, double ye
 }
 
 // 7.5.27 TemporalDurationToString ( years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldurationtostring
-DeprecatedString temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<String> temporal_duration_to_string(VM& vm, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision)
 {
     if (precision.has<StringView>())
         VERIFY(precision.get<StringView>() == "auto"sv);
@@ -1736,24 +1736,23 @@ DeprecatedString temporal_duration_to_string(double years, double months, double
 
         // b. Let decimalPart be ToZeroPaddedDecimalString(fraction, 9).
         // NOTE: padding with zeros leads to weird results when applied to a double. Not sure if that's a bug in AK/Format.h or if I'm doing this wrong.
-        auto decimal_part = DeprecatedString::formatted("{:09}", (u64)fraction);
+        auto decimal_part_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", (u64)fraction));
+        StringView decimal_part;
 
         // c. If precision is "auto", then
         if (precision.has<StringView>() && precision.get<StringView>() == "auto"sv) {
             // i. Set decimalPart to the longest possible substring of decimalPart starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
-            // NOTE: trim() would keep the left-most 0.
-            while (decimal_part.ends_with('0'))
-                decimal_part = decimal_part.substring(0, decimal_part.length() - 1);
+            decimal_part = decimal_part_string.bytes_as_string_view().trim("0"sv, TrimMode::Right);
         }
         // d. Else if precision = 0, then
         else if (precision.get<u8>() == 0) {
             // i. Set decimalPart to "".
-            decimal_part = DeprecatedString::empty();
+            decimal_part = ""sv;
         }
         // e. Else,
         else {
             // i. Set decimalPart to the substring of decimalPart from 0 to precision.
-            decimal_part = decimal_part.substring(0, precision.get<u8>());
+            decimal_part = decimal_part_string.bytes_as_string_view().substring_view(0, precision.get<u8>());
         }
 
         // f. Let secondsPart be abs(seconds) formatted as a decimal number.
@@ -1789,7 +1788,7 @@ DeprecatedString temporal_duration_to_string(double years, double months, double
     }
 
     // 20. Return result.
-    return result.to_deprecated_string();
+    return TRY_OR_THROW_OOM(vm, result.to_string());
 }
 
 // 7.5.28 AddDurationToOrSubtractDurationFromDuration ( operation, duration, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-adddurationtoorsubtractdurationfromduration
