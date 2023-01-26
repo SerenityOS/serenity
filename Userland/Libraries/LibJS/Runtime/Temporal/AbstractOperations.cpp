@@ -170,17 +170,17 @@ ThrowCompletionOr<String> to_temporal_overflow(VM& vm, Object const* options)
 }
 
 // 13.5 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
-ThrowCompletionOr<DeprecatedString> to_temporal_disambiguation(VM& vm, Object const* options)
+ThrowCompletionOr<String> to_temporal_disambiguation(VM& vm, Object const* options)
 {
     // 1. If options is undefined, return "compatible".
     if (options == nullptr)
-        return "compatible"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8("compatible"sv));
 
     // 2. Return ? GetOption(options, "disambiguation", "string", « "compatible", "earlier", "later", "reject" », "compatible").
     auto option = TRY(get_option(vm, *options, vm.names.disambiguation, OptionType::String, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, "compatible"sv));
 
     VERIFY(option.is_string());
-    return TRY(option.as_string().deprecated_string());
+    return option.as_string().utf8_string();
 }
 
 // 13.6 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
