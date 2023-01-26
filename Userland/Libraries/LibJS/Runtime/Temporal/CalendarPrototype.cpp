@@ -301,7 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
     // NOTE: The assertion happens in iso_month() call.
 
     // 6. Return ISOMonthCode(temporalDateLike.[[ISOMonth]]).
-    return PrimitiveString::create(vm, iso_month_code(iso_month(temporal_date_like.as_object())));
+    return PrimitiveString::create(vm, TRY(iso_month_code(vm, iso_month(temporal_date_like.as_object()))));
 }
 
 // 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day

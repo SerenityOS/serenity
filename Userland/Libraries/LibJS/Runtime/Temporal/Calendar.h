@@ -73,7 +73,7 @@ ThrowCompletionOr<bool> calendar_equals(VM&, Object& one, Object& two);
 ThrowCompletionOr<Object*> consolidate_calendars(VM&, Object& one, Object& two);
 u8 iso_days_in_month(i32 year, u8 month);
 YearWeekRecord to_iso_week_of_year(i32 year, u8 month, u8 day);
-DeprecatedString iso_month_code(u8 month);
+ThrowCompletionOr<String> iso_month_code(VM&, u8 month);
 ThrowCompletionOr<double> resolve_iso_month(VM&, Object const& fields);
 ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM&, Object const& fields, Object const& options);
 ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(VM&, Object const& fields, Object const& options);
