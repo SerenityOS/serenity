@@ -1863,9 +1863,9 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
 
     // 13. Return the Record { [[SmallestUnit]]: smallestUnit, [[LargestUnit]]: largestUnit, [[RoundingMode]]: roundingMode, [[RoundingIncrement]]: roundingIncrement, [[Options]]: options }.
     return DifferenceSettings {
-        .smallest_unit = smallest_unit->to_deprecated_string(),
-        .largest_unit = largest_unit->to_deprecated_string(),
-        .rounding_mode = rounding_mode.to_deprecated_string(),
+        .smallest_unit = smallest_unit.release_value(),
+        .largest_unit = largest_unit.release_value(),
+        .rounding_mode = move(rounding_mode),
         .rounding_increment = rounding_increment,
         .options = *options,
     };

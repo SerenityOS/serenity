@@ -118,9 +118,9 @@ struct SecondsStringPrecision {
 };
 
 struct DifferenceSettings {
-    DeprecatedString smallest_unit;
-    DeprecatedString largest_unit;
-    DeprecatedString rounding_mode;
+    String smallest_unit;
+    String largest_unit;
+    String rounding_mode;
     u64 rounding_increment;
     Object& options;
 };
