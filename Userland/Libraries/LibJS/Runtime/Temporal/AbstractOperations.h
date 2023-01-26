@@ -165,7 +165,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, StringView iso_string);
 ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM&, ParseResult const& parse_result);
 ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM&, StringView iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM&, StringView iso_string);
-ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM&, StringView iso_string);
+ThrowCompletionOr<String> parse_temporal_calendar_string(VM&, StringView iso_string);
 ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM&, StringView iso_string);
 ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM&, StringView iso_string);
 ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM&, StringView iso_string);

@@ -37,7 +37,7 @@ struct YearWeekRecord {
     i32 year { 0 };
 };
 
-bool is_builtin_calendar(DeprecatedString const& identifier);
+bool is_builtin_calendar(StringView identifier);
 Span<StringView const> available_calendars();
 ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, DeprecatedString const& identifier, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Calendar*> get_builtin_calendar(VM&, DeprecatedString const& identifier);
