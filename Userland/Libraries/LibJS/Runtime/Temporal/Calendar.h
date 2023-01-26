@@ -48,7 +48,7 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(VM&, Object& calendar, Value dat
 ThrowCompletionOr<Duration*> calendar_date_until(VM&, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until = nullptr);
 ThrowCompletionOr<double> calendar_year(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_month(VM&, Object& calendar, Object& date_like);
-ThrowCompletionOr<DeprecatedString> calendar_month_code(VM&, Object& calendar, Object& date_like);
+ThrowCompletionOr<String> calendar_month_code(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_day(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_day_of_week(VM&, Object& calendar, Object& date_like);
 ThrowCompletionOr<double> calendar_day_of_year(VM&, Object& calendar, Object& date_like);

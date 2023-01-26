@@ -230,7 +230,7 @@ ThrowCompletionOr<double> calendar_month(VM& vm, Object& calendar, Object& date_
 }
 
 // 12.2.10 CalendarMonthCode ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthcode
-ThrowCompletionOr<DeprecatedString> calendar_month_code(VM& vm, Object& calendar, Object& date_like)
+ThrowCompletionOr<String> calendar_month_code(VM& vm, Object& calendar, Object& date_like)
 {
     // 1. Let result be ? Invoke(calendar, "monthCode", « dateLike »).
     auto result = TRY(Value(&calendar).invoke(vm, vm.names.monthCode, &date_like));
@@ -240,7 +240,7 @@ ThrowCompletionOr<DeprecatedString> calendar_month_code(VM& vm, Object& calendar
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFunctionResult, vm.names.monthCode.as_string(), vm.names.undefined.as_string());
 
     // 3. Return ? ToString(result).
-    return result.to_deprecated_string(vm);
+    return result.to_string(vm);
 }
 
 // 12.2.11 CalendarDay ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendarday
