@@ -544,11 +544,11 @@ Web::WebDriver::Response Client::get_computed_role(Web::WebDriver::Parameters pa
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
 // POST /session/{session id}/element/{element id}/click
-Web::WebDriver::Response Client::click(Web::WebDriver::Parameters parameters, JsonValue)
+Web::WebDriver::Response Client::element_click(Web::WebDriver::Parameters parameters, JsonValue)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/click");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().click(parameters[1]);
+    return session->web_content_connection().element_click(parameters[1]);
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source

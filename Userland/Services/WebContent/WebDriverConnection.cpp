@@ -1192,7 +1192,7 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
-Messages::WebDriverClient::ClickResponse WebDriverConnection::click(DeprecatedString const& element_id)
+Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_click(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
