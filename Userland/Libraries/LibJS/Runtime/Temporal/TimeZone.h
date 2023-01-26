@@ -53,6 +53,4 @@ ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM&, MarkedVector<Ins
 ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM&, Value time_zone, PlainDateTime&);
 ThrowCompletionOr<bool> time_zone_equals(VM&, Object& one, Object& two);
 
-bool is_valid_time_zone_numeric_utc_offset_syntax(DeprecatedString const&);
-
 }
