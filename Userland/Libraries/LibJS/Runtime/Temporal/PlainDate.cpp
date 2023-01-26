@@ -395,14 +395,14 @@ ISODateRecord balance_iso_date(double year, double month, double day)
 }
 
 // 3.5.7 PadISOYear ( y ), https://tc39.es/proposal-temporal/#sec-temporal-padisoyear
-DeprecatedString pad_iso_year(i32 y)
+ThrowCompletionOr<String> pad_iso_year(VM& vm, i32 y)
 {
     // 1. Assert: y is an integer.
 
     // 2. If y ≥ 0 and y ≤ 9999, then
     if (y >= 0 && y <= 9999) {
         // a. Return ToZeroPaddedDecimalString(y, 4).
-        return DeprecatedString::formatted("{:04}", y);
+        return TRY_OR_THROW_OOM(vm, String::formatted("{:04}", y));
     }
 
     // 3. If y > 0, let yearSign be "+"; otherwise, let yearSign be "-".
@@ -410,7 +410,7 @@ DeprecatedString pad_iso_year(i32 y)
 
     // 4. Let year be ToZeroPaddedDecimalString(abs(y), 6).
     // 5. Return the string-concatenation of yearSign and year.
-    return DeprecatedString::formatted("{}{:06}", year_sign, abs(y));
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{:06}", year_sign, abs(y)));
 }
 
 // 3.5.8 TemporalDateToString ( temporalDate, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetostring
@@ -420,7 +420,7 @@ ThrowCompletionOr<DeprecatedString> temporal_date_to_string(VM& vm, PlainDate& t
     // 2. Assert: temporalDate has an [[InitializedTemporalDate]] internal slot.
 
     // 3. Let year be ! PadISOYear(temporalDate.[[ISOYear]]).
-    auto year = pad_iso_year(temporal_date.iso_year());
+    auto year = MUST_OR_THROW_OOM(pad_iso_year(vm, temporal_date.iso_year()));
 
     // 4. Let month be ToZeroPaddedDecimalString(monthDay.[[ISOMonth]], 2).
     auto month = DeprecatedString::formatted("{:02}", temporal_date.iso_month());
