@@ -57,7 +57,7 @@ ThrowCompletionOr<String> canonicalize_time_zone_name(VM& vm, StringView time_zo
 }
 
 // 11.6.1 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
-ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString const& identifier, FunctionObject const* new_target)
+ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, StringView identifier, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
 
@@ -74,7 +74,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
         auto offset_nanoseconds_result = parse_time_zone_offset_string(identifier);
 
         // b. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(offsetNanosecondsResult).
-        object->set_identifier(format_time_zone_offset_string(offset_nanoseconds_result));
+        object->set_identifier(TRY_OR_THROW_OOM(vm, String::from_utf8(format_time_zone_offset_string(offset_nanoseconds_result))));
 
         // c. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.
         object->set_offset_nanoseconds(offset_nanoseconds_result);
@@ -82,10 +82,10 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
     // 4. Else,
     else {
         // a. Assert: ! CanonicalizeTimeZoneName(identifier) is identifier.
-        VERIFY(MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, identifier)) == identifier.view());
+        VERIFY(MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, identifier)) == identifier);
 
         // b. Set object.[[Identifier]] to identifier.
-        object->set_identifier(identifier);
+        object->set_identifier(TRY_OR_THROW_OOM(vm, String::from_utf8(identifier)));
 
         // c. Set object.[[OffsetNanoseconds]] to undefined.
         // NOTE: No-op.
@@ -353,15 +353,15 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
         }
 
         // c. Return ! CreateTemporalTimeZone(name).
-        return MUST(create_temporal_time_zone(vm, name.to_deprecated_string()));
+        return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, name));
     }
 
     // 5. If parseResult.[[Z]] is true, return ! CreateTemporalTimeZone("UTC").
     if (parse_result.z)
-        return MUST(create_temporal_time_zone(vm, "UTC"sv));
+        return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, "UTC"sv));
 
     // 6. Return ! CreateTemporalTimeZone(parseResult.[[OffsetString]]).
-    return MUST(create_temporal_time_zone(vm, parse_result.offset_string->to_deprecated_string()));
+    return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, *parse_result.offset_string));
 }
 
 // 11.6.8 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -155,6 +155,7 @@ TimeZone* system_time_zone(VM& vm)
     auto identifier = default_time_zone();
 
     // 2. Return ! CreateTemporalTimeZone(identifier).
+    // FIXME: Propagate possible OOM error
     return MUST(create_temporal_time_zone(vm, identifier));
 }
 
