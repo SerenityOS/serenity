@@ -22,13 +22,13 @@ class Calendar final : public Object {
 public:
     virtual ~Calendar() override = default;
 
-    [[nodiscard]] DeprecatedString const& identifier() const { return m_identifier; }
+    [[nodiscard]] String const& identifier() const { return m_identifier; }
 
 private:
-    Calendar(DeprecatedString identifier, Object& prototype);
+    Calendar(String identifier, Object& prototype);
 
     // 12.5 Properties of Temporal.Calendar Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-calendar-instances
-    DeprecatedString m_identifier; // [[Identifier]]
+    String m_identifier; // [[Identifier]]
 };
 
 // 14.2 The Year-Week Record Specification Type, https://tc39.es/proposal-temporal/#sec-year-week-record-specification-type
@@ -39,7 +39,7 @@ struct YearWeekRecord {
 
 bool is_builtin_calendar(StringView identifier);
 Span<StringView const> available_calendars();
-ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, DeprecatedString const& identifier, FunctionObject const* new_target = nullptr);
+ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, String const& identifier, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Calendar*> get_builtin_calendar(VM&, DeprecatedString const& identifier);
 Calendar* get_iso8601_calendar(VM&);
 ThrowCompletionOr<Vector<String>> calendar_fields(VM&, Object& calendar, Vector<StringView> const& field_names);
