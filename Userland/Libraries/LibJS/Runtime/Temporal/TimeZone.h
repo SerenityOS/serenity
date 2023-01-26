@@ -42,7 +42,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, StringView identifie
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
 BigInt* get_named_time_zone_next_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);
 BigInt* get_named_time_zone_previous_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);
-DeprecatedString format_time_zone_offset_string(double offset_nanoseconds);
+ThrowCompletionOr<String> format_time_zone_offset_string(VM&, double offset_nanoseconds);
 DeprecatedString format_iso_time_zone_offset_string(double offset_nanoseconds);
 ThrowCompletionOr<Object*> to_temporal_time_zone(VM&, Value temporal_time_zone_like);
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM&, Value time_zone, Instant&);
