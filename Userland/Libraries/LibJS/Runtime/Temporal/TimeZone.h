@@ -46,7 +46,7 @@ ThrowCompletionOr<String> format_time_zone_offset_string(VM&, double offset_nano
 ThrowCompletionOr<String> format_iso_time_zone_offset_string(VM&, double offset_nanoseconds);
 ThrowCompletionOr<Object*> to_temporal_time_zone(VM&, Value temporal_time_zone_like);
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM&, Value time_zone, Instant&);
-ThrowCompletionOr<DeprecatedString> builtin_time_zone_get_offset_string_for(VM&, Value time_zone, Instant&);
+ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM&, Value time_zone, Instant&);
 ThrowCompletionOr<PlainDateTime*> builtin_time_zone_get_plain_date_time_for(VM&, Value time_zone, Instant&, Object& calendar);
 ThrowCompletionOr<Instant*> builtin_time_zone_get_instant_for(VM&, Value time_zone, PlainDateTime&, StringView disambiguation);
 ThrowCompletionOr<Instant*> disambiguate_possible_instants(VM&, MarkedVector<Instant*> const& possible_instants, Value time_zone, PlainDateTime&, StringView disambiguation);

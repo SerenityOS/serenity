@@ -1369,7 +1369,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::get_iso_fields)
     MUST(fields->create_data_property_or_throw(vm.names.isoYear, Value(date_time->iso_year())));
 
     // 19. Perform ! CreateDataPropertyOrThrow(fields, "offset", offset).
-    MUST(fields->create_data_property_or_throw(vm.names.offset, PrimitiveString::create(vm, offset)));
+    MUST(fields->create_data_property_or_throw(vm.names.offset, PrimitiveString::create(vm, move(offset))));
 
     // 20. Perform ! CreateDataPropertyOrThrow(fields, "timeZone", timeZone).
     MUST(fields->create_data_property_or_throw(vm.names.timeZone, Value(&time_zone)));
