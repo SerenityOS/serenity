@@ -145,7 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
                 outln("    Y = ({}*X + {})**{}   if X >= {}",
                     parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
-                outln("    Y =  {}*X                        else", parametric_curve.c());
+                outln("    Y =  {}*X                         else", parametric_curve.c());
                 break;
             case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
                 outln("    Y = ({}*X + {})**{} + {}   if X >= {}",
