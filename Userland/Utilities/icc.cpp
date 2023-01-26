@@ -10,6 +10,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICCProfile.h>
+#include <LibGfx/ImageDecoder.h>
 
 template<class T>
 static ErrorOr<String> hyperlink(URL const& target, T const& label)
@@ -31,12 +32,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    static StringView icc_path;
-    args_parser.add_positional_argument(icc_path, "Path to ICC profile", "FILE");
+    static StringView path;
+    args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE");
     args_parser.parse(arguments);
 
-    auto icc_file = TRY(Core::MappedFile::map(icc_path));
-    auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
+    auto file = TRY(Core::MappedFile::map(path));
+    ReadonlyBytes icc_bytes;
+
+    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+    if (decoder) {
+        if (auto embedded_icc_bytes = TRY(decoder->icc_data()); embedded_icc_bytes.has_value()) {
+            icc_bytes = *embedded_icc_bytes;
+        } else {
+            outln("image contains no embedded ICC profile");
+            return 1;
+        }
+    } else {
+        icc_bytes = file->bytes();
+    }
+
+    auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes));
 
     out_optional("    preferred CMM type", profile->preferred_cmm_type());
     outln("               version: {}", profile->version());
@@ -82,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     out_optional("               creator", profile->creator());
     out_optional("                    id", profile->id());
 
-    size_t profile_disk_size = icc_file->size();
+    size_t profile_disk_size = icc_bytes.size();
     if (profile_disk_size != profile->on_disk_size()) {
         VERIFY(profile_disk_size > profile->on_disk_size());
         outln("{} trailing bytes after profile data", profile_disk_size - profile->on_disk_size());
