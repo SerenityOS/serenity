@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Variant.h>
 #include <LibJS/Forward.h>
@@ -113,7 +112,7 @@ struct ISODateTime {
 
 struct SecondsStringPrecision {
     Variant<StringView, u8> precision;
-    DeprecatedString unit;
+    StringView unit;
     u32 increment;
 };
 
