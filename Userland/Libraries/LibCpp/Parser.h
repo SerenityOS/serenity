@@ -49,6 +49,7 @@ private:
         Namespace,
         Constructor,
         Destructor,
+        UsingNamespace,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
@@ -80,6 +81,7 @@ private:
     bool match_access_specifier();
     bool match_constructor(StringView class_name);
     bool match_destructor(StringView class_name);
+    bool match_using_namespace_declaration();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -121,6 +123,7 @@ private:
     NonnullRefPtrVector<Declaration> parse_class_members(StructOrClassDeclaration& parent);
     NonnullRefPtr<Constructor> parse_constructor(ASTNode& parent);
     NonnullRefPtr<Destructor> parse_destructor(ASTNode& parent);
+    NonnullRefPtr<UsingNamespaceDeclaration> parse_using_namespace_declaration(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);
