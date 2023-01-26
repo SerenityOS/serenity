@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +42,7 @@ Span<StringView const> available_calendars();
 ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, DeprecatedString const& identifier, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Calendar*> get_builtin_calendar(VM&, DeprecatedString const& identifier);
 Calendar* get_iso8601_calendar(VM&);
-ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM&, Object& calendar, Vector<StringView> const& field_names);
+ThrowCompletionOr<Vector<String>> calendar_fields(VM&, Object& calendar, Vector<StringView> const& field_names);
 ThrowCompletionOr<Object*> calendar_merge_fields(VM&, Object& calendar, Object& fields, Object& additional_fields);
 ThrowCompletionOr<PlainDate*> calendar_date_add(VM&, Object& calendar, Value date, Duration&, Object* options = nullptr, FunctionObject* date_add = nullptr);
 ThrowCompletionOr<Duration*> calendar_date_until(VM&, Object& calendar, Value one, Value two, Object& options, FunctionObject* date_until = nullptr);

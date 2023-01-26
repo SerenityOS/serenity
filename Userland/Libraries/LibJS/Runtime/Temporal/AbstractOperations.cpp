@@ -1740,7 +1740,7 @@ ThrowCompletionOr<double> to_positive_integer_with_truncation(VM& vm, Value argu
 }
 
 // 13.43 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
-ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields, Vector<DeprecatedString> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
+ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& realm = *vm.current_realm();
 
@@ -1754,7 +1754,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     // 3. For each value property of fieldNames, do
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
-        auto value = TRY(fields.get(property));
+        auto value = TRY(fields.get(property.to_deprecated_string()));
 
         // b. If value is not undefined, then
         if (!value.is_undefined()) {
@@ -1783,7 +1783,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
-            MUST(result->create_data_property_or_throw(property, value));
+            MUST(result->create_data_property_or_throw(property.to_deprecated_string(), value));
         }
         // c. Else if requiredFields is a List, then
         else if (required_fields.has<Vector<StringView>>()) {
@@ -1800,13 +1800,14 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
-            MUST(result->create_data_property_or_throw(property, value));
+            MUST(result->create_data_property_or_throw(property.to_deprecated_string(), value));
         }
     }
 
     // 4. If requiredFields is partial and any is false, then
     if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
+        // FIXME: Add & use String::join()
         return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, DeprecatedString::join(", "sv, field_names));
     }
 
