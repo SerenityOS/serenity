@@ -120,7 +120,7 @@ ThrowCompletionOr<PlainMonthDay*> to_temporal_month_day(VM& vm, Value item, Obje
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 6. Let string be ? ToString(item).
-    auto string = TRY(item.to_deprecated_string(vm));
+    auto string = TRY(item.to_string(vm));
 
     // 7. Let result be ? ParseTemporalMonthDayString(string).
     auto result = TRY(parse_temporal_month_day_string(vm, string));

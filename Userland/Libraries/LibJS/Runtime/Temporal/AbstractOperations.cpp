@@ -629,7 +629,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     // 7. Else,
     else {
         // a. Let string be ? ToString(value).
-        auto string = TRY(value.to_deprecated_string(vm));
+        auto string = TRY(value.to_string(vm));
 
         // b. Let result be ? ParseTemporalRelativeToString(string).
         result = TRY(parse_temporal_relative_to_string(vm, string));
@@ -1374,7 +1374,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
 }
 
 // 13.29 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
-ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, StringView iso_string)
 {
     // 1. If ParseText(StringToCodePoints(isoString), TemporalInstantString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalInstantString, iso_string);
@@ -1401,7 +1401,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, Depreca
 }
 
 // 13.30 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
-ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, StringView iso_string)
 {
     // 1. If ParseText(StringToCodePoints(isoString), TemporalZonedDateTimeString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
@@ -1413,7 +1413,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, Dep
 }
 
 // 13.31 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be Completion(ParseISODateTime(isoString)).
     auto parse_result_completion = parse_iso_date_time(vm, iso_string);
@@ -1445,7 +1445,7 @@ ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, Depre
 }
 
 // 13.32 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
-ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM& vm, StringView iso_string)
 {
     // 1. Let parts be ? ParseTemporalDateTimeString(isoString).
     auto parts = TRY(parse_temporal_date_time_string(vm, iso_string));
@@ -1455,7 +1455,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM& vm, DeprecatedStr
 }
 
 // 13.33 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
-ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalDateTimeString).
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
@@ -1473,7 +1473,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM& vm, Deprecate
 }
 
 // 13.34 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
-ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringView iso_string)
 {
     // 1. Let duration be ParseText(StringToCodePoints(isoString), TemporalDurationString).
     auto parse_result = parse_iso8601(Production::TemporalDurationString, iso_string);
@@ -1609,7 +1609,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, Depreca
 }
 
 // 13.35 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
-ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalMonthDayString).
     auto parse_result = parse_iso8601(Production::TemporalMonthDayString, iso_string);
@@ -1639,7 +1639,7 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, Depr
 }
 
 // 13.36 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
-ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalDateTimeString).
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
@@ -1657,7 +1657,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, Depreca
 }
 
 // 13.37 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
-ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeString).
     auto parse_result = parse_iso8601(Production::TemporalTimeString, iso_string);
@@ -1678,7 +1678,7 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, DeprecatedStr
 }
 
 // 13.38 ParseTemporalTimeZoneString ( timeZoneString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
-ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, DeprecatedString const& time_zone_string)
+ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, StringView time_zone_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(timeZoneString), TimeZoneIdentifier).
     auto parse_result = parse_iso8601(Production::TimeZoneIdentifier, time_zone_string);
@@ -1704,7 +1704,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, Depr
 }
 
 // 13.39 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
-ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalYearMonthString).
     auto parse_result = parse_iso8601(Production::TemporalYearMonthString, iso_string);

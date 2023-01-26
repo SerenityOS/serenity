@@ -66,7 +66,7 @@ ThrowCompletionOr<PlainYearMonth*> to_temporal_year_month(VM& vm, Value item, Ob
     (void)TRY(to_temporal_overflow(vm, options));
 
     // 5. Let string be ? ToString(item).
-    auto string = TRY(item.to_deprecated_string(vm));
+    auto string = TRY(item.to_string(vm));
 
     // 6. Let result be ? ParseTemporalYearMonthString(string).
     auto result = TRY(parse_temporal_year_month_string(vm, string));

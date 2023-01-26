@@ -137,7 +137,7 @@ ThrowCompletionOr<PlainTime*> to_temporal_time(VM& vm, Value item, Optional<Stri
     // 4. Else,
     else {
         // a. Let string be ? ToString(item).
-        auto string = TRY(item.to_deprecated_string(vm));
+        auto string = TRY(item.to_string(vm));
 
         // b. Let result be ? ParseTemporalTimeString(string).
         result = TRY(parse_temporal_time_string(vm, string));
