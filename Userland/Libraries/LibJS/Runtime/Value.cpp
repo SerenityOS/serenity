@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -314,42 +314,42 @@ ThrowCompletionOr<bool> Value::is_regexp(VM& vm) const
 }
 
 // 13.5.3 The typeof Operator, https://tc39.es/ecma262/#sec-typeof-operator
-DeprecatedString Value::typeof() const
+StringView Value::typeof() const
 {
     // 9. If val is a Number, return "number".
     if (is_number())
-        return "number";
+        return "number"sv;
 
     switch (m_value.tag) {
     // 4. If val is undefined, return "undefined".
     case UNDEFINED_TAG:
-        return "undefined";
+        return "undefined"sv;
     // 5. If val is null, return "object".
     case NULL_TAG:
-        return "object";
+        return "object"sv;
     // 6. If val is a String, return "string".
     case STRING_TAG:
-        return "string";
+        return "string"sv;
     // 7. If val is a Symbol, return "symbol".
     case SYMBOL_TAG:
-        return "symbol";
+        return "symbol"sv;
     // 8. If val is a Boolean, return "boolean".
     case BOOLEAN_TAG:
-        return "boolean";
+        return "boolean"sv;
     // 10. If val is a BigInt, return "bigint".
     case BIGINT_TAG:
-        return "bigint";
+        return "bigint"sv;
     // 11. Assert: val is an Object.
     case OBJECT_TAG:
         // B.3.6.3 Changes to the typeof Operator, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-typeof
         // 12. If val has an [[IsHTMLDDA]] internal slot, return "undefined".
         if (as_object().is_htmldda())
-            return "undefined";
+            return "undefined"sv;
         // 13. If val has a [[Call]] internal slot, return "function".
         if (is_function())
-            return "function";
+            return "function"sv;
         // 14. Return "object".
-        return "object";
+        return "object"sv;
     default:
         VERIFY_NOT_REACHED();
     }
