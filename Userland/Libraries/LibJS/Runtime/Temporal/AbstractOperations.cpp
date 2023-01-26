@@ -254,13 +254,13 @@ ThrowCompletionOr<String> to_calendar_name_option(VM& vm, Object const& normaliz
 }
 
 // 13.10 ToTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totimezonenameoption
-ThrowCompletionOr<DeprecatedString> to_time_zone_name_option(VM& vm, Object const& normalized_options)
+ThrowCompletionOr<String> to_time_zone_name_option(VM& vm, Object const& normalized_options)
 {
     // 1. Return ? GetOption(normalizedOptions, "timeZoneName", "string", « "auto", "never", "critical" », "auto").
     auto option = TRY(get_option(vm, normalized_options, vm.names.timeZoneName, OptionType::String, { "auto"sv, "never"sv, "critical"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return TRY(option.as_string().deprecated_string());
+    return option.as_string().utf8_string();
 }
 
 // 13.11 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
