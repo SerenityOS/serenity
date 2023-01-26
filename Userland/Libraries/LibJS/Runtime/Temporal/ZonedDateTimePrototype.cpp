@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -1105,7 +1105,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::to_string)
     auto precision = TRY(to_seconds_string_precision(vm, *options));
 
     // 5. Let roundingMode be ? ToTemporalRoundingMode(options, "trunc").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *options, "trunc"));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *options, "trunc"sv));
 
     // 6. Let showCalendar be ? ToCalendarNameOption(options).
     auto show_calendar = TRY(to_calendar_name_option(vm, *options));

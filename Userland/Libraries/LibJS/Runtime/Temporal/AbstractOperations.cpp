@@ -184,7 +184,7 @@ ThrowCompletionOr<String> to_temporal_disambiguation(VM& vm, Object const* optio
 }
 
 // 13.6 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
-ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM& vm, Object const& normalized_options, DeprecatedString const& fallback)
+ThrowCompletionOr<String> to_temporal_rounding_mode(VM& vm, Object const& normalized_options, StringView fallback)
 {
     // 1. Return ? GetOption(normalizedOptions, "roundingMode", "string", « "ceil", "floor", "expand", "trunc", "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven" », fallback).
     auto option = TRY(get_option(
@@ -200,14 +200,14 @@ ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM& vm, Object con
             "halfTrunc"sv,
             "halfEven"sv,
         },
-        fallback.view()));
+        fallback));
 
     VERIFY(option.is_string());
-    return TRY(option.as_string().deprecated_string());
+    return option.as_string().utf8_string();
 }
 
 // 13.7 NegateTemporalRoundingMode ( roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-negatetemporalroundingmode
-StringView negate_temporal_rounding_mode(DeprecatedString const& rounding_mode)
+StringView negate_temporal_rounding_mode(StringView rounding_mode)
 {
     // 1. If roundingMode is "ceil", return "floor".
     if (rounding_mode == "ceil"sv)
@@ -1850,7 +1850,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
     // 10. If operation is since, then
     if (operation == DifferenceOperation::Since) {
         // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
-        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+        rounding_mode = TRY_OR_THROW_OOM(vm, String::from_utf8(negate_temporal_rounding_mode(rounding_mode)));
     }
 
     // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
@@ -1863,7 +1863,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
     return DifferenceSettings {
         .smallest_unit = smallest_unit.release_value(),
         .largest_unit = largest_unit.release_value(),
-        .rounding_mode = move(rounding_mode),
+        .rounding_mode = rounding_mode.to_deprecated_string(),
         .rounding_increment = rounding_increment,
         .options = *options,
     };
