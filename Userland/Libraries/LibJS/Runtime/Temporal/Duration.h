@@ -140,7 +140,7 @@ ThrowCompletionOr<MoveRelativeDateResult> move_relative_date(VM&, Object& calend
 ThrowCompletionOr<ZonedDateTime*> move_relative_zoned_date_time(VM&, ZonedDateTime&, double years, double months, double weeks, double days);
 ThrowCompletionOr<RoundedDuration> round_duration(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object = nullptr);
 ThrowCompletionOr<DurationRecord> adjust_rounded_duration_days(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, u32 increment, StringView unit, StringView rounding_mode, Object* relative_to_object);
-DeprecatedString temporal_duration_to_string(double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision);
+ThrowCompletionOr<String> temporal_duration_to_string(VM&, double years, double months, double weeks, double days, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds, Variant<StringView, u8> const& precision);
 ThrowCompletionOr<Duration*> add_duration_to_or_subtract_duration_from_duration(VM&, ArithmeticOperation, Duration const&, Value other_value, Value options_value);
 
 // 7.5.22 DaysUntil ( earlier, later ), https://tc39.es/proposal-temporal/#sec-temporal-daysuntil
