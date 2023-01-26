@@ -258,7 +258,7 @@ ThrowCompletionOr<DeprecatedString> temporal_date_time_to_string(VM& vm, i32 iso
     // 6. Let minute be ToZeroPaddedDecimalString(minute, 2).
 
     // 7. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
-    auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
+    auto seconds = MUST_OR_THROW_OOM(format_seconds_string_part(vm, second, millisecond, microsecond, nanosecond, precision));
 
     // 8. Let calendarString be ? MaybeFormatCalendarAnnotation(calendar, showCalendar).
     auto calendar_string = TRY(maybe_format_calendar_annotation(vm, calendar, show_calendar));

@@ -152,7 +152,7 @@ StringView larger_of_two_temporal_units(StringView, StringView);
 ThrowCompletionOr<Object*> merge_largest_unit_option(VM&, Object const& options, String largest_unit);
 Optional<u16> maximum_temporal_duration_rounding_increment(StringView unit);
 ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(VM&, Object&);
-DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
+ThrowCompletionOr<String> format_seconds_string_part(VM&, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision);
 double sign(double);
 double sign(Crypto::SignedBigInteger const&);
 UnsignedRoundingMode get_unsigned_rounding_mode(StringView rounding_mode, bool is_negative);

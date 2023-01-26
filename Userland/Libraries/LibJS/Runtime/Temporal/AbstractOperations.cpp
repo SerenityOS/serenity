@@ -824,7 +824,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(VM& vm, Object&
 }
 
 // 13.21 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
-DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<String> format_seconds_string_part(VM& vm, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: second, millisecond, microsecond, and nanosecond are integers.
 
@@ -834,15 +834,15 @@ DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 micr
 
     // 2. If precision is "minute", return "".
     if (precision.has<StringView>() && precision.get<StringView>() == "minute"sv)
-        return DeprecatedString::empty();
+        return String {};
 
     // 3. Let secondsString be the string-concatenation of the code unit 0x003A (COLON) and ToZeroPaddedDecimalString(second, 2).
-    auto seconds_string = DeprecatedString::formatted(":{:02}", second);
+    auto seconds_string = TRY_OR_THROW_OOM(vm, String::formatted(":{:02}", second));
 
     // 4. Let fraction be millisecond × 10^6 + microsecond × 10^3 + nanosecond.
     u32 fraction = millisecond * 1'000'000 + microsecond * 1'000 + nanosecond;
 
-    DeprecatedString fraction_string;
+    String fraction_string;
 
     // 5. If precision is "auto", then
     if (precision.has<StringView>() && precision.get<StringView>() == "auto"sv) {
@@ -851,10 +851,11 @@ DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 micr
             return seconds_string;
 
         // b. Set fraction to ToZeroPaddedDecimalString(fraction, 9).
-        fraction_string = DeprecatedString::formatted("{:09}", fraction);
+        fraction_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", fraction));
 
         // c. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
-        fraction_string = fraction_string.trim("0"sv, TrimMode::Right);
+        // FIXME: Add String::trim()
+        fraction_string = TRY_OR_THROW_OOM(vm, String::from_utf8(fraction_string.bytes_as_string_view().trim("0"sv, TrimMode::Right)));
     }
     // 6. Else,
     else {
@@ -863,14 +864,14 @@ DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 micr
             return seconds_string;
 
         // b. Set fraction to ToZeroPaddedDecimalString(fraction, 9)
-        fraction_string = DeprecatedString::formatted("{:09}", fraction);
+        fraction_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", fraction));
 
         // c. Set fraction to the substring of fraction from 0 to precision.
-        fraction_string = fraction_string.substring(0, precision.get<u8>());
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.substring_from_byte_offset(0, precision.get<u8>()));
     }
 
     // 7. Return the string-concatenation of secondsString, the code unit 0x002E (FULL STOP), and fraction.
-    return DeprecatedString::formatted("{}.{}", seconds_string, fraction_string);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}.{}", seconds_string, fraction_string));
 }
 
 // 13.23 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
