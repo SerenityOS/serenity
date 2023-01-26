@@ -264,7 +264,7 @@ ThrowCompletionOr<String> format_time_zone_offset_string(VM& vm, double offset_n
 }
 
 // 11.6.6 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring
-DeprecatedString format_iso_time_zone_offset_string(double offset_nanoseconds)
+ThrowCompletionOr<String> format_iso_time_zone_offset_string(VM& vm, double offset_nanoseconds)
 {
     // 1. Assert: offsetNanoseconds is an integer.
     VERIFY(trunc(offset_nanoseconds) == offset_nanoseconds);
@@ -287,7 +287,7 @@ DeprecatedString format_iso_time_zone_offset_string(double offset_nanoseconds)
     // 7. Let h be ToZeroPaddedDecimalString(hours, 2).
     // 8. Let m be ToZeroPaddedDecimalString(minutes, 2).
     // 9. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), and m.
-    return DeprecatedString::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes));
 }
 
 // 11.6.7 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone

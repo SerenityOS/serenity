@@ -43,7 +43,7 @@ ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_
 BigInt* get_named_time_zone_next_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);
 BigInt* get_named_time_zone_previous_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);
 ThrowCompletionOr<String> format_time_zone_offset_string(VM&, double offset_nanoseconds);
-DeprecatedString format_iso_time_zone_offset_string(double offset_nanoseconds);
+ThrowCompletionOr<String> format_iso_time_zone_offset_string(VM&, double offset_nanoseconds);
 ThrowCompletionOr<Object*> to_temporal_time_zone(VM&, Value temporal_time_zone_like);
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM&, Value time_zone, Instant&);
 ThrowCompletionOr<DeprecatedString> builtin_time_zone_get_offset_string_for(VM&, Value time_zone, Instant&);
