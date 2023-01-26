@@ -34,7 +34,7 @@ Calendar::Calendar(DeprecatedString identifier, Object& prototype)
 }
 
 // 12.1.1 IsBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-isbuiltincalendar
-bool is_builtin_calendar(DeprecatedString const& identifier)
+bool is_builtin_calendar(StringView identifier)
 {
     // 1. Let calendars be AvailableCalendars().
     auto calendars = available_calendars();
@@ -463,7 +463,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
     }
 
     // 2. Let identifier be ? ToString(temporalCalendarLike).
-    auto identifier = TRY(temporal_calendar_like.to_deprecated_string(vm));
+    auto identifier = TRY(temporal_calendar_like.to_string(vm));
 
     // 3. Set identifier to ? ParseTemporalCalendarString(identifier).
     identifier = TRY(parse_temporal_calendar_string(vm, identifier));
@@ -473,7 +473,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
     // 5. Return ! CreateTemporalCalendar(identifier).
-    return MUST(create_temporal_calendar(vm, identifier));
+    return MUST(create_temporal_calendar(vm, identifier.to_deprecated_string()));
 }
 
 // 12.2.22 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault

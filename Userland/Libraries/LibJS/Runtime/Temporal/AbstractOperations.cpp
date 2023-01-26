@@ -1413,7 +1413,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, Str
 }
 
 // 13.31 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, StringView iso_string)
+ThrowCompletionOr<String> parse_temporal_calendar_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be Completion(ParseISODateTime(isoString)).
     auto parse_result_completion = parse_iso_date_time(vm, iso_string);
@@ -1425,10 +1425,10 @@ ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, Strin
 
         // b. If calendar is undefined, return "iso8601".
         if (!calendar.has_value())
-            return "iso8601"sv;
+            return TRY_OR_THROW_OOM(vm, String::from_utf8("iso8601"sv));
         // c. Else, return calendar.
         else
-            return calendar.release_value();
+            return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(*calendar));
     }
     // 3. Else,
     else {
@@ -1440,7 +1440,7 @@ ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, Strin
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarString, iso_string);
         // c. Else, return isoString.
         else
-            return iso_string;
+            return TRY_OR_THROW_OOM(vm, String::from_utf8(iso_string));
     }
 }
 
