@@ -100,7 +100,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
     }
 
     // 2. Let string be ? ToString(item).
-    auto string = TRY(item.to_deprecated_string(vm));
+    auto string = TRY(item.to_string(vm));
 
     // 3. Let epochNanoseconds be ? ParseTemporalInstant(string).
     auto* epoch_nanoseconds = TRY(parse_temporal_instant(vm, string));
@@ -110,7 +110,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
 }
 
 // 8.5.4 ParseTemporalInstant ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstant
-ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, StringView iso_string)
 {
     // 1. Assert: Type(isoString) is String.
 
