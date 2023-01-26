@@ -10,6 +10,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace JS {
@@ -21,7 +22,7 @@ public:
     Token next();
 
     DeprecatedString const& source() const { return m_source; };
-    DeprecatedString const& filename() const { return m_filename; };
+    String const& filename() const { return m_filename; };
 
     void disallow_html_comments() { m_allow_html_comments = false; };
 
@@ -63,7 +64,7 @@ private:
     char m_current_char { 0 };
     bool m_eof { false };
 
-    DeprecatedString m_filename;
+    String m_filename;
     size_t m_line_number { 1 };
     size_t m_line_column { 0 };
 
