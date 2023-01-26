@@ -314,12 +314,12 @@ ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, Z
     // 9. Let dateTimeString be ! TemporalDateTimeToString(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], isoCalendar, precision, "never").
     auto date_time_string = MUST_OR_THROW_OOM(temporal_date_time_to_string(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
 
-    DeprecatedString offset_string;
+    String offset_string;
 
     // 10. If showOffset is "never", then
     if (show_offset == "never"sv) {
         // a. Let offsetString be the empty String.
-        offset_string = DeprecatedString::empty();
+        offset_string = {};
     }
     // 11. Else,
     else {
@@ -327,7 +327,7 @@ ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, Z
         auto offset_ns = TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant));
 
         // b. Let offsetString be ! FormatISOTimeZoneOffsetString(offsetNs).
-        offset_string = format_iso_time_zone_offset_string(offset_ns);
+        offset_string = MUST_OR_THROW_OOM(format_iso_time_zone_offset_string(vm, offset_ns));
     }
 
     DeprecatedString time_zone_string;

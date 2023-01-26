@@ -275,7 +275,7 @@ ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, V
         auto offset_ns = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
 
         // b. Let timeZoneString be ! FormatISOTimeZoneOffsetString(offsetNs).
-        time_zone_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(format_iso_time_zone_offset_string(offset_ns)));
+        time_zone_string = MUST_OR_THROW_OOM(format_iso_time_zone_offset_string(vm, offset_ns));
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.
