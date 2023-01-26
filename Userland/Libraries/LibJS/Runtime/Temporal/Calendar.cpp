@@ -27,7 +27,7 @@
 namespace JS::Temporal {
 
 // 12 Temporal.Calendar Objects, https://tc39.es/proposal-temporal/#sec-temporal-calendar-objects
-Calendar::Calendar(DeprecatedString identifier, Object& prototype)
+Calendar::Calendar(String identifier, Object& prototype)
     : Object(ConstructWithPrototypeTag::Tag, prototype)
     , m_identifier(move(identifier))
 {
@@ -65,7 +65,7 @@ Span<StringView const> available_calendars()
 }
 
 // 12.2.1 CreateTemporalCalendar ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporalcalendar
-ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, DeprecatedString const& identifier, FunctionObject const* new_target)
+ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& identifier, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
 
@@ -78,7 +78,7 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, DeprecatedString c
 
     // 3. Let object be ? OrdinaryCreateFromConstructor(newTarget, "%Temporal.Calendar.prototype%", « [[InitializedTemporalCalendar]], [[Identifier]] »).
     // 4. Set object.[[Identifier]] to the ASCII-lowercase of identifier.
-    auto object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, identifier.to_lowercase()));
+    auto object = TRY(ordinary_create_from_constructor<Calendar>(vm, *new_target, &Intrinsics::temporal_calendar_prototype, TRY_OR_THROW_OOM(vm, identifier.to_lowercase())));
 
     // 5. Return object.
     return object.ptr();
@@ -92,7 +92,7 @@ ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, DeprecatedString const
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
     // 2. Return ! CreateTemporalCalendar(id).
-    return MUST(create_temporal_calendar(vm, identifier));
+    return MUST_OR_THROW_OOM(create_temporal_calendar(vm, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(identifier))));
 }
 
 // 12.2.3 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
@@ -473,7 +473,7 @@ ThrowCompletionOr<Object*> to_temporal_calendar(VM& vm, Value temporal_calendar_
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
     // 5. Return ! CreateTemporalCalendar(identifier).
-    return MUST(create_temporal_calendar(vm, identifier.to_deprecated_string()));
+    return MUST_OR_THROW_OOM(create_temporal_calendar(vm, identifier));
 }
 
 // 12.2.22 ToTemporalCalendarWithISODefault ( temporalCalendarLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalcalendarwithisodefault
