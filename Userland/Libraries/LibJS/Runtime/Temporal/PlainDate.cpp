@@ -510,7 +510,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_date(VM& vm, DifferenceOp
     auto settings = TRY(get_difference_settings(vm, operation, options_value, UnitGroup::Date, {}, { "day"sv }, "day"sv));
 
     // 5. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(settings.largest_unit))));
+    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, move(settings.largest_unit)));
 
     // 6. Let result be ? CalendarDateUntil(temporalDate.[[Calendar]], temporalDate, other, untilOptions).
     auto* duration = TRY(calendar_date_until(vm, temporal_date.calendar(), &temporal_date, other, *until_options));
