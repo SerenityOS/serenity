@@ -565,20 +565,20 @@ ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM& vm, Object&
 }
 
 // 12.2.27 MaybeFormatCalendarAnnotation ( calendarObject, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-maybeformatcalendarannotation
-ThrowCompletionOr<DeprecatedString> maybe_format_calendar_annotation(VM& vm, Object const* calendar_object, StringView show_calendar)
+ThrowCompletionOr<String> maybe_format_calendar_annotation(VM& vm, Object const* calendar_object, StringView show_calendar)
 {
     // 1. If showCalendar is "never", return the empty String.
     if (show_calendar == "never"sv)
-        return DeprecatedString::empty();
+        return String {};
 
     // 2. Assert: Type(calendarObject) is Object.
     VERIFY(calendar_object);
 
     // 3. Let calendarID be ? ToString(calendarObject).
-    auto calendar_id = TRY(Value(calendar_object).to_deprecated_string(vm));
+    auto calendar_id = TRY(Value(calendar_object).to_string(vm));
 
     // 4. Return FormatCalendarAnnotation(calendarID, showCalendar).
-    return format_calendar_annotation(calendar_id, show_calendar);
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(format_calendar_annotation(calendar_id, show_calendar)));
 }
 
 // 12.2.28 FormatCalendarAnnotation ( id, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-formatcalendarannotation
