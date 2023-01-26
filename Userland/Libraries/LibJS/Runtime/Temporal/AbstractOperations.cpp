@@ -1226,15 +1226,15 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
     auto f_seconds = parse_result.time_fraction;
 
     // 5. If the first code point of year is U+2212 (MINUS SIGN), replace the first code point with U+002D (HYPHEN-MINUS).
-    Optional<DeprecatedString> normalized_year;
+    Optional<String> normalized_year;
     if (year.has_value()) {
         normalized_year = year->starts_with("\xE2\x88\x92"sv)
-            ? DeprecatedString::formatted("-{}", year->substring_view(3))
-            : DeprecatedString { *year };
+            ? TRY_OR_THROW_OOM(vm, String::formatted("-{}", year->substring_view(3)))
+            : TRY_OR_THROW_OOM(vm, String::from_utf8(*year));
     }
 
     // 6. Let yearMV be ! ToIntegerOrInfinity(CodePointsToString(year)).
-    auto year_mv = *normalized_year.value_or("0"sv).to_int<i32>();
+    auto year_mv = *normalized_year.value_or(String::from_utf8_short_string("0"sv)).to_number<i32>();
 
     // 7. If month is empty, then
     //    a. Let monthMV be 1.
@@ -1273,25 +1273,25 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         auto f_seconds_digits = f_seconds->substring_view(1);
 
         // b. Let fSecondsDigitsExtended be the string-concatenation of fSecondsDigits and "000000000".
-        auto f_seconds_digits_extended = DeprecatedString::formatted("{}000000000", f_seconds_digits);
+        auto f_seconds_digits_extended = TRY_OR_THROW_OOM(vm, String::formatted("{}000000000", f_seconds_digits));
 
         // c. Let millisecond be the substring of fSecondsDigitsExtended from 0 to 3.
-        auto millisecond = f_seconds_digits_extended.substring(0, 3);
+        auto millisecond = TRY_OR_THROW_OOM(vm, f_seconds_digits_extended.substring_from_byte_offset_with_shared_superstring(0, 3));
 
         // d. Let microsecond be the substring of fSecondsDigitsExtended from 3 to 6.
-        auto microsecond = f_seconds_digits_extended.substring(3, 3);
+        auto microsecond = TRY_OR_THROW_OOM(vm, f_seconds_digits_extended.substring_from_byte_offset_with_shared_superstring(3, 3));
 
         // e. Let nanosecond be the substring of fSecondsDigitsExtended from 6 to 9.
-        auto nanosecond = f_seconds_digits_extended.substring(6, 3);
+        auto nanosecond = TRY_OR_THROW_OOM(vm, f_seconds_digits_extended.substring_from_byte_offset_with_shared_superstring(6, 3));
 
         // f. Let millisecondMV be ! ToIntegerOrInfinity(millisecond).
-        millisecond_mv = *millisecond.to_uint<u16>();
+        millisecond_mv = *millisecond.to_number<u16>();
 
         // g. Let microsecondMV be ! ToIntegerOrInfinity(microsecond).
-        microsecond_mv = *microsecond.to_uint<u16>();
+        microsecond_mv = *microsecond.to_number<u16>();
 
         // h. Let nanosecondMV be ! ToIntegerOrInfinity(nanosecond).
-        nanosecond_mv = *nanosecond.to_uint<u16>();
+        nanosecond_mv = *nanosecond.to_number<u16>();
     }
     // 16. Else,
     else {
