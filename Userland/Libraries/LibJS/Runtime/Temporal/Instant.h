@@ -45,7 +45,7 @@ bool is_valid_epoch_nanoseconds(BigInt const& epoch_nanoseconds);
 bool is_valid_epoch_nanoseconds(Crypto::SignedBigInteger const& epoch_nanoseconds);
 ThrowCompletionOr<Instant*> create_temporal_instant(VM&, BigInt const& nanoseconds, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Instant*> to_temporal_instant(VM&, Value item);
-ThrowCompletionOr<BigInt*> parse_temporal_instant(VM&, DeprecatedString const& iso_string);
+ThrowCompletionOr<BigInt*> parse_temporal_instant(VM&, StringView iso_string);
 i32 compare_epoch_nanoseconds(BigInt const&, BigInt const&);
 ThrowCompletionOr<BigInt*> add_instant(VM&, BigInt const& epoch_nanoseconds, double hours, double minutes, double seconds, double milliseconds, double microseconds, double nanoseconds);
 BigInt* difference_instant(VM&, BigInt const& nanoseconds1, BigInt const& nanoseconds2, u64 rounding_increment, StringView smallest_unit, StringView rounding_mode);
