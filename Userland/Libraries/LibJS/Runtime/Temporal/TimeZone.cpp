@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DateTimeLexer.h>
 #include <AK/Time.h>
 #include <AK/TypeCasts.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
@@ -163,49 +162,6 @@ BigInt* get_named_time_zone_previous_transition(VM&, [[maybe_unused]] StringView
 
     // TODO: Implement this
     return nullptr;
-}
-
-// https://tc39.es/proposal-temporal/#prod-TimeZoneNumericUTCOffset
-static bool parse_time_zone_numeric_utc_offset_syntax(DeprecatedString const& offset_string, StringView& sign, StringView& hours, Optional<StringView>& minutes, Optional<StringView>& seconds, Optional<StringView>& fraction)
-{
-    DateTimeLexer lexer(offset_string);
-    auto sign_part = lexer.consume_sign();
-    if (!sign_part.has_value())
-        return false;
-    sign = *sign_part;
-    auto hours_part = lexer.consume_hours();
-    if (!hours_part.has_value())
-        return false;
-    hours = *hours_part;
-    if (!lexer.tell_remaining())
-        return true;
-    auto uses_separator = lexer.consume_specific(':');
-    minutes = lexer.consume_minutes_or_seconds();
-    if (!minutes.has_value())
-        return false;
-    if (!lexer.tell_remaining())
-        return true;
-    if (lexer.consume_specific(':') != uses_separator)
-        return false;
-    seconds = lexer.consume_minutes_or_seconds();
-    if (!seconds.has_value())
-        return false;
-    if (!lexer.tell_remaining())
-        return true;
-    if (!lexer.consume_specific('.') && !lexer.consume_specific(','))
-        return false;
-    fraction = lexer.consume_fractional_seconds();
-    if (!fraction.has_value())
-        return false;
-    return !lexer.tell_remaining();
-}
-
-bool is_valid_time_zone_numeric_utc_offset_syntax(DeprecatedString const& offset_string)
-{
-    StringView discarded;
-    Optional<StringView> optionally_discarded;
-    // FIXME: This is very wasteful
-    return parse_time_zone_numeric_utc_offset_syntax(offset_string, discarded, discarded, optionally_discarded, optionally_discarded, optionally_discarded);
 }
 
 // 11.6.5 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
