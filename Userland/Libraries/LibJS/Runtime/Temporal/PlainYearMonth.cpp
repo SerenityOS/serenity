@@ -222,7 +222,7 @@ ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainY
     }
 
     // 8. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
-    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
+    auto calendar_string = MUST_OR_THROW_OOM(format_calendar_annotation(vm, calendar_id, show_calendar));
 
     // 9. Set result to the string-concatenation of result and calendarString.
     // 10. Return result.
