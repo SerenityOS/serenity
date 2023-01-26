@@ -40,7 +40,7 @@ struct YearWeekRecord {
 bool is_builtin_calendar(StringView identifier);
 Span<StringView const> available_calendars();
 ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, String const& identifier, FunctionObject const* new_target = nullptr);
-ThrowCompletionOr<Calendar*> get_builtin_calendar(VM&, DeprecatedString const& identifier);
+ThrowCompletionOr<Calendar*> get_builtin_calendar(VM&, String const& identifier);
 Calendar* get_iso8601_calendar(VM&);
 ThrowCompletionOr<Vector<String>> calendar_fields(VM&, Object& calendar, Vector<StringView> const& field_names);
 ThrowCompletionOr<Object*> calendar_merge_fields(VM&, Object& calendar, Object& fields, Object& additional_fields);
