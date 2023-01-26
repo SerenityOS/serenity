@@ -134,6 +134,16 @@ void ImageEditor::update_modified()
         on_modified_change(is_modified());
 }
 
+Gfx::IntRect ImageEditor::subtract_rulers_from_rect(Gfx::IntRect const& rect) const
+{
+    Gfx::IntRect clipped_rect {};
+    clipped_rect.set_top(max(rect.y(), m_ruler_thickness + 1));
+    clipped_rect.set_left(max(rect.x(), m_ruler_thickness + 1));
+    clipped_rect.set_bottom(rect.bottom());
+    clipped_rect.set_right(rect.right());
+    return clipped_rect;
+}
+
 void ImageEditor::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
@@ -282,11 +292,7 @@ void ImageEditor::second_paint_event(GUI::PaintEvent& event)
 {
     if (m_active_tool) {
         if (m_show_rulers) {
-            auto clipped_event = GUI::PaintEvent(Gfx::IntRect { event.rect().x() + m_ruler_thickness,
-                                                     event.rect().y() + m_ruler_thickness,
-                                                     event.rect().width() - m_ruler_thickness,
-                                                     event.rect().height() - m_ruler_thickness },
-                event.window_size());
+            auto clipped_event = GUI::PaintEvent(subtract_rulers_from_rect(event.rect()), event.window_size());
             m_active_tool->on_second_paint(m_active_layer, clipped_event);
         } else {
             m_active_tool->on_second_paint(m_active_layer, event);
