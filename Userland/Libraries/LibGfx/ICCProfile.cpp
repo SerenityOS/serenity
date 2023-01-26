@@ -1223,6 +1223,9 @@ ErrorOr<void> Profile::check_tag_types()
     // This uses m_tag_table.get() even for tags that are guaranteed to exist after check_required_tags()
     // so that the two functions can be called in either order.
 
+    // Profile ID of /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
+    static constexpr Crypto::Hash::MD5::DigestType apple_itu_2020_id = { 0x57, 0x0b, 0x1b, 0x76, 0xc6, 0xa0, 0x50, 0xaa, 0x9f, 0x6c, 0x53, 0x8d, 0xbe, 0x2d, 0x3e, 0xf0 };
+
     // ICC v4, 9.2.1 AToB0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
     // FIXME
@@ -1331,9 +1334,10 @@ ErrorOr<void> Profile::check_tag_types()
     if (auto type = m_tag_table.get(copyrightTag); type.has_value()) {
         // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
         // that still uses the v2 'text' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
-        // FIXME: File a bug for that and add id-based quirk instead.
-        // if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
-        // return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v4 type");
+        // https://openradar.appspot.com/radar?id=5529765549178880
+        bool has_v2_cprt_type_in_v4_file_quirk = id() == apple_itu_2020_id;
+        if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type && (!has_v2_cprt_type_in_v4_file_quirk || type.value()->type() != TextTagData::Type))
+            return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v4 type");
         if (is_v2() && type.value()->type() != TextTagData::Type)
             return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v2 type");
     }
@@ -1494,9 +1498,10 @@ ErrorOr<void> Profile::check_tag_types()
     if (auto type = m_tag_table.get(profileDescriptionTag); type.has_value()) {
         // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
         // that still uses the v2 'desc' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
-        // FIXME: File a bug for that and add id-based quirk instead.
-        // if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type)
-        // return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v4 type");
+        // https://openradar.appspot.com/radar?id=5529765549178880
+        bool has_v2_desc_type_in_v4_file_quirk = id() == apple_itu_2020_id;
+        if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type && (!has_v2_desc_type_in_v4_file_quirk || type.value()->type() != TextDescriptionTagData::Type))
+            return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v4 type");
         if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
             return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v2 type");
     }
