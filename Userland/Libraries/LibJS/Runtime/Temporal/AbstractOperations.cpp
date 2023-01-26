@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DateTimeLexer.h>
+#include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -155,17 +156,17 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
 }
 
 // 13.4 ToTemporalOverflow ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
-ThrowCompletionOr<DeprecatedString> to_temporal_overflow(VM& vm, Object const* options)
+ThrowCompletionOr<String> to_temporal_overflow(VM& vm, Object const* options)
 {
     // 1. If options is undefined, return "constrain".
     if (options == nullptr)
-        return "constrain"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8("constrain"sv));
 
     // 2. Return ? GetOption(options, "overflow", "string", « "constrain", "reject" », "constrain").
     auto option = TRY(get_option(vm, *options, vm.names.overflow, OptionType::String, { "constrain"sv, "reject"sv }, "constrain"sv));
 
     VERIFY(option.is_string());
-    return TRY(option.as_string().deprecated_string());
+    return option.as_string().utf8_string();
 }
 
 // 13.5 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation

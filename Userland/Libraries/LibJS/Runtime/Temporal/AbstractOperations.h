@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -135,7 +135,7 @@ using TemporalUnitDefault = Variant<TemporalUnitRequired, Optional<StringView>>;
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(VM&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(VM&, Value options);
 ThrowCompletionOr<Value> get_option(VM&, Object const& options, PropertyKey const& property, OptionType type, Span<StringView const> values, OptionDefault const&);
-ThrowCompletionOr<DeprecatedString> to_temporal_overflow(VM&, Object const* options);
+ThrowCompletionOr<String> to_temporal_overflow(VM&, Object const* options);
 ThrowCompletionOr<DeprecatedString> to_temporal_disambiguation(VM&, Object const* options);
 ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM&, Object const& normalized_options, DeprecatedString const& fallback);
 StringView negate_temporal_rounding_mode(DeprecatedString const& rounding_mode);
