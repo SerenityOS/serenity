@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -270,7 +270,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
     auto* this_date = TRY(calendar_date_from_fields(vm, calendar, *this_fields));
 
     // 13. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, settings.largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(settings.largest_unit))));
 
     // 14. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
     auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *until_options));
