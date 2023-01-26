@@ -748,11 +748,11 @@ YearWeekRecord to_iso_week_of_year(i32 year, u8 month, u8 day)
 }
 
 // 12.2.33 ISOMonthCode ( month ), https://tc39.es/proposal-temporal/#sec-temporal-isomonthcode
-DeprecatedString iso_month_code(u8 month)
+ThrowCompletionOr<String> iso_month_code(VM& vm, u8 month)
 {
     // 1. Let numberPart be ToZeroPaddedDecimalString(month, 2).
     // 2. Return the string-concatenation of "M" and numberPart.
-    return DeprecatedString::formatted("M{:02}", month);
+    return TRY_OR_THROW_OOM(vm, String::formatted("M{:02}", month));
 }
 
 // 12.2.34 ResolveISOMonth ( fields ), https://tc39.es/proposal-temporal/#sec-temporal-resolveisomonth
@@ -804,7 +804,7 @@ ThrowCompletionOr<double> resolve_iso_month(VM& vm, Object const& fields)
     auto month_code_number = MUST(Value(PrimitiveString::create(vm, move(month_code_digits))).to_integer_or_infinity(vm));
 
     // 12. Assert: SameValue(monthCode, ISOMonthCode(monthCodeNumber)) is true.
-    VERIFY(month_code_string == iso_month_code(month_code_number));
+    VERIFY(month_code_string.view() == TRY(iso_month_code(vm, month_code_number)));
 
     // 13. If month is not undefined and SameValue(month, monthCodeNumber) is false, throw a RangeError exception.
     if (!month.is_undefined() && month.as_double() != month_code_number)
