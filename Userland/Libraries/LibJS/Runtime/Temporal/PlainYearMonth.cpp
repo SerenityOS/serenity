@@ -209,7 +209,7 @@ ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainY
     // 3. Let year be ! PadISOYear(yearMonth.[[ISOYear]]).
     // 4. Let month be ToZeroPaddedDecimalString(yearMonth.[[ISOMonth]], 2).
     // 5. Let result be the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and month.
-    auto result = DeprecatedString::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
+    auto result = DeprecatedString::formatted("{}-{:02}", MUST_OR_THROW_OOM(pad_iso_year(vm, year_month.iso_year())), year_month.iso_month());
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
     auto calendar_id = TRY(Value(&year_month.calendar()).to_deprecated_string(vm));

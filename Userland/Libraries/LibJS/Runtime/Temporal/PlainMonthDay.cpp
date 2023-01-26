@@ -191,7 +191,7 @@ ThrowCompletionOr<String> temporal_month_day_to_string(VM& vm, PlainMonthDay& mo
     if (show_calendar.is_one_of("always"sv, "critical"sv) || calendar_id != "iso8601"sv) {
         // a. Let year be ! PadISOYear(monthDay.[[ISOYear]]).
         // b. Set result to the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and result.
-        result = TRY_OR_THROW_OOM(vm, String::formatted("{}-{}", pad_iso_year(month_day.iso_year()), result));
+        result = TRY_OR_THROW_OOM(vm, String::formatted("{}-{}", MUST_OR_THROW_OOM(pad_iso_year(vm, month_day.iso_year())), result));
     }
 
     // 8. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
