@@ -214,17 +214,17 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 29. Let timeZone be ? Get(options, "timeZone").
     auto time_zone_value = TRY(options->get(vm.names.timeZone));
-    DeprecatedString time_zone;
+    String time_zone;
 
     // 30. If timeZone is undefined, then
     if (time_zone_value.is_undefined()) {
         // a. Set timeZone to DefaultTimeZone().
-        time_zone = default_time_zone();
+        time_zone = TRY_OR_THROW_OOM(vm, String::from_utf8(default_time_zone()));
     }
     // 31. Else,
     else {
         // a. Set timeZone to ? ToString(timeZone).
-        time_zone = TRY(time_zone_value.to_deprecated_string(vm));
+        time_zone = TRY(time_zone_value.to_string(vm));
 
         // b. If IsAvailableTimeZoneName(timeZone) is false, then
         if (!Temporal::is_available_time_zone_name(time_zone)) {
@@ -233,11 +233,11 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
         }
 
         // c. Set timeZone to ! CanonicalizeTimeZoneName(timeZone).
-        time_zone = Temporal::canonicalize_time_zone_name(time_zone);
+        time_zone = MUST_OR_THROW_OOM(Temporal::canonicalize_time_zone_name(vm, time_zone));
     }
 
     // 32. Set dateTimeFormat.[[TimeZone]] to timeZone.
-    date_time_format.set_time_zone(move(time_zone));
+    date_time_format.set_time_zone(time_zone.to_deprecated_string());
 
     // 33. Let formatOptions be a new Record.
     ::Locale::CalendarPattern format_options {};

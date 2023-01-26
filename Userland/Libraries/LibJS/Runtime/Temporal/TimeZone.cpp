@@ -43,7 +43,7 @@ bool is_available_time_zone_name(StringView time_zone)
 
 // 11.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-canonicalizetimezonename
 // 15.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sup-canonicalizetimezonename
-DeprecatedString canonicalize_time_zone_name(DeprecatedString const& time_zone)
+ThrowCompletionOr<String> canonicalize_time_zone_name(VM& vm, StringView time_zone)
 {
     // 1. Let ianaTimeZone be the String value of the Zone or Link name of the IANA Time Zone Database that is an ASCII-case-insensitive match of timeZone as described in 6.1.
     // 2. If ianaTimeZone is a Link name, let ianaTimeZone be the String value of the corresponding Zone name as specified in the file backward of the IANA Time Zone Database.
@@ -53,7 +53,7 @@ DeprecatedString canonicalize_time_zone_name(DeprecatedString const& time_zone)
     // NOTE: This is already done in canonicalize_time_zone().
 
     // 4. Return ianaTimeZone.
-    return *iana_time_zone;
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(*iana_time_zone));
 }
 
 // 11.6.1 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
@@ -82,7 +82,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
     // 4. Else,
     else {
         // a. Assert: ! CanonicalizeTimeZoneName(identifier) is identifier.
-        VERIFY(canonicalize_time_zone_name(identifier) == identifier);
+        VERIFY(MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, identifier)) == identifier.view());
 
         // b. Set object.[[Identifier]] to identifier.
         object->set_identifier(identifier);
@@ -349,7 +349,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, name);
 
             // ii. Set name to ! CanonicalizeTimeZoneName(name).
-            name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(canonicalize_time_zone_name(name.to_deprecated_string())));
+            name = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, name));
         }
 
         // c. Return ! CreateTemporalTimeZone(name).

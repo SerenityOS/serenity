@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,7 +37,7 @@ private:
 };
 
 bool is_available_time_zone_name(StringView time_zone);
-DeprecatedString canonicalize_time_zone_name(DeprecatedString const& time_zone);
+ThrowCompletionOr<String> canonicalize_time_zone_name(VM&, StringView time_zone);
 ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, DeprecatedString const& identifier, FunctionObject const* new_target = nullptr);
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
 BigInt* get_named_time_zone_next_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);

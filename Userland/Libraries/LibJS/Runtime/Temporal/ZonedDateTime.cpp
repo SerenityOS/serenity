@@ -203,7 +203,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
             // ii. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
-            time_zone_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(canonicalize_time_zone_name(time_zone_name->to_deprecated_string())));
+            time_zone_name = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, *time_zone_name));
         }
 
         // g. Let offsetString be result.[[TimeZone]].[[OffsetString]].
