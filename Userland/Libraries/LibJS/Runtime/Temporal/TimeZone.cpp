@@ -394,13 +394,13 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
 }
 
 // 11.6.9 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
-ThrowCompletionOr<DeprecatedString> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
+ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
 {
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
 
     // 2. Return ! FormatTimeZoneOffsetString(offsetNanoseconds).
-    return MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds)).to_deprecated_string();
+    return MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds));
 }
 
 // 11.6.10 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
