@@ -4962,9 +4962,9 @@ ModuleRequest::ModuleRequest(DeprecatedFlyString module_specifier_, Vector<Asser
     });
 }
 
-DeprecatedString const& SourceRange::filename() const
+DeprecatedString SourceRange::filename() const
 {
-    return code->filename();
+    return code->filename().to_deprecated_string();
 }
 
 NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)

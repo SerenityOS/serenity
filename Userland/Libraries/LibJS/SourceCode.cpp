@@ -12,23 +12,23 @@
 
 namespace JS {
 
-NonnullRefPtr<SourceCode> SourceCode::create(DeprecatedString filename, DeprecatedString code)
+NonnullRefPtr<SourceCode> SourceCode::create(String filename, String code)
 {
     return adopt_ref(*new SourceCode(move(filename), move(code)));
 }
 
-SourceCode::SourceCode(DeprecatedString filename, DeprecatedString code)
+SourceCode::SourceCode(String filename, String code)
     : m_filename(move(filename))
     , m_code(move(code))
 {
 }
 
-DeprecatedString const& SourceCode::filename() const
+String const& SourceCode::filename() const
 {
     return m_filename;
 }
 
-DeprecatedString const& SourceCode::code() const
+String const& SourceCode::code() const
 {
     return m_code;
 }
@@ -41,7 +41,7 @@ void SourceCode::compute_line_break_offsets() const
         return;
 
     bool previous_code_point_was_carriage_return = false;
-    Utf8View view(m_code.view());
+    Utf8View view(m_code);
     for (auto it = view.begin(); it != view.end(); ++it) {
         u32 code_point = *it;
         bool is_line_terminator = code_point == '\r' || (code_point == '\n' && !previous_code_point_was_carriage_return) || code_point == LINE_SEPARATOR || code_point == PARAGRAPH_SEPARATOR;
@@ -78,7 +78,7 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
 
     bool previous_code_point_was_carriage_return = false;
 
-    Utf8View view(m_code.view());
+    Utf8View view(m_code);
     for (auto it = view.iterator_at_byte_offset_without_validation(nearest_preceding_line_break_offset); it != view.end(); ++it) {
 
         // If we're on or after the start offset, this is the start position.

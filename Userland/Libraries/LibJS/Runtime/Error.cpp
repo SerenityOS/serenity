@@ -54,7 +54,7 @@ ThrowCompletionOr<void> Error::install_error_cause(Value options)
 
 void Error::populate_stack()
 {
-    static auto dummy_source_range = SourceRange { .code = SourceCode::create("", ""), .start = {}, .end = {} };
+    static auto dummy_source_range = SourceRange { .code = SourceCode::create(String {}, String {}), .start = {}, .end = {} };
 
     auto& vm = this->vm();
     m_traceback.ensure_capacity(vm.execution_context_stack().size());
@@ -84,7 +84,7 @@ DeprecatedString Error::stack_string() const
         auto const& frame = m_traceback[i];
         auto function_name = frame.function_name;
         // Note: Since we don't know whether we have a valid SourceRange here we just check for some default values.
-        if (!frame.source_range.filename().is_null() || frame.source_range.start.offset != 0 || frame.source_range.end.offset != 0) {
+        if (!frame.source_range.filename().is_empty() || frame.source_range.start.offset != 0 || frame.source_range.end.offset != 0) {
 
             if (function_name == "<unknown>"sv)
                 stack_string_builder.appendff("    at {}:{}:{}\n", frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column);
