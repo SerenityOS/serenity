@@ -22,23 +22,23 @@ public:
 
     virtual ~TimeZone() override = default;
 
-    [[nodiscard]] DeprecatedString const& identifier() const { return m_identifier; }
+    [[nodiscard]] String const& identifier() const { return m_identifier; }
     [[nodiscard]] Optional<OffsetType> const& offset_nanoseconds() const { return m_offset_nanoseconds; }
 
-    void set_identifier(DeprecatedString identifier) { m_identifier = move(identifier); };
+    void set_identifier(String identifier) { m_identifier = move(identifier); };
     void set_offset_nanoseconds(OffsetType offset_nanoseconds) { m_offset_nanoseconds = offset_nanoseconds; };
 
 private:
     explicit TimeZone(Object& prototype);
 
     // 11.5 Properties of Temporal.TimeZone Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-timezone-instances
-    DeprecatedString m_identifier;             // [[Identifier]]
+    String m_identifier;                       // [[Identifier]]
     Optional<OffsetType> m_offset_nanoseconds; // [[OffsetNanoseconds]]
 };
 
 bool is_available_time_zone_name(StringView time_zone);
 ThrowCompletionOr<String> canonicalize_time_zone_name(VM&, StringView time_zone);
-ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, DeprecatedString const& identifier, FunctionObject const* new_target = nullptr);
+ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM&, StringView identifier, FunctionObject const* new_target = nullptr);
 ISODateTime get_iso_parts_from_epoch(VM&, Crypto::SignedBigInteger const& epoch_nanoseconds);
 BigInt* get_named_time_zone_next_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);
 BigInt* get_named_time_zone_previous_transition(VM&, StringView time_zone_identifier, BigInt const& epoch_nanoseconds);
