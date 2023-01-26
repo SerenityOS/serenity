@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -103,7 +103,7 @@ Calendar* get_iso8601_calendar(VM& vm)
 }
 
 // 12.2.4 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
-ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& calendar, Vector<StringView> const& field_names)
+ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vector<StringView> const& field_names)
 {
     auto& realm = *vm.current_realm();
 
@@ -112,9 +112,10 @@ ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& cale
 
     // 2. If fields is undefined, return fieldNames.
     if (!fields) {
-        Vector<DeprecatedString> result;
+        Vector<String> result;
+        TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(field_names.size()));
         for (auto& value : field_names)
-            result.append(value);
+            result.unchecked_append(TRY_OR_THROW_OOM(vm, String::from_utf8(value)));
         return result;
     }
 
@@ -124,9 +125,10 @@ ThrowCompletionOr<Vector<DeprecatedString>> calendar_fields(VM& vm, Object& cale
     // 4. Return ? IterableToListOfType(fieldsArray, « String »).
     auto list = TRY(iterable_to_list_of_type(vm, fields_array, { OptionType::String }));
 
-    Vector<DeprecatedString> result;
+    Vector<String> result;
+    TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(list.size()));
     for (auto& value : list)
-        result.append(TRY(value.as_string().deprecated_string()));
+        result.unchecked_append(TRY(value.as_string().utf8_string()));
     return result;
 }
 
@@ -818,7 +820,12 @@ ThrowCompletionOr<ISODateRecord> iso_date_from_fields(VM& vm, Object const& fiel
     // 1. Assert: Type(fields) is Object.
 
     // 2. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "year", "day" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields, { "day", "month", "monthCode", "year" }, Vector<StringView> { "year"sv, "day"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
+        { String::from_utf8_short_string("day"sv),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("month"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("monthCode"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("year"sv)) },
+        Vector<StringView> { "year"sv, "day"sv }));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(vm, &options));
@@ -848,7 +855,11 @@ ThrowCompletionOr<ISOYearMonth> iso_year_month_from_fields(VM& vm, Object const&
     // 1. Assert: Type(fields) is Object.
 
     // 2. Set fields to ? PrepareTemporalFields(fields, « "month", "monthCode", "year" », « "year" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields, { "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "year"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
+        { TRY_OR_THROW_OOM(vm, String::from_utf8("month"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("monthCode"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("year"sv)) },
+        Vector<StringView> { "year"sv }));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(vm, &options));
@@ -875,7 +886,12 @@ ThrowCompletionOr<ISOMonthDay> iso_month_day_from_fields(VM& vm, Object const& f
     // 1. Assert: Type(fields) is Object.
 
     // 2. Set fields to ? PrepareTemporalFields(fields, « "day", "month", "monthCode", "year" », « "day" »).
-    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields, { "day"sv, "month"sv, "monthCode"sv, "year"sv }, Vector<StringView> { "day"sv }));
+    auto* prepared_fields = TRY(prepare_temporal_fields(vm, fields,
+        { String::from_utf8_short_string("day"sv),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("month"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("monthCode"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("year"sv)) },
+        Vector<StringView> { "day"sv }));
 
     // 3. Let overflow be ? ToTemporalOverflow(options).
     auto overflow = TRY(to_temporal_overflow(vm, &options));

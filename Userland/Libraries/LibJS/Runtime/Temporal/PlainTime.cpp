@@ -343,7 +343,14 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
     // 1. If completeness is not present, set completeness to complete.
 
     // 2. Let partial be ? PrepareTemporalFields(temporalTimeLike, « "hour", "microsecond", "millisecond", "minute", "nanosecond", "second" », partial).
-    auto* partial = TRY(prepare_temporal_fields(vm, temporal_time_like, { "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "nanosecond"sv, "second"sv }, PrepareTemporalFieldsPartial {}));
+    auto* partial = TRY(prepare_temporal_fields(vm, temporal_time_like,
+        { TRY_OR_THROW_OOM(vm, String::from_utf8("hour"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("microsecond"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("millisecond"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("minute"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("nanosecond"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("second"sv)) },
+        PrepareTemporalFieldsPartial {}));
 
     TemporalTimeLikeRecord result;
     // 3. If completeness is complete, then
