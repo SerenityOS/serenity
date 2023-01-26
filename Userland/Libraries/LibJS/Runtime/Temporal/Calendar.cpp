@@ -85,21 +85,21 @@ ThrowCompletionOr<Calendar*> create_temporal_calendar(VM& vm, String const& iden
 }
 
 // 12.2.2 GetBuiltinCalendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal-getbuiltincalendar
-ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, DeprecatedString const& identifier)
+ThrowCompletionOr<Calendar*> get_builtin_calendar(VM& vm, String const& identifier)
 {
     // 1. If IsBuiltinCalendar(id) is false, throw a RangeError exception.
     if (!is_builtin_calendar(identifier))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarIdentifier, identifier);
 
     // 2. Return ! CreateTemporalCalendar(id).
-    return MUST_OR_THROW_OOM(create_temporal_calendar(vm, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(identifier))));
+    return MUST_OR_THROW_OOM(create_temporal_calendar(vm, identifier));
 }
 
 // 12.2.3 GetISO8601Calendar ( ), https://tc39.es/proposal-temporal/#sec-temporal-getiso8601calendar
 Calendar* get_iso8601_calendar(VM& vm)
 {
     // 1. Return ! GetBuiltinCalendar("iso8601").
-    return MUST(get_builtin_calendar(vm, "iso8601"));
+    return MUST(get_builtin_calendar(vm, String::from_utf8("iso8601"sv).release_value_but_fixme_should_propagate_errors()));
 }
 
 // 12.2.4 CalendarFields ( calendar, fieldNames ), https://tc39.es/proposal-temporal/#sec-temporal-calendarfields
