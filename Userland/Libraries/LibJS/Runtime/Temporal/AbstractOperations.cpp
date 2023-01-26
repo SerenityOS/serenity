@@ -264,13 +264,13 @@ ThrowCompletionOr<String> to_time_zone_name_option(VM& vm, Object const& normali
 }
 
 // 13.11 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
-ThrowCompletionOr<DeprecatedString> to_show_offset_option(VM& vm, Object const& normalized_options)
+ThrowCompletionOr<String> to_show_offset_option(VM& vm, Object const& normalized_options)
 {
     // 1. Return ? GetOption(normalizedOptions, "offset", "string", « "auto", "never" », "auto").
     auto option = TRY(get_option(vm, normalized_options, vm.names.offset, OptionType::String, { "auto"sv, "never"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return TRY(option.as_string().deprecated_string());
+    return option.as_string().utf8_string();
 }
 
 // 13.12 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
