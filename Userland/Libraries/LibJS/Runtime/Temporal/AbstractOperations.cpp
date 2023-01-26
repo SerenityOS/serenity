@@ -458,7 +458,7 @@ static Vector<TemporalUnit> temporal_units = {
 };
 
 // 13.15 GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues ] ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalunit
-ThrowCompletionOr<Optional<DeprecatedString>> get_temporal_unit(VM& vm, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values)
+ThrowCompletionOr<Optional<String>> get_temporal_unit(VM& vm, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values)
 {
     // 1. Let singularNames be a new empty List.
     Vector<StringView> singular_names;
@@ -529,15 +529,15 @@ ThrowCompletionOr<Optional<DeprecatedString>> get_temporal_unit(VM& vm, Object c
     if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
         return vm.throw_completion<RangeError>(ErrorType::IsUndefined, DeprecatedString::formatted("{} option value", key.as_string()));
 
-    Optional<DeprecatedString> value = option_value.is_undefined()
-        ? Optional<DeprecatedString> {}
-        : TRY(option_value.as_string().deprecated_string());
+    auto value = option_value.is_undefined()
+        ? Optional<String> {}
+        : TRY(option_value.as_string().utf8_string());
 
     // 11. If value is listed in the Plural column of Table 13, then
     for (auto const& row : temporal_units) {
         if (row.plural == value) {
             // a. Set value to the value in the Singular column of the corresponding row.
-            value = row.singular;
+            value = TRY_OR_THROW_OOM(vm, String::from_utf8(row.singular));
         }
     }
 
@@ -1838,7 +1838,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
 
     // 7. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
     if (largest_unit == "auto"sv)
-        largest_unit = default_largest_unit;
+        largest_unit = TRY_OR_THROW_OOM(vm, String::from_utf8(default_largest_unit));
 
     // 8. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
     if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
@@ -1861,8 +1861,8 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
 
     // 13. Return the Record { [[SmallestUnit]]: smallestUnit, [[LargestUnit]]: largestUnit, [[RoundingMode]]: roundingMode, [[RoundingIncrement]]: roundingIncrement, [[Options]]: options }.
     return DifferenceSettings {
-        .smallest_unit = smallest_unit.release_value(),
-        .largest_unit = largest_unit.release_value(),
+        .smallest_unit = smallest_unit->to_deprecated_string(),
+        .largest_unit = largest_unit->to_deprecated_string(),
         .rounding_mode = rounding_mode.to_deprecated_string(),
         .rounding_increment = rounding_increment,
         .options = *options,
