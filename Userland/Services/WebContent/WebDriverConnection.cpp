@@ -20,12 +20,14 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/NodeFilter.h>
 #include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLDataListElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
@@ -35,6 +37,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWeb/WebDriver/Screenshot.h>
 #include <WebContent/WebDriverConnection.h>
@@ -301,6 +304,20 @@ static Optional<Web::DOM::Element&> container_for_element(Web::DOM::Element& ele
         return element;
     }
 }
+
+template<typename T>
+static bool fire_an_event(DeprecatedString name, Optional<Web::DOM::Element&> target)
+{
+    // FIXME: This is supposed to call the https://dom.spec.whatwg.org/#concept-event-fire DOM algorithm,
+    //        but that doesn't seem to be implemented elsewhere. So, we'll ad-hack it for now. :^)
+
+    if (!target.has_value())
+        return false;
+
+    auto event = T::create(target->realm(), name);
+    return target->dispatch_event(*event);
+}
+
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
@@ -1272,8 +1289,90 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
     // FIXME: 7. If element’s container is obscured by another element, return error with error code element click intercepted.
 
     // 8. Matching on element:
-    // FIXME: option element
-    // FIXME: Otherwise
+    // -> option element
+    if (is<Web::HTML::HTMLOptionElement>(*element)) {
+        auto& option_element = static_cast<Web::HTML::HTMLOptionElement&>(*element);
+
+        // 1. Let parent node be the element’s container.
+        auto parent_node = element_container;
+
+        // 2. Fire a mouseOver event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseOver", parent_node);
+
+        // 3. Fire a mouseMove event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseMove", parent_node);
+
+        // 4. Fire a mouseDown event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseDown", parent_node);
+
+        // 5. Run the focusing steps on parent node.
+        Web::HTML::run_focusing_steps(parent_node.has_value() ? &*parent_node : nullptr);
+
+        // 6. If element is not disabled:
+        if (!option_element.is_actually_disabled()) {
+            // 1. Fire an input event at parent node.
+            fire_an_event<Web::DOM::Event>("input", parent_node);
+
+            // 2. Let previous selectedness be equal to element selectedness.
+            auto previous_selectedness = option_element.selected();
+
+            // 3. If element’s container has the multiple attribute, toggle the element’s selectedness state
+            //    by setting it to the opposite value of its current selectedness.
+            if (parent_node.has_value() && parent_node->has_attribute("multiple")) {
+                option_element.set_selected(!option_element.selected());
+            }
+            //    Otherwise, set the element’s selectedness state to true.
+            else {
+                option_element.set_selected(true);
+            }
+
+            // 4. If previous selectedness is false, fire a change event at parent node.
+            if (!previous_selectedness) {
+                fire_an_event<Web::DOM::Event>("change", parent_node);
+            }
+        }
+        // 7. Fire a mouseUp event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseUp", parent_node);
+
+        // 8. Fire a click event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("click", parent_node);
+    }
+    // -> Otherwise
+    else {
+        // FIXME: 1. Let input state be the result of get the input state given current session and current top-level browsing context.
+
+        // FIXME: 2. Let actions options be a new actions options with the is element origin steps set to represents a web element, and the get element origin steps set to get a WebElement origin.
+
+        // FIXME: 3. Let input id be a the result of generating a UUID.
+
+        // FIXME: 4. Let source be the result of create an input source with input state, and "pointer".
+
+        // FIXME: 5. Add an input source with input state, input id and source.
+
+        // FIXME: 6. Let click point be the element’s in-view center point.
+
+        // FIXME: 7. Let pointer move action be an action object constructed with arguments input id, "pointer", and "pointerMove".
+
+        // FIXME: 8. Set a property x to 0 on pointer move action.
+
+        // FIXME: 9. Set a property y to 0 on pointer move action.
+
+        // FIXME: 10. Set a property origin to element on pointer move action.
+
+        // FIXME: 11. Let pointer down action be an action object constructed with arguments input id, "pointer", and "pointerDown".
+
+        // FIXME: 12. Set a property button to 0 on pointer down action.
+
+        // FIXME: 13. Let pointer up action be an action object constructed with arguments input id, "mouse", and "pointerUp" as arguments.
+
+        // FIXME: 14. Set a property button to 0 on pointer up action.
+
+        // FIXME: 15. Let actions be the list «pointer move action, pointer down action, pointer move action».
+
+        // FIXME: 16. Dispatch a list of actions with input state, actions, current browsing context, and actions options.
+
+        // FIXME: 17. Remove an input source with input state and input id.
+    }
 
     // FIXME: 9. Wait until the user agent event loop has spun enough times to process the DOM events generated by the previous step.
     // FIXME: 10. Perform implementation-defined steps to allow any navigations triggered by the click to start.
