@@ -4133,7 +4133,7 @@ Token Parser::consume_and_validate_numeric_literal()
 
 void Parser::expected(char const* what)
 {
-    auto message = m_state.current_token.message();
+    auto message = m_state.current_token.message().to_deprecated_string();
     if (message.is_empty())
         message = DeprecatedString::formatted("Unexpected token {}. Expected {}", m_state.current_token.name(), what);
     syntax_error(message);
