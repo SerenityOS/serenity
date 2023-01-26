@@ -432,9 +432,9 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
 
             auto const& child_box_state = m_state.get(*child_box);
 
-            if (margins_collapse_through(*child_box, m_state)) {
+            // Ignore anonymous block containers with no lines. These don't count as in-flow block boxes.
+            if (child_box->is_anonymous() && child_box->is_block_container() && child_box_state.line_boxes.is_empty())
                 continue;
-            }
 
             auto margin_bottom = m_margin_state.current_collapsed_margin();
             if (box_state.padding_bottom == 0 && box_state.border_bottom == 0) {
