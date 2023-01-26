@@ -243,9 +243,13 @@ ErrorOr<void> parse_file_signature(ICCHeader const& header)
     return {};
 }
 
-ErrorOr<PrimaryPlatform> parse_primary_platform(ICCHeader const& header)
+ErrorOr<Optional<PrimaryPlatform>> parse_primary_platform(ICCHeader const& header)
 {
     // ICC v4, 7.2.10 Primary platform field
+    // "If there is no primary platform identified, this field shall be set to zero (00000000h)."
+    if (header.primary_platform == PrimaryPlatform { 0 })
+        return OptionalNone {};
+
     switch (header.primary_platform) {
     case PrimaryPlatform::Apple:
     case PrimaryPlatform::Microsoft:

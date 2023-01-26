@@ -572,7 +572,7 @@ public:
 
     u32 on_disk_size() const { return m_on_disk_size; }
     time_t creation_timestamp() const { return m_creation_timestamp; }
-    PrimaryPlatform primary_platform() const { return m_primary_platform; }
+    Optional<PrimaryPlatform> primary_platform() const { return m_primary_platform; }
     Flags flags() const { return m_flags; }
     Optional<DeviceManufacturer> device_manufacturer() const { return m_device_manufacturer; }
     Optional<DeviceModel> device_model() const { return m_device_model; }
@@ -609,7 +609,7 @@ private:
     ColorSpace m_data_color_space {};
     ColorSpace m_connection_space {};
     time_t m_creation_timestamp { 0 };
-    PrimaryPlatform m_primary_platform {};
+    Optional<PrimaryPlatform> m_primary_platform {};
     Flags m_flags;
     Optional<DeviceManufacturer> m_device_manufacturer;
     Optional<DeviceModel> m_device_model;
