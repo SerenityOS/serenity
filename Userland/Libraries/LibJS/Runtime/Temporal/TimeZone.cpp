@@ -332,7 +332,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
     }
 
     // 2. Let identifier be ? ToString(temporalTimeZoneLike).
-    auto identifier = TRY(temporal_time_zone_like.to_deprecated_string(vm));
+    auto identifier = TRY(temporal_time_zone_like.to_string(vm));
 
     // 3. Let parseResult be ? ParseTemporalTimeZoneString(identifier).
     auto parse_result = TRY(parse_temporal_time_zone_string(vm, identifier));
