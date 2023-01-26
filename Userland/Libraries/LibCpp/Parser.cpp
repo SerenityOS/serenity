@@ -91,6 +91,8 @@ NonnullRefPtr<Declaration> Parser::parse_declaration(ASTNode& parent, Declaratio
         return parse_constructor(parent);
     case DeclarationType::Destructor:
         return parse_destructor(parent);
+    case DeclarationType::UsingNamespace:
+        return parse_using_namespace_declaration(parent);
     default:
         error("unexpected declaration type"sv);
         return create_ast_node<InvalidDeclaration>(parent, position(), position());
@@ -624,6 +626,8 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
         return DeclarationType::Namespace;
     if (match_variable_declaration())
         return DeclarationType::Variable;
+    if (match_using_namespace_declaration())
+        return DeclarationType::UsingNamespace;
     return {};
 }
 
@@ -1701,6 +1705,39 @@ NonnullRefPtr<Destructor> Parser::parse_destructor(ASTNode& parent)
     auto ctor = create_ast_node<Destructor>(parent, position(), {});
     parse_constructor_or_destructor_impl(*ctor, CtorOrDtor::Dtor);
     return ctor;
+}
+
+bool Parser::match_using_namespace_declaration()
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!match_keyword("using"))
+        return false;
+    consume();
+
+    if (!match_keyword("namespace"))
+        return false;
+    consume();
+
+    return true;
+}
+
+NonnullRefPtr<UsingNamespaceDeclaration> Parser::parse_using_namespace_declaration(ASTNode& parent)
+{
+    auto decl = create_ast_node<UsingNamespaceDeclaration>(parent, position(), {});
+
+    consume_keyword("using");
+    consume_keyword("namespace");
+
+    auto name = parse_name(*decl);
+
+    decl->set_end(position());
+    consume(Token::Type::Semicolon);
+
+    decl->set_name(name);
+
+    return decl;
 }
 
 }
