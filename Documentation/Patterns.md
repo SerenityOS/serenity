@@ -88,6 +88,45 @@ ErrorOr<void> insert_one_to_onehundred(Vector<int>& vector)
 }
 ```
 
+## Fallible Constructors
+
+The usual C++ constructors are incompatible with SerenityOS' method of handling errors,
+as potential errors are passed using the `ErrorOr` return type. As a replacement, classes
+that require fallible operations during their construction define a static function that
+is fallible instead.
+
+This fallible function (which should usually be named `create`) will handle any errors while
+preparing arguments for the internal constructor and run any required fallible operations after
+the object has been initialized. The resulting object is then returned as `ErrorOr<T>` or
+`ErrorOr<NonnullOwnPtr<T>>`.
+
+### Example:
+
+```cpp
+class Decompressor {
+public:
+    static ErrorOr<NonnullOwnPtr<Decompressor>> create(NonnullOwnPtr<Core::Stream::Stream> stream)
+    {
+        auto buffer = TRY(CircularBuffer::create_empty(32 * KiB));
+        auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Decompressor(move(stream), move(buffer))));
+        TRY(decompressor->initialize_settings_from_header());
+        return decompressor;
+    }
+
+... snip ...
+
+private:
+    Decompressor(NonnullOwnPtr<Core::Stream::Stream> stream, CircularBuffer buffer)
+        : m_stream(move(stream))
+        , m_buffer(move(buffer))
+    {
+    }
+
+    CircularBuffer m_buffer;
+    NonnullOwnPtr<Core::Stream::Stream> m_stream;
+}
+```
+
 ## The `serenity_main(..)` program entry point
 
 Serenity has moved to a pattern where executables do not expose a normal C
