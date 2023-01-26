@@ -74,7 +74,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, StringView identi
         auto offset_nanoseconds_result = parse_time_zone_offset_string(identifier);
 
         // b. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(offsetNanosecondsResult).
-        object->set_identifier(TRY_OR_THROW_OOM(vm, String::from_utf8(format_time_zone_offset_string(offset_nanoseconds_result))));
+        object->set_identifier(MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds_result)));
 
         // c. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.
         object->set_offset_nanoseconds(offset_nanoseconds_result);
@@ -209,7 +209,7 @@ bool is_valid_time_zone_numeric_utc_offset_syntax(DeprecatedString const& offset
 }
 
 // 11.6.5 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
-DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
+ThrowCompletionOr<String> format_time_zone_offset_string(VM& vm, double offset_nanoseconds)
 {
     auto offset = static_cast<i64>(offset_nanoseconds);
 
@@ -248,7 +248,8 @@ DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
         // a. Let fraction be ToZeroPaddedDecimalString(nanoseconds, 9).
         // b. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
         // c. Let post be the string-concatenation of the code unit 0x003A (COLON), s, the code unit 0x002E (FULL STOP), and fraction.
-        builder.appendff(":{:02}.{}", seconds, DeprecatedString::formatted("{:09}", nanoseconds).trim("0"sv, TrimMode::Right));
+        // FIXME: Add String::trim()
+        builder.appendff(":{:02}.{}", seconds, TRY_OR_THROW_OOM(vm, String::from_utf8(TRY_OR_THROW_OOM(vm, String::formatted("{:09}", nanoseconds)).bytes_as_string_view().trim("0"sv, TrimMode::Right))));
     }
     // 12. Else if seconds ≠ 0, then
     else if (seconds != 0) {
@@ -259,7 +260,7 @@ DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
     //    a. Let post be the empty String.
 
     // 14. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
-    return builder.to_deprecated_string();
+    return TRY_OR_THROW_OOM(vm, builder.to_string());
 }
 
 // 11.6.6 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring
@@ -399,7 +400,7 @@ ThrowCompletionOr<DeprecatedString> builtin_time_zone_get_offset_string_for(VM& 
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
 
     // 2. Return ! FormatTimeZoneOffsetString(offsetNanoseconds).
-    return format_time_zone_offset_string(offset_nanoseconds);
+    return MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds)).to_deprecated_string();
 }
 
 // 11.6.10 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor
