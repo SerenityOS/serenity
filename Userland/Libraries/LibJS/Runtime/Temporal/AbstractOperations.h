@@ -141,7 +141,7 @@ ThrowCompletionOr<String> to_temporal_rounding_mode(VM&, Object const& normalize
 StringView negate_temporal_rounding_mode(StringView rounding_mode);
 ThrowCompletionOr<String> to_temporal_offset(VM&, Object const* options, StringView fallback);
 ThrowCompletionOr<String> to_calendar_name_option(VM&, Object const& normalized_options);
-ThrowCompletionOr<DeprecatedString> to_time_zone_name_option(VM&, Object const& normalized_options);
+ThrowCompletionOr<String> to_time_zone_name_option(VM&, Object const& normalized_options);
 ThrowCompletionOr<DeprecatedString> to_show_offset_option(VM&, Object const& normalized_options);
 ThrowCompletionOr<u64> to_temporal_rounding_increment(VM&, Object const& normalized_options, Optional<double> dividend, bool inclusive);
 ThrowCompletionOr<u64> to_temporal_date_time_rounding_increment(VM&, Object const& normalized_options, StringView smallest_unit);
