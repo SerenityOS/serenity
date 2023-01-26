@@ -414,7 +414,7 @@ ThrowCompletionOr<String> pad_iso_year(VM& vm, i32 y)
 }
 
 // 3.5.8 TemporalDateToString ( temporalDate, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporaldatetostring
-ThrowCompletionOr<DeprecatedString> temporal_date_to_string(VM& vm, PlainDate& temporal_date, StringView show_calendar)
+ThrowCompletionOr<String> temporal_date_to_string(VM& vm, PlainDate& temporal_date, StringView show_calendar)
 {
     // 1. Assert: Type(temporalDate) is Object.
     // 2. Assert: temporalDate has an [[InitializedTemporalDate]] internal slot.
@@ -423,16 +423,16 @@ ThrowCompletionOr<DeprecatedString> temporal_date_to_string(VM& vm, PlainDate& t
     auto year = MUST_OR_THROW_OOM(pad_iso_year(vm, temporal_date.iso_year()));
 
     // 4. Let month be ToZeroPaddedDecimalString(monthDay.[[ISOMonth]], 2).
-    auto month = DeprecatedString::formatted("{:02}", temporal_date.iso_month());
+    auto month = TRY_OR_THROW_OOM(vm, String::formatted("{:02}", temporal_date.iso_month()));
 
     // 5. Let day be ToZeroPaddedDecimalString(monthDay.[[ISODay]], 2).
-    auto day = DeprecatedString::formatted("{:02}", temporal_date.iso_day());
+    auto day = TRY_OR_THROW_OOM(vm, String::formatted("{:02}", temporal_date.iso_day()));
 
     // 6. Let calendar be ? MaybeFormatCalendarAnnotation(temporalDate.[[Calendar]], showCalendar).
     auto calendar = TRY(maybe_format_calendar_annotation(vm, &temporal_date.calendar(), show_calendar));
 
     // 7. Return the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), month, the code unit 0x002D (HYPHEN-MINUS), day, and calendar.
-    return DeprecatedString::formatted("{}-{}-{}{}", year, month, day, calendar);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}-{}-{}{}", year, month, day, calendar));
 }
 
 // 3.5.9 AddISODate ( year, month, day, years, months, weeks, days, overflow ), https://tc39.es/proposal-temporal/#sec-temporal-addisodate
