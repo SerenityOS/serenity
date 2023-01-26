@@ -735,7 +735,7 @@ StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 }
 
 // 13.18 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
-ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& options, DeprecatedString largest_unit)
+ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& options, String largest_unit)
 {
     auto& realm = *vm.current_realm();
 
