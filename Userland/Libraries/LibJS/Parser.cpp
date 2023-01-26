@@ -409,7 +409,7 @@ Parser::ParserState::ParserState(Lexer l, Program::Type program_type)
 }
 
 Parser::Parser(Lexer lexer, Program::Type program_type, Optional<EvalInitialState> initial_state_for_eval)
-    : m_source_code(SourceCode::create(lexer.filename(), lexer.source()))
+    : m_source_code(SourceCode::create(String::from_deprecated_string(lexer.filename()).release_value_but_fixme_should_propagate_errors(), String::from_deprecated_string(lexer.source()).release_value_but_fixme_should_propagate_errors()))
     , m_state(move(lexer), program_type)
     , m_program_type(program_type)
 {
