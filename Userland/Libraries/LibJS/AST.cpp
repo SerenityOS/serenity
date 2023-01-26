@@ -3762,7 +3762,7 @@ Completion TemplateLiteral::execute(Interpreter& interpreter) const
     }
 
     // 7. Return the string-concatenation of head, middle, and tail.
-    return Value { PrimitiveString::create(vm, string_builder.build()) };
+    return Value { PrimitiveString::create(vm, string_builder.to_deprecated_string()) };
 }
 
 void TaggedTemplateLiteral::dump(int indent) const

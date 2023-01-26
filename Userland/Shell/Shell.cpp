@@ -846,7 +846,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     // as the child will run this chain.
     if (command.should_immediately_execute_next)
         command_copy.next_chain.clear();
-    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, move(command_copy));
+    auto job = Job::create(child, pgid, cmd.to_deprecated_string(), find_last_job_id() + 1, move(command_copy));
     jobs.set((u64)child, job);
 
     job->on_exit = [this](auto job) {
@@ -1159,7 +1159,7 @@ DeprecatedString Shell::escape_token_for_single_quotes(StringView token)
     if (started_single_quote)
         builder.append("'"sv);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
@@ -1185,7 +1185,7 @@ DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
 
     builder.append('"');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point, EscapeMode mode)
@@ -1290,7 +1290,7 @@ static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token)
         }
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Shell::escape_token(Utf32View token, EscapeMode escape_mode)
@@ -1333,7 +1333,7 @@ DeprecatedString Shell::unescape_token(StringView token)
     if (state == Escaped)
         builder.append('\\');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 void Shell::cache_path()
@@ -1477,7 +1477,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
         path_builder.append('/');
         path_builder.append(init_slash_part);
     }
-    path = path_builder.build();
+    path = path_builder.to_deprecated_string();
     token = last_slash_part;
 
     // the invariant part of the token is actually just the last segment
@@ -1745,7 +1745,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto list = pop_list();
             StringBuilder builder;
             builder.join(""sv, list);
-            this->list().append(builder.build());
+            this->list().append(builder.to_deprecated_string());
         }
 
         virtual void visit(AST::Glob const* node) override
@@ -1764,7 +1764,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto list = pop_list();
             StringBuilder builder;
             builder.join(""sv, list);
-            this->list().append(builder.build());
+            this->list().append(builder.to_deprecated_string());
         }
 
         virtual void visit(AST::ImmediateExpression const* node) override
@@ -1813,7 +1813,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                 for (auto& right_entry : right) {
                     builder.append(left_entry);
                     builder.append(right_entry);
-                    list().append(builder.build());
+                    list().append(builder.to_deprecated_string());
                     builder.clear();
                 }
             }

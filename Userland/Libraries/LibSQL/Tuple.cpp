@@ -173,7 +173,7 @@ DeprecatedString Tuple::to_deprecated_string() const
     if (pointer() != 0) {
         builder.appendff(":{}", pointer());
     }
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 void Tuple::copy_from(Tuple const& other)

@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& part = parts[idx];
 
             path_builder.append(part);
-            auto path = path_builder.build();
+            auto path = path_builder.to_deprecated_string();
 
             struct stat st;
             if (stat(path.characters(), &st) < 0) {

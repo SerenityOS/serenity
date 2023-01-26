@@ -106,7 +106,7 @@ public:
     {
         StringBuilder builder;
         builder.join(separator, collection, fmtstr);
-        return builder.build();
+        return builder.to_deprecated_string();
     }
 
     [[nodiscard]] bool matches(StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;

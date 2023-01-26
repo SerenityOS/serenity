@@ -222,7 +222,7 @@ GUI::Variant DisassemblyModel::data(GUI::ModelIndex const& index, GUI::ModelRole
                 auto const& entry = insn.source_position_with_inlines.source_position.value();
                 builder.appendff("{}:{}", entry.file_path, entry.line_number);
             }
-            return builder.build();
+            return builder.to_deprecated_string();
         }
 
         return {};

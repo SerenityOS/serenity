@@ -364,7 +364,7 @@ void TreeNode::dump_if(int flag, DeprecatedString&& msg)
         builder.append(", leaf"sv);
     }
     builder.append(')');
-    dbgln(builder.build());
+    dbgln(builder.to_deprecated_string());
 }
 
 void TreeNode::list_node(int indent)

@@ -20,7 +20,7 @@ DeprecatedString CommentBlock::render_to_html(bool) const
     // TODO: This is probably incorrect, because we technically need to escape "--" in some form. However, Browser does not care about this.
     builder.append("-->\n"sv);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Vector<DeprecatedString> CommentBlock::render_lines_for_terminal(size_t) const
@@ -69,7 +69,7 @@ OwnPtr<CommentBlock> CommentBlock::parse(LineIterator& lines)
         line = *lines;
     }
 
-    return make<CommentBlock>(builder.build());
+    return make<CommentBlock>(builder.to_deprecated_string());
 }
 
 }

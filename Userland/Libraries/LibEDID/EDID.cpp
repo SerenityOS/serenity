@@ -1010,7 +1010,7 @@ DeprecatedString Parser::display_product_name() const
                 break;
             str.append((char)byte);
         }
-        product_name = str.build();
+        product_name = str.to_deprecated_string();
         return IterationDecision::Break;
     });
     if (result.is_error()) {
@@ -1033,7 +1033,7 @@ DeprecatedString Parser::display_product_serial_number() const
                 break;
             str.append((char)byte);
         }
-        product_name = str.build();
+        product_name = str.to_deprecated_string();
         return IterationDecision::Break;
     });
     if (result.is_error()) {

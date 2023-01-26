@@ -116,7 +116,7 @@ ErrorOr<DeprecatedString, ParseRegexPatternError> parse_regex_pattern(StringView
             builder.append_code_point(code_unit);
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView pattern, bool unicode, bool unicode_sets)

@@ -163,7 +163,7 @@ struct ParsedDHCPv4Options {
                 builder.appendff(" {} ", ((u8 const*)opt.value.value)[i]);
             builder.append('\n');
         }
-        return builder.build();
+        return builder.to_deprecated_string();
     }
 
     struct DHCPOptionValue {

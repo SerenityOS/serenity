@@ -63,7 +63,7 @@ double Token::double_value() const
         builder.append(ch);
     }
 
-    DeprecatedString value_string = builder.to_deprecated_string();
+    auto value_string = builder.to_deprecated_string();
     if (value_string[0] == '0' && value_string.length() >= 2) {
         if (value_string[1] == 'x' || value_string[1] == 'X') {
             // hexadecimal

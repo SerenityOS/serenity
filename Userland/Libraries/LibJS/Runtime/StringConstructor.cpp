@@ -94,7 +94,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
             builder.append(next_sub);
         }
     }
-    return PrimitiveString::create(vm, builder.build());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode

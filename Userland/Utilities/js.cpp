@@ -110,7 +110,7 @@ static DeprecatedString prompt_for_level(int level)
     for (auto i = 0; i < level; ++i)
         prompt_builder.append("    "sv);
 
-    return prompt_builder.build();
+    return prompt_builder.to_deprecated_string();
 }
 
 static DeprecatedString read_next_piece()

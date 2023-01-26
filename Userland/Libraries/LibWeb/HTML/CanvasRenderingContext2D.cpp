@@ -420,7 +420,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     for (auto c : text) {
         builder.append(Infra::is_ascii_whitespace(c) ? ' ' : c);
     }
-    DeprecatedString replaced_text = builder.build();
+    auto replaced_text = builder.to_deprecated_string();
 
     // 3. Let font be the current font of target, as given by that object's font attribute.
     // FIXME: Once we have CanvasTextDrawingStyles, implement font selection.

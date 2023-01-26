@@ -32,7 +32,7 @@ Vector<DeprecatedString> Heading::render_lines_for_terminal(size_t) const
         break;
     }
 
-    return Vector<DeprecatedString> { builder.build() };
+    return Vector<DeprecatedString> { builder.to_deprecated_string() };
 }
 
 RecursionDecision Heading::walk(Visitor& visitor) const

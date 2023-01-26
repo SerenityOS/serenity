@@ -252,7 +252,7 @@ static DeprecatedString handle_escapes(char const* string)
                     builder.append('\b');
                     break;
                 case 'c':
-                    return builder.build();
+                    return builder.to_deprecated_string();
                 case 'e':
                     builder.append('\e');
                     break;
@@ -288,7 +288,7 @@ static DeprecatedString handle_escapes(char const* string)
         }
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

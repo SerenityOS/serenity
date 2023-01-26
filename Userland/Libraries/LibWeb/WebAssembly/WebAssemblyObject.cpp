@@ -284,7 +284,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
         StringBuilder builder;
         builder.append("LinkError: Missing "sv);
         builder.join(' ', link_result.error().missing_imports);
-        return vm.throw_completion<JS::TypeError>(builder.build());
+        return vm.throw_completion<JS::TypeError>(builder.to_deprecated_string());
     }
 
     auto instance_result = s_abstract_machine.instantiate(module, link_result.release_value());

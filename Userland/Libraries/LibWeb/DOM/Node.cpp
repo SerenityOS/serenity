@@ -270,7 +270,7 @@ DeprecatedString Node::child_text_content() const
         if (is<Text>(child))
             builder.append(verify_cast<Text>(child).text_content());
     });
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#concept-tree-root

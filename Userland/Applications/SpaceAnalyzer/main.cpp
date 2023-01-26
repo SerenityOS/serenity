@@ -146,7 +146,7 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
         TreeNode const* node = treemapwidget.path_node(k);
         path_builder.append(node->name());
     }
-    return path_builder.build();
+    return path_builder.to_deprecated_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

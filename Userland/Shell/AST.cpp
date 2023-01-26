@@ -198,7 +198,7 @@ static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& i
         for (auto& index : indices)
             builder.append(input_value[index]);
 
-        input_value = builder.build();
+        input_value = builder.to_deprecated_string();
     }
 
     return move(input_value);
