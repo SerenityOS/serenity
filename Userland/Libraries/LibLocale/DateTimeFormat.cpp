@@ -169,7 +169,7 @@ Optional<Weekday> get_locale_weekend_end(StringView locale)
     return find_regional_values_for_locale(locale, get_regional_weekend_end);
 }
 
-DeprecatedString combine_skeletons(StringView first, StringView second)
+ErrorOr<String> combine_skeletons(StringView first, StringView second)
 {
     // https://unicode.org/reports/tr35/tr35-dates.html#availableFormats_appendItems
     constexpr auto field_order = Array {
@@ -207,14 +207,14 @@ DeprecatedString combine_skeletons(StringView first, StringView second)
         }
     }
 
-    return builder.build();
+    return builder.to_string();
 }
 
-Optional<CalendarFormat> __attribute__((weak)) get_calendar_date_format(StringView, StringView) { return {}; }
-Optional<CalendarFormat> __attribute__((weak)) get_calendar_time_format(StringView, StringView) { return {}; }
-Optional<CalendarFormat> __attribute__((weak)) get_calendar_date_time_format(StringView, StringView) { return {}; }
+ErrorOr<Optional<CalendarFormat>> __attribute__((weak)) get_calendar_date_format(StringView, StringView) { return OptionalNone {}; }
+ErrorOr<Optional<CalendarFormat>> __attribute__((weak)) get_calendar_time_format(StringView, StringView) { return OptionalNone {}; }
+ErrorOr<Optional<CalendarFormat>> __attribute__((weak)) get_calendar_date_time_format(StringView, StringView) { return OptionalNone {}; }
 
-Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type)
+ErrorOr<Optional<CalendarFormat>> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type)
 {
     switch (type) {
     case CalendarFormatType::Date:
@@ -228,10 +228,10 @@ Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calen
     }
 }
 
-Vector<CalendarPattern> __attribute__((weak)) get_calendar_available_formats(StringView, StringView) { return {}; }
-Optional<CalendarRangePattern> __attribute__((weak)) get_calendar_default_range_format(StringView, StringView) { return {}; }
-Vector<CalendarRangePattern> __attribute__((weak)) get_calendar_range_formats(StringView, StringView, StringView) { return {}; }
-Vector<CalendarRangePattern> __attribute__((weak)) get_calendar_range12_formats(StringView, StringView, StringView) { return {}; }
+ErrorOr<Vector<CalendarPattern>> __attribute__((weak)) get_calendar_available_formats(StringView, StringView) { return Vector<CalendarPattern> {}; }
+ErrorOr<Optional<CalendarRangePattern>> __attribute__((weak)) get_calendar_default_range_format(StringView, StringView) { return OptionalNone {}; }
+ErrorOr<Vector<CalendarRangePattern>> __attribute__((weak)) get_calendar_range_formats(StringView, StringView, StringView) { return Vector<CalendarRangePattern> {}; }
+ErrorOr<Vector<CalendarRangePattern>> __attribute__((weak)) get_calendar_range12_formats(StringView, StringView, StringView) { return Vector<CalendarRangePattern> {}; }
 Optional<StringView> __attribute__((weak)) get_calendar_era_symbol(StringView, StringView, CalendarPatternStyle, Era) { return {}; }
 Optional<StringView> __attribute__((weak)) get_calendar_month_symbol(StringView, StringView, CalendarPatternStyle, Month) { return {}; }
 Optional<StringView> __attribute__((weak)) get_calendar_weekday_symbol(StringView, StringView, CalendarPatternStyle, Weekday) { return {}; }
@@ -241,18 +241,18 @@ Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol_for_ho
 Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle, TimeZone::InDST) { return {}; }
 Optional<TimeZoneFormat> __attribute__((weak)) get_time_zone_format(StringView) { return {}; }
 
-static Optional<DeprecatedString> format_time_zone_offset(StringView locale, CalendarPatternStyle style, i64 offset_seconds)
+static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, CalendarPatternStyle style, i64 offset_seconds)
 {
     auto formats = get_time_zone_format(locale);
     if (!formats.has_value())
-        return {};
+        return OptionalNone {};
 
     auto number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
     if (!number_system.has_value())
-        return {};
+        return OptionalNone {};
 
     if (offset_seconds == 0)
-        return formats->gmt_zero_format;
+        return String::from_utf8(formats->gmt_zero_format);
 
     auto sign = offset_seconds > 0 ? formats->symbol_ahead_sign : formats->symbol_behind_sign;
     auto separator = offset_seconds > 0 ? formats->symbol_ahead_separator : formats->symbol_behind_separator;
@@ -290,16 +290,16 @@ static Optional<DeprecatedString> format_time_zone_offset(StringView locale, Cal
     }
 
     // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
-    auto result = replace_digits_for_number_system(*number_system, builder.build()).release_value_but_fixme_should_propagate_errors();
-    return formats->gmt_format.replace("{0}"sv, result, ReplaceMode::FirstOnly);
+    auto result = TRY(replace_digits_for_number_system(*number_system, builder.build()));
+    return TRY(String::from_utf8(formats->gmt_format)).replace("{0}"sv, result, ReplaceMode::FirstOnly);
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology
-DeprecatedString format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
+ErrorOr<String> format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
 {
     auto offset = TimeZone::get_time_zone_offset(time_zone, time);
     if (!offset.has_value())
-        return time_zone;
+        return String::from_utf8(time_zone);
 
     switch (style) {
     case CalendarPatternStyle::Short:
@@ -307,12 +307,14 @@ DeprecatedString format_time_zone(StringView locale, StringView time_zone, Calen
     case CalendarPatternStyle::ShortGeneric:
     case CalendarPatternStyle::LongGeneric:
         if (auto name = get_time_zone_name(locale, time_zone, style, offset->in_dst); name.has_value())
-            return *name;
+            return String::from_utf8(*name);
         break;
 
     case CalendarPatternStyle::ShortOffset:
     case CalendarPatternStyle::LongOffset:
-        return format_time_zone_offset(locale, style, offset->seconds).value_or(time_zone);
+        if (auto formatted_offset = TRY(format_time_zone_offset(locale, style, offset->seconds)); formatted_offset.has_value())
+            return formatted_offset.release_value();
+        return String::from_utf8(time_zone);
 
     default:
         VERIFY_NOT_REACHED();
