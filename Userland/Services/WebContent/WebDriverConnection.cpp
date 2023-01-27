@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
@@ -20,13 +20,18 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/NodeFilter.h>
+#include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLDataListElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
+#include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
@@ -253,6 +258,49 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     }
 }
 
+// https://w3c.github.io/webdriver/#dfn-container
+static Optional<Web::DOM::Element&> container_for_element(Web::DOM::Element& element)
+{
+    auto first_element_reached_by_traversing_the_tree_in_reverse_order = [](Web::DOM::Element& element, auto filter) -> Optional<Web::DOM::Element&> {
+        auto node_iterator = element.document().create_node_iterator(element, to_underlying(Web::DOM::NodeFilter::WhatToShow::SHOW_ALL), nullptr);
+
+        auto current_node = node_iterator->previous_node();
+        while (current_node.has_value() && current_node.value() != nullptr && current_node.value()->is_element()) {
+            if (filter(current_node.value()))
+                return static_cast<Web::DOM::Element&>(*current_node.release_value());
+        }
+
+        return {};
+    };
+
+    // An element’s container is:
+    // -> option element in a valid element context
+    // -> optgroup element in a valid element context
+    // FIXME: Determine if the element is in a valid element context. (https://html.spec.whatwg.org/#concept-element-contexts)
+    if (is<Web::HTML::HTMLOptionElement>(element) || is<Web::HTML::HTMLOptGroupElement>(element)) {
+        // The element’s element context, which is determined by:
+        // 1. Let datalist parent be the first datalist element reached by traversing the tree in reverse order from element, or undefined if the root of the tree is reached.
+        auto datalist_parent = first_element_reached_by_traversing_the_tree_in_reverse_order(element, [](auto& node) { return is<Web::HTML::HTMLDataListElement>(*node); });
+
+        // 2. Let select parent be the first select element reached by traversing the tree in reverse order from element, or undefined if the root of the tree is reached.
+        auto select_parent = first_element_reached_by_traversing_the_tree_in_reverse_order(element, [](auto& node) { return is<Web::HTML::HTMLSelectElement>(*node); });
+
+        // 3. If datalist parent is undefined, the element context is select parent. Otherwise, the element context is datalist parent.
+        if (!datalist_parent.has_value())
+            return select_parent;
+        return datalist_parent;
+    }
+    // -> option element in an invalid element context
+    else if (is<Web::HTML::HTMLOptionElement>(element)) {
+        // The element does not have a container.
+        return {};
+    }
+    // -> Otherwise
+    else {
+        // The container is the element itself.
+        return element;
+    }
+}
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
@@ -1214,11 +1262,12 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
     }
 
     // 5. Scroll into view the element’s container.
-    auto scroll_or_error = scroll_element_into_view(*element);
-
-    // 6. If element’s container is still not in view, return error with error code element not interactable.
+    auto element_container = container_for_element(*element);
+    auto scroll_or_error = scroll_element_into_view(*element_container);
     if (scroll_or_error.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ElementNotInteractable, "Element’s container is still not in view after scrolling"sv);
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnknownError, scroll_or_error.error().string_literal());
+
+    // FIXME: 6. If element’s container is still not in view, return error with error code element not interactable.
 
     // FIXME: 7. If element’s container is obscured by another element, return error with error code element click intercepted.
 
@@ -1232,7 +1281,7 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
     // FIXME: 12. Try to run the post-navigation checks.
     // FIXME: 13. Return success with data null.
 
-    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Click not implemented"sv);
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Click not implemented"sv);
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
