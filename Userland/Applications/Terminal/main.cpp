@@ -381,6 +381,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         if (close_message.has_value())
             return GUI::MessageBox::show(window, *close_message, "Close this terminal?"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+        
+        kill(shell_pid, SIGKILL);   // Ensure the shell is killed.
         return GUI::MessageBox::ExecResult::OK;
     };
 
