@@ -200,6 +200,28 @@ void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     }
     painter.draw_rect_with_thickness(rect_in_editor, Color::Black, 3);
     painter.draw_rect_with_thickness(rect_in_editor, Color::White, 1);
+    auto resize_anchors = resize_anchor_rects(rect_in_editor);
+    for (auto const& resize_anchor_rect : resize_anchors) {
+        painter.draw_rect_with_thickness(resize_anchor_rect, Color::Black, 3);
+        painter.draw_rect_with_thickness(resize_anchor_rect, Color::White, 1);
+    }
+}
+
+Gfx::IntRect MoveTool::resize_anchor_rect_from_position(Gfx::IntPoint position)
+{
+    constexpr int resize_anchor_size = 20;
+    auto resize_anchor_rect_top_left = position.translated(-resize_anchor_size / 2);
+    return Gfx::IntRect(resize_anchor_rect_top_left, Gfx::IntSize(resize_anchor_size, resize_anchor_size));
+}
+
+Array<Gfx::IntRect, 4> MoveTool::resize_anchor_rects(Gfx::IntRect layer_rect_in_frame_coordinates)
+{
+    return Array {
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_left()),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_right().translated(1, 0)),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_left().translated(0, 1)),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_right().translated(1))
+    };
 }
 
 ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
@@ -218,14 +240,11 @@ ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
 
 Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_cursor_position(Layer const* layer, MouseEvent& event)
 {
-    auto cursor_within_resize_anchor_rect = [&](Gfx::IntPoint layer_position) {
-        constexpr int sensitivity = 20;
-        auto resize_anchor_rect_center = m_editor->content_to_frame_position(layer_position).to_rounded<int>();
-        auto resize_anchor_rect_top_left = resize_anchor_rect_center.translated(-sensitivity / 2);
-        auto resize_anchor_rect = Gfx::IntRect(resize_anchor_rect_top_left, Gfx::IntSize(sensitivity, sensitivity));
+    auto cursor_within_resize_anchor_rect = [&](Gfx::IntPoint layer_position_in_frame_coordinates) {
+        auto resize_anchor_rect = resize_anchor_rect_from_position(layer_position_in_frame_coordinates);
         return resize_anchor_rect.contains(event.raw_event().position());
     };
-    auto layer_rect = layer->relative_rect();
+    auto layer_rect = m_editor->content_to_frame_rect(layer->relative_rect()).to_rounded<int>();
     if (cursor_within_resize_anchor_rect(layer_rect.top_left()))
         return ResizeAnchorLocation::TopLeft;
     if (cursor_within_resize_anchor_rect(layer_rect.top_right().translated(1, 0)))
