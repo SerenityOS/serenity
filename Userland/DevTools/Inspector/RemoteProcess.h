@@ -39,8 +39,6 @@ private:
     void handle_get_all_objects_response(JsonObject const&);
     void handle_identify_response(JsonObject const&);
 
-    void send_request(JsonObject const&);
-
     pid_t m_pid { -1 };
     DeprecatedString m_process_name;
     NonnullRefPtr<RemoteObjectGraphModel> m_object_graph_model;
