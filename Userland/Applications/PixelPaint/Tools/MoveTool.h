@@ -41,8 +41,9 @@ public:
     LayerSelectionMode layer_selection_mode() const { return m_layer_selection_mode; }
 
 private:
-    static Gfx::IntRect resize_anchor_rect_from_position(Gfx::IntPoint);
-    static Array<Gfx::IntRect, 4> resize_anchor_rects(Gfx::IntRect layer_rect_in_frame_coordinates);
+    static int resize_anchor_size(Gfx::IntRect layer_rect_in_frame_coordinates);
+    static Gfx::IntRect resize_anchor_rect_from_position(Gfx::IntPoint, int resize_anchor_size);
+    static Array<Gfx::IntRect, 4> resize_anchor_rects(Gfx::IntRect layer_rect_in_frame_coordinates, int resize_anchor_size);
     virtual StringView tool_name() const override { return "Move Tool"sv; }
     ErrorOr<void> update_cached_preview_bitmap(Layer const* layer);
     Optional<ResizeAnchorLocation const> resize_anchor_location_from_cursor_position(Layer const*, MouseEvent&);
