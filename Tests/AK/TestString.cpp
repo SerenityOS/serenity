@@ -495,3 +495,115 @@ TEST_CASE(join)
     auto string7 = MUST(String::join(" - "sv, Array { 1, 16, 256, 4096 }, "[{:#04x}]"sv));
     EXPECT_EQ(string7, "[0x0001] - [0x0010] - [0x0100] - [0x1000]"sv);
 }
+
+TEST_CASE(trim)
+{
+    {
+        String string {};
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT(result.is_empty());
+    }
+    {
+        auto string = MUST(String::from_utf8("word"sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("    word"sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "    word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("word    "sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word    "sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("    word    "sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word    "sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "    word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("    word    "sv));
+
+        auto result = MUST(string.trim("\t"sv, TrimMode::Both));
+        EXPECT_EQ(result, "    word    "sv);
+
+        result = MUST(string.trim("\t"sv, TrimMode::Left));
+        EXPECT_EQ(result, "    word    "sv);
+
+        result = MUST(string.trim("\t"sv, TrimMode::Right));
+        EXPECT_EQ(result, "    word    "sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto result = MUST(string.trim("ω"sv, TrimMode::Both));
+        EXPECT_EQ(result, "ΣωΣ"sv);
+
+        result = MUST(string.trim("ω"sv, TrimMode::Left));
+        EXPECT_EQ(result, "ΣωΣω"sv);
+
+        result = MUST(string.trim("ω"sv, TrimMode::Right));
+        EXPECT_EQ(result, "ωΣωΣ"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto result = MUST(string.trim("ωΣ"sv, TrimMode::Both));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("ωΣ"sv, TrimMode::Left));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("ωΣ"sv, TrimMode::Right));
+        EXPECT(result.is_empty());
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto result = MUST(string.trim("Σω"sv, TrimMode::Both));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("Σω"sv, TrimMode::Left));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("Σω"sv, TrimMode::Right));
+        EXPECT(result.is_empty());
+    }
+}

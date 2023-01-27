@@ -130,6 +130,9 @@ public:
     ErrorOr<String> replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const;
     ErrorOr<String> reverse() const;
 
+    ErrorOr<String> trim(Utf8View const& code_points_to_trim, TrimMode mode = TrimMode::Both) const;
+    ErrorOr<String> trim(StringView code_points_to_trim, TrimMode mode = TrimMode::Both) const;
+
     ErrorOr<Vector<String>> split_limit(u32 separator, size_t limit, SplitBehavior = SplitBehavior::Nothing) const;
     ErrorOr<Vector<String>> split(u32 separator, SplitBehavior = SplitBehavior::Nothing) const;
 
