@@ -10,6 +10,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ImageDecoder.h>
 
 template<class T>
