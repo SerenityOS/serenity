@@ -26,8 +26,6 @@ class AudioPlayerLoop final : public Core::Object {
 public:
     virtual ~AudioPlayerLoop() override;
 
-    void enqueue_audio();
-
     void toggle_paused();
     bool is_playing() const { return m_should_play_audio; }
 
