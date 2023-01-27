@@ -122,7 +122,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::traverse(Direction directio
         auto result = TRY(filter(*m_traversal_pointer->node));
 
         // 3. If result is FILTER_ACCEPT, then break.
-        if (result == NodeFilter::FILTER_ACCEPT)
+        if (result == NodeFilter::Result::FILTER_ACCEPT)
             break;
     }
 
@@ -146,11 +146,11 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 
     // 3. If the nth bit (where 0 is the least significant bit) of traverser’s whatToShow is not set, then return FILTER_SKIP.
     if (!(m_what_to_show & (1u << n)))
-        return NodeFilter::FILTER_SKIP;
+        return NodeFilter::Result::FILTER_SKIP;
 
     // 4. If traverser’s filter is null, then return FILTER_ACCEPT.
     if (!m_filter)
-        return NodeFilter::FILTER_ACCEPT;
+        return NodeFilter::Result::FILTER_ACCEPT;
 
     // 5. Set traverser’s active flag.
     m_active = true;
