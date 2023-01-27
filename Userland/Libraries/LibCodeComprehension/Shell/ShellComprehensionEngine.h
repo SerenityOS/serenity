@@ -39,7 +39,6 @@ private:
     void set_document_data(DeprecatedString const& file, OwnPtr<DocumentData>&& data);
 
     OwnPtr<DocumentData> create_document_data_for(DeprecatedString const& file);
-    DeprecatedString document_path_from_include_path(StringView include_path) const;
     void update_declared_symbols(DocumentData const&);
 
     static size_t resolve(ShellComprehensionEngine::DocumentData const& document, const GUI::TextPosition& position);
