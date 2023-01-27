@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,23 +38,40 @@ void BigIntPrototype::initialize(Realm& realm)
 // thisBigIntValue ( value ), https://tc39.es/ecma262/#thisbigintvalue
 static ThrowCompletionOr<BigInt*> this_bigint_value(VM& vm, Value value)
 {
+    // 1. If value is a BigInt, return value.
     if (value.is_bigint())
         return &value.as_bigint();
-    if (value.is_object() && is<BigIntObject>(value.as_object()))
+
+    // 2. If value is an Object and value has a [[BigIntData]] internal slot, then
+    if (value.is_object() && is<BigIntObject>(value.as_object())) {
+        // a. Assert: value.[[BigIntData]] is a BigInt.
+        // b. Return value.[[BigIntData]].
         return &static_cast<BigIntObject&>(value.as_object()).bigint();
+    }
+
+    // 3. Throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "BigInt");
 }
 
 // 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
+    // 1. Let x be ? thisBigIntValue(this value).
     auto* bigint = TRY(this_bigint_value(vm, vm.this_value()));
+
+    // 2. If radix is undefined, let radixMV be 10.
     double radix = 10;
+
+    // 3. Else, let radixMV be ? ToIntegerOrInfinity(radix).
     if (!vm.argument(0).is_undefined()) {
         radix = TRY(vm.argument(0).to_integer_or_infinity(vm));
+
+        // 4. If radixMV is not in the inclusive interval from 2 to 36, throw a RangeError exception.
         if (radix < 2 || radix > 36)
             return vm.throw_completion<RangeError>(ErrorType::InvalidRadix);
     }
+
+    // 5. Return BigInt::toString(x, radixMV).
     return PrimitiveString::create(vm, bigint->big_integer().to_base_deprecated(radix));
 }
 
@@ -81,6 +98,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 // 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
+    // 1. Return ? thisBigIntValue(this value).
     return TRY(this_bigint_value(vm, vm.this_value()));
 }
 
