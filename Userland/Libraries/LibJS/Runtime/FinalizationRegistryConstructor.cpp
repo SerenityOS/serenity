@@ -33,6 +33,8 @@ void FinalizationRegistryConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.FinalizationRegistry);
 }
 
@@ -40,8 +42,6 @@ ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> FinalizationRegistryConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-
-    // NOTE: Step 1 is implemented in FinalizationRegistryConstructor::call()
 
     // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
     auto cleanup_callback = vm.argument(0);
