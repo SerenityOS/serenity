@@ -50,18 +50,23 @@ static void print_syscall(PtraceRegisters& regs, size_t depth)
     StringView begin_color = g_should_output_color ? "\033[34;1m"sv : ""sv;
     StringView end_color = g_should_output_color ? "\033[0m"sv : ""sv;
 #if ARCH(X86_64)
-    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}){}",
+    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}, {:#x}){}",
         begin_color,
         Syscall::to_string((Syscall::Function)regs.rax),
         regs.rdx,
-        regs.rcx,
+        regs.rdi,
         regs.rbx,
+        regs.rsi,
         end_color);
 #elif ARCH(AARCH64)
-    (void)regs;
-    (void)begin_color;
-    (void)end_color;
-    TODO_AARCH64();
+    outln("=> {}SC_{}({:#x}, {:#x}, {:#x}, {:#x}){}",
+        begin_color,
+        Syscall::to_string((Syscall::Function)regs.x[8]),
+        regs.x[1],
+        regs.x[2],
+        regs.x[3],
+        regs.x[4],
+        end_color);
 #else
 #    error Unknown architecture
 #endif
