@@ -808,8 +808,8 @@ Optional<KeywordHours> __attribute__((weak)) keyword_hc_from_string(StringView) 
 Optional<KeywordColCaseFirst> __attribute__((weak)) keyword_kf_from_string(StringView) { return {}; }
 Optional<KeywordColNumeric> __attribute__((weak)) keyword_kn_from_string(StringView) { return {}; }
 Optional<KeywordNumbers> __attribute__((weak)) keyword_nu_from_string(StringView) { return {}; }
-Vector<StringView> __attribute__((weak)) get_keywords_for_locale(StringView, StringView) { return {}; }
-Optional<StringView> __attribute__((weak)) get_preferred_keyword_value_for_locale(StringView, StringView) { return {}; }
+ErrorOr<Vector<StringView>> __attribute__((weak)) get_keywords_for_locale(StringView, StringView) { return Vector<StringView> {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_preferred_keyword_value_for_locale(StringView, StringView) { return OptionalNone {}; }
 Optional<DisplayPattern> __attribute__((weak)) get_locale_display_patterns(StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_language_mapping(StringView, StringView) { return {}; }
 Optional<StringView> __attribute__((weak)) get_locale_territory_mapping(StringView, StringView) { return {}; }

@@ -94,8 +94,8 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
 Optional<HourCycleRegion> __attribute__((weak)) hour_cycle_region_from_string(StringView) { return {}; }
 Vector<HourCycle> __attribute__((weak)) get_regional_hour_cycles(StringView) { return {}; }
 
-template<typename GetRegionalValues>
-static auto find_regional_values_for_locale(StringView locale, GetRegionalValues&& get_regional_values)
+template<typename T, typename GetRegionalValues>
+static ErrorOr<T> find_regional_values_for_locale(StringView locale, GetRegionalValues&& get_regional_values)
 {
     auto has_value = [](auto const& container) {
         if constexpr (requires { container.has_value(); })
@@ -109,12 +109,12 @@ static auto find_regional_values_for_locale(StringView locale, GetRegionalValues
 
     auto return_default_values = [&]() { return get_regional_values("001"sv); };
 
-    auto language = parse_unicode_language_id(locale).release_value_but_fixme_should_propagate_errors();
+    auto language = TRY(parse_unicode_language_id(locale));
     if (!language.has_value())
         return return_default_values();
 
     if (!language->region.has_value())
-        language = add_likely_subtags(*language).release_value_but_fixme_should_propagate_errors();
+        language = TRY(add_likely_subtags(*language));
     if (!language.has_value() || !language->region.has_value())
         return return_default_values();
 
@@ -125,48 +125,48 @@ static auto find_regional_values_for_locale(StringView locale, GetRegionalValues
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
-Vector<HourCycle> get_locale_hour_cycles(StringView locale)
+ErrorOr<Vector<HourCycle>> get_locale_hour_cycles(StringView locale)
 {
-    return find_regional_values_for_locale(locale, get_regional_hour_cycles);
+    return find_regional_values_for_locale<Vector<HourCycle>>(locale, get_regional_hour_cycles);
 }
 
-Optional<HourCycle> get_default_regional_hour_cycle(StringView locale)
+ErrorOr<Optional<HourCycle>> get_default_regional_hour_cycle(StringView locale)
 {
-    if (auto hour_cycles = get_locale_hour_cycles(locale); !hour_cycles.is_empty())
+    if (auto hour_cycles = TRY(get_locale_hour_cycles(locale)); !hour_cycles.is_empty())
         return hour_cycles.first();
-    return {};
+    return OptionalNone {};
 }
 
 Optional<MinimumDaysRegion> __attribute__((weak)) minimum_days_region_from_string(StringView) { return {}; }
 Optional<u8> __attribute__((weak)) get_regional_minimum_days(StringView) { return {}; }
 
-Optional<u8> get_locale_minimum_days(StringView locale)
+ErrorOr<Optional<u8>> get_locale_minimum_days(StringView locale)
 {
-    return find_regional_values_for_locale(locale, get_regional_minimum_days);
+    return find_regional_values_for_locale<Optional<u8>>(locale, get_regional_minimum_days);
 }
 
 Optional<FirstDayRegion> __attribute__((weak)) first_day_region_from_string(StringView) { return {}; }
 Optional<Weekday> __attribute__((weak)) get_regional_first_day(StringView) { return {}; }
 
-Optional<Weekday> get_locale_first_day(StringView locale)
+ErrorOr<Optional<Weekday>> get_locale_first_day(StringView locale)
 {
-    return find_regional_values_for_locale(locale, get_regional_first_day);
+    return find_regional_values_for_locale<Optional<Weekday>>(locale, get_regional_first_day);
 }
 
 Optional<WeekendStartRegion> __attribute__((weak)) weekend_start_region_from_string(StringView) { return {}; }
 Optional<Weekday> __attribute__((weak)) get_regional_weekend_start(StringView) { return {}; }
 
-Optional<Weekday> get_locale_weekend_start(StringView locale)
+ErrorOr<Optional<Weekday>> get_locale_weekend_start(StringView locale)
 {
-    return find_regional_values_for_locale(locale, get_regional_weekend_start);
+    return find_regional_values_for_locale<Optional<Weekday>>(locale, get_regional_weekend_start);
 }
 
 Optional<WeekendEndRegion> __attribute__((weak)) weekend_end_region_from_string(StringView) { return {}; }
 Optional<Weekday> __attribute__((weak)) get_regional_weekend_end(StringView) { return {}; }
 
-Optional<Weekday> get_locale_weekend_end(StringView locale)
+ErrorOr<Optional<Weekday>> get_locale_weekend_end(StringView locale)
 {
-    return find_regional_values_for_locale(locale, get_regional_weekend_end);
+    return find_regional_values_for_locale<Optional<Weekday>>(locale, get_regional_weekend_end);
 }
 
 ErrorOr<String> combine_skeletons(StringView first, StringView second)
@@ -232,11 +232,11 @@ ErrorOr<Vector<CalendarPattern>> __attribute__((weak)) get_calendar_available_fo
 ErrorOr<Optional<CalendarRangePattern>> __attribute__((weak)) get_calendar_default_range_format(StringView, StringView) { return OptionalNone {}; }
 ErrorOr<Vector<CalendarRangePattern>> __attribute__((weak)) get_calendar_range_formats(StringView, StringView, StringView) { return Vector<CalendarRangePattern> {}; }
 ErrorOr<Vector<CalendarRangePattern>> __attribute__((weak)) get_calendar_range12_formats(StringView, StringView, StringView) { return Vector<CalendarRangePattern> {}; }
-Optional<StringView> __attribute__((weak)) get_calendar_era_symbol(StringView, StringView, CalendarPatternStyle, Era) { return {}; }
-Optional<StringView> __attribute__((weak)) get_calendar_month_symbol(StringView, StringView, CalendarPatternStyle, Month) { return {}; }
-Optional<StringView> __attribute__((weak)) get_calendar_weekday_symbol(StringView, StringView, CalendarPatternStyle, Weekday) { return {}; }
-Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol(StringView, StringView, CalendarPatternStyle, DayPeriod) { return {}; }
-Optional<StringView> __attribute__((weak)) get_calendar_day_period_symbol_for_hour(StringView, StringView, CalendarPatternStyle, u8) { return {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_calendar_era_symbol(StringView, StringView, CalendarPatternStyle, Era) { return OptionalNone {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_calendar_month_symbol(StringView, StringView, CalendarPatternStyle, Month) { return OptionalNone {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_calendar_weekday_symbol(StringView, StringView, CalendarPatternStyle, Weekday) { return OptionalNone {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_calendar_day_period_symbol(StringView, StringView, CalendarPatternStyle, DayPeriod) { return OptionalNone {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_calendar_day_period_symbol_for_hour(StringView, StringView, CalendarPatternStyle, u8) { return OptionalNone {}; }
 
 Optional<StringView> __attribute__((weak)) get_time_zone_name(StringView, StringView, CalendarPatternStyle, TimeZone::InDST) { return {}; }
 Optional<TimeZoneFormat> __attribute__((weak)) get_time_zone_format(StringView) { return {}; }
@@ -247,7 +247,7 @@ static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, Cale
     if (!formats.has_value())
         return OptionalNone {};
 
-    auto number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
+    auto number_system = TRY(get_preferred_keyword_value_for_locale(locale, "nu"sv));
     if (!number_system.has_value())
         return OptionalNone {};
 

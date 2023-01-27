@@ -510,7 +510,7 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, ::Locale::Ca
     return {};
 }
 
-static Optional<StringView> resolve_day_period(StringView locale, StringView calendar, ::Locale::CalendarPatternStyle style, Span<PatternPartition const> pattern_parts, LocalTime local_time)
+static ThrowCompletionOr<Optional<StringView>> resolve_day_period(VM& vm, StringView locale, StringView calendar, ::Locale::CalendarPatternStyle style, Span<PatternPartition const> pattern_parts, LocalTime local_time)
 {
     // Use the "noon" day period if the locale has it, but only if the time is either exactly 12:00.00 or would be displayed as such.
     if (local_time.hour == 12) {
@@ -525,13 +525,13 @@ static Optional<StringView> resolve_day_period(StringView locale, StringView cal
         });
 
         if (it == pattern_parts.end()) {
-            auto noon_symbol = ::Locale::get_calendar_day_period_symbol(locale, calendar, style, ::Locale::DayPeriod::Noon);
+            auto noon_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_day_period_symbol(locale, calendar, style, ::Locale::DayPeriod::Noon));
             if (noon_symbol.has_value())
                 return *noon_symbol;
         }
     }
 
-    return ::Locale::get_calendar_day_period_symbol_for_hour(locale, calendar, style, local_time.hour);
+    return TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_day_period_symbol_for_hour(locale, calendar, style, local_time.hour));
 }
 
 // 11.5.6 FormatDateTimePattern ( dateTimeFormat, patternParts, x, rangeFormatOptions ), https://tc39.es/ecma402/#sec-formatdatetimepattern
@@ -638,7 +638,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             auto style = date_time_format.day_period();
 
             // ii. Let fv be a String value representing the day period of tm in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-            auto symbol = resolve_day_period(data_locale, date_time_format.calendar(), style, pattern_parts, local_time);
+            auto symbol = MUST_OR_THROW_OOM(resolve_day_period(vm, data_locale, date_time_format.calendar(), style, pattern_parts, local_time));
             if (symbol.has_value())
                 formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(*symbol));
 
@@ -738,11 +738,11 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 Optional<StringView> symbol;
 
                 if (part == "era"sv)
-                    symbol = ::Locale::get_calendar_era_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Era>(value));
+                    symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_era_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Era>(value)));
                 else if (part == "month"sv)
-                    symbol = ::Locale::get_calendar_month_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Month>(value - 1));
+                    symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_month_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Month>(value - 1)));
                 else if (part == "weekday"sv)
-                    symbol = ::Locale::get_calendar_weekday_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Weekday>(value));
+                    symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_weekday_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Weekday>(value)));
 
                 if (symbol.has_value())
                     formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(*symbol));
@@ -770,13 +770,13 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // ii. If v is greater than 11, then
             if (value > 11) {
                 // 1. Let fv be an implementation and locale dependent String value representing "post meridiem".
-                auto symbol = ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::PM);
+                auto symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::PM));
                 formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol.value_or("PM"sv)));
             }
             // iii. Else,
             else {
                 // 1. Let fv be an implementation and locale dependent String value representing "ante meridiem".
-                auto symbol = ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::AM);
+                auto symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::AM));
                 formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol.value_or("AM"sv)));
             }
 
@@ -805,7 +805,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
         // Non-standard, TR-35 requires the decimal separator before injected {fractionalSecondDigits} partitions
         // to adhere to the selected locale. This depends on other generated data, so it is deferred to here.
         else if (part == "decimal"sv) {
-            auto decimal_symbol = ::Locale::get_number_system_symbol(data_locale, date_time_format.numbering_system(), ::Locale::NumericSymbol::Decimal).value_or("."sv);
+            auto decimal_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(data_locale, date_time_format.numbering_system(), ::Locale::NumericSymbol::Decimal)).value_or("."sv);
             result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_symbol)) });
         }
 
@@ -892,29 +892,30 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
 }
 
 template<typename Callback>
-void for_each_range_pattern_field(LocalTime const& time1, LocalTime const& time2, Callback&& callback)
+ThrowCompletionOr<void> for_each_range_pattern_field(LocalTime const& time1, LocalTime const& time2, Callback&& callback)
 {
     // Table 4: Range pattern fields, https://tc39.es/ecma402/#table-datetimeformat-rangepatternfields
-    if (callback(static_cast<u8>(time1.era), static_cast<u8>(time2.era), ::Locale::CalendarRangePattern::Field::Era) == IterationDecision::Break)
-        return;
-    if (callback(time1.year, time2.year, ::Locale::CalendarRangePattern::Field::Year) == IterationDecision::Break)
-        return;
-    if (callback(time1.month, time2.month, ::Locale::CalendarRangePattern::Field::Month) == IterationDecision::Break)
-        return;
-    if (callback(time1.day, time2.day, ::Locale::CalendarRangePattern::Field::Day) == IterationDecision::Break)
-        return;
-    if (callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::AmPm) == IterationDecision::Break)
-        return;
-    if (callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::DayPeriod) == IterationDecision::Break)
-        return;
-    if (callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::Hour) == IterationDecision::Break)
-        return;
-    if (callback(time1.minute, time2.minute, ::Locale::CalendarRangePattern::Field::Minute) == IterationDecision::Break)
-        return;
-    if (callback(time1.second, time2.second, ::Locale::CalendarRangePattern::Field::Second) == IterationDecision::Break)
-        return;
-    if (callback(time1.millisecond, time2.millisecond, ::Locale::CalendarRangePattern::Field::FractionalSecondDigits) == IterationDecision::Break)
-        return;
+    if (TRY(callback(static_cast<u8>(time1.era), static_cast<u8>(time2.era), ::Locale::CalendarRangePattern::Field::Era)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.year, time2.year, ::Locale::CalendarRangePattern::Field::Year)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.month, time2.month, ::Locale::CalendarRangePattern::Field::Month)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.day, time2.day, ::Locale::CalendarRangePattern::Field::Day)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::AmPm)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::DayPeriod)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.hour, time2.hour, ::Locale::CalendarRangePattern::Field::Hour)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.minute, time2.minute, ::Locale::CalendarRangePattern::Field::Minute)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.second, time2.second, ::Locale::CalendarRangePattern::Field::Second)) == IterationDecision::Break)
+        return {};
+    if (TRY(callback(time1.millisecond, time2.millisecond, ::Locale::CalendarRangePattern::Field::FractionalSecondDigits)) == IterationDecision::Break)
+        return {};
+    return {};
 }
 
 template<typename Callback>
@@ -964,7 +965,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     bool pattern_contains_larger_date_field = false;
 
     // 11. While dateFieldsPracticallyEqual is true and patternContainsLargerDateField is false, repeat for each row of Table 4 in order, except the header row:
-    for_each_range_pattern_field(start_local_time, end_local_time, [&](auto start_value, auto end_value, auto field_name) {
+    TRY(for_each_range_pattern_field(start_local_time, end_local_time, [&](auto start_value, auto end_value, auto field_name) -> ThrowCompletionOr<IterationDecision> {
         // a. Let fieldName be the name given in the Range Pattern Field column of the row.
 
         // b. If rangePatterns has a field [[<fieldName>]], let rp be rangePatterns.[[<fieldName>]]; else let rp be undefined.
@@ -1003,10 +1004,10 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
             // iii. Else if fieldName is equal to [[DayPeriod]], then
             case ::Locale::CalendarRangePattern::Field::DayPeriod: {
                 // 1. Let v1 be a String value representing the day period of tm1; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-                auto start_period = ::Locale::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, start_value);
+                auto start_period = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, start_value));
 
                 // 2. Let v2 be a String value representing the day period of tm2; the String value depends upon the implementation and the effective locale of dateTimeFormat.
-                auto end_period = ::Locale::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, end_value);
+                auto end_period = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_day_period_symbol_for_hour(date_time_format.data_locale(), date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, end_value));
 
                 // 3. If v1 is not equal to v2, then
                 if (start_period != end_period) {
@@ -1066,7 +1067,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         if (date_fields_practically_equal && !pattern_contains_larger_date_field)
             return IterationDecision::Continue;
         return IterationDecision::Break;
-    });
+    }));
 
     // 12. If dateFieldsPracticallyEqual is true, then
     if (date_fields_practically_equal) {

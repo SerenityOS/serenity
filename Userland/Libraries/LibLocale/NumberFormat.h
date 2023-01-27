@@ -61,14 +61,14 @@ enum class NumericSymbol : u8 {
     TimeSeparator,
 };
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol);
-Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system);
+ErrorOr<Optional<StringView>> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol);
+ErrorOr<Optional<NumberGroupings>> get_number_system_groupings(StringView locale, StringView system);
 
 Optional<Span<u32 const>> get_digits_for_number_system(StringView system);
 ErrorOr<String> replace_digits_for_number_system(StringView system, StringView number);
 
-Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
-Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
+ErrorOr<Optional<NumberFormat>> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type);
+ErrorOr<Vector<NumberFormat>> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type);
 Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style);
 
 ErrorOr<Optional<String>> augment_currency_format_pattern(StringView currency_display, StringView base_pattern);

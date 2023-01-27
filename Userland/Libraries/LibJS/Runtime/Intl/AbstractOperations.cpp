@@ -433,7 +433,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
         // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
         //       alphabetically, so we get the locale's preferred value from LibUnicode.
         Optional<String> value;
-        if (auto preference = ::Locale::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
+        if (auto preference = TRY_OR_THROW_OOM(vm, ::Locale::get_preferred_keyword_value_for_locale(found_locale, key)); preference.has_value())
             value = TRY_OR_THROW_OOM(vm, String::from_utf8(*preference));
 
         // g. Let supportedExtensionAddition be "".

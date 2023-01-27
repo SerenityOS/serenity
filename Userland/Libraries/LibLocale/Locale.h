@@ -173,8 +173,8 @@ Optional<KeywordHours> keyword_hc_from_string(StringView hc);
 Optional<KeywordColCaseFirst> keyword_kf_from_string(StringView kf);
 Optional<KeywordColNumeric> keyword_kn_from_string(StringView kn);
 Optional<KeywordNumbers> keyword_nu_from_string(StringView nu);
-Vector<StringView> get_keywords_for_locale(StringView locale, StringView key);
-Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
+ErrorOr<Vector<StringView>> get_keywords_for_locale(StringView locale, StringView key);
+ErrorOr<Optional<StringView>> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
 ErrorOr<Optional<String>> format_locale_for_display(StringView locale, LocaleID locale_id);
