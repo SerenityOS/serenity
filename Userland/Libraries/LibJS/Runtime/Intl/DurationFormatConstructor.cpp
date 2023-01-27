@@ -99,7 +99,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
     duration_format->set_data_locale(move(result.data_locale));
 
     // 16. Let prevStyle be the empty String.
-    auto previous_style = DeprecatedString::empty();
+    String previous_style {};
 
     // 17. For each row of Table 1, except the header row, in table order, do
     for (auto const& duration_instances_component : duration_instances_components) {
@@ -110,7 +110,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DurationFormatConstructor::construct(Fun
         auto display_slot = duration_instances_component.set_display_slot;
 
         // c. Let unit be the Unit value.
-        auto unit = duration_instances_component.unit;
+        auto unit = TRY_OR_THROW_OOM(vm, String::from_utf8(duration_instances_component.unit));
 
         // d. Let valueList be the Values value.
         auto value_list = duration_instances_component.values;
