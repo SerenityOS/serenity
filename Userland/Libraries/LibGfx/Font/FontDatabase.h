@@ -62,8 +62,6 @@ private:
     FontDatabase();
     ~FontDatabase() = default;
 
-    void load_fonts();
-
     RefPtr<Typeface> get_or_create_typeface(DeprecatedString const& family, DeprecatedString const& variant);
 
     struct Private;

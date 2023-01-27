@@ -254,7 +254,6 @@ private:
     DDSImageDecoderPlugin(u8 const*, size_t);
 
     OwnPtr<DDSLoadingContext> m_context;
-    void dump_debug();
 };
 
 }
