@@ -97,7 +97,6 @@ private:
     {
     }
 
-    DecoderErrorOr<void> set_position(size_t position);
     DecoderErrorOr<void> seek_to_cue_point(CuePoint const& cue_point);
 
     RefPtr<Core::MappedFile> m_file;

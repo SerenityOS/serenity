@@ -45,7 +45,6 @@ private:
     DecoderErrorOr<void> create_video_frame(FrameContext const&);
 
     DecoderErrorOr<void> allocate_buffers(FrameContext const&);
-    Vector<Intermediate>& get_temp_buffer(u8 plane);
     Vector<u16>& get_output_buffer(u8 plane);
 
     /* (8.4) Probability Adaptation Process */
@@ -66,8 +65,6 @@ private:
     MotionVector select_motion_vector(u8 plane, BlockContext const&, ReferenceIndex, u32 block_index);
     // (8.5.2.2) Motion vector clamping process
     MotionVector clamp_motion_vector(u8 plane, BlockContext const&, u32 block_row, u32 block_column, MotionVector vector);
-    // (8.5.2.3) Motion vector scaling process
-    DecoderErrorOr<MotionVector> scale_motion_vector(u8 plane, ReferenceIndex, u32 x, u32 y, MotionVector vector);
     // From (8.5.1) Inter prediction process, steps 2-5
     DecoderErrorOr<void> predict_inter_block(u8 plane, BlockContext const&, ReferenceIndex, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer);
 
