@@ -27,6 +27,31 @@ struct PNG_IHDR {
 
 static_assert(AssertSize<PNG_IHDR, 13>());
 
+struct ChromaticitiesAndWhitepoint {
+    NetworkOrdered<u32> white_point_x;
+    NetworkOrdered<u32> white_point_y;
+    NetworkOrdered<u32> red_x;
+    NetworkOrdered<u32> red_y;
+    NetworkOrdered<u32> green_x;
+    NetworkOrdered<u32> green_y;
+    NetworkOrdered<u32> blue_x;
+    NetworkOrdered<u32> blue_y;
+};
+static_assert(AssertSize<ChromaticitiesAndWhitepoint, 32>());
+
+struct CodingIndependentCodePoints {
+    u8 color_primaries;
+    u8 transfer_function;
+    u8 matrix_coefficients;
+    u8 video_full_range_flag;
+};
+static_assert(AssertSize<CodingIndependentCodePoints, 4>());
+
+struct EmbeddedICCProfile {
+    StringView profile_name;
+    ReadonlyBytes compressed_data;
+};
+
 struct Scanline {
     PNG::FilterType filter;
     ReadonlyBytes data {};
@@ -67,6 +92,13 @@ enum PngInterlaceMethod {
     Adam7 = 1
 };
 
+enum RenderingIntent {
+    Perceptual = 0,
+    RelativeColorimetric = 1,
+    Saturation = 2,
+    AbsoluteColorimetric = 3,
+};
+
 struct PNGLoadingContext {
     enum State {
         NotDecoded = 0,
@@ -96,6 +128,12 @@ struct PNGLoadingContext {
     Vector<u8> compressed_data;
     Vector<PaletteEntry> palette_data;
     Vector<u8> palette_transparency_data;
+
+    Optional<ChromaticitiesAndWhitepoint> chromaticities_and_whitepoint;
+    Optional<CodingIndependentCodePoints> coding_independent_code_points;
+    Optional<u32> gamma;
+    Optional<EmbeddedICCProfile> embedded_icc_profile;
+    Optional<RenderingIntent> sRGB_rendering_intent;
 
     Checked<int> compute_row_size_for_width(int width)
     {
@@ -841,6 +879,73 @@ static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
     return true;
 }
 
+static bool process_cHRM(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11cHRM
+    if (data.size() != 32)
+        return false;
+    context.chromaticities_and_whitepoint = *bit_cast<ChromaticitiesAndWhitepoint* const>(data.data());
+    return true;
+}
+
+static bool process_cICP(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#cICP-chunk
+    if (data.size() != 4)
+        return false;
+    context.coding_independent_code_points = *bit_cast<CodingIndependentCodePoints* const>(data.data());
+    return true;
+}
+
+static bool process_iCCP(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11iCCP
+    size_t profile_name_length_max = min(80u, data.size());
+    size_t profile_name_length = strnlen((char const*)data.data(), profile_name_length_max);
+    if (profile_name_length == 0 || profile_name_length == profile_name_length_max)
+        return false;
+
+    if (data.size() < profile_name_length + 2)
+        return false;
+
+    u8 compression_method = data[profile_name_length + 1];
+    if (compression_method != 0)
+        return false;
+
+    context.embedded_icc_profile = EmbeddedICCProfile { { data.data(), profile_name_length }, data.slice(profile_name_length + 2) };
+
+    return true;
+}
+
+static bool process_gAMA(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11gAMA
+    if (data.size() != 4)
+        return false;
+
+    u32 gamma = *bit_cast<NetworkOrdered<u32> const*>(data.data());
+    if (gamma & 0x8000'0000)
+        return false;
+    context.gamma = gamma;
+
+    return true;
+}
+
+static bool process_sRGB(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#srgb-standard-colour-space
+    if (data.size() != 1)
+        return false;
+
+    u8 rendering_intent = data[0];
+    if (rendering_intent > 3)
+        return false;
+
+    context.sRGB_rendering_intent = (RenderingIntent)rendering_intent;
+
+    return true;
+}
+
 static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
@@ -872,6 +977,16 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         return process_IDAT(chunk_data, context);
     if (!strcmp((char const*)chunk_type, "PLTE"))
         return process_PLTE(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "cHRM"))
+        return process_cHRM(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "cICP"))
+        return process_cICP(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "iCCP"))
+        return process_iCCP(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "gAMA"))
+        return process_gAMA(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "sRGB"))
+        return process_sRGB(chunk_data, context);
     if (!strcmp((char const*)chunk_type, "tRNS"))
         return process_tRNS(chunk_data, context);
     return true;
