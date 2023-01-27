@@ -29,6 +29,8 @@ set(SOURCES
     GradientPainting.cpp
     GIFLoader.cpp
     ICC/Profile.cpp
+    ICC/Tags.cpp
+    ICC/TagTypes.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
     JPGLoader.cpp
