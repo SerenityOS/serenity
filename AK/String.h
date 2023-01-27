@@ -14,6 +14,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
@@ -183,6 +184,14 @@ public:
     {
         VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_parameters { parameters... };
         return vformatted(fmtstr.view(), variadic_format_parameters);
+    }
+
+    template<class SeparatorType, class CollectionType>
+    static ErrorOr<String> join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
+    {
+        StringBuilder builder;
+        TRY(builder.try_join(separator, collection, fmtstr));
+        return builder.to_string();
     }
 
     // NOTE: This is primarily interesting to unit tests.
