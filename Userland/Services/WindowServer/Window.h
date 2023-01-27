@@ -254,7 +254,6 @@ public:
     Gfx::Bitmap* last_backing_store() { return m_last_backing_store.ptr(); }
     i32 last_backing_store_serial() const { return m_last_backing_store_serial; }
 
-    void set_global_cursor_tracking_enabled(bool);
     void set_automatic_cursor_tracking_enabled(bool enabled) { m_automatic_cursor_tracking_enabled = enabled; }
     bool is_automatic_cursor_tracking() const { return m_automatic_cursor_tracking_enabled; }
 
@@ -387,7 +386,6 @@ private:
     void add_child_window(Window&);
     void ensure_window_menu();
     void update_window_menu_items();
-    void modal_unparented();
     ErrorOr<Optional<DeprecatedString>> compute_title_username(ConnectionFromClient* client);
 
     ConnectionFromClient* m_client { nullptr };
