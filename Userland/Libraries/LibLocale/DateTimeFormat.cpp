@@ -17,11 +17,11 @@ HourCycle hour_cycle_from_string(StringView hour_cycle)
 {
     if (hour_cycle == "h11"sv)
         return HourCycle::H11;
-    else if (hour_cycle == "h12"sv)
+    if (hour_cycle == "h12"sv)
         return HourCycle::H12;
-    else if (hour_cycle == "h23"sv)
+    if (hour_cycle == "h23"sv)
         return HourCycle::H23;
-    else if (hour_cycle == "h24"sv)
+    if (hour_cycle == "h24"sv)
         return HourCycle::H24;
     VERIFY_NOT_REACHED();
 }
