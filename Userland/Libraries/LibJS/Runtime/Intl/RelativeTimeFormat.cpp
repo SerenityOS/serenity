@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -222,22 +223,22 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, Stri
 }
 
 // 17.5.4 FormatRelativeTime ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTime
-ThrowCompletionOr<DeprecatedString> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<String> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
     // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
     auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));
 
     // 2. Let result be an empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 3. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
     for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(move(part.value));
+        MUST_OR_THROW_OOM(result.append(part.value));
     }
 
     // 4. Return result.
-    return result.to_deprecated_string();
+    return result.to_string();
 }
 
 // 17.5.5 FormatRelativeTimeToParts ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts
