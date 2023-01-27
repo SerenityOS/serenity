@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/Intl/NumberFormat.h>
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/Utf16String.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/NumberFormat.h>
@@ -153,13 +154,13 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
 }
 
 // 11.5.2 DateTimeStyleFormat ( dateStyle, timeStyle, styles ), https://tc39.es/ecma402/#sec-date-time-style-format
-Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format)
+ThrowCompletionOr<Optional<::Locale::CalendarPattern>> date_time_style_format(VM& vm, StringView data_locale, DateTimeFormat& date_time_format)
 {
     ::Locale::CalendarPattern time_format {};
     ::Locale::CalendarPattern date_format {};
 
-    auto get_pattern = [&](auto type, auto style) -> Optional<::Locale::CalendarPattern> {
-        auto formats = ::Locale::get_calendar_format(data_locale, date_time_format.calendar(), type);
+    auto get_pattern = [&](auto type, auto style) -> ThrowCompletionOr<Optional<::Locale::CalendarPattern>> {
+        auto formats = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_format(data_locale, date_time_format.calendar(), type));
 
         if (formats.has_value()) {
             switch (style) {
@@ -174,16 +175,16 @@ Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_local
             }
         }
 
-        return {};
+        return OptionalNone {};
     };
 
     // 1. If timeStyle is not undefined, then
     if (date_time_format.has_time_style()) {
         // a. Assert: timeStyle is one of "full", "long", "medium", or "short".
         // b. Let timeFormat be styles.[[TimeFormat]].[[<timeStyle>]].
-        auto pattern = get_pattern(::Locale::CalendarFormatType::Time, date_time_format.time_style());
+        auto pattern = MUST_OR_THROW_OOM(get_pattern(::Locale::CalendarFormatType::Time, date_time_format.time_style()));
         if (!pattern.has_value())
-            return {};
+            return OptionalNone {};
 
         time_format = pattern.release_value();
     }
@@ -192,9 +193,9 @@ Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_local
     if (date_time_format.has_date_style()) {
         // a. Assert: dateStyle is one of "full", "long", "medium", or "short".
         // b. Let dateFormat be styles.[[DateFormat]].[[<dateStyle>]].
-        auto pattern = get_pattern(::Locale::CalendarFormatType::Date, date_time_format.date_style());
+        auto pattern = MUST_OR_THROW_OOM(get_pattern(::Locale::CalendarFormatType::Date, date_time_format.date_style()));
         if (!pattern.has_value())
-            return {};
+            return OptionalNone {};
 
         date_format = pattern.release_value();
     }
@@ -216,12 +217,13 @@ Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_local
         });
 
         // d. Let connector be styles.[[DateTimeFormat]].[[<dateStyle>]].
-        auto connector = get_pattern(::Locale::CalendarFormatType::DateTime, date_time_format.date_style());
+        auto connector = MUST_OR_THROW_OOM(get_pattern(::Locale::CalendarFormatType::DateTime, date_time_format.date_style()));
         if (!connector.has_value())
-            return {};
+            return OptionalNone {};
 
         // e. Let pattern be the string connector with the substring "{0}" replaced with timeFormat.[[pattern]] and the substring "{1}" replaced with dateFormat.[[pattern]].
-        auto pattern = connector->pattern.replace("{0}"sv, time_format.pattern, ReplaceMode::FirstOnly).replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly);
+        auto pattern = TRY_OR_THROW_OOM(vm, connector->pattern.replace("{0}"sv, time_format.pattern, ReplaceMode::FirstOnly));
+        pattern = TRY_OR_THROW_OOM(vm, pattern.replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly));
 
         // f. Set format.[[pattern]] to pattern.
         format.pattern = move(pattern);
@@ -229,7 +231,8 @@ Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_local
         // g. If timeFormat has a [[pattern12]] field, then
         if (time_format.pattern12.has_value()) {
             // i. Let pattern12 be the string connector with the substring "{0}" replaced with timeFormat.[[pattern12]] and the substring "{1}" replaced with dateFormat.[[pattern]].
-            auto pattern12 = connector->pattern.replace("{0}"sv, *time_format.pattern12, ReplaceMode::FirstOnly).replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly);
+            auto pattern12 = TRY_OR_THROW_OOM(vm, connector->pattern.replace("{0}"sv, *time_format.pattern12, ReplaceMode::FirstOnly));
+            pattern12 = TRY_OR_THROW_OOM(vm, pattern12.replace("{1}"sv, date_format.pattern, ReplaceMode::FirstOnly));
 
             // ii. Set format.[[pattern12]] to pattern12.
             format.pattern12 = move(pattern12);
@@ -238,7 +241,7 @@ Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_local
         // NOTE: Our implementation of steps h-j differ from the spec. LibUnicode does not attach range patterns to the
         //       format pattern; rather, lookups for range patterns are performed separately based on the format pattern's
         //       skeleton. So we form a new skeleton here and defer the range pattern lookups.
-        format.skeleton = ::Locale::combine_skeletons(date_format.skeleton, time_format.skeleton);
+        format.skeleton = TRY_OR_THROW_OOM(vm, ::Locale::combine_skeletons(date_format.skeleton, time_format.skeleton));
 
         // k. Return format.
         return format;
@@ -629,7 +632,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
 
         // d. Else if p is equal to "dayPeriod", then
         else if (part == "dayPeriod"sv) {
-            DeprecatedString formatted_value;
+            String formatted_value;
 
             // i. Let f be the value of dateTimeFormat's internal slot whose name is the Internal Slot column of the matching row.
             auto style = date_time_format.day_period();
@@ -637,10 +640,10 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // ii. Let fv be a String value representing the day period of tm in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
             auto symbol = resolve_day_period(data_locale, date_time_format.calendar(), style, pattern_parts, local_time);
             if (symbol.has_value())
-                formatted_value = *symbol;
+                formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(*symbol));
 
             // iii. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ "dayPeriod"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_value)) });
+            result.append({ "dayPeriod"sv, move(formatted_value) });
         }
 
         // e. Else if p is equal to "timeZoneName", then
@@ -654,15 +657,15 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // iii. Let fv be a String value representing v in the form given by f; the String value depends upon the implementation and the effective locale of dateTimeFormat.
             //      The String value may also depend on the value of the [[InDST]] field of tm if f is "short", "long", "shortOffset", or "longOffset".
             //      If the implementation does not have a localized representation of f, then use the String value of v itself.
-            auto formatted_value = ::Locale::format_time_zone(data_locale, value, style, local_time.time_since_epoch());
+            auto formatted_value = TRY_OR_THROW_OOM(vm, ::Locale::format_time_zone(data_locale, value, style, local_time.time_since_epoch()));
 
             // iv. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ "timeZoneName"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_value)) });
+            result.append({ "timeZoneName"sv, move(formatted_value) });
         }
 
         // f. Else if p matches a Property column of the row in Table 6, then
         else if (auto style_and_value = find_calendar_field(part, date_time_format, range_format_options, local_time); style_and_value.has_value()) {
-            DeprecatedString formatted_value;
+            String formatted_value;
 
             // i. If rangeFormatOptions is not undefined, let f be the value of rangeFormatOptions's field whose name matches p.
             // ii. Else, let f be the value of dateTimeFormat's internal slot whose name is the Internal Slot column of the matching row.
@@ -705,20 +708,20 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             // viii. If f is "numeric", then
             case ::Locale::CalendarPatternStyle::Numeric:
                 // 1. Let fv be FormatNumeric(nf, v).
-                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, Value(value))).to_deprecated_string();
+                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, Value(value)));
                 break;
 
             // ix. Else if f is "2-digit", then
             case ::Locale::CalendarPatternStyle::TwoDigit:
                 // 1. Let fv be FormatNumeric(nf2, v).
-                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format2, Value(value))).to_deprecated_string();
+                formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format2, Value(value)));
 
                 // 2. If the "length" property of fv is greater than 2, let fv be the substring of fv containing the last two characters.
                 // NOTE: The first length check here isn't enough, but lets us avoid UTF-16 transcoding when the formatted value is ASCII.
-                if (formatted_value.length() > 2) {
+                if (formatted_value.bytes_as_string_view().length() > 2) {
                     auto utf16_formatted_value = TRY(Utf16String::create(vm, formatted_value));
                     if (utf16_formatted_value.length_in_code_units() > 2)
-                        formatted_value = TRY_OR_THROW_OOM(vm, utf16_formatted_value.substring_view(utf16_formatted_value.length_in_code_units() - 2).to_deprecated_string());
+                        formatted_value = TRY_OR_THROW_OOM(vm, utf16_formatted_value.substring_view(utf16_formatted_value.length_in_code_units() - 2).to_utf8());
                 }
 
                 break;
@@ -741,7 +744,11 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 else if (part == "weekday"sv)
                     symbol = ::Locale::get_calendar_weekday_symbol(data_locale, date_time_format.calendar(), style, static_cast<::Locale::Weekday>(value));
 
-                formatted_value = symbol.value_or(DeprecatedString::number(value));
+                if (symbol.has_value())
+                    formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(*symbol));
+                else
+                    formatted_value = TRY_OR_THROW_OOM(vm, String::number(value));
+
                 break;
             }
 
@@ -750,12 +757,12 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             }
 
             // xi. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ style_and_value->name, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_value)) });
+            result.append({ style_and_value->name, move(formatted_value) });
         }
 
         // g. Else if p is equal to "ampm", then
         else if (part == "ampm"sv) {
-            DeprecatedString formatted_value;
+            String formatted_value;
 
             // i. Let v be tm.[[Hour]].
             auto value = local_time.hour;
@@ -764,17 +771,17 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             if (value > 11) {
                 // 1. Let fv be an implementation and locale dependent String value representing "post meridiem".
                 auto symbol = ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::PM);
-                formatted_value = symbol.value_or("PM"sv);
+                formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol.value_or("PM"sv)));
             }
             // iii. Else,
             else {
                 // 1. Let fv be an implementation and locale dependent String value representing "ante meridiem".
                 auto symbol = ::Locale::get_calendar_day_period_symbol(data_locale, date_time_format.calendar(), ::Locale::CalendarPatternStyle::Short, ::Locale::DayPeriod::AM);
-                formatted_value = symbol.value_or("AM"sv);
+                formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol.value_or("AM"sv)));
             }
 
             // iv. Append a new Record { [[Type]]: "dayPeriod", [[Value]]: fv } as the last element of the list result.
-            result.append({ "dayPeriod"sv, TRY_OR_THROW_OOM(vm, String::from_deprecated_string(formatted_value)) });
+            result.append({ "dayPeriod"sv, move(formatted_value) });
         }
 
         // h. Else if p is equal to "relatedYear", then
@@ -830,22 +837,22 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM& vm, 
 }
 
 // 11.5.8 FormatDateTime ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetime
-ThrowCompletionOr<DeprecatedString> format_date_time(VM& vm, DateTimeFormat& date_time_format, double time)
+ThrowCompletionOr<String> format_date_time(VM& vm, DateTimeFormat& date_time_format, double time)
 {
     // 1. Let parts be ? PartitionDateTimePattern(dateTimeFormat, x).
     auto parts = TRY(partition_date_time_pattern(vm, date_time_format, time));
 
     // 2. Let result be the empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 3. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(move(part.value));
+        TRY(result.append(part.value));
     }
 
     // 4. Return result.
-    return result.build();
+    return result.to_string();
 }
 
 // 11.5.9 FormatDateTimeToParts ( dateTimeFormat, x ), https://tc39.es/ecma402/#sec-formatdatetimetoparts
@@ -1089,7 +1096,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
     // 14. If rangePattern is undefined, then
     if (!range_pattern.has_value()) {
         // a. Let rangePattern be rangePatterns.[[Default]].
-        range_pattern = ::Locale::get_calendar_default_range_format(date_time_format.data_locale(), date_time_format.calendar());
+        range_pattern = TRY_OR_THROW_OOM(vm, ::Locale::get_calendar_default_range_format(date_time_format.data_locale(), date_time_format.calendar()));
 
         // Non-standard, range_pattern will be empty if Unicode data generation is disabled.
         if (!range_pattern.has_value())
@@ -1100,11 +1107,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         auto const& pattern = date_time_format.pattern();
 
         if (range_pattern->start_range.contains("{0}"sv)) {
-            range_pattern->start_range = range_pattern->start_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly);
-            range_pattern->end_range = range_pattern->end_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly);
+            range_pattern->start_range = TRY_OR_THROW_OOM(vm, range_pattern->start_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly));
+            range_pattern->end_range = TRY_OR_THROW_OOM(vm, range_pattern->end_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly));
         } else {
-            range_pattern->start_range = range_pattern->start_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly);
-            range_pattern->end_range = range_pattern->end_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly);
+            range_pattern->start_range = TRY_OR_THROW_OOM(vm, range_pattern->start_range.replace("{1}"sv, pattern, ReplaceMode::FirstOnly));
+            range_pattern->end_range = TRY_OR_THROW_OOM(vm, range_pattern->end_range.replace("{0}"sv, pattern, ReplaceMode::FirstOnly));
         }
 
         // FIXME: The above is not sufficient. For example, if the start date is days before the end date, and only the timeStyle
@@ -1146,22 +1153,22 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 }
 
 // 11.5.11 FormatDateTimeRange ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerange
-ThrowCompletionOr<DeprecatedString> format_date_time_range(VM& vm, DateTimeFormat& date_time_format, double start, double end)
+ThrowCompletionOr<String> format_date_time_range(VM& vm, DateTimeFormat& date_time_format, double start, double end)
 {
     // 1. Let parts be ? PartitionDateTimeRangePattern(dateTimeFormat, x, y).
     auto parts = TRY(partition_date_time_range_pattern(vm, date_time_format, start, end));
 
     // 2. Let result be the empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 3. For each Record { [[Type]], [[Value]], [[Source]] } part in parts, do
     for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(move(part.value));
+        TRY(result.append(part.value));
     }
 
     // 4. Return result.
-    return result.build();
+    return result.to_string();
 }
 
 // 11.5.12 FormatDateTimeRangeToParts ( dateTimeFormat, x, y ), https://tc39.es/ecma402/#sec-formatdatetimerangetoparts

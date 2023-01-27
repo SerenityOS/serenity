@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
@@ -62,8 +61,8 @@ public:
     void set_hour_cycle(::Locale::HourCycle hour_cycle) { m_hour_cycle = hour_cycle; }
     void clear_hour_cycle() { m_hour_cycle.clear(); }
 
-    DeprecatedString const& time_zone() const { return m_time_zone; }
-    void set_time_zone(DeprecatedString time_zone) { m_time_zone = move(time_zone); }
+    String const& time_zone() const { return m_time_zone; }
+    void set_time_zone(String time_zone) { m_time_zone = move(time_zone); }
 
     bool has_date_style() const { return m_date_style.has_value(); }
     Style date_style() const { return *m_date_style; };
@@ -75,8 +74,8 @@ public:
     StringView time_style_string() const { return style_to_string(*m_time_style); };
     void set_time_style(StringView style) { m_time_style = style_from_string(style); };
 
-    DeprecatedString const& pattern() const { return Patterns::pattern; };
-    void set_pattern(DeprecatedString pattern) { Patterns::pattern = move(pattern); }
+    String const& pattern() const { return Patterns::pattern; };
+    void set_pattern(String pattern) { Patterns::pattern = move(pattern); }
 
     Span<::Locale::CalendarRangePattern const> range_patterns() const { return m_range_patterns.span(); };
     void set_range_patterns(Vector<::Locale::CalendarRangePattern> range_patterns) { m_range_patterns = move(range_patterns); }
@@ -139,7 +138,7 @@ private:
     String m_calendar;                                       // [[Calendar]]
     String m_numbering_system;                               // [[NumberingSystem]]
     Optional<::Locale::HourCycle> m_hour_cycle;              // [[HourCycle]]
-    DeprecatedString m_time_zone;                            // [[TimeZone]]
+    String m_time_zone;                                      // [[TimeZone]]
     Optional<Style> m_date_style;                            // [[DateStyle]]
     Optional<Style> m_time_style;                            // [[TimeStyle]]
     Vector<::Locale::CalendarRangePattern> m_range_patterns; // [[RangePatterns]]
@@ -182,15 +181,15 @@ struct LocalTime {
 };
 
 ThrowCompletionOr<Object*> to_date_time_options(VM&, Value options_value, OptionRequired, OptionDefaults);
-Optional<::Locale::CalendarPattern> date_time_style_format(StringView data_locale, DateTimeFormat& date_time_format);
+ThrowCompletionOr<Optional<::Locale::CalendarPattern>> date_time_style_format(VM&, StringView data_locale, DateTimeFormat& date_time_format);
 Optional<::Locale::CalendarPattern> basic_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
 Optional<::Locale::CalendarPattern> best_fit_format_matcher(::Locale::CalendarPattern const& options, Vector<::Locale::CalendarPattern> formats);
 ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM&, DateTimeFormat&, Vector<PatternPartition> pattern_parts, double time, ::Locale::CalendarPattern const* range_format_options);
 ThrowCompletionOr<Vector<PatternPartition>> partition_date_time_pattern(VM&, DateTimeFormat&, double time);
-ThrowCompletionOr<DeprecatedString> format_date_time(VM&, DateTimeFormat&, double time);
+ThrowCompletionOr<String> format_date_time(VM&, DateTimeFormat&, double time);
 ThrowCompletionOr<Array*> format_date_time_to_parts(VM&, DateTimeFormat&, double time);
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_pattern(VM&, DateTimeFormat&, double start, double end);
-ThrowCompletionOr<DeprecatedString> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
+ThrowCompletionOr<String> format_date_time_range(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM&, DateTimeFormat&, double start, double end);
 ThrowCompletionOr<LocalTime> to_local_time(VM&, Crypto::SignedBigInteger const& epoch_ns, StringView calendar, StringView time_zone);
 
