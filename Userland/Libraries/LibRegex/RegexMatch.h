@@ -8,6 +8,7 @@
 
 #include "Forward.h"
 #include "RegexOptions.h"
+#include <AK/Error.h>
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
@@ -159,6 +160,11 @@ public:
 
     RegexStringView(DeprecatedString const& string)
         : m_view(string.view())
+    {
+    }
+
+    RegexStringView(String const& string)
+        : m_view(string.bytes_as_string_view())
     {
     }
 
@@ -391,6 +397,19 @@ public:
                 for (auto it = view.begin(); it != view.end(); ++it)
                     builder.append_code_point(*it);
                 return builder.to_deprecated_string();
+            });
+    }
+
+    ErrorOr<String> to_string() const
+    {
+        return m_view.visit(
+            [](StringView view) { return String::from_utf8(view); },
+            [](Utf16View view) { return view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes); },
+            [](auto& view) -> ErrorOr<String> {
+                StringBuilder builder;
+                for (auto it = view.begin(); it != view.end(); ++it)
+                    TRY(builder.try_append_code_point(*it));
+                return builder.to_string();
             });
     }
 
