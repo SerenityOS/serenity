@@ -8,6 +8,7 @@
 #include <AK/Checked.h>
 #include <AK/FlyString.h>
 #include <AK/Format.h>
+#include <AK/MemMem.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -325,6 +326,21 @@ Optional<size_t> String::find_byte_offset(u32 code_point, size_t from_byte_offse
             return code_points.byte_offset_of(it);
     }
 
+    return {};
+}
+
+Optional<size_t> String::find_byte_offset(StringView substring, size_t from_byte_offset) const
+{
+    auto view = bytes_as_string_view();
+    if (from_byte_offset >= view.length())
+        return {};
+
+    auto index = memmem_optional(
+        view.characters_without_null_termination() + from_byte_offset, view.length() - from_byte_offset,
+        substring.characters_without_null_termination(), substring.length());
+
+    if (index.has_value())
+        return *index + from_byte_offset;
     return {};
 }
 

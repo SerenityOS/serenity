@@ -320,8 +320,11 @@ TEST_CASE(find_byte_offset)
 {
     {
         String string {};
-        auto index = string.find_byte_offset(0);
-        EXPECT(!index.has_value());
+        auto index1 = string.find_byte_offset(0);
+        EXPECT(!index1.has_value());
+
+        auto index2 = string.find_byte_offset(""sv);
+        EXPECT(!index2.has_value());
     }
     {
         auto string = MUST(String::from_utf8("foo"sv));
@@ -336,6 +339,21 @@ TEST_CASE(find_byte_offset)
         EXPECT_EQ(index3, 2u);
 
         auto index4 = string.find_byte_offset('b');
+        EXPECT(!index4.has_value());
+    }
+    {
+        auto string = MUST(String::from_utf8("foo"sv));
+
+        auto index1 = string.find_byte_offset("fo"sv);
+        EXPECT_EQ(index1, 0u);
+
+        auto index2 = string.find_byte_offset("oo"sv);
+        EXPECT_EQ(index2, 1u);
+
+        auto index3 = string.find_byte_offset("o"sv, *index2 + 1);
+        EXPECT_EQ(index3, 2u);
+
+        auto index4 = string.find_byte_offset("fooo"sv);
         EXPECT(!index4.has_value());
     }
     {
@@ -354,6 +372,24 @@ TEST_CASE(find_byte_offset)
         EXPECT_EQ(index4, 6u);
 
         auto index5 = string.find_byte_offset(0x03C9U, 6);
+        EXPECT_EQ(index5, 8u);
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto index1 = string.find_byte_offset("ω"sv);
+        EXPECT_EQ(index1, 0u);
+
+        auto index2 = string.find_byte_offset("Σ"sv);
+        EXPECT_EQ(index2, 2u);
+
+        auto index3 = string.find_byte_offset("ω"sv, 2);
+        EXPECT_EQ(index3, 4u);
+
+        auto index4 = string.find_byte_offset("Σ"sv, 4);
+        EXPECT_EQ(index4, 6u);
+
+        auto index5 = string.find_byte_offset("ω"sv, 6);
         EXPECT_EQ(index5, 8u);
     }
 }
