@@ -265,23 +265,23 @@ static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, Cale
     offset_seconds %= 60;
 
     StringBuilder builder;
-    builder.append(sign);
+    TRY(builder.try_append(sign));
 
     switch (style) {
     // The long format always uses 2-digit hours field and minutes field, with optional 2-digit seconds field.
     case CalendarPatternStyle::LongOffset:
-        builder.appendff("{:02}{}{:02}", offset_hours, separator, offset_minutes);
+        TRY(builder.try_appendff("{:02}{}{:02}", offset_hours, separator, offset_minutes));
         if (offset_seconds > 0)
-            builder.appendff("{}{:02}", separator, offset_seconds);
+            TRY(builder.try_appendff("{}{:02}", separator, offset_seconds));
         break;
 
     // The short format is intended for the shortest representation and uses hour fields without leading zero, with optional 2-digit minutes and seconds fields.
     case CalendarPatternStyle::ShortOffset:
-        builder.appendff("{}", offset_hours);
+        TRY(builder.try_appendff("{}", offset_hours));
         if (offset_minutes > 0) {
-            builder.appendff("{}{:02}", separator, offset_minutes);
+            TRY(builder.try_appendff("{}{:02}", separator, offset_minutes));
             if (offset_seconds > 0)
-                builder.appendff("{}{:02}", separator, offset_seconds);
+                TRY(builder.try_appendff("{}{:02}", separator, offset_seconds));
         }
         break;
 
@@ -290,7 +290,7 @@ static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, Cale
     }
 
     // The digits used for hours, minutes and seconds fields in this format are the locale's default decimal digits.
-    auto result = TRY(replace_digits_for_number_system(*number_system, builder.to_deprecated_string()));
+    auto result = TRY(replace_digits_for_number_system(*number_system, TRY(builder.to_string())));
     return TRY(String::from_utf8(formats->gmt_format)).replace("{0}"sv, result, ReplaceMode::FirstOnly);
 }
 
