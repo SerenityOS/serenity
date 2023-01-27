@@ -63,8 +63,9 @@ public:
 
 #ifndef KERNEL
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
-    ErrorOr<String> to_string() const;
 #endif
+
+    ErrorOr<String> to_string() const;
 
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
 
