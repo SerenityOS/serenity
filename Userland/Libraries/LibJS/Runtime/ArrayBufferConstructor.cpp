@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,6 +40,8 @@ void ArrayBufferConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.ArrayBuffer);
 }
 
@@ -47,6 +49,8 @@ ThrowCompletionOr<Value> ArrayBufferConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+
+    // 2. Let byteLength be ? ToIndex(length).
     auto byte_length_or_error = vm.argument(0).to_index(vm);
 
     if (byte_length_or_error.is_error()) {
@@ -57,6 +61,8 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(Functi
         }
         return error;
     }
+
+    // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
     return *TRY(allocate_array_buffer(vm, new_target, byte_length_or_error.release_value()));
 }
 
@@ -64,18 +70,25 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ArrayBufferConstructor::construct(Functi
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
 {
     auto arg = vm.argument(0);
+
+    // 1. If arg is not an Object, return false.
     if (!arg.is_object())
         return Value(false);
+
+    // 2. If arg has a [[ViewedArrayBuffer]] internal slot, return true.
     if (arg.as_object().is_typed_array())
         return Value(true);
     if (is<DataView>(arg.as_object()))
         return Value(true);
+
+    // 3. Return false.
     return Value(false);
 }
 
 // 25.1.4.3 get ArrayBuffer [ @@species ], https://tc39.es/ecma262/#sec-get-arraybuffer-@@species
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::symbol_species_getter)
 {
+    // 1. Return the this value.
     return vm.this_value();
 }
 
