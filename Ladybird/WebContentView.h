@@ -94,6 +94,8 @@ public:
     void show_js_console();
     void show_inspector();
 
+    ErrorOr<String> dump_layout_tree();
+
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
 

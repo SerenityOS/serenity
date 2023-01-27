@@ -1055,3 +1055,8 @@ void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString c
 {
     dbgln("TODO: support accessibility tree in Ladybird");
 }
+
+ErrorOr<String> WebContentView::dump_layout_tree()
+{
+    return String::from_deprecated_string(client().dump_layout_tree());
+}
