@@ -42,8 +42,6 @@ class Classic : public SynthesizerProcessor {
 public:
     Classic(NonnullRefPtr<Transport>);
 
-    static Envelope compute_envelope(RollNote&);
-
     Waveform wave() const { return m_waveform.value(); }
 
 private:
@@ -57,7 +55,6 @@ private:
     double square_position(u32 sample_time, u8 note) const;
     double saw_position(u32 sample_time, u8 note) const;
     double noise_position(u32 sample_time, u8 note);
-    double get_random_from_seed(u64 note);
 
     ProcessorEnumParameter<Waveform> m_waveform;
     ProcessorRangeParameter m_attack;
