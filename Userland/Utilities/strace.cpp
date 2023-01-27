@@ -703,86 +703,505 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
 
     ResultType result_type { Int };
     switch (syscall_function) {
-    case SC_clock_gettime:
-        format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
+    case SC_emuctl:
+        // () → ENOSYS
         break;
-    case SC_close:
-        format_close(builder, (int)arg1);
+    case SC_yield:
+        // () → 0
         break;
-    case SC_connect:
-        format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
+    case SC_sync:
+        // () → 0
+        break;
+    case SC_beep:
+        // () → 0
+        break;
+    case SC_create_inode_watcher:
+        // (u32 flags) → (int fd)
+        break;
+    case SC_inode_watcher_add_watch:
+        // (Userspace<Syscall::SC_inode_watcher_add_watch_params const*> user_params) → (int wd)
+        break;
+    case SC_inode_watcher_remove_watch:
+        // (int fd, int wd) → 0
         break;
     case SC_dbgputstr:
+        // (Userspace<char const*> characters, size_t size) → (size_t string_length)
         format_dbgputstr(builder, (char*)arg1, (size_t)arg2);
         break;
-    case SC_exit:
-        format_exit(builder, (int)arg1);
-        result_type = Void;
+    case SC_dump_backtrace:
+        // () → 0
         break;
-    case SC_fstat:
-        format_fstat(builder, (int)arg1, (struct stat*)arg2);
-        result_type = Ssize;
+    case SC_gettid:
+        // () → (pid_t tid)
         break;
-    case SC_chdir:
-        format_chdir(builder, (char const*)arg1, (size_t)arg2);
-        result_type = Int;
+    case SC_setsid:
+        // () → (pid_t sid)
         break;
-    case SC_getrandom:
-        format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
+    case SC_getsid:
+        // (pid_t pid) → (pid_t sid)
         break;
-    case SC_ioctl:
-        format_ioctl(builder, (int)arg1, (unsigned)arg2, (void*)arg3);
+    case SC_setpgid:
+        // (pid_t pid, pid_t pgid) → 0
         break;
-    case SC_lseek:
-        format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
+    case SC_getpgrp:
+        // () → (pid_t pgid)
         break;
-    case SC_mmap:
-        TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
-        result_type = VoidP;
+    case SC_getpgid:
+        // (pid_t pid) → (pid_t pgid)
         break;
-    case SC_mprotect:
-        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
+    case SC_getuid:
+        // () → (uid_t uid)
         break;
-    case SC_munmap:
-        format_munmap(builder, (void*)arg1, (size_t)arg2);
+    case SC_getgid:
+        // () → (gid_t uid)
+        break;
+    case SC_geteuid:
+        // () → (uid_t euid)
+        break;
+    case SC_getegid:
+        // () → (gid_t egid)
+        break;
+    case SC_getpid:
+        // () → (pid_t pid)
+        break;
+    case SC_getppid:
+        // () → (pid_t pid)
+        break;
+    case SC_getresuid:
+        // (Userspace<UserID*> user_ruid, Userspace<UserID*> user_euid, Userspace<UserID*> user_suid) → 0
+        break;
+    case SC_getresgid:
+        // (Userspace<GroupID*> user_rgid, Userspace<GroupID*> user_egid, Userspace<GroupID*> user_sgid) → 0
+        break;
+    case SC_getrusage:
+        // (int who, Userspace<rusage*> user_usage) → 0
+        break;
+    case SC_umask:
+        // (mode_t mask) → (mode_t old_mask)
         break;
     case SC_open:
+        // (Userspace<Syscall::SC_open_params const*> user_params) → (int fd)
         TRY(format_open(builder, (Syscall::SC_open_params*)arg1));
         break;
-    case SC_poll:
-        TRY(format_poll(builder, (Syscall::SC_poll_params*)arg1));
+    case SC_close:
+        // (int fd) → 0
+        format_close(builder, (int)arg1);
         break;
     case SC_read:
+        // (int fd, Userspace<u8*> buffer, size_t size) → (size_t read_count)
         format_read(builder, (int)arg1, (void*)arg2, (size_t)arg3);
         result_type = Ssize;
         break;
-    case SC_realpath:
-        TRY(format_realpath(builder, (Syscall::SC_realpath_params*)arg1, (size_t)res));
+    case SC_pread:
+        // (int fd, Userspace<u8*> buffer, size_t size, Userspace<off_t const*> userspace_offset) → (size_t read_count)
         break;
-    case SC_recvmsg:
-        format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
-        result_type = Ssize;
-        break;
-    case SC_set_mmap_name:
-        TRY(format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1));
-        break;
-    case SC_socket:
-        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
-        break;
-    case SC_stat:
-        TRY(format_stat(builder, (Syscall::SC_stat_params*)arg1));
+    case SC_readv:
+        // (int fd, Userspace<const struct iovec*> iov, int iov_count) → (int read_count)
         break;
     case SC_write:
+        // (int fd, Userspace<u8 const*> data, size_t size) → (size_t write_count)
         format_write(builder, (int)arg1, (void*)arg2, (size_t)arg3);
         result_type = Ssize;
         break;
-    case SC_getuid:
-    case SC_geteuid:
-    case SC_getgid:
-    case SC_getegid:
-    case SC_getpid:
-    case SC_getppid:
-    case SC_gettid:
+    case SC_pwritev:
+        // (int fd, Userspace<const struct iovec*> iov, int iov_count, Userspace<off_t const*> userspace_offset) → (int write_count)
+        break;
+    case SC_fstat:
+        // (int fd, Userspace<stat*> user_statbuf) → 0
+        format_fstat(builder, (int)arg1, (struct stat*)arg2);
+        result_type = Ssize;
+        break;
+    case SC_stat:
+        // (Userspace<Syscall::SC_stat_params const*> user_params) → 0
+        TRY(format_stat(builder, (Syscall::SC_stat_params*)arg1));
+        break;
+    case SC_annotate_mapping:
+        // (Userspace<void*> address, int flags) → 0
+        break;
+    case SC_lseek:
+        // (int fd, Userspace<off_t*> userspace_offset, int whence) → 0
+        format_lseek(builder, (int)arg1, (off_t)arg2, (int)arg3);
+        break;
+    case SC_ftruncate:
+        // (int fd, Userspace<off_t const*> userspace_length) → 0
+        break;
+    case SC_posix_fallocate:
+        // (int fd, Userspace<off_t const*> userspace_offset, Userspace<off_t const*> userspace_length) → 0
+        break;
+    case SC_kill:
+        // (pid_t pid_or_pgid, int sig) → 0
+        break;
+    case SC_exit:
+        // (int status) → UNREACHABLE
+        format_exit(builder, (int)arg1);
+        result_type = Void;
+        break;
+    case SC_sigreturn:
+        // (RegisterState& registers) → (FlatPtr return_value)
+        break;
+    case SC_waitid:
+        // (Userspace<Syscall::SC_waitid_params const*> user_params) → 0
+        break;
+    case SC_mmap:
+        // (Userspace<Syscall::SC_mmap_params const*> user_params) → (FlatPtr address)
+        TRY(format_mmap(builder, (Syscall::SC_mmap_params*)arg1));
+        result_type = VoidP;
+        break;
+    case SC_mremap:
+        // (Userspace<Syscall::SC_mremap_params const*> user_params) → (FlatPtr new_region)
+        break;
+    case SC_munmap:
+        // (Userspace<void*> addres, size_t size) → 0
+        format_munmap(builder, (void*)arg1, (size_t)arg2);
+        break;
+    case SC_set_mmap_name:
+        // (Userspace<Syscall::SC_set_mmap_name_params const*> user_params) → 0
+        TRY(format_set_mmap_name(builder, (Syscall::SC_set_mmap_name_params*)arg1));
+        break;
+    case SC_mprotect:
+        // (Userspace<void*> addr, size_t size, int prot) → 0
+        format_mprotect(builder, (void*)arg1, (size_t)arg2, (int)arg3);
+        break;
+    case SC_madvise:
+        // (Userspace<void*> address, size_t size, int advice) → (1|0 was_purged)
+        break;
+    case SC_msync:
+        // (Userspace<void*> address, size_t size, int flags) → 0
+        break;
+    case SC_purge:
+        // (int mode) → (size_t purged_page_count)
+        break;
+    case SC_poll:
+        // (Userspace<Syscall::SC_poll_params const*> user_params) → (int fds_with_revents)
+        TRY(format_poll(builder, (Syscall::SC_poll_params*)arg1));
+        break;
+    case SC_get_dir_entries:
+        // s(int fd, Userspace<void*> user_buffer, size_t user_size) → (size_t count)
+        break;
+    case SC_getcwd:
+        // (Userspace<char*> buffer, size_t size) → (size_t ideal_size)
+        break;
+    case SC_chdir:
+        // (Userspace<char const*> user_path, size_t path_length) → 0
+        format_chdir(builder, (char const*)arg1, (size_t)arg2);
+        result_type = Int;
+        break;
+    case SC_fchdir:
+        // (int fd) → 0
+        break;
+    case SC_adjtime:
+        // (Userspace<timeval const*> user_delta, Userspace<timeval*> user_old_delta) → 0
+        break;
+    case SC_clock_gettime:
+        // (clockid_t clock_id, Userspace<timespec*> user_ts) → 0
+        format_clock_gettime(builder, (clockid_t)arg1, (struct timespec*)arg2);
+        break;
+    case SC_clock_settime:
+        // (clockid_t clock_id, Userspace<timespec const*> user_ts) → 0
+        break;
+    case SC_clock_nanosleep:
+        // (Userspace<Syscall::SC_clock_nanosleep_params const*> user_params) → 0
+        break;
+    case SC_clock_getres:
+        // (Userspace<Syscall::SC_clock_getres_params const*> user_params) → 0
+        break;
+    case SC_gethostname:
+        // e(Userspace<char*> buffer, size_t size) → 0
+        break;
+    case SC_sethostname:
+        // (Userspace<char const*> buffer, size_t length) → 0
+        break;
+    case SC_uname:
+        // (Userspace<utsname*> user_buf) → 0
+        break;
+    case SC_readlink:
+        // (Userspace<Syscall::SC_readlink_params const*> user_params) → (size_t link_target_size)
+        break;
+    case SC_fork:
+        // (RegisterState& regs) → (pid_t child_pid)
+        break;
+    case SC_execve:
+        // (Userspace<Syscall::SC_execve_params const*> user_params) → 0
+        break;
+    case SC_dup2:
+        // (int old_fd, int new_fd) → (int new_fd)
+        break;
+    case SC_sigaction:
+        // (int signum, Userspace<sigaction const*> act, Userspace<sigaction*> old_act) → 0
+        break;
+    case SC_sigaltstack:
+        // (Userspace<stack_t const*> ss, Userspace<stack_t*> old_ss) → 0
+        break;
+    case SC_sigprocmask:
+        // (int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set) → 0
+        break;
+    case SC_sigpending:
+        // (Userspace<sigset_t*> set) → 0
+        break;
+    case SC_sigsuspend:
+        // (Userspace<sigset_t const*> mask) → 0
+        break;
+    case SC_sigtimedwait:
+        // (Userspace<sigset_t const*> set, Userspace<siginfo_t*> info, Userspace<timespec const*> timeout) → (int signal_number)
+        break;
+    case SC_getgroups:
+        // (size_t count, Userspace<GroupID*> user_gids) → 0
+        break;
+    case SC_setgroups:
+        // (size_t count, Userspace<GroupID const*> user_gids) → 0
+        break;
+    case SC_pipe:
+        // (Userspace<int*> pipefd, int flags) → 0
+        break;
+    case SC_killpg:
+        // (pid_t pgrp, int sig) → 0
+        break;
+    case SC_seteuid:
+        // (UserID new_euid) → 0
+        break;
+    case SC_setegid:
+        // (GroupID new_egid) → 0
+        break;
+    case SC_setuid:
+        // (UserID new_uid) → 0
+        break;
+    case SC_setgid:
+        // (GroupID new_gid) → 0
+        break;
+    case SC_setreuid:
+        // (UserID new_ruid, UserID new_euid) → 0
+        break;
+    case SC_setresuid:
+        // (UserID new_ruid, UserID new_euid, UserID new_suid) → 0
+        break;
+    case SC_setregid:
+        // (GroupID new_rgid, GroupID new_egid) → 0
+        break;
+    case SC_setresgid:
+        // (GroupID new_rgid, GroupID new_egid, GroupID new_sgid) → 0
+        break;
+    case SC_alarm:
+        // (unsigned seconds) → (unsigned previous_alarm_remaining)
+        break;
+    case SC_faccessat:
+        // (Userspace<Syscall::SC_faccessat_params const*> user_params) → 0
+        break;
+    case SC_fcntl:
+        // (int fd, int cmd, uintptr_t extra_arg) → 0
+        break;
+    case SC_ioctl:
+        // (int fd, unsigned request, FlatPtr arg) → 0
+        format_ioctl(builder, (int)arg1, (unsigned)arg2, (void*)arg3);
+        break;
+    case SC_mkdir:
+        // (int dirfd, Userspace<char const*> pathname, size_t path_length, mode_t mode) → 0
+        break;
+    case SC_times:
+        // (Userspace<tms*> user_times) → (u64 ms)
+        break;
+    case SC_utime:
+        // (Userspace<char const*> pathname, size_t path_length, Userspace<const struct utimbuf*>) → 0
+        break;
+    case SC_utimensat:
+        // (Userspace<Syscall::SC_utimensat_params const*> user_params) → 0
+        break;
+    case SC_link:
+        // (Userspace<Syscall::SC_link_params const*> user_params) → 0
+        break;
+    case SC_unlink:
+        // (int dirfd, Userspace<char const*> pathname, size_t path_length, int flags) → 0
+        break;
+    case SC_symlink:
+        // (Userspace<Syscall::SC_symlink_params const*> user_params) → 0
+        break;
+    case SC_rmdir:
+        // (Userspace<char const*> pathname, size_t path_length) → 0
+        break;
+    case SC_mount:
+        // (Userspace<Syscall::SC_mount_params const*> user_params) → 0
+        break;
+    case SC_umount:
+        // (Userspace<char const*> mountpoint, size_t mountpoint_length) → 0
+        break;
+    case SC_chmod:
+        // (Userspace<Syscall::SC_chmod_params const*> user_params) → 0
+        break;
+    case SC_fchmod:
+        // (int fd, mode_t mode) → 0
+        break;
+    case SC_chown:
+        // (Userspace<Syscall::SC_chown_params const*> user_params) → 0
+        break;
+    case SC_fchown:
+        // (int fd, UserID uid, GroupID gid) → 0
+        break;
+    case SC_fsync:
+        // (int fd) → 0
+        break;
+    case SC_socket:
+        // (int domain, int type, int protocol) → (int fd)
+        format_socket(builder, (int)arg1, (int)arg2, (int)arg3);
+        break;
+    case SC_bind:
+        // (int sockfd, Userspace<sockaddr const*> addr, socklen_t address_length) → 0
+        break;
+    case SC_listen:
+        // (int sockfd, int backlog) → 0
+        break;
+    case SC_accept4:
+        // (Userspace<Syscall::SC_accept4_params const*> user_params) → (int fd)
+        break;
+    case SC_connect:
+        // (int sockfd, Userspace<sockaddr const*> user_address, socklen_t user_address_size) → 0
+        format_connect(builder, (int)arg1, (const struct sockaddr*)arg2, (socklen_t)arg3);
+        break;
+    case SC_shutdown:
+        // (int sockfd, int how) → 0;  typeof ‘howʼ = SHUT_RD | SHUT_WD | SHUT_RDWR
+        break;
+    case SC_sendmsg:
+        // (int sockfd, Userspace<const struct msghdr*> user_msg, int flags) → (size_t write_count)
+        break;
+    case SC_recvmsg:
+        // (int sockfd, Userspace<struct msghdr*>, int flags) → (size_t read_count)
+        format_recvmsg(builder, (int)arg1, (struct msghdr*)arg2, (int)arg3);
+        result_type = Ssize;
+        break;
+    case SC_getsockopt:
+        // (Userspace<Syscall::SC_getsockopt_params const*> user_params) → 0
+        break;
+    case SC_setsockopt:
+        // (Userspace<Syscall::SC_setsockopt_params const*> user_params) → 0
+        break;
+    case SC_getsockname:
+        // (Userspace<Syscall::SC_getsockname_params const*> user_params) → 0
+        break;
+    case SC_getpeername:
+        // (Userspace<Syscall::SC_getpeername_params const*> user_params) → 0
+        break;
+    case SC_socketpair:
+        // (Userspace<Syscall::SC_socketpair_params const*> user_params) → 0
+        break;
+    case SC_scheduler_set_parameters:
+        // (Userspace<Syscall::SC_scheduler_parameters_params const*> user_params) → 0
+        break;
+    case SC_scheduler_get_parameters:
+        // (Userspace<Syscall::SC_scheduler_parameters_params*> user_params) → 0
+        break;
+    case SC_create_thread:
+        // (void* (*entry)(void*), Userspace<Syscall::SC_create_thread_params const*> user_params) → (pid_t tid)
+        break;
+    case SC_exit_thread:
+        // (Userspace<void*> exit_value, Userspace<void*> stack_location, size_t stack_size) → UNREACHABLE
+        result_type = Void;
+        break;
+    case SC_join_thread:
+        // (pid_t tid, Userspace<void**> exit_value) → 0
+        break;
+    case SC_detach_thread:
+        // (pid_t tid) → 0
+        break;
+    case SC_set_thread_name:
+        // (pid_t tid, Userspace<char const*> buffer, size_t buffer_size) → 0
+        break;
+    case SC_get_thread_name:
+        // (pid_t tid, Userspace<char*> buffer, size_t buffer_size) → 0
+        break;
+    case SC_kill_thread:
+        // (pid_t tid, int signal) → 0
+        break;
+    case SC_rename:
+        // (Userspace<Syscall::SC_rename_params const*> user_params) → 0
+        break;
+    case SC_mknod:
+        // (Userspace<Syscall::SC_mknod_params const*> user_params) → 0
+        break;
+    case SC_realpath:
+        // (Userspace<Syscall::SC_realpath_params const*> user_params) → (size_t ideal_size)
+        TRY(format_realpath(builder, (Syscall::SC_realpath_params*)arg1, (size_t)res));
+        break;
+    case SC_getrandom:
+        // (Userspace<void*> buffer, size_t buffer_size, unsigned int flags) → (size_t count)
+        format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
+        break;
+    case SC_getkeymap:
+        // (Userspace<Syscall::SC_getkeymap_params const*> user_params) → 0
+        break;
+    case SC_setkeymap:
+        // (Userspace<Syscall::SC_setkeymap_params const*> user_params) → 0
+        break;
+    case SC_profiling_enable:
+        // (pid_t, Userspace<u64 const*>) → 0
+        break;
+    case SC_profiling_disable:
+        // (pid_t) → 0
+        break;
+    case SC_profiling_free_buffer:
+        // (pid_t) → 0
+        break;
+    case SC_futex:
+        // (Userspace<Syscall::SC_futex_params const*> user_params) → (…)
+        break;
+    case SC_pledge:
+        // (Userspace<Syscall::SC_pledge_params const*> user_params) → 0
+        break;
+    case SC_unveil:
+        // (Userspace<Syscall::SC_unveil_params const*> user_params) → 0
+        break;
+    case SC_perf_event:
+        // (int type, FlatPtr arg1, FlatPtr arg2) → 0
+        break;
+    case SC_perf_register_string:
+        // (Userspace<char const*> user_string, size_t user_string_length) → (FlatPtr string_index) | 0
+        break;
+    case SC_get_stack_bounds:
+        // (Userspace<FlatPtr*> stack_base, Userspace<size_t*> stack_size) → 0
+        break;
+    case SC_ptrace:
+        // (Userspace<Syscall::SC_ptrace_params const*> user_params) → 0
+        break;
+    case SC_sendfd:
+        // (int sockfd, int fd) → 0
+        break;
+    case SC_recvfd:
+        // (int sockfd, int options) → (int fd)
+        break;
+    case SC_sysconf:
+        // (int name) → (…);  typeof ‘nameʼ =
+        //   | _SC_MONOTONIC_CLOCK | _SC_NPROCESSORS_CONF | _SC_NPROCESSORS_ONLN | _SC_OPEN_MAX | _SC_HOST_NAME_MAX
+        //   | _SC_TTY_NAME_MAX | _SC_PAGESIZE | _SC_GETPW_R_SIZE_MAX | _SC_CLK_TCK | _SC_SYMLOOP_MAX | _SC_MAPPED_FILES
+        //   | _SC_ARG_MAX | _SC_IOV_MAX
+        break;
+    case SC_disown:
+        // (ProcessID pid) → 0
+        break;
+    case SC_allocate_tls:
+        // (Userspace<char const*> initial_data, size_t size) → (FlatPtr master_tls_region)
+        break;
+    case SC_prctl:
+        // (int option, FlatPtr arg1, FlatPtr arg2) → bool | 0;  typeof ‘optionʼ = PR_GET_DUMPABLE | PR_SET_DUMPABLE
+        // (PR_GET_DUMPABLE option, FlatPtr arg1, FlatPtr arg2) → (bool is_dumpable)
+        // (PR_SET_DUMPABLE option, FlatPtr arg1, FlatPtr arg2) → 0
+        break;
+    case SC_anon_create:
+        // (size_t size, int options) → (int new_fd)
+        break;
+    case SC_statvfs:
+        // (Userspace<Syscall::SC_statvfs_params const*> user_params) → 0
+        break;
+    case SC_fstatvfs:
+        // (int fd, statvfs* buf) → 0
+        break;
+    case SC_map_time_page:
+        // () → (FlatPtr new_region)
+        break;
+    case SC_jail_create:
+        // (Userspace<Syscall::SC_jail_create_params*> user_params) → 0
+        break;
+    case SC_jail_attach:
+        // (Userspace<Syscall::SC_jail_attach_params const*> user_params) → 0
+        break;
+    case SC_get_root_session_id:
+        // (pid_t force_sid) → (pid_t sid)
         break;
     default:
         builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3, (void*)arg4);
