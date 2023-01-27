@@ -11,8 +11,7 @@
 
 namespace Kernel {
 
-// NOTE: The offset is passed by pointer because off_t is 64bit,
-// hence it can't be passed by register on 32bit platforms.
+// TODO: The offset could be passed by value instead of a pointer
 ErrorOr<FlatPtr> Process::sys$pwritev(int fd, Userspace<const struct iovec*> iov, int iov_count, Userspace<off_t const*> userspace_offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);

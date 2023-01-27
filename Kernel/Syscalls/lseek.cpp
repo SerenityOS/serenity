@@ -9,6 +9,7 @@
 
 namespace Kernel {
 
+// TODO: The offset could be passed by value instead of a pointer
 ErrorOr<FlatPtr> Process::sys$lseek(int fd, Userspace<off_t*> userspace_offset, int whence)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);

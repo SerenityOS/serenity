@@ -13,6 +13,7 @@
 namespace Kernel {
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_fallocate.html
+// TODO: The offset and length could be passed by value instead of a pointer
 ErrorOr<FlatPtr> Process::sys$posix_fallocate(int fd, Userspace<off_t const*> userspace_offset, Userspace<off_t const*> userspace_length)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);

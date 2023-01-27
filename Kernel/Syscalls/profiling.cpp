@@ -18,6 +18,8 @@ u64 g_profiling_event_mask;
 
 // NOTE: event_mask needs to be passed as a pointer as u64
 //       does not fit into a register on 32bit architectures.
+// TODO: thatʼs not the case anymore as we support 64-bit architectures only,
+//       so this can be simplified a little
 ErrorOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, Userspace<u64 const*> userspace_event_mask)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);

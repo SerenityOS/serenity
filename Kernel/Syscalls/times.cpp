@@ -23,6 +23,7 @@ ErrorOr<FlatPtr> Process::sys$times(Userspace<tms*> user_times)
     times.tms_cstime = m_ticks_in_kernel_for_dead_children;
 
     TRY(copy_to_user(user_times, &times));
+    // TODO: applying positive mask seems to be unnecessary…?
     return TimeManagement::the().uptime_ms() & 0x7fffffff;
 }
 
