@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Jack Karamanian <karamanian.jack@gmail.com>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,8 +32,12 @@ void BooleanConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> BooleanConstructor::call()
 {
     auto& vm = this->vm();
+    auto value = vm.argument(0);
 
-    auto b = vm.argument(0).to_boolean();
+    // 1. Let b be ToBoolean(value).
+    auto b = value.to_boolean();
+
+    // 2. If NewTarget is undefined, return b.
     return Value(b);
 }
 
@@ -40,8 +45,14 @@ ThrowCompletionOr<Value> BooleanConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> BooleanConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+    auto value = vm.argument(0);
 
-    auto b = vm.argument(0).to_boolean();
+    // 1. Let b be ToBoolean(value).
+    auto b = value.to_boolean();
+
+    // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
+    // 4. Set O.[[BooleanData]] to b.
+    // 5. Return O.
     return TRY(ordinary_create_from_constructor<BooleanObject>(vm, new_target, &Intrinsics::boolean_prototype, b));
 }
 
