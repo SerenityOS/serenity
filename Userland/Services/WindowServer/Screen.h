@@ -180,7 +180,6 @@ private:
     Screen(size_t);
     bool open_device();
     void close_device();
-    void init();
     void scale_factor_changed();
     bool set_resolution(bool initial);
     void constrain_pending_flush_rects();
