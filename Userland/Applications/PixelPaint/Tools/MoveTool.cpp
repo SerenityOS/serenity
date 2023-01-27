@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,7 +41,7 @@ void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
     m_layer_being_moved = *layer;
     m_event_origin = image_event.position();
     m_layer_origin = layer->location();
-    m_new_layer_rect = m_editor->active_layer()->rect();
+    m_new_layer_rect = m_editor->active_layer()->relative_rect();
 }
 
 void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
