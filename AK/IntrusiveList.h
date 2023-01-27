@@ -112,7 +112,6 @@ public:
             m_value = IntrusiveList<T, Container, member>::prev(m_value);
             return *this;
         }
-        ReverseIterator& erase();
 
     private:
         T* m_value { nullptr };

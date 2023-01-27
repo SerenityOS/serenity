@@ -215,12 +215,10 @@ public:
     bool operator==(DeprecatedFlyString const&) const;
 
     bool operator<(DeprecatedString const&) const;
-    bool operator<(char const*) const;
     bool operator>=(DeprecatedString const& other) const { return !(*this < other); }
     bool operator>=(char const* other) const { return !(*this < other); }
 
     bool operator>(DeprecatedString const&) const;
-    bool operator>(char const*) const;
     bool operator<=(DeprecatedString const& other) const { return !(*this > other); }
     bool operator<=(char const* other) const { return !(*this > other); }
 
