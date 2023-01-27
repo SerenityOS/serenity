@@ -274,7 +274,6 @@ private:
     bool parse_extended_atom(ByteCode&, size_t&, ParseFlags);
     bool parse_inner_disjunction(ByteCode& bytecode_stack, size_t& length, ParseFlags);
     bool parse_invalid_braced_quantifier(); // Note: This function either parses and *fails*, or doesn't parse anything and returns false.
-    bool parse_legacy_octal_escape_sequence(ByteCode& bytecode_stack, size_t& length);
     Optional<u8> parse_legacy_octal_escape();
 
     size_t ensure_total_number_of_capturing_parenthesis();
