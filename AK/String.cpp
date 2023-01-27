@@ -438,6 +438,17 @@ ErrorOr<String> String::reverse() const
     return builder.to_string();
 }
 
+ErrorOr<String> String::trim(Utf8View const& code_points_to_trim, TrimMode mode) const
+{
+    auto trimmed = code_points().trim(code_points_to_trim, mode);
+    return String::from_utf8(trimmed.as_string());
+}
+
+ErrorOr<String> String::trim(StringView code_points_to_trim, TrimMode mode) const
+{
+    return trim(Utf8View { code_points_to_trim }, mode);
+}
+
 bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::contains(bytes_as_string_view(), needle, case_sensitivity);
