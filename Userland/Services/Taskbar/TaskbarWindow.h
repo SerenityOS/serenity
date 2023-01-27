@@ -35,7 +35,6 @@ private:
     explicit TaskbarWindow();
     static void show_desktop_button_clicked(unsigned);
     static void toggle_show_desktop();
-    void set_quick_launch_button_data(GUI::Button&, DeprecatedString const&, NonnullRefPtr<Desktop::AppFile>);
     void on_screen_rects_change(Vector<Gfx::IntRect, 4> const&, size_t);
     NonnullRefPtr<GUI::Button> create_button(WindowIdentifier const&);
     void add_window_button(::Window&, WindowIdentifier const&);
