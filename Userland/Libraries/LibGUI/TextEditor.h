@@ -306,7 +306,6 @@ private:
     virtual void automatic_scrolling_timer_did_fire() override;
 
     void create_actions();
-    void paint_ruler(Painter&);
     void update_content_size();
     int fixed_glyph_width() const;
 
