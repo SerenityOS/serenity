@@ -313,8 +313,6 @@ public:
 
     bool is_following(Node const&) const;
 
-    void prepend_child(JS::NonnullGCPtr<Node> node);
-
     Node* next_in_pre_order()
     {
         if (first_child())
