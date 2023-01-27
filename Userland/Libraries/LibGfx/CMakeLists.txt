@@ -28,7 +28,7 @@ set(SOURCES
     Font/WOFF/Font.cpp
     GradientPainting.cpp
     GIFLoader.cpp
-    ICCProfile.cpp
+    ICC/Profile.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
     JPGLoader.cpp

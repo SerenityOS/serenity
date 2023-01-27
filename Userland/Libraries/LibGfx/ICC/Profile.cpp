@@ -5,7 +5,7 @@
  */
 
 #include <AK/Endian.h>
-#include <LibGfx/ICCProfile.h>
+#include <LibGfx/ICC/Profile.h>
 #include <LibTextCodec/Decoder.h>
 #include <math.h>
 #include <time.h>

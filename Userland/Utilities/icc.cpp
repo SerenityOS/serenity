@@ -9,7 +9,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/ICCProfile.h>
+#include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageDecoder.h>
 
 template<class T>
