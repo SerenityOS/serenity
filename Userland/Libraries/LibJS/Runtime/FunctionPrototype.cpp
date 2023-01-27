@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -145,7 +145,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     // 1. Let func be the this value.
     auto function_value = vm.this_value();
 
-    // If func is not a function, let's bail out early. The order of this step is not observable.
+    // OPTIMIZATION: If func is not a function, bail out early. The order of this step is not observable.
     if (!function_value.is_function()) {
         // 5. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Function");
@@ -175,6 +175,8 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
 {
+    // 1. Let F be the this value.
+    // 2. Return ? OrdinaryHasInstance(F, V).
     return TRY(ordinary_has_instance(vm, vm.argument(0), vm.this_value()));
 }
 
