@@ -7,7 +7,6 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/DateTimeLexer.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
