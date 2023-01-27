@@ -400,18 +400,11 @@ public:
         m_context.extensions.SNI = sni;
     }
 
-    bool load_certificates(ReadonlyBytes pem_buffer);
-    bool load_private_key(ReadonlyBytes pem_buffer);
-
     void set_root_certificates(Vector<Certificate>);
 
     static Vector<Certificate> parse_pem_certificate(ReadonlyBytes certificate_pem_buffer, ReadonlyBytes key_pem_buffer);
 
-    ByteBuffer finish_build();
-
     StringView alpn() const { return m_context.negotiated_alpn; }
-    void add_alpn(StringView alpn);
-    bool has_alpn(StringView alpn) const;
 
     bool supports_cipher(CipherSuite suite) const
     {
@@ -461,10 +454,8 @@ private:
     ByteBuffer build_hello();
     ByteBuffer build_handshake_finished();
     ByteBuffer build_certificate();
-    ByteBuffer build_done();
     ByteBuffer build_alert(bool critical, u8 code);
     ByteBuffer build_change_cipher_spec();
-    ByteBuffer build_verify_request();
     void build_rsa_pre_master_secret(PacketBuilder&);
     void build_dhe_rsa_pre_master_secret(PacketBuilder&);
     void build_ecdhe_rsa_pre_master_secret(PacketBuilder&);
@@ -486,7 +477,6 @@ private:
     ssize_t handle_certificate_verify(ReadonlyBytes);
     ssize_t handle_handshake_payload(ReadonlyBytes);
     ssize_t handle_message(ReadonlyBytes);
-    ssize_t handle_random(ReadonlyBytes);
 
     void pseudorandom_function(Bytes output, ReadonlyBytes secret, u8 const* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b);
 
