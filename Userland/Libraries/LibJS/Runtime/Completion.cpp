@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +28,7 @@ Completion::Completion(ThrowCompletionOr<Value> const& throw_completion_or_value
 }
 
 // 6.2.3.1 Await, https://tc39.es/ecma262/#await
+// FIXME: This no longer matches the spec!
 ThrowCompletionOr<Value> await(VM& vm, Value value)
 {
     auto& realm = *vm.current_realm();
@@ -120,9 +121,10 @@ ThrowCompletionOr<Value> await(VM& vm, Value value)
     return throw_completion(result);
 }
 
-// 6.2.3.3 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
+// 6.2.4.2 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
 Completion throw_completion(Value value)
 {
+    // 1. Return Completion Record { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
     return { Completion::Type::Throw, value, {} };
 }
 
