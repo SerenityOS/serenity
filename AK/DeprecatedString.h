@@ -129,6 +129,8 @@ public:
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
+    [[nodiscard]] DeprecatedStringCodePointIterator code_points() const;
+
     [[nodiscard]] DeprecatedString trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
         auto trimmed_view = StringUtils::trim(view(), characters, mode);

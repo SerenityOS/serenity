@@ -11,6 +11,7 @@
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 
 namespace AK {
@@ -447,6 +448,11 @@ DeprecatedString DeprecatedString::vformatted(StringView fmtstr, TypeErasedForma
 Vector<size_t> DeprecatedString::find_all(StringView needle) const
 {
     return StringUtils::find_all(*this, needle);
+}
+
+DeprecatedStringCodePointIterator DeprecatedString::code_points() const
+{
+    return DeprecatedStringCodePointIterator(*this);
 }
 
 }
