@@ -79,7 +79,7 @@ public:
 
     bool modulo_is_zero(Checked<i32> mod) const;
 
-    int logarithmic_floor() const;
+    ThrowCompletionOr<int> logarithmic_floor(VM&) const;
 
     bool is_equal_to(MathematicalValue const&) const;
     bool is_less_than(MathematicalValue const&) const;
