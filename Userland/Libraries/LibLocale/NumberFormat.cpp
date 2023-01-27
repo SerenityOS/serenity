@@ -16,10 +16,10 @@
 
 namespace Locale {
 
-Optional<StringView> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return {}; }
-Optional<NumberGroupings> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return {}; }
-Optional<NumberFormat> __attribute__((weak)) get_standard_number_system_format(StringView, StringView, StandardNumberFormatType) { return {}; }
-Vector<NumberFormat> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return {}; }
+ErrorOr<Optional<StringView>> __attribute__((weak)) get_number_system_symbol(StringView, StringView, NumericSymbol) { return OptionalNone {}; }
+ErrorOr<Optional<NumberGroupings>> __attribute__((weak)) get_number_system_groupings(StringView, StringView) { return OptionalNone {}; }
+ErrorOr<Optional<NumberFormat>> __attribute__((weak)) get_standard_number_system_format(StringView, StringView, StandardNumberFormatType) { return OptionalNone {}; }
+ErrorOr<Vector<NumberFormat>> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return Vector<NumberFormat> {}; }
 Vector<NumberFormat> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return {}; }
 
 Optional<Span<u32 const>> __attribute__((weak)) get_digits_for_number_system(StringView)

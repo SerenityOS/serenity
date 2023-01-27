@@ -166,7 +166,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
 
     // 23. Let dataLocaleData be localeData.[[<dataLocale>]].
     // 24. Let hcDefault be dataLocaleData.[[hourCycle]].
-    auto default_hour_cycle = ::Locale::get_default_regional_hour_cycle(data_locale);
+    auto default_hour_cycle = TRY_OR_THROW_OOM(vm, ::Locale::get_default_regional_hour_cycle(data_locale));
 
     // Non-standard, default_hour_cycle will be empty if Unicode data generation is disabled.
     if (!default_hour_cycle.has_value()) {
