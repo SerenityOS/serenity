@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022-2023, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
