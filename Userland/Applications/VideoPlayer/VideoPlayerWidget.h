@@ -47,7 +47,6 @@ private:
     void set_time_label(Time);
     void on_decoding_error(Video::DecoderError const&);
     void update_seek_mode();
-    void display_next_frame();
 
     void cycle_sizing_modes();
 
