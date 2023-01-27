@@ -10,7 +10,6 @@
 #include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <stdlib.h>

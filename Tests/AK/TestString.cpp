@@ -471,3 +471,27 @@ TEST_CASE(repeated)
         return Test::Crash::Failure::DidNotCrash;
     });
 }
+
+TEST_CASE(join)
+{
+    auto string1 = MUST(String::join(',', Vector<i32> {}));
+    EXPECT(string1.is_empty());
+
+    auto string2 = MUST(String::join(',', Array { 1 }));
+    EXPECT_EQ(string2, "1"sv);
+
+    auto string3 = MUST(String::join(':', Array { 1 }, "[{}]"sv));
+    EXPECT_EQ(string3, "[1]"sv);
+
+    auto string4 = MUST(String::join(',', Array { 1, 2, 3 }));
+    EXPECT_EQ(string4, "1,2,3"sv);
+
+    auto string5 = MUST(String::join(',', Array { 1, 2, 3 }, "[{}]"sv));
+    EXPECT_EQ(string5, "[1],[2],[3]"sv);
+
+    auto string6 = MUST(String::join(String::from_utf8_short_string("!!!"sv), Array { "foo"sv, "bar"sv, "baz"sv }));
+    EXPECT_EQ(string6, "foo!!!bar!!!baz"sv);
+
+    auto string7 = MUST(String::join(" - "sv, Array { 1, 16, 256, 4096 }, "[{:#04x}]"sv));
+    EXPECT_EQ(string7, "[0x0001] - [0x0010] - [0x0100] - [0x1000]"sv);
+}
