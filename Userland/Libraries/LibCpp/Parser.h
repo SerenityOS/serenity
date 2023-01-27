@@ -95,7 +95,6 @@ private:
     NonnullRefPtr<Expression> parse_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_primary_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_secondary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs);
-    NonnullRefPtr<FunctionCall> parse_function_call(ASTNode& parent);
     NonnullRefPtr<StringLiteral> parse_string_literal(ASTNode& parent);
     NonnullRefPtr<ReturnStatement> parse_return_statement(ASTNode& parent);
     NonnullRefPtr<EnumDeclaration> parse_enum_declaration(ASTNode& parent);
@@ -104,7 +103,6 @@ private:
     NonnullRefPtr<UnaryExpression> parse_unary_expression(ASTNode& parent);
     NonnullRefPtr<BooleanLiteral> parse_boolean_literal(ASTNode& parent);
     NonnullRefPtr<Type> parse_type(ASTNode& parent);
-    NonnullRefPtr<NamedType> parse_named_type(ASTNode& parent);
     NonnullRefPtr<BinaryExpression> parse_binary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs, BinaryOp);
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs, AssignmentOp);
     NonnullRefPtr<ForStatement> parse_for_statement(ASTNode& parent);
