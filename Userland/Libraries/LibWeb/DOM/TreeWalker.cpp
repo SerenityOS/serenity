@@ -187,7 +187,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::next_node()
             node = *node->first_child();
 
             // 2. Set result to the result of filtering node within this.
-            auto result = TRY(filter(*node));
+            result = TRY(filter(*node));
 
             // 3. If result is FILTER_ACCEPT, then set this’s current to node and return node.
             if (result == NodeFilter::FILTER_ACCEPT) {
