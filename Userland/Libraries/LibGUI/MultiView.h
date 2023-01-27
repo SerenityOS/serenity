@@ -20,8 +20,6 @@ class MultiView final : public GUI::StackWidget {
 public:
     virtual ~MultiView() override = default;
 
-    void refresh();
-
     Function<void()> on_selection_change;
     Function<void(ModelIndex const&)> on_activation;
     Function<void(ModelIndex const&)> on_selection;
