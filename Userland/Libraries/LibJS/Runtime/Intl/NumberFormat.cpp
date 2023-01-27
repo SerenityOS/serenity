@@ -995,7 +995,7 @@ struct RawPrecisionResult {
 static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, MathematicalValue const& number, int precision, PreferredResult mode)
 {
     RawPrecisionResult result {};
-    result.exponent = number.logarithmic_floor();
+    result.exponent = MUST_OR_THROW_OOM(number.logarithmic_floor(vm));
 
     if (number.is_number()) {
         result.number = number.divided_by_power(result.exponent - precision + 1);
@@ -1506,7 +1506,7 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 3. Let magnitude be the base 10 logarithm of x rounded down to the nearest integer.
-    int magnitude = number.logarithmic_floor();
+    int magnitude = MUST_OR_THROW_OOM(number.logarithmic_floor(vm));
 
     // 4. Let exponent be ComputeExponentForMagnitude(numberFormat, magnitude).
     int exponent = MUST_OR_THROW_OOM(compute_exponent_for_magnitude(vm, number_format, magnitude));
@@ -1524,7 +1524,7 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 8. Let newMagnitude be the base 10 logarithm of formatNumberResult.[[RoundedNumber]] rounded down to the nearest integer.
-    int new_magnitude = format_number_result.rounded_number.logarithmic_floor();
+    int new_magnitude = MUST_OR_THROW_OOM(format_number_result.rounded_number.logarithmic_floor(vm));
 
     // 9. If newMagnitude is magnitude - exponent, then
     if (new_magnitude == magnitude - exponent) {
