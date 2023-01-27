@@ -22,7 +22,7 @@ public:
     WebIDL::CallbackType& callback() { return m_callback; }
 
     // FIXME: Generate both of these enums from IDL.
-    enum Result {
+    enum class Result : u8 {
         FILTER_ACCEPT = 1,
         FILTER_REJECT = 2,
         FILTER_SKIP = 3,
