@@ -34,7 +34,6 @@ public:
     PrimitiveString& operator=(PrimitiveString const&) = delete;
 
     bool is_empty() const;
-    u32 hash() const;
 
     ThrowCompletionOr<String> utf8_string() const;
     ThrowCompletionOr<StringView> utf8_string_view() const;
