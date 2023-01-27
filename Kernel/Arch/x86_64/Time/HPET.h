@@ -59,8 +59,6 @@ private:
     bool is_64bit_capable(u8 comparator_number) const;
     void set_comparators_to_optimal_interrupt_state(size_t timers_count);
 
-    u64 nanoseconds_to_raw_ticks() const;
-
     PhysicalAddress find_acpi_hpet_registers_block();
     explicit HPET(PhysicalAddress acpi_hpet);
     PhysicalAddress m_physical_acpi_hpet_table;

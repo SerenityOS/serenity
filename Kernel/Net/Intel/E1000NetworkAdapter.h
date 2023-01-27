@@ -73,9 +73,6 @@ protected:
     virtual u32 read_eeprom(u8 address);
     void read_mac_address();
 
-    void write_command(u16 address, u32);
-    u32 read_command(u16 address);
-
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
 

@@ -44,7 +44,6 @@ protected:
     void remove_disk_cache_before_last_unmount();
 
 private:
-    DiskCache& cache() const;
     void flush_specific_block_if_needed(BlockIndex index);
 
     mutable MutexProtected<OwnPtr<DiskCache>> m_cache;

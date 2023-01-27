@@ -132,7 +132,6 @@ private:
     void read_mac_address();
     void set_phy_speed();
     void start_hardware();
-    void initialize();
     void startup();
 
     void configure_phy();
