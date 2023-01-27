@@ -800,6 +800,8 @@ void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, A
     m_url = url;
     if (is_inspector_open())
         inspect_dom_tree();
+    if (on_load_finish)
+        on_load_finish(url);
 }
 
 void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
