@@ -58,9 +58,6 @@ private:
     bool find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg);
     Access();
 
-    Vector<Capability> get_capabilities(Address);
-    Optional<u8> get_capabilities_pointer(Address address);
-
     mutable RecursiveSpinlock<LockRank::None> m_access_lock {};
     mutable Spinlock<LockRank::None> m_scan_lock {};
 

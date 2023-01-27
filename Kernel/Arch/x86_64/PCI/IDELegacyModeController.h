@@ -31,7 +31,6 @@ private:
     bool is_pci_native_mode_enabled_on_secondary_channel() const;
     explicit PCIIDELegacyModeController(PCI::DeviceIdentifier const&);
 
-    LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     ErrorOr<void> initialize_and_enumerate_channels(bool force_pio);
 
     // FIXME: Find a better way to get the ProgrammingInterface

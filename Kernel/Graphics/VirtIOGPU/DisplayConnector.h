@@ -72,10 +72,6 @@ private:
     ErrorOr<void> flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
     void set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
 
-    void query_display_information();
-    ErrorOr<void> query_edid_from_virtio_adapter();
-    void query_display_edid();
-
     void clear_to_black();
 
     // Member data

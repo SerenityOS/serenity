@@ -32,9 +32,6 @@ public:
     FileSystemID fsid() const { return m_fsid; }
     InodeIndex index() const { return m_index; }
 
-    FileSystem* fs();
-    FileSystem const* fs() const;
-
     bool operator==(InodeIdentifier const& other) const
     {
         return m_fsid == other.m_fsid && m_index == other.m_index;

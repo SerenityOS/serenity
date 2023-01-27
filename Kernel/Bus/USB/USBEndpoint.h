@@ -53,7 +53,6 @@ public:
     u8 polling_interval() const { return m_descriptor.poll_interval_in_frames; }
 
 private:
-    USBEndpoint(/* TODO */);
     USBEndpointDescriptor m_descriptor;
 
     Pipe m_pipe;
