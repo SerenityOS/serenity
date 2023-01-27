@@ -692,7 +692,7 @@ static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters,
     builder.add_argument(StringArgument { { characters, size }, "\0\n"sv });
 }
 
-static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
+static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t arg4, syscall_arg_t res)
 {
     enum ResultType {
         Int,
@@ -785,7 +785,7 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_gettid:
         break;
     default:
-        builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3);
+        builder.add_arguments((void*)arg1, (void*)arg2, (void*)arg3, (void*)arg4);
         result_type = VoidP;
     }
 
@@ -887,14 +887,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if ARCH(X86_64)
         syscall_arg_t syscall_index = regs.rax;
         syscall_arg_t arg1 = regs.rdx;
-        syscall_arg_t arg2 = regs.rcx;
+        syscall_arg_t arg2 = regs.rdi;
         syscall_arg_t arg3 = regs.rbx;
+        syscall_arg_t arg4 = regs.rsi;
 #elif ARCH(AARCH64)
-        syscall_arg_t syscall_index = 0; // FIXME
-        syscall_arg_t arg1 = 0;          // FIXME
-        syscall_arg_t arg2 = 0;          // FIXME
-        syscall_arg_t arg3 = 0;          // FIXME
-        TODO_AARCH64();
+        syscall_arg_t syscall_index = regs.x[8];
+        syscall_arg_t arg1 = regs.x[1];
+        syscall_arg_t arg2 = regs.x[2];
+        syscall_arg_t arg3 = regs.x[3];
+        syscall_arg_t arg4 = regs.x[4];
 #else
 #    error Unknown architecture
 #endif
@@ -910,8 +911,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if ARCH(X86_64)
         u64 res = regs.rax;
 #elif ARCH(AARCH64)
-        u64 res = 0; // FIXME
-        TODO_AARCH64();
+        u64 res = regs.x[0];
 #else
 #    error Unknown architecture
 #endif
@@ -924,7 +924,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
 
         FormattedSyscallBuilder builder(syscall_name);
-        TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, res));
+        TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, arg4, res));
 
         TRY(trace_file->write_until_depleted(builder.string_view().bytes()));
     }
