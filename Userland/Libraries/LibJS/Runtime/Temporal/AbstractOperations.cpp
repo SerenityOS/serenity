@@ -853,8 +853,7 @@ ThrowCompletionOr<String> format_seconds_string_part(VM& vm, u8 second, u16 mill
         fraction_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", fraction));
 
         // c. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
-        // FIXME: Add String::trim()
-        fraction_string = TRY_OR_THROW_OOM(vm, String::from_utf8(fraction_string.bytes_as_string_view().trim("0"sv, TrimMode::Right)));
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.trim("0"sv, TrimMode::Right));
     }
     // 6. Else,
     else {
@@ -1806,8 +1805,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     // 4. If requiredFields is partial and any is false, then
     if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
-        // FIXME: Add & use String::join()
-        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, DeprecatedString::join(", "sv, field_names));
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, TRY_OR_THROW_OOM(vm, String::join(", "sv, field_names)));
     }
 
     // 5. Return result.

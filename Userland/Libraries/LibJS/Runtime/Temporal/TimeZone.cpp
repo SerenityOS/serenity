@@ -202,10 +202,13 @@ ThrowCompletionOr<String> format_time_zone_offset_string(VM& vm, double offset_n
     // 11. If nanoseconds ≠ 0, then
     if (nanoseconds != 0) {
         // a. Let fraction be ToZeroPaddedDecimalString(nanoseconds, 9).
+        auto fraction = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", nanoseconds));
+
         // b. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
+        fraction = TRY_OR_THROW_OOM(vm, fraction.trim("0"sv, TrimMode::Right));
+
         // c. Let post be the string-concatenation of the code unit 0x003A (COLON), s, the code unit 0x002E (FULL STOP), and fraction.
-        // FIXME: Add String::trim()
-        builder.appendff(":{:02}.{}", seconds, TRY_OR_THROW_OOM(vm, String::from_utf8(TRY_OR_THROW_OOM(vm, String::formatted("{:09}", nanoseconds)).bytes_as_string_view().trim("0"sv, TrimMode::Right))));
+        builder.appendff(":{:02}.{}", seconds, fraction);
     }
     // 12. Else if seconds ≠ 0, then
     else if (seconds != 0) {
