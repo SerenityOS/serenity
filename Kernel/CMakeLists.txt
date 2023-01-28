@@ -135,6 +135,8 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS/ComponentRegistry.cpp
     FileSystem/ProcFS/FileSystem.cpp
     FileSystem/ProcFS/Inode.cpp
+    FileSystem/RAMFS/FileSystem.cpp
+    FileSystem/RAMFS/Inode.cpp
     FileSystem/SysFS/Component.cpp
     FileSystem/SysFS/DirectoryInode.cpp
     FileSystem/SysFS/FileSystem.cpp
@@ -196,8 +198,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
-    FileSystem/TmpFS/FileSystem.cpp
-    FileSystem/TmpFS/Inode.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp

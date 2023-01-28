@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/TmpFS/Inode.h>
+#include <Kernel/FileSystem/RAMFS/Inode.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
 
-TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
+RAMFSInode::RAMFSInode(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
     : Inode(fs, fs.next_inode_index())
     , m_metadata(metadata)
     , m_parent(move(parent))
@@ -18,7 +18,7 @@ TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<Tmp
     m_metadata.inode = identifier();
 }
 
-TmpFSInode::TmpFSInode(TmpFS& fs)
+RAMFSInode::RAMFSInode(RAMFS& fs)
     : Inode(fs, 1)
     , m_root_directory_inode(true)
 {
@@ -27,29 +27,29 @@ TmpFSInode::TmpFSInode(TmpFS& fs)
     m_metadata.atime = now;
     m_metadata.ctime = now;
     m_metadata.mtime = now;
-    m_metadata.mode = S_IFDIR | S_ISVTX | 0777;
+    m_metadata.mode = S_IFDIR | 0755;
 }
 
-TmpFSInode::~TmpFSInode() = default;
+RAMFSInode::~RAMFSInode() = default;
 
-ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent)
+ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs, metadata, move(parent)));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs, metadata, move(parent)));
 }
 
-ErrorOr<NonnullLockRefPtr<TmpFSInode>> TmpFSInode::try_create_root(TmpFS& fs)
+ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create_root(RAMFS& fs)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) TmpFSInode(fs));
+    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs));
 }
 
-InodeMetadata TmpFSInode::metadata() const
+InodeMetadata RAMFSInode::metadata() const
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
     return m_metadata;
 }
 
-ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+ErrorOr<void> RAMFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
 
@@ -69,7 +69,7 @@ ErrorOr<void> TmpFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     return {};
 }
 
-ErrorOr<void> TmpFSInode::replace_child(StringView name, Inode& new_child)
+ErrorOr<void> RAMFSInode::replace_child(StringView name, Inode& new_child)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
@@ -80,7 +80,7 @@ ErrorOr<void> TmpFSInode::replace_child(StringView name, Inode& new_child)
         return ENOENT;
 
     auto old_child = child->inode;
-    child->inode = static_cast<TmpFSInode&>(new_child);
+    child->inode = static_cast<RAMFSInode&>(new_child);
 
     old_child->did_delete_self();
 
@@ -89,13 +89,13 @@ ErrorOr<void> TmpFSInode::replace_child(StringView name, Inode& new_child)
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<TmpFSInode::DataBlock>> TmpFSInode::DataBlock::create()
+ErrorOr<NonnullOwnPtr<RAMFSInode::DataBlock>> RAMFSInode::DataBlock::create()
 {
     auto data_block_buffer_vmobject = TRY(Memory::AnonymousVMObject::try_create_with_size(DataBlock::block_size, AllocationStrategy::AllocateNow));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DataBlock(move(data_block_buffer_vmobject))));
 }
 
-ErrorOr<void> TmpFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
+ErrorOr<void> RAMFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
 {
     VERIFY(m_inode_lock.is_locked());
     size_t block_start_index = offset / DataBlock::block_size;
@@ -123,31 +123,31 @@ ErrorOr<void> TmpFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
     return {};
 }
 
-ErrorOr<size_t> TmpFSInode::read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const
+ErrorOr<size_t> RAMFSInode::read_bytes_from_content_space(size_t offset, size_t io_size, UserOrKernelBuffer& buffer) const
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(m_metadata.size >= 0);
     if (static_cast<size_t>(m_metadata.size) < offset)
         return 0;
-    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "TmpFSInode Mapping Region"sv, Memory::Region::Access::Read, AllocationStrategy::Reserve));
-    return const_cast<TmpFSInode&>(*this).do_io_on_content_space(*mapping_region, offset, io_size, buffer, false);
+    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Read, AllocationStrategy::Reserve));
+    return const_cast<RAMFSInode&>(*this).do_io_on_content_space(*mapping_region, offset, io_size, buffer, false);
 }
 
-ErrorOr<size_t> TmpFSInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> RAMFSInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
     return read_bytes_from_content_space(offset, size, buffer);
 }
 
-ErrorOr<size_t> TmpFSInode::write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer)
+ErrorOr<size_t> RAMFSInode::write_bytes_to_content_space(size_t offset, size_t io_size, UserOrKernelBuffer const& buffer)
 {
     VERIFY(m_inode_lock.is_locked());
-    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "TmpFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
+    auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
     return do_io_on_content_space(*mapping_region, offset, io_size, const_cast<UserOrKernelBuffer&>(buffer), true);
 }
 
-ErrorOr<size_t> TmpFSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
+ErrorOr<size_t> RAMFSInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(!is_directory());
@@ -169,7 +169,7 @@ ErrorOr<size_t> TmpFSInode::write_bytes_locked(off_t offset, size_t size, UserOr
     return nwritten;
 }
 
-ErrorOr<size_t> TmpFSInode::do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write)
+ErrorOr<size_t> RAMFSInode::do_io_on_content_space(Memory::Region& mapping_region, size_t offset, size_t io_size, UserOrKernelBuffer& buffer, bool write)
 {
     VERIFY(m_inode_lock.is_locked());
     size_t remaining_bytes = 0;
@@ -227,14 +227,14 @@ ErrorOr<size_t> TmpFSInode::do_io_on_content_space(Memory::Region& mapping_regio
     return nio;
 }
 
-ErrorOr<void> TmpFSInode::truncate_to_block_index(size_t block_index)
+ErrorOr<void> RAMFSInode::truncate_to_block_index(size_t block_index)
 {
     VERIFY(m_inode_lock.is_locked());
     TRY(m_blocks.try_resize(block_index));
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::lookup(StringView name)
+ErrorOr<NonnullLockRefPtr<Inode>> RAMFSInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
@@ -253,7 +253,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::lookup(StringView name)
     return child->inode;
 }
 
-TmpFSInode::Child* TmpFSInode::find_child_by_name(StringView name)
+RAMFSInode::Child* RAMFSInode::find_child_by_name(StringView name)
 {
     for (auto& child : m_children) {
         if (child.name->view() == name)
@@ -262,7 +262,7 @@ TmpFSInode::Child* TmpFSInode::find_child_by_name(StringView name)
     return nullptr;
 }
 
-ErrorOr<void> TmpFSInode::flush_metadata()
+ErrorOr<void> RAMFSInode::flush_metadata()
 {
     // We don't really have any metadata that could become dirty.
     // The only reason we even call set_metadata_dirty() is
@@ -273,7 +273,7 @@ ErrorOr<void> TmpFSInode::flush_metadata()
     return {};
 }
 
-ErrorOr<void> TmpFSInode::chmod(mode_t mode)
+ErrorOr<void> RAMFSInode::chmod(mode_t mode)
 {
     MutexLocker locker(m_inode_lock);
 
@@ -282,7 +282,7 @@ ErrorOr<void> TmpFSInode::chmod(mode_t mode)
     return {};
 }
 
-ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
+ErrorOr<void> RAMFSInode::chown(UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
 
@@ -292,7 +292,7 @@ ErrorOr<void> TmpFSInode::chown(UserID uid, GroupID gid)
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullLockRefPtr<Inode>> RAMFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
     auto now = kgettimeofday();
@@ -307,12 +307,12 @@ ErrorOr<NonnullLockRefPtr<Inode>> TmpFSInode::create_child(StringView name, mode
     metadata.major_device = major_from_encoded_device(dev);
     metadata.minor_device = minor_from_encoded_device(dev);
 
-    auto child = TRY(TmpFSInode::try_create(fs(), metadata, *this));
+    auto child = TRY(RAMFSInode::try_create(fs(), metadata, *this));
     TRY(add_child(*child, name, mode));
     return child;
 }
 
-ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView name, mode_t)
+ErrorOr<void> RAMFSInode::add_child(Inode& child, StringView name, mode_t)
 {
     VERIFY(is_directory());
     VERIFY(child.fsid() == fsid());
@@ -329,7 +329,7 @@ ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView name, mode_t)
     auto name_kstring = TRY(KString::try_create(name));
     // Balanced by `delete` in remove_child()
 
-    auto* child_entry = new (nothrow) Child { move(name_kstring), static_cast<TmpFSInode&>(child) };
+    auto* child_entry = new (nothrow) Child { move(name_kstring), static_cast<RAMFSInode&>(child) };
     if (!child_entry)
         return ENOMEM;
 
@@ -338,7 +338,7 @@ ErrorOr<void> TmpFSInode::add_child(Inode& child, StringView name, mode_t)
     return {};
 }
 
-ErrorOr<void> TmpFSInode::remove_child(StringView name)
+ErrorOr<void> RAMFSInode::remove_child(StringView name)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(is_directory());
@@ -359,7 +359,7 @@ ErrorOr<void> TmpFSInode::remove_child(StringView name)
     return {};
 }
 
-ErrorOr<void> TmpFSInode::truncate(u64 size)
+ErrorOr<void> RAMFSInode::truncate(u64 size)
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(!is_directory());
@@ -369,7 +369,7 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
 
     u64 last_possible_block_index = size / DataBlock::block_size;
     if ((size % DataBlock::block_size != 0) && m_blocks[last_possible_block_index]) {
-        auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "TmpFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
+        auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Write, AllocationStrategy::Reserve));
         VERIFY(m_blocks[last_possible_block_index]);
         NonnullLockRefPtr<Memory::AnonymousVMObject> block_vmobject = m_blocks[last_possible_block_index]->vmobject();
         mapping_region->set_vmobject(block_vmobject);
@@ -381,7 +381,7 @@ ErrorOr<void> TmpFSInode::truncate(u64 size)
     return {};
 }
 
-ErrorOr<void> TmpFSInode::update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime)
+ErrorOr<void> RAMFSInode::update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime)
 {
     MutexLocker locker(m_inode_lock);
 
