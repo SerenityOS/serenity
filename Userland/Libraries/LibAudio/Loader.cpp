@@ -24,19 +24,19 @@ Loader::Loader(NonnullOwnPtr<LoaderPlugin> plugin)
 Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(StringView path)
 {
     {
-        auto plugin = WavLoaderPlugin::try_create(path);
+        auto plugin = WavLoaderPlugin::create(path);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
 
     {
-        auto plugin = FlacLoaderPlugin::try_create(path);
+        auto plugin = FlacLoaderPlugin::create(path);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
 
     {
-        auto plugin = MP3LoaderPlugin::try_create(path);
+        auto plugin = MP3LoaderPlugin::create(path);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
@@ -47,19 +47,19 @@ Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(StringView p
 Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(Bytes buffer)
 {
     {
-        auto plugin = WavLoaderPlugin::try_create(buffer);
+        auto plugin = WavLoaderPlugin::create(buffer);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
 
     {
-        auto plugin = FlacLoaderPlugin::try_create(buffer);
+        auto plugin = FlacLoaderPlugin::create(buffer);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
 
     {
-        auto plugin = MP3LoaderPlugin::try_create(buffer);
+        auto plugin = MP3LoaderPlugin::create(buffer);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }

@@ -23,7 +23,7 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> str
 {
 }
 
-Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(StringView path)
+Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
 {
     auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
     auto loader = make<WavLoaderPlugin>(move(stream));
@@ -33,7 +33,7 @@ Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(
     return loader;
 }
 
-Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::try_create(Bytes buffer)
+Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Bytes buffer)
 {
     auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));

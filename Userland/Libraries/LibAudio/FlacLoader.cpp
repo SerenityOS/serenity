@@ -30,7 +30,7 @@ FlacLoaderPlugin::FlacLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> s
 {
 }
 
-Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::try_create(StringView path)
+Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(StringView path)
 {
     auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
     auto loader = make<FlacLoaderPlugin>(move(stream));
@@ -40,7 +40,7 @@ Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::try_creat
     return loader;
 }
 
-Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::try_create(Bytes buffer)
+Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(Bytes buffer)
 {
     auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(buffer));
     auto loader = make<FlacLoaderPlugin>(move(stream));

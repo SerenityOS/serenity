@@ -19,7 +19,7 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> str
 {
 }
 
-Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::try_create(StringView path)
+Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(StringView path)
 {
     auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
     auto loader = make<MP3LoaderPlugin>(move(stream));
@@ -29,7 +29,7 @@ Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::try_create(
     return loader;
 }
 
-Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::try_create(Bytes buffer)
+Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Bytes buffer)
 {
     auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(buffer));
     auto loader = make<MP3LoaderPlugin>(move(stream));
