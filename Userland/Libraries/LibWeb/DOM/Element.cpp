@@ -459,6 +459,58 @@ DOMTokenList* Element::class_list()
     return m_class_list;
 }
 
+// https://dom.spec.whatwg.org/#dom-element-attachshadow
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowRootInit init)
+{
+    // 1. If this’s namespace is not the HTML namespace, then throw a "NotSupportedError" DOMException.
+    if (namespace_() != Namespace::HTML)
+        return WebIDL::NotSupportedError::create(realm(), "Element's namespace is not the HTML namespace"sv);
+
+    // 2. If this’s local name is not one of the following:
+    //    FIXME: - a valid custom element name
+    //    - "article", "aside", "blockquote", "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "main", "nav", "p", "section", or "span"
+    if (!local_name().is_one_of("article", "aside", "blockquote", "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "main", "nav", "p", "section", "span")) {
+        // then throw a "NotSupportedError" DOMException.
+        return WebIDL::NotSupportedError::create(realm(), DeprecatedString::formatted("Element '{}' cannot be a shadow host", local_name()));
+    }
+
+    // FIXME: 3. If this’s local name is a valid custom element name, or this’s is value is not null, then: ...
+
+    // 4. If this is a shadow host, then throw an "NotSupportedError" DOMException.
+    if (is_shadow_host())
+        return WebIDL::NotSupportedError::create(realm(), "Element already is a shadow host");
+
+    // 5. Let shadow be a new shadow root whose node document is this’s node document, host is this, and mode is init["mode"].
+    auto shadow = MUST_OR_THROW_OOM(heap().allocate<ShadowRoot>(realm(), document(), *this, init.mode));
+
+    // 6. Set shadow’s delegates focus to init["delegatesFocus"].
+    shadow->set_delegates_focus(init.delegates_focus);
+
+    // FIXME: 7. If this’s custom element state is "precustomized" or "custom", then set shadow’s available to element internals to true.
+
+    // FIXME: 8. Set shadow’s slot assignment to init["slotAssignment"].
+
+    // 9. Set this’s shadow root to shadow.
+    set_shadow_root(shadow);
+
+    // 10. Return shadow.
+    return shadow;
+}
+
+// https://dom.spec.whatwg.org/#dom-element-shadowroot
+JS::GCPtr<ShadowRoot> Element::shadow_root() const
+{
+    // 1. Let shadow be this’s shadow root.
+    auto shadow = m_shadow_root;
+
+    // 2. If shadow is null or its mode is "closed", then return null.
+    if (shadow == nullptr || shadow->mode() == Bindings::ShadowRootMode::Closed)
+        return nullptr;
+
+    // 3. Return shadow.
+    return shadow;
+}
+
 // https://dom.spec.whatwg.org/#dom-element-matches
 WebIDL::ExceptionOr<bool> Element::matches(StringView selectors) const
 {

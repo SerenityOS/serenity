@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
+#include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attr.h>
@@ -26,6 +27,11 @@
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
+
+struct ShadowRootInit {
+    Bindings::ShadowRootMode mode;
+    bool delegates_focus = false;
+};
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrolloptions
 struct ScrollOptions {
@@ -77,6 +83,9 @@ public:
     JS::GCPtr<Attr> get_attribute_node(DeprecatedFlyString const& name) const;
 
     DOMTokenList* class_list();
+
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> attach_shadow(ShadowRootInit init);
+    JS::GCPtr<ShadowRoot> shadow_root() const;
 
     WebIDL::ExceptionOr<bool> matches(StringView selectors) const;
     WebIDL::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;

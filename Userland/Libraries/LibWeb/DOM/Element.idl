@@ -8,6 +8,7 @@
 #import <DOM/Node.idl>
 #import <DOM/NodeList.idl>
 #import <DOM/ParentNode.idl>
+#import <DOM/ShadowRoot.idl>
 #import <Geometry/DOMRect.idl>
 #import <Geometry/DOMRectList.idl>
 
@@ -50,6 +51,9 @@ interface Element : Node {
     [Reflect=class] attribute DOMString className;
     [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
 
+    ShadowRoot attachShadow(ShadowRootInit init);
+    readonly attribute ShadowRoot? shadowRoot;
+
     boolean matches(DOMString selectors);
     Element? closest(DOMString selectors);
 
@@ -79,6 +83,12 @@ interface Element : Node {
 
     undefined scrollIntoView(optional (boolean or ScrollIntoViewOptions) arg = {});
 
+};
+
+dictionary ShadowRootInit {
+    required ShadowRootMode mode;
+    boolean delegatesFocus = false;
+    // FIXME: SlotAssignmentMode slotAssignment = "named";
 };
 
 Element includes ParentNode;
