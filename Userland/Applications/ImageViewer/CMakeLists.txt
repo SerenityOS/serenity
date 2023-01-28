@@ -7,6 +7,7 @@ serenity_component(
 
 set(SOURCES
     main.cpp
+        MainWidget.cpp
         ViewWidget.cpp
 )
 
