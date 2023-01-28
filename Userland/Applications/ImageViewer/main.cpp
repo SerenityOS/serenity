@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "MainWidget.h"
 #include "ViewWidget.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
@@ -56,10 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Image Viewer");
 
-    auto root_widget = TRY(window->set_main_widget<GUI::Widget>());
-    root_widget->set_fill_with_background_color(true);
-    root_widget->set_layout<GUI::VerticalBoxLayout>();
-    root_widget->layout()->set_spacing(2);
+    auto root_widget = TRY(window->set_main_widget<MainWidget>());
 
     auto toolbar_container = TRY(root_widget->try_add<GUI::ToolbarContainer>());
     auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
