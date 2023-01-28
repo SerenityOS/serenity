@@ -639,6 +639,39 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         }
         return;
     }
+    // https://webassembly.github.io/spec/core/bikeshed/#exec-memory-copy
+    case Instructions::memory_copy.value(): {
+        auto address = configuration.frame().module().memories()[0];
+        auto instance = configuration.store().get(address);
+        auto count = configuration.stack().pop().get<Value>().to<i32>().value();
+        auto source_offset = configuration.stack().pop().get<Value>().to<i32>().value();
+        auto destination_offset = configuration.stack().pop().get<Value>().to<i32>().value();
+
+        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= instance->data().size());
+        TRAP_IF_NOT(static_cast<size_t>(destination_offset + count) <= instance->data().size());
+
+        if (count == 0)
+            return;
+
+        Instruction synthetic_store_instruction {
+            Instructions::i32_store8,
+            Instruction::MemoryArgument { 0, 0 }
+        };
+
+        if (destination_offset <= source_offset) {
+            for (auto i = 0; i < count; ++i) {
+                auto value = instance->data()[source_offset + i];
+                store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
+            }
+        } else {
+            for (auto i = count - 1; i >= 0; --i) {
+                auto value = instance->data()[source_offset + i];
+                store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
+            }
+        }
+
+        return;
+    }
     case Instructions::table_get.value():
     case Instructions::table_set.value():
         goto unimplemented;
@@ -973,7 +1006,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::data_drop.value():
-    case Instructions::memory_copy.value():
     case Instructions::table_init.value():
     case Instructions::elem_drop.value():
     case Instructions::table_copy.value():
