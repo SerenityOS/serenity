@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Intl {

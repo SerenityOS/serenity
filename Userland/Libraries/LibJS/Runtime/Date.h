@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
