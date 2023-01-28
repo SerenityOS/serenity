@@ -672,6 +672,30 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
 
         return;
     }
+    // https://webassembly.github.io/spec/core/bikeshed/#exec-memory-init
+    case Instructions::memory_init.value(): {
+        auto data_index = instruction.arguments().get<DataIndex>();
+        auto& data_address = configuration.frame().module().datas()[data_index.value()];
+        auto& data = *configuration.store().get(data_address);
+        auto count = *configuration.stack().pop().get<Value>().to<i32>();
+        auto source_offset = *configuration.stack().pop().get<Value>().to<i32>();
+        auto destination_offset = *configuration.stack().pop().get<Value>().to<i32>();
+
+        TRAP_IF_NOT(count > 0);
+        TRAP_IF_NOT(source_offset + count > 0);
+        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= data.size());
+
+        Instruction synthetic_store_instruction {
+            Instructions::i32_store8,
+            Instruction::MemoryArgument { 0, 0 }
+        };
+
+        for (size_t i = 0; i < (size_t)count; ++i) {
+            auto value = data.data()[source_offset + i];
+            store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
+        }
+        return;
+    }
     case Instructions::table_get.value():
     case Instructions::table_set.value():
         goto unimplemented;
@@ -982,29 +1006,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return unary_operation<double, i64, Operators::SaturatingTruncate<i64>>(configuration);
     case Instructions::i64_trunc_sat_f64_u.value():
         return unary_operation<double, i64, Operators::SaturatingTruncate<u64>>(configuration);
-    case Instructions::memory_init.value(): {
-        auto data_index = instruction.arguments().get<DataIndex>();
-        auto& data_address = configuration.frame().module().datas()[data_index.value()];
-        auto& data = *configuration.store().get(data_address);
-        auto count = *configuration.stack().pop().get<Value>().to<i32>();
-        auto source_offset = *configuration.stack().pop().get<Value>().to<i32>();
-        auto destination_offset = *configuration.stack().pop().get<Value>().to<i32>();
-
-        TRAP_IF_NOT(count > 0);
-        TRAP_IF_NOT(source_offset + count > 0);
-        TRAP_IF_NOT(static_cast<size_t>(source_offset + count) <= data.size());
-
-        Instruction synthetic_store_instruction {
-            Instructions::i32_store8,
-            Instruction::MemoryArgument { 0, 0 }
-        };
-
-        for (size_t i = 0; i < (size_t)count; ++i) {
-            auto value = data.data()[source_offset + i];
-            store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset + i);
-        }
-        return;
-    }
     case Instructions::data_drop.value():
     case Instructions::table_init.value():
     case Instructions::elem_drop.value():
