@@ -30,6 +30,12 @@ void TextToolEditor::handle_keyevent(Badge<TextTool>, GUI::KeyEvent& event)
     TextEditor::keydown_event(event);
 }
 
+NonnullRefPtrVector<GUI::Action> TextToolEditor::actions()
+{
+    static NonnullRefPtrVector<GUI::Action> actions = { cut_action(), copy_action(), paste_action(), undo_action(), redo_action(), select_all_action() };
+    return actions;
+}
+
 TextTool::TextTool()
 {
     m_text_editor = TextToolEditor::construct();
@@ -280,6 +286,15 @@ bool TextTool::on_keydown(GUI::KeyEvent& event)
         apply_text_to_layer();
         reset_tool();
         return true;
+    }
+
+    // Pass key events that would normally be handled by menu shortcuts to our TextEditor subclass.
+    for (auto& action : m_text_editor->actions()) {
+        auto const& shortcut = action.shortcut();
+        if (event.key() == shortcut.key() && event.modifiers() == shortcut.modifiers()) {
+            action.activate(m_text_editor);
+            return true;
+        }
     }
 
     // Pass the key event off to our TextEditor subclass which handles all text entry features like
