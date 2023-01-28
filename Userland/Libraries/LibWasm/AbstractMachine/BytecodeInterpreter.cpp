@@ -696,6 +696,13 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         }
         return;
     }
+    // https://webassembly.github.io/spec/core/bikeshed/#exec-data-drop
+    case Instructions::data_drop.value(): {
+        auto data_index = instruction.arguments().get<DataIndex>();
+        auto data_address = configuration.frame().module().datas()[data_index.value()];
+        *configuration.store().get(data_address) = DataInstance({});
+        return;
+    }
     case Instructions::table_get.value():
     case Instructions::table_set.value():
         goto unimplemented;
@@ -1006,7 +1013,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return unary_operation<double, i64, Operators::SaturatingTruncate<i64>>(configuration);
     case Instructions::i64_trunc_sat_f64_u.value():
         return unary_operation<double, i64, Operators::SaturatingTruncate<u64>>(configuration);
-    case Instructions::data_drop.value():
     case Instructions::table_init.value():
     case Instructions::elem_drop.value():
     case Instructions::table_copy.value():
