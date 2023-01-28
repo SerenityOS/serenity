@@ -45,15 +45,15 @@ protected:
 
 class Image : public RefCounted<Image> {
 public:
-    static ErrorOr<NonnullRefPtr<Image>> try_create_with_size(Gfx::IntSize);
-    static ErrorOr<NonnullRefPtr<Image>> try_create_from_pixel_paint_json(JsonObject const&);
-    static ErrorOr<NonnullRefPtr<Image>> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
+    static ErrorOr<NonnullRefPtr<Image>> create_with_size(Gfx::IntSize);
+    static ErrorOr<NonnullRefPtr<Image>> create_from_pixel_paint_json(JsonObject const&);
+    static ErrorOr<NonnullRefPtr<Image>> create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
 
-    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_decode_bitmap(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> decode_bitmap(ReadonlyBytes);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
-    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_compose_bitmap(Gfx::BitmapFormat format) const;
-    RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> compose_bitmap(Gfx::BitmapFormat format) const;
+    RefPtr<Gfx::Bitmap> copy_bitmap(Selection const&) const;
 
     Selection& selection() { return m_selection; }
     Selection const& selection() const { return m_selection; }

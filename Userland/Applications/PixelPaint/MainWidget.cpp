@@ -152,7 +152,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                auto image_result = PixelPaint::Image::try_create_with_size(dialog->image_size());
+                auto image_result = PixelPaint::Image::create_with_size(dialog->image_size());
                 if (image_result.is_error()) {
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image with size {}, error: {}", dialog->image_size(), image_result.error()));
                     return;
@@ -320,9 +320,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
 
-            auto bitmap = editor->image().try_copy_bitmap(editor->image().selection());
+            auto bitmap = editor->image().copy_bitmap(editor->image().selection());
             if (!bitmap) {
-                dbgln("try_copy_bitmap() from Image failed");
+                dbgln("copy_bitmap() from Image failed");
                 return;
             }
             GUI::Clipboard::the().set_bitmap(*bitmap);
@@ -1113,7 +1113,7 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
 
 ErrorOr<void> MainWidget::create_default_image()
 {
-    auto image = TRY(Image::try_create_with_size({ 510, 356 }));
+    auto image = TRY(Image::create_with_size({ 510, 356 }));
 
     auto bg_layer = TRY(Layer::try_create_with_size(*image, image->size(), "Background"));
     image->add_layer(*bg_layer);
@@ -1136,7 +1136,7 @@ ErrorOr<void> MainWidget::create_image_from_clipboard()
         return Error::from_string_view("There is no image in a clipboard to paste."sv);
     }
 
-    auto image = TRY(PixelPaint::Image::try_create_with_size(bitmap->size()));
+    auto image = TRY(PixelPaint::Image::create_with_size(bitmap->size()));
     auto layer = TRY(PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer"));
     image->add_layer(*layer);
 

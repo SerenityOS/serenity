@@ -24,15 +24,15 @@ ErrorOr<void> ProjectLoader::try_load_from_file(NonnullOwnPtr<Core::Stream::File
         m_is_raw_image = true;
 
         // FIXME: Find a way to avoid the memory copy here.
-        auto bitmap = TRY(Image::try_decode_bitmap(contents));
-        auto image = TRY(Image::try_create_from_bitmap(move(bitmap)));
+        auto bitmap = TRY(Image::decode_bitmap(contents));
+        auto image = TRY(Image::create_from_bitmap(move(bitmap)));
 
         m_image = image;
         return {};
     }
 
     auto& json = json_or_error.value().as_object();
-    auto image = TRY(Image::try_create_from_pixel_paint_json(json));
+    auto image = TRY(Image::create_from_pixel_paint_json(json));
 
     if (json.has_array("guides"sv))
         m_json_metadata = json.get_array("guides"sv).value();
