@@ -50,17 +50,21 @@ static float rand_float()
 
 void Game::timer_event(Core::TimerEvent&)
 {
-    if (m_start_game_over_animation_next_frame) {
-        m_start_game_over_animation_next_frame = false;
-        m_game_over_animation = true;
+    switch (m_state) {
+    case State::StartGameOverAnimationNextFrame: {
+        m_state = State::GameOverAnimation;
         set_background_fill_enabled(false);
-    } else if (m_game_over_animation) {
+        break;
+    }
+    case State::GameOverAnimation: {
         if (m_animation.position().x() >= Game::width || m_animation.card_rect().right() <= 0)
             create_new_animation_card();
 
         if (m_animation.tick())
             update(m_animation.card_rect());
-    } else if (m_new_game_animation) {
+        break;
+    }
+    case State::NewGameAnimation: {
         if (m_new_game_animation_delay < new_game_animation_delay) {
             ++m_new_game_animation_delay;
         } else {
@@ -85,11 +89,14 @@ void Game::timer_event(Core::TimerEvent&)
 
                 update(stock_pile.bounding_box());
 
-                m_new_game_animation = false;
-                m_waiting_for_new_game = true;
+                m_state = State::WaitingForNewGame;
                 stop_timer();
             }
         }
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -114,7 +121,7 @@ void Game::set_background_fill_enabled(bool enabled)
 
 void Game::start_game_over_animation()
 {
-    if (m_game_over_animation || m_start_game_over_animation_next_frame)
+    if (m_state == State::GameOverAnimation || m_state == State::StartGameOverAnimationNextFrame)
         return;
 
     m_last_move = {};
@@ -126,7 +133,7 @@ void Game::start_game_over_animation()
     // We wait one frame, to make sure that the foundation stacks are repainted before we start.
     // Otherwise, if the game ended from an attempt_to_move_card_to_foundations() move, the
     // foundations could appear empty or otherwise incorrect.
-    m_start_game_over_animation_next_frame = true;
+    m_state = State::StartGameOverAnimationNextFrame;
 
     start_timer(s_timer_interval_ms);
 
@@ -136,11 +143,11 @@ void Game::start_game_over_animation()
 
 void Game::stop_game_over_animation()
 {
-    if (!m_game_over_animation)
+    if (m_state != State::GameOverAnimation)
         return;
 
     set_background_fill_enabled(true);
-    m_game_over_animation = false;
+    m_state = State::NewGameAnimation;
     update();
 
     stop_timer();
@@ -148,7 +155,7 @@ void Game::stop_game_over_animation()
 
 void Game::setup(Mode mode)
 {
-    if (m_new_game_animation)
+    if (m_state == State::NewGameAnimation)
         stop_timer();
 
     stop_game_over_animation();
@@ -172,16 +179,16 @@ void Game::setup(Mode mode)
 
     clear_moving_cards();
 
-    m_new_game_animation = true;
+    m_state = State::NewGameAnimation;
     start_timer(s_timer_interval_ms);
     update();
 }
 
 void Game::start_timer_if_necessary()
 {
-    if (on_game_start && m_waiting_for_new_game) {
+    if (on_game_start && m_state == State::WaitingForNewGame) {
         on_game_start();
-        m_waiting_for_new_game = false;
+        m_state = State::GameInProgress;
     }
 }
 
@@ -213,7 +220,7 @@ void Game::update_score(int to_add)
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (is_moving_cards() || m_new_game_animation || m_game_over_animation) {
+    if (is_moving_cards() || m_state == State::NewGameAnimation || m_state == State::GameOverAnimation) {
         event.ignore();
         return;
     }
@@ -237,7 +244,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mousedown_event(event);
 
-    if (m_new_game_animation || m_game_over_animation)
+    if (m_state == State::NewGameAnimation || m_state == State::GameOverAnimation)
         return;
 
     auto click_location = event.position();
@@ -289,7 +296,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (!is_moving_cards() || m_game_over_animation || m_new_game_animation)
+    if (!is_moving_cards() || m_state == State::NewGameAnimation || m_state == State::GameOverAnimation)
         return;
 
     bool rebound = true;
@@ -321,7 +328,7 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mousemove_event(event);
 
-    if (!m_mouse_down || m_game_over_animation || m_new_game_animation)
+    if (!m_mouse_down || m_state == State::NewGameAnimation || m_state == State::GameOverAnimation)
         return;
 
     auto click_location = event.position();
@@ -353,12 +360,12 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
 {
     GUI::Frame::doubleclick_event(event);
 
-    if (m_game_over_animation) {
+    if (m_state == State::GameOverAnimation) {
         setup(mode());
         return;
     }
 
-    if (m_new_game_animation)
+    if (m_state == State::NewGameAnimation)
         return;
 
     auto click_location = event.position();
@@ -543,7 +550,7 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    if (m_game_over_animation) {
+    if (m_state == State::GameOverAnimation) {
         m_animation.draw(painter);
         return;
     }

@@ -204,11 +204,16 @@ private:
 
     bool m_mouse_down { false };
 
+    enum class State {
+        WaitingForNewGame,
+        NewGameAnimation,
+        GameInProgress,
+        StartGameOverAnimationNextFrame,
+        GameOverAnimation,
+    };
+    State m_state { State::WaitingForNewGame };
+
     Animation m_animation;
-    bool m_start_game_over_animation_next_frame { false };
-    bool m_game_over_animation { false };
-    bool m_waiting_for_new_game { true };
-    bool m_new_game_animation { false };
     uint8_t m_new_game_animation_pile { 0 };
     uint8_t m_new_game_animation_delay { 0 };
 
