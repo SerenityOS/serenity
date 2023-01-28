@@ -133,6 +133,7 @@ struct PNGLoadingContext {
     Optional<CodingIndependentCodePoints> coding_independent_code_points;
     Optional<u32> gamma;
     Optional<EmbeddedICCProfile> embedded_icc_profile;
+    Optional<ByteBuffer> decompressed_icc_profile;
     Optional<RenderingIntent> sRGB_rendering_intent;
 
     Checked<int> compute_row_size_for_width(int width)
@@ -1080,6 +1081,30 @@ ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 
 ErrorOr<Optional<ReadonlyBytes>> PNGImageDecoderPlugin::icc_data()
 {
+    if (!decode_png_chunks(*m_context))
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding chunks failed");
+
+    if (m_context->embedded_icc_profile.has_value()) {
+        if (!m_context->decompressed_icc_profile.has_value()) {
+            auto result = Compress::ZlibDecompressor::decompress_all(m_context->embedded_icc_profile->compressed_data);
+            if (!result.has_value()) {
+                m_context->embedded_icc_profile.clear();
+                return Error::from_string_literal("PNGImageDecoderPlugin: Decompression of ICC profile failed");
+            }
+            m_context->decompressed_icc_profile = move(*result);
+        }
+
+        return m_context->decompressed_icc_profile.value();
+    }
+
+    // FIXME: Eventually, look at coding_independent_code_points, chromaticities_and_whitepoint, gamma, sRGB_rendering_intent too.
+    // The order is:
+    // 1. Use coding_independent_code_points if it exists, ignore the rest.
+    // 2. Use embedded_icc_profile if it exists, ignore the rest.
+    // 3. Use sRGB_rendering_intent if it exists, ignore the rest.
+    // 4. Use gamma to adjust gamma and chromaticities_and_whitepoint to adjust color.
+    // (Order between 2 and 3 isn't fully clear, but "It is recommended that the sRGB and iCCP chunks do not appear simultaneously in a PNG datastream."
+
     return OptionalNone {};
 }
 
