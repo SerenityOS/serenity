@@ -47,7 +47,7 @@ public:
             return false;
 
         if (m_in_chunk_location >= m_current_audio_chunk.size()) {
-            auto result = m_buffer->try_dequeue();
+            auto result = m_buffer->dequeue();
             if (result.is_error()) {
                 if (result.error() == Audio::AudioQueue::QueueStatus::Empty) {
                     dbgln("Audio client {} can't keep up!", m_client->client_id());
@@ -79,7 +79,7 @@ public:
     {
         ErrorOr<Array<Audio::Sample, Audio::AUDIO_BUFFER_SIZE>, Audio::AudioQueue::QueueStatus> result = Audio::AudioQueue::QueueStatus::Invalid;
         do {
-            result = m_buffer->try_dequeue();
+            result = m_buffer->dequeue();
         } while (result.is_error() && result.error() != Audio::AudioQueue::QueueStatus::Empty);
     }
 

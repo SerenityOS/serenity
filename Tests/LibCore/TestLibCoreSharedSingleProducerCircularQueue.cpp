@@ -18,23 +18,23 @@ Function<intptr_t()> dequeuer(TestQueue& queue, Atomic<size_t>& dequeue_count, s
 
 TEST_CASE(simple_enqueue)
 {
-    auto queue = MUST(TestQueue::try_create());
+    auto queue = MUST(TestQueue::create());
     for (size_t i = 0; i < queue.size() - 1; ++i)
-        EXPECT(!queue.try_enqueue((int)i).is_error());
+        EXPECT(!queue.enqueue((int)i).is_error());
 
-    auto result = queue.try_enqueue(0);
+    auto result = queue.enqueue(0);
     EXPECT(result.is_error());
     EXPECT_EQ(result.release_error(), TestQueue::QueueStatus::Full);
 }
 
 TEST_CASE(simple_dequeue)
 {
-    auto queue = MUST(TestQueue::try_create());
+    auto queue = MUST(TestQueue::create());
     auto const test_count = 10;
     for (int i = 0; i < test_count; ++i)
-        (void)queue.try_enqueue(i);
+        (void)queue.enqueue(i);
     for (int i = 0; i < test_count; ++i) {
-        auto const element = queue.try_dequeue();
+        auto const element = queue.dequeue();
         EXPECT(!element.is_error());
         EXPECT_EQ(element.value(), i);
     }
@@ -43,18 +43,18 @@ TEST_CASE(simple_dequeue)
 // There is one parallel consumer, but nobody is producing at the same time.
 TEST_CASE(simple_multithread)
 {
-    auto queue = MUST(TestQueue::try_create());
+    auto queue = MUST(TestQueue::create());
     auto const test_count = 10;
 
     for (int i = 0; i < test_count; ++i)
-        (void)queue.try_enqueue(i);
+        (void)queue.enqueue(i);
 
     auto second_thread = Threading::Thread::construct([&queue]() {
         auto copied_queue = queue;
         for (int i = 0; i < test_count; ++i) {
             QueueError result = TestQueue::QueueStatus::Invalid;
             do {
-                result = copied_queue.try_dequeue();
+                result = copied_queue.dequeue();
                 if (!result.is_error())
                     EXPECT_EQ(result.value(), i);
             } while (result.is_error() && result.error() == TestQueue::QueueStatus::Empty);
@@ -73,7 +73,7 @@ TEST_CASE(simple_multithread)
 // There is one parallel consumer and one parallel producer.
 TEST_CASE(producer_consumer_multithread)
 {
-    auto queue = MUST(TestQueue::try_create());
+    auto queue = MUST(TestQueue::create());
     // Ensure that we have the possibility of filling the queue up.
     auto const test_count = queue.size() * 4;
 
@@ -85,7 +85,7 @@ TEST_CASE(producer_consumer_multithread)
         for (size_t i = 0; i < test_count; ++i) {
             QueueError result = TestQueue::QueueStatus::Invalid;
             do {
-                result = copied_queue.try_dequeue();
+                result = copied_queue.dequeue();
                 if (!result.is_error())
                     EXPECT_EQ(result.value(), (int)i);
             } while (result.is_error() && result.error() == TestQueue::QueueStatus::Empty);
@@ -103,7 +103,7 @@ TEST_CASE(producer_consumer_multithread)
     for (size_t i = 0; i < test_count; ++i) {
         ErrorOr<void, TestQueue::QueueStatus> result = TestQueue::QueueStatus::Invalid;
         do {
-            result = queue.try_enqueue((int)i);
+            result = queue.enqueue((int)i);
         } while (result.is_error() && result.error() == TestQueue::QueueStatus::Full);
 
         if (result.is_error())
@@ -118,7 +118,7 @@ TEST_CASE(producer_consumer_multithread)
 // There are multiple parallel consumers, but nobody is producing at the same time.
 TEST_CASE(multi_consumer)
 {
-    auto queue = MUST(TestQueue::try_create());
+    auto queue = MUST(TestQueue::create());
     // This needs to be divisible by 4!
     size_t const test_count = queue.size() - 4;
     Atomic<size_t> dequeue_count = 0;
@@ -131,7 +131,7 @@ TEST_CASE(multi_consumer)
     };
 
     for (size_t i = 0; i < test_count; ++i)
-        (void)queue.try_enqueue((int)i);
+        (void)queue.enqueue((int)i);
 
     for (auto thread : threads)
         thread->start();
@@ -145,7 +145,7 @@ TEST_CASE(multi_consumer)
 // There are multiple parallel consumers and one parallel producer.
 TEST_CASE(single_producer_multi_consumer)
 {
-    auto queue = MUST(TestQueue::try_create());
+    auto queue = MUST(TestQueue::create());
     // Choose a higher number to provoke possible race conditions.
     size_t const test_count = queue.size() * 8;
     Atomic<size_t> dequeue_count = 0;
@@ -162,7 +162,7 @@ TEST_CASE(single_producer_multi_consumer)
     for (size_t i = 0; i < test_count; ++i) {
         ErrorOr<void, TestQueue::QueueStatus> result = TestQueue::QueueStatus::Invalid;
         do {
-            result = queue.try_enqueue((int)i);
+            result = queue.enqueue((int)i);
             // After we put something in the first time, let's wait while nobody has dequeued yet.
             while (dequeue_count.load() == 0)
                 ;
@@ -188,7 +188,7 @@ Function<intptr_t()> dequeuer(TestQueue& queue, Atomic<size_t>& dequeue_count, s
         for (size_t i = 0; i < test_count / 4; ++i) {
             QueueError result = TestQueue::QueueStatus::Invalid;
             do {
-                result = copied_queue.try_dequeue();
+                result = copied_queue.dequeue();
                 if (!result.is_error())
                     dequeue_count.fetch_add(1);
                 // Give others time to do something.
