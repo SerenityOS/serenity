@@ -131,6 +131,7 @@ public:
 
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
 
+    bool is_shadow_host() const;
     ShadowRoot* shadow_root_internal() { return m_shadow_root.ptr(); }
     ShadowRoot const* shadow_root_internal() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
