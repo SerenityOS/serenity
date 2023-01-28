@@ -22,6 +22,7 @@ class TextToolEditor : public GUI::TextEditor {
 public:
     virtual ~TextToolEditor() override = default;
     virtual void handle_keyevent(Badge<TextTool>, GUI::KeyEvent&);
+    NonnullRefPtrVector<GUI::Action> actions();
 
 protected:
     TextToolEditor();
