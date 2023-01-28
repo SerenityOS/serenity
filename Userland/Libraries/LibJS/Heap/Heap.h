@@ -46,7 +46,10 @@ public:
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
-        memory->initialize(realm);
+
+        // FIXME: Propagate this error.
+        (void)memory->initialize(realm);
+
         return *cell;
     }
 

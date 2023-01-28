@@ -20,9 +20,9 @@ PlainYearMonthConstructor::PlainYearMonthConstructor(Realm& realm)
 {
 }
 
-void PlainYearMonthConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> PlainYearMonthConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -34,6 +34,8 @@ void PlainYearMonthConstructor::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.from, from, 1, attr);
     define_native_function(realm, vm.names.compare, compare, 2, attr);
+
+    return {};
 }
 
 // 9.1.1 Temporal.PlainYearMonth ( isoYear, isoMonth [ , calendarLike [ , referenceISODay ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plainyearmonth

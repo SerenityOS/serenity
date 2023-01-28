@@ -26,9 +26,9 @@ PlainDateTimePrototype::PlainDateTimePrototype(Realm& realm)
 {
 }
 
-void PlainDateTimePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> PlainDateTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -79,6 +79,8 @@ void PlainDateTimePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(realm, vm.names.toPlainTime, to_plain_time, 0, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
+
+    return {};
 }
 
 // 5.3.3 get Temporal.PlainDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.calendar

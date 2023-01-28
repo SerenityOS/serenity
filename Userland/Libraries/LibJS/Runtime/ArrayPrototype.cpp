@@ -33,10 +33,10 @@ ArrayPrototype::ArrayPrototype(Realm& realm)
 {
 }
 
-void ArrayPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ArrayPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Array::initialize(realm);
+    MUST_OR_THROW_OOM(Array::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(realm, vm.names.at, at, 1, attr);
@@ -110,6 +110,8 @@ void ArrayPrototype::initialize(Realm& realm)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
+
+    return {};
 }
 
 // 10.4.2.3 ArraySpeciesCreate ( originalArray, length ), https://tc39.es/ecma262/#sec-arrayspeciescreate

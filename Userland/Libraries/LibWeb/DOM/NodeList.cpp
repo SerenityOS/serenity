@@ -17,10 +17,12 @@ NodeList::NodeList(JS::Realm& realm)
 
 NodeList::~NodeList() = default;
 
-void NodeList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> NodeList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeListPrototype>(realm, "NodeList"));
+
+    return {};
 }
 
 JS::Value NodeList::item_value(size_t index) const

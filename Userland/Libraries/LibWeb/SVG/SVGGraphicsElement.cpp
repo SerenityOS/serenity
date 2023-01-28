@@ -18,10 +18,12 @@ SVGGraphicsElement::SVGGraphicsElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-void SVGGraphicsElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SVGGraphicsElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGraphicsElementPrototype>(realm, "SVGGraphicsElement"));
+
+    return {};
 }
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const

@@ -467,11 +467,13 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                            \
     }                                                                                                                            \
                                                                                                                                  \
-    void PrototypeName::initialize(Realm& realm)                                                                                 \
+    ThrowCompletionOr<void> PrototypeName::initialize(Realm& realm)                                                              \
     {                                                                                                                            \
         auto& vm = this->vm();                                                                                                   \
-        Object::initialize(realm);                                                                                               \
+        MUST_OR_THROW_OOM(Base::initialize(realm));                                                                              \
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                         \
+                                                                                                                                 \
+        return {};                                                                                                               \
     }                                                                                                                            \
                                                                                                                                  \
     ConstructorName::ConstructorName(Realm& realm, Object& prototype)                                                            \
@@ -483,10 +485,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     {                                                                                                                            \
     }                                                                                                                            \
                                                                                                                                  \
-    void ConstructorName::initialize(Realm& realm)                                                                               \
+    ThrowCompletionOr<void> ConstructorName::initialize(Realm& realm)                                                            \
     {                                                                                                                            \
         auto& vm = this->vm();                                                                                                   \
-        NativeFunction::initialize(realm);                                                                                       \
+        MUST_OR_THROW_OOM(NativeFunction::initialize(realm));                                                                    \
                                                                                                                                  \
         /* 23.2.6.2 TypedArray.prototype, https://tc39.es/ecma262/#sec-typedarray.prototype */                                   \
         define_direct_property(vm.names.prototype, realm.intrinsics().snake_name##_prototype(), 0);                              \
@@ -495,6 +497,8 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         define_direct_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                         \
                                                                                                                                  \
         define_direct_property(vm.names.length, Value(3), Attribute::Configurable);                                              \
+                                                                                                                                 \
+        return {};                                                                                                               \
     }                                                                                                                            \
                                                                                                                                  \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                               \

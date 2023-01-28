@@ -47,10 +47,12 @@ CanvasGradient::CanvasGradient(JS::Realm& realm, Gfx::GradientPaintStyle& gradie
 
 CanvasGradient::~CanvasGradient() = default;
 
-void CanvasGradient::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CanvasGradient::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasGradientPrototype>(realm, "CanvasGradient"));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-canvasgradient-addcolorstop

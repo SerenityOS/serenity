@@ -65,7 +65,7 @@ public:
         instance->m_module_instance = result.release_value();
         return instance.ptr();
     }
-    void initialize(JS::Realm&) override;
+    JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     ~WebAssemblyModule() override = default;
 
@@ -143,11 +143,13 @@ TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
     return JS::Value(lhs_array.viewed_array_buffer()->buffer() == rhs_array.viewed_array_buffer()->buffer());
 }
 
-void WebAssemblyModule::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyModule::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_native_function(realm, "getExport", get_export, 1, JS::default_attributes);
     define_native_function(realm, "invoke", wasm_invoke, 1, JS::default_attributes);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)

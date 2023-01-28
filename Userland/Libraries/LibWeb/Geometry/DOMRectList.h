@@ -30,7 +30,7 @@ public:
 private:
     DOMRectList(JS::Realm&, Vector<JS::NonnullGCPtr<DOMRect>>);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     Vector<JS::NonnullGCPtr<DOMRect>> m_rects;
 };

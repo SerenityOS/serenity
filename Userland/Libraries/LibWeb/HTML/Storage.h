@@ -35,7 +35,7 @@ public:
 private:
     explicit Storage(JS::Realm&);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     void reorder();
     void broadcast(DeprecatedString const& key, DeprecatedString const& old_value, DeprecatedString const& new_value);

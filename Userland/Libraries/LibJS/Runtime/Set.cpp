@@ -18,9 +18,11 @@ Set::Set(Object& prototype)
 {
 }
 
-void Set::initialize(Realm& realm)
+ThrowCompletionOr<void> Set::initialize(Realm& realm)
 {
     m_values = Map::create(realm);
+
+    return {};
 }
 
 NonnullGCPtr<Set> Set::copy() const

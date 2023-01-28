@@ -46,7 +46,7 @@ class Object : public Cell {
 public:
     static NonnullGCPtr<Object> create(Realm&, Object* prototype);
 
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~Object();
 
     enum class PropertyKind {

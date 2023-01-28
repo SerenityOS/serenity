@@ -39,13 +39,15 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyInstanceConstruct
     return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result);
 }
 
-void WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
     define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssembly.Instance"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+
+    return {};
 }
 
 }

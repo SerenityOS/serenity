@@ -129,9 +129,9 @@ AtomicsObject::AtomicsObject(Realm& realm)
 {
 }
 
-void AtomicsObject::initialize(Realm& realm)
+ThrowCompletionOr<void> AtomicsObject::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -148,6 +148,8 @@ void AtomicsObject::initialize(Realm& realm)
 
     // 25.4.15 Atomics [ @@toStringTag ], https://tc39.es/ecma262/#sec-atomics-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Atomics"), Attribute::Configurable);
+
+    return {};
 }
 
 // 25.4.3 Atomics.add ( typedArray, index, value ), https://tc39.es/ecma262/#sec-atomics.add

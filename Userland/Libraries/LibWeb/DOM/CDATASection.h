@@ -23,7 +23,7 @@ public:
 private:
     CDATASection(Document&, DeprecatedString const&);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 template<>

@@ -19,7 +19,7 @@ public:
     explicit WindowPrototype(JS::Realm& realm);
 
 private:
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

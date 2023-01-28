@@ -18,10 +18,12 @@ HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLQuoteElement::~HTMLQuoteElement() = default;
 
-void HTMLQuoteElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLQuoteElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLQuoteElementPrototype>(realm, "HTMLQuoteElement"));
+
+    return {};
 }
 
 Optional<DOM::ARIARoles::Role> HTMLQuoteElement::default_role() const

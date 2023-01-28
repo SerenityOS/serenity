@@ -26,9 +26,9 @@ Temporal::Temporal(Realm& realm)
 {
 }
 
-void Temporal::initialize(Realm& realm)
+ThrowCompletionOr<void> Temporal::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -47,6 +47,8 @@ void Temporal::initialize(Realm& realm)
     define_intrinsic_accessor(vm.names.PlainYearMonth, attr, [](auto& realm) -> Value { return realm.intrinsics().temporal_plain_year_month_constructor(); });
     define_intrinsic_accessor(vm.names.TimeZone, attr, [](auto& realm) -> Value { return realm.intrinsics().temporal_time_zone_constructor(); });
     define_intrinsic_accessor(vm.names.ZonedDateTime, attr, [](auto& realm) -> Value { return realm.intrinsics().temporal_zoned_date_time_constructor(); });
+
+    return {};
 }
 
 }

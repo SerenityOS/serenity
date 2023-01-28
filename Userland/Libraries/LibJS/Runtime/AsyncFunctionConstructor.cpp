@@ -17,15 +17,17 @@ AsyncFunctionConstructor::AsyncFunctionConstructor(Realm& realm)
 {
 }
 
-void AsyncFunctionConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> AsyncFunctionConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 27.7.2.2 AsyncFunction.prototype, https://tc39.es/ecma262/#sec-async-function-constructor-prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().async_function_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 27.7.1.1 AsyncFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-async-function-constructor-arguments

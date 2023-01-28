@@ -16,15 +16,17 @@ ShadowRealmConstructor::ShadowRealmConstructor(Realm& realm)
 {
 }
 
-void ShadowRealmConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> ShadowRealmConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 3.3.1 ShadowRealm.prototype, https://tc39.es/proposal-shadowrealm/#sec-shadowrealm.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().shadow_realm_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    return {};
 }
 
 // 3.2.1 ShadowRealm ( ), https://tc39.es/proposal-shadowrealm/#sec-shadowrealm

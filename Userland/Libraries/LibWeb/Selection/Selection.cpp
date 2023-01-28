@@ -24,10 +24,12 @@ Selection::Selection(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Do
 
 Selection::~Selection() = default;
 
-void Selection::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Selection::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SelectionPrototype>(realm, "Selection"));
+
+    return {};
 }
 
 // https://w3c.github.io/selection-api/#dfn-empty

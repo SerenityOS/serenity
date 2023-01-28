@@ -22,9 +22,9 @@ PlainYearMonthPrototype::PlainYearMonthPrototype(Realm& realm)
 {
 }
 
-void PlainYearMonthPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> PlainYearMonthPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -55,6 +55,8 @@ void PlainYearMonthPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
     define_native_function(realm, vm.names.toPlainDate, to_plain_date, 1, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
+
+    return {};
 }
 
 // 9.3.3 get Temporal.PlainYearMonth.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plainyearmonth.prototype.calendar

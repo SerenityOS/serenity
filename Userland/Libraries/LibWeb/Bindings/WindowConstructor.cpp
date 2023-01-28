@@ -27,13 +27,15 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WindowConstructor::construct
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "Window");
 }
 
-void WindowConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WindowConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
     define_direct_property(vm.names.prototype, &ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
+
+    return {};
 }
 
 }

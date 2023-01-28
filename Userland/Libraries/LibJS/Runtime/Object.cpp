@@ -74,8 +74,9 @@ Object::~Object()
     s_intrinsics.remove(this);
 }
 
-void Object::initialize(Realm&)
+ThrowCompletionOr<void> Object::initialize(Realm&)
 {
+    return {};
 }
 
 // 7.2 Testing and Comparison Operations, https://tc39.es/ecma262/#sec-testing-and-comparison-operations

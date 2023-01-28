@@ -95,10 +95,12 @@ WebSocket::WebSocket(HTML::Window& window, AK::URL& url)
 
 WebSocket::~WebSocket() = default;
 
-void WebSocket::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebSocket::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WebSocketPrototype>(realm, "WebSocket"));
+
+    return {};
 }
 
 void WebSocket::visit_edges(Cell::Visitor& visitor)

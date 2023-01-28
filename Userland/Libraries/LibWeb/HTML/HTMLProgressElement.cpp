@@ -21,10 +21,12 @@ HTMLProgressElement::HTMLProgressElement(DOM::Document& document, DOM::Qualified
 
 HTMLProgressElement::~HTMLProgressElement() = default;
 
-void HTMLProgressElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLProgressElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLProgressElementPrototype>(realm, "HTMLProgressElement"));
+
+    return {};
 }
 
 JS::GCPtr<Layout::Node> HTMLProgressElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

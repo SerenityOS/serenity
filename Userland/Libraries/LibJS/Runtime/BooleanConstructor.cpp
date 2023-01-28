@@ -17,15 +17,17 @@ BooleanConstructor::BooleanConstructor(Realm& realm)
 {
 }
 
-void BooleanConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> BooleanConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 20.3.2.1 Boolean.prototype, https://tc39.es/ecma262/#sec-boolean.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().boolean_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 20.3.1.1 Boolean ( value ), https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value

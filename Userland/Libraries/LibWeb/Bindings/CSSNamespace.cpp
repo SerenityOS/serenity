@@ -18,12 +18,14 @@ CSSNamespace::CSSNamespace(JS::Realm& realm)
 {
 }
 
-void CSSNamespace::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSNamespace::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
     u8 attr = JS::Attribute::Enumerable;
     define_native_function(realm, "escape", escape, 1, attr);
     define_native_function(realm, "supports", supports, 2, attr);
+
+    return {};
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-css-escape

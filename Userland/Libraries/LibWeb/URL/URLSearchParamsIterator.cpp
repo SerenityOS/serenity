@@ -37,10 +37,12 @@ URLSearchParamsIterator::URLSearchParamsIterator(URLSearchParams const& url_sear
 
 URLSearchParamsIterator::~URLSearchParamsIterator() = default;
 
-void URLSearchParamsIterator::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> URLSearchParamsIterator::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(realm, "URLSearchParamsIterator"));
+
+    return {};
 }
 
 void URLSearchParamsIterator::visit_edges(JS::Cell::Visitor& visitor)

@@ -24,10 +24,12 @@ FileList::FileList(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
 
 FileList::~FileList() = default;
 
-void FileList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> FileList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::FileListPrototype>(realm, "FileList"));
+
+    return {};
 }
 
 // https://w3c.github.io/FileAPI/#dfn-item

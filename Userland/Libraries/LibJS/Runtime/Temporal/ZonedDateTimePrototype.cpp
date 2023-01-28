@@ -26,9 +26,9 @@ ZonedDateTimePrototype::ZonedDateTimePrototype(Realm& realm)
 {
 }
 
-void ZonedDateTimePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ZonedDateTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -90,6 +90,8 @@ void ZonedDateTimePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
     define_native_function(realm, vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
+
+    return {};
 }
 
 // 6.3.3 get Temporal.ZonedDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendar

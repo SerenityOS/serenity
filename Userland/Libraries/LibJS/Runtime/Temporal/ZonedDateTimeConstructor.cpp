@@ -21,9 +21,9 @@ ZonedDateTimeConstructor::ZonedDateTimeConstructor(Realm& realm)
 {
 }
 
-void ZonedDateTimeConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> ZonedDateTimeConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -35,6 +35,8 @@ void ZonedDateTimeConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    return {};
 }
 
 // 6.1.1 Temporal.ZonedDateTime ( epochNanoseconds, timeZoneLike [ , calendarLike ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime

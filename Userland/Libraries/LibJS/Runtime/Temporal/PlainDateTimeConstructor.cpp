@@ -20,9 +20,9 @@ PlainDateTimeConstructor::PlainDateTimeConstructor(Realm& realm)
 {
 }
 
-void PlainDateTimeConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> PlainDateTimeConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -34,6 +34,8 @@ void PlainDateTimeConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(3), Attribute::Configurable);
+
+    return {};
 }
 
 // 5.1.1 Temporal.PlainDateTime ( isoYear, isoMonth, isoDay [ , hour [ , minute [ , second [ , millisecond [ , microsecond [ , nanosecond [ , calendarLike ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime

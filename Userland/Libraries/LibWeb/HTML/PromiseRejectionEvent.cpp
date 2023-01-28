@@ -35,10 +35,12 @@ void PromiseRejectionEvent::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_reason);
 }
 
-void PromiseRejectionEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> PromiseRejectionEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PromiseRejectionEventPrototype>(realm, "PromiseRejectionEvent"));
+
+    return {};
 }
 
 }

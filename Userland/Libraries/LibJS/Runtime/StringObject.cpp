@@ -26,13 +26,15 @@ StringObject::StringObject(PrimitiveString& string, Object& prototype)
 {
 }
 
-void StringObject::initialize(Realm& realm)
+ThrowCompletionOr<void> StringObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     // FIXME: Propagate this error.
     define_direct_property(vm.names.length, Value(MUST(m_string.utf16_string_view()).length_in_code_units()), 0);
+
+    return {};
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)

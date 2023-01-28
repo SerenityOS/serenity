@@ -33,10 +33,12 @@ MutationRecord::MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type
 
 MutationRecord::~MutationRecord() = default;
 
-void MutationRecord::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> MutationRecord::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationRecordPrototype>(realm, "MutationRecord"));
+
+    return {};
 }
 
 void MutationRecord::visit_edges(Cell::Visitor& visitor)

@@ -47,7 +47,7 @@ public:
 private:
     explicit TextMetrics(JS::Realm&);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     double m_width { 0 };
     double m_actual_bounding_box_left { 0 };

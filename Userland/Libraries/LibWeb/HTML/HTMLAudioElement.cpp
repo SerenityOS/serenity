@@ -16,10 +16,12 @@ HTMLAudioElement::HTMLAudioElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLAudioElement::~HTMLAudioElement() = default;
 
-void HTMLAudioElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLAudioElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAudioElementPrototype>(realm, "HTMLAudioElement"));
+
+    return {};
 }
 
 }

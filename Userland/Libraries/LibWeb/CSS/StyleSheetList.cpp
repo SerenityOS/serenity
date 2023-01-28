@@ -57,10 +57,12 @@ StyleSheetList::StyleSheetList(DOM::Document& document)
 {
 }
 
-void StyleSheetList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> StyleSheetList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(realm, "StyleSheetList"));
+
+    return {};
 }
 
 void StyleSheetList::visit_edges(Cell::Visitor& visitor)

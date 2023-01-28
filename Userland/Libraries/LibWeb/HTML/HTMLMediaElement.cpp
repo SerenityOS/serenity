@@ -17,10 +17,12 @@ HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLMediaElement::~HTMLMediaElement() = default;
 
-void HTMLMediaElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLMediaElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMediaElementPrototype>(realm, "HTMLMediaElement"));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype

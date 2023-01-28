@@ -25,10 +25,12 @@ HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLOptionElement::~HTMLOptionElement() = default;
 
-void HTMLOptionElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLOptionElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionElementPrototype>(realm, "HTMLOptionElement"));
+
+    return {};
 }
 
 void HTMLOptionElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

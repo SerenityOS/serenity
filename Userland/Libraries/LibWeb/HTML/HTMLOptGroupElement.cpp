@@ -16,10 +16,12 @@ HTMLOptGroupElement::HTMLOptGroupElement(DOM::Document& document, DOM::Qualified
 
 HTMLOptGroupElement::~HTMLOptGroupElement() = default;
 
-void HTMLOptGroupElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLOptGroupElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptGroupElementPrototype>(realm, "HTMLOptGroupElement"));
+
+    return {};
 }
 
 }

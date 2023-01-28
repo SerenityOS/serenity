@@ -31,16 +31,18 @@ JSONObject::JSONObject(Realm& realm)
 {
 }
 
-void JSONObject::initialize(Realm& realm)
+ThrowCompletionOr<void> JSONObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.stringify, stringify, 3, attr);
     define_native_function(realm, vm.names.parse, parse, 2, attr);
 
     // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "JSON"), Attribute::Configurable);
+
+    return {};
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify

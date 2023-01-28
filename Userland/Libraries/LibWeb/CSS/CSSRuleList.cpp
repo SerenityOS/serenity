@@ -35,10 +35,12 @@ CSSRuleList* CSSRuleList::create_empty(JS::Realm& realm)
     return realm.heap().allocate<CSSRuleList>(realm, realm);
 }
 
-void CSSRuleList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSRuleList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"));
+
+    return {};
 }
 
 void CSSRuleList::visit_edges(Cell::Visitor& visitor)

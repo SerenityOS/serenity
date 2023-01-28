@@ -27,10 +27,12 @@ PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, DeprecatedFlyString c
 
 PageTransitionEvent::~PageTransitionEvent() = default;
 
-void PageTransitionEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> PageTransitionEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PageTransitionEventPrototype>(realm, "PageTransitionEvent"));
+
+    return {};
 }
 
 }

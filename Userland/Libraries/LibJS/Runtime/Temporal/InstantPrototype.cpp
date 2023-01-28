@@ -24,9 +24,9 @@ InstantPrototype::InstantPrototype(Realm& realm)
 {
 }
 
-void InstantPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> InstantPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -51,6 +51,8 @@ void InstantPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
     define_native_function(realm, vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
     define_native_function(realm, vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
+
+    return {};
 }
 
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds

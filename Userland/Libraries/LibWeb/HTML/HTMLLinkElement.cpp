@@ -26,10 +26,12 @@ HTMLLinkElement::HTMLLinkElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLLinkElement::~HTMLLinkElement() = default;
 
-void HTMLLinkElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLLinkElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLLinkElementPrototype>(realm, "HTMLLinkElement"));
+
+    return {};
 }
 
 void HTMLLinkElement::inserted()

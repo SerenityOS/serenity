@@ -19,10 +19,10 @@ ArrayBufferConstructor::ArrayBufferConstructor(Realm& realm)
 {
 }
 
-void ArrayBufferConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> ArrayBufferConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 25.1.4.2 ArrayBuffer.prototype, https://tc39.es/ecma262/#sec-arraybuffer.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().array_buffer_prototype(), 0);
@@ -34,6 +34,8 @@ void ArrayBufferConstructor::initialize(Realm& realm)
     define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length

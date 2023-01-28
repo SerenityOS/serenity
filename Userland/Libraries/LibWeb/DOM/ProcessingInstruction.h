@@ -24,7 +24,7 @@ public:
 private:
     ProcessingInstruction(Document&, DeprecatedString const& data, DeprecatedString const& target);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     DeprecatedString m_target;
 };

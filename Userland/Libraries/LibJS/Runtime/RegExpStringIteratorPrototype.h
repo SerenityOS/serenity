@@ -17,7 +17,7 @@ class RegExpStringIteratorPrototype final : public PrototypeObject<RegExpStringI
 public:
     virtual ~RegExpStringIteratorPrototype() override = default;
 
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
 
 private:
     explicit RegExpStringIteratorPrototype(Realm&);

@@ -42,10 +42,10 @@ NumberPrototype::NumberPrototype(Realm& realm)
 {
 }
 
-void NumberPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> NumberPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Configurable | Attribute::Writable;
     define_native_function(realm, vm.names.toExponential, to_exponential, 1, attr);
     define_native_function(realm, vm.names.toFixed, to_fixed, 1, attr);
@@ -53,6 +53,8 @@ void NumberPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toPrecision, to_precision, 1, attr);
     define_native_function(realm, vm.names.toString, to_string, 1, attr);
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+
+    return {};
 }
 
 // thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue

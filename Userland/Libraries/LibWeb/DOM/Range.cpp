@@ -66,10 +66,12 @@ Range::~Range()
     live_ranges().remove(this);
 }
 
-void Range::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Range::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::RangePrototype>(realm, "Range"));
+
+    return {};
 }
 
 void Range::visit_edges(Cell::Visitor& visitor)

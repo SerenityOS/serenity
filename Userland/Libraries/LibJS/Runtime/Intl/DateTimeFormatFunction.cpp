@@ -25,13 +25,15 @@ DateTimeFormatFunction::DateTimeFormatFunction(DateTimeFormat& date_time_format,
 {
 }
 
-void DateTimeFormatFunction::initialize(Realm& realm)
+ThrowCompletionOr<void> DateTimeFormatFunction::initialize(Realm& realm)
 {
     auto& vm = this->vm();
 
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
     define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
+
+    return {};
 }
 
 ThrowCompletionOr<Value> DateTimeFormatFunction::call()

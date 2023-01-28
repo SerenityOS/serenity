@@ -16,9 +16,9 @@ RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(Realm& realm)
 {
 }
 
-void RelativeTimeFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> RelativeTimeFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void RelativeTimeFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.format, format, 2, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 17.3.3 Intl.RelativeTimeFormat.prototype.format ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.format

@@ -16,10 +16,12 @@ HTMLTextAreaElement::HTMLTextAreaElement(DOM::Document& document, DOM::Qualified
 
 HTMLTextAreaElement::~HTMLTextAreaElement() = default;
 
-void HTMLTextAreaElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLTextAreaElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTextAreaElementPrototype>(realm, "HTMLTextAreaElement"));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
