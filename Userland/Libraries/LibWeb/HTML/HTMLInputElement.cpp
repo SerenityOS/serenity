@@ -872,32 +872,32 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 e
     return {};
 }
 
-Optional<DOM::ARIARoles::Role> HTMLInputElement::default_role() const
+Optional<ARIA::Role> HTMLInputElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-input-button
     if (type_state() == TypeAttributeState::Button)
-        return DOM::ARIARoles::Role::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-checkbox
     if (type_state() == TypeAttributeState::Checkbox)
-        return DOM::ARIARoles::Role::checkbox;
+        return ARIA::Role::checkbox;
     // https://www.w3.org/TR/html-aria/#el-input-email
     if (type_state() == TypeAttributeState::Email && attribute("list").is_null())
-        return DOM::ARIARoles::Role::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-image
     if (type_state() == TypeAttributeState::ImageButton)
-        return DOM::ARIARoles::Role::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-number
     if (type_state() == TypeAttributeState::Number)
-        return DOM::ARIARoles::Role::spinbutton;
+        return ARIA::Role::spinbutton;
     // https://www.w3.org/TR/html-aria/#el-input-radio
     if (type_state() == TypeAttributeState::RadioButton)
-        return DOM::ARIARoles::Role::radio;
+        return ARIA::Role::radio;
     // https://www.w3.org/TR/html-aria/#el-input-range
     if (type_state() == TypeAttributeState::Range)
-        return DOM::ARIARoles::Role::slider;
+        return ARIA::Role::slider;
     // https://www.w3.org/TR/html-aria/#el-input-reset
     if (type_state() == TypeAttributeState::ResetButton)
-        return DOM::ARIARoles::Role::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-text-list
     if ((type_state() == TypeAttributeState::Text
             || type_state() == TypeAttributeState::Search
@@ -905,22 +905,22 @@ Optional<DOM::ARIARoles::Role> HTMLInputElement::default_role() const
             || type_state() == TypeAttributeState::URL
             || type_state() == TypeAttributeState::Email)
         && !attribute("list").is_null())
-        return DOM::ARIARoles::Role::combobox;
+        return ARIA::Role::combobox;
     // https://www.w3.org/TR/html-aria/#el-input-search
     if (type_state() == TypeAttributeState::Search && attribute("list").is_null())
-        return DOM::ARIARoles::Role::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-submit
     if (type_state() == TypeAttributeState::SubmitButton)
-        return DOM::ARIARoles::Role::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-tel
     if (type_state() == TypeAttributeState::Telephone)
-        return DOM::ARIARoles::Role::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-text
     if (type_state() == TypeAttributeState::Text && attribute("list").is_null())
-        return DOM::ARIARoles::Role::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-url
     if (type_state() == TypeAttributeState::URL && attribute("list").is_null())
-        return DOM::ARIARoles::Role::textbox;
+        return ARIA::Role::textbox;
 
     // https://www.w3.org/TR/html-aria/#el-input-color
     // https://www.w3.org/TR/html-aria/#el-input-date

@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
-namespace Web::DOM {
+namespace Web::ARIA {
 
 class ARIAMixin {
 
@@ -133,9 +133,9 @@ public:
     virtual WebIDL::ExceptionOr<void> set_aria_value_text(DeprecatedString const&) = 0;
 
     // https://www.w3.org/TR/html-aria/#docconformance
-    virtual Optional<ARIARoles::Role> default_role() const { return {}; };
+    virtual Optional<Role> default_role() const { return {}; };
 
-    Optional<ARIARoles::Role> role_or_default() const;
+    Optional<Role> role_or_default() const;
 
     // https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion
     virtual bool exclude_from_accessibility_tree() const = 0;

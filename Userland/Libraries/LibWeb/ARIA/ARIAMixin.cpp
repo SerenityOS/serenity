@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/ARIAMixin.h>
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/ARIAMixin.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 
-namespace Web::DOM {
+namespace Web::ARIA {
 
 // https://www.w3.org/TR/wai-aria-1.2/#introroles
-Optional<ARIARoles::Role> ARIAMixin::role_or_default() const
+Optional<Role> ARIAMixin::role_or_default() const
 {
     // 1. Use the rules of the host language to detect that an element has a role attribute and to identify the attribute value string for it.
     auto role_string = role();
@@ -22,10 +22,10 @@ Optional<ARIARoles::Role> ARIAMixin::role_or_default() const
     // 3. Compare the substrings to all the names of the non-abstract WAI-ARIA roles. Case-sensitivity of the comparison inherits from the case-sensitivity of the host language.
     for (auto const& role_name : role_list) {
         // 4. Use the first such substring in textual order that matches the name of a non-abstract WAI-ARIA role.
-        auto role = ARIARoles::from_string(role_name);
+        auto role = role_from_string(role_name);
         if (!role.has_value())
             continue;
-        if (ARIARoles::is_non_abstract_aria_role(*role))
+        if (is_non_abstract_role(*role))
             return *role;
     }
 

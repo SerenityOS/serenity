@@ -5,9 +5,9 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -204,14 +204,14 @@ bool HTMLImageElement::complete() const
     return false;
 }
 
-Optional<DOM::ARIARoles::Role> HTMLImageElement::default_role() const
+Optional<ARIA::Role> HTMLImageElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-img
     // https://www.w3.org/TR/html-aria/#el-img-no-alt
     if (alt().is_null() || !alt().is_empty())
-        return DOM::ARIARoles::Role::img;
+        return ARIA::Role::img;
     // https://www.w3.org/TR/html-aria/#el-img-empty-alt
-    return DOM::ARIARoles::Role::presentation;
+    return ARIA::Role::presentation;
 }
 
 }

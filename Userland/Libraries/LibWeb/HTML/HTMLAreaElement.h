@@ -42,7 +42,7 @@ private:
         queue_an_element_task(source, move(steps));
     }
 
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 };
 
 }

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -52,7 +52,7 @@ public:
     virtual void reset_algorithm() override;
 
     // https://www.w3.org/TR/html-aria/#el-textarea
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::textbox; }
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::textbox; }
 
 private:
     HTMLTextAreaElement(DOM::Document&, DOM::QualifiedName);

@@ -59,7 +59,7 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const { return false; }
 
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 
 protected:
     HTMLElement(DOM::Document&, DOM::QualifiedName);

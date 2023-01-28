@@ -76,7 +76,7 @@ void HTMLTableCellElement::set_row_span(unsigned int value)
     MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
 }
 
-Optional<DOM::ARIARoles::Role> HTMLTableCellElement::default_role() const
+Optional<ARIA::Role> HTMLTableCellElement::default_role() const
 {
     // TODO: For td:
     //       role=cell if the ancestor table element is exposed as a role=table

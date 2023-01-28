@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -50,13 +50,13 @@ i32 HTMLAreaElement::default_tab_index_value() const
     return 0;
 }
 
-Optional<DOM::ARIARoles::Role> HTMLAreaElement::default_role() const
+Optional<ARIA::Role> HTMLAreaElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-area-no-href
     if (!href().is_null())
-        return DOM::ARIARoles::Role::link;
+        return ARIA::Role::link;
     // https://www.w3.org/TR/html-aria/#el-area
-    return DOM::ARIARoles::Role::generic;
+    return ARIA::Role::generic;
 }
 
 }

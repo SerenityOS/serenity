@@ -1285,7 +1285,7 @@ bool Element::exclude_from_accessibility_tree() const
     // Elements with none or presentation as the first role in the role attribute. However, their exclusion is conditional. In addition, the element's descendants and text content are generally included. These exceptions and conditions are documented in the presentation (role) section.
     // FIXME: Handle exceptions to excluding presentation role
     auto role = role_or_default();
-    if (role == ARIARoles::Role::none || role == ARIARoles::Role::presentation)
+    if (role == ARIA::Role::none || role == ARIA::Role::presentation)
         return true;
 
     // TODO: If not already excluded from the accessibility tree per the above rules, user agents SHOULD NOT include the following elements in the accessibility tree:

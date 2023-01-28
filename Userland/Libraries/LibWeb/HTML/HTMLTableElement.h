@@ -43,7 +43,7 @@ public:
     WebIDL::ExceptionOr<void> delete_row(long index);
 
     // https://www.w3.org/TR/html-aria/#el-table
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::table; }
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::table; }
 
 private:
     HTMLTableElement(DOM::Document&, DOM::QualifiedName);
