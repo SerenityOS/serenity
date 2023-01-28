@@ -1097,7 +1097,7 @@ void MainWidget::set_actions_enabled(bool enabled)
 
 void MainWidget::open_image(FileSystemAccessClient::File file)
 {
-    auto try_load = m_loader.try_load_from_file(file.release_stream());
+    auto try_load = m_loader.load_from_file(file.release_stream());
     if (try_load.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
         return;
