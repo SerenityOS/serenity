@@ -19,10 +19,12 @@ DocumentType::DocumentType(Document& document)
 {
 }
 
-void DocumentType::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> DocumentType::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentTypePrototype>(realm, "DocumentType"));
+
+    return {};
 }
 
 }

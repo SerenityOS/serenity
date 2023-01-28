@@ -16,10 +16,12 @@ HTMLPictureElement::HTMLPictureElement(DOM::Document& document, DOM::QualifiedNa
 
 HTMLPictureElement::~HTMLPictureElement() = default;
 
-void HTMLPictureElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLPictureElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLPictureElementPrototype>(realm, "HTMLPictureElement"));
+
+    return {};
 }
 
 }

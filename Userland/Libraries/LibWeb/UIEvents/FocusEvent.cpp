@@ -22,10 +22,12 @@ FocusEvent::FocusEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, 
 
 FocusEvent::~FocusEvent() = default;
 
-void FocusEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> FocusEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::FocusEventPrototype>(realm, "FocusEvent"));
+
+    return {};
 }
 
 }

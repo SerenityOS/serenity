@@ -14,9 +14,9 @@
 
 namespace JS::Test262 {
 
-void GlobalObject::initialize(Realm& realm)
+ThrowCompletionOr<void> GlobalObject::initialize(Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     m_$262 = vm().heap().allocate<$262Object>(realm, realm);
 
@@ -24,6 +24,8 @@ void GlobalObject::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, "print", print, 1, attr);
     define_direct_property("$262", m_$262, attr);
+
+    return {};
 }
 
 void GlobalObject::visit_edges(Cell::Visitor& visitor)

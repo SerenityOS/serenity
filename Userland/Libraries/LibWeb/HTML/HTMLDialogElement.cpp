@@ -16,10 +16,12 @@ HTMLDialogElement::HTMLDialogElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLDialogElement::~HTMLDialogElement() = default;
 
-void HTMLDialogElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLDialogElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDialogElementPrototype>(realm, "HTMLDialogElement"));
+
+    return {};
 }
 
 }

@@ -42,7 +42,7 @@ public:
         : GlobalObject(realm)
     {
     }
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~ReplObject() override = default;
 
 private:
@@ -63,7 +63,7 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~ScriptObject() override = default;
 
 private:
@@ -381,9 +381,9 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
     return JS::JSONObject::parse_json_value(vm, json.value());
 }
 
-void ReplObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ReplObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
@@ -413,6 +413,8 @@ void ReplObject::initialize(JS::Realm& realm)
             return value;
         },
         attr);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
@@ -466,15 +468,17 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
     return JS::js_undefined();
 }
 
-void ScriptObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ScriptObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "loadINI", load_ini, 1, attr);
     define_native_function(realm, "loadJSON", load_json, 1, attr);
     define_native_function(realm, "print", print, 1, attr);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_ini)

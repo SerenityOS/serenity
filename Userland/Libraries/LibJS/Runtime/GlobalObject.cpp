@@ -190,15 +190,17 @@ Object& set_default_global_bindings(Realm& realm)
     return global;
 }
 
-void GlobalObject::initialize(Realm& realm)
+ThrowCompletionOr<void> GlobalObject::initialize(Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
     // Non-standard
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.gc, gc, 0, attr);
+
+    return {};
 }
 
 GlobalObject::~GlobalObject() = default;

@@ -30,10 +30,12 @@ CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& me
         rule.set_parent_style_sheet(this);
 }
 
-void CSSStyleSheet::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSStyleSheet::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleSheetPrototype>(realm, "CSSStyleSheet"));
+
+    return {};
 }
 
 void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)

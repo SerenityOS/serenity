@@ -16,10 +16,12 @@ HTMLMenuElement::HTMLMenuElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLMenuElement::~HTMLMenuElement() = default;
 
-void HTMLMenuElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLMenuElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMenuElementPrototype>(realm, "HTMLMenuElement"));
+
+    return {};
 }
 
 }

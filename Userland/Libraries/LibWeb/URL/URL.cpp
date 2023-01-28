@@ -61,10 +61,12 @@ URL::URL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 
 URL::~URL() = default;
 
-void URL::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> URL::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::URLPrototype>(realm, "URL"));
+
+    return {};
 }
 
 void URL::visit_edges(Cell::Visitor& visitor)

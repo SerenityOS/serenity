@@ -152,12 +152,14 @@ RegExpObject::RegExpObject(Regex<ECMA262> regex, DeprecatedString pattern, Depre
     VERIFY(m_regex->parser_result.error == regex::Error::NoError);
 }
 
-void RegExpObject::initialize(Realm& realm)
+ThrowCompletionOr<void> RegExpObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_direct_property(vm.names.lastIndex, Value(0), Attribute::Writable);
+
+    return {};
 }
 
 // 22.2.3.2.2 RegExpInitialize ( obj, pattern, flags ), https://tc39.es/ecma262/#sec-regexpinitialize

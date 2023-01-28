@@ -30,7 +30,7 @@ public:
 
     static NonnullGCPtr<PromiseResolvingFunction> create(Realm&, Promise&, AlreadyResolved&, FunctionType);
 
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~PromiseResolvingFunction() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

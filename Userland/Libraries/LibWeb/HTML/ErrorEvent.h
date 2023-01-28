@@ -47,7 +47,7 @@ public:
 private:
     ErrorEvent(JS::Realm&, DeprecatedFlyString const& event_name, ErrorEventInit const& event_init);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     DeprecatedString m_message { "" };

@@ -21,9 +21,9 @@ SVGForeignObjectElement::SVGForeignObjectElement(DOM::Document& document, DOM::Q
 
 SVGForeignObjectElement::~SVGForeignObjectElement() = default;
 
-void SVGForeignObjectElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SVGForeignObjectElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGForeignObjectElementPrototype>(realm, "SVGForeignObjectElement"));
 
     // FIXME: These never actually get updated!
@@ -31,6 +31,8 @@ void SVGForeignObjectElement::initialize(JS::Realm& realm)
     m_y = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
     m_width = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
     m_height = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+
+    return {};
 }
 
 void SVGForeignObjectElement::visit_edges(Cell::Visitor& visitor)

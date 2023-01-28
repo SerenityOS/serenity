@@ -33,7 +33,7 @@ public:
 private:
     explicit IntersectionObserver(JS::Realm&);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

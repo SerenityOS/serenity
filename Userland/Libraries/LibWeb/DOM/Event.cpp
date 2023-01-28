@@ -41,10 +41,12 @@ Event::Event(JS::Realm& realm, DeprecatedFlyString const& type, EventInit const&
 {
 }
 
-void Event::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Event::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::EventPrototype>(realm, "Event"));
+
+    return {};
 }
 
 void Event::visit_edges(Visitor& visitor)

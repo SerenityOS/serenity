@@ -30,10 +30,12 @@ WorkerGlobalScope::WorkerGlobalScope(JS::Realm& realm)
 
 WorkerGlobalScope::~WorkerGlobalScope() = default;
 
-void WorkerGlobalScope::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WorkerGlobalScope::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     m_navigator = WorkerNavigator::create(*this);
+
+    return {};
 }
 
 void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)

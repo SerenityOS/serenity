@@ -17,9 +17,9 @@ SegmenterPrototype::SegmenterPrototype(Realm& realm)
 {
 }
 
-void SegmenterPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> SegmenterPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void SegmenterPrototype::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
     define_native_function(realm, vm.names.segment, segment, 1, attr);
+
+    return {};
 }
 
 // 18.3.4 Intl.Segmenter.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.segmenter.prototype.resolvedoptions

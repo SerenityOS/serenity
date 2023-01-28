@@ -16,10 +16,12 @@ HTMLDListElement::HTMLDListElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLDListElement::~HTMLDListElement() = default;
 
-void HTMLDListElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLDListElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDListElementPrototype>(realm, "HTMLDListElement"));
+
+    return {};
 }
 
 }

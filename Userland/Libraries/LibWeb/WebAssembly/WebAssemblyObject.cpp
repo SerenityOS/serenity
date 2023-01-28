@@ -32,9 +32,9 @@ WebAssemblyObject::WebAssemblyObject(JS::Realm& realm)
     s_abstract_machine.enable_instruction_count_limit();
 }
 
-void WebAssemblyObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "validate", validate, 1, attr);
@@ -52,6 +52,8 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
 
     auto& table_constructor = Bindings::ensure_web_constructor<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"sv);
     define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+
+    return {};
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;

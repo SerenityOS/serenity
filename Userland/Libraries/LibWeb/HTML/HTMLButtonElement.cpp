@@ -51,10 +51,12 @@ HTMLButtonElement::HTMLButtonElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLButtonElement::~HTMLButtonElement() = default;
 
-void HTMLButtonElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLButtonElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLButtonElementPrototype>(realm, "HTMLButtonElement"));
+
+    return {};
 }
 
 DeprecatedString HTMLButtonElement::type() const

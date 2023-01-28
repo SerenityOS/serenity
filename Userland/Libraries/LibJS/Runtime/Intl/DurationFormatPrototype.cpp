@@ -18,9 +18,9 @@ DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
 {
 }
 
-void DurationFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> DurationFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -31,6 +31,8 @@ void DurationFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.format, format, 1, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 1.4.3 Intl.DurationFormat.prototype.format ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.format

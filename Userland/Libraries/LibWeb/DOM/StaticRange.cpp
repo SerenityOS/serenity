@@ -35,10 +35,12 @@ WebIDL::ExceptionOr<StaticRange*> StaticRange::construct_impl(JS::Realm& realm, 
     return realm.heap().allocate<StaticRange>(realm, *init.start_container, init.start_offset, *init.end_container, init.end_offset).ptr();
 }
 
-void StaticRange::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> StaticRange::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::StaticRangePrototype>(realm, "StaticRange"));
+
+    return {};
 }
 
 }

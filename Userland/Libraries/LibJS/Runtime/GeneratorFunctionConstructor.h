@@ -15,7 +15,7 @@ class GeneratorFunctionConstructor final : public NativeFunction {
     JS_OBJECT(GeneratorFunctionConstructor, NativeFunction);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~GeneratorFunctionConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

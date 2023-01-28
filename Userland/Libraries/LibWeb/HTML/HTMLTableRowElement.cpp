@@ -22,10 +22,12 @@ HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::Qualified
 
 HTMLTableRowElement::~HTMLTableRowElement() = default;
 
-void HTMLTableRowElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLTableRowElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>(realm, "HTMLTableRowElement"));
+
+    return {};
 }
 
 void HTMLTableRowElement::visit_edges(Cell::Visitor& visitor)

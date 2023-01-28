@@ -29,7 +29,7 @@ public:
 private:
     WebGLContextEvent(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     DeprecatedString m_status_message { DeprecatedString::empty() };
 };

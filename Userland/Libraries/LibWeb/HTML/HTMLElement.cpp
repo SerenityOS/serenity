@@ -40,12 +40,14 @@ HTMLElement::HTMLElement(DOM::Document& document, DOM::QualifiedName qualified_n
 
 HTMLElement::~HTMLElement() = default;
 
-void HTMLElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
 
     m_dataset = DOMStringMap::create(*this);
+
+    return {};
 }
 
 void HTMLElement::visit_edges(Cell::Visitor& visitor)

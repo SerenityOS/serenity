@@ -27,10 +27,12 @@ DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rec
 
 DOMRectList::~DOMRectList() = default;
 
-void DOMRectList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> DOMRectList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectListPrototype>(realm, "DOMRectList"));
+
+    return {};
 }
 
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length

@@ -56,7 +56,7 @@ public:
 private:
     KeyboardEvent(JS::Realm&, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     DeprecatedString m_key;
     DeprecatedString m_code;

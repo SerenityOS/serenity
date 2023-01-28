@@ -27,10 +27,10 @@ RegExpPrototype::RegExpPrototype(Realm& realm)
 {
 }
 
-void RegExpPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> RegExpPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, vm.names.test, test, 1, attr);
@@ -50,6 +50,8 @@ void RegExpPrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.flagName, flag_name, {}, Attribute::Configurable);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
+
+    return {};
 }
 
 // Non-standard abstraction around steps used by multiple prototypes.

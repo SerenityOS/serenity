@@ -29,9 +29,9 @@ CalendarPrototype::CalendarPrototype(Realm& realm)
 {
 }
 
-void CalendarPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> CalendarPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -65,6 +65,8 @@ void CalendarPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.era, era, 1, attr);
     define_native_function(realm, vm.names.eraYear, era_year, 1, attr);
+
+    return {};
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id

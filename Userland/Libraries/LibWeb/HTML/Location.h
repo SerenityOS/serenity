@@ -68,7 +68,7 @@ public:
 private:
     explicit Location(JS::Realm&);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     DOM::Document const* relevant_document() const;

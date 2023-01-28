@@ -18,10 +18,12 @@ File::File(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString file_name,
 {
 }
 
-void File::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> File::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::FilePrototype>(realm, "File"));
+
+    return {};
 }
 
 File::~File() = default;

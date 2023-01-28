@@ -26,10 +26,12 @@ MessagePort::MessagePort(JS::Realm& realm)
 
 MessagePort::~MessagePort() = default;
 
-void MessagePort::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> MessagePort::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MessagePortPrototype>(realm, "MessagePort"));
+
+    return {};
 }
 
 void MessagePort::visit_edges(Cell::Visitor& visitor)

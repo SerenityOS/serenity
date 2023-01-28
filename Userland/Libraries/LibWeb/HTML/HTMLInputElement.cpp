@@ -41,10 +41,12 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLInputElement::~HTMLInputElement() = default;
 
-void HTMLInputElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLInputElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLInputElementPrototype>(realm, "HTMLInputElement"));
+
+    return {};
 }
 
 void HTMLInputElement::visit_edges(Cell::Visitor& visitor)

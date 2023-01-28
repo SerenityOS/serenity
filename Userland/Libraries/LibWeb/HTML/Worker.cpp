@@ -30,10 +30,12 @@ Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const option
 {
 }
 
-void Worker::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Worker::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"));
+
+    return {};
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)

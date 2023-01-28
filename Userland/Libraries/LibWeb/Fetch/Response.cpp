@@ -26,10 +26,12 @@ Response::Response(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> 
 
 Response::~Response() = default;
 
-void Response::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Response::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ResponsePrototype>(realm, "Response"));
+
+    return {};
 }
 
 void Response::visit_edges(Cell::Visitor& visitor)

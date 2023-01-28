@@ -15,13 +15,15 @@ AggregateErrorPrototype::AggregateErrorPrototype(Realm& realm)
 {
 }
 
-void AggregateErrorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> AggregateErrorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, PrimitiveString::create(vm, "AggregateError"), attr);
     define_direct_property(vm.names.message, PrimitiveString::create(vm, ""), attr);
+
+    return {};
 }
 
 }

@@ -18,9 +18,9 @@ PluralRulesPrototype::PluralRulesPrototype(Realm& realm)
 {
 }
 
-void PluralRulesPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> PluralRulesPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -31,6 +31,8 @@ void PluralRulesPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.select, select, 1, attr);
     define_native_function(realm, vm.names.selectRange, select_range, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 16.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select

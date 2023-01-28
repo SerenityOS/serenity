@@ -17,10 +17,12 @@ HTMLModElement::HTMLModElement(DOM::Document& document, DOM::QualifiedName quali
 
 HTMLModElement::~HTMLModElement() = default;
 
-void HTMLModElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLModElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"));
+
+    return {};
 }
 
 Optional<DOM::ARIARoles::Role> HTMLModElement::default_role() const

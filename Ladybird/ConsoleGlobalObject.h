@@ -24,7 +24,7 @@ class ConsoleGlobalObject final : public JS::GlobalObject {
 
 public:
     ConsoleGlobalObject(JS::Realm&, Web::HTML::Window&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~ConsoleGlobalObject() override = default;
 
     virtual JS::ThrowCompletionOr<Object*> internal_get_prototype_of() const override;

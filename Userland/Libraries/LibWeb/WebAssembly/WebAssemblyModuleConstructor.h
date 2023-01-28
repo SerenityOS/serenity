@@ -15,7 +15,7 @@ class WebAssemblyModuleConstructor : public JS::NativeFunction {
 
 public:
     explicit WebAssemblyModuleConstructor(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~WebAssemblyModuleConstructor() override;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;

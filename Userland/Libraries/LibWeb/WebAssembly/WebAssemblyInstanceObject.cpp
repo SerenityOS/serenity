@@ -24,9 +24,9 @@ WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::Realm& realm, size_t in
 {
 }
 
-void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyInstanceObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -66,6 +66,8 @@ void WebAssemblyInstanceObject::initialize(JS::Realm& realm)
     }
 
     MUST(m_exports_object->set_integrity_level(IntegrityLevel::Frozen));
+
+    return {};
 }
 
 void WebAssemblyInstanceObject::visit_edges(Visitor& visitor)

@@ -59,10 +59,12 @@ XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::Head
 
 XMLHttpRequest::~XMLHttpRequest() = default;
 
-void XMLHttpRequest::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> XMLHttpRequest::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLHttpRequestPrototype>(realm, "XMLHttpRequest"));
+
+    return {};
 }
 
 void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)

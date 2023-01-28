@@ -22,10 +22,12 @@ TreeWalker::TreeWalker(Node& root)
 
 TreeWalker::~TreeWalker() = default;
 
-void TreeWalker::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> TreeWalker::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TreeWalkerPrototype>(realm, "TreeWalker"));
+
+    return {};
 }
 
 void TreeWalker::visit_edges(Cell::Visitor& visitor)
