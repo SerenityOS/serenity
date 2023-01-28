@@ -135,6 +135,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 // FIXME: Maybe print the actual points if -v is passed?
                 outln("    curve with {} points", curve.values().size());
             }
+        } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
+            auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
+            outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
+            outln("    output table: {} channels x {} entries", lut16.number_of_output_channels(), lut16.number_of_output_table_entries());
+            outln("    color lookup table: {} grid points, {} total entries", lut16.number_of_clut_grid_points(), lut16.clut_values().size());
+
+            auto const& e = lut16.e_matrix();
+            outln("    e = [ {}, {}, {},", e[0], e[1], e[2]);
+            outln("          {}, {}, {},", e[3], e[4], e[5]);
+            outln("          {}, {}, {} ]", e[6], e[7], e[8]);
+        } else if (tag_data->type() == Gfx::ICC::Lut8TagData::Type) {
+            auto& lut8 = static_cast<Gfx::ICC::Lut8TagData&>(*tag_data);
+            outln("    input table: {} channels x {} entries", lut8.number_of_input_channels(), lut8.number_of_input_table_entries());
+            outln("    output table: {} channels x {} entries", lut8.number_of_output_channels(), lut8.number_of_output_table_entries());
+            outln("    color lookup table: {} grid points, {} total entries", lut8.number_of_clut_grid_points(), lut8.clut_values().size());
+
+            auto const& e = lut8.e_matrix();
+            outln("    e = [ {}, {}, {},", e[0], e[1], e[2]);
+            outln("          {}, {}, {},", e[3], e[4], e[5]);
+            outln("          {}, {}, {} ]", e[6], e[7], e[8]);
         } else if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
             auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
             for (auto& record : multi_localized_unicode.records()) {
