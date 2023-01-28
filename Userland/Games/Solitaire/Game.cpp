@@ -48,6 +48,35 @@ static float rand_float()
     return get_random_uniform(RAND_MAX) / static_cast<float>(RAND_MAX);
 }
 
+void Game::deal_next_card()
+{
+    VERIFY(m_state == State::NewGameAnimation);
+
+    auto& current_pile = stack_at_location(piles.at(m_new_game_animation_pile));
+
+    if (current_pile.count() < m_new_game_animation_pile) {
+        auto card = m_new_deck.take_last();
+        card->set_upside_down(true);
+        current_pile.push(card).release_value_but_fixme_should_propagate_errors();
+    } else {
+        current_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
+        ++m_new_game_animation_pile;
+    }
+
+    update(current_pile.bounding_box());
+
+    if (m_new_game_animation_pile == piles.size()) {
+        auto& stock_pile = stack_at_location(Stock);
+        while (!m_new_deck.is_empty())
+            stock_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
+
+        update(stock_pile.bounding_box());
+
+        m_state = State::WaitingForNewGame;
+        stop_timer();
+    }
+}
+
 void Game::timer_event(Core::TimerEvent&)
 {
     switch (m_state) {
@@ -69,29 +98,7 @@ void Game::timer_event(Core::TimerEvent&)
             ++m_new_game_animation_delay;
         } else {
             m_new_game_animation_delay = 0;
-            auto& current_pile = stack_at_location(piles.at(m_new_game_animation_pile));
-
-            if (current_pile.count() < m_new_game_animation_pile) {
-                auto card = m_new_deck.take_last();
-                card->set_upside_down(true);
-                current_pile.push(card).release_value_but_fixme_should_propagate_errors();
-            } else {
-                current_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
-                ++m_new_game_animation_pile;
-            }
-
-            update(current_pile.bounding_box());
-
-            if (m_new_game_animation_pile == piles.size()) {
-                auto& stock_pile = stack_at_location(Stock);
-                while (!m_new_deck.is_empty())
-                    stock_pile.push(m_new_deck.take_last()).release_value_but_fixme_should_propagate_errors();
-
-                update(stock_pile.bounding_box());
-
-                m_state = State::WaitingForNewGame;
-                stop_timer();
-            }
+            deal_next_card();
         }
         break;
     }
@@ -365,8 +372,11 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (m_state == State::NewGameAnimation)
+    if (m_state == State::NewGameAnimation) {
+        while (m_state == State::NewGameAnimation)
+            deal_next_card();
         return;
+    }
 
     auto click_location = event.position();
     for (auto& to_check : stacks()) {

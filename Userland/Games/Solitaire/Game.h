@@ -187,6 +187,7 @@ private:
     void set_background_fill_enabled(bool);
     void check_for_game_over();
     void clear_hovered_stack();
+    void deal_next_card();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
