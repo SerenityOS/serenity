@@ -12,8 +12,15 @@
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_radial(JS::Realm& realm, double x0, double y0, double r0, double x1, double y1, double r1)
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-createradialgradient
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasGradient>> CanvasGradient::create_radial(JS::Realm& realm, double x0, double y0, double r0, double x1, double y1, double r1)
 {
+    // If either of r0 or r1 are negative, then an "IndexSizeError" DOMException must be thrown.
+    if (r0 < 0)
+        return WebIDL::IndexSizeError::create(realm, "The r0 passed is less than 0");
+    if (r1 < 0)
+        return WebIDL::IndexSizeError::create(realm, "The r1 passed is less than 0");
+
     auto radial_gradient = Gfx::CanvasRadialGradientPaintStyle::create(Gfx::FloatPoint { x0, y0 }, r0, Gfx::FloatPoint { x1, y1 }, r1);
     return realm.heap().allocate<CanvasGradient>(realm, realm, *radial_gradient);
 }
