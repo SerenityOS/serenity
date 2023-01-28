@@ -12,8 +12,9 @@
 
 namespace Web::DOM {
 
-ShadowRoot::ShadowRoot(Document& document, Element& host)
+ShadowRoot::ShadowRoot(Document& document, Element& host, Bindings::ShadowRootMode mode)
     : DocumentFragment(document)
+    , m_mode(mode)
 {
     set_host(&host);
 }
