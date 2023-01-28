@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/Forward.h>
+#include <AK/StringView.h>
 
 namespace Web::ARIA {
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/Forward.h>
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
