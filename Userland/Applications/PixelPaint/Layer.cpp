@@ -16,7 +16,7 @@
 
 namespace PixelPaint {
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::IntSize size, DeprecatedString name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_size(Image& image, Gfx::IntSize size, DeprecatedString name)
 {
     VERIFY(!size.is_empty());
 
@@ -27,7 +27,7 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_size(Image& image, Gfx::Int
     return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, move(bitmap), move(name)));
 }
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, DeprecatedString name)
+ErrorOr<NonnullRefPtr<Layer>> Layer::create_with_bitmap(Image& image, NonnullRefPtr<Gfx::Bitmap> bitmap, DeprecatedString name)
 {
     VERIFY(!bitmap->size().is_empty());
 
@@ -37,10 +37,10 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_with_bitmap(Image& image, Nonnul
     return adopt_nonnull_ref_or_enomem(new (nothrow) Layer(image, bitmap, move(name)));
 }
 
-ErrorOr<NonnullRefPtr<Layer>> Layer::try_create_snapshot(Image& image, Layer const& layer)
+ErrorOr<NonnullRefPtr<Layer>> Layer::create_snapshot(Image& image, Layer const& layer)
 {
     auto bitmap = TRY(layer.content_bitmap().clone());
-    auto snapshot = TRY(try_create_with_bitmap(image, move(bitmap), layer.name()));
+    auto snapshot = TRY(create_with_bitmap(image, move(bitmap), layer.name()));
 
     /*
         We set these properties directly because calling the setters might
@@ -127,7 +127,7 @@ Gfx::Bitmap& Layer::get_scratch_edited_bitmap()
     return *m_scratch_edited_bitmap;
 }
 
-RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
+RefPtr<Gfx::Bitmap> Layer::copy_bitmap(Selection const& selection) const
 {
     if (selection.is_empty()) {
         return {};
@@ -185,7 +185,7 @@ void Layer::erase_selection(Selection const& selection)
     did_modify_bitmap(translated_to_layer_space);
 }
 
-ErrorOr<void> Layer::try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask)
+ErrorOr<void> Layer::set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask)
 {
     if (mask && content->size() != mask->size())
         return Error::from_string_literal("Layer content and mask must be same size");
