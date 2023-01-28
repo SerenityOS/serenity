@@ -1254,7 +1254,7 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
 
     // 5. Return success with data role.
     if (role.has_value())
-        return Web::DOM::ARIARoles::role_name(*role);
+        return Web::ARIA::role_name(*role);
     return ""sv;
 }
 

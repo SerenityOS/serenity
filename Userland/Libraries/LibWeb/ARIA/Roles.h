@@ -8,7 +8,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 
-namespace Web::DOM::ARIARoles {
+namespace Web::ARIA {
 
 #define ENUMERATE_ARIA_ROLES                \
     __ENUMERATE_ARIA_ROLE(alert)            \
@@ -113,15 +113,15 @@ enum class Role {
 };
 
 StringView role_name(Role);
-Optional<Role> from_string(StringView role_name);
+Optional<Role> role_from_string(StringView role_name);
 
-bool is_abstract_aria_role(Role);
-bool is_widget_aria_role(Role);
-bool is_document_structure_aria_role(Role);
-bool is_landmark_aria_role(Role);
-bool is_live_region_aria_role(Role);
-bool is_windows_aria_role(Role);
+bool is_abstract_role(Role);
+bool is_widget_role(Role);
+bool is_document_structure_role(Role);
+bool is_landmark_role(Role);
+bool is_live_region_role(Role);
+bool is_windows_role(Role);
 
-bool is_non_abstract_aria_role(Role);
+bool is_non_abstract_role(Role);
 
 }

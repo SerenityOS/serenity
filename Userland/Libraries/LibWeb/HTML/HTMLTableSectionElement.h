@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -25,7 +25,7 @@ public:
     // https://www.w3.org/TR/html-aria/#el-tbody
     // https://www.w3.org/TR/html-aria/#el-tfoot
     // https://www.w3.org/TR/html-aria/#el-thead
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::rowgroup; }
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::rowgroup; }
 
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);

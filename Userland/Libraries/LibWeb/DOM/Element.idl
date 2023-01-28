@@ -1,6 +1,6 @@
+#import <ARIA/ARIAMixin.idl>
 #import <CSS/CSSStyleDeclaration.idl>
 #import <DOM/Attr.idl>
-#import <DOM/ARIAMixin.idl>
 #import <DOM/ChildNode.idl>
 #import <DOM/DOMTokenList.idl>
 #import <DOM/InnerHTML.idl>

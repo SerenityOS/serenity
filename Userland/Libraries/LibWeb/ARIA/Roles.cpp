@@ -5,9 +5,9 @@
  */
 
 #include <AK/GenericShorthands.h>
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/Roles.h>
 
-namespace Web::DOM::ARIARoles {
+namespace Web::ARIA {
 
 StringView role_name(Role role)
 {
@@ -22,7 +22,7 @@ StringView role_name(Role role)
     }
 }
 
-Optional<Role> from_string(StringView role_name)
+Optional<Role> role_from_string(StringView role_name)
 {
 #define __ENUMERATE_ARIA_ROLE(name)                \
     if (role_name.equals_ignoring_case(#name##sv)) \
@@ -33,7 +33,7 @@ Optional<Role> from_string(StringView role_name)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#abstract_roles
-bool is_abstract_aria_role(Role role)
+bool is_abstract_role(Role role)
 {
     return first_is_one_of(role,
         Role::command,
@@ -51,7 +51,7 @@ bool is_abstract_aria_role(Role role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#widget_roles
-bool is_widget_aria_role(Role role)
+bool is_widget_role(Role role)
 {
     return first_is_one_of(role,
         Role::button,
@@ -85,7 +85,7 @@ bool is_widget_aria_role(Role role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#document_structure_roles
-bool is_document_structure_aria_role(Role role)
+bool is_document_structure_role(Role role)
 {
     return first_is_one_of(role,
         Role::application,
@@ -128,7 +128,7 @@ bool is_document_structure_aria_role(Role role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#landmark_roles
-bool is_landmark_aria_role(Role role)
+bool is_landmark_role(Role role)
 {
     return first_is_one_of(role,
         Role::banner,
@@ -142,7 +142,7 @@ bool is_landmark_aria_role(Role role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#live_region_roles
-bool is_live_region_aria_role(Role role)
+bool is_live_region_role(Role role)
 {
     return first_is_one_of(role,
         Role::alert,
@@ -153,20 +153,20 @@ bool is_live_region_aria_role(Role role)
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#window_roles
-bool is_windows_aria_role(Role role)
+bool is_windows_role(Role role)
 {
     return first_is_one_of(role,
         Role::alertdialog,
         Role::dialog);
 }
 
-bool is_non_abstract_aria_role(Role role)
+bool is_non_abstract_role(Role role)
 {
-    return is_widget_aria_role(role)
-        || is_document_structure_aria_role(role)
-        || is_landmark_aria_role(role)
-        || is_live_region_aria_role(role)
-        || is_windows_aria_role(role);
+    return is_widget_role(role)
+        || is_document_structure_role(role)
+        || is_landmark_role(role)
+        || is_live_region_role(role)
+        || is_windows_role(role);
 }
 
 }

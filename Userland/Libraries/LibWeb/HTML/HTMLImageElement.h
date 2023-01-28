@@ -43,7 +43,7 @@ public:
     // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-complete
     bool complete() const;
 
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 
 private:
     HTMLImageElement(DOM::Document&, DOM::QualifiedName);

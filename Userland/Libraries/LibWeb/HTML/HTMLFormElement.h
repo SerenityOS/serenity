@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoles.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 
@@ -38,7 +38,7 @@ public:
     unsigned length() const;
 
     // https://www.w3.org/TR/html-aria/#el-form
-    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::form; }
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::form; }
 
 private:
     HTMLFormElement(DOM::Document&, DOM::QualifiedName);
