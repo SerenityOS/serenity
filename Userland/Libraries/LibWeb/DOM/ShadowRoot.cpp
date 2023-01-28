@@ -18,6 +18,13 @@ ShadowRoot::ShadowRoot(Document& document, Element& host)
     set_host(&host);
 }
 
+JS::ThrowCompletionOr<void> ShadowRoot::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ShadowRootPrototype>(realm, "ShadowRoot"));
+    return {};
+}
+
 // https://dom.spec.whatwg.org/#ref-for-get-the-parent%E2%91%A6
 EventTarget* ShadowRoot::get_parent(Event const& event)
 {
