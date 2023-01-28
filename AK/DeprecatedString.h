@@ -95,6 +95,8 @@ public:
 
     DeprecatedString(DeprecatedFlyString const&);
 
+    static ErrorOr<DeprecatedString> from_utf8(ReadonlyBytes);
+
     [[nodiscard]] static DeprecatedString repeated(char, size_t count);
     [[nodiscard]] static DeprecatedString repeated(StringView, size_t count);
 

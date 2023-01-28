@@ -455,4 +455,11 @@ DeprecatedStringCodePointIterator DeprecatedString::code_points() const
     return DeprecatedStringCodePointIterator(*this);
 }
 
+ErrorOr<DeprecatedString> DeprecatedString::from_utf8(ReadonlyBytes bytes)
+{
+    if (!Utf8View(bytes).validate())
+        return Error::from_string_literal("DeprecatedString::from_utf8: Input was not valid UTF-8");
+    return DeprecatedString { StringImpl::create(bytes) };
+}
+
 }
