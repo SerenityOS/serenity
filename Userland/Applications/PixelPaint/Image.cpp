@@ -75,7 +75,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::decode_bitmap(ReadonlyBytes bitmap_da
 ErrorOr<NonnullRefPtr<Image>> Image::create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const& bitmap)
 {
     auto image = TRY(create_with_size({ bitmap->width(), bitmap->height() }));
-    auto layer = TRY(Layer::try_create_with_bitmap(*image, *bitmap, "Background"));
+    auto layer = TRY(Layer::create_with_bitmap(*image, *bitmap, "Background"));
     image->add_layer(move(layer));
     return image;
 }
@@ -93,13 +93,13 @@ ErrorOr<NonnullRefPtr<Image>> Image::create_from_pixel_paint_json(JsonObject con
         auto bitmap_base64_encoded = layer_object.get_deprecated_string("bitmap"sv).value();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
         auto bitmap = TRY(decode_bitmap(bitmap_data));
-        auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
+        auto layer = TRY(Layer::create_with_bitmap(*image, move(bitmap), name));
 
         if (auto const& mask_object = layer_object.get_deprecated_string("mask"sv); mask_object.has_value()) {
             auto mask_base64_encoded = mask_object.value();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
             auto mask = TRY(decode_bitmap(mask_data));
-            TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));
+            TRY(layer->set_bitmaps(layer->content_bitmap(), mask));
         }
 
         auto width = layer_object.get_i32("width"sv).value_or(0);
@@ -219,7 +219,7 @@ ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 {
     auto snapshot = TRY(create_with_size(m_size));
     for (auto const& layer : m_layers) {
-        auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
+        auto layer_snapshot = TRY(Layer::create_snapshot(*snapshot, layer));
         snapshot->add_layer(move(layer_snapshot));
     }
     snapshot->m_selection.set_mask(m_selection.mask());
@@ -233,7 +233,7 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 
     bool layer_selected = false;
     for (auto const& snapshot_layer : snapshot.m_layers) {
-        auto layer = TRY(Layer::try_create_snapshot(*this, snapshot_layer));
+        auto layer = TRY(Layer::create_snapshot(*this, snapshot_layer));
         if (layer->is_selected()) {
             select_layer(layer.ptr());
             layer_selected = true;
@@ -493,7 +493,7 @@ ErrorOr<void> Image::flip(Gfx::Orientation orientation)
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;
@@ -524,7 +524,7 @@ ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;
@@ -556,7 +556,7 @@ ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;
@@ -626,7 +626,7 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;

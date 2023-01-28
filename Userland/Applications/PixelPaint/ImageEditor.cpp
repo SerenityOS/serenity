@@ -517,11 +517,11 @@ ErrorOr<void> ImageEditor::add_new_layer_from_selection()
     // save offsets of selection so we know where to place the new layer
     auto selection_offset = current_layer_selection.bounding_rect().location();
 
-    auto selection_bitmap = active_layer()->try_copy_bitmap(current_layer_selection);
+    auto selection_bitmap = active_layer()->copy_bitmap(current_layer_selection);
     if (selection_bitmap.is_null())
         return Error::from_string_literal("Unable to create bitmap from selection.");
 
-    auto layer_or_error = PixelPaint::Layer::try_create_with_bitmap(image(), selection_bitmap.release_nonnull(), "New Layer"sv);
+    auto layer_or_error = PixelPaint::Layer::create_with_bitmap(image(), selection_bitmap.release_nonnull(), "New Layer"sv);
     if (layer_or_error.is_error())
         return Error::from_string_literal("Unable to create layer from selection.");
 
