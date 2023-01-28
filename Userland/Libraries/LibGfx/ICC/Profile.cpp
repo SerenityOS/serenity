@@ -115,7 +115,7 @@ struct ICCHeader {
     u8 profile_id[16];
     u8 reserved[28];
 };
-static_assert(sizeof(ICCHeader) == 128);
+static_assert(AssertSize<ICCHeader, 128>());
 
 ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
 {
@@ -623,7 +623,7 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
         BigEndian<u32> offset_to_beginning_of_tag_data_element;
         BigEndian<u32> size_of_tag_data_element;
     };
-    static_assert(sizeof(TagTableEntry) == 12);
+    static_assert(AssertSize<TagTableEntry, 12>());
 
     tag_table_bytes = tag_table_bytes.slice(sizeof(u32));
     if (tag_table_bytes.size() < tag_count * sizeof(TagTableEntry))
