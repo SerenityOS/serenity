@@ -188,17 +188,18 @@ void MoveTool::on_keyup(GUI::KeyEvent& event)
 
 void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
-    if (layer != m_layer_being_moved.ptr() || !m_scaling)
-        return;
-
+    VERIFY(m_editor);
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto rect_in_editor = m_editor->content_to_frame_rect(m_new_layer_rect).to_rounded<int>();
-    painter.draw_rect(rect_in_editor, Color::Black);
-    if (!m_cached_preview_bitmap.is_null() || !update_cached_preview_bitmap(layer).is_error()) {
+    auto content_rect = m_scaling ? m_new_layer_rect : m_editor->active_layer()->relative_rect();
+    auto rect_in_editor = m_editor->content_to_frame_rect(content_rect).to_rounded<int>();
+    if (m_scaling && (!m_cached_preview_bitmap.is_null() || !update_cached_preview_bitmap(layer).is_error())) {
+        Gfx::PainterStateSaver saver(painter);
         painter.add_clip_rect(m_editor->content_rect());
         painter.draw_scaled_bitmap(rect_in_editor, *m_cached_preview_bitmap, m_cached_preview_bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
     }
+    painter.draw_rect_with_thickness(rect_in_editor, Color::Black, 3);
+    painter.draw_rect_with_thickness(rect_in_editor, Color::White, 1);
 }
 
 ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
