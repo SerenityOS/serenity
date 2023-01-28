@@ -8,7 +8,7 @@
 #include <Applications/PixelPaint/IconBag.h>
 
 namespace PixelPaint {
-ErrorOr<IconBag> IconBag::try_create()
+ErrorOr<IconBag> IconBag::create()
 {
     IconBag icon_bag;
 
