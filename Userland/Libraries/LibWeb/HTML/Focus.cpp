@@ -210,7 +210,7 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
     // with the focusing steps.
 
     auto is_shadow_host = [](DOM::Node* node) {
-        return is<DOM::Element>(node) && static_cast<DOM::Element*>(node)->shadow_root() != nullptr;
+        return is<DOM::Element>(node) && static_cast<DOM::Element*>(node)->is_shadow_host();
     };
 
     // 1. If old focus target is a shadow host whose shadow root's delegates focus is true, and old focus target's

@@ -537,6 +537,13 @@ JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedF
     });
 }
 
+// https://dom.spec.whatwg.org/#element-shadow-host
+bool Element::is_shadow_host() const
+{
+    // An element is a shadow host if its shadow root is non-null.
+    return m_shadow_root != nullptr;
+}
+
 void Element::set_shadow_root(JS::GCPtr<ShadowRoot> shadow_root)
 {
     if (m_shadow_root == shadow_root)
