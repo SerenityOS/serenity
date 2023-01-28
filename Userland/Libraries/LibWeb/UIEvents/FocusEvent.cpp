@@ -11,7 +11,7 @@ namespace Web::UIEvents {
 
 FocusEvent* FocusEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, FocusEventInit const& event_init)
 {
-    return realm.heap().allocate<FocusEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<FocusEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 FocusEvent::FocusEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, FocusEventInit const& event_init)

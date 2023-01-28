@@ -106,7 +106,7 @@ bool KeyboardEvent::get_modifier_state(DeprecatedString const& key_arg)
 
 KeyboardEvent* KeyboardEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
 {
-    return realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 KeyboardEvent* KeyboardEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)

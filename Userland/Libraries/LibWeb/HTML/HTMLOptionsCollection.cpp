@@ -15,7 +15,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
 {
-    return root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter));
+    return root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)

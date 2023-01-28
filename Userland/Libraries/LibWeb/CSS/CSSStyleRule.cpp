@@ -13,7 +13,7 @@ namespace Web::CSS {
 
 CSSStyleRule* CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
 {
-    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration);
+    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)

@@ -15,7 +15,7 @@ namespace Web::CSS {
 
 JS::NonnullGCPtr<Screen> Screen::create(HTML::Window& window)
 {
-    return window.heap().allocate<Screen>(window.realm(), window);
+    return window.heap().allocate<Screen>(window.realm(), window).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Screen::Screen(HTML::Window& window)

@@ -11,7 +11,7 @@ namespace Web::HTML {
 
 SubmitEvent* SubmitEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, SubmitEventInit const& event_init)
 {
-    return realm.heap().allocate<SubmitEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<SubmitEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 SubmitEvent* SubmitEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, SubmitEventInit const& event_init)

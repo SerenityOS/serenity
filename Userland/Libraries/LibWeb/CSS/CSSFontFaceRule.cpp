@@ -14,7 +14,7 @@ namespace Web::CSS {
 
 CSSFontFaceRule* CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
 {
-    return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face));
+    return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)

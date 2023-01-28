@@ -16,7 +16,7 @@ namespace Web::DOM {
 JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 {
     auto& realm = element.realm();
-    return realm.heap().allocate<NamedNodeMap>(realm, element);
+    return realm.heap().allocate<NamedNodeMap>(realm, element).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)

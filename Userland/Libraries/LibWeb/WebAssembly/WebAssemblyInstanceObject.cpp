@@ -35,34 +35,38 @@ JS::ThrowCompletionOr<void> WebAssemblyInstanceObject::initialize(JS::Realm& rea
     auto& instance = this->instance();
     auto& cache = this->cache();
     for (auto& export_ : instance.exports()) {
-        export_.value().visit(
-            [&](Wasm::FunctionAddress const& address) {
+        TRY(export_.value().visit(
+            [&](Wasm::FunctionAddress const& address) -> JS::ThrowCompletionOr<void> {
                 Optional<JS::FunctionObject*> object = cache.function_instances.get(address);
                 if (!object.has_value()) {
                     object = create_native_function(vm, address, export_.name());
                     cache.function_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
+                return {};
             },
-            [&](Wasm::MemoryAddress const& address) {
+            [&](Wasm::MemoryAddress const& address) -> JS::ThrowCompletionOr<void> {
                 Optional<WebAssemblyMemoryObject*> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm, realm, address);
+                    object = MUST_OR_THROW_OOM(heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm, realm, address));
                     cache.memory_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
+                return {};
             },
-            [&](Wasm::TableAddress const& address) {
+            [&](Wasm::TableAddress const& address) -> JS::ThrowCompletionOr<void> {
                 Optional<WebAssemblyTableObject*> object = cache.table_instances.get(address);
                 if (!object.has_value()) {
-                    object = heap().allocate<Web::Bindings::WebAssemblyTableObject>(realm, realm, address);
+                    object = MUST_OR_THROW_OOM(heap().allocate<Web::Bindings::WebAssemblyTableObject>(realm, realm, address));
                     cache.table_instances.set(address, *object);
                 }
                 m_exports_object->define_direct_property(export_.name(), *object, JS::default_attributes);
+                return {};
             },
-            [&](auto const&) {
+            [&](auto const&) -> JS::ThrowCompletionOr<void> {
                 // FIXME: Implement other exports!
-            });
+                return {};
+            }));
     }
 
     MUST(m_exports_object->set_integrity_level(IntegrityLevel::Frozen));

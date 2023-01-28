@@ -11,7 +11,7 @@ namespace Web::Geometry {
 
 JS::NonnullGCPtr<DOMRect> DOMRect::construct_impl(JS::Realm& realm, double x, double y, double width, double height)
 {
-    return realm.heap().allocate<DOMRect>(realm, realm, x, y, width, height);
+    return realm.heap().allocate<DOMRect>(realm, realm, x, y, width, height).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<DOMRect> DOMRect::create(JS::Realm& realm, Gfx::FloatRect const& rect)

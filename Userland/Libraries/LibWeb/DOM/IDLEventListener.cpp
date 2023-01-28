@@ -10,7 +10,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<IDLEventListener> IDLEventListener::create(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::CallbackType> callback)
 {
-    return realm.heap().allocate<IDLEventListener>(realm, realm, move(callback));
+    return realm.heap().allocate<IDLEventListener>(realm, realm, move(callback)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 IDLEventListener::IDLEventListener(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::CallbackType> callback)

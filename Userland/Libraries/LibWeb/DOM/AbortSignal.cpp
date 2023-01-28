@@ -14,7 +14,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<AbortSignal> AbortSignal::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<AbortSignal>(realm, realm);
+    return realm.heap().allocate<AbortSignal>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 AbortSignal::AbortSignal(JS::Realm& realm)

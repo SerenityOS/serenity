@@ -11,7 +11,7 @@ namespace Web::WebGL {
 
 WebGLContextEvent* WebGLContextEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, WebGLContextEventInit const& event_init)
 {
-    return realm.heap().allocate<WebGLContextEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<WebGLContextEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 WebGLContextEvent* WebGLContextEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, WebGLContextEventInit const& event_init)

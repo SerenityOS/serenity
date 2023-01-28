@@ -157,7 +157,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (result.is_error())
         promise->reject(*result.release_error().value());
     else
-        promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, result.release_value()));
+        promise->fulfill(MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, result.release_value())));
     return promise;
 }
 
@@ -337,10 +337,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value());
+        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value()));
         if (should_return_module) {
             auto object = JS::Object::create(realm, nullptr);
-            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, s_compiled_modules.size() - 1), JS::default_attributes);
+            object->define_direct_property("module", MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, s_compiled_modules.size() - 1)), JS::default_attributes);
             object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
         } else {
@@ -355,7 +355,7 @@ JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
     auto& realm = *vm.current_realm();
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
-        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger { wasm_value.to<i64>().value() });
+        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger { wasm_value.to<i64>().value() }).release_allocated_value_but_fixme_should_propagate_errors();
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:

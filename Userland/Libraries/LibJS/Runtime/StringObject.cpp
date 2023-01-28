@@ -17,7 +17,7 @@ namespace JS {
 // 10.4.3.4 StringCreate ( value, prototype ), https://tc39.es/ecma262/#sec-stringcreate
 NonnullGCPtr<StringObject> StringObject::create(Realm& realm, PrimitiveString& primitive_string, Object& prototype)
 {
-    return realm.heap().allocate<StringObject>(realm, primitive_string, prototype);
+    return realm.heap().allocate<StringObject>(realm, primitive_string, prototype).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)

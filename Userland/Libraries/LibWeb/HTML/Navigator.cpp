@@ -17,7 +17,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<Navigator> Navigator::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Navigator>(realm, realm);
+    return realm.heap().allocate<Navigator>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Navigator::Navigator(JS::Realm& realm)

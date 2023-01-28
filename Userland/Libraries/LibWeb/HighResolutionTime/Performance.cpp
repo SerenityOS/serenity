@@ -40,7 +40,7 @@ void Performance::visit_edges(Cell::Visitor& visitor)
 JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 {
     if (!m_timing)
-        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window);
+        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window).release_allocated_value_but_fixme_should_propagate_errors();
     return m_timing;
 }
 

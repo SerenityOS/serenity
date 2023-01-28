@@ -17,7 +17,7 @@ JS::NonnullGCPtr<IntersectionObserver> IntersectionObserver::construct_impl(JS::
     (void)callback;
     (void)options;
 
-    return realm.heap().allocate<IntersectionObserver>(realm, realm);
+    return realm.heap().allocate<IntersectionObserver>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 IntersectionObserver::IntersectionObserver(JS::Realm& realm)

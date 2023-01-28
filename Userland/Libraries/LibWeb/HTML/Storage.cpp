@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Storage>(realm, realm);
+    return realm.heap().allocate<Storage>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Storage::Storage(JS::Realm& realm)
