@@ -30,7 +30,7 @@ public:
     WebIDL::ExceptionOr<void> set_inner_html(DeprecatedString const&);
 
 private:
-    ShadowRoot(Document&, Element&);
+    ShadowRoot(Document&, Element& host, Bindings::ShadowRootMode);
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     // ^Node

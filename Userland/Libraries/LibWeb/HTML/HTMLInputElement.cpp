@@ -382,7 +382,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         break;
     }
 
-    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this).release_allocated_value_but_fixme_should_propagate_errors();
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this, Bindings::ShadowRootMode::Closed).release_allocated_value_but_fixme_should_propagate_errors();
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
