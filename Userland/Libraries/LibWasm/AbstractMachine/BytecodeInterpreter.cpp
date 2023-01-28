@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -615,6 +616,29 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
             configuration.stack().peek() = Value((i32)-1);
         return;
     }
+    // https://webassembly.github.io/spec/core/bikeshed/#exec-memory-fill
+    case Instructions::memory_fill.value(): {
+        auto address = configuration.frame().module().memories()[0];
+        auto instance = configuration.store().get(address);
+        auto count = configuration.stack().pop().get<Value>().to<i32>().value();
+        auto value = configuration.stack().pop().get<Value>().to<i32>().value();
+        auto destination_offset = configuration.stack().pop().get<Value>().to<i32>().value();
+
+        TRAP_IF_NOT(static_cast<size_t>(destination_offset + count) <= instance->data().size());
+
+        if (count == 0)
+            return;
+
+        Instruction synthetic_store_instruction {
+            Instructions::i32_store8,
+            Instruction::MemoryArgument { 0, 0 }
+        };
+
+        for (auto i = 0; i < count; ++i) {
+            store_to_memory(configuration, synthetic_store_instruction, { &value, sizeof(value) }, destination_offset);
+        }
+        return;
+    }
     case Instructions::table_get.value():
     case Instructions::table_set.value():
         goto unimplemented;
@@ -950,7 +974,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::data_drop.value():
     case Instructions::memory_copy.value():
-    case Instructions::memory_fill.value():
     case Instructions::table_init.value():
     case Instructions::elem_drop.value():
     case Instructions::table_copy.value():
