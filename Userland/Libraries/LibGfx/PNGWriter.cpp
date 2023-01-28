@@ -175,7 +175,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     ByteBuffer uncompressed_block_data;
     TRY(uncompressed_block_data.try_ensure_capacity(bitmap.size_in_bytes() + bitmap.height()));
 
-    auto dummy_scanline = TRY(FixedArray<Pixel>::try_create(bitmap.width()));
+    auto dummy_scanline = TRY(FixedArray<Pixel>::create(bitmap.width()));
     auto const* scanline_minus_1 = dummy_scanline.data();
 
     for (int y = 0; y < bitmap.height(); ++y) {

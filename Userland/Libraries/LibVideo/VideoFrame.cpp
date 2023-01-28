@@ -18,9 +18,9 @@ ErrorOr<NonnullOwnPtr<SubsampledYUVFrame>> SubsampledYUVFrame::try_create(
     bool subsampling_horizontal, bool subsampling_vertical,
     Span<u16> plane_y, Span<u16> plane_u, Span<u16> plane_v)
 {
-    auto plane_y_array = TRY(FixedArray<u16>::try_create(plane_y));
-    auto plane_u_array = TRY(FixedArray<u16>::try_create(plane_u));
-    auto plane_v_array = TRY(FixedArray<u16>::try_create(plane_v));
+    auto plane_y_array = TRY(FixedArray<u16>::create(plane_y));
+    auto plane_u_array = TRY(FixedArray<u16>::create(plane_u));
+    auto plane_v_array = TRY(FixedArray<u16>::create(plane_v));
     return adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(size, bit_depth, cicp, subsampling_horizontal, subsampling_vertical, plane_y_array, plane_u_array, plane_v_array));
 }
 
@@ -28,8 +28,8 @@ DecoderErrorOr<void> SubsampledYUVFrame::output_to_bitmap(Gfx::Bitmap& bitmap)
 {
     size_t width = this->width();
     size_t height = this->height();
-    auto u_sample_row = DECODER_TRY_ALLOC(FixedArray<u16>::try_create(width));
-    auto v_sample_row = DECODER_TRY_ALLOC(FixedArray<u16>::try_create(width));
+    auto u_sample_row = DECODER_TRY_ALLOC(FixedArray<u16>::create(width));
+    auto v_sample_row = DECODER_TRY_ALLOC(FixedArray<u16>::create(width));
     size_t uv_width = width >> m_subsampling_horizontal;
 
     auto converter = TRY(ColorConverter::create(bit_depth(), cicp()));

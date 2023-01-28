@@ -124,7 +124,7 @@ void PlaybackManager::next_buffer()
 
         m_resampler->reset();
         // FIXME: Handle OOM better.
-        auto resampled = MUST(FixedArray<Audio::Sample>::try_create(m_resampler->resample(move(m_current_buffer)).span()));
+        auto resampled = MUST(FixedArray<Audio::Sample>::create(m_resampler->resample(move(m_current_buffer)).span()));
         m_current_buffer.swap(resampled);
         MUST(m_connection->async_enqueue(m_current_buffer));
     }

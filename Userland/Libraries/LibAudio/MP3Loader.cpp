@@ -91,7 +91,7 @@ MaybeLoaderError MP3LoaderPlugin::seek(int const position)
 
 LoaderSamples MP3LoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
 {
-    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::try_create(max_samples_to_read_from_input));
+    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(max_samples_to_read_from_input));
 
     size_t samples_to_read = max_samples_to_read_from_input;
     while (samples_to_read > 0) {

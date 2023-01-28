@@ -180,7 +180,7 @@ ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
         return Error::from_string_literal("Kern table does not contain any subtables");
 
     // Read all subtable offsets
-    auto subtable_offsets = TRY(FixedArray<size_t>::try_create(number_of_subtables));
+    auto subtable_offsets = TRY(FixedArray<size_t>::create(number_of_subtables));
     size_t offset = sizeof(Header);
     for (size_t i = 0; i < number_of_subtables; ++i) {
         if (slice.size() < offset + sizeof(SubtableHeader))
