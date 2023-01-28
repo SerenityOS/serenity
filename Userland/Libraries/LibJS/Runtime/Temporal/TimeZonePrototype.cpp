@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -244,7 +244,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
     auto* time_zone = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(timeZone).
-    return PrimitiveString::create(vm, TRY(Value(time_zone).to_deprecated_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(time_zone).to_string(vm)));
 }
 
 }

@@ -563,10 +563,10 @@ ThrowCompletionOr<bool> time_zone_equals(VM& vm, Object& one, Object& two)
         return true;
 
     // 2. Let timeZoneOne be ? ToString(one).
-    auto time_zone_one = TRY(Value(&one).to_deprecated_string(vm));
+    auto time_zone_one = TRY(Value(&one).to_string(vm));
 
     // 3. Let timeZoneTwo be ? ToString(two).
-    auto time_zone_two = TRY(Value(&two).to_deprecated_string(vm));
+    auto time_zone_two = TRY(Value(&two).to_string(vm));
 
     // 4. If timeZoneOne is timeZoneTwo, return true.
     if (time_zone_one == time_zone_two)

@@ -340,7 +340,7 @@ ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTi
     // 13. Else,
     else {
         // a. Let timeZoneID be ? ToString(timeZone).
-        auto time_zone_id = TRY(Value(&time_zone).to_deprecated_string(vm));
+        auto time_zone_id = TRY(Value(&time_zone).to_string(vm));
 
         // b. If showTimeZone is "critical", let flag be "!"; else let flag be the empty String.
         auto flag = show_time_zone == "critical"sv ? "!"sv : ""sv;
