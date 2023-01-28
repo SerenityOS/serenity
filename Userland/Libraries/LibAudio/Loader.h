@@ -65,8 +65,8 @@ protected:
 
 class Loader : public RefCounted<Loader> {
 public:
-    static Result<NonnullRefPtr<Loader>, LoaderError> create(StringView path) { return adopt_ref(*new Loader(TRY(try_create(path)))); }
-    static Result<NonnullRefPtr<Loader>, LoaderError> create(Bytes buffer) { return adopt_ref(*new Loader(TRY(try_create(buffer)))); }
+    static Result<NonnullRefPtr<Loader>, LoaderError> create(StringView path) { return adopt_ref(*new Loader(TRY(create_plugin(path)))); }
+    static Result<NonnullRefPtr<Loader>, LoaderError> create(Bytes buffer) { return adopt_ref(*new Loader(TRY(create_plugin(buffer)))); }
 
     LoaderSamples get_more_samples(size_t max_samples_to_read_from_input = 128 * KiB) const { return m_plugin->get_more_samples(max_samples_to_read_from_input); }
 
@@ -82,8 +82,8 @@ public:
     Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
 
 private:
-    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(StringView path);
-    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> try_create(Bytes buffer);
+    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(StringView path);
+    static Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> create_plugin(Bytes buffer);
 
     explicit Loader(NonnullOwnPtr<LoaderPlugin>);
 

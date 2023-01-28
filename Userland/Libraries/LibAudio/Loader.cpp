@@ -21,7 +21,7 @@ Loader::Loader(NonnullOwnPtr<LoaderPlugin> plugin)
 {
 }
 
-Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(StringView path)
+Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(StringView path)
 {
     {
         auto plugin = WavLoaderPlugin::create(path);
@@ -44,7 +44,7 @@ Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(StringView p
     return LoaderError { "No loader plugin available" };
 }
 
-Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::try_create(Bytes buffer)
+Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(Bytes buffer)
 {
     {
         auto plugin = WavLoaderPlugin::create(buffer);
