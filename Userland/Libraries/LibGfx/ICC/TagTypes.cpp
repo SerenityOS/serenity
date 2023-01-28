@@ -28,6 +28,16 @@ struct XYZNumber {
     }
 };
 
+// Common bits of ICC v4, Table 40 — lut16Type encoding and Table 44 — lut8Type encoding
+struct LUTHeader {
+    u8 number_of_input_channels;
+    u8 number_of_output_channels;
+    u8 number_of_clut_grid_points;
+    u8 reserved_for_padding;
+    BigEndian<s15Fixed16Number> e_parameters[9];
+};
+static_assert(AssertSize<LUTHeader, 40>());
+
 ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
 {
     if (tag_bytes.size() < 2 * sizeof(u32))
@@ -68,6 +78,107 @@ ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes byte
         values[i] = raw_values[i];
 
     return adopt_ref(*new CurveTagData(offset, size, move(values)));
+}
+
+ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.10 lut16Type
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(LUTHeader) + 2 + sizeof(u16))
+        return Error::from_string_literal("ICC::Profile: lut16Type has not enough data");
+
+    auto& header = *bit_cast<LUTHeader const*>(bytes.data() + 8);
+    if (header.reserved_for_padding != 0)
+        return Error::from_string_literal("ICC::Profile: lut16Type reserved_for_padding not 0");
+
+    u16 number_of_input_table_entries = *bit_cast<BigEndian<u16> const*>(bytes.data() + 8 + sizeof(LUTHeader));
+    u16 number_of_output_table_entries = *bit_cast<BigEndian<u16> const*>(bytes.data() + 8 + sizeof(LUTHeader) + 2);
+    ReadonlyBytes table_bytes = bytes.slice(8 + sizeof(LUTHeader) + 4);
+
+    EMatrix e;
+    for (int i = 0; i < 9; ++i)
+        e.e[i] = S15Fixed16::create_raw(header.e_parameters[i]);
+
+    u32 input_tables_size = number_of_input_table_entries * header.number_of_input_channels;
+    u32 output_tables_size = number_of_output_table_entries * header.number_of_output_channels;
+    u32 clut_values_size = header.number_of_output_channels;
+    for (int i = 0; i < header.number_of_input_channels; ++i)
+        clut_values_size *= header.number_of_clut_grid_points;
+
+    if (table_bytes.size() < (input_tables_size + clut_values_size + output_tables_size) * sizeof(u16))
+        return Error::from_string_literal("ICC::Profile: lut16Type has not enough data for tables");
+
+    auto* raw_table_data = bit_cast<BigEndian<u16> const*>(table_bytes.data());
+
+    Vector<u16> input_tables;
+    input_tables.resize(input_tables_size);
+    for (u32 i = 0; i < input_tables_size; ++i)
+        input_tables[i] = raw_table_data[i];
+
+    Vector<u16> clut_values;
+    clut_values.resize(clut_values_size);
+    for (u32 i = 0; i < clut_values_size; ++i)
+        clut_values[i] = raw_table_data[input_tables_size + i];
+
+    Vector<u16> output_tables;
+    output_tables.resize(output_tables_size);
+    for (u32 i = 0; i < output_tables_size; ++i)
+        output_tables[i] = raw_table_data[input_tables_size + clut_values_size + i];
+
+    return adopt_ref(*new Lut16TagData(offset, size, e,
+        header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
+        number_of_input_table_entries, number_of_output_table_entries,
+        move(input_tables), move(clut_values), move(output_tables)));
+}
+
+ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.11 lut8Type
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 8 + sizeof(LUTHeader))
+        return Error::from_string_literal("ICC::Profile: lut8Type has not enough data");
+
+    auto& header = *bit_cast<LUTHeader const*>(bytes.data() + 8);
+    if (header.reserved_for_padding != 0)
+        return Error::from_string_literal("ICC::Profile: lut16Type reserved_for_padding not 0");
+
+    u16 number_of_input_table_entries = 256;
+    u16 number_of_output_table_entries = 256;
+    ReadonlyBytes table_bytes = bytes.slice(8 + sizeof(LUTHeader));
+
+    EMatrix e;
+    for (int i = 0; i < 9; ++i)
+        e.e[i] = S15Fixed16::create_raw(header.e_parameters[i]);
+
+    u32 input_tables_size = number_of_input_table_entries * header.number_of_input_channels;
+    u32 output_tables_size = number_of_output_table_entries * header.number_of_output_channels;
+    u32 clut_values_size = header.number_of_output_channels;
+    for (int i = 0; i < header.number_of_input_channels; ++i)
+        clut_values_size *= header.number_of_clut_grid_points;
+
+    if (table_bytes.size() < input_tables_size + clut_values_size + output_tables_size)
+        return Error::from_string_literal("ICC::Profile: lut8Type has not enough data for tables");
+
+    Vector<u8> input_tables;
+    input_tables.resize(input_tables_size);
+    memcpy(input_tables.data(), table_bytes.data(), input_tables_size);
+
+    Vector<u8> clut_values;
+    clut_values.resize(clut_values_size);
+    memcpy(clut_values.data(), table_bytes.data() + input_tables_size, clut_values_size);
+
+    Vector<u8> output_tables;
+    output_tables.resize(output_tables_size);
+    memcpy(output_tables.data(), table_bytes.data() + input_tables_size + clut_values_size, output_tables_size);
+
+    return adopt_ref(*new Lut8TagData(offset, size, e,
+        header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
+        number_of_input_table_entries, number_of_output_table_entries,
+        move(input_tables), move(clut_values), move(output_tables)));
 }
 
 ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)

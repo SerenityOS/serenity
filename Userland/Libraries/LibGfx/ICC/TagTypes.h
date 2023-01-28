@@ -86,6 +86,124 @@ private:
     Vector<u16> m_values;
 };
 
+struct EMatrix {
+    S15Fixed16 e[9];
+
+    S15Fixed16 const& operator[](int i) const
+    {
+        VERIFY(i >= 0 && i < 9);
+        return e[i];
+    }
+};
+
+// ICC v4, 10.10 lut16Type
+class Lut16TagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D667432 }; // 'mft2'
+
+    static ErrorOr<NonnullRefPtr<Lut16TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    Lut16TagData(u32 offset, u32 size, EMatrix e,
+        u8 number_of_input_channels, u8 number_of_output_channels, u8 number_of_clut_grid_points,
+        u16 number_of_input_table_entries, u16 number_of_output_table_entries,
+        Vector<u16> input_tables, Vector<u16> clut_values, Vector<u16> output_tables)
+        : TagData(offset, size, Type)
+        , m_e(e)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_number_of_clut_grid_points(number_of_clut_grid_points)
+        , m_number_of_input_table_entries(number_of_input_table_entries)
+        , m_number_of_output_table_entries(number_of_output_table_entries)
+        , m_input_tables(move(input_tables))
+        , m_clut_values(move(clut_values))
+        , m_output_tables(move(output_tables))
+    {
+        VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
+        VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+    }
+
+    EMatrix const& e_matrix() const { return m_e; }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+    u8 number_of_clut_grid_points() const { return m_number_of_clut_grid_points; }
+
+    u16 number_of_input_table_entries() const { return m_number_of_input_table_entries; }
+    u16 number_of_output_table_entries() const { return m_number_of_output_table_entries; }
+
+    Vector<u16> const& input_tables() const { return m_input_tables; }
+    Vector<u16> const& clut_values() const { return m_clut_values; }
+    Vector<u16> const& output_tables() const { return m_output_tables; }
+
+private:
+    EMatrix m_e;
+
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+    u8 m_number_of_clut_grid_points;
+
+    u16 m_number_of_input_table_entries;
+    u16 m_number_of_output_table_entries;
+
+    Vector<u16> m_input_tables;
+    Vector<u16> m_clut_values;
+    Vector<u16> m_output_tables;
+};
+
+// ICC v4, 10.11 lut8Type
+class Lut8TagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D667431 }; // 'mft1'
+
+    static ErrorOr<NonnullRefPtr<Lut8TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    Lut8TagData(u32 offset, u32 size, EMatrix e,
+        u8 number_of_input_channels, u8 number_of_output_channels, u8 number_of_clut_grid_points,
+        u16 number_of_input_table_entries, u16 number_of_output_table_entries,
+        Vector<u8> input_tables, Vector<u8> clut_values, Vector<u8> output_tables)
+        : TagData(offset, size, Type)
+        , m_e(e)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_number_of_clut_grid_points(number_of_clut_grid_points)
+        , m_number_of_input_table_entries(number_of_input_table_entries)
+        , m_number_of_output_table_entries(number_of_output_table_entries)
+        , m_input_tables(move(input_tables))
+        , m_clut_values(move(clut_values))
+        , m_output_tables(move(output_tables))
+    {
+        VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
+        VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+    }
+
+    EMatrix const& e_matrix() const { return m_e; }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+    u8 number_of_clut_grid_points() const { return m_number_of_clut_grid_points; }
+
+    u16 number_of_input_table_entries() const { return m_number_of_input_table_entries; }
+    u16 number_of_output_table_entries() const { return m_number_of_output_table_entries; }
+
+    Vector<u8> const& input_tables() const { return m_input_tables; }
+    Vector<u8> const& clut_values() const { return m_clut_values; }
+    Vector<u8> const& output_tables() const { return m_output_tables; }
+
+private:
+    EMatrix m_e;
+
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+    u8 m_number_of_clut_grid_points;
+
+    u16 m_number_of_input_table_entries;
+    u16 m_number_of_output_table_entries;
+
+    Vector<u8> m_input_tables;
+    Vector<u8> m_clut_values;
+    Vector<u8> m_output_tables;
+};
+
 // ICC v4, 10.15 multiLocalizedUnicodeType
 class MultiLocalizedUnicodeTagData : public TagData {
 public:
