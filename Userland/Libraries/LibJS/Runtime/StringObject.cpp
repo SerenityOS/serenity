@@ -15,9 +15,9 @@
 namespace JS {
 
 // 10.4.3.4 StringCreate ( value, prototype ), https://tc39.es/ecma262/#sec-stringcreate
-NonnullGCPtr<StringObject> StringObject::create(Realm& realm, PrimitiveString& primitive_string, Object& prototype)
+ThrowCompletionOr<NonnullGCPtr<StringObject>> StringObject::create(Realm& realm, PrimitiveString& primitive_string, Object& prototype)
 {
-    return realm.heap().allocate<StringObject>(realm, primitive_string, prototype).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<StringObject>(realm, primitive_string, prototype));
 }
 
 StringObject::StringObject(PrimitiveString& string, Object& prototype)
@@ -31,8 +31,7 @@ ThrowCompletionOr<void> StringObject::initialize(Realm& realm)
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
-    // FIXME: Propagate this error.
-    define_direct_property(vm.names.length, Value(MUST(m_string.utf16_string_view()).length_in_code_units()), 0);
+    define_direct_property(vm.names.length, Value(MUST_OR_THROW_OOM(m_string.utf16_string_view()).length_in_code_units()), 0);
 
     return {};
 }
