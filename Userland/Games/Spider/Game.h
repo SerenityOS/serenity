@@ -92,12 +92,14 @@ private:
     void detect_victory();
     void move_focused_cards(CardStack& stack);
     void clear_hovered_stack();
+    void deal_next_card();
 
-    void paint_event(GUI::PaintEvent&) override;
-    void mousedown_event(GUI::MouseEvent&) override;
-    void mouseup_event(GUI::MouseEvent&) override;
-    void mousemove_event(GUI::MouseEvent&) override;
-    void timer_event(Core::TimerEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
 
     Mode m_mode { Mode::SingleSuit };
 
