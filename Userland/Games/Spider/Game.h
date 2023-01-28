@@ -107,12 +107,17 @@ private:
 
     bool m_mouse_down { false };
 
-    bool m_waiting_for_new_game { true };
-    bool m_new_game_animation { false };
+    enum class State {
+        WaitingForNewGame,
+        NewGameAnimation,
+        GameInProgress,
+        DrawAnimation,
+        Victory,
+    };
+    State m_state { State::WaitingForNewGame };
     uint8_t m_new_game_animation_delay { 0 };
     uint8_t m_new_game_animation_pile { 0 };
 
-    bool m_draw_animation { false };
     uint8_t m_draw_animation_delay { 0 };
     uint8_t m_draw_animation_pile { 0 };
     Gfx::IntRect m_original_stock_rect;
