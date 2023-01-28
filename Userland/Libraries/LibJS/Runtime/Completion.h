@@ -42,7 +42,7 @@ namespace JS {
             /* We can't explicitly check for OOM because InternalError does not store the ErrorType */ \
             VERIFY(_completion.value().has_value());                                                   \
             VERIFY(_completion.value()->is_object());                                                  \
-            VERIFY(is<JS::InternalError>(_completion.value()->as_object()));                           \
+            VERIFY(::AK::is<JS::InternalError>(_completion.value()->as_object()));                     \
                                                                                                        \
             return _completion;                                                                        \
         }                                                                                              \
