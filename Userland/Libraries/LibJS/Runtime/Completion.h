@@ -332,6 +332,12 @@ public:
     [[nodiscard]] ValueType release_value() { return m_value.release_value(); }
     Completion release_error() { return m_throw_completion.release_value(); }
 
+    ValueType release_allocated_value_but_fixme_should_propagate_errors()
+    {
+        VERIFY(!is_error());
+        return release_value();
+    }
+
 private:
     Optional<Completion> m_throw_completion;
     Optional<ValueType> m_value;
