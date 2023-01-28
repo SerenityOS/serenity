@@ -137,7 +137,7 @@ template<Concepts::SharedSingleProducerCircularQueue T>
 ErrorOr<T> decode(Decoder& decoder)
 {
     auto anon_file = TRY(decoder.decode<IPC::File>());
-    return T::try_create(anon_file.take_fd());
+    return T::create(anon_file.take_fd());
 }
 
 template<Concepts::Optional T>

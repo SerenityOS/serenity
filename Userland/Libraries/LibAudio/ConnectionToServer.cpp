@@ -22,7 +22,7 @@ namespace Audio {
 
 ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
     : IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>(*this, move(socket))
-    , m_buffer(make<AudioQueue>(MUST(AudioQueue::try_create())))
+    , m_buffer(make<AudioQueue>(MUST(AudioQueue::create())))
     , m_user_queue(make<UserSampleQueue>())
     , m_background_audio_enqueuer(Threading::Thread::construct([this]() {
         // All the background thread does is run an event loop.
@@ -105,7 +105,7 @@ void ConnectionToServer::custom_event(Core::CustomEvent&)
         m_user_queue->discard_samples(available_samples);
 
         // FIXME: Could we receive interrupts in a good non-IPC way instead?
-        auto result = m_buffer->try_blocking_enqueue(next_chunk, [this]() {
+        auto result = m_buffer->blocking_enqueue(next_chunk, [this]() {
             nanosleep(&m_good_sleep_time, nullptr);
         });
         if (result.is_error())
@@ -115,12 +115,12 @@ void ConnectionToServer::custom_event(Core::CustomEvent&)
 
 ErrorOr<void, AudioQueue::QueueStatus> ConnectionToServer::realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples)
 {
-    return m_buffer->try_enqueue(samples);
+    return m_buffer->enqueue(samples);
 }
 
 ErrorOr<void> ConnectionToServer::blocking_realtime_enqueue(Array<Sample, AUDIO_BUFFER_SIZE> samples, Function<void()> wait_function)
 {
-    return m_buffer->try_blocking_enqueue(samples, move(wait_function));
+    return m_buffer->blocking_enqueue(samples, move(wait_function));
 }
 
 unsigned ConnectionToServer::total_played_samples() const
