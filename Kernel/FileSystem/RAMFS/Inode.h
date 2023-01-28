@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,19 +8,20 @@
 #pragma once
 
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/FileSystem/TmpFS/FileSystem.h>
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
+#include <Kernel/Forward.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 
 namespace Kernel {
 
-class TmpFSInode final : public Inode {
-    friend class TmpFS;
+class RAMFSInode final : public Inode {
+    friend class RAMFS;
 
 public:
-    virtual ~TmpFSInode() override;
+    virtual ~RAMFSInode() override;
 
-    TmpFS& fs() { return static_cast<TmpFS&>(Inode::fs()); }
-    TmpFS const& fs() const { return static_cast<TmpFS const&>(Inode::fs()); }
+    RAMFS& fs() { return static_cast<RAMFS&>(Inode::fs()); }
+    RAMFS const& fs() const { return static_cast<RAMFS const&>(Inode::fs()); }
 
     // ^Inode
     virtual InodeMetadata metadata() const override;
@@ -37,10 +38,10 @@ public:
     virtual ErrorOr<void> update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime) override;
 
 private:
-    TmpFSInode(TmpFS& fs, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
-    explicit TmpFSInode(TmpFS& fs);
-    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create(TmpFS&, InodeMetadata const& metadata, LockWeakPtr<TmpFSInode> parent);
-    static ErrorOr<NonnullLockRefPtr<TmpFSInode>> try_create_root(TmpFS&);
+    RAMFSInode(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
+    explicit RAMFSInode(RAMFS& fs);
+    static ErrorOr<NonnullLockRefPtr<RAMFSInode>> try_create(RAMFS&, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent);
+    static ErrorOr<NonnullLockRefPtr<RAMFSInode>> try_create_root(RAMFS&);
 
     // ^Inode
     virtual ErrorOr<size_t> read_bytes_locked(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const override;
@@ -50,7 +51,7 @@ private:
 
     struct Child {
         NonnullOwnPtr<KString> name;
-        NonnullLockRefPtr<TmpFSInode> inode;
+        NonnullLockRefPtr<RAMFSInode> inode;
         IntrusiveListNode<Child> list_node {};
         using List = IntrusiveList<&Child::list_node>;
     };
@@ -58,7 +59,7 @@ private:
     Child* find_child_by_name(StringView);
 
     InodeMetadata m_metadata;
-    LockWeakPtr<TmpFSInode> m_parent;
+    LockWeakPtr<RAMFSInode> m_parent;
 
     ErrorOr<void> ensure_allocated_blocks(size_t offset, size_t io_size);
     ErrorOr<void> truncate_to_block_index(size_t block_index);

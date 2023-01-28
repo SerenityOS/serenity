@@ -389,7 +389,11 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
     TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
-    TRY(Core::System::mount(-1, "/dev"sv, "tmp"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
+    TRY(Core::System::mount(-1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
+
+    TRY(Core::System::mount(-1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
+    // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
+    TRY(Core::System::chmod("/tmp"sv, 01777));
 
     TRY(Core::System::mkdir("/dev/audio"sv, 0755));
     TRY(Core::System::mkdir("/dev/input"sv, 0755));

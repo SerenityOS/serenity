@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * Copyright (c) 2022, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2022-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,24 +13,24 @@
 
 namespace Kernel {
 
-class TmpFS final : public FileSystem {
-    friend class TmpFSInode;
+class RAMFS final : public FileSystem {
+    friend class RAMFSInode;
 
 public:
-    virtual ~TmpFS() override;
+    virtual ~RAMFS() override;
     static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
     virtual ErrorOr<void> initialize() override;
 
-    virtual StringView class_name() const override { return "TmpFS"sv; }
+    virtual StringView class_name() const override { return "RAMFS"sv; }
 
     virtual bool supports_watchers() const override { return true; }
 
     virtual Inode& root_inode() override;
 
 private:
-    TmpFS();
+    RAMFS();
 
-    LockRefPtr<TmpFSInode> m_root_inode;
+    LockRefPtr<RAMFSInode> m_root_inode;
 
     // NOTE: We start by assigning InodeIndex of 2, because 0 is invalid and 1
     // is reserved for the root directory inode.
