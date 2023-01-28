@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=angband
+description='Angband'
 version=4.2.4
+website='https://rephial.org'
 workdir="Angband-${version}"
 useconfigure=true
 use_fresh_config_sub=true

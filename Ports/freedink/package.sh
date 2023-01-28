@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=freedink
+description='FreeDink'
 version=109.6
+website='https://www.gnu.org/software/freedink/'
 useconfigure="true"
 use_fresh_config_sub="true"
 config_sub_paths=("autotools/config.sub")

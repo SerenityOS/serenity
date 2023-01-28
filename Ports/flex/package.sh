@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=flex
+description='flex'
 version=2.6.4
+website='https://github.com/westes/flex'
 files="https://github.com/westes/flex/releases/download/v${version}/flex-${version}.tar.gz flex-${version}.tar.gz
 https://github.com/westes/flex/releases/download/v${version}/flex-${version}.tar.gz.sig flex-${version}.tar.gz.sig"
 useconfigure=true

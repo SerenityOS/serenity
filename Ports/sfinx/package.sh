@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=sfinx
+description='Sfinx'
 version="1.1"
+website='https://www.scummvm.org/games/#games-sfinx'
 files="https://downloads.scummvm.org/frs/extras/Sfinx/sfinx-en-v1.1.zip ${port}-en-v${version}.zip f516b30a046526f78cbc923d8f907d267ab964ccd9b770afc72350e8d467ec4d"
 auth_type=sha256
 depends=("scummvm")

@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=Another-World
 useconfigure=true
+description='Another World Bytecode Interpreter'
 version=git
+website='https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter'
 depends=("SDL2" "zlib")
 workdir=Another-World-Bytecode-Interpreter-master
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DSDL2_INCLUDE_DIR=${SERENITY_INSTALL_ROOT}/usr/local/include/SDL2")

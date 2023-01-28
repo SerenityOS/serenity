@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mysthous
+description='Hi-Res Adventure #1: Mystery House'
 version="1.0"
+website='https://www.scummvm.org/games/#games-hires1'
 files="https://downloads.scummvm.org/frs/extras/Mystery%20House/MYSTHOUS.zip ${port}-${version}.zip ada412228a149394489b28c6c7f9ebab0722b52e04732fd0aa22949673cfa3a0"
 auth_type=sha256
 depends=("scummvm")

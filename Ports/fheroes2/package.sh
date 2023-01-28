@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=fheroes2
 useconfigure=true
+description='Free Heroes of Might and Magic II'
 version=0.9.13
+website='https://github.com/ihhub/fheroes2'
 depends=("SDL2" "SDL2_image" "SDL2_mixer" "libpng" "zlib")
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-DUSE_SDL_VERSION=SDL2" "-DENABLE_IMAGE=ON" "-DGET_HOMM2_DEMO=ON")
 files="https://github.com/ihhub/fheroes2/archive/refs/tags/${version}.zip fheroes2-${version}.zip 879805bc88c3561d0eedc3dda425e8d9a3c7ae8a80b9f6909797acc72598cc17"

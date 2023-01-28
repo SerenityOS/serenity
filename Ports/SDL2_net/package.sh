@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_net'
+description='SDL2_net (Network add-on for SDL2)'
 version='2.2.0'
+website='https://github.com/libsdl-org/SDL_net'
 useconfigure='true'
 configopts=(
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"

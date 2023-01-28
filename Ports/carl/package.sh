@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=carl
+description='Crypto Ancienne Resource Loader'
 version=1.5
+website='https://github.com/classilla/cryanc'
 workdir=cryanc-"${version}"
 files="https://github.com/classilla/cryanc/archive/refs/tags/${version}.tar.gz cryanc-${version}.tar.gz 019c2a4df4ce5a332fc29b7903244d6a76bb0bd8bb3e406326b6239416a5b0f6"
 auth_type=sha256

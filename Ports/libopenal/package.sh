@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libopenal
 useconfigure=true
+description='OpenAL soft'
 version=1.21.1
+website='https://openal-soft.org/'
 workdir="openal-soft-${version}"
 depends=('SDL2')
 configopts=(

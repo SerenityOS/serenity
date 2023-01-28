@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=powdertoy
+description='The Powder Toy'
 version=96.2.350
+website='https://powdertoy.co.uk/'
 useconfigure=true
 configopts=("-Dbuildtype=release" "build-release" "--cross-file" "${SERENITY_BUILD_DIR}/meson-cross-file.txt")
 depends=("luajit" "curl" "libfftw3f" "zlib" "SDL2")

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=RISCVEmu
+description='A Basic C++ RISC-V Emulator'
 version=ad8ad6a0eb8591385318b2ec1cffde6078ff0185
+website='https://github.com/IdanHo/RISCVEmu'
 files="https://github.com/IdanHo/RISCVEmu/archive/${version}.tar.gz RISCVEmu-${version}.tar.gz b4636284dd407e490ba6dd783b65caf8c019785285d6a86aece3860465276b33"
 auth_type="sha256"
 

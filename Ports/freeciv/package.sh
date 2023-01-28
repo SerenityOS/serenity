@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=freeciv
+description='Freeciv'
 version=3.0.0-beta2
+website='http://freeciv.org/'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("bootstrap/config.sub")

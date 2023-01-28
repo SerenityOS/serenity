@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libicu
+description='ICU'
 version=69.1
+website='http://site.icu-project.org/'
 useconfigure=true
 use_fresh_config_sub=true
 workdir=icu/source

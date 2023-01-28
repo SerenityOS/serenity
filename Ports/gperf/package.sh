@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=gperf
+description='GNU gperf'
 version=3.1
+website='https://www.gnu.org/software/gperf/'
 useconfigure="true"
 depends=()
 files="https://ftpmirror.gnu.org/gnu/gperf/gperf-${version}.tar.gz gperf-${version}.tar.gz

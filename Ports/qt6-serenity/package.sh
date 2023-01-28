@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=qt6-serenity
+description='QSerenityPlatform'
 version=git
+website='https://github.com/SerenityPorts/QSerenityPlatform'
 depends=("qt6-qtbase")
 workdir=QSerenityPlatform-master
 useconfigure=true

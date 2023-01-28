@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mgba
+description='Game Boy, Game Boy Color and Game Boy Advance emulator'
 version=0.9.3
+website='https://mgba.io/'
 files="https://github.com/mgba-emu/mgba/archive/refs/tags/${version}.tar.gz mgba-${version}.tar.gz 692ff0ac50e18380df0ff3ee83071f9926715200d0dceedd9d16a028a59537a0"
 auth_type=sha256
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")

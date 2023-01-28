@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=drascula
+description='Dráscula: The Vampire Strikes Back'
 version="1.0"
+website='https://www.scummvm.org/games/#games-drascula'
 files="https://downloads.scummvm.org/frs/extras/Drascula_%20The%20Vampire%20Strikes%20Back/drascula-1.0.zip ${port}-${version}.zip b731f6cb5a22ba8b4c3b3362f570b9a10a67b6cb0b395394b19a94b36e4e42de"
 auth_type=sha256
 depends=("scummvm")

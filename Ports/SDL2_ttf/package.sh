@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_ttf'
+description='SDL2_ttf (TrueType Font add-on for SDL2)'
 version='2.20.1'
+website='https://github.com/libsdl-org/SDL_ttf'
 useconfigure='true'
 files="https://github.com/libsdl-org/SDL_ttf/releases/download/release-${version}/SDL2_ttf-${version}.tar.gz SDL2_ttf-${version}.tar.gz 78cdad51f3cc3ada6932b1bb6e914b33798ab970a1e817763f22ddbfd97d0c57"
 auth_type='sha256'

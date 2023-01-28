@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libgd
+description='libgd'
 version=2.3.3
+website='https://libgd.github.io/'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("config/config.sub")

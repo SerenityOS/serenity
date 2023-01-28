@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='git'
+description='Git'
 version='2.39.1'
+website='https://git-scm.com/'
 files="https://mirrors.edge.kernel.org/pub/software/scm/git/git-${version}.tar.xz git-${version}.tar.xz 40a38a0847b30c371b35873b3afcf123885dd41ea3ecbbf510efa97f3ce5c161"
 auth_type='sha256'
 useconfigure='true'

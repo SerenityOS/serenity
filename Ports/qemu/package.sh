@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='qemu'
+description='QEMU'
 version='7.2.0'
+website='https://qemu.org'
 useconfigure='true'
 configopts=(
     "--target-list=aarch64-softmmu,i386-softmmu,x86_64-softmmu"

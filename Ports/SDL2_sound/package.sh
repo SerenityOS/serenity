@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_sound'
+description='SDL2_sound (Abstract soundfile decoder add-on for SDL2)'
 version='git'
+website='https://github.com/icculus/SDL_sound'
 _commit='301135a6d0d9bb77c9da0b7f809e9a10d579610f'
 workdir="SDL_sound-${_commit}"
 useconfigure='true'

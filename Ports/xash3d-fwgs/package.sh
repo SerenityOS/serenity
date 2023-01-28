@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='xash3d-fwgs'
+description='Xash3D FWGS game engine'
 version='2022.12.26'  # Bogus version, this was the last time the commit hashes were updated.
+website='https://github.com/FWGS/xash3d-fwgs'
 _xash3d_commit='12bb0ca44b966b16c7ec3688ae07404b485ae455'
 _vgui_dev_commit='93573075afe885618ea15831e72d44bdacd65bfb'
 _vgui_support_commit='63c134f188e7c0891927f5a4149f4444b43b0be8'

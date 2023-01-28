@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=fontconfig
+description='Fontconfig'
 version=2.14.0
+website='https://www.freedesktop.org/wiki/Software/fontconfig/'
 useconfigure="true"
 use_fresh_config_sub="true"
 depends=("libxml2" "freetype")

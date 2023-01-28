@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=luajit
+description='LuaJIT'
 version=2.1.0-beta3
+website='https://luajit.org/luajit.html'
 useconfigure=true
 files="https://luajit.org/download/LuaJIT-${version}.tar.gz LuaJIT-${version}.tar.gz 1ad2e34b111c802f9d0cdf019e986909123237a28c746b21295b63c9e785d9c3"
 auth_type=sha256

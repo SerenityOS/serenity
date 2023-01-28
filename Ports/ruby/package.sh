@@ -5,7 +5,9 @@ source version.sh
 export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/ruby/bin:${PATH}"
 
 port=ruby
+description='Ruby'
 version=${RUBY_VERSION}
+website='https://www.ruby-lang.org/'
 useconfigure="true"
 use_fresh_config_sub=true
 config_sub_paths=("tool/config.sub")

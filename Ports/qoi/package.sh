@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='qoi'
+description='Quite OK Image Format for fast, lossless image compression'
 version='edb8d7b1140be3168cc99ed87edc605c7c1cf31f'
+website='https://github.com/phoboslab/qoi'
 files="https://github.com/phoboslab/qoi/archive/${version}.zip qoi-${version}.zip 3d3df95fb0b59aca2113ce45396f887eaba1be914cd54b56804efc241f93f203"
 auth_type='sha256'
 depends=('libpng' 'stb')

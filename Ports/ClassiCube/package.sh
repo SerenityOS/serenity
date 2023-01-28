@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='ClassiCube'
+description='ClassiCube'
 version='1.3.3'
+website='https://github.com/UnknownShadow200/ClassiCube'
 files="https://github.com/UnknownShadow200/ClassiCube/archive/refs/tags/${version}.tar.gz ClassiCube-${version}.tar.gz f90acfeb82fd440ead6e086694d99bd1583b0174da1801687c4c3d0fcb21d83d"
 auth_type='sha256'
 workdir="${port}-${version}/src/"

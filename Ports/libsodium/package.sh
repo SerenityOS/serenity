@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libsodium
+description='libsodium'
 version=1.0.18
+website='https://doc.libsodium.org/'
 useconfigure=true
 configopts=("--disable-static" "--enable-shared")
 use_fresh_config_sub=true

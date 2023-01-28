@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=SDLPoP
 useconfigure=true
+description='Prince of Persia game'
 version=git
+website='https://github.com/NagyD/SDLPoP'
 depends=("SDL2" "SDL2_image")
 commitid="86988c668eeaa10f218e1d4938fc5b4e42314d68"
 workdir="${port}-${commitid}"

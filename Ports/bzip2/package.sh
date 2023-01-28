@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=bzip2
+description='bzip2'
 version=1.0.8
+website='https://sourceware.org/bzip2/'
 files="https://sourceware.org/pub/bzip2/bzip2-${version}.tar.gz bzip2-${version}.tar.gz ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"
 auth_type=sha256
 makeopts=("bzip2")

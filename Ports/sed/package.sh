@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=sed
+description='GNU sed'
 version=4.9
+website='https://www.gnu.org/software/sed/'
 useconfigure="true"
 use_fresh_config_sub="true"
 config_sub_paths=("build-aux/config.sub")

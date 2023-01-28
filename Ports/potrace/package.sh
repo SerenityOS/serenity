@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='potrace'
+description='Bitmap tracing utility'
 version='1.16'
+website='https://potrace.sourceforge.net/'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=('config.sub')

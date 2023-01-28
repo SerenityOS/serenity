@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libtheora
+description='libtheora'
 version=1.1.1
+website='https://www.theora.org/'
 useconfigure=true
 configopts=()
 use_fresh_config_sub=true

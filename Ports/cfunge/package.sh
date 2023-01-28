@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='cfunge'
+description='cfunge'
 version='2bc4fb27ade2a816ca9a90a6d9f6958111123fa9'
+website='https://github.com/VorpalBlade/cfunge/'
 useconfigure='true'
 files="https://codeload.github.com/VorpalBlade/cfunge/zip/${version} cfunge.zip 364994a890ed1083684956db576a2a5cfb94b3117bae868910d6a75111033f55"
 auth_type='sha256'

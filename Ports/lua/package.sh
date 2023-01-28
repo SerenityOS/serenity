@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lua'
+description='Lua'
 version='5.4.4'
+website='https://www.lua.org/'
 files="http://www.lua.org/ftp/lua-${version}.tar.gz lua-${version}.tar.gz 164c7849653b80ae67bec4b7473b884bf5cc8d2dca05653475ec2ed27b9ebf61"
 depends=("readline")
 auth_type='sha256'

@@ -1,7 +1,9 @@
 #!/usr/bin/env -S USE_CCACHE=false bash ../.port_include.sh
 
 port='OpenJDK'
+description='OpenJDK'
 version='17.0.2'
+website='https://openjdk.java.net/'
 workdir="jdk17u-dev-jdk-${version}-ga"
 useconfigure='true'
 use_fresh_config_guess='true'

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mpfr
+description='GNU Multiple Precision Floating-Point Reliable Library (MPFR)'
 version=4.1.0
+website='https://www.mpfr.org/'
 useconfigure=true
 use_fresh_config_sub=true
 configopts=("--target=${SERENITY_ARCH}-pc-serenity" "--with-sysroot=/")

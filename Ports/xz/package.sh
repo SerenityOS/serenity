@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=xz
+description='xz'
 version=5.2.5
+website='https://tukaani.org/xz/'
 useconfigure=true
 configopts=("--disable-static" "--enable-shared")
 use_fresh_config_sub=true

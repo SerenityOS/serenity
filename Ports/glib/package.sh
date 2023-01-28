@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='glib'
+description='GLib'
 version='2.75.2'
+website='https://wiki.gnome.org/Projects/GLib'
 files="https://download.gnome.org/sources/glib/2.75/glib-${version}.tar.xz glib-${version}.tar.xz 360d6fb75202c0eb0d07f0ab812b19b526f1c05ccc0a8ed7e5d2c988616d343a"
 auth_type='sha256'
 useconfigure='true'

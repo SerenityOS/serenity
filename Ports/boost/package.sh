@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='boost'
+description='Boost C++ libraries'
 version='1.80.0'
+website='https://www.boost.org/'
 useconfigure='true'
 workdir="boost_${version//./_}"
 depends=(

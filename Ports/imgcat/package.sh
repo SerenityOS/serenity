@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=imgcat
+description='imgcat'
 version=2.5.1
+website='https://github.com/eddieantonio/imgcat'
 useconfigure=true
 installopts=("PREFIX=${SERENITY_INSTALL_ROOT}/usr/local")
 depends=("ncurses" "libpng" "libjpeg" "termcap")

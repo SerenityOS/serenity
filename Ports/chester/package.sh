@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=chester
 useconfigure=true
+description='Chester Gameboy Emulator'
 version=git
+website='https://github.com/veikkos/chester'
 depends=("SDL2")
 workdir=chester-public
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")

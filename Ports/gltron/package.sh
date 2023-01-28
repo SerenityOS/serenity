@@ -2,7 +2,9 @@
 port='gltron'
 useconfigure='true'
 use_fresh_config_sub='true'
+description='GLTron'
 version='0.70'
+website='http://gltron.org'
 files="http://mirror.sobukus.de/files/grimoire/games-arcade-2d/gltron-${version}-source.tar.gz gltron-${version}.tar.gz e0c8ebb41a18a1f8d7302a9c2cb466f5b1dd63e9a9966c769075e6b6bdad8bb0"
 auth_type='sha256'
 depends=("libpng" "glu" "SDL_sound" "sdl12-compat" "zlib")

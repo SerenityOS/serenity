@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=bochs
+description='Bochs x86 PC emulator'
 version=2.7
+website='https://sourceforge.net/projects/bochs/'
 depends=("SDL2")
 files="https://download.sourceforge.net/project/bochs/bochs/$version/bochs-$version.tar.gz bochs-${version}.tar.gz a010ab1bfdc72ac5a08d2e2412cd471c0febd66af1d9349bc0d796879de5b17a"
 auth_type=sha256

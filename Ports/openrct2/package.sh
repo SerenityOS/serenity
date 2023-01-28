@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openrct2'
+description='OpenRCT2'
 version='0.4.3'
+website='https://openrct2.org/'
 auth_type='sha256'
 depends=(
     'curl'

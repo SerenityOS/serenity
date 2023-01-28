@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='taskwarrior'
+description='TODO list manager'
 version='2.6.2'
+website='https://taskwarrior.org/'
 useconfigure='true'
 files="https://github.com/GothenburgBitFactory/taskwarrior/releases/download/v${version}/task-${version}.tar.gz taskwarrior-${version}.tar.gz b1d3a7f000cd0fd60640670064e0e001613c9e1cb2242b9b3a9066c78862cfec"
 auth_type='sha256'

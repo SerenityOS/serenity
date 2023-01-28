@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=RetroArch
 useconfigure="true"
+description='RetroArch'
 version="1.12.0"
+website='https://www.retroarch.com'
 archive_hash="c912e32a0300f16ade827d48a4a948d5dab40b764cd1169f61108c6f5803649a"
 files="https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz $archive_hash"
 auth_type=sha256

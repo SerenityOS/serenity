@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='backward-cpp'
+description='Backward-cpp'
 version='1.6'
+website='https://github.com/bombela/backward-cpp'
 files="https://github.com/bombela/backward-cpp/archive/refs/tags/v${version}.tar.gz backward-cpp-${version}.tar.gz c654d0923d43f1cea23d086729673498e4741fb2457e806cfaeaea7b20c97c10"
 auth_type='sha256'
 useconfigure='true'

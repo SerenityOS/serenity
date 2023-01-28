@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ca-certificates
+description='Mozilla CA certificate store'
 version=2022-04-26
+website='https://curl.se/docs/caextract.html'
 files="https://curl.se/ca/cacert-${version}.pem cacert-${version}.pem 08df40e8f528ed283b0e480ba4bcdbfdd2fdcf695a7ada1668243072d80f8b6f"
 auth_type=sha256
 workdir="."

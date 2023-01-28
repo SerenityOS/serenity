@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mruby
+description='mruby'
 version=3.0.0
+website='https://mruby.org/'
 files="https://github.com/mruby/mruby/archive/refs/tags/${version}.tar.gz mruby-${version}.tar.gz 95b798cdd931ef29d388e2b0b267cba4dc469e8722c37d4ef8ee5248bc9075b0"
 auth_type="sha256"
 

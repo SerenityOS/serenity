@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libfftw3f
+description='Fastest Fourier Transform in the West (single precision)'
 version=3.3.10
+website='https://www.fftw.org/'
 useconfigure=true
 configopts=("--enable-float")
 use_fresh_config_sub=true

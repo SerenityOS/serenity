@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='sdl12-compat'
+description='SDL2 compatibility layer for SDL 1.2 games'
 version='1.2.56'
+website='https://github.com/libsdl-org/sdl12-compat/'
 workdir=sdl12-compat-release-${version}
 useconfigure='true'
 files="https://github.com/libsdl-org/sdl12-compat/archive/refs/tags/release-${version}.tar.gz ${port}-${version}.tar.gz f62f3e15f95aade366ee6c03f291e8825c4689390a6be681535259a877259c58"

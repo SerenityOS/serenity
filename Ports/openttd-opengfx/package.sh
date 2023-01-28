@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openttd-opengfx
+description='OpenGFX graphics for OpenTTD'
 version=7.1
+website='https://www.openttd.org/'
 workdir=.
 files="https://cdn.openttd.org/opengfx-releases/${version}/opengfx-${version}-all.zip opengfx-${version}-all.zip 928fcf34efd0719a3560cbab6821d71ce686b6315e8825360fba87a7a94d7846"
 auth_type=sha256

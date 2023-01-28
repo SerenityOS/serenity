@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lzop'
+description='LZO lossless data compression utility'
 version='1.04'
+website='https://www.lzop.org/'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=('autoconf/config.sub')

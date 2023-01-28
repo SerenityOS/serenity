@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=genemu
+description='Genesis / MegaDrive Emulator'
 version=e39f690157d8f969adfbaba30a4e639d20b34768
+website='https://github.com/rasky/genemu'
 useconfigure=true
 files="https://github.com/rasky/genemu/archive/${version}.tar.gz genemu-${version}.tar.gz 9b9616f6237e621a169422058caeccb2d0f4399374dc38f34837980154c89497"
 auth_type=sha256

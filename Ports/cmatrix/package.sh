@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=cmatrix
 useconfigure=true
+description='cmatrix'
 version=3112b127babe72d2222059edd2d7eb7fb8bddfb1
+website='https://github.com/abishekvashok/cmatrix'
 depends=("ncurses")
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 files="https://github.com/abishekvashok/cmatrix/archive/${version}.tar.gz ${port}-${version}.tar.gz a1d313d49a39cb5ae3a1c675872712f9f871114a161c38cbe94ce78967825f87"

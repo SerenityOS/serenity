@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='prboom-plus'
+description='PrBoom+'
 version='2.6.2'
+website='https://prboom-plus.sourceforge.io/'
 useconfigure='true'
 squashed_version=$(echo "${version}" | tr -d '.')
 files="https://github.com/coelckers/prboom-plus/archive/refs/tags/v${version}.tar.gz prboom-plus-v4${version}.tar.gz 5cfeec96fbfe4fc3bd5dbc2b8d581ff5f6617dd74b2799680ba5b1e2e38c4aff

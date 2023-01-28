@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=bash
+description='GNU Bash'
 version=5.1.16
+website='https://www.gnu.org/software/bash/'
 useconfigure=true
 use_fresh_config_sub=true
 use_fresh_config_guess=true

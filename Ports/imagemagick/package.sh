@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=imagemagick
+description='ImageMagick'
 version=7.1.0-29
+website='https://imagemagick.org'
 workdir="ImageMagick-${version}"
 useconfigure="true"
 files="https://github.com/ImageMagick/ImageMagick/archive/refs/tags/${version}.tar.gz ${port}-v${version}.tar.gz 889be185fd17a9b9b3d4090e28aecdec289a4f690964a7964b4f893c7a8ec21c"

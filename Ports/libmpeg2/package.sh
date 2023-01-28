@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libmpeg2
+description='libmpeg2'
 version=0.5.1
+website='https://libmpeg2.sourceforge.io/'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=(".auto/config.sub")

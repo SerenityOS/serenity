@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libassuan
+description='libassuan'
 version=2.5.5
+website='https://gnupg.org/software/libassuan/index.html'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")

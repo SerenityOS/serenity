@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libxml2'
+description='libxml2'
 version='2.9.14'
+website='http://www.xmlsoft.org/'
 files="https://download.gnome.org/sources/libxml2/2.9/libxml2-${version}.tar.xz libxml2-${version}.tar.xz 60d74a257d1ccec0475e749cba2f21559e48139efba6ff28224357c7c798dfee"
 auth_type='sha256'
 useconfigure='true'

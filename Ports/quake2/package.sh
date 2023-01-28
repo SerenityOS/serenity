@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='quake2'
+description='QuakeII'
 version='0.1'
+website='https://github.com/shamazmazum/quake2sdl'
 useconfigure='true'
 commit_hash='d26d00845e95dc7d781459d0c1a7fd48ea4b6be3'
 archive_hash='f940d71e0a4e15c040776979c6c99cb3520208744b3c22921f484d70ba82d675'

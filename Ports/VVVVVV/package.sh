@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='VVVVVV'
+description='Terry Cavanagh'"'"'s VVVVVV'
 version='2.3.6'
+website='https://github.com/TerryCavanagh/VVVVVV/'
 useconfigure='true'
 auth_type='sha256'
 files="https://github.com/TerryCavanagh/VVVVVV/archive/refs/tags/${version}.tar.gz VVVVVV-${version}.tar.gz a3366aab9e8462d330044ab1ec63927e9f5c3801c0ed96b24f08c553dcb911e9"

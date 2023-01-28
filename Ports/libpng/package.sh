@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libpng
+description='libpng'
 version=1.6.37
+website='https://libpng.org/'
 useconfigure=true
 configopts=("--disable-static" "--enable-shared")
 use_fresh_config_sub=true

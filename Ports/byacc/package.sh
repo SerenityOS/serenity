@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=byacc
+description='Berkeley Yacc'
 version=20220128
+website='https://invisible-island.net/byacc/byacc.html'
 files="https://invisible-mirror.net/archives/byacc/byacc-${version}.tgz byacc-${version}.tgz
 https://invisible-mirror.net/archives/byacc/byacc-${version}.tgz.asc byacc-${version}.tgz.asc"
 useconfigure=true

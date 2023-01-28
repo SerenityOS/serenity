@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='wayland'
+description='Wayland client libraries'
 version='1.21.0'
+website='https://wayland.freedesktop.org/'
 useconfigure='true'
 configopts=(
     "--buildtype=release"

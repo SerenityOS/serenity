@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lzo'
+description='LZO lossless data compression algorithm'
 version='2.10'
+website='https://www.oberhumer.com/opensource/lzo/'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=('autoconf/config.sub')

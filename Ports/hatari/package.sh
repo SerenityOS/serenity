@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=hatari
 useconfigure=true
+description='Atari ST/STE/TT/Falcon emulator'
 version=2.4.0-devel
+website='https://hatari.tuxfamily.org/'
 depends=("SDL2" "zlib")
 commit=6a86f054cc560a858bbe60c7529dafe2cf6ec604
 workdir="${port}-${commit}"

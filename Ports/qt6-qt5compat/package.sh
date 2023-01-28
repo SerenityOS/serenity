@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='qt6-qt5compat'
+description='Qt6 Qt5Compat'
 version='6.4.0'
+website='https://doc.qt.io/qt-6/qtcore5-index.html'
 workdir="qt5compat-everywhere-src-${version}"
 useconfigure='true'
 files="https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qt5compat-everywhere-src-${version}.tar.xz qt6-qt5compat-${version}.tar.xz 73475d0837f78246d509199f211a35c71fc36cccf64b3de258ebc6387194a4c0"

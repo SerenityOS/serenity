@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=griffon
+description='The Griffon Legend'
 version="1.0"
+website='https://www.scummvm.org/games/#games-griffon'
 files="https://downloads.scummvm.org/frs/extras/Griffon%20Legend/${port}-${version}.zip ${port}-${version}.zip 0aad5fb10f51afb5c121cf04cc86539a6f0d89db85809f9e1767dfdc8d3191a4"
 auth_type=sha256
 depends=("scummvm")

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2'
+description='Simple DirectMedia Layer (SDL2)'
 version='2.24.0'
+website='https://github.com/libsdl-org/SDL'
 useconfigure='true'
 auth_type='sha256'
 files="https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz SDL2-${version}.tar.gz 91e4c34b1768f92d399b078e171448c6af18cafda743987ed2064a28954d6d97"

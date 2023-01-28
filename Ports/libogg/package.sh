@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libogg
+description='libogg'
 version=1.3.5
+website='https://github.com/xiph/ogg'
 useconfigure=true
 configopts=("--disable-static" "--enable-shared")
 use_fresh_config_sub=true

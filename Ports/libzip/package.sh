@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libzip'
+description='libzip'
 version='1.8.0'
+website='https://libzip.org/'
 files="https://libzip.org/download/libzip-${version}.tar.gz libzip-${version}.tar.gz 30ee55868c0a698d3c600492f2bea4eb62c53849bcf696d21af5eb65f3f3839e"
 auth_type='sha256'
 useconfigure='true'

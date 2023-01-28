@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=gnupg
+description='GnuPG'
 version=2.3.0
+website='https://gnupg.org/software/index.html'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")

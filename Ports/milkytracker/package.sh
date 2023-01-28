@@ -1,6 +1,8 @@
 #!/bin/bash ../.port_include.sh
 port=milkytracker
+description='milkytracker'
 version=1.03.00
+website='https://github.com/milkytracker/MilkyTracker'
 workdir=MilkyTracker-$version
 useconfigure=true
 files="https://github.com/milkytracker/MilkyTracker/archive/v$version.tar.gz MilkyTracker-$version.tar.gz 72d5357e303380b52383b66b51f944a77cd77e2b3bfeb227d87cc0e72ab292f7"

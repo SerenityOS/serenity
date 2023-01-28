@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libmikmod
+description='libmikmod'
 version=3.3.11.1
+website='http://mikmod.sourceforge.net/'
 useconfigure=true
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 use_fresh_config_sub=true

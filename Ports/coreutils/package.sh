@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=coreutils
+description='GNU core utilities'
 version=9.1
+website='https://www.gnu.org/software/coreutils/'
 useconfigure="true"
 use_fresh_config_sub="true"
 config_sub_paths=("build-aux/config.sub")

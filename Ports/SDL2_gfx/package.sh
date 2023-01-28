@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port=SDL2_gfx
+description='SDL2_gfx (Graphics primitives add-on for SDL2)'
 version=1.0.4
+website='https://sourceforge.net/projects/sdl2gfx/'
 files="https://downloads.sourceforge.net/project/sdl2gfx/SDL2_gfx-${version}.tar.gz SDL2_gfx-${version}.tar.gz 63e0e01addedc9df2f85b93a248f06e8a04affa014a835c2ea34bfe34e576262"
 auth_type=sha256
 depends=("SDL2")

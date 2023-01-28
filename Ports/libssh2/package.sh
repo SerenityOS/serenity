@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libssh2
+description='libssh2'
 version=1.10.0
+website='https://www.libssh2.org/'
 useconfigure=true
 files="https://www.libssh2.org/download/libssh2-${version}.tar.gz libssh2-${version}.tar.gz
 https://www.libssh2.org/download/libssh2-${version}.tar.gz.asc libssh2-${version}.tar.gz.asc"

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=quake
+description='Quake'
 version=0.65
+website='https://github.com/SerenityOS/SerenityQuake'
 workdir=SerenityQuake-master
 useconfigure=false
 files="https://github.com/SerenityPorts/SerenityQuake/archive/master.tar.gz quake.tar.gz"

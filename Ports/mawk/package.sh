@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mawk
+description='mawk'
 version=1.3.4-20200120
+website='https://invisible-island.net/mawk/'
 files="https://invisible-mirror.net/archives/mawk/mawk-${version}.tgz mawk-${version}.tgz
 https://invisible-mirror.net/archives/mawk/mawk-${version}.tgz.asc mawk-${version}.tgz.asc"
 useconfigure=true

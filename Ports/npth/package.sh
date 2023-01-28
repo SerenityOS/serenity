@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=npth
+description='New GNU Portable Threads Library'
 version=1.6
+website='https://gnupg.org/software/npth/index.html'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")

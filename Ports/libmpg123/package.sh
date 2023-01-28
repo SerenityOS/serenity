@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libmpg123
+description='libmpg123'
 version=1.29.3
+website='https://www.mpg123.de/'
 useconfigure=true
 workdir=mpg123-${version}
 use_fresh_config_sub=true

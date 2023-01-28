@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='halflife'
+description='Half-Life'
 version='2022.12.26'  # Bogus version, this was the last time the commit hashes were updated.
+website='https://github.com/FWGS/hlsdk-portable'
 _hlsdk_commit='63e3769c46ba7f502b53abdfdd55597e4130c0dd'
 useconfigure='true'
 depends=("xash3d-fwgs")

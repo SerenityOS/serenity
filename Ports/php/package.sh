@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='php'
 useconfigure='true'
+description='PHP'
 version='8.1.12'
+website='https://www.php.net/'
 files="https://www.php.net/distributions/php-${version}.tar.xz php-${version}.tar.xz 08243359e2204d842082269eedc15f08d2eca726d0e65b93fb11f4bfc51bbbab"
 auth_type='sha256'
 depends=(

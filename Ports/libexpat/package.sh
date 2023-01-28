@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libexpat
+description='Expat'
 version=2.4.8
+website='https://libexpat.github.io/'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("conftools/config.sub")

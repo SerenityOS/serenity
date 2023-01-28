@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='alpine'
+description='Alpine Email Client'
 version='2.26'
+website='https://alpineapp.email'
 useconfigure='true'
 configopts=(
     '--disable-static'

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='lite-xl'
+description='Lite-XL'
 version='2.1.0'
+website='https://lite-xl.com/'
 commit_hash='97ba91af8b855a10a14bdc5cad774c877156f4a9'
 useconfigure='true'
 configopts=(

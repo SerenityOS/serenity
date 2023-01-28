@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='flac'
+description='Free Lossless Audio Codec'
 version='1.4.2'
+website='https://xiph.org/flac/'
 auth_type='sha256'
 useconfigure='true'
 depends=('libogg')

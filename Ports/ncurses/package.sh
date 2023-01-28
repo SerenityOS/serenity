@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ncurses
+description='ncurses'
 version=6.3
+website='https://invisible-island.net/ncurses/announce.html'
 useconfigure=true
 configopts=(
     "--enable-pc-files"

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=dos2unix
+description='dos2unix'
 version=7.4.4
+website='https://waterlan.home.xs4all.nl/dos2unix.html'
 workdir="${port}-${version}"
 files="https://waterlan.home.xs4all.nl/dos2unix/dos2unix-${version}.tar.gz ${port}-${version}.tar.gz
 https://waterlan.home.xs4all.nl/dos2unix/dos2unix-${version}.tar.gz.asc ${port}-${version}.tar.gz.asc"

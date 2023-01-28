@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libtiff'
+description='libtiff'
 version='4.4.0'
+website='http://www.libtiff.org/'
 files="http://download.osgeo.org/libtiff/tiff-${version}.tar.xz tiff-${version}.tar.xz 49307b510048ccc7bc40f2cba6e8439182fe6e654057c1a1683139bf2ecb1dc1"
 auth_type='sha256'
 useconfigure='true'

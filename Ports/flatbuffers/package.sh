@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port=flatbuffers
+description='Flatbuffers'
 version=2.0.0
+website='https://github.com/google/flatbuffers'
 auth_type=sha256
 files="https://github.com/google/flatbuffers/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 9ddb9031798f4f8754d00fca2f1a68ecf9d0f83dfac7239af1311e4fd9a565c4"
 useconfigure=true

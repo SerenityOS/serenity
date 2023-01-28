@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=gnucobol
+description='GnuCOBOL'
 version=3.1.2
+website='https://gnucobol.sourceforge.io/'
 useconfigure="true"
 use_fresh_config_sub="true"
 config_sub_paths=("build_aux/config.sub")

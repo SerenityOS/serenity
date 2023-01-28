@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libgcrypt
+description='libgcrypt'
 version=1.10.1
+website='https://gnupg.org/software/libgcrypt/index.html'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")

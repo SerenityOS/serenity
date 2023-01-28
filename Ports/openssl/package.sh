@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=openssl
 branch='1.1.1'
+description='OpenSSL'
 version="${branch}s"
+website='https://www.openssl.org/'
 useconfigure=true
 configscript=Configure
 files="https://www.openssl.org/source/openssl-${version}.tar.gz openssl-${version}.tar.gz c5ac01e760ee6ff0dab61d6b2bbd30146724d063eb322180c6f18a6f74e4b6aa"

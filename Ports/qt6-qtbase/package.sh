@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='qt6-qtbase'
+description='Qt6 QtBase'
 version='6.4.0'
+website='https://qt.io'
 workdir="qtbase-everywhere-src-${version}"
 useconfigure='true'
 files="https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtbase-everywhere-src-${version}.tar.xz qt6-qtbase-${version}.tar.xz cb6475a0bd8567c49f7ffbb072a05516ee6671171bed55db75b22b94ead9b37d"

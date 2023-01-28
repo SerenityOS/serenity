@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ja2
+description='Jagged Alliance 2 Stracciatella'
 version=0.15.x
+website='https://github.com/safarp/ja2-stracciatella/tree/0.15.x'
 depends=("SDL2")
 workdir="ja2-stracciatella-${version}"
 files="https://github.com/ja2-stracciatella/ja2-stracciatella/archive/refs/heads/${version}.zip ja2-stracciatella-${version}.zip 178375de4859d16a76276c781455bf48d3fa862841387c8aa6cfa4162f4f0ca4"

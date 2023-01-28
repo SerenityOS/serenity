@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=SDL_mixer
+description='SDL_mixer (Audio mixer add-on for SDL 1.2)'
 version=1.2.12
+website='https://www.libsdl.org/projects/SDL_mixer/release-1.2.html'
 useconfigure=true
 configopts=("--disable-static")
 use_fresh_config_sub=true

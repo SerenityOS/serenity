@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='double-conversion'
+description='double-conversion'
 version='3.2.1'
+website='https://github.com/google/double-conversion'
 files="https://github.com/google/double-conversion/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz e40d236343cad807e83d192265f139481c51fc83a1c49e406ac6ce0a0ba7cd35"
 auth_type='sha256'
 useconfigure='true'

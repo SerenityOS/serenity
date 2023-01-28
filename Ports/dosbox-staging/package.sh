@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=dosbox-staging
+description='DOSBox Staging'
 version=0.76.0
+website='https://dosbox-staging.github.io/'
 useconfigure=true
 configopts=("--disable-opus-cdda" "--disable-fluidsynth" "--disable-dynamic-core")
 files="https://github.com/dosbox-staging/dosbox-staging/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz 7df53c22f7ce78c70afb60b26b06742b90193b56c510219979bf12e0bb2dc6c7"

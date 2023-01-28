@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=indent
+description='GNU indent'
 version=2.2.11
+website='https://www.gnu.org/software/indent/'
 files="https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz indent-${version}.tar.gz
 https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz.sig indent-${version}.tar.gz.sig
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"

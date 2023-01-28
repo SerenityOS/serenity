@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libmad
+description='libmad'
 version=0.15.1b
+website='https://www.underbit.com/products/mad/'
 useconfigure=true
 use_fresh_config_sub=true
 use_fresh_config_guess=true

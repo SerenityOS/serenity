@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port="gnuapl"
+description='GNU APL'
 version="1.8"
+website='https://www.gnu.org/software/apl/'
 useconfigure="true"
 workdir="apl-${version}"
 configopts=("CXX_WERROR=no")

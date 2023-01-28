@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gzip'
+description='GNU gzip'
 version='1.12'
+website='https://www.gnu.org/software/gzip/'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=('build-aux/config.sub')

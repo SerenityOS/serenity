@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='dosfstools'
+description='dosfstools utility suite'
 version='4.2'
+website='https://github.com/dosfstools/dosfstools/'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=('config.sub')

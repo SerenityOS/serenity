@@ -5,7 +5,9 @@ source version.sh
 export PATH="${SERENITY_SOURCE_DIR}/Toolchain/Local/python/bin:${PATH}"
 
 port='python3'
+description='Python'
 version="${PYTHON_VERSION}"
+website='https://www.python.org/'
 workdir="Python-${version}"
 useconfigure='true'
 use_fresh_config_sub='true'

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=ntbtls
+description='The Not Too Bad TLS Library'
 version=0.2.0
+website='https://gnupg.org/software/ntbtls/index.html'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")

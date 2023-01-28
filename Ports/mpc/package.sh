@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=mpc
+description='GNU Multiple Precision Complex Library (MPC)'
 version=1.2.1
+website='http://www.multiprecision.org/mpc/'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build-aux/config.sub")

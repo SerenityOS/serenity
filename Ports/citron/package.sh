@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=citron
+description='Citron Programming Language'
 version=0.0.9.3
+website='https://github.com/alimpfard/citron'
 useconfigure=false
 depends=(sparsehash libffi pcre)
 commit_hash=d28b7d62bd61397e46152aa6e4ee59b115c0e2d7

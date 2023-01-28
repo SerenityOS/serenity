@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='opfor'
+description='Half-Life: Opposing Force'
 version='2022.12.26'  # Bogus version, this was the last time the commit hashes were updated.
+website='https://github.com/FWGS/hlsdk-portable'
 _hlsdk_commit='e785ec1582eece8bf8f603249c2a567f6ec3d5eb'
 useconfigure='true'
 depends=("xash3d-fwgs")

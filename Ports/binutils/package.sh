@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='binutils'
+description='GNU Binutils'
 version='2.39'
+website='https://www.gnu.org/software/binutils/'
 useconfigure='true'
 use_fresh_config_sub='true'
 configopts=(

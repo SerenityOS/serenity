@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='pcre2'
+description='Perl-compatible Regular Expressions (PCRE2)'
 version='10.40'
+website='https://www.pcre.org/'
 files="https://github.com/PhilipHazel/pcre2/releases/download/pcre2-${version}/pcre2-${version}.tar.gz pcre2-${version}.tar.gz ded42661cab30ada2e72ebff9e725e745b4b16ce831993635136f2ef86177724"
 auth_type='sha256'
 useconfigure='true'

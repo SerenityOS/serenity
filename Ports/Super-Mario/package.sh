@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=Super-Mario
 useconfigure=true
+description='Super-Mario Clone'
 version=git
+website='https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp'
 depends=("SDL2" "SDL2_mixer" "SDL2_image")
 workdir=Super-Mario-Clone-Cpp-master
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")

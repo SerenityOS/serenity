@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=stpuzzles
 useconfigure=true
+description='Simon Tatham'"'"'s Portable Puzzle Collection'
 version=git
+website='https://www.chiark.greenend.org.uk/~sgtatham/puzzles/'
 workdir="${port}-main"
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt")
 files="https://github.com/SerenityPorts/stpuzzles/archive/refs/heads/main.zip ${port}.zip"

@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=dropbear
+description='Dropbear SSH'
 version=2022.82
+website='https://dropbear.nl/mirror/dropbear.html'
 files="https://mirror.dropbear.nl/mirror/releases/dropbear-${version}.tar.bz2 dropbear-${version}.tar.bz2 3a038d2bbc02bf28bbdd20c012091f741a3ec5cbe460691811d714876aad75d1"
 auth_type="sha256"
 useconfigure=true

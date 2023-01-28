@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libvorbis
+description='libvorbis'
 version=1.3.7
+website='https://github.com/xiph/vorbis'
 useconfigure=true
 configopts=("--disable-static" "--enable-shared")
 use_fresh_config_sub=true

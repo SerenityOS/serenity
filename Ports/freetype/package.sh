@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='freetype'
+description='FreeType'
 version='2.12.1'
+website='https://www.freetype.org/'
 files="https://download.savannah.gnu.org/releases/freetype/freetype-${version}.tar.gz freetype-${version}.tar.gz efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938"
 auth_type='sha256'
 useconfigure='true'

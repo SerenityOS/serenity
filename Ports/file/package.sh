@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='file'
+description='file (determine file type)'
 version='5.43'
+website='https://www.darwinsys.com/file/'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=('config.sub')

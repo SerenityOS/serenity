@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libmodplug
+description='libmodplug'
 version=0.8.9.0
+website='http://modplug-xmms.sourceforge.net/'
 useconfigure=true
 use_fresh_config_sub=true
 configopts=("ac_cv_c_bigendian=no")

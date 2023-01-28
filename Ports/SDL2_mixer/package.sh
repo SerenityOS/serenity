@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2_mixer'
+description='SDL2_mixer (Audio mixer add-on for SDL2)'
 version='2.6.2'
+website='https://github.com/libsdl-org/SDL_mixer'
 useconfigure='true'
 files="https://github.com/libsdl-org/SDL_mixer/releases/download/release-${version}/SDL2_mixer-${version}.tar.gz SDL2_mixer-${version}.tar.gz 8cdea810366decba3c33d32b8071bccd1c309b2499a54946d92b48e6922aa371"
 auth_type='sha256'

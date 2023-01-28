@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libiconv'
+description='GNU libiconv'
 version='1.17'
+website='https://www.gnu.org/software/libiconv/'
 files="https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${version}.tar.gz libiconv-${version}.tar.gz 8f74213b56238c85a50a5329f77e06198771e70dd9a739779f4c02f65d971313"
 auth_type='sha256'
 useconfigure='true'

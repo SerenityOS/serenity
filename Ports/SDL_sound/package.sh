@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL_sound'
+description='SDL_sound (Abstract soundfile decoder add-on for SDL 1.2)'
 version='1.0.3'
+website='https://www.icculus.org/SDL_sound/'
 useconfigure='true'
 use_fresh_config_sub='true'
 depends=("sdl12-compat" "libmikmod")

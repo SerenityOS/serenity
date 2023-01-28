@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=pcre
+description='Perl-compatible Regular Expressions (PCRE)'
 version=8.45
+website='https://www.pcre.org/'
 useconfigure=true
 use_fresh_config_sub=true
 files="https://downloads.sourceforge.net/project/pcre/pcre/${version}/pcre-${version}.tar.gz pcre-${version}.tar.gz

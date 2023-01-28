@@ -1,6 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libarchive
+description='libarchive'
 version=3.6.1
+website='https://libarchive.org/'
 useconfigure=true
 use_fresh_config_sub=true
 config_sub_paths=("build/autoconf/config.sub")

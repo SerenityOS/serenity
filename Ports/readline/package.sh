@@ -1,7 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port=readline
+description='GNU Readline Library'
 version=8.1.2
+website='https://tiswww.case.edu/php/chet/readline/rltop.html'
 useconfigure=true
 config_sub_paths=("support/config.sub")
 use_fresh_config_sub=true

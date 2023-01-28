@@ -132,7 +132,9 @@ script simply defines some well-known variables and looks like this:
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port="foo"
+description='Exampleʼs foo (bar)'
 version="1.2.3"
+website='https://example.com/foo'
 useconfigure="true"
 files="https://example.com/foo-${version}.tar.gz foo-${version}.tar.gz"
 depends=("bar" "baz")
@@ -286,11 +288,19 @@ to `true`, and simply skip them otherwise.
 
 Defaults to `false`.
 
+#### `description`
+
+The description of the port. Currently required in the list of [available ports](#available-ports) only.
+
 #### `version`
 
 The version of the port. Written to `package.db`, and usually used with
 variable interpolation in [`files`](#files) where the version is part of the
 filename.
+
+#### `website`
+
+The website of the port. Currently required in the list of [available ports](#available-ports) only.
 
 #### `workdir`
 
