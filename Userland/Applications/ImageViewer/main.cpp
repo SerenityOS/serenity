@@ -180,12 +180,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             widget->navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)),
+    auto go_back_action = GUI::Action::create("Go to &Previous", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)),
+    auto go_forward_action = GUI::Action::create("Go to &Next", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Forward);
         });
