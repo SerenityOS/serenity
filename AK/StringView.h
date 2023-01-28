@@ -60,6 +60,9 @@ public:
     explicit StringView(DeprecatedFlyString&&) = delete;
 #endif
 
+    template<OneOf<String, DeprecatedString, DeprecatedFlyString, ByteBuffer> StringType>
+    StringView& operator=(StringType&&) = delete;
+
     [[nodiscard]] constexpr bool is_null() const
     {
         return m_characters == nullptr;
