@@ -15,7 +15,7 @@ JS::NonnullGCPtr<ResizeObserver> ResizeObserver::construct_impl(JS::Realm& realm
 {
     // FIXME: Implement
     (void)callback;
-    return realm.heap().allocate<ResizeObserver>(realm, realm);
+    return realm.heap().allocate<ResizeObserver>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ResizeObserver::ResizeObserver(JS::Realm& realm)

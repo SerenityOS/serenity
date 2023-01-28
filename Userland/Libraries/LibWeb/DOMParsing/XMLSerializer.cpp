@@ -22,7 +22,7 @@ namespace Web::DOMParsing {
 
 JS::NonnullGCPtr<XMLSerializer> XMLSerializer::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<XMLSerializer>(realm, realm);
+    return (realm.heap().allocate<XMLSerializer>(realm, realm)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 XMLSerializer::XMLSerializer(JS::Realm& realm)

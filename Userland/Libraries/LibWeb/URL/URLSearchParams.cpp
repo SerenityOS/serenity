@@ -91,7 +91,7 @@ Vector<QueryParam> url_decode(StringView input)
 
 JS::NonnullGCPtr<URLSearchParams> URLSearchParams::create(JS::Realm& realm, Vector<QueryParam> list)
 {
-    return realm.heap().allocate<URLSearchParams>(realm, realm, move(list));
+    return realm.heap().allocate<URLSearchParams>(realm, realm, move(list)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams

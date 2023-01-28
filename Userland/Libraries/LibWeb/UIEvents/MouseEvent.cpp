@@ -58,7 +58,7 @@ static i16 determine_button(unsigned mouse_button)
 
 MouseEvent* MouseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
 {
-    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)

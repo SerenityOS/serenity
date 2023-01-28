@@ -16,7 +16,7 @@ JS::NonnullGCPtr<DOMRectList> DOMRectList::create(JS::Realm& realm, Vector<JS::H
     Vector<JS::NonnullGCPtr<DOMRect>> rects;
     for (auto& rect : rect_handles)
         rects.append(*rect);
-    return realm.heap().allocate<DOMRectList>(realm, realm, move(rects));
+    return realm.heap().allocate<DOMRectList>(realm, realm, move(rects)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rects)

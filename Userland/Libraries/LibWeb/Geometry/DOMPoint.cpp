@@ -12,7 +12,7 @@ namespace Web::Geometry {
 
 JS::NonnullGCPtr<DOMPoint> DOMPoint::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
 {
-    return realm.heap().allocate<DOMPoint>(realm, realm, x, y, z, w);
+    return realm.heap().allocate<DOMPoint>(realm, realm, x, y, z, w).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DOMPoint::DOMPoint(JS::Realm& realm, double x, double y, double z, double w)

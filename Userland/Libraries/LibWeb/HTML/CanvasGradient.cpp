@@ -22,21 +22,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasGradient>> CanvasGradient::create_rad
         return WebIDL::IndexSizeError::create(realm, "The r1 passed is less than 0");
 
     auto radial_gradient = Gfx::CanvasRadialGradientPaintStyle::create(Gfx::FloatPoint { x0, y0 }, r0, Gfx::FloatPoint { x1, y1 }, r1);
-    return realm.heap().allocate<CanvasGradient>(realm, realm, *radial_gradient);
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CanvasGradient>(realm, realm, *radial_gradient));
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-createlineargradient
 JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_linear(JS::Realm& realm, double x0, double y0, double x1, double y1)
 {
     auto linear_gradient = Gfx::CanvasLinearGradientPaintStyle::create(Gfx::FloatPoint { x0, y0 }, Gfx::FloatPoint { x1, y1 });
-    return realm.heap().allocate<CanvasGradient>(realm, realm, *linear_gradient);
+    return realm.heap().allocate<CanvasGradient>(realm, realm, *linear_gradient).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-createconicgradient
 JS::NonnullGCPtr<CanvasGradient> CanvasGradient::create_conic(JS::Realm& realm, double start_angle, double x, double y)
 {
     auto conic_gradient = Gfx::CanvasConicGradientPaintStyle::create(Gfx::FloatPoint { x, y }, start_angle);
-    return realm.heap().allocate<CanvasGradient>(realm, realm, *conic_gradient);
+    return realm.heap().allocate<CanvasGradient>(realm, realm, *conic_gradient).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CanvasGradient::CanvasGradient(JS::Realm& realm, Gfx::GradientPaintStyle& gradient)

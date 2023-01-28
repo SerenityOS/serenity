@@ -11,7 +11,7 @@ namespace Web::XHR {
 
 ProgressEvent* ProgressEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init)
 {
-    return realm.heap().allocate<ProgressEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<ProgressEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ProgressEvent* ProgressEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init)

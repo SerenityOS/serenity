@@ -48,7 +48,7 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 StyleSheetList* StyleSheetList::create(DOM::Document& document)
 {
     auto& realm = document.realm();
-    return realm.heap().allocate<StyleSheetList>(realm, document);
+    return realm.heap().allocate<StyleSheetList>(realm, document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)

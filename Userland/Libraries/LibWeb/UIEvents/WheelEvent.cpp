@@ -32,7 +32,7 @@ JS::ThrowCompletionOr<void> WheelEvent::initialize(JS::Realm& realm)
 
 WheelEvent* WheelEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, WheelEventInit const& event_init)
 {
-    return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<WheelEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 WheelEvent* WheelEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixels offset_x, CSSPixels offset_y, CSSPixels client_x, CSSPixels client_y, double delta_x, double delta_y, unsigned buttons, unsigned button)

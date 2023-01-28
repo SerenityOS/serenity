@@ -22,7 +22,7 @@ namespace Web::CSS {
 
 ResolvedCSSStyleDeclaration* ResolvedCSSStyleDeclaration::create(DOM::Element& element)
 {
-    return element.realm().heap().allocate<ResolvedCSSStyleDeclaration>(element.realm(), element);
+    return element.realm().heap().allocate<ResolvedCSSStyleDeclaration>(element.realm(), element).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ResolvedCSSStyleDeclaration::ResolvedCSSStyleDeclaration(DOM::Element& element)

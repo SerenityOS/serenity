@@ -36,7 +36,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyInstanceConstruct
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
     auto result = TRY(WebAssemblyObject::instantiate_module(vm, module_object.module()));
-    return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result);
+    return MUST_OR_THROW_OOM(heap().allocate<WebAssemblyInstanceObject>(realm, realm, result));
 }
 
 JS::ThrowCompletionOr<void> WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)

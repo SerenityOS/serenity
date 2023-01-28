@@ -12,7 +12,7 @@ namespace Web::Geometry {
 
 JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
 {
-    return realm.heap().allocate<DOMPointReadOnly>(realm, realm, x, y, z, w);
+    return realm.heap().allocate<DOMPointReadOnly>(realm, realm, x, y, z, w).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DOMPointReadOnly::DOMPointReadOnly(JS::Realm& realm, double x, double y, double z, double w)

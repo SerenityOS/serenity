@@ -16,7 +16,7 @@ namespace Web::CSS {
 
 CSSStyleSheet* CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
 {
-    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));
+    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)

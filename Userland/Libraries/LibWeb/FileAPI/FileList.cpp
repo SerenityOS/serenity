@@ -13,7 +13,7 @@ namespace Web::FileAPI {
 
 JS::NonnullGCPtr<FileList> FileList::create(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)
 {
-    return realm.heap().allocate<FileList>(realm, realm, move(files));
+    return realm.heap().allocate<FileList>(realm, realm, move(files)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 FileList::FileList(JS::Realm& realm, Vector<JS::NonnullGCPtr<File>>&& files)

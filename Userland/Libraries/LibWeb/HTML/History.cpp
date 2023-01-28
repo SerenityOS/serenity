@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<History> History::create(JS::Realm& realm, DOM::Document& document)
 {
-    return realm.heap().allocate<History>(realm, realm, document);
+    return realm.heap().allocate<History>(realm, realm, document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 History::History(JS::Realm& realm, DOM::Document& document)

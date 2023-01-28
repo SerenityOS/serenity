@@ -28,8 +28,8 @@ ThrowCompletionOr<void> $262Object::initialize(Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
-    m_agent = vm().heap().allocate<AgentObject>(realm, realm);
-    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(realm, realm);
+    m_agent = MUST_OR_THROW_OOM(vm().heap().allocate<AgentObject>(realm, realm));
+    m_is_htmldda = MUST_OR_THROW_OOM(vm().heap().allocate<IsHTMLDDA>(realm, realm));
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, "clearKeptObjects", clear_kept_objects, 0, attr);

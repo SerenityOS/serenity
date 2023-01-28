@@ -77,7 +77,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
     for (auto& element : table.elements())
         element = reference;
 
-    return vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address);
+    return MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address));
 }
 
 JS::ThrowCompletionOr<void> WebAssemblyTableConstructor::initialize(JS::Realm& realm)

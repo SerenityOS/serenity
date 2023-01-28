@@ -11,7 +11,7 @@ namespace Web::SVG {
 
 JS::NonnullGCPtr<SVGLength> SVGLength::create(JS::Realm& realm, u8 unit_type, float value)
 {
-    return realm.heap().allocate<SVGLength>(realm, realm, unit_type, value);
+    return realm.heap().allocate<SVGLength>(realm, realm, unit_type, value).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 SVGLength::SVGLength(JS::Realm& realm, u8 unit_type, float value)

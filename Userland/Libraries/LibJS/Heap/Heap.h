@@ -41,15 +41,12 @@ public:
     }
 
     template<typename T, typename... Args>
-    NonnullGCPtr<T> allocate(Realm& realm, Args&&... args)
+    ThrowCompletionOr<NonnullGCPtr<T>> allocate(Realm& realm, Args&&... args)
     {
         auto* memory = allocate_cell(sizeof(T));
         new (memory) T(forward<Args>(args)...);
         auto* cell = static_cast<T*>(memory);
-
-        // FIXME: Propagate this error.
-        (void)memory->initialize(realm);
-
+        MUST_OR_THROW_OOM(memory->initialize(realm));
         return *cell;
     }
 

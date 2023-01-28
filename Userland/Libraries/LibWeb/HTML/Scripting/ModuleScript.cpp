@@ -38,7 +38,7 @@ JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(DeprecatedStrin
     auto& realm = settings_object.realm();
 
     // 2. Let script be a new module script that this algorithm will subsequently initialize.
-    auto script = realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object);
+    auto script = realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 3. Set script's settings object to settings.
     // NOTE: This was already done when constructing.
