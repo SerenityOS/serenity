@@ -54,6 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes));
 
+    outln("                  size: {} bytes", profile->on_disk_size());
     out_optional("    preferred CMM type", profile->preferred_cmm_type());
     outln("               version: {}", profile->version());
     outln("          device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
