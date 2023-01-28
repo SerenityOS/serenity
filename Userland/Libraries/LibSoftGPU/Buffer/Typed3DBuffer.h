@@ -25,7 +25,7 @@ public:
     static ErrorOr<NonnullRefPtr<Typed3DBuffer<T>>> try_create(int width, int height, int depth)
     {
         VERIFY(width > 0 && height > 0 && depth > 0);
-        auto data = TRY(FixedArray<T>::try_create(width * height * depth));
+        auto data = TRY(FixedArray<T>::create(width * height * depth));
         return adopt_ref(*new Typed3DBuffer(width, height, depth, move(data)));
     }
 

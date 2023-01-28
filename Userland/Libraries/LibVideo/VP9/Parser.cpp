@@ -858,9 +858,9 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     auto tile_cols = 1 << log2_dimensions.width();
     auto tile_rows = 1 << log2_dimensions.height();
 
-    PartitionContext above_partition_context = DECODER_TRY_ALLOC(PartitionContext::try_create(superblocks_to_blocks(frame_context.superblock_columns())));
+    PartitionContext above_partition_context = DECODER_TRY_ALLOC(PartitionContext::create(superblocks_to_blocks(frame_context.superblock_columns())));
     NonZeroTokens above_non_zero_tokens = DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(frame_context.columns()), frame_context.color_config.subsampling_x));
-    SegmentationPredictionContext above_segmentation_ids = DECODER_TRY_ALLOC(SegmentationPredictionContext::try_create(frame_context.columns()));
+    SegmentationPredictionContext above_segmentation_ids = DECODER_TRY_ALLOC(SegmentationPredictionContext::create(frame_context.columns()));
 
     // FIXME: To implement tiled decoding, we'll need to pre-parse the tile positions and sizes into a 2D vector of ReadonlyBytes,
     //        then run through each column of tiles in top to bottom order afterward. Each column can be sent to a worker thread

@@ -1118,7 +1118,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
 #ifdef AK_OS_SERENITY
     Syscall::SC_execve_params params;
 
-    auto argument_strings = TRY(FixedArray<Syscall::StringArgument>::try_create(arguments.size()));
+    auto argument_strings = TRY(FixedArray<Syscall::StringArgument>::create(arguments.size()));
     for (size_t i = 0; i < arguments.size(); ++i) {
         argument_strings[i] = { arguments[i].characters_without_null_termination(), arguments[i].length() };
     }
@@ -1133,7 +1133,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
             ++env_count;
     }
 
-    auto environment_strings = TRY(FixedArray<Syscall::StringArgument>::try_create(env_count));
+    auto environment_strings = TRY(FixedArray<Syscall::StringArgument>::create(env_count));
     if (environment.has_value()) {
         for (size_t i = 0; i < env_count; ++i) {
             environment_strings[i] = { environment->at(i).characters_without_null_termination(), environment->at(i).length() };
@@ -1172,8 +1172,8 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
 #else
     DeprecatedString filename_string { filename };
 
-    auto argument_strings = TRY(FixedArray<DeprecatedString>::try_create(arguments.size()));
-    auto argv = TRY(FixedArray<char*>::try_create(arguments.size() + 1));
+    auto argument_strings = TRY(FixedArray<DeprecatedString>::create(arguments.size()));
+    auto argv = TRY(FixedArray<char*>::create(arguments.size() + 1));
     for (size_t i = 0; i < arguments.size(); ++i) {
         argument_strings[i] = arguments[i].to_deprecated_string();
         argv[i] = const_cast<char*>(argument_strings[i].characters());
@@ -1182,8 +1182,8 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
 
     int rc = 0;
     if (environment.has_value()) {
-        auto environment_strings = TRY(FixedArray<DeprecatedString>::try_create(environment->size()));
-        auto envp = TRY(FixedArray<char*>::try_create(environment->size() + 1));
+        auto environment_strings = TRY(FixedArray<DeprecatedString>::create(environment->size()));
+        auto envp = TRY(FixedArray<char*>::create(environment->size() + 1));
         for (size_t i = 0; i < environment->size(); ++i) {
             environment_strings[i] = environment->at(i).to_deprecated_string();
             envp[i] = const_cast<char*>(environment_strings[i].characters());

@@ -143,9 +143,9 @@ private:
 static ErrorOr<NonZeroTokens> create_non_zero_tokens(u32 size_in_sub_blocks, bool subsampling)
 {
     return NonZeroTokens {
-        TRY(FixedArray<bool>::try_create(size_in_sub_blocks)),
-        TRY(FixedArray<bool>::try_create(size_in_sub_blocks >>= subsampling)),
-        TRY(FixedArray<bool>::try_create(size_in_sub_blocks)),
+        TRY(FixedArray<bool>::create(size_in_sub_blocks)),
+        TRY(FixedArray<bool>::create(size_in_sub_blocks >>= subsampling)),
+        TRY(FixedArray<bool>::create(size_in_sub_blocks)),
     };
 }
 
@@ -191,9 +191,9 @@ public:
             above_partition_context,
             above_non_zero_tokens,
             above_segmentation_ids,
-            TRY(PartitionContext::try_create(superblocks_to_blocks(blocks_ceiled_to_superblocks(height)))),
+            TRY(PartitionContext::create(superblocks_to_blocks(blocks_ceiled_to_superblocks(height)))),
             TRY(create_non_zero_tokens(blocks_to_sub_blocks(height), frame_context.color_config.subsampling_y)),
-            TRY(SegmentationPredictionContext::try_create(height)),
+            TRY(SegmentationPredictionContext::create(height)),
         };
     }
 

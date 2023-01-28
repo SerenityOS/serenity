@@ -212,7 +212,7 @@ ErrorOr<Optional<size_t>> AllocatingMemoryStream::offset_of(ReadonlyBytes needle
     VERIFY(m_chunks.size() * chunk_size - m_write_offset < chunk_size);
 
     auto chunk_count = m_chunks.size();
-    auto search_spans = TRY(FixedArray<ReadonlyBytes>::try_create(chunk_count));
+    auto search_spans = TRY(FixedArray<ReadonlyBytes>::create(chunk_count));
 
     for (size_t i = 0; i < chunk_count; i++) {
         search_spans[i] = m_chunks[i].span();

@@ -70,7 +70,7 @@ public:
 
     ErrorOr<void> set_render_sample_count(size_t count)
     {
-        auto new_buffer = TRY(FixedArray<float>::try_create(count));
+        auto new_buffer = TRY(FixedArray<float>::create(count));
         m_render_buffer.swap(new_buffer);
         return {};
     }

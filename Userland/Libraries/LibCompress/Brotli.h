@@ -67,7 +67,7 @@ public:
     public:
         static ErrorOr<LookbackBuffer> try_create(size_t size)
         {
-            auto buffer = TRY(FixedArray<u8>::try_create(size));
+            auto buffer = TRY(FixedArray<u8>::create(size));
             return LookbackBuffer { buffer };
         }
 

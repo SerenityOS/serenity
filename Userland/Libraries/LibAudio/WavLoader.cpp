@@ -114,7 +114,7 @@ static ErrorOr<double> read_sample(Core::Stream::Stream& stream)
 
 LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
 {
-    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::try_create(samples_to_read));
+    FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
     auto stream = LOADER_TRY(Core::Stream::FixedMemoryStream::construct(move(data)));
 
     switch (m_sample_format) {

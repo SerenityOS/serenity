@@ -22,9 +22,9 @@ class FixedArray {
 public:
     FixedArray() = default;
 
-    static ErrorOr<FixedArray<T>> try_create(std::initializer_list<T> initializer)
+    static ErrorOr<FixedArray<T>> create(std::initializer_list<T> initializer)
     {
-        auto array = TRY(try_create(initializer.size()));
+        auto array = TRY(create(initializer.size()));
         auto it = initializer.begin();
         for (size_t i = 0; i < array.size(); ++i) {
             array[i] = move(*it);
@@ -33,7 +33,7 @@ public:
         return array;
     }
 
-    static ErrorOr<FixedArray<T>> try_create(size_t size)
+    static ErrorOr<FixedArray<T>> create(size_t size)
     {
         if (size == 0)
             return FixedArray<T>();
@@ -48,17 +48,17 @@ public:
 
     static FixedArray<T> must_create_but_fixme_should_propagate_errors(size_t size)
     {
-        return MUST(try_create(size));
+        return MUST(create(size));
     }
 
     template<size_t N>
-    static ErrorOr<FixedArray<T>> try_create(T (&&array)[N])
+    static ErrorOr<FixedArray<T>> create(T (&&array)[N])
     {
-        return try_create(Span(array, N));
+        return create(Span(array, N));
     }
 
     template<typename U>
-    static ErrorOr<FixedArray<T>> try_create(Span<U> span)
+    static ErrorOr<FixedArray<T>> create(Span<U> span)
     {
         if (span.size() == 0)
             return FixedArray<T>();
@@ -71,9 +71,9 @@ public:
         return FixedArray<T>(new_storage);
     }
 
-    ErrorOr<FixedArray<T>> try_clone() const
+    ErrorOr<FixedArray<T>> clone() const
     {
-        return try_create(span());
+        return create(span());
     }
 
     static size_t storage_allocation_size(size_t size)

@@ -153,9 +153,9 @@ DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_conte
         output_y_size.height() >> frame_context.color_config.subsampling_y,
     };
     Array<FixedArray<u16>, 3> output_buffers = {
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_y_size.width() * output_y_size.height())),
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
-        DECODER_TRY_ALLOC(FixedArray<u16>::try_create(output_uv_size.width() * output_uv_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::create(output_y_size.width() * output_y_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::create(output_uv_size.width() * output_uv_size.height())),
+        DECODER_TRY_ALLOC(FixedArray<u16>::create(output_uv_size.width() * output_uv_size.height())),
     };
     for (u8 plane = 0; plane < 3; plane++) {
         auto& buffer = output_buffers[plane];
