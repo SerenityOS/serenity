@@ -865,17 +865,34 @@ ErrorOr<void> Profile::check_tag_types()
     // Profile ID of /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
     static constexpr Crypto::Hash::MD5::DigestType apple_itu_2020_id = { 0x57, 0x0b, 0x1b, 0x76, 0xc6, 0xa0, 0x50, 0xaa, 0x9f, 0x6c, 0x53, 0x8d, 0xbe, 0x2d, 0x3e, 0xf0 };
 
+    auto has_type = [&](auto tag, std::initializer_list<TagTypeSignature> types, std::initializer_list<TagTypeSignature> v4_types) {
+        if (auto type = m_tag_table.get(tag); type.has_value()) {
+            auto type_matches = [&](auto wanted_type) { return type.value()->type() == wanted_type; };
+            return any_of(types, type_matches) || (is_v4() && any_of(v4_types, type_matches));
+        }
+        return true;
+    };
+
     // ICC v4, 9.2.1 AToB0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
-    // FIXME
+    // ICC v2, 6.4.1 AToB0Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(AToB0Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutAToBTagData::Type }))
+        return Error::from_string_literal("ICC::Profile: AToB0Tag has unexpected type");
 
     // ICC v4, 9.2.2 AToB1Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
-    // FIXME
+    // ICC v2, 6.4.2 AToB1Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(AToB1Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutAToBTagData::Type }))
+        return Error::from_string_literal("ICC::Profile: AToB1Tag has unexpected type");
 
     // ICC v4, 9.2.3 AToB2Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType"
-    // FIXME
+    // ICC v2, 6.4.3 AToB2Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(AToB2Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutAToBTagData::Type }))
+        return Error::from_string_literal("ICC::Profile: AToB2Tag has unexpected type");
 
     // ICC v4, 9.2.4 blueMatrixColumnTag
     // "Permitted tag types: XYZType
@@ -892,20 +909,29 @@ ErrorOr<void> Profile::check_tag_types()
     // "Permitted tag types: curveType or parametricCurveType"
     // ICC v2, 6.4.5 blueTRCTag
     // "Tag Type: curveType"
-    if (auto type = m_tag_table.get(blueTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+    if (!has_type(blueTRCTag, { CurveTagData::Type }, { ParametricCurveTagData::Type }))
         return Error::from_string_literal("ICC::Profile: blueTRCTag has unexpected type");
 
     // ICC v4, 9.2.6 BToA0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.6 BToA0Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(BToA0Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: BToA0Tag has unexpected type");
 
     // ICC v4, 9.2.7 BToA1Tag
     // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.7 BToA1Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(BToA1Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: BToA1Tag has unexpected type");
 
     // ICC v4, 9.2.8 BToA2Tag
     // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.8 BToA2Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(BToA2Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: BToA2Tag has unexpected type");
 
     // ICC v4, 9.2.9 BToD0Tag
     // "Permitted tag types: multiProcessElementsType"
@@ -929,7 +955,7 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.14 charTargetTag
     // "Permitted tag types: textType"
-    if (auto type = m_tag_table.get(charTargetTag); type.has_value() && type.value()->type() != TextTagData::Type)
+    if (!has_type(charTargetTag, { TextTagData::Type }, {}))
         return Error::from_string_literal("ICC::Profile: charTargetTag has unexpected type");
 
     // ICC v4, 9.2.15 chromaticAdaptationTag
@@ -1021,13 +1047,16 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.29 gamutTag
     // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.18 gamutTag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(gamutTag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: gamutTag has unexpected type");
 
     // ICC v4, 9.2.30 grayTRCTag
     // "Permitted tag types: curveType or parametricCurveType"
     // ICC v2, 6.4.19 grayTRCTag
     // "Tag Type: curveType"
-    if (auto type = m_tag_table.get(grayTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+    if (!has_type(grayTRCTag, { CurveTagData::Type }, { ParametricCurveTagData::Type }))
         return Error::from_string_literal("ICC::Profile: grayTRCTag has unexpected type");
 
     // ICC v4, 9.2.31 greenMatrixColumnTag
@@ -1045,7 +1074,7 @@ ErrorOr<void> Profile::check_tag_types()
     // "Permitted tag types: curveType or parametricCurveType"
     // ICC v2, 6.4.21 greenTRCTag
     // "Tag Type: curveType"
-    if (auto type = m_tag_table.get(greenTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+    if (!has_type(greenTRCTag, { CurveTagData::Type }, { ParametricCurveTagData::Type }))
         return Error::from_string_literal("ICC::Profile: greenTRCTag has unexpected type");
 
     // ICC v4, 9.2.33 luminanceTag
@@ -1120,15 +1149,24 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.40 preview0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.29 preview0Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(preview0Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type, LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: preview0Tag has unexpected type");
 
     // ICC v4, 9.2.41 preview1Tag
     // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.30 preview1Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(preview1Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: preview1Tag has unexpected type");
 
     // ICC v4, 9.2.42 preview2Tag
     // "Permitted tag types: lut8Type or lut16Type or lutBToAType"
-    // FIXME
+    // ICC v2, 6.4.31 preview2Tag
+    // "Tag Type: lut8Type or lut16Type"
+    if (!has_type(preview2Tag, { Lut8TagData::Type, Lut16TagData::Type }, { LutBToATagData::Type }))
+        return Error::from_string_literal("ICC::Profile: preview2Tag has unexpected type");
 
     // ICC v4, 9.2.43 profileDescriptionTag
     // "Permitted tag types: multiLocalizedUnicodeType"
@@ -1168,7 +1206,7 @@ ErrorOr<void> Profile::check_tag_types()
     // "Permitted tag types: curveType or parametricCurveType"
     // ICC v2, 6.4.41 redTRCTag
     // "Tag Type: curveType"
-    if (auto type = m_tag_table.get(redTRCTag); type.has_value() && type.value()->type() != CurveTagData::Type && (is_v2() || type.value()->type() != ParametricCurveTagData::Type))
+    if (!has_type(redTRCTag, { CurveTagData::Type }, { ParametricCurveTagData::Type }))
         return Error::from_string_literal("ICC::Profile: redTRCTag has unexpected type");
 
     // ICC v4, 9.2.48 saturationRenderingIntentGamutTag

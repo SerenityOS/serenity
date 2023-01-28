@@ -204,6 +204,22 @@ private:
     Vector<u8> m_output_tables;
 };
 
+// ICC v4, 10.12 lutAToBType
+class LutAToBTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D414220 }; // 'mAB '
+
+    // FIXME: Implement!
+};
+
+// ICC v4, 10.13 lutBToAType
+class LutBToATagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D424120 }; // 'mBA '
+
+    // FIXME: Implement!
+};
+
 // ICC v4, 10.15 multiLocalizedUnicodeType
 class MultiLocalizedUnicodeTagData : public TagData {
 public:
