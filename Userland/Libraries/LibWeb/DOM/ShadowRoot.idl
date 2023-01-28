@@ -4,8 +4,7 @@
 // https://dom.spec.whatwg.org/#shadowroot
 [Exposed=Window]
 interface ShadowRoot : DocumentFragment {
-    // FIXME: mode should return a ShadowRootMode
-    readonly attribute DOMString mode;
+    readonly attribute ShadowRootMode mode;
     // FIXME: readonly attribute boolean delegatesFocus;
     // FIXME: readonly attribute SlotAssignmentMode slotAssignment;
     readonly attribute Element host;
