@@ -30,8 +30,8 @@ static constexpr unsigned const WAVE_FORMAT_EXTENSIBLE = 0xFFFE; // Determined b
 class WavLoaderPlugin : public LoaderPlugin {
 public:
     explicit WavLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
-    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> try_create(StringView path);
-    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> try_create(Bytes buffer);
+    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> create(StringView path);
+    static Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> create(Bytes buffer);
 
     virtual LoaderSamples get_more_samples(size_t max_samples_to_read_from_input = 128 * KiB) override;
 

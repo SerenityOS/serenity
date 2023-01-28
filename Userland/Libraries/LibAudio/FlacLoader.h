@@ -50,8 +50,8 @@ public:
     explicit FlacLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
     virtual ~FlacLoaderPlugin() override = default;
 
-    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> try_create(StringView path);
-    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> try_create(Bytes buffer);
+    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(StringView path);
+    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(Bytes buffer);
 
     virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
