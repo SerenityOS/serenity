@@ -141,6 +141,18 @@ public:
         return value;
     }
 
+    [[nodiscard]] Optional<u32> peek() const
+    {
+        if (m_it.done())
+            return {};
+        return *m_it;
+    }
+
+    [[nodiscard]] size_t byte_offset() const
+    {
+        return Utf8View(m_string).byte_offset_of(m_it);
+    }
+
     DeprecatedStringCodePointIterator(DeprecatedString string)
         : m_string(move(string))
         , m_it(Utf8View(m_string).begin())
