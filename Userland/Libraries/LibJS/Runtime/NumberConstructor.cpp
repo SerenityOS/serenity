@@ -6,6 +6,7 @@
 
 #include <AK/Math.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberConstructor.h>
