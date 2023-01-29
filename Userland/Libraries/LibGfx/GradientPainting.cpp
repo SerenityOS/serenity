@@ -53,10 +53,10 @@ enum class UsePremultipliedAlpha {
 class GradientLine {
 public:
     GradientLine(int gradient_length, Span<ColorStop const> color_stops, Optional<float> repeat_length, UsePremultipliedAlpha use_premultiplied_alpha = UsePremultipliedAlpha::Yes)
-        : m_repeating { repeat_length.has_value() }
-        , m_start_offset { round_to<int>((m_repeating ? color_stops.first().position : 0.0f) * gradient_length) }
-        , m_color_stops { color_stops }
-        , m_use_premultiplied_alpha { use_premultiplied_alpha }
+        : m_repeating(repeat_length.has_value())
+        , m_start_offset(round_to<int>((m_repeating ? color_stops.first().position : 0.0f) * gradient_length))
+        , m_color_stops(color_stops)
+        , m_use_premultiplied_alpha(use_premultiplied_alpha)
     {
         // Avoid generating excessive amounts of colors when the not enough shades to fill that length.
         auto necessary_length = min<int>((color_stops.size() - 1) * 255, gradient_length);
