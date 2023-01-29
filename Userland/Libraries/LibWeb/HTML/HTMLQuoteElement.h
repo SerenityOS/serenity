@@ -16,7 +16,7 @@ class HTMLQuoteElement final : public HTMLElement {
 public:
     virtual ~HTMLQuoteElement() override;
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
 
 private:
     HTMLQuoteElement(DOM::Document&, DOM::QualifiedName);

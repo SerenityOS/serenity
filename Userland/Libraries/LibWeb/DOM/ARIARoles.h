@@ -8,7 +8,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 
-namespace Web::DOM::ARIARoleNames {
+namespace Web::DOM::ARIARoles {
 
 #define ENUMERATE_ARIA_ROLES                \
     __ENUMERATE_ARIA_ROLE(alert)            \
@@ -106,17 +106,22 @@ namespace Web::DOM::ARIARoleNames {
     __ENUMERATE_ARIA_ROLE(widget)           \
     __ENUMERATE_ARIA_ROLE(window)
 
-#define __ENUMERATE_ARIA_ROLE(name) extern DeprecatedFlyString name;
-ENUMERATE_ARIA_ROLES
+enum class Role {
+#define __ENUMERATE_ARIA_ROLE(name) name,
+    ENUMERATE_ARIA_ROLES
 #undef __ENUMERATE_ARIA_ROLE
+};
 
-bool is_abstract_aria_role(DeprecatedFlyString const&);
-bool is_widget_aria_role(DeprecatedFlyString const&);
-bool is_document_structure_aria_role(DeprecatedFlyString const&);
-bool is_landmark_aria_role(DeprecatedFlyString const&);
-bool is_live_region_aria_role(DeprecatedFlyString const&);
-bool is_windows_aria_role(DeprecatedFlyString const&);
+StringView role_name(Role);
+Optional<Role> from_string(StringView role_name);
 
-bool is_non_abstract_aria_role(DeprecatedFlyString const&);
+bool is_abstract_aria_role(Role);
+bool is_widget_aria_role(Role);
+bool is_document_structure_aria_role(Role);
+bool is_landmark_aria_role(Role);
+bool is_live_region_aria_role(Role);
+bool is_windows_aria_role(Role);
+
+bool is_non_abstract_aria_role(Role);
 
 }

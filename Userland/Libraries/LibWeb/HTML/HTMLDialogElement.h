@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -18,7 +18,7 @@ public:
     virtual ~HTMLDialogElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-dialog
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::dialog; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::dialog; }
 
 private:
     HTMLDialogElement(DOM::Document&, DOM::QualifiedName);

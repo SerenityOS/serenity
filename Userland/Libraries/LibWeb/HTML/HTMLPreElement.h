@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -18,7 +18,7 @@ public:
     virtual ~HTMLPreElement() override;
 
     // https://www.w3.org/TR/html-aria/#el-pre
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::generic; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::generic; }
 
 private:
     HTMLPreElement(DOM::Document&, DOM::QualifiedName);

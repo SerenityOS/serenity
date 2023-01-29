@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -36,7 +36,7 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::group; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::group; }
 
 private:
     HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);

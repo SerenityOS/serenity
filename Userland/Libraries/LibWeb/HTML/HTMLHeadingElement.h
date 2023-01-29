@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -20,7 +20,8 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-h1-h6
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::heading; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::heading; }
+
     virtual DeprecatedString aria_level() const override
     {
         // TODO: aria-level = the number in the element's tag name

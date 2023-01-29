@@ -870,32 +870,32 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 e
     return {};
 }
 
-DeprecatedFlyString HTMLInputElement::default_role() const
+Optional<DOM::ARIARoles::Role> HTMLInputElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-input-button
     if (type_state() == TypeAttributeState::Button)
-        return DOM::ARIARoleNames::button;
+        return DOM::ARIARoles::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-checkbox
     if (type_state() == TypeAttributeState::Checkbox)
-        return DOM::ARIARoleNames::checkbox;
+        return DOM::ARIARoles::Role::checkbox;
     // https://www.w3.org/TR/html-aria/#el-input-email
     if (type_state() == TypeAttributeState::Email && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return DOM::ARIARoles::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-image
     if (type_state() == TypeAttributeState::ImageButton)
-        return DOM::ARIARoleNames::button;
+        return DOM::ARIARoles::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-number
     if (type_state() == TypeAttributeState::Number)
-        return DOM::ARIARoleNames::spinbutton;
+        return DOM::ARIARoles::Role::spinbutton;
     // https://www.w3.org/TR/html-aria/#el-input-radio
     if (type_state() == TypeAttributeState::RadioButton)
-        return DOM::ARIARoleNames::radio;
+        return DOM::ARIARoles::Role::radio;
     // https://www.w3.org/TR/html-aria/#el-input-range
     if (type_state() == TypeAttributeState::Range)
-        return DOM::ARIARoleNames::slider;
+        return DOM::ARIARoles::Role::slider;
     // https://www.w3.org/TR/html-aria/#el-input-reset
     if (type_state() == TypeAttributeState::ResetButton)
-        return DOM::ARIARoleNames::button;
+        return DOM::ARIARoles::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-text-list
     if ((type_state() == TypeAttributeState::Text
             || type_state() == TypeAttributeState::Search
@@ -903,22 +903,22 @@ DeprecatedFlyString HTMLInputElement::default_role() const
             || type_state() == TypeAttributeState::URL
             || type_state() == TypeAttributeState::Email)
         && !attribute("list").is_null())
-        return DOM::ARIARoleNames::combobox;
+        return DOM::ARIARoles::Role::combobox;
     // https://www.w3.org/TR/html-aria/#el-input-search
     if (type_state() == TypeAttributeState::Search && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return DOM::ARIARoles::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-submit
     if (type_state() == TypeAttributeState::SubmitButton)
-        return DOM::ARIARoleNames::button;
+        return DOM::ARIARoles::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-tel
     if (type_state() == TypeAttributeState::Telephone)
-        return DOM::ARIARoleNames::textbox;
+        return DOM::ARIARoles::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-text
     if (type_state() == TypeAttributeState::Text && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return DOM::ARIARoles::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-url
     if (type_state() == TypeAttributeState::URL && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return DOM::ARIARoles::Role::textbox;
 
     // https://www.w3.org/TR/html-aria/#el-input-color
     // https://www.w3.org/TR/html-aria/#el-input-date

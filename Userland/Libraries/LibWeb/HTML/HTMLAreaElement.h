@@ -42,7 +42,7 @@ private:
         queue_an_element_task(source, move(steps));
     }
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
 };
 
 }

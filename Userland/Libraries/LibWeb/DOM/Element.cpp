@@ -1282,8 +1282,8 @@ bool Element::exclude_from_accessibility_tree() const
 
     // Elements with none or presentation as the first role in the role attribute. However, their exclusion is conditional. In addition, the element's descendants and text content are generally included. These exceptions and conditions are documented in the presentation (role) section.
     // FIXME: Handle exceptions to excluding presentation role
-    auto role = role_or_default().to_lowercase();
-    if (role == ARIARoleNames::none || role == ARIARoleNames::presentation)
+    auto role = role_or_default();
+    if (role == ARIARoles::Role::none || role == ARIARoles::Role::presentation)
         return true;
 
     // TODO: If not already excluded from the accessibility tree per the above rules, user agents SHOULD NOT include the following elements in the accessibility tree:
@@ -1322,7 +1322,7 @@ bool Element::include_in_accessibility_tree() const
     // Elements that have an explicit role or a global WAI-ARIA attribute and do not have aria-hidden set to true. (See Excluding Elements in the Accessibility Tree for additional guidance on aria-hidden.)
     // NOTE: The spec says only explicit roles count, but playing around in other browsers, this does not seem to be true in practice (for example button elements are always exposed with their implicit role if none is set)
     //       This issue https://github.com/w3c/aria/issues/1851 seeks clarification on this point
-    if ((!role_or_default().is_empty() || has_global_aria_attribute()) && aria_hidden() != "true")
+    if ((role_or_default().has_value() || has_global_aria_attribute()) && aria_hidden() != "true")
         return true;
 
     // TODO: Elements that are not hidden and have an ID that is referenced by another element via a WAI-ARIA property.

@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/HTMLQuoteElement.h>
 
 namespace Web::HTML {
@@ -24,14 +24,14 @@ void HTMLQuoteElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLQuoteElementPrototype>(realm, "HTMLQuoteElement"));
 }
 
-DeprecatedFlyString HTMLQuoteElement::default_role() const
+Optional<DOM::ARIARoles::Role> HTMLQuoteElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-blockquote
     if (local_name() == TagNames::blockquote)
-        return DOM::ARIARoleNames::blockquote;
+        return DOM::ARIARoles::Role::blockquote;
     // https://www.w3.org/TR/html-aria/#el-q
     if (local_name() == TagNames::q)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     VERIFY_NOT_REACHED();
 }
 

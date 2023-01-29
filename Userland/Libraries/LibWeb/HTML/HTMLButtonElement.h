@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -57,7 +57,7 @@ public:
     virtual bool is_labelable() const override { return true; }
 
     // https://www.w3.org/TR/html-aria/#el-button
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::button; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::button; }
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);
