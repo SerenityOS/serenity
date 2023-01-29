@@ -48,10 +48,10 @@ ErrorOr<void> WelcomeWidget::create_widgets()
         m_tip_frame->set_visible(true);
         if (m_tips.is_empty())
             return;
-        m_initial_tip_index++;
-        if (m_initial_tip_index >= m_tips.size())
-            m_initial_tip_index = 0;
-        m_tip_label->set_text(m_tips[m_initial_tip_index].to_deprecated_string());
+        m_tip_index++;
+        if (m_tip_index >= m_tips.size())
+            m_tip_index = 0;
+        m_tip_label->set_text(m_tips[m_tip_index].to_deprecated_string());
     };
 
     m_help_button = find_descendant_of_type_named<GUI::Button>("help_button");
@@ -114,8 +114,8 @@ void WelcomeWidget::set_random_tip()
     if (m_tips.is_empty())
         return;
 
-    m_initial_tip_index = get_random_uniform(m_tips.size());
-    m_tip_label->set_text(m_tips[m_initial_tip_index].to_deprecated_string());
+    m_tip_index = get_random_uniform(m_tips.size());
+    m_tip_label->set_text(m_tips[m_tip_index].to_deprecated_string());
 }
 
 void WelcomeWidget::paint_event(GUI::PaintEvent& event)
