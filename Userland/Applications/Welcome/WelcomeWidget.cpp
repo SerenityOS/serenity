@@ -6,6 +6,7 @@
 
 #include "WelcomeWidget.h"
 #include <AK/Random.h>
+#include <AK/String.h>
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
@@ -33,7 +34,8 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     TRY(load_from_gml(welcome_window_gml));
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
-    m_web_view->load(URL::create_with_file_scheme(DeprecatedString::formatted("{}/README.md", Core::StandardPaths::home_directory())));
+    auto path = TRY(String::formatted("{}/README.md", Core::StandardPaths::home_directory()));
+    m_web_view->load(URL::create_with_file_scheme(path.to_deprecated_string()));
 
     m_tip_label = find_descendant_of_type_named<GUI::Label>("tip_label");
     m_tip_frame = find_descendant_of_type_named<GUI::Frame>("tip_frame");
@@ -47,7 +49,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
         m_initial_tip_index++;
         if (m_initial_tip_index >= m_tips.size())
             m_initial_tip_index = 0;
-        m_tip_label->set_text(m_tips[m_initial_tip_index]);
+        m_tip_label->set_text(m_tips[m_initial_tip_index].to_deprecated_string());
     };
 
     m_help_button = find_descendant_of_type_named<GUI::Button>("help_button");
@@ -77,8 +79,9 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     };
 
     if (auto result = open_and_parse_tips_file(); result.is_error()) {
-        auto error = DeprecatedString::formatted("Opening \"{}/tips.txt\" failed: {}", Core::StandardPaths::documents_directory(), result.error());
-        m_tip_label->set_text(error);
+        auto path = TRY(String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory()));
+        auto error = TRY(String::formatted("Opening \"{}\" failed: {}", path, result.error()));
+        m_tip_label->set_text(error.to_deprecated_string());
         warnln(error);
     }
 
@@ -89,7 +92,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
 
 ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
 {
-    auto path = DeprecatedString::formatted("{}/tips.txt", Core::StandardPaths::documents_directory());
+    auto path = TRY(String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory()));
     auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
     auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> buffer;
@@ -98,7 +101,7 @@ ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
         auto line = TRY(buffered_file->read_line(buffer));
         if (line.starts_with('#') || line.is_empty())
             continue;
-        m_tips.append(line);
+        TRY(m_tips.try_append(TRY(String::from_utf8(line))));
     }
 
     return {};
@@ -110,7 +113,7 @@ void WelcomeWidget::set_random_tip()
         return;
 
     m_initial_tip_index = get_random_uniform(m_tips.size());
-    m_tip_label->set_text(m_tips[m_initial_tip_index]);
+    m_tip_label->set_text(m_tips[m_initial_tip_index].to_deprecated_string());
 }
 
 void WelcomeWidget::paint_event(GUI::PaintEvent& event)
