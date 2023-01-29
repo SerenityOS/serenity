@@ -12,11 +12,22 @@
 
 namespace AK {
 
-struct LEB128 {
-    template<typename ValueType = size_t>
-    static ErrorOr<void> read_unsigned(AK::Stream& stream, ValueType& result)
+template<typename ValueType>
+class [[gnu::packed]] LEB128 {
+public:
+    constexpr LEB128() = default;
+
+    constexpr LEB128(ValueType value)
+        : m_value(value)
     {
-        result = 0;
+    }
+
+    constexpr operator ValueType() const { return m_value; }
+
+    static ErrorOr<LEB128<ValueType>> read_from_stream(AK::Stream& stream)
+    requires(Unsigned<ValueType>)
+    {
+        ValueType result {};
         size_t num_bytes = 0;
         while (true) {
             if (stream.is_eof())
@@ -39,11 +50,11 @@ struct LEB128 {
             ++num_bytes;
         }
 
-        return {};
+        return LEB128<ValueType> { result };
     }
 
-    template<typename ValueType = ssize_t>
-    static ErrorOr<void> read_signed(AK::Stream& stream, ValueType& result)
+    static ErrorOr<LEB128<ValueType>> read_from_stream(AK::Stream& stream)
+    requires(Signed<ValueType>)
     {
         // Note: We read into a u64 to simplify the parsing logic;
         //    result is range checked into ValueType after parsing.
@@ -52,7 +63,7 @@ struct LEB128 {
         i64 temp = 0;
         size_t num_bytes = 0;
         u8 byte = 0;
-        result = 0;
+        ValueType result {};
 
         do {
             if (stream.is_eof())
@@ -87,8 +98,11 @@ struct LEB128 {
 
         result = static_cast<ValueType>(temp);
 
-        return {};
+        return LEB128<ValueType> { result };
     }
+
+private:
+    ValueType m_value { 0 };
 };
 
 }
