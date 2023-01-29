@@ -23,12 +23,10 @@
 
 TEST_CASE(test_bmp)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/bmpsuite_files/rgba32-1.bmp"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::BMPImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::BMPImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/bmpsuite_files/rgba32-1.bmp"sv));
+    EXPECT(MUST(Gfx::BMPImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -40,12 +38,10 @@ TEST_CASE(test_bmp)
 
 TEST_CASE(test_gif)
 {
-    auto file = Core::MappedFile::map("/res/graphics/download-animation.gif"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::GIFImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::GIFImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/graphics/download-animation.gif"sv));
+    EXPECT(MUST(Gfx::GIFImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::GIFImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(plugin_decoder->is_animated());
@@ -57,12 +53,10 @@ TEST_CASE(test_gif)
 
 TEST_CASE(test_not_ico)
 {
-    auto file = Core::MappedFile::map("/res/graphics/buggie.png"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::ICOImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), false);
-    auto plugin_decoder_or_error = Gfx::ICOImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), false);
+    auto file = MUST(Core::MappedFile::map("/res/graphics/buggie.png"sv));
+    EXPECT(!MUST(Gfx::ICOImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
+    EXPECT(!plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -73,12 +67,10 @@ TEST_CASE(test_not_ico)
 
 TEST_CASE(test_bmp_embedded_in_ico)
 {
-    auto file = Core::MappedFile::map("/res/icons/16x16/serenity.ico"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::ICOImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::ICOImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/icons/16x16/serenity.ico"sv));
+    EXPECT(MUST(Gfx::ICOImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -89,12 +81,10 @@ TEST_CASE(test_bmp_embedded_in_ico)
 
 TEST_CASE(test_jpg)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/bmpsuite_files/rgb24.jpg"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::JPGImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::JPGImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/bmpsuite_files/rgb24.jpg"sv));
+    EXPECT(MUST(Gfx::JPGImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::JPGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -108,12 +98,10 @@ TEST_CASE(test_jpg)
 
 TEST_CASE(test_pbm)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/pbmsuite_files/buggie-raw.pbm"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::PBMImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::PBMImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/pbmsuite_files/buggie-raw.pbm"sv));
+    EXPECT(MUST(Gfx::PBMImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::PBMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -127,12 +115,10 @@ TEST_CASE(test_pbm)
 
 TEST_CASE(test_pgm)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/pgmsuite_files/buggie-raw.pgm"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::PGMImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::PGMImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/pgmsuite_files/buggie-raw.pgm"sv));
+    EXPECT(MUST(Gfx::PGMImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::PGMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -146,12 +132,10 @@ TEST_CASE(test_pgm)
 
 TEST_CASE(test_png)
 {
-    auto file = Core::MappedFile::map("/res/graphics/buggie.png"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::PNGImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::PNGImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/graphics/buggie.png"sv));
+    EXPECT(MUST(Gfx::PNGImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -165,12 +149,10 @@ TEST_CASE(test_png)
 
 TEST_CASE(test_ppm)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/ppmsuite_files/buggie-raw.ppm"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::PPMImageDecoderPlugin::sniff({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::PPMImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/ppmsuite_files/buggie-raw.ppm"sv));
+    EXPECT(MUST(Gfx::PPMImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::PPMImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());
     EXPECT(!plugin_decoder->is_animated());
@@ -184,12 +166,10 @@ TEST_CASE(test_ppm)
 
 TEST_CASE(test_targa_bottom_left)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-bottom-left-uncompressed.tga"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::TGAImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-bottom-left-uncompressed.tga"sv));
+    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT_EQ(plugin_decoder->frame_count(), 1u);
     EXPECT(!plugin_decoder->is_animated());
@@ -205,12 +185,10 @@ TEST_CASE(test_targa_bottom_left)
 
 TEST_CASE(test_targa_top_left)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-top-left-uncompressed.tga"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::TGAImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-top-left-uncompressed.tga"sv));
+    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT_EQ(plugin_decoder->frame_count(), 1u);
     EXPECT(!plugin_decoder->is_animated());
@@ -226,12 +204,10 @@ TEST_CASE(test_targa_top_left)
 
 TEST_CASE(test_targa_bottom_left_compressed)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-bottom-left-compressed.tga"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::TGAImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-bottom-left-compressed.tga"sv));
+    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT_EQ(plugin_decoder->frame_count(), 1u);
     EXPECT(!plugin_decoder->is_animated());
@@ -247,12 +223,10 @@ TEST_CASE(test_targa_bottom_left_compressed)
 
 TEST_CASE(test_targa_top_left_compressed)
 {
-    auto file = Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-top-left-compressed.tga"sv).release_value();
-    EXPECT_EQ(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create({ (u8 const*)file->data(), file->size() })), true);
-    auto plugin_decoder_or_error = Gfx::TGAImageDecoderPlugin::create({ (u8 const*)file->data(), file->size() });
-    EXPECT(!plugin_decoder_or_error.is_error());
-    auto plugin_decoder = plugin_decoder_or_error.release_value();
-    EXPECT_EQ(plugin_decoder->initialize(), true);
+    auto file = MUST(Core::MappedFile::map("/res/html/misc/targasuite_files/buggie-top-left-compressed.tga"sv));
+    EXPECT(MUST(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
 
     EXPECT_EQ(plugin_decoder->frame_count(), 1u);
     EXPECT(!plugin_decoder->is_animated());
