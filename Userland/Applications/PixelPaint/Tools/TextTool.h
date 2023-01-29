@@ -37,6 +37,7 @@ public:
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
+    virtual void on_tool_activation() override;
     virtual void on_tool_deactivation() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
     virtual GUI::Widget* get_properties_widget() override;
