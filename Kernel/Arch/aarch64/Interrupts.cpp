@@ -73,6 +73,9 @@ static PageFault page_fault_from_exception_syndrome_register(VirtualAddress faul
     // FIXME: Set correct mode
     fault.set_mode(ExecutionMode::Kernel);
 
+    if (Aarch64::exception_class_is_instruction_abort(esr_el1.EC))
+        fault.set_instruction_fetch(true);
+
     return fault;
 }
 
@@ -92,7 +95,7 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
         dump_exception_syndrome_register(esr_el1);
     }
 
-    if (Aarch64::exception_class_is_data_abort(esr_el1.EC)) {
+    if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
         auto page_fault = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
         page_fault.handle(*trap_frame->regs);
     } else {
