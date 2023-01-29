@@ -59,12 +59,12 @@ bool validate_elf_header(ElfW(Ehdr) const& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    auto expected_machine = EM_X86_64;
-    auto expected_machine_name = "x86-64";
+    auto expected_machines = Array { EM_X86_64, EM_AARCH64 };
+    auto expected_machine_names = Array { "x86-64"sv, "aarch64"sv };
 
-    if (expected_machine != elf_header.e_machine) {
+    if (!expected_machines.span().contains_slow(elf_header.e_machine)) {
         if (verbose)
-            dbgln("File has unknown machine ({}), expected {} ({})!", elf_header.e_machine, expected_machine_name, expected_machine);
+            dbgln("File has unknown machine ({}), expected {} ({})!", elf_header.e_machine, expected_machine_names.span(), expected_machines.span());
         return false;
     }
 
