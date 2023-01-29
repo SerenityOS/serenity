@@ -483,7 +483,7 @@ RENDERER_HANDLER(text_next_line)
 RENDERER_HANDLER(text_show_string)
 {
     auto text = MUST(m_document->resolve_to<StringObject>(args[0]))->string();
-    show_text(text);
+    TRY(show_text(text));
     return {};
 }
 
@@ -510,7 +510,7 @@ RENDERER_HANDLER(text_show_string_array)
             auto shift = next_shift / 1000.0f;
             m_text_matrix.translate(-shift * text_state().font_size * text_state().horizontal_scaling, 0.0f);
             auto str = element.get<NonnullRefPtr<Object>>()->cast<StringObject>()->string();
-            show_text(str);
+            TRY(show_text(str));
         }
     }
 
@@ -724,7 +724,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     return {};
 }
 
-void Renderer::show_text(DeprecatedString const& string)
+PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
 {
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
@@ -748,6 +748,7 @@ void Renderer::show_text(DeprecatedString const& string)
     auto delta_x = glyph_position.x() - original_position.x();
     m_text_rendering_matrix_is_dirty = true;
     m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
+    return {};
 }
 
 PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<StreamObject> image)

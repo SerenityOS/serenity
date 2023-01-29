@@ -114,7 +114,7 @@ private:
     void begin_path_paint();
     void end_path_paint();
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
-    void show_text(DeprecatedString const&);
+    PDFErrorOr<void> show_text(DeprecatedString const&);
     PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_image(NonnullRefPtr<StreamObject>);
     PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
     void show_empty_image(int width, int height);
