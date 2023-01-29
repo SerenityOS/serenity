@@ -121,18 +121,14 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     }
     case AttributeDataForm::SData: {
         i64 data;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_signed(wrapped_debug_info_stream, data);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_signed(debug_info_stream, data));
         value.m_type = AttributeValue::Type::SignedNumber;
         value.m_data.as_signed = data;
         break;
     }
     case AttributeDataForm::UData: {
         u64 data;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_unsigned(wrapped_debug_info_stream, data);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_unsigned(debug_info_stream, data));
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = data;
         break;
@@ -174,9 +170,7 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     }
     case AttributeDataForm::ExprLoc: {
         size_t length;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_unsigned(wrapped_debug_info_stream, length);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_unsigned(debug_info_stream, length));
         value.m_type = AttributeValue::Type::DwarfExpression;
         TRY(assign_raw_bytes_value(length));
         break;
@@ -209,9 +203,7 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     case AttributeDataForm::Block: {
         value.m_type = AttributeValue::Type::RawBytes;
         size_t length;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_unsigned(wrapped_debug_info_stream, length);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_unsigned(debug_info_stream, length));
         TRY(assign_raw_bytes_value(length));
         break;
     }
@@ -249,9 +241,7 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     }
     case AttributeDataForm::StrX: {
         size_t index;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_unsigned(wrapped_debug_info_stream, index);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_unsigned(debug_info_stream, index));
         value.m_type = AttributeValue::Type::String;
         value.m_data.as_unsigned = index;
         break;
@@ -276,18 +266,14 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
     }
     case AttributeDataForm::AddrX: {
         size_t index;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_unsigned(wrapped_debug_info_stream, index);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_unsigned(debug_info_stream, index));
         value.m_type = AttributeValue::Type::Address;
         value.m_data.as_unsigned = index;
         break;
     }
     case AttributeDataForm::RngListX: {
         size_t index;
-        Core::Stream::WrapInAKInputStream wrapped_debug_info_stream { debug_info_stream };
-        LEB128::read_unsigned(wrapped_debug_info_stream, index);
-        VERIFY(!wrapped_debug_info_stream.has_any_error());
+        TRY(LEB128::read_unsigned(debug_info_stream, index));
         value.m_type = AttributeValue::Type::UnsignedNumber;
         value.m_data.as_unsigned = index;
         break;
