@@ -8,7 +8,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedStream.h>
-#include <AK/LEB128.h>
 #include <AK/MemMem.h>
 #include <AK/Vector.h>
 
@@ -73,12 +72,6 @@ public:
 
         return m_bytes[m_offset];
     }
-
-    template<typename ValueType>
-    bool read_LEB128_unsigned(ValueType& result) { return LEB128::read_unsigned(*this, result); }
-
-    template<typename ValueType>
-    bool read_LEB128_signed(ValueType& result) { return LEB128::read_signed(*this, result); }
 
     ReadonlyBytes bytes() const { return m_bytes; }
     size_t offset() const { return m_offset; }

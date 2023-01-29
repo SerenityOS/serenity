@@ -27,8 +27,7 @@ static auto parse_vector(AK::Stream& stream)
     if constexpr (requires { T::parse(stream); }) {
         using ResultT = typename decltype(T::parse(stream))::ValueType;
         size_t count;
-        Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-        if (!LEB128::read_unsigned(wrapped_stream, count))
+        if (LEB128::read_unsigned(stream, count).is_error())
             return ParseResult<Vector<ResultT>> { with_eof_check(stream, ParseError::ExpectedSize) };
 
         Vector<ResultT> entries;
@@ -41,22 +40,19 @@ static auto parse_vector(AK::Stream& stream)
         return ParseResult<Vector<ResultT>> { move(entries) };
     } else {
         size_t count;
-        Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-        if (!LEB128::read_unsigned(wrapped_stream, count))
+        if (LEB128::read_unsigned(stream, count).is_error())
             return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
 
         Vector<T> entries;
         for (size_t i = 0; i < count; ++i) {
             if constexpr (IsSame<T, size_t>) {
                 size_t value;
-                Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-                if (!LEB128::read_unsigned(wrapped_stream, value))
+                if (LEB128::read_unsigned(stream, value).is_error())
                     return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
                 entries.append(value);
             } else if constexpr (IsSame<T, ssize_t>) {
                 ssize_t value;
-                Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-                if (!LEB128::read_signed(wrapped_stream, value))
+                if (LEB128::read_signed(stream, value).is_error())
                     return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
                 entries.append(value);
             } else if constexpr (IsSame<T, u8>) {
@@ -191,15 +187,13 @@ ParseResult<Limits> Limits::parse(AK::Stream& stream)
         return with_eof_check(stream, ParseError::InvalidTag);
 
     size_t min;
-    Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-    if (!LEB128::read_unsigned(wrapped_stream, min))
+    if (LEB128::read_unsigned(stream, min).is_error())
         return with_eof_check(stream, ParseError::ExpectedSize);
 
     Optional<u32> max;
     if (flag) {
         size_t value;
-        Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-        if (!LEB128::read_unsigned(wrapped_stream, value))
+        if (LEB128::read_unsigned(stream, value).is_error())
             return with_eof_check(stream, ParseError::ExpectedSize);
         max = value;
     }
@@ -270,8 +264,7 @@ ParseResult<BlockType> BlockType::parse(AK::Stream& stream)
     new_stream.unread({ &kind, 1 });
 
     ssize_t index_value;
-    Core::Stream::WrapInAKInputStream wrapped_new_stream { new_stream };
-    if (!LEB128::read_signed(wrapped_new_stream, index_value))
+    if (LEB128::read_signed(new_stream, index_value).is_error())
         return with_eof_check(stream, ParseError::ExpectedIndex);
 
     if (index_value < 0) {
@@ -414,15 +407,13 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
         case Instructions::i64_store8.value():
         case Instructions::i64_store16.value():
         case Instructions::i64_store32.value(): {
-            Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-
             // op (align offset)
             size_t align;
-            if (!LEB128::read_unsigned(wrapped_stream, align))
+            if (LEB128::read_unsigned(stream, align).is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
 
             size_t offset;
-            if (!LEB128::read_unsigned(wrapped_stream, offset))
+            if (LEB128::read_unsigned(stream, offset).is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
 
             resulting_instructions.append(Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } });
@@ -466,8 +457,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
         }
         case Instructions::i32_const.value(): {
             i32 value;
-            Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-            if (!LEB128::read_signed(wrapped_stream, value))
+            if (LEB128::read_signed(stream, value).is_error())
                 return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
 
             resulting_instructions.append(Instruction { opcode, value });
@@ -476,8 +466,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
         case Instructions::i64_const.value(): {
             // op literal
             i64 value;
-            Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-            if (!LEB128::read_signed(wrapped_stream, value))
+            if (LEB128::read_signed(stream, value).is_error())
                 return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
 
             resulting_instructions.append(Instruction { opcode, value });
@@ -677,8 +666,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
         case 0xfc: {
             // These are multibyte instructions.
             u32 selector;
-            Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-            if (!LEB128::read_unsigned(wrapped_stream, selector))
+            if (LEB128::read_unsigned(stream, selector).is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
             switch (selector) {
             case Instructions::i32_trunc_sat_f32_s_second:
@@ -955,8 +943,7 @@ ParseResult<ExportSection::Export> ExportSection::Export::parse(AK::Stream& stre
     auto tag = tag_or_error.release_value();
 
     size_t index;
-    Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-    if (!LEB128::read_unsigned(wrapped_stream, index))
+    if (LEB128::read_unsigned(stream, index).is_error())
         return with_eof_check(stream, ParseError::ExpectedIndex);
 
     switch (tag) {
@@ -1152,8 +1139,7 @@ ParseResult<Locals> Locals::parse(AK::Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Locals"sv);
     size_t count;
-    Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-    if (!LEB128::read_unsigned(wrapped_stream, count))
+    if (LEB128::read_unsigned(stream, count).is_error())
         return with_eof_check(stream, ParseError::InvalidSize);
 
     if (count > Constants::max_allowed_function_locals_per_type)
@@ -1182,8 +1168,7 @@ ParseResult<CodeSection::Code> CodeSection::Code::parse(AK::Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Code"sv);
     size_t size;
-    Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-    if (!LEB128::read_unsigned(wrapped_stream, size))
+    if (LEB128::read_unsigned(stream, size).is_error())
         return with_eof_check(stream, ParseError::InvalidSize);
 
     auto constrained_stream = ConstrainedStream { stream, size };
@@ -1260,8 +1245,7 @@ ParseResult<DataCountSection> DataCountSection::parse([[maybe_unused]] AK::Strea
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("DataCountSection"sv);
     u32 value;
-    Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-    if (!LEB128::read_unsigned(wrapped_stream, value)) {
+    if (LEB128::read_unsigned(stream, value).is_error()) {
         if (stream.is_eof()) {
             // The section simply didn't contain anything.
             return DataCountSection { {} };
@@ -1297,8 +1281,7 @@ ParseResult<Module> Module::parse(AK::Stream& stream)
         auto section_id = section_id_or_error.release_value();
 
         size_t section_size;
-        Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-        if (!LEB128::read_unsigned(wrapped_stream, section_size))
+        if (LEB128::read_unsigned(stream, section_size).is_error())
             return with_eof_check(stream, ParseError::ExpectedSize);
 
         auto section_stream = ConstrainedStream { stream, section_size };

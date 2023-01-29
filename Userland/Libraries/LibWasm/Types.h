@@ -66,8 +66,7 @@ struct GenericIndexParser {
     static ParseResult<T> parse(AK::Stream& stream)
     {
         size_t value;
-        Core::Stream::WrapInAKInputStream wrapped_stream { stream };
-        if (!LEB128::read_unsigned(wrapped_stream, value))
+        if (LEB128::read_unsigned(stream, value).is_error())
             return with_eof_check(stream, ParseError::ExpectedIndex);
         return T { value };
     }

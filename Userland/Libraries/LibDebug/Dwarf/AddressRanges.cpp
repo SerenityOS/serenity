@@ -21,8 +21,6 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
 {
     // Dwarf version 5, section 2.17.3 "Non-Contiguous Address Ranges"
 
-    Core::Stream::WrapInAKInputStream wrapped_range_lists_stream { *m_range_lists_stream };
-
     Optional<FlatPtr> current_base_address;
     while (!m_range_lists_stream->is_eof()) {
         auto entry_type = TRY(m_range_lists_stream->read_value<u8>());
@@ -33,7 +31,7 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
         }
         case RangeListEntryType::BaseAddressX: {
             FlatPtr index;
-            LEB128::read_unsigned(wrapped_range_lists_stream, index);
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, index));
             current_base_address = TRY(m_compilation_unit.get_address(index));
             break;
         }
@@ -47,29 +45,29 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
                 return Error::from_string_literal("Expected base_address for rangelist");
 
             size_t start_offset, end_offset;
-            LEB128::read_unsigned(wrapped_range_lists_stream, start_offset);
-            LEB128::read_unsigned(wrapped_range_lists_stream, end_offset);
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, start_offset));
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, end_offset));
             callback(Range { start_offset + *base_address, end_offset + *base_address });
             break;
         }
         case RangeListEntryType::StartLength: {
             auto start = TRY(m_range_lists_stream->read_value<FlatPtr>());
             size_t length;
-            LEB128::read_unsigned(wrapped_range_lists_stream, length);
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, length));
             callback(Range { start, start + length });
             break;
         }
         case RangeListEntryType::StartXEndX: {
             size_t start, end;
-            LEB128::read_unsigned(wrapped_range_lists_stream, start);
-            LEB128::read_unsigned(wrapped_range_lists_stream, end);
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, start));
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, end));
             callback(Range { TRY(m_compilation_unit.get_address(start)), TRY(m_compilation_unit.get_address(end)) });
             break;
         }
         case RangeListEntryType::StartXLength: {
             size_t start, length;
-            LEB128::read_unsigned(wrapped_range_lists_stream, start);
-            LEB128::read_unsigned(wrapped_range_lists_stream, length);
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, start));
+            TRY(LEB128::read_unsigned(*m_range_lists_stream, length));
             auto start_addr = TRY(m_compilation_unit.get_address(start));
             callback(Range { start_addr, start_addr + length });
             break;

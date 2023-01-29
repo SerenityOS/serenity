@@ -23,18 +23,17 @@ ErrorOr<void> AbbreviationsMap::populate_map()
 {
     auto abbreviation_stream = TRY(FixedMemoryStream::construct(m_dwarf_info.abbreviation_data()));
     TRY(abbreviation_stream->discard(m_offset));
-    Core::Stream::WrapInAKInputStream wrapped_abbreviation_stream { *abbreviation_stream };
 
     while (!abbreviation_stream->is_eof()) {
         size_t abbreviation_code = 0;
-        LEB128::read_unsigned(wrapped_abbreviation_stream, abbreviation_code);
+        TRY(LEB128::read_unsigned(*abbreviation_stream, abbreviation_code));
         // An abbreviation code of 0 marks the end of the
         // abbreviations for a given compilation unit
         if (abbreviation_code == 0)
             break;
 
         size_t tag {};
-        LEB128::read_unsigned(wrapped_abbreviation_stream, tag);
+        TRY(LEB128::read_unsigned(*abbreviation_stream, tag));
 
         auto has_children = TRY(abbreviation_stream->read_value<u8>());
 
@@ -46,15 +45,15 @@ ErrorOr<void> AbbreviationsMap::populate_map()
         do {
             size_t attribute_value = 0;
             size_t form_value = 0;
-            LEB128::read_unsigned(wrapped_abbreviation_stream, attribute_value);
-            LEB128::read_unsigned(wrapped_abbreviation_stream, form_value);
+            TRY(LEB128::read_unsigned(*abbreviation_stream, attribute_value));
+            TRY(LEB128::read_unsigned(*abbreviation_stream, form_value));
 
             current_attribute_specification.attribute = static_cast<Attribute>(attribute_value);
             current_attribute_specification.form = static_cast<AttributeDataForm>(form_value);
 
             if (current_attribute_specification.form == AttributeDataForm::ImplicitConst) {
                 ssize_t data_value;
-                LEB128::read_signed(wrapped_abbreviation_stream, data_value);
+                TRY(LEB128::read_signed(*abbreviation_stream, data_value));
                 current_attribute_specification.value = data_value;
             }
 
