@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/Error.h>
+#include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/String.h>
@@ -166,6 +167,11 @@ struct HuffmanStreamState {
     size_t byte_offset { 0 };
 };
 
+struct ICCMultiChunkState {
+    u8 seen_number_of_icc_chunks { 0 };
+    FixedArray<ByteBuffer> chunks;
+};
+
 struct JPGLoadingContext {
     enum State {
         NotDecoded = 0,
@@ -193,6 +199,8 @@ struct JPGLoadingContext {
     i32 previous_dc_values[3] = { 0 };
     MacroblockMeta mblock_meta;
     OwnPtr<Core::Stream::FixedMemoryStream> stream;
+
+    Optional<ICCMultiChunkState> icc_multi_chunk_state;
     Optional<ByteBuffer> icc_data;
 };
 
@@ -601,14 +609,50 @@ static ErrorOr<void> read_icc_profile(Core::Stream::SeekableStream& stream, JPGL
     auto number_of_chunks = TRY(stream.read_value<u8>());
     bytes_to_read -= 2;
 
-    // FIXME: Support ICC profiles larger than a single jpeg marker. (They are very rare in practice.)
-    if (number_of_chunks != 1) {
-        dbgln("jpg: Ignoring ICC profile spanning several chunks ({}/{})", chunk_sequence_number, number_of_chunks);
-        return stream.discard(bytes_to_read);
+    if (!context.icc_multi_chunk_state.has_value())
+        context.icc_multi_chunk_state.emplace(ICCMultiChunkState { 0, TRY(FixedArray<ByteBuffer>::create(number_of_chunks)) });
+    auto& chunk_state = context.icc_multi_chunk_state;
+
+    if (chunk_state->seen_number_of_icc_chunks >= number_of_chunks)
+        return Error::from_string_literal("Too many ICC chunks");
+
+    if (chunk_state->chunks.size() != number_of_chunks)
+        return Error::from_string_literal("Inconsistent number of total ICC chunks");
+
+    if (chunk_sequence_number == 0)
+        return Error::from_string_literal("ICC chunk sequence number not 1 based");
+    u8 index = chunk_sequence_number - 1;
+
+    if (index >= chunk_state->chunks.size())
+        return Error::from_string_literal("ICC chunk sequence number larger than number of chunks");
+
+    if (!chunk_state->chunks[index].is_empty())
+        return Error::from_string_literal("Duplicate ICC chunk at sequence number");
+
+    chunk_state->chunks[index] = TRY(ByteBuffer::create_zeroed(bytes_to_read));
+    TRY(stream.read_entire_buffer(chunk_state->chunks[index]));
+
+    chunk_state->seen_number_of_icc_chunks++;
+
+    if (chunk_state->seen_number_of_icc_chunks != chunk_state->chunks.size())
+        return {};
+
+    if (number_of_chunks == 1) {
+        context.icc_data = move(chunk_state->chunks[0]);
+        return {};
     }
 
-    ByteBuffer icc_bytes = TRY(ByteBuffer::create_zeroed(bytes_to_read));
-    TRY(stream.read_entire_buffer(icc_bytes));
+    size_t total_size = 0;
+    for (auto const& chunk : chunk_state->chunks)
+        total_size += chunk.size();
+
+    auto icc_bytes = TRY(ByteBuffer::create_zeroed(total_size));
+    size_t start = 0;
+    for (auto const& chunk : chunk_state->chunks) {
+        memcpy(icc_bytes.data() + start, chunk.data(), chunk.size());
+        start += chunk.size();
+    }
+
     context.icc_data = move(icc_bytes);
 
     return {};
