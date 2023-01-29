@@ -56,9 +56,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(handle_attached_debugger());
 
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client("./SQLServer/SQLServer"sv));
-    auto database = TRY(Browser::Database::create(move(sql_client)));
-
     QApplication app(arguments.argc, arguments.argv);
 
     platform_init();
@@ -95,6 +92,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view.load(url);
         return app.exec();
     }
+
+    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client("./SQLServer/SQLServer"sv));
+    auto database = TRY(Browser::Database::create(move(sql_client)));
 
     auto cookie_jar = TRY(Browser::CookieJar::create(*database));
 
