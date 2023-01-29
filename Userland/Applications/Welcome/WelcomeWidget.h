@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/Widget.h>
+#include <LibGfx/Font/BitmapFont.h>
 #include <LibWebView/OutOfProcessWebView.h>
 
 class WelcomeWidget final : public GUI::Widget {
@@ -24,6 +25,9 @@ private:
 
     void set_random_tip();
     ErrorOr<void> open_and_parse_tips_file();
+
+    RefPtr<Gfx::BitmapFont> m_banner_font;
+    RefPtr<GUI::Widget> m_banner_widget;
 
     RefPtr<GUI::Button> m_close_button;
     RefPtr<GUI::Button> m_next_button;
