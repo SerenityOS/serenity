@@ -54,7 +54,7 @@ ErrorOr<void> AbbreviationsMap::populate_map()
 
             if (current_attribute_specification.form == AttributeDataForm::ImplicitConst) {
                 ssize_t data_value;
-                LEB128::read_unsigned(wrapped_abbreviation_stream, data_value);
+                LEB128::read_signed(wrapped_abbreviation_stream, data_value);
                 current_attribute_specification.value = data_value;
             }
 
