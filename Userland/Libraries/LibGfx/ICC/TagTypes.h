@@ -122,6 +122,10 @@ private:
 };
 
 struct EMatrix3x3 {
+    // A row-major 3x3 matrix:
+    // [ e[0] e[1] e[2] ]
+    // [ e[3] e[4] e[5] ] * v
+    // ] e[6] e[7] e[8] ]
     S15Fixed16 e[9];
 
     S15Fixed16 const& operator[](unsigned i) const
@@ -239,12 +243,58 @@ private:
     Vector<u8> m_output_tables;
 };
 
+struct EMatrix3x4 {
+    // A row-major 3x3 matrix followed by a translation vector:
+    // [ e[0] e[1] e[2] ]       [ e[9]  ]
+    // [ e[3] e[4] e[5] ] * v + [ e[10] ]
+    // [ e[6] e[7] e[8] ]       [ e[11] ]
+    S15Fixed16 e[12];
+
+    S15Fixed16 const& operator[](unsigned i) const
+    {
+        VERIFY(i < array_size(e));
+        return e[i];
+    }
+};
+
+struct CLUTData {
+    Vector<u8, 4> number_of_grid_points_in_dimension;
+    Variant<Vector<u8>, Vector<u16>> values;
+};
+
 // ICC v4, 10.12 lutAToBType
 class LutAToBTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x6D414220 }; // 'mAB '
 
-    // FIXME: Implement!
+    static ErrorOr<NonnullRefPtr<LutAToBTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<CLUTData> clut, Optional<EMatrix3x4> e)
+        : TagData(offset, size, Type)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_clut(move(clut))
+        , m_e(e)
+    {
+    }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+
+    Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+
+private:
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+
+    // "Only the following combinations are permitted:
+    //  - B;
+    //  - M, Matrix, B;
+    //  - A, CLUT, B;
+    //  - A, CLUT, M, Matrix, B."
+    Optional<CLUTData> m_clut;
+    Optional<EMatrix3x4> m_e;
 };
 
 // ICC v4, 10.13 lutBToAType
@@ -252,7 +302,34 @@ class LutBToATagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x6D424120 }; // 'mBA '
 
-    // FIXME: Implement!
+    static ErrorOr<NonnullRefPtr<LutBToATagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<EMatrix3x4> e, Optional<CLUTData> clut)
+        : TagData(offset, size, Type)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_e(e)
+        , m_clut(move(clut))
+    {
+    }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+
+    Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Optional<CLUTData> const& clut() const { return m_clut; }
+
+private:
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+
+    // "Only the following combinations are permitted:
+    //  - B;
+    //  - B, Matrix, M;
+    //  - B, CLUT, A;
+    //  - B, Matrix, M, CLUT, A."
+    Optional<EMatrix3x4> m_e;
+    Optional<CLUTData> m_clut;
 };
 
 // ICC v4, 10.15 multiLocalizedUnicodeType

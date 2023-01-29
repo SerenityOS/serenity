@@ -165,6 +165,52 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    e = [ {}, {}, {},", e[0], e[1], e[2]);
             outln("          {}, {}, {},", e[3], e[4], e[5]);
             outln("          {}, {}, {} ]", e[6], e[7], e[8]);
+        } else if (tag_data->type() == Gfx::ICC::LutAToBTagData::Type) {
+            auto& a_to_b = static_cast<Gfx::ICC::LutAToBTagData&>(*tag_data);
+            outln("    {} input channels, {} output channels", a_to_b.number_of_input_channels(), a_to_b.number_of_output_channels());
+
+            if (auto const& optional_clut = a_to_b.clut(); optional_clut.has_value()) {
+                auto const& clut = optional_clut.value();
+                outln("    color lookup table: {} grid points, {}",
+                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    MUST(clut.values.visit(
+                        [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
+                        [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
+            } else {
+                outln("    color lookup table: (not set)");
+            }
+
+            if (auto const& optional_e = a_to_b.e_matrix(); optional_e.has_value()) {
+                auto const& e = optional_e.value();
+                outln("    e = [ {}, {}, {}, {},", e[0], e[1], e[2], e[9]);
+                outln("          {}, {}, {}, {},", e[3], e[4], e[5], e[10]);
+                outln("          {}, {}, {}, {} ]", e[6], e[7], e[8], e[11]);
+            } else {
+                outln("    e = (not set)");
+            }
+        } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
+            auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
+            outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
+
+            if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
+                auto const& e = optional_e.value();
+                outln("    e = [ {}, {}, {}, {},", e[0], e[1], e[2], e[9]);
+                outln("          {}, {}, {}, {},", e[3], e[4], e[5], e[10]);
+                outln("          {}, {}, {}, {} ]", e[6], e[7], e[8], e[11]);
+            } else {
+                outln("    e = (not set)");
+            }
+
+            if (auto const& optional_clut = b_to_a.clut(); optional_clut.has_value()) {
+                auto const& clut = optional_clut.value();
+                outln("    color lookup table: {} grid points, {}",
+                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    MUST(clut.values.visit(
+                        [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
+                        [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
+            } else {
+                outln("    color lookup table: (not set)");
+            }
         } else if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
             auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
             for (auto& record : multi_localized_unicode.records()) {
