@@ -18,7 +18,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
-#include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
 
 ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::try_create()
@@ -32,6 +31,9 @@ ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::try_create()
 ErrorOr<void> WelcomeWidget::create_widgets()
 {
     TRY(load_from_gml(welcome_window_gml));
+
+    m_banner_widget = find_descendant_of_type_named<GUI::Widget>("welcome_banner");
+    m_banner_font = TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/MarietaRegular24.font"sv));
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     auto path = TRY(String::formatted("{}/README.md", Core::StandardPaths::home_directory()));
@@ -121,8 +123,10 @@ void WelcomeWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    static auto font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font"sv);
-    painter.draw_text(Gfx::IntRect { 12, 4, 1, 30 }, "Welcome to "sv, *font, Gfx::TextAlignment::CenterLeft, palette().base_text());
-    painter.draw_text(Gfx::IntRect { 12 + static_cast<int>(ceilf(font->width("Welcome to "sv))), 4, 1, 30 }, "Serenity"sv, font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base_text());
-    painter.draw_text(Gfx::IntRect { 12 + static_cast<int>(ceilf(font->width("Welcome to "sv))) + static_cast<int>(ceilf(font->bold_variant().width("Serenity"sv))), 4, 1, 30 }, "OS"sv, font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base() == palette().window() ? palette().base_text() : palette().base());
+    auto rect = m_banner_widget->relative_rect();
+    painter.draw_text(rect, "Welcome to "sv, *m_banner_font, Gfx::TextAlignment::CenterLeft, palette().base_text());
+    rect.set_x(rect.x() + static_cast<int>(ceilf(m_banner_font->width("Welcome to "sv))));
+    painter.draw_text(rect, "Serenity"sv, m_banner_font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().base_text());
+    rect.set_x(rect.x() + static_cast<int>(ceilf(m_banner_font->bold_variant().width("Serenity"sv))));
+    painter.draw_text(rect, "OS"sv, m_banner_font->bold_variant(), Gfx::TextAlignment::CenterLeft, palette().tray_text());
 }
