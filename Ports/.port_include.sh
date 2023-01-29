@@ -682,7 +682,7 @@ do_generate_patch_readme() {
     # An existing patches directory but no actual patches presumably means that we just deleted all patches,
     # so remove the ReadMe file accordingly.
     if [ -z "$(find -L "${PORT_META_DIR}/patches" -maxdepth 1 -name '*.patch' -print -quit)" ]; then
-        >&2 echo "Port $port does not have any patches, deleting ReadMe..."
+        >&2 echo "Port $port does not have any patches, deleting ReadMe.md..."
         rm -f "${PORT_META_DIR}/patches/ReadMe.md"
         exit 0
     fi
@@ -736,6 +736,16 @@ do_generate_patch_readme() {
     popd
 
     >&2 echo "Successfully generated entries for $count patch(es) in patches/ReadMe.md."
+}
+
+do_generate_available_ports() {
+    pushd "${PORT_META_DIR}/.."
+
+    ./generate-available-ports.py > AvailablePorts.md
+
+    popd
+
+    >&2 echo "Successfully regenerated available ports."
 }
 
 launch_user_shell() {
@@ -882,6 +892,8 @@ do_dev() {
         git -C "$workdir" format-patch --no-numbered --zero-commit --no-signature --full-index refs/tags/import -o "$(realpath "${PORT_META_DIR}/patches")"
         do_generate_patch_readme
     fi
+
+    do_generate_available_ports
 }
 
 NO_GPG=false
@@ -891,7 +903,7 @@ parse_arguments() {
         return
     fi
     case "$1" in
-        fetch|patch|shell|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty|generate_patch_readme)
+        fetch|patch|shell|configure|build|install|installdepends|clean|clean_dist|clean_all|uninstall|showproperty|generate_patch_readme|generate_available_ports)
             method=$1
             shift
             do_${method} "$@"
@@ -914,14 +926,14 @@ parse_arguments() {
                 do_installdepends
             fi
             if [ -d "$workdir" ] && [ ! -d "$workdir/.git" ]; then
-                if prompt_yes_no "- Would you like to clean the working direcory (i.e. ./package.sh clean)?"; then
+                if prompt_yes_no "- Would you like to clean the working directory (i.e. ./package.sh clean)?"; then
                     do_clean
                 fi
             fi
             do_dev
             ;;
         *)
-            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, interactive, clean, clean_dist, clean_all, uninstall, showproperty, generate_patch_readme, dev."
+            >&2 echo "I don't understand $1! Supported arguments: fetch, patch, configure, build, install, installdepends, interactive, clean, clean_dist, clean_all, uninstall, showproperty, generate_patch_readme, generate_available_ports, dev."
             exit 1
             ;;
     esac

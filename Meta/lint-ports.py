@@ -385,10 +385,11 @@ def run():
     if REQUIRE_GIT_PATCHES and not check_patches_are_git_patches(port_properties):
         all_good = False
 
-    if not all_good:
+    if all_good:
+        print('No issues found.', file=sys.stdout)
+    else:
+        print("Run after manual changes to ports:  package.sh generate_available_ports", file=sys.stdout)
         sys.exit(1)
-
-    print('No issues found.', file=sys.stdout)
 
 
 if __name__ == '__main__':

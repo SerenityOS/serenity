@@ -109,7 +109,8 @@ This mode has a bunch of nice features:
 - The "remote" repository can be pushed to, pulled from and generally anything that
   you'd want to do with a remote repo.
 - After leaving the dev shell, all patches are updated and the user will be prompted
-  whether they wish to generate a new patch readme file.
+  whether they wish to generate a new patch readme file and update the list of
+  available ports.
 
 This mode takes an extra `--no-depends` option, that if given, will cause the dependency
 fetch and build steps to be skipped.
