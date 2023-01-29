@@ -5,13 +5,13 @@
  */
 
 #include <LibWeb/DOM/ARIAMixin.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 
 namespace Web::DOM {
 
 // https://www.w3.org/TR/wai-aria-1.2/#introroles
-DeprecatedFlyString ARIAMixin::role_or_default() const
+Optional<ARIARoles::Role> ARIAMixin::role_or_default() const
 {
     // 1. Use the rules of the host language to detect that an element has a role attribute and to identify the attribute value string for it.
     auto role_string = role();
@@ -20,10 +20,13 @@ DeprecatedFlyString ARIAMixin::role_or_default() const
     auto role_list = role_string.split_view(Infra::is_ascii_whitespace);
 
     // 3. Compare the substrings to all the names of the non-abstract WAI-ARIA roles. Case-sensitivity of the comparison inherits from the case-sensitivity of the host language.
-    for (auto const& role : role_list) {
+    for (auto const& role_name : role_list) {
         // 4. Use the first such substring in textual order that matches the name of a non-abstract WAI-ARIA role.
-        if (ARIARoleNames::is_non_abstract_aria_role(role))
-            return role;
+        auto role = ARIARoles::from_string(role_name);
+        if (!role.has_value())
+            continue;
+        if (ARIARoles::is_non_abstract_aria_role(*role))
+            return *role;
     }
 
     // https://www.w3.org/TR/wai-aria-1.2/#document-handling_author-errors_roles

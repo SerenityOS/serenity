@@ -35,10 +35,10 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
             MUST(object.add("type"sv, "element"sv));
 
             auto role = element->role_or_default();
-            bool has_role = !role.is_null() && !role.is_empty() && !ARIARoleNames::is_abstract_aria_role(role);
+            bool has_role = role.has_value() && !ARIARoles::is_abstract_aria_role(*role);
 
             if (has_role)
-                MUST(object.add("role"sv, role.view()));
+                MUST(object.add("role"sv, ARIARoles::role_name(*role)));
             else
                 MUST(object.add("role"sv, ""sv));
         } else {

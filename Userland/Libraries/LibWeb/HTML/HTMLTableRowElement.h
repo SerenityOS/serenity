@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -25,7 +25,7 @@ public:
     WebIDL::ExceptionOr<void> delete_cell(i32 index);
 
     // https://www.w3.org/TR/html-aria/#el-tr
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::row; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::row; }
 
 private:
     HTMLTableRowElement(DOM::Document&, DOM::QualifiedName);

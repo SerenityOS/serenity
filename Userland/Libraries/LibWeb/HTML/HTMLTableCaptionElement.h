@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -20,7 +20,7 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-caption
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::caption; }
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override { return DOM::ARIARoles::Role::caption; }
 
 private:
     HTMLTableCaptionElement(DOM::Document&, DOM::QualifiedName);

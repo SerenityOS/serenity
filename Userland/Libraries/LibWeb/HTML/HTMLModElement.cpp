@@ -23,14 +23,14 @@ void HTMLModElement::initialize(JS::Realm& realm)
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"));
 }
 
-DeprecatedFlyString HTMLModElement::default_role() const
+Optional<DOM::ARIARoles::Role> HTMLModElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-del
     if (local_name() == TagNames::del)
-        return DOM::ARIARoleNames::deletion;
+        return DOM::ARIARoles::Role::deletion;
     // https://www.w3.org/TR/html-aria/#el-ins
     if (local_name() == TagNames::ins)
-        return DOM::ARIARoleNames::insertion;
+        return DOM::ARIARoles::Role::insertion;
     VERIFY_NOT_REACHED();
 }
 

@@ -6,7 +6,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -329,86 +329,86 @@ void HTMLElement::blur()
     // User agents may selectively or uniformly ignore calls to this method for usability reasons.
 }
 
-DeprecatedFlyString HTMLElement::default_role() const
+Optional<DOM::ARIARoles::Role> HTMLElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-article
     if (local_name() == TagNames::article)
-        return DOM::ARIARoleNames::article;
+        return DOM::ARIARoles::Role::article;
     // https://www.w3.org/TR/html-aria/#el-aside
     if (local_name() == TagNames::aside)
-        return DOM::ARIARoleNames::complementary;
+        return DOM::ARIARoles::Role::complementary;
     // https://www.w3.org/TR/html-aria/#el-b
     if (local_name() == TagNames::b)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-bdi
     if (local_name() == TagNames::bdi)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-bdo
     if (local_name() == TagNames::bdo)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-code
     if (local_name() == TagNames::code)
-        return DOM::ARIARoleNames::code;
+        return DOM::ARIARoles::Role::code;
     // https://www.w3.org/TR/html-aria/#el-dfn
     if (local_name() == TagNames::dfn)
-        return DOM::ARIARoleNames::term;
+        return DOM::ARIARoles::Role::term;
     // https://www.w3.org/TR/html-aria/#el-em
     if (local_name() == TagNames::em)
-        return DOM::ARIARoleNames::emphasis;
+        return DOM::ARIARoles::Role::emphasis;
     // https://www.w3.org/TR/html-aria/#el-figure
     if (local_name() == TagNames::figure)
-        return DOM::ARIARoleNames::figure;
+        return DOM::ARIARoles::Role::figure;
     // https://www.w3.org/TR/html-aria/#el-footer
     if (local_name() == TagNames::footer) {
         // TODO: If not a descendant of an article, aside, main, nav or section element, or an element with role=article, complementary, main, navigation or region then role=contentinfo
         // Otherwise, role=generic
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     }
     // https://www.w3.org/TR/html-aria/#el-header
     if (local_name() == TagNames::header) {
         // TODO: If not a descendant of an article, aside, main, nav or section element, or an element with role=article, complementary, main, navigation or region then role=banner
         // Otherwise, role=generic
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     }
     // https://www.w3.org/TR/html-aria/#el-hgroup
     if (local_name() == TagNames::hgroup)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-i
     if (local_name() == TagNames::i)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-main
     if (local_name() == TagNames::main)
-        return DOM::ARIARoleNames::main;
+        return DOM::ARIARoles::Role::main;
     // https://www.w3.org/TR/html-aria/#el-nav
     if (local_name() == TagNames::nav)
-        return DOM::ARIARoleNames::navigation;
+        return DOM::ARIARoles::Role::navigation;
     // https://www.w3.org/TR/html-aria/#el-samp
     if (local_name() == TagNames::samp)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-section
     if (local_name() == TagNames::section) {
         // TODO:  role=region if the section element has an accessible name
         //        Otherwise, no corresponding role
-        return DOM::ARIARoleNames::region;
+        return DOM::ARIARoles::Role::region;
     }
     // https://www.w3.org/TR/html-aria/#el-small
     if (local_name() == TagNames::small)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
     // https://www.w3.org/TR/html-aria/#el-strong
     if (local_name() == TagNames::strong)
-        return DOM::ARIARoleNames::strong;
+        return DOM::ARIARoles::Role::strong;
     // https://www.w3.org/TR/html-aria/#el-sub
     if (local_name() == TagNames::sub)
-        return DOM::ARIARoleNames::subscript;
+        return DOM::ARIARoles::Role::subscript;
     // https://www.w3.org/TR/html-aria/#el-summary
     if (local_name() == TagNames::summary)
-        return DOM::ARIARoleNames::button;
+        return DOM::ARIARoles::Role::button;
     // https://www.w3.org/TR/html-aria/#el-sup
     if (local_name() == TagNames::sup)
-        return DOM::ARIARoleNames::superscript;
+        return DOM::ARIARoles::Role::superscript;
     // https://www.w3.org/TR/html-aria/#el-u
     if (local_name() == TagNames::u)
-        return DOM::ARIARoleNames::generic;
+        return DOM::ARIARoles::Role::generic;
 
     return {};
 }

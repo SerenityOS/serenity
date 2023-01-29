@@ -1253,7 +1253,9 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
     auto role = element->role_or_default();
 
     // 5. Return success with data role.
-    return DeprecatedString { role };
+    if (role.has_value())
+        return Web::DOM::ARIARoles::role_name(*role);
+    return ""sv;
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click

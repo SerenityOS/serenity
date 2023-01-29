@@ -22,7 +22,7 @@ public:
     void set_col_span(unsigned);
     void set_row_span(unsigned);
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
 
 private:
     HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);

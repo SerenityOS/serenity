@@ -30,7 +30,7 @@ public:
 
     bool disabled() const;
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
 
 private:
     friend class Bindings::OptionConstructor;

@@ -12,7 +12,7 @@
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/DOM/AccessibilityTreeNode.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOMParsing/XMLSerializer.h>

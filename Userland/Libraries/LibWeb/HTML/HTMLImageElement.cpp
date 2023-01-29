@@ -7,7 +7,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/DOM/ARIARoles.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -202,14 +202,14 @@ bool HTMLImageElement::complete() const
     return false;
 }
 
-DeprecatedFlyString HTMLImageElement::default_role() const
+Optional<DOM::ARIARoles::Role> HTMLImageElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-img
     // https://www.w3.org/TR/html-aria/#el-img-no-alt
     if (alt().is_null() || !alt().is_empty())
-        return DOM::ARIARoleNames::img;
+        return DOM::ARIARoles::Role::img;
     // https://www.w3.org/TR/html-aria/#el-img-empty-alt
-    return DOM::ARIARoleNames::presentation;
+    return DOM::ARIARoles::Role::presentation;
 }
 
 }

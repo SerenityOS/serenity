@@ -60,7 +60,7 @@ public:
 
     DeprecatedString const& type() const;
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<DOM::ARIARoles::Role> default_role() const override;
 
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
