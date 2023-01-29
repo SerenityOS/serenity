@@ -20,9 +20,17 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Palette.h>
 
-WelcomeWidget::WelcomeWidget()
+ErrorOr<NonnullRefPtr<WelcomeWidget>> WelcomeWidget::try_create()
 {
-    load_from_gml(welcome_window_gml).release_value_but_fixme_should_propagate_errors();
+    auto welcome_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WelcomeWidget()));
+    TRY(welcome_widget->create_widgets());
+
+    return welcome_widget;
+}
+
+ErrorOr<void> WelcomeWidget::create_widgets()
+{
+    TRY(load_from_gml(welcome_window_gml));
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->load(URL::create_with_file_scheme(DeprecatedString::formatted("{}/README.md", Core::StandardPaths::home_directory())));
@@ -75,6 +83,8 @@ WelcomeWidget::WelcomeWidget()
     }
 
     set_random_tip();
+
+    return {};
 }
 
 ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
