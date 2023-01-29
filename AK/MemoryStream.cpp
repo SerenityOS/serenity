@@ -48,7 +48,7 @@ void FixedMemoryStream::close()
     // FIXME: It doesn't make sense to close a memory stream. Therefore, we don't do anything here. Is that fine?
 }
 
-ErrorOr<void> FixedMemoryStream::truncate(off_t)
+ErrorOr<void> FixedMemoryStream::truncate(size_t)
 {
     return Error::from_errno(EBADF);
 }

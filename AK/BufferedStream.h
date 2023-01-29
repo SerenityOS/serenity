@@ -295,7 +295,7 @@ public:
 
         return result;
     }
-    virtual ErrorOr<void> truncate(off_t length) override
+    virtual ErrorOr<void> truncate(size_t length) override
     {
         return m_helper.stream().truncate(length);
     }

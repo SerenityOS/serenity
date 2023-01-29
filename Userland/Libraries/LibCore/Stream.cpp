@@ -184,8 +184,11 @@ ErrorOr<size_t> File::seek(i64 offset, SeekMode mode)
     return seek_result;
 }
 
-ErrorOr<void> File::truncate(off_t length)
+ErrorOr<void> File::truncate(size_t length)
 {
+    if (length > static_cast<size_t>(NumericLimits<off_t>::max()))
+        return Error::from_string_literal("Length is larger than the maximum supported length");
+
     return System::ftruncate(m_fd, length);
 }
 

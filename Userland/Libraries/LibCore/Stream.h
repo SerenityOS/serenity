@@ -169,7 +169,7 @@ public:
     virtual bool is_open() const override;
     virtual void close() override;
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode) override;
-    virtual ErrorOr<void> truncate(off_t length) override;
+    virtual ErrorOr<void> truncate(size_t length) override;
 
     int leak_fd(Badge<::IPC::File>)
     {

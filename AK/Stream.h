@@ -120,7 +120,7 @@ public:
     virtual ErrorOr<size_t> size();
     /// Shrinks or extends the stream to the given size. Returns an errno in
     /// the case of an error.
-    virtual ErrorOr<void> truncate(off_t length) = 0;
+    virtual ErrorOr<void> truncate(size_t length) = 0;
     /// Seeks until after the given amount of bytes to be discarded instead of
     /// reading and discarding everything manually;
     virtual ErrorOr<void> discard(size_t discarded_bytes) override;
