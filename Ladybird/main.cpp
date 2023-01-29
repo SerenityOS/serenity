@@ -89,6 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view.on_load_finish = [&](auto&) {
             auto dump = view.dump_layout_tree().release_value_but_fixme_should_propagate_errors();
             outln("{}", dump);
+            fflush(stdout);
             _exit(0);
         };
         view.load(url);
