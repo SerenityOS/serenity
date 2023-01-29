@@ -1,6 +1,7 @@
 set(TEST_SOURCES
     BenchmarkGfxPainter.cpp
     TestFontHandling.cpp
+    TestICCProfile.cpp
     TestImageDecoder.cpp
 )
 
