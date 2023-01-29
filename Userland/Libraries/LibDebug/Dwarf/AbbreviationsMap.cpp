@@ -25,15 +25,13 @@ ErrorOr<void> AbbreviationsMap::populate_map()
     TRY(abbreviation_stream->discard(m_offset));
 
     while (!abbreviation_stream->is_eof()) {
-        size_t abbreviation_code = 0;
-        TRY(LEB128::read_unsigned(*abbreviation_stream, abbreviation_code));
+        size_t abbreviation_code = TRY(abbreviation_stream->read_value<LEB128<size_t>>());
         // An abbreviation code of 0 marks the end of the
         // abbreviations for a given compilation unit
         if (abbreviation_code == 0)
             break;
 
-        size_t tag {};
-        TRY(LEB128::read_unsigned(*abbreviation_stream, tag));
+        size_t tag = TRY(abbreviation_stream->read_value<LEB128<size_t>>());
 
         auto has_children = TRY(abbreviation_stream->read_value<u8>());
 
@@ -43,17 +41,14 @@ ErrorOr<void> AbbreviationsMap::populate_map()
 
         AttributeSpecification current_attribute_specification {};
         do {
-            size_t attribute_value = 0;
-            size_t form_value = 0;
-            TRY(LEB128::read_unsigned(*abbreviation_stream, attribute_value));
-            TRY(LEB128::read_unsigned(*abbreviation_stream, form_value));
+            size_t attribute_value = TRY(abbreviation_stream->read_value<LEB128<size_t>>());
+            size_t form_value = TRY(abbreviation_stream->read_value<LEB128<size_t>>());
 
             current_attribute_specification.attribute = static_cast<Attribute>(attribute_value);
             current_attribute_specification.form = static_cast<AttributeDataForm>(form_value);
 
             if (current_attribute_specification.form == AttributeDataForm::ImplicitConst) {
-                ssize_t data_value;
-                TRY(LEB128::read_signed(*abbreviation_stream, data_value));
+                ssize_t data_value = TRY(abbreviation_stream->read_value<LEB128<ssize_t>>());
                 current_attribute_specification.value = data_value;
             }
 

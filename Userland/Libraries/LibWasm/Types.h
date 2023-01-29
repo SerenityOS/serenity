@@ -65,9 +65,10 @@ template<typename T>
 struct GenericIndexParser {
     static ParseResult<T> parse(AK::Stream& stream)
     {
-        size_t value;
-        if (LEB128::read_unsigned(stream, value).is_error())
+        auto value_or_error = stream.read_value<LEB128<size_t>>();
+        if (value_or_error.is_error())
             return with_eof_check(stream, ParseError::ExpectedIndex);
+        size_t value = value_or_error.release_value();
         return T { value };
     }
 };

@@ -30,8 +30,7 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
             break;
         }
         case RangeListEntryType::BaseAddressX: {
-            FlatPtr index;
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, index));
+            FlatPtr index = TRY(m_range_lists_stream->read_value<LEB128<FlatPtr>>());
             current_base_address = TRY(m_compilation_unit.get_address(index));
             break;
         }
@@ -44,30 +43,26 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
             if (!base_address.has_value())
                 return Error::from_string_literal("Expected base_address for rangelist");
 
-            size_t start_offset, end_offset;
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, start_offset));
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, end_offset));
+            size_t start_offset = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
+            size_t end_offset = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
             callback(Range { start_offset + *base_address, end_offset + *base_address });
             break;
         }
         case RangeListEntryType::StartLength: {
             auto start = TRY(m_range_lists_stream->read_value<FlatPtr>());
-            size_t length;
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, length));
+            size_t length = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
             callback(Range { start, start + length });
             break;
         }
         case RangeListEntryType::StartXEndX: {
-            size_t start, end;
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, start));
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, end));
+            size_t start = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
+            size_t end = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
             callback(Range { TRY(m_compilation_unit.get_address(start)), TRY(m_compilation_unit.get_address(end)) });
             break;
         }
         case RangeListEntryType::StartXLength: {
-            size_t start, length;
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, start));
-            TRY(LEB128::read_unsigned(*m_range_lists_stream, length));
+            size_t start = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
+            size_t length = TRY(m_range_lists_stream->read_value<LEB128<size_t>>());
             auto start_addr = TRY(m_compilation_unit.get_address(start));
             callback(Range { start_addr, start_addr + length });
             break;

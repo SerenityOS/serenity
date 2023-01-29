@@ -26,7 +26,7 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
     auto stream = TRY(FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
     // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
     TRY(stream->seek(m_offset));
-    TRY(LEB128::read_unsigned(*stream, m_abbreviation_code));
+    m_abbreviation_code = TRY(stream->read_value<LEB128<size_t>>());
     m_data_offset = TRY(stream->tell());
 
     if (m_abbreviation_code == 0) {

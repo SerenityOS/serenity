@@ -21,11 +21,11 @@ TEST_CASE(single_byte)
         buf[0] = i;
 
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_unsigned(*stream, output).is_error());
+        output = MUST(stream->read_value<LEB128<u32>>());
         EXPECT_EQ(output, i);
 
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_signed(*stream, output_signed).is_error());
+        output_signed = MUST(stream->read_value<LEB128<i32>>());
         EXPECT_EQ(output_signed, i);
     }
 
@@ -34,11 +34,11 @@ TEST_CASE(single_byte)
         buf[0] = i;
 
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_unsigned(*stream, output).is_error());
+        output = MUST(stream->read_value<LEB128<u32>>());
         EXPECT_EQ(output, i);
 
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_signed(*stream, output_signed).is_error());
+        output_signed = MUST(stream->read_value<LEB128<i32>>());
         EXPECT_EQ(output_signed, (i | (-1 & (~0x3F))));
     }
     // MSB set, but input too short
@@ -46,10 +46,10 @@ TEST_CASE(single_byte)
         buf[0] = static_cast<u8>(i);
 
         MUST(stream->seek(0));
-        EXPECT(LEB128::read_unsigned(*stream, output).is_error());
+        EXPECT(stream->read_value<LEB128<u32>>().is_error());
 
         MUST(stream->seek(0));
-        EXPECT(LEB128::read_signed(*stream, output_signed).is_error());
+        EXPECT(stream->read_value<LEB128<i32>>().is_error());
     }
 }
 
@@ -69,11 +69,11 @@ TEST_CASE(two_bytes)
             buf[1] = j;
 
             MUST(stream->seek(0));
-            EXPECT(!LEB128::read_unsigned(*stream, output).is_error());
+            output = MUST(stream->read_value<LEB128<u32>>());
             EXPECT_EQ(output, (static_cast<u32>(j) << 7) + (i & 0x7F));
 
             MUST(stream->seek(0));
-            EXPECT(!LEB128::read_signed(*stream, output_signed).is_error());
+            output_signed = MUST(stream->read_value<LEB128<i32>>());
             EXPECT_EQ(output_signed, (static_cast<i32>(j) << 7) + (i & 0x7F));
         }
 
@@ -82,11 +82,11 @@ TEST_CASE(two_bytes)
             buf[1] = j;
 
             MUST(stream->seek(0));
-            EXPECT(!LEB128::read_unsigned(*stream, output).is_error());
+            output = MUST(stream->read_value<LEB128<u32>>());
             EXPECT_EQ(output, (static_cast<u32>(j) << 7) + (i & 0x7F));
 
             MUST(stream->seek(0));
-            EXPECT(!LEB128::read_signed(*stream, output_signed).is_error());
+            output_signed = MUST(stream->read_value<LEB128<i32>>());
             EXPECT_EQ(output_signed, ((static_cast<i32>(j) << 7) + (i & 0x7F)) | (-1 & (~0x3FFF)));
         }
 
@@ -95,10 +95,10 @@ TEST_CASE(two_bytes)
             buf[1] = static_cast<u8>(j);
 
             MUST(stream->seek(0));
-            EXPECT(LEB128::read_unsigned(*stream, output).is_error());
+            EXPECT(stream->read_value<LEB128<u32>>().is_error());
 
             MUST(stream->seek(0));
-            EXPECT(LEB128::read_signed(*stream, output_signed).is_error());
+            EXPECT(stream->read_value<LEB128<i32>>().is_error());
         }
     }
 }
@@ -107,27 +107,22 @@ TEST_CASE(overflow_sizeof_output_unsigned)
 {
     u8 u32_max_plus_one[] = { 0x80, 0x80, 0x80, 0x80, 0x10 };
     {
-        u32 out = 0;
         auto stream = MUST(FixedMemoryStream::construct(ReadonlyBytes { u32_max_plus_one, sizeof(u32_max_plus_one) }));
-        EXPECT(LEB128::read_unsigned(*stream, out).is_error());
-        EXPECT_EQ(out, 0u);
+        EXPECT(stream->read_value<LEB128<u32>>().is_error());
 
-        u64 out64 = 0;
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_unsigned(*stream, out64).is_error());
+        u64 out64 = MUST(stream->read_value<LEB128<u64>>());
         EXPECT_EQ(out64, static_cast<u64>(NumericLimits<u32>::max()) + 1);
     }
 
     u8 u32_max[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
     {
-        u32 out = 0;
         auto stream = MUST(FixedMemoryStream::construct(ReadonlyBytes { u32_max, sizeof(u32_max) }));
-        EXPECT(!LEB128::read_unsigned(*stream, out).is_error());
+        u32 out = MUST(stream->read_value<LEB128<u32>>());
         EXPECT_EQ(out, NumericLimits<u32>::max());
 
-        u64 out64 = 0;
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_unsigned(*stream, out64).is_error());
+        u64 out64 = MUST(stream->read_value<LEB128<u64>>());
         EXPECT_EQ(out64, NumericLimits<u32>::max());
     }
 }
@@ -136,53 +131,43 @@ TEST_CASE(overflow_sizeof_output_signed)
 {
     u8 i32_max_plus_one[] = { 0x80, 0x80, 0x80, 0x80, 0x08 };
     {
-        i32 out = 0;
         auto stream = MUST(FixedMemoryStream::construct(ReadonlyBytes { i32_max_plus_one, sizeof(i32_max_plus_one) }));
-        EXPECT(LEB128::read_signed(*stream, out).is_error());
-        EXPECT_EQ(out, 0);
+        EXPECT(stream->read_value<LEB128<i32>>().is_error());
 
-        i64 out64 = 0;
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_signed(*stream, out64).is_error());
+        i64 out64 = MUST(stream->read_value<LEB128<i64>>());
         EXPECT_EQ(out64, static_cast<i64>(NumericLimits<i32>::max()) + 1);
     }
 
     u8 i32_max[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0x07 };
     {
-        i32 out = 0;
         auto stream = MUST(FixedMemoryStream::construct(ReadonlyBytes { i32_max, sizeof(i32_max) }));
-        EXPECT(!LEB128::read_signed(*stream, out).is_error());
+        i32 out = MUST(stream->read_value<LEB128<i32>>());
         EXPECT_EQ(out, NumericLimits<i32>::max());
 
-        i64 out64 = 0;
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_signed(*stream, out64).is_error());
+        i64 out64 = MUST(stream->read_value<LEB128<i64>>());
         EXPECT_EQ(out64, NumericLimits<i32>::max());
     }
 
     u8 i32_min_minus_one[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0x77 };
     {
-        i32 out = 0;
         auto stream = MUST(FixedMemoryStream::construct(ReadonlyBytes { i32_min_minus_one, sizeof(i32_min_minus_one) }));
-        EXPECT(LEB128::read_signed(*stream, out).is_error());
-        EXPECT_EQ(out, 0);
+        EXPECT(stream->read_value<LEB128<i32>>().is_error());
 
-        i64 out64 = 0;
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_signed(*stream, out64).is_error());
+        i64 out64 = MUST(stream->read_value<LEB128<i64>>());
         EXPECT_EQ(out64, static_cast<i64>(NumericLimits<i32>::min()) - 1);
     }
 
     u8 i32_min[] = { 0x80, 0x80, 0x80, 0x80, 0x78 };
     {
-        i32 out = 0;
         auto stream = MUST(FixedMemoryStream::construct(ReadonlyBytes { i32_min, sizeof(i32_min) }));
-        EXPECT(!LEB128::read_signed(*stream, out).is_error());
+        i32 out = MUST(stream->read_value<LEB128<i32>>());
         EXPECT_EQ(out, NumericLimits<i32>::min());
 
-        i64 out64 = 0;
         MUST(stream->seek(0));
-        EXPECT(!LEB128::read_signed(*stream, out64).is_error());
+        i64 out64 = MUST(stream->read_value<LEB128<i64>>());
         EXPECT_EQ(out64, NumericLimits<i32>::min());
     }
 }

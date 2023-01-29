@@ -26,9 +26,10 @@ static auto parse_vector(AK::Stream& stream)
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
     if constexpr (requires { T::parse(stream); }) {
         using ResultT = typename decltype(T::parse(stream))::ValueType;
-        size_t count;
-        if (LEB128::read_unsigned(stream, count).is_error())
+        auto count_or_error = stream.read_value<LEB128<size_t>>();
+        if (count_or_error.is_error())
             return ParseResult<Vector<ResultT>> { with_eof_check(stream, ParseError::ExpectedSize) };
+        size_t count = count_or_error.release_value();
 
         Vector<ResultT> entries;
         for (size_t i = 0; i < count; ++i) {
@@ -39,21 +40,24 @@ static auto parse_vector(AK::Stream& stream)
         }
         return ParseResult<Vector<ResultT>> { move(entries) };
     } else {
-        size_t count;
-        if (LEB128::read_unsigned(stream, count).is_error())
+        auto count_or_error = stream.read_value<LEB128<size_t>>();
+        if (count_or_error.is_error())
             return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
+        size_t count = count_or_error.release_value();
 
         Vector<T> entries;
         for (size_t i = 0; i < count; ++i) {
             if constexpr (IsSame<T, size_t>) {
-                size_t value;
-                if (LEB128::read_unsigned(stream, value).is_error())
+                auto value_or_error = stream.read_value<LEB128<size_t>>();
+                if (value_or_error.is_error())
                     return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
+                size_t value = value_or_error.release_value();
                 entries.append(value);
             } else if constexpr (IsSame<T, ssize_t>) {
-                ssize_t value;
-                if (LEB128::read_signed(stream, value).is_error())
+                auto value_or_error = stream.read_value<LEB128<ssize_t>>();
+                if (value_or_error.is_error())
                     return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::ExpectedSize) };
+                ssize_t value = value_or_error.release_value();
                 entries.append(value);
             } else if constexpr (IsSame<T, u8>) {
                 if (count > Constants::max_allowed_vector_size)
@@ -186,16 +190,17 @@ ParseResult<Limits> Limits::parse(AK::Stream& stream)
     if (flag > 1)
         return with_eof_check(stream, ParseError::InvalidTag);
 
-    size_t min;
-    if (LEB128::read_unsigned(stream, min).is_error())
+    auto min_or_error = stream.read_value<LEB128<size_t>>();
+    if (min_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedSize);
+    size_t min = min_or_error.release_value();
 
     Optional<u32> max;
     if (flag) {
-        size_t value;
-        if (LEB128::read_unsigned(stream, value).is_error())
+        auto value_or_error = stream.read_value<LEB128<size_t>>();
+        if (value_or_error.is_error())
             return with_eof_check(stream, ParseError::ExpectedSize);
-        max = value;
+        max = value_or_error.release_value();
     }
 
     return Limits { static_cast<u32>(min), move(max) };
@@ -263,9 +268,10 @@ ParseResult<BlockType> BlockType::parse(AK::Stream& stream)
     ReconsumableStream new_stream { stream };
     new_stream.unread({ &kind, 1 });
 
-    ssize_t index_value;
-    if (LEB128::read_signed(new_stream, index_value).is_error())
+    auto index_value_or_error = stream.read_value<LEB128<ssize_t>>();
+    if (index_value_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedIndex);
+    ssize_t index_value = index_value_or_error.release_value();
 
     if (index_value < 0) {
         dbgln("Invalid type index {}", index_value);
@@ -408,13 +414,15 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
         case Instructions::i64_store16.value():
         case Instructions::i64_store32.value(): {
             // op (align offset)
-            size_t align;
-            if (LEB128::read_unsigned(stream, align).is_error())
+            auto align_or_error = stream.read_value<LEB128<size_t>>();
+            if (align_or_error.is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
+            size_t align = align_or_error.release_value();
 
-            size_t offset;
-            if (LEB128::read_unsigned(stream, offset).is_error())
+            auto offset_or_error = stream.read_value<LEB128<size_t>>();
+            if (offset_or_error.is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
+            size_t offset = offset_or_error.release_value();
 
             resulting_instructions.append(Instruction { opcode, MemoryArgument { static_cast<u32>(align), static_cast<u32>(offset) } });
             break;
@@ -456,18 +464,20 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
             break;
         }
         case Instructions::i32_const.value(): {
-            i32 value;
-            if (LEB128::read_signed(stream, value).is_error())
+            auto value_or_error = stream.read_value<LEB128<i32>>();
+            if (value_or_error.is_error())
                 return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
+            i32 value = value_or_error.release_value();
 
             resulting_instructions.append(Instruction { opcode, value });
             break;
         }
         case Instructions::i64_const.value(): {
             // op literal
-            i64 value;
-            if (LEB128::read_signed(stream, value).is_error())
+            auto value_or_error = stream.read_value<LEB128<i64>>();
+            if (value_or_error.is_error())
                 return with_eof_check(stream, ParseError::ExpectedSignedImmediate);
+            i64 value = value_or_error.release_value();
 
             resulting_instructions.append(Instruction { opcode, value });
             break;
@@ -665,9 +675,10 @@ ParseResult<Vector<Instruction>> Instruction::parse(AK::Stream& stream, Instruct
             break;
         case 0xfc: {
             // These are multibyte instructions.
-            u32 selector;
-            if (LEB128::read_unsigned(stream, selector).is_error())
+            auto selector_or_error = stream.read_value<LEB128<u32>>();
+            if (selector_or_error.is_error())
                 return with_eof_check(stream, ParseError::InvalidInput);
+            u32 selector = selector_or_error.release_value();
             switch (selector) {
             case Instructions::i32_trunc_sat_f32_s_second:
             case Instructions::i32_trunc_sat_f32_u_second:
@@ -942,9 +953,10 @@ ParseResult<ExportSection::Export> ExportSection::Export::parse(AK::Stream& stre
 
     auto tag = tag_or_error.release_value();
 
-    size_t index;
-    if (LEB128::read_unsigned(stream, index).is_error())
+    auto index_or_error = stream.read_value<LEB128<size_t>>();
+    if (index_or_error.is_error())
         return with_eof_check(stream, ParseError::ExpectedIndex);
+    size_t index = index_or_error.release_value();
 
     switch (tag) {
     case Constants::extern_function_tag:
@@ -1138,9 +1150,10 @@ ParseResult<ElementSection> ElementSection::parse(AK::Stream& stream)
 ParseResult<Locals> Locals::parse(AK::Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Locals"sv);
-    size_t count;
-    if (LEB128::read_unsigned(stream, count).is_error())
+    auto count_or_error = stream.read_value<LEB128<size_t>>();
+    if (count_or_error.is_error())
         return with_eof_check(stream, ParseError::InvalidSize);
+    size_t count = count_or_error.release_value();
 
     if (count > Constants::max_allowed_function_locals_per_type)
         return with_eof_check(stream, ParseError::HugeAllocationRequested);
@@ -1167,9 +1180,10 @@ ParseResult<CodeSection::Func> CodeSection::Func::parse(AK::Stream& stream)
 ParseResult<CodeSection::Code> CodeSection::Code::parse(AK::Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Code"sv);
-    size_t size;
-    if (LEB128::read_unsigned(stream, size).is_error())
+    auto size_or_error = stream.read_value<LEB128<size_t>>();
+    if (size_or_error.is_error())
         return with_eof_check(stream, ParseError::InvalidSize);
+    size_t size = size_or_error.release_value();
 
     auto constrained_stream = ConstrainedStream { stream, size };
 
@@ -1244,14 +1258,15 @@ ParseResult<DataSection> DataSection::parse(AK::Stream& stream)
 ParseResult<DataCountSection> DataCountSection::parse([[maybe_unused]] AK::Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("DataCountSection"sv);
-    u32 value;
-    if (LEB128::read_unsigned(stream, value).is_error()) {
+    auto value_or_error = stream.read_value<LEB128<u32>>();
+    if (value_or_error.is_error()) {
         if (stream.is_eof()) {
             // The section simply didn't contain anything.
             return DataCountSection { {} };
         }
         return ParseError::ExpectedSize;
     }
+    u32 value = value_or_error.release_value();
 
     return DataCountSection { value };
 }
@@ -1280,9 +1295,10 @@ ParseResult<Module> Module::parse(AK::Stream& stream)
 
         auto section_id = section_id_or_error.release_value();
 
-        size_t section_size;
-        if (LEB128::read_unsigned(stream, section_size).is_error())
+        auto section_size_or_error = stream.read_value<LEB128<size_t>>();
+        if (section_size_or_error.is_error())
             return with_eof_check(stream, ParseError::ExpectedSize);
+        size_t section_size = section_size_or_error.release_value();
 
         auto section_stream = ConstrainedStream { stream, section_size };
 
