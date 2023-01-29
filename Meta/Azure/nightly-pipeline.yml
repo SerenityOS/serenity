@@ -1,0 +1,33 @@
+# Pipeline definition for nightly or other scheduled jobs we don't want to run on every PR in Azure
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+
+# Github YAML pipelines have CI and PR triggers on by default.
+# We only want this pipeline to run nightly
+pr: none
+trigger: none
+
+stages:
+  - stage: Toolchain
+    dependsOn: []
+    jobs:
+      - template: Toolchain.yml
+
+  - stage: SerenityOS_Coverage
+    dependsOn: Toolchain
+    jobs:
+      - template: Serenity.yml
+        parameters:
+          arch: 'x86_64'
+          coverage: 'ON'
+
+  - stage: Lagom_Android
+    dependsOn: []
+    jobs:
+      - template: Lagom.yml
+        parameters:
+          os: 'Android'

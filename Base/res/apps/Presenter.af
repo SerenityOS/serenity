@@ -1,0 +1,7 @@
+[App]
+Name=Presenter
+Executable=/bin/Presenter
+Category=Office
+
+[Launcher]
+FileTypes=presenter

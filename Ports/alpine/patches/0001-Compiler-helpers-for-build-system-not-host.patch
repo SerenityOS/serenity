@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Taj Morton <tajmorton@gmail.com>
+Date: Sun, 27 Nov 2022 16:27:48 -0800
+Subject: [PATCH] Compiler helpers for build system, not host.
+
+---
+ pith/Makefile.am | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/pith/Makefile.am b/pith/Makefile.am
+index 748b9ececd2b7e120a0bc25b1e949788bf55fc06..bfee7cce61e1a5b589aa153038064563d8f94220 100644
+--- a/pith/Makefile.am
++++ b/pith/Makefile.am
+@@ -30,12 +30,12 @@ libpith_a_SOURCES = ablookup.c abdlc.c addrbook.c addrstring.c adrbklib.c bldadd
+ 	state.c status.c store.c stream.c string.c strlst.c takeaddr.c tempfile.c text.c \
+ 	thread.c adjtime.c url.c util.c helptext.c smkeys.c smime.c
+ 
+-help_c_gen$(EXEEXT): $(help_c_gen_OBJECTS) $(help_c_gen_DEPENDENCIES)
+-	@rm -f help_c_gen$(EXEEXT)
+-	$(LINK) $(help_c_gen_OBJECTS) $(help_c_gen_LDADD)
+-help_h_gen$(EXEEXT): $(help_h_gen_OBJECTS) $(help_h_gen_DEPENDENCIES)
+-	@rm -f help_h_gen$(EXEEXT)
+-	$(LINK) $(help_h_gen_OBJECTS) $(help_h_gen_LDADD)
++help_c_gen$(BUILD_EXEEXT): help_c_gen.c
++	@rm -f help_c_gen$(BUILD_EXEEXT)
++	$(CC_FOR_BUILD) help_c_gen.c -o help_c_gen$(BUILD_EXEEXT)
++help_h_gen$(BUILD_EXEEXT):
++	@rm -f help_h_gen$(BUILD_EXEEXT)
++	$(CC_FOR_BUILD) help_h_gen.c -o help_h_gen$(BUILD_EXEEXT)
+ 
+ helptext.c: help_c_gen pine.hlp
+ 	./help_c_gen < pine.hlp > $@

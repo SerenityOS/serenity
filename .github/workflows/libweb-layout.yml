@@ -1,0 +1,57 @@
+name: Test LibWeb layout
+on: [ push, pull_request ]
+
+env:
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+
+concurrency: libweb-layout
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    if: github.repository == 'SerenityOS/serenity'
+    strategy:
+      fail-fast: true
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Install Ubuntu dependencies"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build gcc-12 g++-12 libstdc++-12-dev \
+            libgl1-mesa-dev qt6-base-dev qt6-tools-dev-tools \
+      - name: "Create build directories"
+        run: |
+          mkdir -p ${{ github.workspace }}/Build/caches/TZDB
+          mkdir -p ${{ github.workspace }}/Build/caches/UCD
+          mkdir -p ${{ github.workspace }}/Build/caches/CLDR
+      - name: "TimeZoneData cache"
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/caches/TZDB
+          key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
+      - name: "UnicodeData cache"
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/caches/UCD
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+      - name: "UnicodeLocale cache"
+        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        with:
+          path: ${{ github.workspace }}/Build/caches/CLDR
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+      - name: "Create Ladybird build environment"
+        run: |
+          cmake -GNinja \
+            -B ${{ github.workspace }}/Build/ladybird \
+            -S ${{ github.workspace }}/Ladybird \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/cachess
+      - name: "Build Ladybird"
+        run: |
+          ninja -C ${{ github.workspace }}/Build/ladybird
+      - name: "Run layout tests"
+        run: |
+          ${{ github.workspace }}/Tests/LibWeb/Layout/layout_test.sh
+        env:
+          QT_QPA_PLATFORM: "offscreen"

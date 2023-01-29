@@ -1,0 +1,6 @@
+[App]
+Name=Clock Settings
+Executable=/bin/ClockSettings
+Category=Settings
+Description=Configure the system clock
+ExcludeFromSystemMenu=true

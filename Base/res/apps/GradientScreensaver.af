@@ -1,0 +1,5 @@
+[App]
+Name=Gradient Screensaver
+Executable=/bin/GradientScreensaver
+Category=Demos/Screensaver
+ExcludeFromSystemMenu=true

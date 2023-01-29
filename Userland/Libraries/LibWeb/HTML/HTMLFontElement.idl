@@ -1,0 +1,11 @@
+#import <HTML/HTMLElement.idl>
+
+// https://html.spec.whatwg.org/multipage/semantics.html#htmlfontelement
+[Exposed=Window]
+interface HTMLFontElement : HTMLElement {
+
+    [LegacyNullToEmptyString, Reflect] attribute DOMString color;
+    [Reflect] attribute DOMString face;
+    [Reflect] attribute DOMString size;
+
+};

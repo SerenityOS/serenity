@@ -1,0 +1,7 @@
+#import <SVG/SVGGeometryElement.idl>
+
+[Exposed=Window]
+interface SVGPolylineElement : SVGGeometryElement {
+};
+
+// SVGPolylineElement includes SVGAnimatedPoints;

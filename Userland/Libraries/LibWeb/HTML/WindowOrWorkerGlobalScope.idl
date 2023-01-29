@@ -1,0 +1,28 @@
+// https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
+interface mixin WindowOrWorkerGlobalScope {
+    [Replaceable] readonly attribute USVString origin;
+    readonly attribute boolean isSecureContext;
+    readonly attribute boolean crossOriginIsolated;
+
+    // FIXME: undefined reportError(any e);
+
+    // base64 utility methods
+    DOMString btoa(DOMString data);
+    ByteString atob(DOMString data);
+
+    // timers
+    // FIXME: long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
+    // FIXME: undefined clearTimeout(optional long id = 0);
+    // FIXME: long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
+    // FIXME: undefined clearInterval(optional long id = 0);
+
+    // microtask queuing
+    // FIXME: undefined queueMicrotask(VoidFunction callback);
+
+    // ImageBitmap
+    // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options = {});
+    // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options = {});
+
+    // structured cloning
+    // FIXME: any structuredClone(any value, optional StructuredSerializeOptions options = {});
+};

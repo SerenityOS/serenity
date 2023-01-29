@@ -1,0 +1,23 @@
+#import <HTML/HTMLElement.idl>
+
+enum CanPlayTypeResult {
+    "",
+    "maybe",
+    "probably"
+};
+
+// https://html.spec.whatwg.org/multipage/media.html#htmlmediaelement
+[Exposed=Window]
+interface HTMLMediaElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+
+    [Reflect] attribute boolean autoplay;
+    [Reflect] attribute boolean loop;
+
+    [Reflect] attribute boolean controls;
+
+    CanPlayTypeResult canPlayType(DOMString type);
+    undefined load();
+    undefined pause();
+};

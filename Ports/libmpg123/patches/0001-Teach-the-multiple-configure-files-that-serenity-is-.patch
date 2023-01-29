@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Michael Manganiello <adamantike@users.noreply.github.com>
+Date: Sat, 26 Mar 2022 13:15:31 -0300
+Subject: [PATCH] Teach the multiple configure files that serenity is a thing
+
+---
+ configure | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index d3404bea2f..42a42d415c 100755
+--- a/configure
++++ b/configure
+@@ -14830,7 +14830,7 @@ case $host in
+     cpu_type="x86"
+     newoldwritesample=enabled
+   ;;
+-  x86_64-*-linux*|x86_64-*-kfreebsd*-gnu)
++  x86_64-*-linux*|x86_64-*-kfreebsd*-gnu|x86_64-*-serenity*)
+     cpu_type="x86-64"
+   ;;
+   *-*-linux*|*-*-kfreebsd*-gnu)

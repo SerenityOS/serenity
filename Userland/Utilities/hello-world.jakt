@@ -1,0 +1,3 @@
+function main() {
+    println("Hello, World, from jakt!");
+}

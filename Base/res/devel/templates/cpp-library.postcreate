@@ -1,0 +1,55 @@
+#!/bin/sh
+
+# $1: Project name, filesystem safe
+# $2: Project full path
+# $3: Project name, namespace safe
+
+# Generate Makefile
+echo > $2/Makefile <<-EOF
+LIBRARY = $1.so
+OBJS = Class1.o
+CXXFLAGS = -g -std=c++2a
+
+all: \$(LIBRARY)
+
+\$(LIBRARY): \$(OBJS)
+	\$(CXX) -shared -o \$@ \$(OBJS)
+
+%.o: %.cpp
+	\$(CXX) \$(CXXFLAGS) -fPIC -o \$@ -c \$<
+
+clean:
+	rm \$(OBJS) \$(LIBRARY)
+
+EOF
+
+# Generate 'Class1' header file
+echo > $2/Class1.h <<-EOF
+#pragma once
+
+namespace $3 {
+
+class Class1 {
+public:
+    void hello();
+};
+
+}
+
+EOF
+
+# Generate 'Class1' source file
+echo > $2/Class1.cpp <<-EOF
+#include "Class1.h"
+#include <stdio.h>
+
+namespace $3 {
+
+void Class1::hello()
+{
+    printf("Hello friends! :^)\\n");
+}
+
+}
+
+EOF

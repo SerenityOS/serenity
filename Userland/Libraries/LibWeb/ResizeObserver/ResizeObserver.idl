@@ -1,0 +1,21 @@
+#import <DOM/Element.idl>
+
+[Exposed=(Window)]
+interface ResizeObserver {
+
+    constructor(ResizeObserverCallback callback);
+    undefined observe(Element target, optional ResizeObserverOptions options = {});
+    undefined unobserve(Element target);
+    undefined disconnect();
+
+};
+
+callback ResizeObserverCallback = void (sequence<ResizeObserverEntry> entries, ResizeObserver observer);
+
+enum ResizeObserverBoxOptions {
+    "border-box", "content-box", "device-pixel-content-box"
+};
+
+dictionary ResizeObserverOptions {
+    ResizeObserverBoxOptions box = "content-box";
+};

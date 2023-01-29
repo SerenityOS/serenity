@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Tue, 29 Mar 2022 22:41:26 +0200
+Subject: [PATCH] Build: Disable `pharcmd`
+
+We do not support running the PHP binary locally after its build, so do
+not try to run phar locally.
+---
+ configure.ac | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index ee2d248105f6af61540dfde3eb9e7297c515f0ea..6190cfb73f01cc68d439cb99fdfc9f18341a4cd6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1567,8 +1567,8 @@ CFLAGS="\$(CFLAGS_CLEAN) $standard_libtool_flag"
+ CXXFLAGS="$CXXFLAGS $standard_libtool_flag \$(PROF_FLAGS)"
+ 
+ if test "$PHP_PHAR" != "no" && test "$PHP_CLI" != "no"; then
+-  pharcmd=pharcmd
+-  pharcmd_install=install-pharcmd
++  pharcmd=
++  pharcmd_install=
+ else
+   pharcmd=
+   pharcmd_install=

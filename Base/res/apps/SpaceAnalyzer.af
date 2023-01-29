@@ -1,0 +1,4 @@
+[App]
+Name=Space Analyzer
+Executable=/bin/SpaceAnalyzer
+Category=Utilities

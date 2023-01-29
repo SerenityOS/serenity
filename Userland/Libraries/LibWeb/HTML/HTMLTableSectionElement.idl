@@ -1,0 +1,18 @@
+#import <DOM/HTMLCollection.idl>
+#import <HTML/HTMLElement.idl>
+#import <HTML/HTMLTableRowElement.idl>
+
+// https://html.spec.whatwg.org/multipage/tables.html#htmltablesectionelement
+[Exposed=Window]
+interface HTMLTableSectionElement : HTMLElement {
+
+    [Reflect] attribute DOMString align;
+    [Reflect=char] attribute DOMString ch;
+    [Reflect=charoff] attribute DOMString chOff;
+    [Reflect=valign] attribute DOMString vAlign;
+
+    [SameObject] readonly attribute HTMLCollection rows;
+    HTMLTableRowElement insertRow(optional long index = -1);
+    undefined deleteRow(long index);
+
+};

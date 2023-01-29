@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ali Mohammad Pur <ali.mpfard@gmail.com>
+Date: Fri, 25 Feb 2022 04:53:53 +0330
+Subject: [PATCH] Make the collector build with threads
+
+In an extremely limited way for now:
+- No extra threads
+    More threads always lead to exactly one borked thread that's stuck
+    in no man's land, doing who-knows-what, and definitely not
+    responding to signals.
+    However, the APIs are there and they work, so they *can* be used to
+    make threads.
+- No fork handling
+    Seems borked for unknown reasons.
+---
+ CMakeLists.txt | 6 +++++-
+ tests/test.c   | 2 +-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e9c52f1..7c9daad 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -56,7 +56,11 @@ IF(enable_threads)
+         MESSAGE("Libs: ${LIBS}" )
+ ENDIF(enable_threads)
+ 
+-OPTION(enable_handle_fork "Attempt to ensure a usable collector after fork()" ON)
++IF(DEBUG_THREADS)
++        ADD_DEFINITIONS("-DDEBUG_THREADS")
++ENDIF()
++
++OPTION(enable_handle_fork "Attempt to ensure a usable collector after fork()" OFF)
+ 
+ OPTION(enable_thread_local_alloc "Turn on thread-local allocation optimization" ON)
+ 
+diff --git a/tests/test.c b/tests/test.c
+index 8e2e3a6..f38fb22 100644
+--- a/tests/test.c
++++ b/tests/test.c
+@@ -40,7 +40,7 @@
+ #include "gc.h"
+ 
+ #ifndef NTHREADS /* Number of additional threads to fork. */
+-#  define NTHREADS 5 /* excludes main thread, which also runs a test. */
++#  define NTHREADS 0 /* excludes main thread, which also runs a test. */
+         /* Not respected by PCR test. */
+ #endif
+ 

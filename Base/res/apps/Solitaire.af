@@ -1,0 +1,4 @@
+[App]
+Name=Solitaire
+Executable=/bin/Solitaire
+Category=Games

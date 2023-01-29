@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jelle Raaijmakers <jelle@gmta.nl>
+Date: Sun, 9 Jan 2022 23:01:32 +0100
+Subject: [PATCH] Teach configure about serenity
+
+---
+ configure | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/configure b/configure
+index a9f4b0e2..a061df20 100755
+--- a/configure
++++ b/configure
+@@ -5543,6 +5543,9 @@ EOF
+ 			mingw*)
+ 				OPENGL_LIBS="-lopengl32"
+ 				;;
++			serenity*)
++				OPENGL_LIBS="-lgl"
++				;;
+ 			*)
+ 				OPENGL_LIBS="-lGL"
+ 				;;
