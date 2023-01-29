@@ -18,4 +18,6 @@ The flooding begins from the top-left corner and continues in whichever directio
 
 ## Settings
 
-The size of the board and the color scheme can be changed in the settings.
+The size of the board can be changed in the settings.
+
+The color scheme of the board dynamically adapts to the system color scheme.
