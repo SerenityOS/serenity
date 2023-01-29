@@ -89,9 +89,9 @@ private:
 struct EMatrix3x3 {
     S15Fixed16 e[9];
 
-    S15Fixed16 const& operator[](int i) const
+    S15Fixed16 const& operator[](unsigned i) const
     {
-        VERIFY(i >= 0 && i < 9);
+        VERIFY(i < array_size(e));
         return e[i];
     }
 };
