@@ -22,7 +22,7 @@ public:
     virtual bool is_eof() const override;
     virtual bool is_open() const override;
     virtual void close() override;
-    virtual ErrorOr<void> truncate(off_t) override;
+    virtual ErrorOr<void> truncate(size_t) override;
     virtual ErrorOr<Bytes> read(Bytes bytes) override;
 
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override;
