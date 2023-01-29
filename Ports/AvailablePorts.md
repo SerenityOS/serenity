@@ -1,7 +1,5 @@
 # Available ports
 
-Please make sure to keep this list up to date when adding and updating ports. :^)
-
 This list is also available at [ports.serenityos.net](https://ports.serenityos.net)
 
 | Port                                                | Name                                                            | Version                  | Website                                                                        |
