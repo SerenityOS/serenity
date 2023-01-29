@@ -70,7 +70,7 @@ ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes byte
     if (bytes.size() < 3 * sizeof(u32) + count * sizeof(u16))
         return Error::from_string_literal("ICC::Profile: curveType has not enough data for curve points");
 
-    BigEndian<u16> const* raw_values = bit_cast<BigEndian<u16> const*>(bytes.data() + 12);
+    auto* raw_values = bit_cast<BigEndian<u16> const*>(bytes.data() + 12);
     Vector<u16> values;
     TRY(values.try_resize(count));
 
@@ -286,7 +286,7 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16) + count * sizeof(s15Fixed16Number))
         return Error::from_string_literal("ICC::Profile: parametricCurveType has not enough data for parameters");
 
-    BigEndian<s15Fixed16Number> const* raw_parameters = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 12);
+    auto* raw_parameters = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 12);
     Array<S15Fixed16, 7> parameters;
     parameters.fill(0);
     for (unsigned i = 0; i < count; ++i)
@@ -308,7 +308,7 @@ ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_byte
         return Error::from_string_literal("ICC::Profile: s15Fixed16ArrayType has wrong size");
 
     size_t count = byte_size / sizeof(s15Fixed16Number);
-    BigEndian<s15Fixed16Number> const* raw_values = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 8);
+    auto* raw_values = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 8);
     Vector<S15Fixed16, 9> values;
     TRY(values.try_resize(count));
     for (size_t i = 0; i < count; ++i)
@@ -489,7 +489,7 @@ ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u
         return Error::from_string_literal("ICC::Profile: XYZType has wrong size");
 
     size_t xyz_count = byte_size / sizeof(XYZNumber);
-    XYZNumber const* raw_xyzs = bit_cast<XYZNumber const*>(bytes.data() + 8);
+    auto* raw_xyzs = bit_cast<XYZNumber const*>(bytes.data() + 8);
     Vector<XYZ, 1> xyzs;
     TRY(xyzs.try_resize(xyz_count));
     for (size_t i = 0; i < xyz_count; ++i)
