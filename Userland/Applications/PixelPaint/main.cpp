@@ -44,7 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
     window->set_title("Pixel Paint");
-    window->resize(800, 510);
+    window->resize(800, 520);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto main_widget = TRY(window->set_main_widget<PixelPaint::MainWidget>());
