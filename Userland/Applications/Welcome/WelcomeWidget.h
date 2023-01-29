@@ -13,10 +13,12 @@ class WelcomeWidget final : public GUI::Widget {
     C_OBJECT(WelcomeWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<WelcomeWidget>> try_create();
     virtual ~WelcomeWidget() override = default;
 
 private:
-    WelcomeWidget();
+    WelcomeWidget() = default;
+    ErrorOr<void> create_widgets();
 
     virtual void paint_event(GUI::PaintEvent&) override;
 
