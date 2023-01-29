@@ -38,6 +38,29 @@ struct LUTHeader {
 };
 static_assert(AssertSize<LUTHeader, 40>());
 
+// Common bits of ICC v4, Table 45 — lutAToBType encoding and Table 47 — lutBToAType encoding
+struct AdvancedLUTHeader {
+    u8 number_of_input_channels;
+    u8 number_of_output_channels;
+    BigEndian<u16> reserved_for_padding;
+    BigEndian<u32> offset_to_b_curves;
+    BigEndian<u32> offset_to_matrix;
+    BigEndian<u32> offset_to_m_curves;
+    BigEndian<u32> offset_to_clut;
+    BigEndian<u32> offset_to_a_curves;
+};
+static_assert(AssertSize<AdvancedLUTHeader, 24>());
+
+// ICC v4, Table 46 — lutAToBType CLUT encoding
+// ICC v4, Table 48 — lutBToAType CLUT encoding
+// (They're identical.)
+struct CLUTHeader {
+    u8 number_of_grid_points_in_dimension[16];
+    u8 precision_of_data_elements; // 1 for u8 entries, 2 for u16 entries.
+    u8 reserved_for_padding[3];
+};
+static_assert(AssertSize<CLUTHeader, 20>());
+
 ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
 {
     if (tag_bytes.size() < 2 * sizeof(u32))
@@ -204,6 +227,209 @@ ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes,
         header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
         number_of_input_table_entries, number_of_output_table_entries,
         move(input_tables), move(clut_values), move(output_tables)));
+}
+
+static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader const& header)
+{
+    // Reads a CLUT as described in ICC v4, 10.12.3 CLUT and 10.13.5 CLUT (the two sections are virtually identical).
+    if (header.offset_to_clut + sizeof(CLUTHeader) > bytes.size())
+        return Error::from_string_literal("ICC::Profile: clut out of bounds");
+
+    if (header.number_of_input_channels >= sizeof(CLUTHeader::number_of_grid_points_in_dimension))
+        return Error::from_string_literal("ICC::Profile: clut has too many input channels");
+
+    auto& clut_header = *bit_cast<CLUTHeader const*>(bytes.data() + header.offset_to_clut);
+
+    // "Number of grid points in each dimension. Only the first i entries are used, where i is the number of input channels."
+    Vector<u8, 4> number_of_grid_points_in_dimension;
+    TRY(number_of_grid_points_in_dimension.try_resize(header.number_of_input_channels));
+    for (size_t i = 0; i < header.number_of_input_channels; ++i)
+        number_of_grid_points_in_dimension[i] = clut_header.number_of_grid_points_in_dimension[i];
+
+    // "Unused entries shall be set to 00h."
+    for (size_t i = header.number_of_input_channels; i < sizeof(CLUTHeader::number_of_grid_points_in_dimension); ++i) {
+        if (clut_header.number_of_grid_points_in_dimension[i] != 0)
+            return Error::from_string_literal("ICC::Profile: unused clut grid point not 0");
+    }
+
+    // "Precision of data elements in bytes. Shall be either 01h or 02h."
+    if (clut_header.precision_of_data_elements != 1 && clut_header.precision_of_data_elements != 2)
+        return Error::from_string_literal("ICC::Profile: clut invalid data element precision");
+
+    // "Reserved for padding, shall be set to 0"
+    for (size_t i = 0; i < sizeof(CLUTHeader::reserved_for_padding); ++i) {
+        if (clut_header.reserved_for_padding[i] != 0)
+            return Error::from_string_literal("ICC::Profile: clut reserved for padding not 0");
+    }
+
+    // "The size of the CLUT in bytes is (nGrid1 x nGrid2 x…x nGridN) x number of output channels (o) x size of (channel component)."
+    u32 clut_size = header.number_of_output_channels;
+    for (u8 grid_size_in_dimension : number_of_grid_points_in_dimension)
+        clut_size *= grid_size_in_dimension;
+
+    if (header.offset_to_clut + sizeof(CLUTHeader) + clut_size * clut_header.precision_of_data_elements > bytes.size())
+        return Error::from_string_literal("ICC::Profile: clut data out of bounds");
+
+    if (clut_header.precision_of_data_elements == 1) {
+        auto* raw_values = bytes.data() + header.offset_to_clut + sizeof(CLUTHeader);
+        Vector<u8> values;
+        TRY(values.try_resize(clut_size));
+        for (u32 i = 0; i < clut_size; ++i)
+            values[i] = raw_values[i];
+        return CLUTData { move(number_of_grid_points_in_dimension), move(values) };
+    }
+
+    VERIFY(clut_header.precision_of_data_elements == 2);
+    auto* raw_values = bit_cast<BigEndian<u16> const*>(bytes.data() + header.offset_to_clut + sizeof(CLUTHeader));
+    Vector<u16> values;
+    TRY(values.try_resize(clut_size));
+    for (u32 i = 0; i < clut_size; ++i)
+        values[i] = raw_values[i];
+    return CLUTData { move(number_of_grid_points_in_dimension), move(values) };
+}
+
+ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.12 lutAToBType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(AdvancedLUTHeader))
+        return Error::from_string_literal("ICC::Profile: lutAToBType has not enough data");
+
+    auto& header = *bit_cast<AdvancedLUTHeader const*>(bytes.data() + 8);
+    if (header.reserved_for_padding != 0)
+        return Error::from_string_literal("ICC::Profile: lutAToBType reserved_for_padding not 0");
+
+    // "Curve data elements may be shared. For example, the offsets for A, B and M curves can be identical."
+
+    // 10.12.2 “A” curves
+    // "There are the same number of “A” curves as there are input channels. The “A” curves may only be used when
+    //  the CLUT is used. The curves are stored sequentially, with 00h bytes used for padding between them if needed.
+    //  Each “A” curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
+    //  is as indicated by the convention of the respective curve type. Note that the entire tag type, including the tag
+    //  type signature and reserved bytes, is included for each curve."
+    if (header.offset_to_a_curves) {
+        // FIXME
+    }
+
+    // 10.12.3 CLUT
+    Optional<CLUTData> clut_data;
+    if (header.offset_to_clut) {
+        clut_data = TRY(read_clut_data(bytes, header));
+    } else if (header.number_of_input_channels != header.number_of_output_channels) {
+        // "If the number of input channels does not equal the number of output channels, the CLUT shall be present."
+        return Error::from_string_literal("ICC::Profile: lutAToBType no CLUT despite different number of input and output channels");
+    }
+
+    // 10.12.4 “M” curves
+    // "There are the same number of “M” curves as there are output channels. The curves are stored sequentially,
+    //  with 00h bytes used for padding between them if needed. Each “M” curve is stored as an embedded curveType
+    //  or a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the respective
+    //  curve type. Note that the entire tag type, including the tag type signature and reserved bytes, is included for
+    //  each curve. The “M” curves may only be used when the matrix is used."
+    if (header.offset_to_m_curves) {
+        // FIXME
+    }
+
+    // 10.12.5 Matrix
+    // "The matrix is organized as a 3 x 4 array. The elements appear in order from e1-e12. The matrix elements are
+    //  each s15Fixed16Numbers."
+    Optional<EMatrix3x4> e;
+    if (header.offset_to_matrix) {
+        if (header.offset_to_matrix + 12 * sizeof(s15Fixed16Number) > bytes.size())
+            return Error::from_string_literal("ICC::Profile: lutAToBType matrix out of bounds");
+
+        e = EMatrix3x4 {};
+        auto* raw_e = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + header.offset_to_matrix);
+        for (int i = 0; i < 12; ++i)
+            e->e[i] = S15Fixed16::create_raw(raw_e[i]);
+    }
+
+    // 10.12.6 “B” curves
+    // "There are the same number of “B” curves as there are output channels. The curves are stored sequentially, with
+    //  00h bytes used for padding between them if needed. Each “B” curve is stored as an embedded curveType or a
+    //  parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the respective curve
+    //  type. Note that the entire tag type, including the tag type signature and reserved bytes, are included for each
+    //  curve."
+    if (header.offset_to_b_curves) {
+        // FIXME
+    }
+
+    // FIXME: Pass curve data once it's read above.
+    return adopt_ref(*new LutAToBTagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, move(clut_data), e));
+}
+
+ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.13 lutBToAType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(AdvancedLUTHeader))
+        return Error::from_string_literal("ICC::Profile: lutBToAType has not enough data");
+
+    auto& header = *bit_cast<AdvancedLUTHeader const*>(bytes.data() + 8);
+    if (header.reserved_for_padding != 0)
+        return Error::from_string_literal("ICC::Profile: lutBToAType reserved_for_padding not 0");
+
+    // "Curve data elements may be shared. For example, the offsets for A, B and M curves may be identical."
+
+    // 10.13.2 “B” curves
+    // "There are the same number of “B” curves as there are input channels. The curves are stored sequentially, with
+    //  00h bytes used for padding between them if needed. Each “B” curve is stored as an embedded curveType tag
+    //  or a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the proper curve
+    //  type. Note that the entire tag type, including the tag type signature and reserved bytes, is included for each
+    //  curve."
+    if (header.offset_to_b_curves) {
+        // FIXME
+    }
+
+    // 10.13.3 Matrix
+    // "The matrix is organized as a 3 x 4 array. The elements of the matrix appear in the type in order from e1 to e12.
+    //  The matrix elements are each s15Fixed16Numbers"
+    Optional<EMatrix3x4> e;
+    if (header.offset_to_matrix) {
+        if (header.offset_to_matrix + 12 * sizeof(s15Fixed16Number) > bytes.size())
+            return Error::from_string_literal("ICC::Profile: lutBToAType matrix out of bounds");
+
+        e = EMatrix3x4 {};
+        auto* raw_e = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + header.offset_to_matrix);
+        for (int i = 0; i < 12; ++i)
+            e->e[i] = S15Fixed16::create_raw(raw_e[i]);
+    }
+
+    // 10.13.4 “M” curves
+    // "There are the same number of “M” curves as there are input channels. The curves are stored sequentially, with
+    //  00h bytes used for padding between them if needed. Each “M” curve is stored as an embedded curveType or
+    //  a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the proper curve
+    //  type. Note that the entire tag type, including the tag type signature and reserved bytes, are included for each
+    //  curve. The “M” curves may only be used when the matrix is used."
+    if (header.offset_to_m_curves) {
+        // FIXME
+    }
+
+    // 10.13.5 CLUT
+    Optional<CLUTData> clut_data;
+    if (header.offset_to_clut) {
+        clut_data = TRY(read_clut_data(bytes, header));
+    } else if (header.number_of_input_channels != header.number_of_output_channels) {
+        // "If the number of input channels does not equal the number of output channels, the CLUT shall be present."
+        return Error::from_string_literal("ICC::Profile: lutAToBType no CLUT despite different number of input and output channels");
+    }
+
+    // 10.13.6 “A” curves
+    // "There are the same number of “A” curves as there are output channels. The “A” curves may only be used when
+    //  the CLUT is used. The curves are stored sequentially, with 00h bytes used for padding between them if needed.
+    //  Each “A” curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
+    //  is as indicated by the convention of the proper curve type. Note that the entire tag type, including the tag type
+    //  signature and reserved bytes, is included for each curve."
+    if (header.offset_to_a_curves) {
+        // FIXME
+    }
+
+    // FIXME: Pass curve data once it's read above.
+    return adopt_ref(*new LutBToATagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, e, move(clut_data)));
 }
 
 ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
