@@ -13,26 +13,19 @@
 namespace AK {
 
 struct LEB128 {
-    template<typename StreamT, typename ValueType = size_t>
-    static bool read_unsigned(StreamT& stream, ValueType& result)
+    template<typename ValueType = size_t>
+    static bool read_unsigned(DeprecatedInputStream& stream, ValueType& result)
     {
-        [[maybe_unused]] size_t backup_offset = 0;
-        if constexpr (requires { stream.offset(); })
-            backup_offset = stream.offset();
-        DeprecatedInputStream& input_stream { stream };
-
         result = 0;
         size_t num_bytes = 0;
         while (true) {
-            if (input_stream.unreliable_eof()) {
-                if constexpr (requires { stream.seek(backup_offset); })
-                    stream.seek(backup_offset);
-                input_stream.set_fatal_error();
+            if (stream.unreliable_eof()) {
+                stream.set_fatal_error();
                 return false;
             }
             u8 byte = 0;
-            input_stream >> byte;
-            if (input_stream.has_any_error())
+            stream >> byte;
+            if (stream.has_any_error())
                 return false;
 
             ValueType masked_byte = byte & ~(1 << 7);
@@ -53,16 +46,12 @@ struct LEB128 {
         return true;
     }
 
-    template<typename StreamT, typename ValueType = ssize_t>
-    static bool read_signed(StreamT& stream, ValueType& result)
+    template<typename ValueType = ssize_t>
+    static bool read_signed(DeprecatedInputStream& stream, ValueType& result)
     {
         // Note: We read into a u64 to simplify the parsing logic;
         //    result is range checked into ValueType after parsing.
         static_assert(sizeof(ValueType) <= sizeof(u64), "Error checking logic assumes 64 bits or less!");
-        [[maybe_unused]] size_t backup_offset = 0;
-        if constexpr (requires { stream.offset(); })
-            backup_offset = stream.offset();
-        DeprecatedInputStream& input_stream { stream };
 
         i64 temp = 0;
         size_t num_bytes = 0;
@@ -70,15 +59,13 @@ struct LEB128 {
         result = 0;
 
         do {
-            if (input_stream.unreliable_eof()) {
-                if constexpr (requires { stream.seek(backup_offset); })
-                    stream.seek(backup_offset);
-                input_stream.set_fatal_error();
+            if (stream.unreliable_eof()) {
+                stream.set_fatal_error();
                 return false;
             }
 
-            input_stream >> byte;
-            if (input_stream.has_any_error())
+            stream >> byte;
+            if (stream.has_any_error())
                 return false;
 
             // note: 64 bit assumptions!
