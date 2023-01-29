@@ -11,7 +11,7 @@ from tempfile import NamedTemporaryFile
 # and captures "bash" in group 1, "bash/" in group 2, "<spaces>" in group 3, "GNU Bash" in group 4, "5.0" in group 5
 # and "https://www.gnu.org/software/bash/" in group 6.
 PORT_TABLE_REGEX = re.compile(
-    r'^\| \[`([^`]+)`\]\(([^\)]+)\)([^\|]+) \| ([^\|]+) \| ([^\|]+?) \| ([^\|]+) \|+$', re.MULTILINE
+    r'^\| \[`([^`]+)`\]\(([^\)]+)\)([^\|]*) \| ([^\|]+) \| ([^\|]+?) \| ([^\|]+) \|+$', re.MULTILINE
 )
 
 # Matches non-abbreviated git hashes
@@ -25,6 +25,7 @@ IGNORE_FILES = {
     PORT_TABLE_FILE,
     'build_all.sh',
     'build_installed.sh',
+    'generate-available-ports.py',
     'README.md',
     '.hosted_defs.sh'
 }
@@ -48,7 +49,7 @@ def read_port_table(filename):
     with open(filename, 'r') as fp:
         matches = PORT_TABLE_REGEX.findall(fp.read())
         for match in matches:
-            line_len = sum([len(part) for part in match])
+            line_len = sum(len(part) for part in match)
             ports[match[0]] = {
                 "dir_ref": match[1],
                 "name": match[2].strip(),
@@ -84,7 +85,7 @@ def read_port_dirs():
     return ports, all_good
 
 
-PORT_PROPERTIES = ('port', 'version', 'files', 'auth_type')
+PORT_PROPERTIES = ('port', 'description', 'version', 'website', 'files', 'auth_type')
 
 
 def get_port_properties(port):
