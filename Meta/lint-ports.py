@@ -73,11 +73,11 @@ def read_port_dirs():
         if entry in IGNORE_FILES:
             continue
         if not os.path.isdir(entry):
-            print(f"Ports/{entry} is neither a port (not a directory) nor an ignored file?!")
+            print(f"Ports/{entry} is neither a port (not a directory) nor an ignored file?!", file=sys.stderr)
             all_good = False
             continue
         if not os.path.exists(entry + '/package.sh'):
-            print(f"Ports/{entry}/ is missing its package.sh?!")
+            print(f"Ports/{entry}/ is missing its package.sh?!", file=sys.stderr)
             all_good = False
             continue
         ports[entry] = get_port_properties(entry)
@@ -101,10 +101,11 @@ def get_port_properties(port):
         results = res.stdout.decode('utf-8').split('\n\n')
         props = {prop: results[i].strip() for i, prop in enumerate(PORT_PROPERTIES)}
     else:
-        print((
+        print(
             f'Executing "{package_sh_command}" script for port {port} failed with '
-            f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}'
-        ))
+            f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}',
+            file=sys.stderr
+        )
         props = {x: '' for x in PORT_PROPERTIES}
     return props
 
@@ -127,18 +128,20 @@ def check_package_files(ports):
         props = ports[port]
 
         if props['port'] != port:
-            print(f"Ports/{port} should use '{port}' for 'port' but is using '{props['port']}' instead")
+            print(f"Ports/{port} should use '{port}' for 'port' but is using '{props['port']}' instead",
+                  file=sys.stderr)
             all_good = False
 
         if not props['auth_type'] in ('sha256', 'sig', ''):
-            print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'")
+            print(f"Ports/{port} uses invalid signature algorithm '{props['auth_type']}' for 'auth_type'",
+                  file=sys.stderr)
             all_good = False
 
         for prop in PORT_PROPERTIES:
             if prop == 'auth_type' and re.match('^https://github.com/SerenityPorts/', props["files"]):
                 continue
             if props[prop] == '':
-                print(f"Ports/{port} is missing required property '{prop}'")
+                print(f"Ports/{port} is missing required property '{prop}'", file=sys.stderr)
                 all_good = False
 
     return all_good
@@ -164,7 +167,7 @@ def get_and_check_port_patch_list(ports):
             continue
 
         if not os.path.isdir(patches_directory):
-            print(f"Ports/{port}/patches exists, but is not a directory. This is not right!")
+            print(f"Ports/{port}/patches exists, but is not a directory. This is not right!", file=sys.stderr)
             all_good = False
             continue
 
@@ -182,8 +185,8 @@ def get_and_check_port_patch_list(ports):
         all_port_properties[port] = port_properties
 
         if len(non_patch_files) != 0:
-            print(f"Ports/{port}/patches contains the following non-patch files:",
-                  ', '.join(x.name for x in non_patch_files))
+            print(f"Ports/{port}/patches contains the following non-patch files:" +
+                  (', '.join(x.name for x in non_patch_files)), file=sys.stderr)
             all_good = False
 
     return all_good, all_port_properties
@@ -206,16 +209,16 @@ def check_descriptions_for_port_patches(patches):
 
         readme_file_exists = patches_readme_path.exists()
         if len(patch_files) == 0:
-            print(f"Ports/{port}/patches exists, but contains no patches", end="")
+            print(f"Ports/{port}/patches exists, but contains no patches", end="", file=sys.stderr)
             if readme_file_exists:
-                print(", yet it contains a ReadMe.md")
+                print(", yet it contains a ReadMe.md", file=sys.stderr)
             else:
-                print()
+                print(file=sys.stderr)
             all_good = False
             continue
 
         if not readme_file_exists:
-            print(f"Ports/{port}/patches contains patches but no ReadMe.md describing them")
+            print(f"Ports/{port}/patches contains patches but no ReadMe.md describing them", file=sys.stderr)
             all_good = False
             continue
 
@@ -233,13 +236,13 @@ def check_descriptions_for_port_patches(patches):
         for patch_name in patch_names:
             if patch_name not in readme_contents:
                 print(f"Ports/{port}/patches/{patch_name}.patch does not appear to be described in"
-                      " the corresponding ReadMe.md")
+                      " the corresponding ReadMe.md", file=sys.stderr)
                 all_good = False
 
         for patch_name in readme_contents:
             if patch_name not in patch_names:
                 print(f"Ports/{port}/patches/{patch_name}.patch is described in ReadMe.md, "
-                      "but does not actually exist")
+                      "but does not actually exist", file=sys.stderr)
                 all_good = False
 
     return all_good
@@ -283,8 +286,8 @@ def check_patches_are_git_patches(patches):
         for patch_path in properties["patch_files"]:
             result = try_parse_git_patch(patch_path)
             if not result:
-                print(f"Ports/{port}/patches: {patch_path.stem} does not appear to be a valid "
-                      "git patch.")
+                print(f"Ports/{port}/patches: {patch_path.stem} does not appear to be a valid git patch.",
+                      file=sys.stderr)
                 all_good = False
                 continue
     return all_good
@@ -309,7 +312,7 @@ def check_available_ports(from_table, ports):
         if previous_line_len is None:
             previous_line_len = from_table[port]["line_len"]
         if previous_line_len != from_table[port]["line_len"]:
-            print(f"Table row for port {port} is improperly aligned with other rows.")
+            print(f"Table row for port {port} is improperly aligned with other rows.", file=sys.stderr)
             all_good = False
         else:
             previous_line_len = from_table[port]["line_len"]
@@ -317,10 +320,11 @@ def check_available_ports(from_table, ports):
         actual_ref = from_table[port]["dir_ref"]
         expected_ref = f"{port}/"
         if actual_ref != expected_ref:
-            print((
+            print(
                 f'Directory link target in AvailablePorts.md for port {port} is '
-                f'incorrect, expected "{expected_ref}", found "{actual_ref}"'
-            ))
+                f'incorrect, expected "{expected_ref}", found "{actual_ref}"',
+                file=sys.stderr
+            )
             all_good = False
 
         actual_version = from_table[port]["version"]
@@ -330,10 +334,9 @@ def check_available_ports(from_table, ports):
         if expected_version == "git":
             expected_version = ""
         if actual_version != expected_version:
-            print((
-                f'Version in AvailablePorts.md for port {port} is incorrect, '
-                f'expected "{expected_version}", found "{actual_version}"'
-            ))
+            print(f'Version in AvailablePorts.md for port {port} is incorrect, '
+                  f'expected "{expected_version}", found "{actual_version}"',
+                  file=sys.stderr)
             all_good = False
 
     return all_good
@@ -350,21 +353,22 @@ def run():
 
     if list(from_table.keys()) != sorted(from_table.keys(), key=str.lower):
         all_good = False
-        print('AvailablePorts.md is not in the correct order, please ensure that all ports are sorted as follows:')
+        print('AvailablePorts.md is not in the correct order, please ensure that all ports are sorted as follows:',
+              file=sys.stderr)
         for port in sorted(from_table.keys(), key=str.lower):
-            print(f"    {port}")
+            print(f"    {port}", file=sys.stderr)
 
     if from_table_set - ports_set:
         all_good = False
-        print('AvailablePorts.md lists ports that do not appear in the file system:')
+        print('AvailablePorts.md lists ports that do not appear in the file system:', file=sys.stderr)
         for port in sorted(from_table_set - ports_set):
-            print(f"    {port}")
+            print(f"    {port}", file=sys.stderr)
 
     if ports_set - from_table_set:
         all_good = False
-        print('AvailablePorts.md is missing the following ports:')
+        print('AvailablePorts.md is missing the following ports:', file=sys.stderr)
         for port in sorted(ports_set - from_table_set):
-            print(f"    {port}")
+            print(f"    {port}", file=sys.stderr)
 
     if not check_package_files(ports):
         all_good = False
@@ -384,7 +388,7 @@ def run():
     if not all_good:
         sys.exit(1)
 
-    print('No issues found.')
+    print('No issues found.', file=sys.stdout)
 
 
 if __name__ == '__main__':
