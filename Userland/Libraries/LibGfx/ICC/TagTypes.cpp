@@ -97,7 +97,7 @@ ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes byte
     u16 number_of_output_table_entries = *bit_cast<BigEndian<u16> const*>(bytes.data() + 8 + sizeof(LUTHeader) + 2);
     ReadonlyBytes table_bytes = bytes.slice(8 + sizeof(LUTHeader) + 4);
 
-    EMatrix e;
+    EMatrix3x3 e;
     for (int i = 0; i < 9; ++i)
         e.e[i] = S15Fixed16::create_raw(header.e_parameters[i]);
 
@@ -150,7 +150,7 @@ ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes,
     u16 number_of_output_table_entries = 256;
     ReadonlyBytes table_bytes = bytes.slice(8 + sizeof(LUTHeader));
 
-    EMatrix e;
+    EMatrix3x3 e;
     for (int i = 0; i < 9; ++i)
         e.e[i] = S15Fixed16::create_raw(header.e_parameters[i]);
 

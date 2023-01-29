@@ -86,7 +86,7 @@ private:
     Vector<u16> m_values;
 };
 
-struct EMatrix {
+struct EMatrix3x3 {
     S15Fixed16 e[9];
 
     S15Fixed16 const& operator[](int i) const
@@ -103,7 +103,7 @@ public:
 
     static ErrorOr<NonnullRefPtr<Lut16TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
-    Lut16TagData(u32 offset, u32 size, EMatrix e,
+    Lut16TagData(u32 offset, u32 size, EMatrix3x3 e,
         u8 number_of_input_channels, u8 number_of_output_channels, u8 number_of_clut_grid_points,
         u16 number_of_input_table_entries, u16 number_of_output_table_entries,
         Vector<u16> input_tables, Vector<u16> clut_values, Vector<u16> output_tables)
@@ -122,7 +122,7 @@ public:
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
     }
 
-    EMatrix const& e_matrix() const { return m_e; }
+    EMatrix3x3 const& e_matrix() const { return m_e; }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
     u8 number_of_output_channels() const { return m_number_of_output_channels; }
@@ -136,7 +136,7 @@ public:
     Vector<u16> const& output_tables() const { return m_output_tables; }
 
 private:
-    EMatrix m_e;
+    EMatrix3x3 m_e;
 
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
@@ -157,7 +157,7 @@ public:
 
     static ErrorOr<NonnullRefPtr<Lut8TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
-    Lut8TagData(u32 offset, u32 size, EMatrix e,
+    Lut8TagData(u32 offset, u32 size, EMatrix3x3 e,
         u8 number_of_input_channels, u8 number_of_output_channels, u8 number_of_clut_grid_points,
         u16 number_of_input_table_entries, u16 number_of_output_table_entries,
         Vector<u8> input_tables, Vector<u8> clut_values, Vector<u8> output_tables)
@@ -176,7 +176,7 @@ public:
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
     }
 
-    EMatrix const& e_matrix() const { return m_e; }
+    EMatrix3x3 const& e_matrix() const { return m_e; }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
     u8 number_of_output_channels() const { return m_number_of_output_channels; }
@@ -190,7 +190,7 @@ public:
     Vector<u8> const& output_tables() const { return m_output_tables; }
 
 private:
-    EMatrix m_e;
+    EMatrix3x3 m_e;
 
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
