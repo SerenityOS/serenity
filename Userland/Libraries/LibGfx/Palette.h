@@ -117,6 +117,8 @@ public:
     Color ruler_inactive_text() const { return color(ColorRole::RulerInactiveText); }
     Color text_cursor() const { return color(ColorRole::TextCursor); }
     Color focus_outline() const { return color(ColorRole::FocusOutline); }
+    Color tray() const { return color(ColorRole::Tray); }
+    Color tray_text() const { return color(ColorRole::TrayText); }
 
     Color link() const { return color(ColorRole::Link); }
     Color active_link() const { return color(ColorRole::ActiveLink); }
