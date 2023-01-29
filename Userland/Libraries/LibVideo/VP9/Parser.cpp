@@ -221,9 +221,9 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
             frame_size = TRY(parse_frame_size());
             render_size = TRY(parse_render_size(frame_size));
         } else {
-            reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_f8());
-            for (auto i = 0; i < 3; i++) {
-                frame_context.reference_frame_indices[i] = TRY_READ(m_bit_stream->read_bits(3));
+            reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_bits(NUM_REF_FRAMES));
+            for (auto i = 0; i < REFS_PER_FRAME; i++) {
+                frame_context.reference_frame_indices[i] = TRY_READ(m_bit_stream->read_bits(LOG2_OF_NUM_REF_FRAMES));
                 frame_context.reference_frame_sign_biases[ReferenceFrameType::LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
             }
             frame_size = TRY(parse_frame_size_with_refs(frame_context.reference_frame_indices));
