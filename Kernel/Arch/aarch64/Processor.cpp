@@ -241,7 +241,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     // x30 is the Link Register for the aarch64 ABI, so this will return to exit_kernel_thread when main thread function returns.
     eretframe.x[30] = FlatPtr(&exit_kernel_thread);
     eretframe.elr_el1 = thread_regs.elr_el1;
-    eretframe.sp_el0 = kernel_stack_top;
+    eretframe.sp_el0 = thread_regs.sp_el0;
     eretframe.tpidr_el0 = 0; // FIXME: Correctly initialize this when aarch64 has support for thread local storage.
     eretframe.spsr_el1 = thread_regs.spsr_el1;
 
