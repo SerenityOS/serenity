@@ -8,3 +8,4 @@ endforeach()
 
 install(FILES vp9_in_webm.webm DESTINATION usr/Tests/LibVideo)
 install(FILES vp9_4k.webm DESTINATION usr/Tests/LibVideo)
+install(FILES vp9_clamp_reference_mvs.webm DESTINATION usr/Tests/LibVideo)
