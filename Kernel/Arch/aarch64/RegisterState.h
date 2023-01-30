@@ -22,19 +22,19 @@ struct RegisterState {
     u64 tpidr_el0; // EL0 thread ID
     u64 sp_el0;    // EL0 stack pointer
 
-    FlatPtr userspace_sp() const { return 0; }
+    FlatPtr userspace_sp() const { return sp_el0; }
     void set_userspace_sp(FlatPtr value)
     {
         (void)value;
         TODO_AARCH64();
     }
-    FlatPtr ip() const { return 0; }
+    FlatPtr ip() const { return elr_el1; }
     void set_ip(FlatPtr value)
     {
         (void)value;
         TODO_AARCH64();
     }
-    FlatPtr bp() const { TODO_AARCH64(); }
+    FlatPtr bp() const { return x[29]; }
 
     ExecutionMode previous_mode() const
     {
