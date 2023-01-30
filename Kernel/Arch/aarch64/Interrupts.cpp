@@ -70,8 +70,7 @@ static PageFault page_fault_from_exception_syndrome_register(VirtualAddress faul
 
     fault.set_access((esr_el1.ISS & (1 << 6)) == (1 << 6) ? PageFault::Access::Write : PageFault::Access::Read);
 
-    // FIXME: Set correct mode
-    fault.set_mode(ExecutionMode::Kernel);
+    fault.set_mode(Aarch64::exception_class_is_data_or_instruction_abort_from_lower_exception_level(esr_el1.EC) ? ExecutionMode::User : ExecutionMode::Kernel);
 
     if (Aarch64::exception_class_is_instruction_abort(esr_el1.EC))
         fault.set_instruction_fetch(true);
