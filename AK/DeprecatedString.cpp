@@ -6,7 +6,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
@@ -414,29 +413,6 @@ DeprecatedString DeprecatedString::invert_case() const
 bool DeprecatedString::operator==(char const* cstring) const
 {
     return view() == cstring;
-}
-
-DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, DeprecatedString& string)
-{
-    StringBuilder builder;
-
-    for (;;) {
-        char next_char;
-        stream >> next_char;
-
-        if (stream.has_any_error()) {
-            stream.set_fatal_error();
-            string = nullptr;
-            return stream;
-        }
-
-        if (next_char) {
-            builder.append(next_char);
-        } else {
-            string = builder.to_deprecated_string();
-            return stream;
-        }
-    }
 }
 
 DeprecatedString DeprecatedString::vformatted(StringView fmtstr, TypeErasedFormatParams& params)

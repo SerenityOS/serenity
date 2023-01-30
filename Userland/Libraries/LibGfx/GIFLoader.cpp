@@ -7,7 +7,7 @@
 
 #include <AK/Array.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedMemoryStream.h>
+#include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/IntegralMath.h>
 #include <AK/Memory.h>

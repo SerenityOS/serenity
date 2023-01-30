@@ -77,20 +77,8 @@ ALWAYS_INLINE T convert_between_host_and_network_endian(T value)
 }
 
 template<typename T>
-class LittleEndian;
-
-template<typename T>
-DeprecatedInputStream& operator>>(DeprecatedInputStream&, LittleEndian<T>&);
-
-template<typename T>
-DeprecatedOutputStream& operator<<(DeprecatedOutputStream&, LittleEndian<T>);
-
-template<typename T>
 class [[gnu::packed]] LittleEndian {
 public:
-    friend DeprecatedInputStream& operator>><T>(DeprecatedInputStream&, LittleEndian<T>&);
-    friend DeprecatedOutputStream& operator<< <T>(DeprecatedOutputStream&, LittleEndian<T>);
-
     constexpr LittleEndian() = default;
 
     constexpr LittleEndian(T value)
@@ -109,20 +97,8 @@ private:
 };
 
 template<typename T>
-class BigEndian;
-
-template<typename T>
-DeprecatedInputStream& operator>>(DeprecatedInputStream&, BigEndian<T>&);
-
-template<typename T>
-DeprecatedOutputStream& operator<<(DeprecatedOutputStream&, BigEndian<T>);
-
-template<typename T>
 class [[gnu::packed]] BigEndian {
 public:
-    friend DeprecatedInputStream& operator>><T>(DeprecatedInputStream&, BigEndian<T>&);
-    friend DeprecatedOutputStream& operator<< <T>(DeprecatedOutputStream&, BigEndian<T>);
-
     constexpr BigEndian() = default;
 
     constexpr BigEndian(T value)
