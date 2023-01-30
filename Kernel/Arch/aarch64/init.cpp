@@ -24,12 +24,15 @@
 #include <Kernel/Arch/aarch64/TrapFrame.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/JailManagement.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Storage/StorageManagement.h>
+#include <Kernel/TTY/VirtualConsole.h>
 
 typedef void (*ctor_func_t)();
 extern ctor_func_t start_heap_ctors[];
@@ -65,41 +68,41 @@ ALWAYS_INLINE static Processor& bootstrap_processor()
 
 Atomic<Graphics::Console*> g_boot_console;
 
+VirtualConsole* tty0;
+ProcessID g_init_pid { 0 };
+
 static void init_stage2(void*);
 void init_stage2(void*)
 {
     Process::register_new(Process::current());
 
-    // This thread is created to show that kernel scheduling is working!
-    LockRefPtr<Thread> some_work_thread;
-    (void)Process::create_kernel_process(some_work_thread, MUST(KString::try_create("Some Work Thread"sv)), [] {
-        Aarch64::Asm::wait_cycles(50000000);
-        dmesgln("Starting \033[0;31msome work\033[0m:");
-        for (int i = 1; i <= 500; i++) {
-            if (i % 20 == 0)
-                dmesgln("    Working on \033[0;31msome work\033[0m: {}", i);
-
-            Aarch64::Asm::wait_cycles(400000);
-        }
-        dmesgln("Finished \033[0;31msome work\033[0m!");
-    });
-
     auto firmware_version = query_firmware_version();
     dmesgln("Firmware version: {}", firmware_version);
 
-    LockRefPtr<Thread> more_work_thread;
-    (void)Process::create_kernel_process(more_work_thread, MUST(KString::try_create("More Work Thread"sv)), [] {
-        dmesgln("Starting \033[0;34mmore work\033[0m:");
-        for (int i = 1; i <= 300; i++) {
-            if (i % 20 == 0)
-                dmesgln("    Working on \033[0;34mmore work\033[0m: {}", i);
+    VirtualFileSystem::initialize();
 
-            Aarch64::Asm::wait_cycles(1000000);
-        }
-        dmesgln("Finished \033[0;34mmore work\033[0m!");
-    });
+    StorageManagement::the().initialize(kernel_command_line().root_device(), kernel_command_line().is_force_pio(), kernel_command_line().is_nvme_polling_enabled());
+    if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
+        PANIC("VirtualFileSystem::mount_root failed");
+    }
 
-    dmesgln("Finished init stage");
+    // Switch out of early boot mode.
+    g_in_early_boot = false;
+
+    LockRefPtr<Thread> thread;
+    auto userspace_init = kernel_command_line().userspace_init();
+    auto init_args = kernel_command_line().userspace_init_args();
+
+    auto init_or_error = Process::try_create_user_process(thread, userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
+    if (init_or_error.is_error())
+        PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
+
+    g_init_pid = init_or_error.value()->pid();
+
+    thread->set_priority(THREAD_PRIORITY_HIGH);
+
+    Process::current().sys$exit(0);
+    VERIFY_NOT_REACHED();
 }
 
 extern "C" [[noreturn]] void init()
