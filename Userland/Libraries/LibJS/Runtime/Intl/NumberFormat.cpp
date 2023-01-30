@@ -398,7 +398,7 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
         // b. If x < 0, let isNegative be true; else let isNegative be false.
         is_negative = number.is_negative();
 
-        // c. If isNegative, then
+        // c. If isNegative is true, then
         if (is_negative) {
             // i. Set x to -x.
             number.negate();
@@ -472,7 +472,7 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
         VERIFY_NOT_REACHED();
     }
 
-    // 7. Let x be result.[[RoundedNumber]].
+    // 7. Set x to result.[[RoundedNumber]].
     number = move(result.rounded_number);
 
     // 8. Let string be result.[[FormattedString]].
@@ -480,11 +480,12 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
 
     // 9. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
     if ((intl_object.trailing_zero_display() == NumberFormat::TrailingZeroDisplay::StripIfInteger) && number.modulo_is_zero(1)) {
-        // a. If string contains ".", then
-        if (auto index = string.find_byte_offset('.'); index.has_value()) {
-            // i. Set string to the substring of string from index 0 to the index of ".".
+        // a. Let i be StringIndexOf(string, ".", 0).
+        auto index = string.find_byte_offset('.');
+
+        // b. If i ≠ -1, set string to the substring of string from 0 to i.
+        if (index.has_value())
             string = TRY_OR_THROW_OOM(vm, string.substring_from_byte_offset(0, *index));
-        }
     }
 
     // 10. Let int be result.[[IntegerDigitsCount]].
@@ -502,18 +503,16 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
         string = TRY_OR_THROW_OOM(vm, String::formatted("{}{}", forward_zeros, string));
     }
 
-    // 13. If isNegative and x is 0, then
-    if (is_negative && number.is_zero()) {
-        // a. Let x be -0.
-        number = MathematicalValue { MathematicalValue::Symbol::NegativeZero };
-    }
-    // 14. Else if isNegative, then
-    else if (is_negative) {
-        // b. Let x be -x.
-        number.negate();
+    // 13. If isNegative is true, then
+    if (is_negative) {
+        // a. If x is 0, set x to negative-zero. Otherwise, set x to -x.
+        if (number.is_zero())
+            number = MathematicalValue { MathematicalValue::Symbol::NegativeZero };
+        else
+            number.negate();
     }
 
-    // 15. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
+    // 14. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
     return FormatResult { move(string), move(number) };
 }
 
@@ -729,12 +728,12 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
     if (!grouping_sizes.has_value())
         return Vector<PatternPartition> {};
 
-    // 2. If x is NaN, then
+    // 2. If x is not-a-number, then
     if (number.is_nan()) {
         // a. Append a new Record { [[Type]]: "nan", [[Value]]: n } as the last element of result.
         result.append({ "nan"sv, move(formatted_string) });
     }
-    // 3. Else if x is a non-finite Number, then
+    // 3. Else if x is positive-infinity or negative-infinity, then
     else if (number.is_positive_infinity() || number.is_negative_infinity()) {
         // a. Append a new Record { [[Type]]: "infinity", [[Value]]: n } as the last element of result.
         result.append({ "infinity"sv, move(formatted_string) });
@@ -1276,6 +1275,13 @@ ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const&
     return result;
 }
 
+enum class NumberCategory {
+    NegativeNonZero,
+    NegativeZero,
+    PositiveNonZero,
+    PositiveZero,
+};
+
 // 15.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
 // 1.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getnumberformatpattern
 ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_pattern(VM& vm, NumberFormat& number_format, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern)
@@ -1361,20 +1367,64 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
     if (!patterns.has_value())
         return OptionalNone {};
 
+    NumberCategory category;
+
+    // 11. If x is negative-infinity, then
+    if (number.is_negative_infinity()) {
+        // a. Let category be negative-nonzero.
+        category = NumberCategory::NegativeNonZero;
+    }
+    // 12. Else if x is negative-zero, then
+    else if (number.is_negative_zero()) {
+        // a. Let category be negative-zero.
+        category = NumberCategory::NegativeZero;
+    }
+    // 13. Else if x is not-a-number, then
+    else if (number.is_nan()) {
+        // a. Let category be positive-zero.
+        category = NumberCategory::PositiveZero;
+    }
+    // 14. Else if x is positive-infinity, then
+    else if (number.is_positive_infinity()) {
+        // a. Let category be positive-nonzero.
+        category = NumberCategory::PositiveNonZero;
+    }
+    // 15. Else,
+    else {
+        // a. Assert: x is a mathematical value.
+        VERIFY(number.is_mathematical_value());
+
+        // b. If x < 0, then
+        if (number.is_negative()) {
+            // i. Let category be negative-nonzero.
+            category = NumberCategory::NegativeNonZero;
+        }
+        // c. Else if x > 0, then
+        else if (number.is_positive()) {
+            // i. Let category be positive-nonzero.
+            category = NumberCategory::PositiveNonZero;
+        }
+        // d. Else,
+        else {
+            // i. Let category be positive-zero.
+            category = NumberCategory::PositiveZero;
+        }
+    }
+
     StringView pattern;
 
-    // 11. Let signDisplay be numberFormat.[[SignDisplay]].
+    // 16. Let signDisplay be numberFormat.[[SignDisplay]].
     switch (number_format.sign_display()) {
-    // 12. If signDisplay is "never", then
+    // 17. If signDisplay is "never", then
     case NumberFormat::SignDisplay::Never:
         // a. Let pattern be patterns.[[zeroPattern]].
         pattern = patterns->zero_format;
         break;
 
-    // 13. Else if signDisplay is "auto", then
+    // 18. Else if signDisplay is "auto", then
     case NumberFormat::SignDisplay::Auto:
-        // a. If x is 0 or x > 0 or x is NaN, then
-        if (number.is_zero() || number.is_positive() || number.is_nan()) {
+        // a. If category is positive-nonzero or positive-zero, then
+        if (category == NumberCategory::PositiveNonZero || category == NumberCategory::PositiveZero) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
@@ -1385,10 +1435,10 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         }
         break;
 
-    // 14. Else if signDisplay is "always", then
+    // 19. Else if signDisplay is "always", then
     case NumberFormat::SignDisplay::Always:
-        // a. If x is 0 or x > 0 or x is NaN, then
-        if (number.is_zero() || number.is_positive() || number.is_nan()) {
+        // a. If category is positive-nonzero or positive-zero, then
+        if (category == NumberCategory::PositiveNonZero || category == NumberCategory::PositiveZero) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1399,15 +1449,15 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         }
         break;
 
-    // 15. Else if signDisplay is "exceptZero", then
+    // 20. Else if signDisplay is "exceptZero", then
     case NumberFormat::SignDisplay::ExceptZero:
-        // a. If x is 0 or x is -0 or x is NaN, then
-        if (number.is_zero() || number.is_negative_zero() || number.is_nan()) {
+        // a. If category is positive-zero or negative-zero, then
+        if (category == NumberCategory::PositiveZero || category == NumberCategory::NegativeZero) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
-        // b. Else if x > 0, then
-        else if (number.is_positive()) {
+        // b. Else if category is positive-nonzero, then
+        else if (category == NumberCategory::PositiveNonZero) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1418,18 +1468,18 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         }
         break;
 
-    // 16. Else,
+    // 21. Else,
     case NumberFormat::SignDisplay::Negative:
         // a. Assert: signDisplay is "negative".
-        // b. If x is 0 or x is -0 or x > 0 or x is NaN, then
-        if (number.is_zero() || number.is_negative_zero() || number.is_positive() || number.is_nan()) {
-            // i. Let pattern be patterns.[[zeroPattern]].
-            pattern = patterns->zero_format;
+        // b. If category is negative-nonzero, then
+        if (category == NumberCategory::NegativeNonZero) {
+            // i. Let pattern be patterns.[[negativePattern]].
+            pattern = patterns->negative_format;
         }
         // c. Else,
         else {
-            // i. Let pattern be patterns.[[negativePattern]].
-            pattern = patterns->negative_format;
+            // i. Let pattern be patterns.[[zeroPattern]].
+            pattern = patterns->zero_format;
         }
         break;
 
@@ -1448,7 +1498,7 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
             return modified_pattern.release_value();
     }
 
-    // 16. Return pattern.
+    // 22. Return pattern.
     return pattern;
 }
 
