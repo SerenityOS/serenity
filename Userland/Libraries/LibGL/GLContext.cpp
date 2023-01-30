@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibGL/GLContext.h>
 #include <LibGL/Image.h>
@@ -69,7 +70,7 @@ GLContext::GLContext(RefPtr<GPU::Driver> driver, NonnullOwnPtr<GPU::Device> devi
         texture_coordinate_generation[3].eye_plane_coefficients = { 0.f, 0.f, 0.f, 0.f };
     }
 
-    build_extension_string();
+    m_extensions = build_extension_string().release_value_but_fixme_should_propagate_errors();
 }
 
 GLContext::~GLContext()
@@ -194,7 +195,7 @@ GLubyte const* GLContext::gl_get_string(GLenum name)
     case GL_VERSION:
         return reinterpret_cast<GLubyte const*>("1.5");
     case GL_EXTENSIONS:
-        return reinterpret_cast<GLubyte const*>(m_extensions.characters());
+        return reinterpret_cast<GLubyte const*>(m_extensions.data());
     case GL_SHADING_LANGUAGE_VERSION:
         return reinterpret_cast<GLubyte const*>("0.0");
     default:
@@ -923,31 +924,37 @@ void GLContext::sync_device_config()
     sync_clip_planes();
 }
 
-void GLContext::build_extension_string()
+ErrorOr<ByteBuffer> GLContext::build_extension_string()
 {
-    Vector<StringView> extensions;
+    Vector<StringView, 6> extensions;
 
     // FIXME: npot texture support became a required core feature starting with OpenGL 2.0 (https://www.khronos.org/opengl/wiki/NPOT_Texture)
     // Ideally we would verify if the selected device adheres to the requested OpenGL context version before context creation
     // and refuse to create a context if it doesn't.
     if (m_device_info.supports_npot_textures)
-        extensions.append("GL_ARB_texture_non_power_of_two"sv);
+        TRY(extensions.try_append("GL_ARB_texture_non_power_of_two"sv));
 
     if (m_device_info.num_texture_units > 1)
-        extensions.append("GL_ARB_multitexture"sv);
+        TRY(extensions.try_append("GL_ARB_multitexture"sv));
 
     if (m_device_info.supports_texture_clamp_to_edge)
-        extensions.append("GL_EXT_texture_edge_clamp"sv);
+        TRY(extensions.try_append("GL_EXT_texture_edge_clamp"sv));
 
     if (m_device_info.supports_texture_env_add) {
-        extensions.append("GL_ARB_texture_env_add"sv);
-        extensions.append("GL_EXT_texture_env_add"sv);
+        TRY(extensions.try_append("GL_ARB_texture_env_add"sv));
+        TRY(extensions.try_append("GL_EXT_texture_env_add"sv));
     }
 
     if (m_device_info.max_texture_lod_bias > 0.f)
-        extensions.append("GL_EXT_texture_lod_bias"sv);
+        TRY(extensions.try_append("GL_EXT_texture_lod_bias"sv));
 
-    m_extensions = DeprecatedString::join(' ', extensions);
+    StringBuilder string_builder {};
+    TRY(string_builder.try_join(' ', extensions));
+
+    // Create null-terminated string
+    auto extensions_bytes = string_builder.to_byte_buffer();
+    TRY(extensions_bytes.try_append(0));
+    return extensions_bytes;
 }
 
 ErrorOr<NonnullOwnPtr<GLContext>> create_context(Gfx::Bitmap& bitmap)

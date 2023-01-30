@@ -1,13 +1,14 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021-2022, Jesse Buhagiar <jooster669@gmail.com>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
@@ -248,7 +249,7 @@ private:
     void sync_stencil_configuration();
     void sync_clip_planes();
 
-    void build_extension_string();
+    ErrorOr<ByteBuffer> build_extension_string();
 
     template<typename T>
     T* store_in_listing(T value)
@@ -562,7 +563,7 @@ private:
     GLenum m_color_material_mode { GL_AMBIENT_AND_DIFFUSE };
 
     // GL Extension string
-    DeprecatedString m_extensions;
+    ByteBuffer m_extensions;
 
     // Buffer objects
     NameAllocator m_buffer_name_allocator;
