@@ -128,10 +128,10 @@ vector_table_el1:
     table_entry system_error_current_elsp_elx
 
     // Exceptions from Lower EL, where causing application is in AArch64 mode
-    unimplemented_entry
-    unimplemented_entry
-    unimplemented_entry
-    unimplemented_entry
+    table_entry synchronous_lower_el
+    table_entry irq_lower_el
+    table_entry fiq_lower_el
+    table_entry system_error_lower_el
 
     // Exceptions from Lower EL, where causing application is in AArch32 mode
     unimplemented_entry
@@ -182,6 +182,30 @@ fiq_current_elsp_el0:
     eret
 
 system_error_current_elsp_el0:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+synchronous_lower_el:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+irq_lower_el:
+    save_current_context
+    bl handle_interrupt
+    restore_previous_context
+    eret
+
+fiq_lower_el:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+system_error_lower_el:
     save_current_context
     bl exception_common
     restore_previous_context
