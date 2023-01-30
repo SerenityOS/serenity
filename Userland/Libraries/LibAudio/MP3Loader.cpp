@@ -41,7 +41,7 @@ Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Byte
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    m_bitstream = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
+    m_bitstream = LOADER_TRY(try_make<BigEndianInputBitStream>(MaybeOwned<AK::Stream>(*m_stream)));
 
     TRY(synchronize());
 
@@ -242,12 +242,12 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     TRY(m_bit_reservoir.discard(old_reservoir_size - frame.main_data_begin));
 
-    auto reservoir_stream = TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(m_bit_reservoir)));
+    BigEndianInputBitStream reservoir_stream { MaybeOwned<AK::Stream>(m_bit_reservoir) };
 
     for (size_t granule_index = 0; granule_index < 2; granule_index++) {
         for (size_t channel_index = 0; channel_index < header.channel_count(); channel_index++) {
-            size_t scale_factor_size = TRY(read_scale_factors(frame, *reservoir_stream, granule_index, channel_index));
-            TRY(read_huffman_data(frame, *reservoir_stream, granule_index, channel_index, scale_factor_size));
+            size_t scale_factor_size = TRY(read_scale_factors(frame, reservoir_stream, granule_index, channel_index));
+            TRY(read_huffman_data(frame, reservoir_stream, granule_index, channel_index, scale_factor_size));
             if (frame.channels[channel_index].granules[granule_index].block_type == MP3::BlockType::Short) {
                 reorder_samples(frame.channels[channel_index].granules[granule_index], frame.header.samplerate);
 

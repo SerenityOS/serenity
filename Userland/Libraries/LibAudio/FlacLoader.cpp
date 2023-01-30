@@ -60,7 +60,7 @@ MaybeLoaderError FlacLoaderPlugin::initialize()
 // 11.5 STREAM
 MaybeLoaderError FlacLoaderPlugin::parse_header()
 {
-    auto bit_input = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
+    BigEndianInputBitStream bit_input { MaybeOwned<AK::Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
 #define FLAC_VERIFY(check, category, msg)                                                                                                     \
@@ -71,28 +71,28 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     } while (0)
 
     // Magic number
-    u32 flac = LOADER_TRY(bit_input->read_bits<u32>(32));
+    u32 flac = LOADER_TRY(bit_input.read_bits<u32>(32));
     m_data_start_location += 4;
     FLAC_VERIFY(flac == 0x664C6143, LoaderError::Category::Format, "Magic number must be 'flaC'"); // "flaC"
 
     // Receive the streaminfo block
-    auto streaminfo = TRY(next_meta_block(*bit_input));
+    auto streaminfo = TRY(next_meta_block(bit_input));
     FLAC_VERIFY(streaminfo.type == FlacMetadataBlockType::STREAMINFO, LoaderError::Category::Format, "First block must be STREAMINFO");
     auto streaminfo_data_memory = LOADER_TRY(FixedMemoryStream::construct(streaminfo.data.bytes()));
-    auto streaminfo_data = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*streaminfo_data_memory)));
+    BigEndianInputBitStream streaminfo_data { MaybeOwned<AK::Stream>(*streaminfo_data_memory) };
 
     // 11.10 METADATA_BLOCK_STREAMINFO
-    m_min_block_size = LOADER_TRY(streaminfo_data->read_bits<u16>(16));
+    m_min_block_size = LOADER_TRY(streaminfo_data.read_bits<u16>(16));
     FLAC_VERIFY(m_min_block_size >= 16, LoaderError::Category::Format, "Minimum block size must be 16");
-    m_max_block_size = LOADER_TRY(streaminfo_data->read_bits<u16>(16));
+    m_max_block_size = LOADER_TRY(streaminfo_data.read_bits<u16>(16));
     FLAC_VERIFY(m_max_block_size >= 16, LoaderError::Category::Format, "Maximum block size");
-    m_min_frame_size = LOADER_TRY(streaminfo_data->read_bits<u32>(24));
-    m_max_frame_size = LOADER_TRY(streaminfo_data->read_bits<u32>(24));
-    m_sample_rate = LOADER_TRY(streaminfo_data->read_bits<u32>(20));
+    m_min_frame_size = LOADER_TRY(streaminfo_data.read_bits<u32>(24));
+    m_max_frame_size = LOADER_TRY(streaminfo_data.read_bits<u32>(24));
+    m_sample_rate = LOADER_TRY(streaminfo_data.read_bits<u32>(20));
     FLAC_VERIFY(m_sample_rate <= 655350, LoaderError::Category::Format, "Sample rate");
-    m_num_channels = LOADER_TRY(streaminfo_data->read_bits<u8>(3)) + 1; // 0 = one channel
+    m_num_channels = LOADER_TRY(streaminfo_data.read_bits<u8>(3)) + 1; // 0 = one channel
 
-    u8 bits_per_sample = LOADER_TRY(streaminfo_data->read_bits<u8>(5)) + 1;
+    u8 bits_per_sample = LOADER_TRY(streaminfo_data.read_bits<u8>(5)) + 1;
     if (bits_per_sample == 8) {
         // FIXME: Signed/Unsigned issues?
         m_sample_format = PcmSampleFormat::Uint8;
@@ -106,12 +106,12 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         FLAC_VERIFY(false, LoaderError::Category::Format, "Sample bit depth invalid");
     }
 
-    m_total_samples = LOADER_TRY(streaminfo_data->read_bits<u64>(36));
+    m_total_samples = LOADER_TRY(streaminfo_data.read_bits<u64>(36));
     FLAC_VERIFY(m_total_samples > 0, LoaderError::Category::Format, "Number of samples is zero");
     // Parse checksum into a buffer first
     [[maybe_unused]] u128 md5_checksum;
-    VERIFY(streaminfo_data->is_aligned_to_byte_boundary());
-    auto md5_bytes_read = LOADER_TRY(streaminfo_data->read(md5_checksum.bytes()));
+    VERIFY(streaminfo_data.is_aligned_to_byte_boundary());
+    auto md5_bytes_read = LOADER_TRY(streaminfo_data.read(md5_checksum.bytes()));
     FLAC_VERIFY(md5_bytes_read.size() == md5_checksum.my_size(), LoaderError::Category::IO, "MD5 Checksum size");
     md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
@@ -120,7 +120,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     [[maybe_unused]] u16 total_meta_blocks = meta_blocks_parsed;
     FlacRawMetadataBlock block = streaminfo;
     while (!block.is_last_block) {
-        block = TRY(next_meta_block(*bit_input));
+        block = TRY(next_meta_block(bit_input));
         switch (block.type) {
         case (FlacMetadataBlockType::SEEKTABLE):
             TRY(load_seektable(block));
@@ -150,30 +150,30 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 {
     auto memory_stream = LOADER_TRY(FixedMemoryStream::construct(block.data.bytes()));
-    auto picture_block_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
+    BigEndianInputBitStream picture_block_bytes { MaybeOwned<AK::Stream>(*memory_stream) };
 
     PictureData picture {};
 
-    picture.type = static_cast<ID3PictureType>(LOADER_TRY(picture_block_bytes->read_bits(32)));
+    picture.type = static_cast<ID3PictureType>(LOADER_TRY(picture_block_bytes.read_bits(32)));
 
-    auto const mime_string_length = LOADER_TRY(picture_block_bytes->read_bits(32));
+    auto const mime_string_length = LOADER_TRY(picture_block_bytes.read_bits(32));
     // Note: We are seeking before reading the value to ensure that we stayed inside buffer's size.
     auto offset_before_seeking = memory_stream->offset();
     LOADER_TRY(memory_stream->seek(mime_string_length, SeekMode::FromCurrentPosition));
     picture.mime_string = { block.data.bytes().data() + offset_before_seeking, (size_t)mime_string_length };
 
-    auto const description_string_length = LOADER_TRY(picture_block_bytes->read_bits(32));
+    auto const description_string_length = LOADER_TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream->offset();
     LOADER_TRY(memory_stream->seek(description_string_length, SeekMode::FromCurrentPosition));
     picture.description_string = Vector<u32> { Span<u32> { reinterpret_cast<u32*>(block.data.bytes().data() + offset_before_seeking), (size_t)description_string_length } };
 
-    picture.width = LOADER_TRY(picture_block_bytes->read_bits(32));
-    picture.height = LOADER_TRY(picture_block_bytes->read_bits(32));
+    picture.width = LOADER_TRY(picture_block_bytes.read_bits(32));
+    picture.height = LOADER_TRY(picture_block_bytes.read_bits(32));
 
-    picture.color_depth = LOADER_TRY(picture_block_bytes->read_bits(32));
-    picture.colors = LOADER_TRY(picture_block_bytes->read_bits(32));
+    picture.color_depth = LOADER_TRY(picture_block_bytes.read_bits(32));
+    picture.colors = LOADER_TRY(picture_block_bytes.read_bits(32));
 
-    auto const picture_size = LOADER_TRY(picture_block_bytes->read_bits(32));
+    auto const picture_size = LOADER_TRY(picture_block_bytes.read_bits(32));
     offset_before_seeking = memory_stream->offset();
     LOADER_TRY(memory_stream->seek(picture_size, SeekMode::FromCurrentPosition));
     picture.data = Vector<u8> { Span<u8> { block.data.bytes().data() + offset_before_seeking, (size_t)picture_size } };
@@ -187,13 +187,13 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
 {
     auto memory_stream = LOADER_TRY(FixedMemoryStream::construct(block.data.bytes()));
-    auto seektable_bytes = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
+    BigEndianInputBitStream seektable_bytes { MaybeOwned<AK::Stream>(*memory_stream) };
     for (size_t i = 0; i < block.length / 18; ++i) {
         // 11.14. SEEKPOINT
         FlacSeekPoint seekpoint {
-            .sample_index = LOADER_TRY(seektable_bytes->read_bits<u64>(64)),
-            .byte_offset = LOADER_TRY(seektable_bytes->read_bits<u64>(64)),
-            .num_samples = LOADER_TRY(seektable_bytes->read_bits<u16>(16))
+            .sample_index = LOADER_TRY(seektable_bytes.read_bits<u64>(64)),
+            .byte_offset = LOADER_TRY(seektable_bytes.read_bits<u64>(64)),
+            .num_samples = LOADER_TRY(seektable_bytes.read_bits<u16>(16))
         };
         m_seektable.append(seekpoint);
     }
@@ -333,55 +333,55 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
         }                                                                                                                                         \
     } while (0)
 
-    auto bit_stream = LOADER_TRY(BigEndianInputBitStream::construct(MaybeOwned<AK::Stream>(*m_stream)));
+    BigEndianInputBitStream bit_stream { MaybeOwned<AK::Stream>(*m_stream) };
 
     // TODO: Check the CRC-16 checksum (and others) by keeping track of read data
 
     // 11.22. FRAME_HEADER
-    u16 sync_code = LOADER_TRY(bit_stream->read_bits<u16>(14));
+    u16 sync_code = LOADER_TRY(bit_stream.read_bits<u16>(14));
     FLAC_VERIFY(sync_code == 0b11111111111110, LoaderError::Category::Format, "Sync code");
-    bool reserved_bit = LOADER_TRY(bit_stream->read_bit());
+    bool reserved_bit = LOADER_TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header bit");
     // 11.22.2. BLOCKING STRATEGY
-    [[maybe_unused]] bool blocking_strategy = LOADER_TRY(bit_stream->read_bit());
+    [[maybe_unused]] bool blocking_strategy = LOADER_TRY(bit_stream.read_bit());
 
-    u32 sample_count = TRY(convert_sample_count_code(LOADER_TRY(bit_stream->read_bits<u8>(4))));
+    u32 sample_count = TRY(convert_sample_count_code(LOADER_TRY(bit_stream.read_bits<u8>(4))));
 
-    u32 frame_sample_rate = TRY(convert_sample_rate_code(LOADER_TRY(bit_stream->read_bits<u8>(4))));
+    u32 frame_sample_rate = TRY(convert_sample_rate_code(LOADER_TRY(bit_stream.read_bits<u8>(4))));
 
-    u8 channel_type_num = LOADER_TRY(bit_stream->read_bits<u8>(4));
+    u8 channel_type_num = LOADER_TRY(bit_stream.read_bits<u8>(4));
     FLAC_VERIFY(channel_type_num < 0b1011, LoaderError::Category::Format, "Channel assignment");
     FlacFrameChannelType channel_type = (FlacFrameChannelType)channel_type_num;
 
-    PcmSampleFormat bit_depth = TRY(convert_bit_depth_code(LOADER_TRY(bit_stream->read_bits<u8>(3))));
+    PcmSampleFormat bit_depth = TRY(convert_bit_depth_code(LOADER_TRY(bit_stream.read_bits<u8>(3))));
 
-    reserved_bit = LOADER_TRY(bit_stream->read_bit());
+    reserved_bit = LOADER_TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header end bit");
 
     // 11.22.8. CODED NUMBER
     // FIXME: sample number can be 8-56 bits, frame number can be 8-48 bits
-    m_current_sample_or_frame = LOADER_TRY(read_utf8_char(*bit_stream));
+    m_current_sample_or_frame = LOADER_TRY(read_utf8_char(bit_stream));
 
     // Conditional header variables
     // 11.22.9. BLOCK SIZE INT
     if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_8) {
-        sample_count = LOADER_TRY(bit_stream->read_bits<u32>(8)) + 1;
+        sample_count = LOADER_TRY(bit_stream.read_bits<u32>(8)) + 1;
     } else if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_16) {
-        sample_count = LOADER_TRY(bit_stream->read_bits<u32>(16)) + 1;
+        sample_count = LOADER_TRY(bit_stream.read_bits<u32>(16)) + 1;
     }
 
     // 11.22.10. SAMPLE RATE INT
     if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_8) {
-        frame_sample_rate = LOADER_TRY(bit_stream->read_bits<u32>(8)) * 1000;
+        frame_sample_rate = LOADER_TRY(bit_stream.read_bits<u32>(8)) * 1000;
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16) {
-        frame_sample_rate = LOADER_TRY(bit_stream->read_bits<u32>(16));
+        frame_sample_rate = LOADER_TRY(bit_stream.read_bits<u32>(16));
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10) {
-        frame_sample_rate = LOADER_TRY(bit_stream->read_bits<u32>(16)) * 10;
+        frame_sample_rate = LOADER_TRY(bit_stream.read_bits<u32>(16)) * 10;
     }
 
     // 11.22.11. FRAME CRC
     // TODO: check header checksum, see above
-    [[maybe_unused]] u8 checksum = LOADER_TRY(bit_stream->read_bits<u8>(8));
+    [[maybe_unused]] u8 checksum = LOADER_TRY(bit_stream.read_bits<u8>(8));
 
     dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {}", sample_count, pcm_bits_per_sample(bit_depth), frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, checksum);
 
@@ -397,17 +397,17 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     current_subframes.ensure_capacity(subframe_count);
 
     for (u8 i = 0; i < subframe_count; ++i) {
-        FlacSubframeHeader new_subframe = TRY(next_subframe_header(*bit_stream, i));
-        Vector<i32> subframe_samples = TRY(parse_subframe(new_subframe, *bit_stream));
+        FlacSubframeHeader new_subframe = TRY(next_subframe_header(bit_stream, i));
+        Vector<i32> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
         current_subframes.unchecked_append(move(subframe_samples));
     }
 
     // 11.2. Overview ("The audio data is composed of...")
-    bit_stream->align_to_byte_boundary();
+    bit_stream.align_to_byte_boundary();
 
     // 11.23. FRAME_FOOTER
     // TODO: check checksum, see above
-    [[maybe_unused]] u16 footer_checksum = LOADER_TRY(bit_stream->read_bits<u16>(16));
+    [[maybe_unused]] u16 footer_checksum = LOADER_TRY(bit_stream.read_bits<u16>(16));
     dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
 
     Vector<i32> left;

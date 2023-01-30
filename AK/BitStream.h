@@ -17,9 +17,9 @@ namespace AK {
 /// in big-endian order from another stream.
 class BigEndianInputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<BigEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
+    explicit BigEndianInputBitStream(MaybeOwned<Stream> stream)
+        : m_stream(move(stream))
     {
-        return adopt_nonnull_own_or_enomem<BigEndianInputBitStream>(new BigEndianInputBitStream(move(stream)));
     }
 
     // ^Stream
@@ -112,11 +112,6 @@ public:
     ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset == 0; }
 
 private:
-    BigEndianInputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
-    {
-    }
-
     Optional<u8> m_current_byte;
     size_t m_bit_offset { 0 };
     MaybeOwned<Stream> m_stream;
