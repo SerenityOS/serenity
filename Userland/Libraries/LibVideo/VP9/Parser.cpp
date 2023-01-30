@@ -1582,6 +1582,10 @@ static MotionVector clamp_motion_vector(BlockContext const& block_context, Motio
 // find_mv_refs( refFrame, block ) in the spec.
 MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_context, ReferenceFrameType reference_frame, i32 block)
 {
+    // FIXME: We should be able to change behavior based on the reference motion vector that will be selected.
+    //        If block_context.y_prediction_mode() != NearMv, then we only need the first motion vector that is added to our result.
+    //        This behavior should combine this function with select_best_reference_motion_vectors(). When that is done, check whether
+    //        the motion vector clamping in that function is always a larger area than in this function. If so, we can drop that call.
     bool different_ref_found = false;
     u8 context_counter = 0;
 
@@ -1646,6 +1650,8 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
     MotionVectorPair result;
     for (auto i = 0u; i < list.size(); i++)
         result[static_cast<ReferenceIndex>(i)] = list[i];
+    result.primary = clamp_motion_vector(block_context, result.primary, MV_BORDER);
+    result.secondary = clamp_motion_vector(block_context, result.secondary, MV_BORDER);
     return result;
 }
 
