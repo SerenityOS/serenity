@@ -317,7 +317,7 @@ void DeflateDecompressor::close()
 
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(FixedMemoryStream::construct(bytes));
+    auto memory_stream = TRY(try_make<FixedMemoryStream>(bytes));
     auto deflate_stream = TRY(DeflateDecompressor::construct(move(memory_stream)));
     AllocatingMemoryStream output_stream;
 

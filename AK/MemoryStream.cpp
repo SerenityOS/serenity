@@ -23,16 +23,6 @@ FixedMemoryStream::FixedMemoryStream(ReadonlyBytes bytes)
 {
 }
 
-ErrorOr<NonnullOwnPtr<FixedMemoryStream>> FixedMemoryStream::construct(Bytes bytes)
-{
-    return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
-}
-
-ErrorOr<NonnullOwnPtr<FixedMemoryStream>> FixedMemoryStream::construct(ReadonlyBytes bytes)
-{
-    return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
-}
-
 bool FixedMemoryStream::is_eof() const
 {
     return m_offset >= m_bytes.size();

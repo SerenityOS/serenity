@@ -1202,7 +1202,7 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingC
 static ErrorOr<void> decode_header(JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::HeaderDecoded) {
-        context.stream = TRY(FixedMemoryStream::construct({ context.data, context.data_size }));
+        context.stream = TRY(try_make<FixedMemoryStream>(ReadonlyBytes { context.data, context.data_size }));
 
         if (auto result = parse_header(*context.stream, context); result.is_error()) {
             context.state = JPGLoadingContext::State::Error;

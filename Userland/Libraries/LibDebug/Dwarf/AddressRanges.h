@@ -24,6 +24,7 @@ class AddressRangesV5 {
     AK_MAKE_NONMOVABLE(AddressRangesV5);
 
 public:
+    // FIXME: This should be fine with using a non-owned stream.
     AddressRangesV5(NonnullOwnPtr<AK::Stream> range_lists_stream, CompilationUnit const& compilation_unit);
 
     ErrorOr<void> for_each_range(Function<void(Range)>);

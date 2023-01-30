@@ -252,8 +252,8 @@ static Optional<Wasm::Module> parse(StringView filename)
         return {};
     }
 
-    auto stream = FixedMemoryStream::construct(ReadonlyBytes { result.value()->data(), result.value()->size() }).release_value_but_fixme_should_propagate_errors();
-    auto parse_result = Wasm::Module::parse(*stream);
+    FixedMemoryStream stream { ReadonlyBytes { result.value()->data(), result.value()->size() } };
+    auto parse_result = Wasm::Module::parse(stream);
     if (parse_result.is_error()) {
         warnln("Something went wrong, either the file is invalid, or there's a bug with LibWasm!");
         warnln("The parse error was {}", Wasm::parse_error_to_deprecated_string(parse_result.error()));
