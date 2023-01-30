@@ -599,7 +599,7 @@ PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::par
     auto input_stream = TRY(FixedMemoryStream::construct(hint_stream_bytes));
     TRY(input_stream->seek(sizeof(PageOffsetHintTable)));
 
-    auto bit_stream = TRY(LittleEndianInputBitStream::construct(move(input_stream)));
+    LittleEndianInputBitStream bit_stream { move(input_stream) };
 
     auto number_of_pages = m_linearization_dictionary.value().number_of_pages;
     Vector<PageOffsetHintTableEntry> entries;
@@ -620,7 +620,7 @@ PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::par
 
         for (int i = 0; i < number_of_pages; i++) {
             auto& entry = entries[i];
-            entry.*field = TRY(bit_stream->read_bits(bit_size));
+            entry.*field = TRY(bit_stream.read_bits(bit_size));
         }
 
         return {};
@@ -636,7 +636,7 @@ PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::par
             items.ensure_capacity(number_of_shared_objects);
 
             for (size_t i = 0; i < number_of_shared_objects; i++)
-                items.unchecked_append(TRY(bit_stream->read_bits(bit_size)));
+                items.unchecked_append(TRY(bit_stream.read_bits(bit_size)));
 
             entries[page].*field = move(items);
         }

@@ -121,12 +121,7 @@ private:
 /// in little-endian order from another stream.
 class LittleEndianInputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<LittleEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
-    {
-        return adopt_nonnull_own_or_enomem<LittleEndianInputBitStream>(new LittleEndianInputBitStream(move(stream)));
-    }
-
-    LittleEndianInputBitStream(MaybeOwned<Stream> stream)
+    explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream)
         : m_stream(move(stream))
     {
     }
