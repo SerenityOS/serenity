@@ -49,3 +49,8 @@ BENCHMARK_CASE(vp9_4k)
 {
     decode_video("./vp9_4k.webm"sv, 2);
 }
+
+BENCHMARK_CASE(vp9_clamp_reference_mvs)
+{
+    decode_video("./vp9_clamp_reference_mvs.webm"sv, 92);
+}
