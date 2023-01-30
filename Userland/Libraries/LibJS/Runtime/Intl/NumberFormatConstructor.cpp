@@ -185,19 +185,32 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
         default_use_grouping = "min2"sv;
     }
 
-    // 24. Let useGrouping be ? GetStringOrBooleanOption(options, "useGrouping", « "min2", "auto", "always" », "always", false, defaultUseGrouping).
-    auto use_grouping = TRY(get_string_or_boolean_option(vm, *options, vm.names.useGrouping, { "min2"sv, "auto"sv, "always"sv }, "always"sv, false, default_use_grouping));
+    // 24. NOTE: For historical reasons, the strings "true" and "false" are accepted and replaced with the default value.
+    // 25. Let useGrouping be ? GetBooleanOrStringNumberFormatOption(options, "useGrouping", « "min2", "auto", "always", "true", "false" », defaultUseGrouping).
+    auto use_grouping = TRY(get_boolean_or_string_number_format_option(vm, *options, vm.names.useGrouping, { "min2"sv, "auto"sv, "always"sv, "true"sv, "false"sv }, default_use_grouping));
 
-    // 25. Set numberFormat.[[UseGrouping]] to useGrouping.
+    // 26. If useGrouping is "true" or useGrouping is "false", set useGrouping to defaultUseGrouping.
+    if (auto const* use_grouping_string = use_grouping.get_pointer<StringView>()) {
+        if (use_grouping_string->is_one_of("true"sv, "false"sv))
+            use_grouping = default_use_grouping;
+    }
+
+    // 27. If useGrouping is true, set useGrouping to "always".
+    if (auto const* use_grouping_boolean = use_grouping.get_pointer<bool>()) {
+        if (*use_grouping_boolean)
+            use_grouping = "always"sv;
+    }
+
+    // 28. Set numberFormat.[[UseGrouping]] to useGrouping.
     number_format.set_use_grouping(use_grouping);
 
-    // 26. Let signDisplay be ? GetOption(options, "signDisplay", string, « "auto", "never", "always", "exceptZero, "negative" », "auto").
+    // 29. Let signDisplay be ? GetOption(options, "signDisplay", string, « "auto", "never", "always", "exceptZero, "negative" », "auto").
     auto sign_display = TRY(get_option(vm, *options, vm.names.signDisplay, OptionType::String, { "auto"sv, "never"sv, "always"sv, "exceptZero"sv, "negative"sv }, "auto"sv));
 
-    // 27. Set numberFormat.[[SignDisplay]] to signDisplay.
+    // 30. Set numberFormat.[[SignDisplay]] to signDisplay.
     number_format.set_sign_display(TRY(sign_display.as_string().utf8_string_view()));
 
-    // 28. Return numberFormat.
+    // 31. Return numberFormat.
     return &number_format;
 }
 
