@@ -338,8 +338,6 @@ struct CaseInsensitiveStringTraits : public Traits<DeprecatedString> {
 
 DeprecatedString escape_html_entities(StringView html);
 
-DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, DeprecatedString& string);
-
 }
 
 #if USING_AK_GLOBALLY
