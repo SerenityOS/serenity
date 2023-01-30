@@ -448,14 +448,19 @@ void WebContentView::handle_resize()
     request_repaint();
 }
 
+void WebContentView::set_viewport_rect(Gfx::IntRect rect)
+{
+    m_viewport_rect = rect;
+    client().async_set_viewport_rect(rect);
+}
+
 void WebContentView::update_viewport_rect()
 {
     auto scaled_width = int(viewport()->width() / m_inverse_pixel_scaling_ratio);
     auto scaled_height = int(viewport()->height() / m_inverse_pixel_scaling_ratio);
     Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
 
-    m_viewport_rect = rect;
-    client().async_set_viewport_rect(rect);
+    set_viewport_rect(rect);
 
     request_repaint();
 }

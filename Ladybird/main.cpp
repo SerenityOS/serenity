@@ -88,6 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (dump_layout_tree) {
         WebContentView view({});
+        view.set_viewport_rect(Gfx::IntRect({}, { 800, 600 }));
         view.on_load_finish = [&](auto&) {
             auto dump = view.dump_layout_tree().release_value_but_fixme_should_propagate_errors();
             outln("{}", dump);
