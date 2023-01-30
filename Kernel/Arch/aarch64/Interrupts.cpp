@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/TrapFrame.h>
@@ -17,7 +18,7 @@
 
 namespace Kernel {
 
-static void dump_registers(RegisterState const& regs)
+void dump_registers(RegisterState const& regs)
 {
     dbgln(" x0={:p}  x1={:p}  x2={:p}  x3={:p}  x4={:p}", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[4]);
     dbgln(" x5={:p}  x6={:p}  x7={:p}  x8={:p}  x9={:p}", regs.x[5], regs.x[6], regs.x[7], regs.x[8], regs.x[9]);
