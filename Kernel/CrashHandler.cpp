@@ -39,7 +39,7 @@ void handle_crash(Kernel::RegisterState const& regs, char const* description, in
         PANIC("Crash in kernel");
     }
 
-    process.crash(signal, regs.ip(), out_of_memory);
+    process.crash(signal, { regs }, out_of_memory);
 }
 
 }

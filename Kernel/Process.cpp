@@ -456,10 +456,12 @@ void create_signal_trampoline()
     g_signal_trampoline_region->remap();
 }
 
-void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
+void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of_memory)
 {
     VERIFY(!is_dead());
     VERIFY(&Process::current() == this);
+
+    auto ip = regs.has_value() ? regs->ip() : 0;
 
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
@@ -470,6 +472,20 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
         } else {
             dbgln("\033[31;1m{:p}  (?)\033[0m\n", ip);
         }
+#if ARCH(X86_64)
+        constexpr bool userspace_backtrace = false;
+#elif ARCH(AARCH64)
+        constexpr bool userspace_backtrace = true;
+#else
+#    error "Unknown architecture"
+#endif
+        if constexpr (userspace_backtrace) {
+            dbgln("Userspace backtrace:");
+            auto bp = regs.has_value() ? regs->bp() : 0;
+            dump_backtrace_from_base_pointer(bp);
+        }
+
+        dbgln("Kernel backtrace:");
         dump_backtrace();
     }
     with_mutable_protected_data([&](auto& protected_data) {
