@@ -821,3 +821,5 @@ struct elf_args {
 #define R_X86_64_RELATIVE 8
 #define R_X86_64_TPOFF64 18
 #define R_X86_64_IRELATIVE 37
+
+#define R_AARCH64_RELATIVE 1027
