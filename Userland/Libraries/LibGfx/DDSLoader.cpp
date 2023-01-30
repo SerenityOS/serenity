@@ -5,10 +5,10 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedMemoryStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Error.h>
+#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
@@ -45,34 +45,6 @@ struct DDSLoadingContext {
 static constexpr u32 create_four_cc(char c0, char c1, char c2, char c3)
 {
     return c0 | c1 << 8 | c2 << 16 | c3 << 24;
-}
-
-static bool is_planar(DXGIFormat format)
-{
-    switch (format) {
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_420_OPAQUE:
-    case DXGI_FORMAT_P208:
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-        return true;
-    default:
-        return false;
-    }
-}
-
-static bool is_packed(DXGIFormat format)
-{
-    switch (format) {
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_YUY2:
-    case DXGI_FORMAT_Y210:
-    case DXGI_FORMAT_Y216:
-        return true;
-    default:
-        return false;
-    }
 }
 
 static u64 get_width(DDSHeader header, size_t mipmap_level)
@@ -230,243 +202,17 @@ static DXGIFormat get_format(DDSPixelFormat format)
     return DXGI_FORMAT_UNKNOWN;
 }
 
-static bool is_block_compressed(DXGIFormat format)
+static ErrorOr<void> decode_dx5_alpha_block(AK::Stream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
 {
-    switch (format) {
-    case DXGI_FORMAT_BC1_TYPELESS:
-    case DXGI_FORMAT_BC1_UNORM:
-    case DXGI_FORMAT_BC1_UNORM_SRGB:
-    case DXGI_FORMAT_BC4_TYPELESS:
-    case DXGI_FORMAT_BC4_UNORM:
-    case DXGI_FORMAT_BC4_SNORM:
-    case DXGI_FORMAT_BC2_TYPELESS:
-    case DXGI_FORMAT_BC2_UNORM:
-    case DXGI_FORMAT_BC2_UNORM_SRGB:
-    case DXGI_FORMAT_BC3_TYPELESS:
-    case DXGI_FORMAT_BC3_UNORM:
-    case DXGI_FORMAT_BC3_UNORM_SRGB:
-    case DXGI_FORMAT_BC5_TYPELESS:
-    case DXGI_FORMAT_BC5_UNORM:
-    case DXGI_FORMAT_BC5_SNORM:
-    case DXGI_FORMAT_BC6H_TYPELESS:
-    case DXGI_FORMAT_BC6H_UF16:
-    case DXGI_FORMAT_BC6H_SF16:
-    case DXGI_FORMAT_BC7_TYPELESS:
-    case DXGI_FORMAT_BC7_UNORM:
-    case DXGI_FORMAT_BC7_UNORM_SRGB:
-        return true;
+    auto color0 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto color1 = TRY(stream.read_value<LittleEndian<u8>>());
 
-    default:
-        return false;
-    }
-}
-
-static size_t block_size(DXGIFormat format)
-{
-    switch (format) {
-    case DXGI_FORMAT_BC2_TYPELESS:
-    case DXGI_FORMAT_BC2_UNORM:
-    case DXGI_FORMAT_BC2_UNORM_SRGB:
-    case DXGI_FORMAT_BC3_TYPELESS:
-    case DXGI_FORMAT_BC3_UNORM:
-    case DXGI_FORMAT_BC3_UNORM_SRGB:
-    case DXGI_FORMAT_BC5_TYPELESS:
-    case DXGI_FORMAT_BC5_UNORM:
-    case DXGI_FORMAT_BC5_SNORM:
-    case DXGI_FORMAT_BC6H_TYPELESS:
-    case DXGI_FORMAT_BC6H_UF16:
-    case DXGI_FORMAT_BC6H_SF16:
-    case DXGI_FORMAT_BC7_TYPELESS:
-    case DXGI_FORMAT_BC7_UNORM:
-    case DXGI_FORMAT_BC7_UNORM_SRGB:
-        return 16;
-
-    case DXGI_FORMAT_BC1_TYPELESS:
-    case DXGI_FORMAT_BC1_UNORM:
-    case DXGI_FORMAT_BC1_UNORM_SRGB:
-    case DXGI_FORMAT_BC4_TYPELESS:
-    case DXGI_FORMAT_BC4_UNORM:
-    case DXGI_FORMAT_BC4_SNORM:
-    case DXGI_FORMAT_Y210:
-    case DXGI_FORMAT_Y216:
-        return 8;
-
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_YUY2:
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-        return 4;
-
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_420_OPAQUE:
-    case DXGI_FORMAT_P208:
-        return 2;
-
-    default:
-        return 0;
-    }
-}
-
-static size_t bits_per_pixel(DXGIFormat format)
-{
-    switch (format) {
-    case DXGI_FORMAT_R32G32B32A32_TYPELESS:
-    case DXGI_FORMAT_R32G32B32A32_FLOAT:
-    case DXGI_FORMAT_R32G32B32A32_UINT:
-    case DXGI_FORMAT_R32G32B32A32_SINT:
-        return 128;
-
-    case DXGI_FORMAT_R32G32B32_TYPELESS:
-    case DXGI_FORMAT_R32G32B32_FLOAT:
-    case DXGI_FORMAT_R32G32B32_UINT:
-    case DXGI_FORMAT_R32G32B32_SINT:
-        return 96;
-
-    case DXGI_FORMAT_R16G16B16A16_TYPELESS:
-    case DXGI_FORMAT_R16G16B16A16_FLOAT:
-    case DXGI_FORMAT_R16G16B16A16_UNORM:
-    case DXGI_FORMAT_R16G16B16A16_UINT:
-    case DXGI_FORMAT_R16G16B16A16_SNORM:
-    case DXGI_FORMAT_R16G16B16A16_SINT:
-    case DXGI_FORMAT_R32G32_TYPELESS:
-    case DXGI_FORMAT_R32G32_FLOAT:
-    case DXGI_FORMAT_R32G32_UINT:
-    case DXGI_FORMAT_R32G32_SINT:
-    case DXGI_FORMAT_R32G8X24_TYPELESS:
-    case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
-    case DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS:
-    case DXGI_FORMAT_X32_TYPELESS_G8X24_UINT:
-    case DXGI_FORMAT_Y416:
-    case DXGI_FORMAT_Y210:
-    case DXGI_FORMAT_Y216:
-        return 64;
-
-    case DXGI_FORMAT_R10G10B10A2_TYPELESS:
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UINT:
-    case DXGI_FORMAT_R11G11B10_FLOAT:
-    case DXGI_FORMAT_R8G8B8A8_TYPELESS:
-    case DXGI_FORMAT_R8G8B8A8_UNORM:
-    case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-    case DXGI_FORMAT_R8G8B8A8_UINT:
-    case DXGI_FORMAT_R8G8B8A8_SNORM:
-    case DXGI_FORMAT_R8G8B8A8_SINT:
-    case DXGI_FORMAT_R16G16_TYPELESS:
-    case DXGI_FORMAT_R16G16_FLOAT:
-    case DXGI_FORMAT_R16G16_UNORM:
-    case DXGI_FORMAT_R16G16_UINT:
-    case DXGI_FORMAT_R16G16_SNORM:
-    case DXGI_FORMAT_R16G16_SINT:
-    case DXGI_FORMAT_R32_TYPELESS:
-    case DXGI_FORMAT_D32_FLOAT:
-    case DXGI_FORMAT_R32_FLOAT:
-    case DXGI_FORMAT_R32_UINT:
-    case DXGI_FORMAT_R32_SINT:
-    case DXGI_FORMAT_R24G8_TYPELESS:
-    case DXGI_FORMAT_D24_UNORM_S8_UINT:
-    case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:
-    case DXGI_FORMAT_X24_TYPELESS_G8_UINT:
-    case DXGI_FORMAT_R9G9B9E5_SHAREDEXP:
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_B8G8R8X8_UNORM:
-    case DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM:
-    case DXGI_FORMAT_B8G8R8A8_TYPELESS:
-    case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
-    case DXGI_FORMAT_B8G8R8X8_TYPELESS:
-    case DXGI_FORMAT_B8G8R8X8_UNORM_SRGB:
-    case DXGI_FORMAT_AYUV:
-    case DXGI_FORMAT_Y410:
-    case DXGI_FORMAT_YUY2:
-        return 32;
-
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-    case DXGI_FORMAT_V408:
-        return 24;
-
-    case DXGI_FORMAT_R8G8_TYPELESS:
-    case DXGI_FORMAT_R8G8_UNORM:
-    case DXGI_FORMAT_R8G8_UINT:
-    case DXGI_FORMAT_R8G8_SNORM:
-    case DXGI_FORMAT_R8G8_SINT:
-    case DXGI_FORMAT_R16_TYPELESS:
-    case DXGI_FORMAT_R16_FLOAT:
-    case DXGI_FORMAT_D16_UNORM:
-    case DXGI_FORMAT_R16_UNORM:
-    case DXGI_FORMAT_R16_UINT:
-    case DXGI_FORMAT_R16_SNORM:
-    case DXGI_FORMAT_R16_SINT:
-    case DXGI_FORMAT_B5G6R5_UNORM:
-    case DXGI_FORMAT_B5G5R5A1_UNORM:
-    case DXGI_FORMAT_A8P8:
-    case DXGI_FORMAT_B4G4R4A4_UNORM:
-    case DXGI_FORMAT_P208:
-    case DXGI_FORMAT_V208:
-        return 16;
-
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_420_OPAQUE:
-    case DXGI_FORMAT_NV11:
-        return 12;
-
-    case DXGI_FORMAT_R8_TYPELESS:
-    case DXGI_FORMAT_R8_UNORM:
-    case DXGI_FORMAT_R8_UINT:
-    case DXGI_FORMAT_R8_SNORM:
-    case DXGI_FORMAT_R8_SINT:
-    case DXGI_FORMAT_A8_UNORM:
-    case DXGI_FORMAT_BC2_TYPELESS:
-    case DXGI_FORMAT_BC2_UNORM:
-    case DXGI_FORMAT_BC2_UNORM_SRGB:
-    case DXGI_FORMAT_BC3_TYPELESS:
-    case DXGI_FORMAT_BC3_UNORM:
-    case DXGI_FORMAT_BC3_UNORM_SRGB:
-    case DXGI_FORMAT_BC5_TYPELESS:
-    case DXGI_FORMAT_BC5_UNORM:
-    case DXGI_FORMAT_BC5_SNORM:
-    case DXGI_FORMAT_BC6H_TYPELESS:
-    case DXGI_FORMAT_BC6H_UF16:
-    case DXGI_FORMAT_BC6H_SF16:
-    case DXGI_FORMAT_BC7_TYPELESS:
-    case DXGI_FORMAT_BC7_UNORM:
-    case DXGI_FORMAT_BC7_UNORM_SRGB:
-    case DXGI_FORMAT_AI44:
-    case DXGI_FORMAT_IA44:
-    case DXGI_FORMAT_P8:
-        return 8;
-
-    case DXGI_FORMAT_R1_UNORM:
-        return 1;
-
-    case DXGI_FORMAT_BC1_TYPELESS:
-    case DXGI_FORMAT_BC1_UNORM:
-    case DXGI_FORMAT_BC1_UNORM_SRGB:
-    case DXGI_FORMAT_BC4_TYPELESS:
-    case DXGI_FORMAT_BC4_UNORM:
-    case DXGI_FORMAT_BC4_SNORM:
-        return 4;
-
-    default:
-        return 0;
-    }
-}
-
-static void decode_dx5_alpha_block(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
-{
-    LittleEndian<u8> color0 {}, color1 {};
-    LittleEndian<u8> code0 {}, code1 {}, code2 {}, code3 {}, code4 {}, code5 {};
-
-    stream >> color0;
-    stream >> color1;
-    stream >> code0;
-    stream >> code1;
-    stream >> code2;
-    stream >> code3;
-    stream >> code4;
-    stream >> code5;
+    auto code0 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto code1 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto code2 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto code3 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto code4 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto code5 = TRY(stream.read_value<LittleEndian<u8>>());
 
     u32 codes[6] = { 0 };
     codes[0] = code0 + 256 * (code1 + 256);
@@ -515,20 +261,20 @@ static void decode_dx5_alpha_block(DeprecatedInputMemoryStream& stream, DDSLoadi
             context.bitmap->set_pixel(bitmap_x + x, bitmap_y + y, color);
         }
     }
+
+    return {};
 }
 
-static void decode_dx3_alpha_block(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
+static ErrorOr<void> decode_dx3_alpha_block(AK::Stream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
 {
-    LittleEndian<u8> a0 {}, a1 {}, a2 {}, a3 {}, a4 {}, a5 {}, a6 {}, a7 {};
-
-    stream >> a0;
-    stream >> a1;
-    stream >> a2;
-    stream >> a3;
-    stream >> a4;
-    stream >> a5;
-    stream >> a6;
-    stream >> a7;
+    auto a0 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a1 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a2 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a3 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a4 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a5 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a6 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto a7 = TRY(stream.read_value<LittleEndian<u8>>());
 
     u64 alpha_0 = a0 + 256u * (a1 + 256u * (a2 + 256u * (a3 + 256u)));
     u64 alpha_1 = a4 + 256u * (a5 + 256u * (a6 + 256u * a7));
@@ -551,6 +297,8 @@ static void decode_dx3_alpha_block(DeprecatedInputMemoryStream& stream, DDSLoadi
             }
         }
     }
+
+    return {};
 }
 
 static void unpack_rbg_565(u32 rgb, u8* output)
@@ -565,19 +313,17 @@ static void unpack_rbg_565(u32 rgb, u8* output)
     output[3] = 255;
 }
 
-static void decode_color_block(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, bool dxt1, u64 bitmap_x, u64 bitmap_y)
+static ErrorOr<void> decode_color_block(AK::Stream& stream, DDSLoadingContext& context, bool dxt1, u64 bitmap_x, u64 bitmap_y)
 {
-    LittleEndian<u8> c0_low {}, c0_high {}, c1_low {}, c1_high {};
-    LittleEndian<u8> codes_0 {}, codes_1 {}, codes_2 {}, codes_3 {};
+    auto c0_low = TRY(stream.read_value<LittleEndian<u8>>());
+    auto c0_high = TRY(stream.read_value<LittleEndian<u8>>());
+    auto c1_low = TRY(stream.read_value<LittleEndian<u8>>());
+    auto c1_high = TRY(stream.read_value<LittleEndian<u8>>());
 
-    stream >> c0_low;
-    stream >> c0_high;
-    stream >> c1_low;
-    stream >> c1_high;
-    stream >> codes_0;
-    stream >> codes_1;
-    stream >> codes_2;
-    stream >> codes_3;
+    auto codes_0 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto codes_1 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto codes_2 = TRY(stream.read_value<LittleEndian<u8>>());
+    auto codes_3 = TRY(stream.read_value<LittleEndian<u8>>());
 
     u64 code = codes_0 + 256 * (codes_1 + 256 * (codes_2 + 256 * codes_3));
     u32 color_0 = c0_low + (c0_high * 256);
@@ -619,96 +365,59 @@ static void decode_color_block(DeprecatedInputMemoryStream& stream, DDSLoadingCo
             i++;
         }
     }
+
+    return {};
 }
 
-static void decode_dxt(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
+static ErrorOr<void> decode_dxt(AK::Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
 {
     if (format == DXGI_FORMAT_BC1_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
-            decode_color_block(stream, context, true, x, y);
+            TRY(decode_color_block(stream, context, true, x, y));
         }
     }
 
     if (format == DXGI_FORMAT_BC2_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
-            decode_dx3_alpha_block(stream, context, x, y);
-            decode_color_block(stream, context, false, x, y);
+            TRY(decode_dx3_alpha_block(stream, context, x, y));
+            TRY(decode_color_block(stream, context, false, x, y));
         }
     }
 
     if (format == DXGI_FORMAT_BC3_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
-            decode_dx5_alpha_block(stream, context, x, y);
-            decode_color_block(stream, context, false, x, y);
+            TRY(decode_dx5_alpha_block(stream, context, x, y));
+            TRY(decode_color_block(stream, context, false, x, y));
         }
     }
+
+    return {};
 }
-static void decode_bitmap(DeprecatedInputMemoryStream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
+static ErrorOr<void> decode_bitmap(AK::Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
 {
     Vector<u32> dxt_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
     if (dxt_formats.contains_slow(format)) {
         for (u64 y = 0; y < height; y += 4) {
-            decode_dxt(stream, context, format, width, y);
+            TRY(decode_dxt(stream, context, format, width, y));
         }
     }
 
     // FIXME: Support more encodings (ATI, YUV, RAW, etc...).
-}
-
-static size_t get_minimum_bytes_for_mipmap(DXGIFormat format, u64 width, u64 height)
-{
-    u64 row_bytes {};
-    u64 row_count {};
-
-    if (is_block_compressed(format)) {
-        u64 width_in_blocks {};
-        u64 height_in_blocks {};
-
-        if (width > 0) {
-            width_in_blocks = max(static_cast<u64>(1), (width + 3u) / 4u);
-        }
-
-        if (height > 0) {
-            height_in_blocks = max(static_cast<u64>(1), (height + 3u) / 4u);
-        }
-
-        row_bytes = width_in_blocks * block_size(format);
-        row_count = height_in_blocks;
-        return row_bytes * row_count;
-    } else if (is_packed(format)) {
-        row_bytes = ((width + 1u) >> 1) * block_size(format);
-        row_count = height;
-        return row_bytes * row_count;
-    } else if (format == DXGI_FORMAT_NV11) {
-        row_bytes = ((width + 3u) >> 2) * 4u;
-        row_count = height * 2u;
-        return row_bytes * row_count;
-    } else if (is_planar(format)) {
-        row_bytes = ((width + 1u) >> 1) * block_size(format);
-        row_count = height + ((height + 1u) >> 1);
-        return (row_bytes * row_count) + (((row_bytes * row_count) + 1) >> 1);
-    } else {
-        u32 bpp = bits_per_pixel(format);
-
-        row_bytes = (width * bpp + 7u) / 8u;
-        row_count = height;
-        return row_bytes * row_count;
-    }
+    return {};
 }
 
 static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 {
-    DeprecatedInputMemoryStream stream({ context.data, context.data_size });
-
     // All valid DDS files are at least 128 bytes long.
-    if (stream.remaining() < 128) {
+    if (context.data_size < 128) {
         dbgln_if(DDS_DEBUG, "File is too short for DDS");
         context.state = DDSLoadingContext::State::Error;
         return Error::from_string_literal("File is too short for DDS");
     }
 
-    u32 magic;
-    stream >> magic;
+    FixedMemoryStream stream { ReadonlyBytes { context.data, context.data_size } };
+
+    auto magic = TRY(stream.read_value<u32>());
 
     if (magic != create_four_cc('D', 'D', 'S', ' ')) {
         dbgln_if(DDS_DEBUG, "Missing magic number");
@@ -716,28 +425,7 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
         return Error::from_string_literal("Missing magic number");
     }
 
-    stream >> context.header.size;
-    stream >> context.header.flags;
-    stream >> context.header.height;
-    stream >> context.header.width;
-    stream >> context.header.pitch;
-    stream >> context.header.depth;
-    stream >> context.header.mip_map_count;
-    // The bytes in context.header.reserved are unused, so we just skip over them (11 * 4 bytes).
-    stream.discard_or_error(44);
-    stream >> context.header.pixel_format.size;
-    stream >> context.header.pixel_format.flags;
-    stream >> context.header.pixel_format.four_cc;
-    stream >> context.header.pixel_format.rgb_bit_count;
-    stream >> context.header.pixel_format.r_bit_mask;
-    stream >> context.header.pixel_format.g_bit_mask;
-    stream >> context.header.pixel_format.b_bit_mask;
-    stream >> context.header.pixel_format.a_bit_mask;
-    stream >> context.header.caps1;
-    stream >> context.header.caps2;
-    stream >> context.header.caps3;
-    stream >> context.header.caps4;
-    stream >> context.header.reserved2;
+    context.header = TRY(stream.read_value<DDSHeader>());
 
     if (context.header.size != 124) {
         dbgln_if(DDS_DEBUG, "Header size is malformed");
@@ -752,19 +440,13 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
 
     if ((context.header.pixel_format.flags & PixelFormatFlags::DDPF_FOURCC) == PixelFormatFlags::DDPF_FOURCC) {
         if (context.header.pixel_format.four_cc == create_four_cc('D', 'X', '1', '0')) {
-            if (stream.bytes().size() < 148) {
+            if (context.data_size < 148) {
                 dbgln_if(DDS_DEBUG, "DX10 header is too short");
                 context.state = DDSLoadingContext::State::Error;
                 return Error::from_string_literal("DX10 header is too short");
             }
 
-            u32 format {};
-            stream >> format;
-            context.header10.format = static_cast<DXGIFormat>(format);
-            stream >> context.header10.resource_dimension;
-            stream >> context.header10.misc_flag;
-            stream >> context.header10.array_size;
-            stream >> context.header10.misc_flag2;
+            context.header10 = TRY(stream.read_value<DDSHeaderDXT10>());
         }
     }
 
@@ -786,13 +468,9 @@ static ErrorOr<void> decode_dds(DDSLoadingContext& context)
         u64 width = get_width(context.header, mipmap_level);
         u64 height = get_height(context.header, mipmap_level);
 
-        u64 needed_bytes = get_minimum_bytes_for_mipmap(format, width, height);
-        dbgln_if(DDS_DEBUG, "There are {} bytes remaining, we need {} for mipmap level {} of the image", stream.remaining(), needed_bytes, mipmap_level);
-        VERIFY(stream.remaining() >= needed_bytes);
-
         context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, { width, height }));
 
-        decode_bitmap(stream, context, format, width, height);
+        TRY(decode_bitmap(stream, context, format, width, height));
     }
 
     context.state = DDSLoadingContext::State::BitmapDecoded;
