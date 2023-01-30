@@ -236,9 +236,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
         if (!m_page.has_value())
             return;
-        VERIFY(m_page.has_value());
-        auto file_ref = make_ref_counted<FileRequest>(url.path());
-        file_ref->on_file_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, file_ref](ErrorOr<i32> file_or_error) {
+
+        FileRequest file_request(url.path(), [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request](ErrorOr<i32> file_or_error) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -271,8 +270,9 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             auto data = maybe_data.release_value();
             log_success(request);
             success_callback(data, {}, {});
-        };
-        m_page->client().request_file(file_ref);
+        });
+
+        m_page->client().request_file(move(file_request));
 
         ++m_pending_loads;
         if (on_load_counter_change)
