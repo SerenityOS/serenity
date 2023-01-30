@@ -225,9 +225,9 @@ private:
 /// in big-endian order to another stream.
 class BigEndianOutputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<BigEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
+    explicit BigEndianOutputBitStream(MaybeOwned<Stream> stream)
+        : m_stream(move(stream))
     {
-        return adopt_nonnull_own_or_enomem<BigEndianOutputBitStream>(new BigEndianOutputBitStream(move(stream)));
     }
 
     virtual ErrorOr<Bytes> read(Bytes) override
@@ -294,11 +294,6 @@ public:
     }
 
 private:
-    BigEndianOutputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
-    {
-    }
-
     MaybeOwned<Stream> m_stream;
     u8 m_current_byte { 0 };
     size_t m_bit_offset { 0 };
