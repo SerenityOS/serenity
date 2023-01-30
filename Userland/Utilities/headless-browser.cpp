@@ -236,10 +236,10 @@ public:
     {
     }
 
-    void request_file(NonnullRefPtr<Web::FileRequest>& request) override
+    void request_file(Web::FileRequest request) override
     {
-        auto const file = Core::System::open(request->path(), O_RDONLY);
-        request->on_file_request_finish(file);
+        auto const file = Core::System::open(request.path(), O_RDONLY);
+        request.on_file_request_finish(file);
     }
 
 private:

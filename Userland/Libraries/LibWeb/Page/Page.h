@@ -195,7 +195,7 @@ public:
     virtual void page_did_update_resource_count(i32) { }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
-    virtual void request_file(NonnullRefPtr<FileRequest>&) = 0;
+    virtual void request_file(FileRequest) = 0;
 
     // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
     virtual void page_did_request_file_picker(WeakPtr<DOM::EventTarget>, [[maybe_unused]] bool multiple) {};
