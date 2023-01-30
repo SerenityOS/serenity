@@ -231,7 +231,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
     if (result.is_error() && result.error().code() == EPROMISEVIOLATION) {
         VERIFY(current_thread->is_promise_violation_pending());
         current_thread->set_promise_violation_pending(false);
-        process.crash(SIGABRT, 0);
+        process.crash(SIGABRT, {});
     } else {
         VERIFY(!current_thread->is_promise_violation_pending());
     }

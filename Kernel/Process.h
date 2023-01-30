@@ -454,7 +454,7 @@ public:
 
     static void initialize();
 
-    [[noreturn]] void crash(int signal, FlatPtr ip, bool out_of_memory = false);
+    [[noreturn]] void crash(int signal, Optional<RegisterState const&> regs, bool out_of_memory = false);
     [[nodiscard]] siginfo_t wait_info() const;
 
     const TTY* tty() const { return m_tty; }

@@ -84,7 +84,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
     auto result = require_promise(Pledge::thread);
     if (result.is_error()) {
         // Crash now, as we will never reach back to the syscall handler.
-        crash(SIGABRT, 0);
+        crash(SIGABRT, {});
     }
 
     if (this->thread_count() == 1) {
