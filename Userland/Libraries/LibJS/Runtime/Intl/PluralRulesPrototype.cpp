@@ -36,6 +36,7 @@ ThrowCompletionOr<void> PluralRulesPrototype::initialize(Realm& realm)
 }
 
 // 16.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select
+// 1.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.select
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 {
     // 1. Let pr be the this value.
@@ -45,9 +46,9 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     // 3. Let n be ? ToNumber(value).
     auto number = TRY(vm.argument(0).to_number(vm));
 
-    // 4. Return ! ResolvePlural(pr, n).
+    // 4. Return ! ResolvePlural(pr, n).[[PluralCategory]].
     auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, *plural_rules, number));
-    return PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality));
+    return PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality.plural_category));
 }
 
 // 1.3.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange

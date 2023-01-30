@@ -92,13 +92,14 @@ PluralRules::PluralRules(Object& prototype)
 }
 
 // 16.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/ecma402/#sec-resolveplural
-ThrowCompletionOr<::Locale::PluralCategory> resolve_plural(VM& vm, PluralRules const& plural_rules, Value number)
+// 1.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-resolveplural
+ThrowCompletionOr<ResolvedPlurality> resolve_plural(VM& vm, PluralRules const& plural_rules, Value number)
 {
     return resolve_plural(vm, plural_rules, plural_rules.type(), number);
 }
 
 // Non-standard overload of ResolvePlural to allow using the AO without an Intl.PluralRules object.
-ThrowCompletionOr<::Locale::PluralCategory> resolve_plural(VM& vm, NumberFormatBase const& number_format, ::Locale::PluralForm type, Value number)
+ThrowCompletionOr<ResolvedPlurality> resolve_plural(VM& vm, NumberFormatBase const& number_format, ::Locale::PluralForm type, Value number)
 {
     // 1. Assert: Type(pluralRules) is Object.
     // 2. Assert: pluralRules has an [[InitializedPluralRules]] internal slot.
@@ -107,7 +108,7 @@ ThrowCompletionOr<::Locale::PluralCategory> resolve_plural(VM& vm, NumberFormatB
     // 4. If n is not a finite Number, then
     if (!number.is_finite_number()) {
         // a. Return "other".
-        return ::Locale::PluralCategory::Other;
+        return ResolvedPlurality { ::Locale::PluralCategory::Other, String {} };
     }
 
     // 5. Let locale be pluralRules.[[Locale]].
@@ -119,13 +120,16 @@ ThrowCompletionOr<::Locale::PluralCategory> resolve_plural(VM& vm, NumberFormatB
     auto result = MUST_OR_THROW_OOM(format_numeric_to_string(vm, number_format, number));
 
     // 8. Let s be res.[[FormattedString]].
-    auto const& string = result.formatted_string;
+    auto string = move(result.formatted_string);
 
     // 9. Let operands be ! GetOperands(s).
     auto operands = get_operands(string);
 
-    // 10. Return ! PluralRuleSelect(locale, type, n, operands).
-    return plural_rule_select(locale, type, number, move(operands));
+    // 10. Let p be ! PluralRuleSelect(locale, type, n, operands).
+    auto plural_category = plural_rule_select(locale, type, number, move(operands));
+
+    // 11. Return the Record { [[PluralCategory]]: p, [[FormattedString]]: s }.
+    return ResolvedPlurality { plural_category, move(string) };
 }
 
 // 1.5.4 PluralRuleSelectRange ( locale, type, xp, yp ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-pluralruleselectrange
@@ -154,14 +158,20 @@ ThrowCompletionOr<::Locale::PluralCategory> resolve_plural_range(VM& vm, PluralR
     // 7. Let yp be ! ResolvePlural(pluralRules, y).
     auto end_plurality = MUST_OR_THROW_OOM(resolve_plural(vm, plural_rules, end));
 
-    // 8. Let locale be pluralRules.[[Locale]].
+    // 8. If xp.[[FormattedString]] is yp.[[FormattedString]], then
+    if (start_plurality.formatted_string == end_plurality.formatted_string) {
+        // a. Return xp.[[PluralCategory]].
+        return start_plurality.plural_category;
+    }
+
+    // 9. Let locale be pluralRules.[[Locale]].
     auto const& locale = plural_rules.locale();
 
-    // 9. Let type be pluralRules.[[Type]].
+    // 10. Let type be pluralRules.[[Type]].
     auto type = plural_rules.type();
 
-    // 10. Return ! PluralRuleSelectRange(locale, type, xp, yp).
-    return plural_rule_select_range(locale, type, start_plurality, end_plurality);
+    // 11. Return ! PluralRuleSelectRange(locale, type, xp.[[PluralCategory]], yp.[[PluralCategory]]).
+    return plural_rule_select_range(locale, type, start_plurality.plural_category, end_plurality.plural_category);
 }
 
 }

@@ -181,7 +181,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, relative_time_format.plural_rules(), Value(value)));
 
     // 22. Let pattern be po.[[<pr>]].
-    auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality; });
+    auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality.plural_category; });
     if (pattern == patterns.end())
         return Vector<PatternPartitionWithUnit> {};
 
