@@ -1812,16 +1812,18 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM& v
 {
     // 1. Let i be an index into result, determined by an implementation-defined algorithm based on numberFormat and result.
     // 2. Let approximatelySign be an ILND String value used to signify that a number is approximate.
-    auto approximately_sign = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::ApproximatelySign)).value_or("~"sv);
+    auto approximately_sign = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::ApproximatelySign));
 
-    // 3. Insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
-    PatternPartitionWithSource partition;
-    partition.type = "approximatelySign"sv;
-    partition.value = TRY_OR_THROW_OOM(vm, String::from_utf8(approximately_sign));
+    // 3. If approximatelySign is not empty, insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
+    if (approximately_sign.has_value() && !approximately_sign->is_empty()) {
+        PatternPartitionWithSource partition;
+        partition.type = "approximatelySign"sv;
+        partition.value = TRY_OR_THROW_OOM(vm, String::from_utf8(*approximately_sign));
 
-    result.insert_before_matching(move(partition), [](auto const& part) {
-        return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);
-    });
+        result.insert_before_matching(move(partition), [](auto const& part) {
+            return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);
+        });
+    }
 
     // 4. Return result.
     return result;
