@@ -18,6 +18,8 @@
 
 namespace Kernel {
 
+extern "C" void syscall_handler(TrapFrame const*);
+
 static void dump_exception_syndrome_register(Aarch64::ESR_EL1 const& esr_el1)
 {
     dbgln("Exception Syndrome: EC({:#b}) IL({:#b}) ISS({:#b}) ISS2({:#b})", esr_el1.EC, esr_el1.IL, esr_el1.ISS, esr_el1.ISS2);
@@ -87,6 +89,8 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
         auto page_fault = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
         page_fault.handle(*trap_frame->regs);
+    } else if (Aarch64::exception_class_is_svc_instruction_execution(esr_el1.EC)) {
+        syscall_handler(trap_frame);
     } else {
         dump_registers(*trap_frame->regs);
         PANIC("Unexpected exception!");
