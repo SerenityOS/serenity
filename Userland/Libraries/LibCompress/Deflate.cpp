@@ -449,7 +449,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
 ErrorOr<NonnullOwnPtr<DeflateCompressor>> DeflateCompressor::construct(MaybeOwned<AK::Stream> stream, CompressionLevel compression_level)
 {
-    auto bit_stream = TRY(LittleEndianOutputBitStream::construct(move(stream)));
+    auto bit_stream = TRY(try_make<LittleEndianOutputBitStream>(move(stream)));
     auto deflate_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateCompressor(move(bit_stream), compression_level)));
     return deflate_compressor;
 }

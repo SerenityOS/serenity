@@ -15,21 +15,21 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(LittleEndianOutputBitStream::construct(MaybeOwned<AK::Stream>(*memory_stream)));
+    LittleEndianOutputBitStream bit_write_stream { MaybeOwned<AK::Stream>(*memory_stream) };
     LittleEndianInputBitStream bit_read_stream { MaybeOwned<AK::Stream>(*memory_stream) };
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {
-        MUST(bit_write_stream->write_bits(0b1111u, 4));
-        MUST(bit_write_stream->write_bits(0b1111u, 4));
+        MUST(bit_write_stream.write_bits(0b1111u, 4));
+        MUST(bit_write_stream.write_bits(0b1111u, 4));
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1111u, result);
         result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1111u, result);
     }
     {
-        MUST(bit_write_stream->write_bits(0b0000u, 4));
-        MUST(bit_write_stream->write_bits(0b0000u, 4));
+        MUST(bit_write_stream.write_bits(0b0000u, 4));
+        MUST(bit_write_stream.write_bits(0b0000u, 4));
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b0000u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -38,8 +38,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Test two mirrored chunks of a non-mirrored pattern to check that we are writing bits within a pattern in the correct order.
     {
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
+        MUST(bit_write_stream.write_bits(0b1000u, 4));
+        MUST(bit_write_stream.write_bits(0b1000u, 4));
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1000u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -48,8 +48,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Test two different chunks to check that we are not confusing their order.
     {
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        MUST(bit_write_stream->write_bits(0b0100u, 4));
+        MUST(bit_write_stream.write_bits(0b1000u, 4));
+        MUST(bit_write_stream.write_bits(0b0100u, 4));
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1000u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -58,7 +58,7 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Test a pattern that spans multiple bytes.
     {
-        MUST(bit_write_stream->write_bits(0b1101001000100001u, 16));
+        MUST(bit_write_stream.write_bits(0b1101001000100001u, 16));
         auto result = MUST(bit_read_stream.read_bits(16));
         EXPECT_EQ(0b1101001000100001u, result);
     }
