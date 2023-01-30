@@ -106,6 +106,9 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(plural_rules->min_significant_digits())));
     if (plural_rules->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(plural_rules->max_significant_digits())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, plural_rules->rounding_mode_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(plural_rules->rounding_increment())));
+    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, plural_rules->trailing_zero_display_string())));
 
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
     auto available_categories = ::Locale::available_plural_categories(plural_rules->locale(), plural_rules->type());
