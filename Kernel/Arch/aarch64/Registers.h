@@ -1344,4 +1344,24 @@ struct alignas(u64) PMCCNTR_EL0 {
 };
 static_assert(sizeof(PMCCNTR_EL0) == 8);
 
+// D17.2.30 CPACR_EL1, Architectural Feature Access Control Register
+struct alignas(u64) CPACR_EL1 {
+    int _reserved0 : 16 = 0;
+    int ZEN : 2;
+    int _reserved18 : 2 = 0;
+    int FPEN : 2;
+    int _reserved22 : 2 = 0;
+    int SMEN : 2;
+    int _reserved26 : 2 = 0;
+    int TTA : 1;
+    int _reserved29 : 3 = 0;
+    int _reserved32 : 32 = 0;
+
+    static inline void write(CPACR_EL1 cpacr_el1)
+    {
+        asm("msr cpacr_el1, %[value]" ::[value] "r"(cpacr_el1));
+    }
+};
+static_assert(sizeof(CPACR_EL1) == 8);
+
 }

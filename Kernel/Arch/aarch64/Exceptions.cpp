@@ -78,6 +78,13 @@ static void setup_el1()
 
     Aarch64::SCTLR_EL1::write(system_control_register_el1);
 
+    Aarch64::CPACR_EL1 cpacr_el1 = {};
+    cpacr_el1.ZEN = 0;     // Trap SVE instructions at EL1 and EL0
+    cpacr_el1.FPEN = 0b11; // Don't trap Advanced SIMD and floating-point instructions
+    cpacr_el1.SMEN = 0;    // Trap SME instructions at EL1 and EL0
+    cpacr_el1.TTA = 0;     // Don't trap access to trace registers
+    Aarch64::CPACR_EL1::write(cpacr_el1);
+
     Aarch64::Asm::load_el1_vector_table(&vector_table_el1);
 }
 
