@@ -106,8 +106,8 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     if (!is<JS::Uint8Array>(object))
         return vm.throw_completion<JS::TypeError>("Expected a Uint8Array argument to parse_webassembly_module");
     auto& array = static_cast<JS::Uint8Array&>(*object);
-    auto stream = FixedMemoryStream::construct(array.data()).release_value_but_fixme_should_propagate_errors();
-    auto result = Wasm::Module::parse(*stream);
+    FixedMemoryStream stream { array.data() };
+    auto result = Wasm::Module::parse(stream);
     if (result.is_error())
         return vm.throw_completion<JS::SyntaxError>(Wasm::parse_error_to_deprecated_string(result.error()));
 

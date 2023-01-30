@@ -164,7 +164,7 @@ Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes
 
 ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(FixedMemoryStream::construct(bytes));
+    auto memory_stream = TRY(try_make<FixedMemoryStream>(bytes));
     auto gzip_stream = make<GzipDecompressor>(move(memory_stream));
     AllocatingMemoryStream output_stream;
 

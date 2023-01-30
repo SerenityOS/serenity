@@ -260,8 +260,8 @@ ParseResult<BlockType> BlockType::parse(AK::Stream& stream)
         return BlockType {};
 
     {
-        auto value_stream = FixedMemoryStream::construct(ReadonlyBytes { &kind, 1 }).release_value_but_fixme_should_propagate_errors();
-        if (auto value_type = ValueType::parse(*value_stream); !value_type.is_error())
+        FixedMemoryStream value_stream { ReadonlyBytes { &kind, 1 } };
+        if (auto value_type = ValueType::parse(value_stream); !value_type.is_error())
             return BlockType { value_type.release_value() };
     }
 
