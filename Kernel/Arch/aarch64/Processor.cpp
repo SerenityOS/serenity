@@ -243,19 +243,7 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     eretframe.elr_el1 = thread_regs.elr_el1;
     eretframe.sp_el0 = kernel_stack_top;
     eretframe.tpidr_el0 = 0; // FIXME: Correctly initialize this when aarch64 has support for thread local storage.
-
-    Aarch64::SPSR_EL1 saved_program_status_register_el1 = {};
-
-    // Don't mask any interrupts, so all interrupts are enabled when transfering into the new context
-    saved_program_status_register_el1.D = 0;
-    saved_program_status_register_el1.A = 0;
-    saved_program_status_register_el1.I = 0;
-    saved_program_status_register_el1.F = 0;
-
-    // Set exception origin mode to EL1h, so when the context is restored, we'll be executing in EL1 with SP_EL1
-    // FIXME: This must be EL0t when aarch64 supports userspace applications.
-    saved_program_status_register_el1.M = Aarch64::SPSR_EL1::Mode::EL1h;
-    memcpy(&eretframe.spsr_el1, &saved_program_status_register_el1, sizeof(u64));
+    eretframe.spsr_el1 = thread_regs.spsr_el1;
 
     // Push a TrapFrame onto the stack
     stack_top -= sizeof(TrapFrame);
