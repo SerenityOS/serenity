@@ -264,6 +264,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/ecma402/#sec-bestavailablelocale
+// 1.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-bestavailablelocale
 Optional<StringView> best_available_locale(StringView locale)
 {
     // 1. Let candidate be locale.
@@ -271,7 +272,7 @@ Optional<StringView> best_available_locale(StringView locale)
 
     // 2. Repeat,
     while (true) {
-        // a. If availableLocales contains an element equal to candidate, return candidate.
+        // a. If availableLocales contains candidate, return candidate.
         if (::Locale::is_locale_available(candidate))
             return candidate;
 
