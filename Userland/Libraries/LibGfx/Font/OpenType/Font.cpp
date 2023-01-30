@@ -726,4 +726,38 @@ Optional<ReadonlyBytes> Font::glyph_program(u32 glyph_id) const
     return glyph.program();
 }
 
+u32 Font::glyph_id_for_code_point(u32 code_point) const
+{
+    return glyph_page(code_point / GlyphPage::glyphs_per_page).glyph_ids[code_point % GlyphPage::glyphs_per_page];
+}
+
+Font::GlyphPage const& Font::glyph_page(size_t page_index) const
+{
+    if (page_index == 0) {
+        if (!m_glyph_page_zero) {
+            m_glyph_page_zero = make<GlyphPage>();
+            populate_glyph_page(*m_glyph_page_zero, 0);
+        }
+        return *m_glyph_page_zero;
+    }
+    if (auto it = m_glyph_pages.find(page_index); it != m_glyph_pages.end()) {
+        return *it->value;
+    }
+
+    auto glyph_page = make<GlyphPage>();
+    populate_glyph_page(*glyph_page, page_index);
+    auto const* glyph_page_ptr = glyph_page.ptr();
+    m_glyph_pages.set(page_index, move(glyph_page));
+    return *glyph_page_ptr;
+}
+
+void Font::populate_glyph_page(GlyphPage& glyph_page, size_t page_index) const
+{
+    u32 first_code_point = page_index * GlyphPage::glyphs_per_page;
+    for (size_t i = 0; i < GlyphPage::glyphs_per_page; ++i) {
+        u32 code_point = first_code_point + i;
+        glyph_page.glyph_ids[i] = m_cmap.glyph_id_for_code_point(code_point);
+    }
+}
+
 }
