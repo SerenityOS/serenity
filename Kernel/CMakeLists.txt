@@ -41,6 +41,7 @@ set(KERNEL_SOURCES
     Bus/VirtIO/RNG.cpp
     CommandLine.cpp
     Coredump.cpp
+    CrashHandler.cpp
     Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
@@ -419,7 +420,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/PageDirectory.cpp
@@ -460,7 +460,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CPUID.cpp
-        Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/init.cpp
