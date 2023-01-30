@@ -336,8 +336,8 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     builder.append("</html>\n"sv);
 
     auto response = builder.to_deprecated_string();
-    auto stream = TRY(FixedMemoryStream::construct(response.bytes()));
-    return send_response(*stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
+    FixedMemoryStream stream { response.bytes() };
+    return send_response(stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
 }
 
 ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)

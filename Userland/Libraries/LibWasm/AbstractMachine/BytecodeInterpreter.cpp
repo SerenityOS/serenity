@@ -203,8 +203,8 @@ struct ConvertToRaw<float> {
     {
         LittleEndian<u32> res;
         ReadonlyBytes bytes { &value, sizeof(float) };
-        auto stream = FixedMemoryStream::construct(bytes).release_value_but_fixme_should_propagate_errors();
-        stream->read_entire_buffer(res.bytes()).release_value_but_fixme_should_propagate_errors();
+        FixedMemoryStream stream { bytes };
+        stream.read_entire_buffer(res.bytes()).release_value_but_fixme_should_propagate_errors();
         return static_cast<u32>(res);
     }
 };
@@ -215,8 +215,8 @@ struct ConvertToRaw<double> {
     {
         LittleEndian<u64> res;
         ReadonlyBytes bytes { &value, sizeof(double) };
-        auto stream = FixedMemoryStream::construct(bytes).release_value_but_fixme_should_propagate_errors();
-        stream->read_entire_buffer(res.bytes()).release_value_but_fixme_should_propagate_errors();
+        FixedMemoryStream stream { bytes };
+        stream.read_entire_buffer(res.bytes()).release_value_but_fixme_should_propagate_errors();
         return static_cast<u64>(res);
     }
 };
@@ -253,8 +253,8 @@ template<typename T>
 T BytecodeInterpreter::read_value(ReadonlyBytes data)
 {
     LittleEndian<T> value;
-    auto stream = FixedMemoryStream::construct(data).release_value_but_fixme_should_propagate_errors();
-    auto maybe_error = stream->read_entire_buffer(value.bytes());
+    FixedMemoryStream stream { data };
+    auto maybe_error = stream.read_entire_buffer(value.bytes());
     if (maybe_error.is_error()) {
         dbgln("Read from {} failed", data.data());
         m_trap = Trap { "Read from memory failed" };
@@ -266,8 +266,8 @@ template<>
 float BytecodeInterpreter::read_value<float>(ReadonlyBytes data)
 {
     LittleEndian<u32> raw_value;
-    auto stream = FixedMemoryStream::construct(data).release_value_but_fixme_should_propagate_errors();
-    auto maybe_error = stream->read_entire_buffer(raw_value.bytes());
+    FixedMemoryStream stream { data };
+    auto maybe_error = stream.read_entire_buffer(raw_value.bytes());
     if (maybe_error.is_error())
         m_trap = Trap { "Read from memory failed" };
     return bit_cast<float>(static_cast<u32>(raw_value));
@@ -277,8 +277,8 @@ template<>
 double BytecodeInterpreter::read_value<double>(ReadonlyBytes data)
 {
     LittleEndian<u64> raw_value;
-    auto stream = FixedMemoryStream::construct(data).release_value_but_fixme_should_propagate_errors();
-    auto maybe_error = stream->read_entire_buffer(raw_value.bytes());
+    FixedMemoryStream stream { data };
+    auto maybe_error = stream.read_entire_buffer(raw_value.bytes());
     if (maybe_error.is_error())
         m_trap = Trap { "Read from memory failed" };
     return bit_cast<double>(static_cast<u64>(raw_value));

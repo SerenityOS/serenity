@@ -23,11 +23,11 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
 {
     m_offset = offset;
 
-    auto stream = TRY(FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
+    FixedMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data() };
     // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
-    TRY(stream->seek(m_offset));
-    m_abbreviation_code = TRY(stream->read_value<LEB128<size_t>>());
-    m_data_offset = TRY(stream->tell());
+    TRY(stream.seek(m_offset));
+    m_abbreviation_code = TRY(stream.read_value<LEB128<size_t>>());
+    m_data_offset = TRY(stream.tell());
 
     if (m_abbreviation_code == 0) {
         // An abbreviation code of 0 ( = null DIE entry) means the end of a chain of siblings
@@ -41,25 +41,25 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
 
         // We iterate the attributes data only to calculate this DIE's size
         for (auto& attribute_spec : abbreviation_info->attribute_specifications) {
-            TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, *stream, &m_compilation_unit));
+            TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit));
         }
     }
-    m_size = TRY(stream->tell()) - m_offset;
+    m_size = TRY(stream.tell()) - m_offset;
     m_parent_offset = parent_offset;
     return {};
 }
 
 ErrorOr<Optional<AttributeValue>> DIE::get_attribute(Attribute const& attribute) const
 {
-    auto stream = TRY(FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
+    FixedMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data() };
     // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
-    TRY(stream->seek(m_data_offset));
+    TRY(stream.seek(m_data_offset));
 
     auto abbreviation_info = m_compilation_unit.abbreviations_map().get(m_abbreviation_code);
     VERIFY(abbreviation_info);
 
     for (auto const& attribute_spec : abbreviation_info->attribute_specifications) {
-        auto value = TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, *stream, &m_compilation_unit));
+        auto value = TRY(m_compilation_unit.dwarf_info().get_attribute_value(attribute_spec.form, attribute_spec.value, stream, &m_compilation_unit));
         if (attribute_spec.attribute == attribute) {
             return value;
         }

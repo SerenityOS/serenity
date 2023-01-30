@@ -342,7 +342,7 @@ public:
     private:
         HTTPHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(try_make<FixedMemoryStream>(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(HTTP::Job::construct(move(request), *m_output_stream))
         {
@@ -421,7 +421,7 @@ public:
     private:
         HTTPSHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(try_make<FixedMemoryStream>(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(HTTP::HttpsJob::construct(move(request), *m_output_stream))
         {
@@ -490,7 +490,7 @@ public:
     private:
         GeminiHeadlessRequest(Gemini::GeminiRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(try_make<FixedMemoryStream>(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(Gemini::Job::construct(move(request), *m_output_stream))
         {

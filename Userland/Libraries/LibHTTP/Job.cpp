@@ -70,8 +70,8 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
     } else if (content_encoding == "br") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is brotli compressed!");
 
-        auto bufstream = TRY(FixedMemoryStream::construct({ buf.data(), buf.size() }));
-        auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
+        FixedMemoryStream bufstream { buf };
+        auto brotli_stream = Compress::BrotliDecompressionStream { bufstream };
 
         auto uncompressed = TRY(brotli_stream.read_until_eof());
         if constexpr (JOB_DEBUG) {

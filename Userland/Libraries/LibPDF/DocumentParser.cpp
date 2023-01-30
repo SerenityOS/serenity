@@ -596,7 +596,7 @@ PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offse
 
 PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes hint_stream_bytes)
 {
-    auto input_stream = TRY(FixedMemoryStream::construct(hint_stream_bytes));
+    auto input_stream = TRY(try_make<FixedMemoryStream>(hint_stream_bytes));
     TRY(input_stream->seek(sizeof(PageOffsetHintTable)));
 
     LittleEndianInputBitStream bit_stream { move(input_stream) };

@@ -202,13 +202,13 @@ bool QOIImageDecoderPlugin::initialize()
 
 ErrorOr<bool> QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    auto stream = TRY(FixedMemoryStream::construct({ data.data(), data.size() }));
-    return !decode_qoi_header(*stream).is_error();
+    FixedMemoryStream stream { { data.data(), data.size() } };
+    return !decode_qoi_header(stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    auto stream = TRY(FixedMemoryStream::construct(data));
+    auto stream = TRY(try_make<FixedMemoryStream>(data));
     return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream)));
 }
 

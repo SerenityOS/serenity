@@ -381,21 +381,21 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
     if (context.data_size < 32)
         return Error::from_string_literal("Size too short for GIF frame descriptors");
 
-    auto stream = TRY(FixedMemoryStream::construct(ReadonlyBytes { context.data, context.data_size }));
+    FixedMemoryStream stream { { context.data, context.data_size } };
 
-    TRY(decode_gif_header(*stream));
+    TRY(decode_gif_header(stream));
 
-    context.logical_screen.width = TRY(stream->read_value<LittleEndian<u16>>());
-    context.logical_screen.height = TRY(stream->read_value<LittleEndian<u16>>());
+    context.logical_screen.width = TRY(stream.read_value<LittleEndian<u16>>());
+    context.logical_screen.height = TRY(stream.read_value<LittleEndian<u16>>());
 
     if (context.logical_screen.width > maximum_width_for_decoded_images || context.logical_screen.height > maximum_height_for_decoded_images) {
         dbgln("This GIF is too large for comfort: {}x{}", context.logical_screen.width, context.logical_screen.height);
         return Error::from_string_literal("This GIF is too large for comfort");
     }
 
-    auto gcm_info = TRY(stream->read_value<u8>());
-    context.background_color_index = TRY(stream->read_value<u8>());
-    [[maybe_unused]] auto pixel_aspect_ratio = TRY(stream->read_value<u8>());
+    auto gcm_info = TRY(stream.read_value<u8>());
+    context.background_color_index = TRY(stream.read_value<u8>());
+    [[maybe_unused]] auto pixel_aspect_ratio = TRY(stream.read_value<u8>());
 
     u8 bits_per_pixel = (gcm_info & 7) + 1;
     int color_map_entry_count = 1;
@@ -403,29 +403,29 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
         color_map_entry_count *= 2;
 
     for (int i = 0; i < color_map_entry_count; ++i) {
-        u8 r = TRY(stream->read_value<u8>());
-        u8 g = TRY(stream->read_value<u8>());
-        u8 b = TRY(stream->read_value<u8>());
+        u8 r = TRY(stream.read_value<u8>());
+        u8 g = TRY(stream.read_value<u8>());
+        u8 b = TRY(stream.read_value<u8>());
         context.logical_screen.color_map[i] = { r, g, b };
     }
 
     NonnullOwnPtr<GIFImageDescriptor> current_image = make<GIFImageDescriptor>();
     for (;;) {
-        u8 sentinel = TRY(stream->read_value<u8>());
+        u8 sentinel = TRY(stream.read_value<u8>());
 
         if (sentinel == '!') {
-            u8 extension_type = TRY(stream->read_value<u8>());
+            u8 extension_type = TRY(stream.read_value<u8>());
 
             u8 sub_block_length = 0;
 
             Vector<u8> sub_block {};
             for (;;) {
-                sub_block_length = TRY(stream->read_value<u8>());
+                sub_block_length = TRY(stream.read_value<u8>());
                 if (sub_block_length == 0)
                     break;
 
                 TRY(sub_block.try_resize(sub_block.size() + sub_block_length));
-                TRY(stream->read_entire_buffer(sub_block.span().slice_from_end(sub_block_length)));
+                TRY(stream.read_entire_buffer(sub_block.span().slice_from_end(sub_block_length)));
             }
 
             if (extension_type == 0xF9) {
@@ -471,12 +471,12 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
             context.images.append(move(current_image));
             auto& image = context.images.last();
 
-            image.x = TRY(stream->read_value<LittleEndian<u16>>());
-            image.y = TRY(stream->read_value<LittleEndian<u16>>());
-            image.width = TRY(stream->read_value<LittleEndian<u16>>());
-            image.height = TRY(stream->read_value<LittleEndian<u16>>());
+            image.x = TRY(stream.read_value<LittleEndian<u16>>());
+            image.y = TRY(stream.read_value<LittleEndian<u16>>());
+            image.width = TRY(stream.read_value<LittleEndian<u16>>());
+            image.height = TRY(stream.read_value<LittleEndian<u16>>());
 
-            auto packed_fields = TRY(stream->read_value<u8>());
+            auto packed_fields = TRY(stream.read_value<u8>());
 
             image.use_global_color_map = !(packed_fields & 0x80);
             image.interlaced = (packed_fields & 0x40) != 0;
@@ -485,24 +485,24 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
                 size_t local_color_table_size = AK::exp2<size_t>((packed_fields & 7) + 1);
 
                 for (size_t i = 0; i < local_color_table_size; ++i) {
-                    u8 r = TRY(stream->read_value<u8>());
-                    u8 g = TRY(stream->read_value<u8>());
-                    u8 b = TRY(stream->read_value<u8>());
+                    u8 r = TRY(stream.read_value<u8>());
+                    u8 g = TRY(stream.read_value<u8>());
+                    u8 b = TRY(stream.read_value<u8>());
                     image.color_map[i] = { r, g, b };
                 }
             }
 
-            image.lzw_min_code_size = TRY(stream->read_value<u8>());
+            image.lzw_min_code_size = TRY(stream.read_value<u8>());
 
             u8 lzw_encoded_bytes_expected = 0;
 
             for (;;) {
-                lzw_encoded_bytes_expected = TRY(stream->read_value<u8>());
+                lzw_encoded_bytes_expected = TRY(stream.read_value<u8>());
                 if (lzw_encoded_bytes_expected == 0)
                     break;
 
                 Array<u8, 256> buffer;
-                TRY(stream->read_entire_buffer(buffer.span().trim(lzw_encoded_bytes_expected)));
+                TRY(stream.read_entire_buffer(buffer.span().trim(lzw_encoded_bytes_expected)));
 
                 for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
                     image.lzw_encoded_bytes.append(buffer[i]);
@@ -565,16 +565,14 @@ bool GIFImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool GIFImageDecoderPlugin::initialize()
 {
-    auto stream_or_error = FixedMemoryStream::construct(ReadonlyBytes { m_context->data, m_context->data_size });
-    if (stream_or_error.is_error())
-        return false;
-    return !decode_gif_header(*stream_or_error.value()).is_error();
+    FixedMemoryStream stream { { m_context->data, m_context->data_size } };
+    return !decode_gif_header(stream).is_error();
 }
 
 ErrorOr<bool> GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    auto stream = TRY(FixedMemoryStream::construct(data));
-    return !decode_gif_header(*stream).is_error();
+    FixedMemoryStream stream { data };
+    return !decode_gif_header(stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> GIFImageDecoderPlugin::create(ReadonlyBytes data)
