@@ -39,10 +39,10 @@ struct ThreadRegisters {
 
     void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
     {
-        (void)entry_ip;
-        (void)userspace_sp;
-        (void)space;
-        TODO_AARCH64();
+        set_ip(entry_ip);
+        set_sp(userspace_sp);
+        ttbr0_el1 = space.page_directory().ttbr0();
+        set_spsr_el1(false);
     }
 
     void set_spsr_el1(bool is_kernel_process)
