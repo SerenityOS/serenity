@@ -12,21 +12,32 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#ifdef AK_OS_SERENITY
+#    define TEST_INPUT(x) ("/usr/Tests/LibGfx/test-inputs/" x)
+#else
+#    define TEST_INPUT(x) ("test-inputs/" x)
+#endif
+
 TEST_CASE(test_fontdatabase_get_by_name)
 {
-    auto name = "Liza 10 400 0"sv;
+    Gfx::FontDatabase::set_default_fonts_lookup_path(TEST_INPUT(""));
+
+    auto name = "Family 12 400 0"sv;
     auto& font_database = Gfx::FontDatabase::the();
     EXPECT(!font_database.get_by_name(name)->name().is_null());
 }
 
 TEST_CASE(test_fontdatabase_get)
 {
+    Gfx::FontDatabase::set_default_fonts_lookup_path(TEST_INPUT(""));
     auto& font_database = Gfx::FontDatabase::the();
-    EXPECT(!font_database.get("Liza", 10, 400, 0)->name().is_null());
+    EXPECT(!font_database.get("Family", 12, 400, 0)->name().is_null());
 }
 
 TEST_CASE(test_fontdatabase_for_each_font)
 {
+    Gfx::FontDatabase::set_default_fonts_lookup_path(TEST_INPUT(""));
+
     auto& font_database = Gfx::FontDatabase::the();
     font_database.for_each_font([&](Gfx::Font const& font) {
         EXPECT(!font.name().is_null());
@@ -119,7 +130,7 @@ TEST_CASE(test_glyph_or_emoji_width)
 
 TEST_CASE(test_load_from_file)
 {
-    auto font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonBold14.font");
+    auto font = Gfx::BitmapFont::load_from_file(TEST_INPUT("TestFont.font"sv));
     EXPECT(!font->name().is_null());
 }
 
@@ -137,7 +148,7 @@ TEST_CASE(test_write_to_file)
 
 TEST_CASE(test_character_set_masking)
 {
-    auto font = Gfx::BitmapFont::try_load_from_file("/usr/Tests/LibGfx/TestFont.font");
+    auto font = Gfx::BitmapFont::try_load_from_file(TEST_INPUT("TestFont.font"sv));
     EXPECT(!font.is_error());
 
     auto unmasked_font = font.value()->unmasked_character_set();

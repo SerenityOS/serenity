@@ -8,4 +8,4 @@ foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibGfx LIBS LibGfx)
 endforeach()
 
-install(FILES TestFont.font DESTINATION usr/Tests/LibGfx)
+install(DIRECTORY test-inputs DESTINATION usr/Tests/LibGfx)
