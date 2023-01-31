@@ -749,9 +749,17 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
 
     m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
 
-    m_notifier->on_ready_to_read = [&] { try_update_once().release_value_but_fixme_should_propagate_errors(); };
-    if (!m_incomplete_data.is_empty())
-        deferred_invoke([&] { try_update_once().release_value_but_fixme_should_propagate_errors(); });
+    m_notifier->on_ready_to_read = [&] {
+        if (try_update_once().is_error())
+            loop.quit(Exit);
+    };
+
+    if (!m_incomplete_data.is_empty()) {
+        deferred_invoke([&] {
+            if (try_update_once().is_error())
+                loop.quit(Exit);
+        });
+    }
 
     if (loop.exec() == Retry)
         return get_line(prompt);
