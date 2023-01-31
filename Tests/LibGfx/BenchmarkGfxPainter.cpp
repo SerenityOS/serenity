@@ -11,15 +11,6 @@
 #include <LibGfx/Painter.h>
 #include <stdio.h>
 
-// Make sure that no matter what order tests are run in, we've got some
-// default fonts for the application to use without talking to WindowServer
-static struct FontDatabaseSpoofer {
-    FontDatabaseSpoofer()
-    {
-        Gfx::FontDatabase::the().set_default_font_query("Katica 10 400 0"sv);
-    }
-} g_spoof;
-
 BENCHMARK_CASE(diagonal_lines)
 {
     int const run_count = 50;
