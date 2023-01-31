@@ -569,6 +569,7 @@ if (BUILD_LAGOM)
             LibCrypto
             LibCompress
             LibGL
+            LibGfx
             LibLocale
             LibMarkdown
             LibPDF
