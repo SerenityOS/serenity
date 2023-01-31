@@ -19,11 +19,11 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
-#include <LibWebView/ViewImplementation.h>
-
 #include <LibWeb/Forward.h>
+#include <LibWebView/ViewImplementation.h>
 #include <QAbstractScrollArea>
 #include <QPointer>
+#include <QSocketNotifier>
 
 class QTextEdit;
 class QLineEdit;
@@ -196,6 +196,7 @@ private:
     Gfx::IntRect m_viewport_rect;
 
     void handle_web_content_process_crash();
+    QSocketNotifier m_web_content_notifier { QSocketNotifier::Type::Read };
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
 
