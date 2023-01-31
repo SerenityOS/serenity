@@ -730,22 +730,11 @@ PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
 
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
 
-    auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-
-    auto original_position = glyph_position;
-
-    for (auto char_code : string.bytes()) {
-        auto char_width = text_state().font->get_char_width(char_code);
-        auto glyph_width = char_width * font_size;
-        text_state().font->draw_glyph(m_painter, glyph_position, glyph_width, char_code, state().paint_color);
-        auto tx = glyph_width;
-        tx += text_state().character_spacing;
-        tx *= text_state().horizontal_scaling;
-        glyph_position += { tx, 0.0f };
-    }
+    auto start_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
+    auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, state().paint_color, font_size, text_state().character_spacing, text_state().horizontal_scaling));
 
     // Update text matrix
-    auto delta_x = glyph_position.x() - original_position.x();
+    auto delta_x = end_position.x() - start_position.x();
     m_text_rendering_matrix_is_dirty = true;
     m_text_matrix.translate(delta_x / text_rendering_matrix.x_scale(), 0.0f);
     return {};

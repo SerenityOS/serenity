@@ -9,8 +9,10 @@
 
 namespace PDF {
 
-PDFErrorOr<NonnullRefPtr<Type0Font>> Type0Font::create(Document* document, NonnullRefPtr<DictObject> dict)
+PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size)
 {
+    TRY(PDFFont::initialize(document, dict, font_size));
+
     // FIXME: Support arbitrary CMaps
     auto cmap_value = TRY(dict->get_object(document, CommonNames::Encoding));
     if (!cmap_value->is<NameObject>() || cmap_value->cast<NameObject>()->name() != CommonNames::IdentityH)
@@ -67,14 +69,10 @@ PDFErrorOr<NonnullRefPtr<Type0Font>> Type0Font::create(Document* document, Nonnu
         }
     }
 
-    return adopt_ref(*new Type0Font(system_info, widths, default_width));
-}
-
-Type0Font::Type0Font(CIDSystemInfo const& system_info, HashMap<u16, u16> const& widths, u16 missing_width)
-    : m_system_info(system_info)
-    , m_widths(widths)
-    , m_missing_width(missing_width)
-{
+    m_system_info = move(system_info);
+    m_widths = move(widths);
+    m_missing_width = default_width;
+    return {};
 }
 
 float Type0Font::get_char_width(u16 char_code) const
@@ -88,5 +86,10 @@ float Type0Font::get_char_width(u16 char_code) const
 
     return static_cast<float>(width) / 1000.0f;
 }
+
+PDFErrorOr<Gfx::FloatPoint> Type0Font::draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float, float, float)
+{
+    return Error::rendering_unsupported_error("Type0 font not implemented yet");
+};
 
 }
