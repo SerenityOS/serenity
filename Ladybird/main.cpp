@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView raw_url;
     StringView webdriver_content_ipc_path;
-    bool dump_layout_tree;
+    bool dump_layout_tree = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
