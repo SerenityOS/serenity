@@ -22,35 +22,21 @@ public:
         TrueType
     };
 
-    // This is used both by Type 1 and TrueType fonts.
-    struct CommonData {
-        DeprecatedFlyString base_font_name;
-        RefPtr<Gfx::Font> font;
-        RefPtr<StreamObject> to_unicode;
-        RefPtr<Encoding> encoding;
-        HashMap<u16, u16> widths;
-        u16 missing_width;
-        bool is_standard_font;
-
-        PDFErrorOr<void> load_from_dict(Document*, NonnullRefPtr<DictObject>, float font_size);
-    };
-
-    static PDFErrorOr<NonnullRefPtr<PDFFont>> create(Document*, NonnullRefPtr<DictObject>, float font_size);
+    static PDFErrorOr<NonnullRefPtr<PDFFont>> create(Document*, NonnullRefPtr<DictObject> const&, float font_size);
 
     virtual ~PDFFont() = default;
 
-    virtual float get_char_width(u16 char_code) const = 0;
+    virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, DeprecatedString const&, Color const&, float font_size, float character_spacing, float horizontal_scaling) = 0;
 
-    virtual void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) = 0;
-
-    virtual bool is_standard_font() const { return m_is_standard_font; }
     virtual Type type() const = 0;
-    virtual DeprecatedFlyString base_font_name() const = 0;
+    DeprecatedFlyString base_font_name() const { return m_base_font_name; };
 
 protected:
-    static Tuple<DeprecatedString, DeprecatedString> replacement_for_standard_latin_font(StringView);
+    virtual PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size);
+    static PDFErrorOr<NonnullRefPtr<Gfx::Font>> replacement_for(StringView name, float font_size);
 
-    bool m_is_standard_font { false };
+private:
+    DeprecatedFlyString m_base_font_name;
 };
 
 }
