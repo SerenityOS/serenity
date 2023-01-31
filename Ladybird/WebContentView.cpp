@@ -49,7 +49,6 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
-#include <QSocketNotifier>
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolTip>
@@ -607,8 +606,10 @@ void WebContentView::create_client()
     auto new_client = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(std::move(socket), *this)));
     new_client->set_fd_passing_socket(MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
-    auto* notifier = new QSocketNotifier(new_client->socket().fd().value(), QSocketNotifier::Type::Read);
-    QObject::connect(notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
+    m_web_content_notifier.setSocket(new_client->socket().fd().value());
+    m_web_content_notifier.setEnabled(true);
+
+    QObject::connect(&m_web_content_notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
         if (auto notifier = new_client->socket().notifier())
             notifier->on_ready_to_read();
     });
