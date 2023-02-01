@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Queue.h>
 #include <LibCore/File.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
@@ -14,6 +15,7 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
+#include <LibThreading/BackgroundAction.h>
 
 class PropertiesWindow final : public GUI::Window {
     C_OBJECT(PropertiesWindow);
@@ -21,6 +23,8 @@ class PropertiesWindow final : public GUI::Window {
 public:
     static ErrorOr<NonnullRefPtr<PropertiesWindow>> try_create(DeprecatedString const& path, bool disable_rename, Window* parent = nullptr);
     virtual ~PropertiesWindow() override = default;
+
+    virtual void close() final;
 
 private:
     PropertiesWindow(DeprecatedString const& path, Window* parent = nullptr);
@@ -36,6 +40,21 @@ private:
         mode_t read;
         mode_t write;
         mode_t execute;
+    };
+
+    class DirectoryStatisticsCalculator final : public RefCounted<DirectoryStatisticsCalculator> {
+    public:
+        DirectoryStatisticsCalculator(DeprecatedString path);
+        void start();
+        void stop();
+        Function<void(off_t total_size_in_bytes, size_t file_count, size_t directory_count)> on_update;
+
+    private:
+        off_t m_total_size_in_bytes { 0 };
+        size_t m_file_count { 0 };
+        size_t m_directory_count { 0 };
+        RefPtr<Threading::BackgroundAction<int>> m_background_action;
+        Queue<DeprecatedString> m_work_queue;
     };
 
     static DeprecatedString const get_description(mode_t const mode)
@@ -70,6 +89,8 @@ private:
     RefPtr<GUI::Button> m_apply_button;
     RefPtr<GUI::TextBox> m_name_box;
     RefPtr<GUI::ImageWidget> m_icon;
+    RefPtr<GUI::Label> m_size_label;
+    RefPtr<DirectoryStatisticsCalculator> m_directory_statistics_calculator;
     DeprecatedString m_name;
     DeprecatedString m_parent_path;
     DeprecatedString m_path;
