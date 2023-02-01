@@ -1,12 +1,12 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ChessWidget.h"
 #include <LibConfig/Client.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -17,6 +17,7 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 
@@ -39,6 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/bin/ChessEngine", "x"));
+    TRY(Core::System::unveil("/bin/GamesSettings", "x"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -99,55 +101,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->reset();
     })));
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the()->quit();
-    })));
 
-    auto style_menu = TRY(window->try_add_menu("&Style"));
-    GUI::ActionGroup piece_set_action_group;
-    piece_set_action_group.set_exclusive(true);
-    auto piece_set_menu = TRY(style_menu->try_add_submenu("&Piece Set"));
-    piece_set_menu->set_icon(app_icon.bitmap_for_size(16));
-
-    Core::DirIterator di("/res/icons/chess/sets/", Core::DirIterator::SkipParentAndBaseDir);
-    while (di.has_next()) {
-        auto set = di.next_path();
-        auto action = GUI::Action::create_checkable(set, [&](auto& action) {
-            widget->set_piece_set(action.text());
-            widget->update();
-            Config::write_string("Games"sv, "Chess"sv, "PieceSet"sv, action.text());
-        });
-
-        piece_set_action_group.add_action(*action);
-        if (widget->piece_set() == set)
-            action->set_checked(true);
-        TRY(piece_set_menu->try_add_action(*action));
-    }
-
-    GUI::ActionGroup board_theme_action_group;
-    board_theme_action_group.set_exclusive(true);
-    auto board_theme_menu = TRY(style_menu->try_add_submenu("Board Theme"));
-    board_theme_menu->set_icon(Gfx::Bitmap::load_from_file("/res/icons/chess/mini-board.png"sv).release_value_but_fixme_should_propagate_errors());
-
-    for (auto const& theme : { "Beige", "Green", "Blue" }) {
-        auto action = GUI::Action::create_checkable(theme, [&](auto& action) {
-            widget->set_board_theme(action.text());
-            widget->update();
-            Config::write_string("Games"sv, "Chess"sv, "BoardTheme"sv, action.text());
-        });
-        board_theme_action_group.add_action(*action);
-        if (widget->board_theme().name == theme)
-            action->set_checked(true);
-        TRY(board_theme_menu->try_add_action(*action));
-    }
-
-    auto coordinates_action = GUI::Action::create_checkable("Coordinates", [&](auto& action) {
-        widget->set_coordinates(action.is_checked());
-        widget->update();
-        Config::write_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, action.is_checked());
-    });
-    coordinates_action->set_checked(widget->coordinates());
-    TRY(style_menu->try_add_action(coordinates_action));
+    auto settings_action = GUI::Action::create(
+        "Chess &Settings", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/games.png"sv)), [window](auto&) {
+            GUI::Process::spawn_or_show_error(window, "/bin/GamesSettings"sv, Array { "--open-tab", "chess" });
+        },
+        window);
+    settings_action->set_status_tip("Open the Game Settings for Chess");
+    TRY(game_menu->try_add_action(settings_action));
 
     auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {
         widget->set_show_available_moves(action.is_checked());
@@ -155,7 +116,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::write_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, action.is_checked());
     });
     show_available_moves_action->set_checked(widget->show_available_moves());
-    TRY(style_menu->try_add_action(show_available_moves_action));
+    TRY(game_menu->try_add_action(show_available_moves_action));
+    TRY(game_menu->try_add_separator());
+
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+        GUI::Application::the()->quit();
+    })));
 
     auto engine_menu = TRY(window->try_add_menu("&Engine"));
 
