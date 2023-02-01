@@ -1162,8 +1162,9 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         // OpenGL 2.0 ¶ 3.5.1 states (in a roundabout way) that texture coordinates must be divided by Q
         auto homogeneous_texture_coordinate = quad.get_input_vector4(SHADER_INPUT_FIRST_TEXCOORD + i * 4);
         auto texel = sampler.sample_2d(homogeneous_texture_coordinate.xy() / homogeneous_texture_coordinate.w());
-        texture_stage_texel[i] = texel;
         INCREASE_STATISTICS_COUNTER(g_num_sampler_calls, 1);
+        if (m_samplers_need_texture_staging)
+            texture_stage_texel[i] = texel;
 
         // FIXME: implement support for GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_INTENSITY and GL_RGB internal formats
         auto& fixed_function_env = sampler.config().fixed_function_texture_environment;
@@ -1584,6 +1585,14 @@ void Device::set_sampler_config(unsigned sampler, GPU::SamplerConfig const& conf
     VERIFY(config.bound_image.is_null() || config.bound_image->ownership_token() == this);
 
     m_samplers[sampler].set_config(config);
+
+    m_samplers_need_texture_staging = any_of(m_samplers, [](auto const& sampler) {
+        auto const& fixed_function_env = sampler.config().fixed_function_texture_environment;
+        if (fixed_function_env.env_mode != GPU::TextureEnvMode::Combine)
+            return false;
+        return any_of(fixed_function_env.alpha_source, [](auto texture_source) { return texture_source == GPU::TextureSource::TextureStage; })
+            || any_of(fixed_function_env.rgb_source, [](auto texture_source) { return texture_source == GPU::TextureSource::TextureStage; });
+    });
 }
 
 void Device::set_light_state(unsigned int light_id, GPU::Light const& light)
