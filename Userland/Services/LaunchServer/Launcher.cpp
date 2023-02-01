@@ -177,7 +177,7 @@ Vector<DeprecatedString> Launcher::handlers_with_details_for_url(const URL& url)
     return handlers;
 }
 
-Optional<DeprecatedString> Launcher::mime_type_for_file(DeprecatedString path)
+Optional<StringView> Launcher::mime_type_for_file(DeprecatedString path)
 {
     auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
