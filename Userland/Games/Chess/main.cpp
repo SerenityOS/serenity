@@ -27,6 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
 
     Config::pledge_domain("Games");
+    Config::monitor_domain("Games");
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man6/Chess.md") }));
     TRY(Desktop::Launcher::seal_allowlist());

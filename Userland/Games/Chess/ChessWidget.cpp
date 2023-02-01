@@ -699,3 +699,28 @@ int ChessWidget::resign()
 
     return 0;
 }
+
+void ChessWidget::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+{
+    if (domain != "Games"sv && group != "Chess"sv)
+        return;
+
+    if (key == "PieceSet"sv) {
+        set_piece_set(value);
+        update();
+    } else if (key == "BoardTheme"sv) {
+        set_board_theme(value);
+        update();
+    }
+}
+
+void ChessWidget::config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value)
+{
+    if (domain != "Games"sv && group != "Chess"sv)
+        return;
+
+    if (key == "ShowCoordinates"sv) {
+        set_coordinates(value);
+        update();
+    }
+}
