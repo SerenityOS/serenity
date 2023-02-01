@@ -75,11 +75,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.parse(arguments);
 
-    URL url = raw_url;
-    if (Core::File::exists(raw_url))
-        url = URL::create_with_file_scheme(Core::File::real_path_for(raw_url));
-    else if (!url.is_valid())
-        url = DeprecatedString::formatted("http://{}", raw_url);
+    auto get_formatted_url = [&](StringView const& raw_url) -> URL {
+        URL url = raw_url;
+        if (Core::File::exists(raw_url))
+            url = URL::create_with_file_scheme(Core::File::real_path_for(raw_url));
+        else if (!url.is_valid())
+            url = DeprecatedString::formatted("http://{}", raw_url);
+        return url;
+    };
 
     if (dump_layout_tree) {
         WebContentView view({});
@@ -92,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             app.quit();
         };
 
-        view.load(url);
+        view.load(get_formatted_url(raw_url));
         return app.exec();
     }
 
@@ -107,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window.resize(800, 600);
     window.show();
 
-    if (url.is_valid())
+    if (auto url = get_formatted_url(raw_url); url.is_valid())
         window.view().load(url);
 
     return app.exec();
