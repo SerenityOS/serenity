@@ -100,21 +100,14 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
             on_segment_drag_enter(index, event);
     };
 
-    auto button_text_width = button.font().width(text);
-    auto icon_width = icon ? icon->width() : 0;
-    auto icon_padding = icon ? 4 : 0;
-
-    int const max_button_width = 100;
-
-    auto button_width = min(button_text_width + icon_width + icon_padding + 16, max_button_width);
-    auto shrunken_width = icon_width + icon_padding + (icon ? 4 : 16);
-
-    button.set_max_size(static_cast<int>(ceilf(button_width)), 16 + 8);
-    button.set_min_size(shrunken_width, 16 + 8);
-
-    Segment segment { icon, text, data, static_cast<int>(ceilf(button_width)), shrunken_width, button.make_weak_ptr<GUI::Button>() };
-
-    m_segments.append(move(segment));
+    m_segments.append(Segment {
+        .icon = icon,
+        .text = move(text),
+        .data = move(data),
+        .width = 0,
+        .shrunken_width = 0,
+        .button = button.make_weak_ptr<GUI::Button>(),
+    });
     relayout();
 }
 
@@ -170,8 +163,30 @@ void Breadcrumbbar::resize_event(ResizeEvent&)
     relayout();
 }
 
+void Breadcrumbbar::did_change_font()
+{
+    Widget::did_change_font();
+    relayout();
+}
+
 void Breadcrumbbar::relayout()
 {
+    for (auto& segment : m_segments) {
+        VERIFY(segment.button);
+        auto& button = *segment.button;
+        auto button_text_width = button.font().width(segment.text);
+        auto icon_width = button.icon() ? button.icon()->width() : 0;
+        auto icon_padding = button.icon() ? 4 : 0;
+
+        int const max_button_width = 100;
+
+        segment.width = static_cast<int>(ceilf(min(button_text_width + icon_width + icon_padding + 16, max_button_width)));
+        segment.shrunken_width = icon_width + icon_padding + (button.icon() ? 4 : 16);
+
+        button.set_max_size(segment.width, 16 + 8);
+        button.set_min_size(segment.shrunken_width, 16 + 8);
+    }
+
     auto remaining_width = 0;
 
     for (auto& segment : m_segments)
