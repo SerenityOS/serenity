@@ -19,9 +19,9 @@ LocalePrototype::LocalePrototype(Realm& realm)
 {
 }
 
-void LocalePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> LocalePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -50,6 +50,8 @@ void LocalePrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.timeZones, time_zones, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.textInfo, text_info, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.weekInfo, week_info, {}, Attribute::Configurable);
+
+    return {};
 }
 
 // 14.3.3 Intl.Locale.prototype.maximize ( ), https://tc39.es/ecma402/#sec-Intl.Locale.prototype.maximize

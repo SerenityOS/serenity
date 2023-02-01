@@ -9,7 +9,9 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/ICCProfile.h>
+#include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/Tags.h>
+#include <LibGfx/ImageDecoder.h>
 
 template<class T>
 static ErrorOr<String> hyperlink(URL const& target, T const& label)
@@ -31,20 +33,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    static StringView icc_path;
-    args_parser.add_positional_argument(icc_path, "Path to ICC profile", "FILE");
+    static StringView path;
+    args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE");
     args_parser.parse(arguments);
 
-    auto icc_file = TRY(Core::MappedFile::map(icc_path));
-    auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
+    auto file = TRY(Core::MappedFile::map(path));
+    ReadonlyBytes icc_bytes;
 
+    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+    if (decoder) {
+        if (auto embedded_icc_bytes = TRY(decoder->icc_data()); embedded_icc_bytes.has_value()) {
+            icc_bytes = *embedded_icc_bytes;
+        } else {
+            outln("image contains no embedded ICC profile");
+            return 1;
+        }
+    } else {
+        icc_bytes = file->bytes();
+    }
+
+    auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes));
+
+    outln("                  size: {} bytes", profile->on_disk_size());
     out_optional("    preferred CMM type", profile->preferred_cmm_type());
     outln("               version: {}", profile->version());
     outln("          device class: {}", Gfx::ICC::device_class_name(profile->device_class()));
     outln("      data color space: {}", Gfx::ICC::data_color_space_name(profile->data_color_space()));
     outln("      connection space: {}", Gfx::ICC::profile_connection_space_name(profile->connection_space()));
     outln("creation date and time: {}", Core::DateTime::from_timestamp(profile->creation_timestamp()));
-    outln("      primary platform: {}", Gfx::ICC::primary_platform_name(profile->primary_platform()));
+    out_optional("      primary platform", profile->primary_platform().map([](auto platform) { return primary_platform_name(platform); }));
 
     auto flags = profile->flags();
     outln("                 flags: 0x{:08x}", flags.bits());
@@ -82,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     out_optional("               creator", profile->creator());
     out_optional("                    id", profile->id());
 
-    size_t profile_disk_size = icc_file->size();
+    size_t profile_disk_size = icc_bytes.size();
     if (profile_disk_size != profile->on_disk_size()) {
         VERIFY(profile_disk_size > profile->on_disk_size());
         outln("{} trailing bytes after profile data", profile_disk_size - profile->on_disk_size());
@@ -118,6 +135,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 // FIXME: Maybe print the actual points if -v is passed?
                 outln("    curve with {} points", curve.values().size());
             }
+        } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
+            auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
+            outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
+            outln("    output table: {} channels x {} entries", lut16.number_of_output_channels(), lut16.number_of_output_table_entries());
+            outln("    color lookup table: {} grid points, {} total entries", lut16.number_of_clut_grid_points(), lut16.clut_values().size());
+
+            auto const& e = lut16.e_matrix();
+            outln("    e = [ {}, {}, {},", e[0], e[1], e[2]);
+            outln("          {}, {}, {},", e[3], e[4], e[5]);
+            outln("          {}, {}, {} ]", e[6], e[7], e[8]);
+        } else if (tag_data->type() == Gfx::ICC::Lut8TagData::Type) {
+            auto& lut8 = static_cast<Gfx::ICC::Lut8TagData&>(*tag_data);
+            outln("    input table: {} channels x {} entries", lut8.number_of_input_channels(), lut8.number_of_input_table_entries());
+            outln("    output table: {} channels x {} entries", lut8.number_of_output_channels(), lut8.number_of_output_table_entries());
+            outln("    color lookup table: {} grid points, {} total entries", lut8.number_of_clut_grid_points(), lut8.clut_values().size());
+
+            auto const& e = lut8.e_matrix();
+            outln("    e = [ {}, {}, {},", e[0], e[1], e[2]);
+            outln("          {}, {}, {},", e[3], e[4], e[5]);
+            outln("          {}, {}, {} ]", e[6], e[7], e[8]);
         } else if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
             auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
             for (auto& record : multi_localized_unicode.records()) {

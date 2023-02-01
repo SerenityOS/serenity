@@ -43,7 +43,7 @@ DeprecatedString format_double(char const* format, double value)
     auto putch = [&](auto, auto ch) { builder.append(ch); };
     printf_internal<decltype(putch), PrintfImpl, double, SingleEntryListNext>(putch, nullptr, format, value);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

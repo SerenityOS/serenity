@@ -26,9 +26,9 @@ ZonedDateTimePrototype::ZonedDateTimePrototype(Realm& realm)
 {
 }
 
-void ZonedDateTimePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ZonedDateTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -90,6 +90,8 @@ void ZonedDateTimePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toPlainYearMonth, to_plain_year_month, 0, attr);
     define_native_function(realm, vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
+
+    return {};
 }
 
 // 6.3.3 get Temporal.ZonedDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.zoneddatetime.prototype.calendar
@@ -801,7 +803,7 @@ JS_DEFINE_NATIVE_FUNCTION(ZonedDateTimePrototype::with)
 
     // 18. Assert: Type(offsetString) is String.
     VERIFY(offset_string_value.is_string());
-    auto offset_string = TRY(offset_string_value.as_string().deprecated_string());
+    auto offset_string = TRY(offset_string_value.as_string().utf8_string());
 
     // 19. Let dateTimeResult be ? InterpretTemporalDateTimeFields(calendar, fields, options).
     auto date_time_result = TRY(interpret_temporal_date_time_fields(vm, calendar, *fields, *options));

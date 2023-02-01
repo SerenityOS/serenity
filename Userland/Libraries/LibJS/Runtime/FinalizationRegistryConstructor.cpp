@@ -18,21 +18,25 @@ FinalizationRegistryConstructor::FinalizationRegistryConstructor(Realm& realm)
 {
 }
 
-void FinalizationRegistryConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> FinalizationRegistryConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 26.2.2.1 FinalizationRegistry.prototype, https://tc39.es/ecma262/#sec-finalization-registry.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().finalization_registry_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 26.2.1.1 FinalizationRegistry ( cleanupCallback ), https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback
 ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.FinalizationRegistry);
 }
 
@@ -40,8 +44,6 @@ ThrowCompletionOr<Value> FinalizationRegistryConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> FinalizationRegistryConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-
-    // NOTE: Step 1 is implemented in FinalizationRegistryConstructor::call()
 
     // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
     auto cleanup_callback = vm.argument(0);

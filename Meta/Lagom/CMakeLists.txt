@@ -253,10 +253,12 @@ function(lagom_test source)
     add_executable(${name} ${source})
     target_link_libraries(${name} PRIVATE LibCore LibTest LibTestMain ${LAGOM_TEST_LIBS})
     add_test(
-            NAME ${name}
-            COMMAND ${name}
-            WORKING_DIRECTORY ${LAGOM_TEST_WORKING_DIRECTORY}
+        NAME ${name}
+        COMMAND ${name}
+        WORKING_DIRECTORY ${LAGOM_TEST_WORKING_DIRECTORY}
     )
+    set_target_properties(${name} PROPERTIES LAGOM_WORKING_DIRECTORY "${LAGOM_TEST_WORKING_DIRECTORY}")
+    set_tests_properties(${name} PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}")
 endfunction()
 
 function(serenity_test test_src sub_dir)
@@ -569,6 +571,7 @@ if (BUILD_LAGOM)
             LibCrypto
             LibCompress
             LibGL
+            LibGfx
             LibLocale
             LibMarkdown
             LibPDF
@@ -687,4 +690,17 @@ if (ENABLE_FUZZERS)
     add_subdirectory(Fuzzers)
 else()
     export_components("${CMAKE_BINARY_DIR}/components.ini")
+endif()
+
+if (NOT "$ENV{LAGOM_TARGET}" STREQUAL "")
+    add_custom_target(run-lagom-target
+        COMMAND "${CMAKE_COMMAND}"
+            -E env "SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}" "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}"
+            "$<TARGET_FILE:$ENV{LAGOM_TARGET}>" $ENV{LAGOM_ARGS}
+
+        WORKING_DIRECTORY "$<TARGET_PROPERTY:$ENV{LAGOM_TARGET},LAGOM_WORKING_DIRECTORY>"
+        DEPENDS "$<TARGET_FILE:$ENV{LAGOM_TARGET}>"
+        USES_TERMINAL
+        VERBATIM
+    )
 endif()

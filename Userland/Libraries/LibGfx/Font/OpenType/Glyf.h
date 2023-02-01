@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Endian.h>
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/AffineTransform.h>

@@ -27,10 +27,10 @@ RegExpPrototype::RegExpPrototype(Realm& realm)
 {
 }
 
-void RegExpPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> RegExpPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, vm.names.test, test, 1, attr);
@@ -50,6 +50,8 @@ void RegExpPrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.flagName, flag_name, {}, Attribute::Configurable);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
+
+    return {};
 }
 
 // Non-standard abstraction around steps used by multiple prototypes.
@@ -820,13 +822,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 15. If nextSourcePosition ≥ lengthS, return accumulatedResult.
     if (next_source_position >= string.length_in_code_units())
-        return PrimitiveString::create(vm, accumulated_result.build());
+        return PrimitiveString::create(vm, accumulated_result.to_deprecated_string());
 
     // 16. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
     auto substring = string.substring_view(next_source_position);
     accumulated_result.append(substring);
 
-    return PrimitiveString::create(vm, accumulated_result.build());
+    return PrimitiveString::create(vm, accumulated_result.to_deprecated_string());
 }
 
 // 22.2.5.12 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search

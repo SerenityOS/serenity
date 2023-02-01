@@ -14,7 +14,7 @@ class JSONObject final : public Object {
     JS_OBJECT(JSONObject, Object);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~JSONObject() override = default;
 
     // The base implementation of stringify is exposed because it is used by

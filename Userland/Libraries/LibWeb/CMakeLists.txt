@@ -1,6 +1,9 @@
 include(libweb_generators)
 
 set(SOURCES
+    ARIA/ARIAMixin.cpp
+    ARIA/ARIAMixin.idl
+    ARIA/Roles.cpp
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
     Bindings/FetchMethod.cpp
@@ -75,9 +78,6 @@ set(SOURCES
     DOM/AccessibilityTreeNode.cpp
     DOM/Attr.cpp
     DOM/Attr.idl
-    DOM/ARIAMixin.cpp
-    DOM/ARIAMixin.idl
-    DOM/ARIARoleNames.cpp
     DOM/CDATASection.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl

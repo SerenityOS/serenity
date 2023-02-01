@@ -86,7 +86,7 @@ struct AK::Formatter<NumberFormat> : Formatter<FormatString> {
             format.zero_format_index,
             format.positive_format_index,
             format.negative_format_index,
-            identifier_indices.build());
+            identifier_indices.to_deprecated_string());
     }
 };
 
@@ -718,7 +718,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.build();
+        return builder.to_deprecated_string();
     };
 
     while (numbers_iterator.has_next()) {
@@ -929,7 +929,7 @@ Optional<Span<u32 const>> get_digits_for_number_system(StringView system)
     return s_number_systems_digits[number_system_index];
 }
 
-static NumberSystemData const* find_number_system(StringView locale, StringView system)
+static ErrorOr<NumberSystemData const*> find_number_system(StringView locale, StringView system)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -959,44 +959,44 @@ static NumberSystemData const* find_number_system(StringView locale, StringView 
     if (auto const* number_system = lookup_number_system(system))
         return number_system;
 
-    auto default_number_system = get_preferred_keyword_value_for_locale(locale, "nu"sv);
+    auto default_number_system = TRY(get_preferred_keyword_value_for_locale(locale, "nu"sv));
     if (!default_number_system.has_value())
         return nullptr;
 
     return lookup_number_system(*default_number_system);
 }
 
-Optional<StringView> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
+ErrorOr<Optional<StringView>> get_number_system_symbol(StringView locale, StringView system, NumericSymbol symbol)
 {
-    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
+    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr) {
         auto symbols = s_numeric_symbol_lists.at(number_system->symbols);
 
         auto symbol_index = to_underlying(symbol);
         if (symbol_index >= symbols.size())
-            return {};
+            return OptionalNone {};
 
-        return decode_string(symbols[symbol_index]);
+        return Optional<StringView> { decode_string(symbols[symbol_index]) };
     }
 
-    return {};
+    return OptionalNone {};
 }
 
-Optional<NumberGroupings> get_number_system_groupings(StringView locale, StringView system)
+ErrorOr<Optional<NumberGroupings>> get_number_system_groupings(StringView locale, StringView system)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
-        return {};
+        return OptionalNone {};
 
     u8 minimum_grouping_digits = s_minimum_grouping_digits[to_underlying(*locale_value) - 1];
 
-    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr)
+    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr)
         return NumberGroupings { minimum_grouping_digits, number_system->primary_grouping_size, number_system->secondary_grouping_size };
-    return {};
+    return OptionalNone {};
 }
 
-Optional<NumberFormat> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
+ErrorOr<Optional<NumberFormat>> get_standard_number_system_format(StringView locale, StringView system, StandardNumberFormatType type)
 {
-    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
+    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr) {
         @number_format_index_type@ format_index = 0;
 
         switch (type) {
@@ -1020,14 +1020,14 @@ Optional<NumberFormat> get_standard_number_system_format(StringView locale, Stri
         return s_number_formats[format_index].to_unicode_number_format();
     }
 
-    return {};
+    return OptionalNone {};
 }
 
-Vector<NumberFormat> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
+ErrorOr<Vector<NumberFormat>> get_compact_number_system_formats(StringView locale, StringView system, CompactNumberFormatType type)
 {
     Vector<NumberFormat> formats;
 
-    if (auto const* number_system = find_number_system(locale, system); number_system != nullptr) {
+    if (auto const* number_system = TRY(find_number_system(locale, system)); number_system != nullptr) {
         @number_format_list_index_type@ number_format_list_index { 0 };
 
         switch (type) {

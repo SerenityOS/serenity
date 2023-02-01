@@ -338,7 +338,7 @@ public:)~~~");
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Core::Stream::Stream& stream, Core::Stream::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(AK::Stream& stream, Core::Stream::LocalSocket& socket)
     {
         IPC::Decoder decoder { stream, socket };)~~~");
 
@@ -371,7 +371,7 @@ public:)~~~");
             builder.append(", "sv);
     }
 
-    message_generator.set("message.constructor_call_parameters", builder.build());
+    message_generator.set("message.constructor_call_parameters", builder.to_deprecated_string());
     message_generator.appendln(R"~~~(
         return make<@message.pascal_name@>(@message.constructor_call_parameters@);
     })~~~");
@@ -586,7 +586,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::Stream::LocalSocket& socket)
     {
-        auto stream = TRY(Core::Stream::FixedMemoryStream::construct(buffer));
+        auto stream = TRY(FixedMemoryStream::construct(buffer));
         auto message_endpoint_magic = TRY(stream->read_value<u32>());)~~~");
     generator.append(R"~~~(
 
@@ -768,10 +768,10 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
     }
 
     generator.appendln(R"~~~(#include <AK/Error.h>
+#include <AK/MemoryStream.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
 #include <AK/Utf8View.h>
-#include <LibCore/MemoryStream.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>

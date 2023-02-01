@@ -32,7 +32,7 @@ public:
 private:
     HTMLAnchorElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     void run_activation_behavior(Web::DOM::Event const&);
 
@@ -53,7 +53,7 @@ private:
         queue_an_element_task(source, move(steps));
     }
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 };
 
 }

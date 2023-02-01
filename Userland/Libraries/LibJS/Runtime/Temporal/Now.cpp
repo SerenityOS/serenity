@@ -26,9 +26,9 @@ Now::Now(Realm& realm)
 {
 }
 
-void Now::initialize(Realm& realm)
+ThrowCompletionOr<void> Now::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -45,6 +45,8 @@ void Now::initialize(Realm& realm)
     define_native_function(realm, vm.names.plainDate, plain_date, 1, attr);
     define_native_function(realm, vm.names.plainDateISO, plain_date_iso, 0, attr);
     define_native_function(realm, vm.names.plainTimeISO, plain_time_iso, 0, attr);
+
+    return {};
 }
 
 // 2.2.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone

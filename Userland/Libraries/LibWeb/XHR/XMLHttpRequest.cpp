@@ -45,7 +45,7 @@ JS::NonnullGCPtr<XMLHttpRequest> XMLHttpRequest::construct_impl(JS::Realm& realm
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     auto author_request_headers = Fetch::Infrastructure::HeaderList::create(realm.vm());
-    return realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers);
+    return realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::HeaderList& author_request_headers)
@@ -59,10 +59,12 @@ XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::Head
 
 XMLHttpRequest::~XMLHttpRequest() = default;
 
-void XMLHttpRequest::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> XMLHttpRequest::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLHttpRequestPrototype>(realm, "XMLHttpRequest"));
+
+    return {};
 }
 
 void XMLHttpRequest::visit_edges(Cell::Visitor& visitor)

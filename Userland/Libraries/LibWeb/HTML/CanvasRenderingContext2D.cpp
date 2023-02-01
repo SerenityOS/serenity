@@ -26,7 +26,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
 {
-    return realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element);
+    return realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasElement& element)
@@ -38,10 +38,12 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasE
 
 CanvasRenderingContext2D::~CanvasRenderingContext2D() = default;
 
-void CanvasRenderingContext2D::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CanvasRenderingContext2D::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CanvasRenderingContext2DPrototype>(realm, "CanvasRenderingContext2D"));
+
+    return {};
 }
 
 void CanvasRenderingContext2D::visit_edges(Cell::Visitor& visitor)
@@ -420,7 +422,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     for (auto c : text) {
         builder.append(Infra::is_ascii_whitespace(c) ? ' ' : c);
     }
-    DeprecatedString replaced_text = builder.build();
+    auto replaced_text = builder.to_deprecated_string();
 
     // 3. Let font be the current font of target, as given by that object's font attribute.
     // FIXME: Once we have CanvasTextDrawingStyles, implement font selection.

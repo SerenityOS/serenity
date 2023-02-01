@@ -27,7 +27,6 @@ public:
     auto const& browsing_context_set() const { return m_browsing_context_set; }
 
     void append(BrowsingContext&);
-    void remove(BrowsingContext&);
 
 private:
     explicit BrowsingContextGroup(Web::Page&);

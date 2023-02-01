@@ -30,7 +30,7 @@ public:
 
     bool disabled() const;
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 
 private:
     friend class Bindings::OptionConstructor;
@@ -38,7 +38,7 @@ private:
 
     HTMLOptionElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     void did_remove_attribute(DeprecatedFlyString const& name) override;

@@ -5,8 +5,8 @@
  */
 
 #include <AK/Assertions.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/HTML/HTMLQuoteElement.h>
 
 namespace Web::HTML {
@@ -18,20 +18,22 @@ HTMLQuoteElement::HTMLQuoteElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLQuoteElement::~HTMLQuoteElement() = default;
 
-void HTMLQuoteElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLQuoteElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLQuoteElementPrototype>(realm, "HTMLQuoteElement"));
+
+    return {};
 }
 
-DeprecatedFlyString HTMLQuoteElement::default_role() const
+Optional<ARIA::Role> HTMLQuoteElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-blockquote
     if (local_name() == TagNames::blockquote)
-        return DOM::ARIARoleNames::blockquote;
+        return ARIA::Role::blockquote;
     // https://www.w3.org/TR/html-aria/#el-q
     if (local_name() == TagNames::q)
-        return DOM::ARIARoleNames::generic;
+        return ARIA::Role::generic;
     VERIFY_NOT_REACHED();
 }
 

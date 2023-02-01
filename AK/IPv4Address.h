@@ -140,7 +140,6 @@ public:
 private:
     constexpr u32 octet(const SubnetClass subnet) const
     {
-        NetworkOrdered<u32> address(m_data);
         constexpr auto bits_per_byte = 8;
         auto const bits_to_shift = bits_per_byte * int(subnet);
         return (m_data >> bits_to_shift) & 0x0000'00FF;

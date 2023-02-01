@@ -16,7 +16,7 @@ namespace Web::Crypto {
 
 JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<SubtleCrypto>(realm, realm);
+    return realm.heap().allocate<SubtleCrypto>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 SubtleCrypto::SubtleCrypto(JS::Realm& realm)
@@ -26,10 +26,12 @@ SubtleCrypto::SubtleCrypto(JS::Realm& realm)
 
 SubtleCrypto::~SubtleCrypto() = default;
 
-void SubtleCrypto::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SubtleCrypto::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SubtleCryptoPrototype>(realm, "SubtleCrypto"));
+
+    return {};
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest

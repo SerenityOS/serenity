@@ -23,15 +23,17 @@ FunctionConstructor::FunctionConstructor(Realm& realm)
 {
 }
 
-void FunctionConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> FunctionConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 20.2.2.2 Function.prototype, https://tc39.es/ecma262/#sec-function.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().function_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 20.2.1.1.1 CreateDynamicFunction ( constructor, newTarget, kind, args ), https://tc39.es/ecma262/#sec-createdynamicfunction

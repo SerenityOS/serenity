@@ -270,7 +270,7 @@ DeprecatedString Node::child_text_content() const
         if (is<Text>(child))
             builder.append(verify_cast<Text>(child).text_content());
     });
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#concept-tree-root
@@ -743,7 +743,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     } else if (is<DocumentType>(this)) {
         // DocumentType
         auto document_type = verify_cast<DocumentType>(this);
-        auto document_type_copy = heap().allocate<DocumentType>(realm(), *document);
+        auto document_type_copy = heap().allocate<DocumentType>(realm(), *document).release_allocated_value_but_fixme_should_propagate_errors();
 
         // Set copy’s name, public ID, and system ID to those of node.
         document_type_copy->set_name(document_type->name());
@@ -760,26 +760,26 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
         auto text = verify_cast<Text>(this);
 
         // Set copy’s data to that of node.
-        auto text_copy = heap().allocate<Text>(realm(), *document, text->data());
+        auto text_copy = heap().allocate<Text>(realm(), *document, text->data()).release_allocated_value_but_fixme_should_propagate_errors();
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
         // Comment
         auto comment = verify_cast<Comment>(this);
 
         // Set copy’s data to that of node.
-        auto comment_copy = heap().allocate<Comment>(realm(), *document, comment->data());
+        auto comment_copy = heap().allocate<Comment>(realm(), *document, comment->data()).release_allocated_value_but_fixme_should_propagate_errors();
         copy = move(comment_copy);
     } else if (is<ProcessingInstruction>(this)) {
         // ProcessingInstruction
         auto processing_instruction = verify_cast<ProcessingInstruction>(this);
 
         // Set copy’s target and data to those of node.
-        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data(), processing_instruction->target());
+        auto processing_instruction_copy = heap().allocate<ProcessingInstruction>(realm(), *document, processing_instruction->data(), processing_instruction->target()).release_allocated_value_but_fixme_should_propagate_errors();
         copy = processing_instruction_copy;
     }
     // Otherwise, Do nothing.
     else if (is<DocumentFragment>(this)) {
-        copy = heap().allocate<DocumentFragment>(realm(), *document);
+        copy = heap().allocate<DocumentFragment>(realm(), *document).release_allocated_value_but_fixme_should_propagate_errors();
     }
 
     // FIXME: 4. Set copy’s node document and document to copy, if copy is a document, and set copy’s node document to document otherwise.
@@ -1179,7 +1179,7 @@ void Node::string_replace_all(DeprecatedString const& string)
 
     // 2. If string is not the empty string, then set node to a new Text node whose data is string and node document is parent’s node document.
     if (!string.is_empty())
-        node = heap().allocate<Text>(realm(), document(), string);
+        node = heap().allocate<Text>(realm(), document(), string).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 3. Replace all with node within parent.
     replace_all(node);

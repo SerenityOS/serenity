@@ -11,8 +11,8 @@
 #include "WebAssemblyModulePrototype.h"
 #include "WebAssemblyTableObject.h"
 #include "WebAssemblyTablePrototype.h"
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
-#include <LibCore/MemoryStream.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -32,9 +32,9 @@ WebAssemblyObject::WebAssemblyObject(JS::Realm& realm)
     s_abstract_machine.enable_instruction_count_limit();
 }
 
-void WebAssemblyObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "validate", validate, 1, attr);
@@ -52,6 +52,8 @@ void WebAssemblyObject::initialize(JS::Realm& realm)
 
     auto& table_constructor = Bindings::ensure_web_constructor<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"sv);
     define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+
+    return {};
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
@@ -119,7 +121,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
     } else {
         return vm.throw_completion<JS::TypeError>("Not a BufferSource");
     }
-    auto stream = Core::Stream::FixedMemoryStream::construct(data).release_value_but_fixme_should_propagate_errors();
+    auto stream = FixedMemoryStream::construct(data).release_value_but_fixme_should_propagate_errors();
     auto module_result = Wasm::Module::parse(*stream);
     if (module_result.is_error()) {
         // FIXME: Throw CompileError instead.
@@ -155,7 +157,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (result.is_error())
         promise->reject(*result.release_error().value());
     else
-        promise->fulfill(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, result.release_value()));
+        promise->fulfill(MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, result.release_value())));
     return promise;
 }
 
@@ -284,7 +286,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
         StringBuilder builder;
         builder.append("LinkError: Missing "sv);
         builder.join(' ', link_result.error().missing_imports);
-        return vm.throw_completion<JS::TypeError>(builder.build());
+        return vm.throw_completion<JS::TypeError>(builder.to_deprecated_string());
     }
 
     auto instance_result = s_abstract_machine.instantiate(module, link_result.release_value());
@@ -335,10 +337,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto instance_object = vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value());
+        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value()));
         if (should_return_module) {
             auto object = JS::Object::create(realm, nullptr);
-            object->define_direct_property("module", vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, s_compiled_modules.size() - 1), JS::default_attributes);
+            object->define_direct_property("module", MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, s_compiled_modules.size() - 1)), JS::default_attributes);
             object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
         } else {
@@ -353,7 +355,7 @@ JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
     auto& realm = *vm.current_realm();
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
-        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger { wasm_value.to<i64>().value() });
+        return realm.heap().allocate<JS::BigInt>(realm, ::Crypto::SignedBigInteger { wasm_value.to<i64>().value() }).release_allocated_value_but_fixme_should_propagate_errors();
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:

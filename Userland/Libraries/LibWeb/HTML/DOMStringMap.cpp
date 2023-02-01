@@ -15,7 +15,7 @@ namespace Web::HTML {
 JS::NonnullGCPtr<DOMStringMap> DOMStringMap::create(DOM::Element& element)
 {
     auto& realm = element.realm();
-    return realm.heap().allocate<DOMStringMap>(realm, element);
+    return realm.heap().allocate<DOMStringMap>(realm, element).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DOMStringMap::DOMStringMap(DOM::Element& element)
@@ -26,10 +26,12 @@ DOMStringMap::DOMStringMap(DOM::Element& element)
 
 DOMStringMap::~DOMStringMap() = default;
 
-void DOMStringMap::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> DOMStringMap::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMStringMapPrototype>(realm, "DOMStringMap"));
+
+    return {};
 }
 
 void DOMStringMap::visit_edges(Cell::Visitor& visitor)

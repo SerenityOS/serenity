@@ -78,9 +78,9 @@ ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(Core::File& file)
                 return Error::from_string_literal("Wavefront: Malformed face line.");
             }
 
-            auto vertex_indices = TRY(FixedArray<GLuint>::try_create(number_of_vertices));
-            auto tex_coord_indices = TRY(FixedArray<GLuint>::try_create(number_of_vertices));
-            auto normal_indices = TRY(FixedArray<GLuint>::try_create(number_of_vertices));
+            auto vertex_indices = TRY(FixedArray<GLuint>::create(number_of_vertices));
+            auto tex_coord_indices = TRY(FixedArray<GLuint>::create(number_of_vertices));
+            auto normal_indices = TRY(FixedArray<GLuint>::create(number_of_vertices));
 
             for (size_t i = 0; i < number_of_vertices; ++i) {
                 auto vertex_parts = face_line.at(i).split_view('/', SplitBehavior::KeepEmpty);

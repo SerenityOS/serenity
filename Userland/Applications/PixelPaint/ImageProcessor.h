@@ -61,7 +61,6 @@ public:
 
 private:
     ImageProcessor();
-    void processor_main();
 
     // Only the memory in the queue is in shared memory, i.e. the smart pointers themselves.
     // The actual data will remain in normal memory, but for this application we're not using multiple processes so it's fine.

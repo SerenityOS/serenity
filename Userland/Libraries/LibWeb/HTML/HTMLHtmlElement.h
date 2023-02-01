@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -20,12 +20,12 @@ public:
     bool should_use_body_background_properties() const;
 
     // https://www.w3.org/TR/html-aria/#el-html
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::document; }
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::document; }
 
 private:
     HTMLHtmlElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual bool is_html_html_element() const override { return true; }
 };
 

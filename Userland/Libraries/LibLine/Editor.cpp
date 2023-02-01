@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
+#include <AK/MemoryStream.h>
 #include <AK/RedBlackTree.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -20,7 +21,6 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -372,7 +372,7 @@ void Editor::insert(const u32 cp)
 {
     StringBuilder builder;
     builder.append(Utf32View(&cp, 1));
-    auto str = builder.build();
+    auto str = builder.to_deprecated_string();
     if (m_pending_chars.try_append(str.characters(), str.length()).is_error())
         return;
 
@@ -749,9 +749,17 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
 
     m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
 
-    m_notifier->on_ready_to_read = [&] { try_update_once().release_value_but_fixme_should_propagate_errors(); };
-    if (!m_incomplete_data.is_empty())
-        deferred_invoke([&] { try_update_once().release_value_but_fixme_should_propagate_errors(); });
+    m_notifier->on_ready_to_read = [&] {
+        if (try_update_once().is_error())
+            loop.quit(Exit);
+    };
+
+    if (!m_incomplete_data.is_empty()) {
+        deferred_invoke([&] {
+            if (try_update_once().is_error())
+                loop.quit(Exit);
+        });
+    }
 
     if (loop.exec() == Retry)
         return get_line(prompt);
@@ -1329,7 +1337,7 @@ ErrorOr<void> Editor::cleanup()
 
 ErrorOr<void> Editor::refresh_display()
 {
-    Core::Stream::AllocatingMemoryStream output_stream;
+    AllocatingMemoryStream output_stream;
     ScopeGuard flush_stream {
         [&] {
             m_shown_lines = current_prompt_metrics().lines_with_addition(m_cached_buffer_metrics, m_num_columns);
@@ -1574,7 +1582,7 @@ void Editor::strip_styles(bool strip_anchored)
     m_refresh_needed = true;
 }
 
-ErrorOr<void> Editor::reposition_cursor(Core::Stream::Stream& stream, bool to_end)
+ErrorOr<void> Editor::reposition_cursor(AK::Stream& stream, bool to_end)
 {
     auto cursor = m_cursor;
     auto saved_cursor = m_cursor;
@@ -1596,12 +1604,12 @@ ErrorOr<void> Editor::reposition_cursor(Core::Stream::Stream& stream, bool to_en
     return {};
 }
 
-ErrorOr<void> VT::move_absolute(u32 row, u32 col, Core::Stream::Stream& stream)
+ErrorOr<void> VT::move_absolute(u32 row, u32 col, AK::Stream& stream)
 {
     return stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{}H", row, col).bytes());
 }
 
-ErrorOr<void> VT::move_relative(int row, int col, Core::Stream::Stream& stream)
+ErrorOr<void> VT::move_relative(int row, int col, AK::Stream& stream)
 {
     char x_op = 'A', y_op = 'D';
 
@@ -1750,10 +1758,10 @@ DeprecatedString Style::to_deprecated_string() const
 
     builder.append('}');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
-ErrorOr<void> VT::apply_style(Style const& style, Core::Stream::Stream& stream, bool is_starting)
+ErrorOr<void> VT::apply_style(Style const& style, AK::Stream& stream, bool is_starting)
 {
     if (is_starting) {
         TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{};{}m{}{}{}",
@@ -1771,7 +1779,7 @@ ErrorOr<void> VT::apply_style(Style const& style, Core::Stream::Stream& stream, 
     return {};
 }
 
-ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, Core::Stream::Stream& stream)
+ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, AK::Stream& stream)
 {
     if (count_below + count_above == 0) {
         TRY(stream.write_entire_buffer("\033[2K"sv.bytes()));
@@ -1790,17 +1798,17 @@ ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, Core::Stre
     return {};
 }
 
-ErrorOr<void> VT::save_cursor(Core::Stream::Stream& stream)
+ErrorOr<void> VT::save_cursor(AK::Stream& stream)
 {
     return stream.write_entire_buffer("\033[s"sv.bytes());
 }
 
-ErrorOr<void> VT::restore_cursor(Core::Stream::Stream& stream)
+ErrorOr<void> VT::restore_cursor(AK::Stream& stream)
 {
     return stream.write_entire_buffer("\033[u"sv.bytes());
 }
 
-ErrorOr<void> VT::clear_to_end_of_line(Core::Stream::Stream& stream)
+ErrorOr<void> VT::clear_to_end_of_line(AK::Stream& stream)
 {
     return stream.write_entire_buffer("\033[K"sv.bytes());
 }
@@ -2182,7 +2190,7 @@ DeprecatedString Editor::line(size_t up_to_index) const
 {
     StringBuilder builder;
     builder.append(Utf32View { m_buffer.data(), min(m_buffer.size(), up_to_index) });
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 void Editor::remove_at_index(size_t index)

@@ -30,10 +30,12 @@ Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const option
 {
 }
 
-void Worker::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Worker::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"));
+
+    return {};
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)
@@ -75,7 +77,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString
     // 5. Let worker URL be the resulting URL record.
 
     // 6. Let worker be a new Worker object.
-    auto worker = document.heap().allocate<Worker>(document.realm(), script_url, options, document);
+    auto worker = MUST_OR_THROW_OOM(document.heap().allocate<Worker>(document.realm(), script_url, options, document));
 
     // 7. Let outside port be a new MessagePort in outside settings's Realm.
     auto outside_port = MessagePort::create(outside_settings.realm());

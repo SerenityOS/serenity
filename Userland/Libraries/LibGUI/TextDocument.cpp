@@ -854,7 +854,7 @@ void InsertTextCommand::perform_formatting(TextDocument::Client const& client)
             ++column;
         }
     }
-    m_text = builder.build();
+    m_text = builder.to_deprecated_string();
 }
 
 void InsertTextCommand::redo()

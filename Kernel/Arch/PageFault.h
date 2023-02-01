@@ -8,10 +8,13 @@
 
 #include <AK/Platform.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/RegisterState.h>
+#include <Kernel/ExecutionMode.h>
 #include <Kernel/VirtualAddress.h>
 
 namespace Kernel {
 
+// NOTE: These flags are x86_64 specific.
 struct PageFaultFlags {
     enum Flags {
         NotPresent = 0x00,
@@ -28,10 +31,21 @@ struct PageFaultFlags {
 class PageFault {
 public:
     PageFault(u16 code, VirtualAddress vaddr)
-        : m_code(code)
-        , m_vaddr(vaddr)
+        : m_vaddr(vaddr)
+    {
+        m_type = (Type)(code & PageFaultFlags::ProtectionViolation);
+        m_access = (Access)(code & PageFaultFlags::Write);
+        m_execution_mode = (code & PageFaultFlags::UserMode) != 0 ? ExecutionMode::User : ExecutionMode::Kernel;
+        m_is_reserved_bit_violation = (code & PageFaultFlags::ReservedBitViolation) != 0;
+        m_is_instruction_fetch = (code & PageFaultFlags::InstructionFetch) != 0;
+    }
+
+    explicit PageFault(VirtualAddress vaddr)
+        : m_vaddr(vaddr)
     {
     }
+
+    void handle(RegisterState& regs);
 
     enum class Type {
         PageNotPresent = PageFaultFlags::NotPresent,
@@ -44,21 +58,42 @@ public:
     };
 
     VirtualAddress vaddr() const { return m_vaddr; }
-    u16 code() const { return m_code; }
+    u16 code() const
+    {
+        u16 code = 0;
+        code |= (u16)m_type;
+        code |= (u16)m_access;
+        code |= m_execution_mode == ExecutionMode::User ? PageFaultFlags::UserMode : 0;
+        code |= m_is_reserved_bit_violation ? PageFaultFlags::ReservedBitViolation : 0;
+        code |= m_is_instruction_fetch ? PageFaultFlags::InstructionFetch : 0;
+        return code;
+    }
 
-    Type type() const { return (Type)(m_code & 1); }
-    Access access() const { return (Access)(m_code & 2); }
+    void set_type(Type type) { m_type = type; }
+    Type type() const { return m_type; }
 
-    bool is_not_present() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
-    bool is_protection_violation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
-    bool is_read() const { return (m_code & 2) == PageFaultFlags::Read; }
-    bool is_write() const { return (m_code & 2) == PageFaultFlags::Write; }
-    bool is_user() const { return (m_code & 4) == PageFaultFlags::UserMode; }
-    bool is_supervisor() const { return (m_code & 4) == PageFaultFlags::SupervisorMode; }
-    bool is_instruction_fetch() const { return (m_code & 16) == PageFaultFlags::InstructionFetch; }
+    void set_access(Access access) { m_access = access; }
+    Access access() const { return m_access; }
+
+    void set_mode(ExecutionMode execution_mode) { m_execution_mode = execution_mode; }
+    ExecutionMode mode() const { return m_execution_mode; }
+
+    bool is_not_present() const { return m_type == Type::PageNotPresent; }
+    bool is_protection_violation() const { return m_type == Type::ProtectionViolation; }
+    bool is_read() const { return m_access == Access::Read; }
+    bool is_write() const { return m_access == Access::Write; }
+    bool is_user() const { return m_execution_mode == ExecutionMode::User; }
+    bool is_kernel() const { return m_execution_mode == ExecutionMode::Kernel; }
+    bool is_reserved_bit_violation() const { return m_is_reserved_bit_violation; }
+    bool is_instruction_fetch() const { return m_is_instruction_fetch; }
 
 private:
-    u16 m_code;
+    Type m_type;
+    Access m_access;
+    ExecutionMode m_execution_mode;
+    bool m_is_reserved_bit_violation { false };
+    bool m_is_instruction_fetch { false };
+
     VirtualAddress m_vaddr;
 };
 

@@ -22,10 +22,12 @@ void CSSConditionRule::for_each_effective_style_rule(Function<void(CSSStyleRule 
         CSSGroupingRule::for_each_effective_style_rule(callback);
 }
 
-void CSSConditionRule::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSConditionRule::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSConditionRulePrototype>(realm, "CSSConditionRule"));
+
+    return {};
 }
 
 }

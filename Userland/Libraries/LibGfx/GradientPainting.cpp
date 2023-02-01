@@ -53,10 +53,10 @@ enum class UsePremultipliedAlpha {
 class GradientLine {
 public:
     GradientLine(int gradient_length, Span<ColorStop const> color_stops, Optional<float> repeat_length, UsePremultipliedAlpha use_premultiplied_alpha = UsePremultipliedAlpha::Yes)
-        : m_repeating { repeat_length.has_value() }
-        , m_start_offset { round_to<int>((m_repeating ? color_stops.first().position : 0.0f) * gradient_length) }
-        , m_color_stops { color_stops }
-        , m_use_premultiplied_alpha { use_premultiplied_alpha }
+        : m_repeating(repeat_length.has_value())
+        , m_start_offset(round_to<int>((m_repeating ? color_stops.first().position : 0.0f) * gradient_length))
+        , m_color_stops(color_stops)
+        , m_use_premultiplied_alpha(use_premultiplied_alpha)
     {
         // Avoid generating excessive amounts of colors when the not enough shades to fill that length.
         auto necessary_length = min<int>((color_stops.size() - 1) * 255, gradient_length);
@@ -165,7 +165,7 @@ private:
     TransformFunction m_transform_function;
 };
 
-static auto create_linear_gradient(IntRect const& physical_rect, Span<ColorStop const> const& color_stops, float angle, Optional<float> repeat_length)
+static auto create_linear_gradient(IntRect const& physical_rect, Span<ColorStop const> color_stops, float angle, Optional<float> repeat_length)
 {
     float normalized_angle = normalized_gradient_angle_radians(angle);
     float sin_angle, cos_angle;
@@ -188,7 +188,7 @@ static auto create_linear_gradient(IntRect const& physical_rect, Span<ColorStop 
     };
 }
 
-static auto create_conic_gradient(Span<ColorStop const> const& color_stops, FloatPoint center_point, float start_angle, Optional<float> repeat_length, UsePremultipliedAlpha use_premultiplied_alpha = UsePremultipliedAlpha::Yes)
+static auto create_conic_gradient(Span<ColorStop const> color_stops, FloatPoint center_point, float start_angle, Optional<float> repeat_length, UsePremultipliedAlpha use_premultiplied_alpha = UsePremultipliedAlpha::Yes)
 {
     // FIXME: Do we need/want sub-degree accuracy for the gradient line?
     GradientLine gradient_line(360, color_stops, repeat_length, use_premultiplied_alpha);
@@ -213,7 +213,7 @@ static auto create_conic_gradient(Span<ColorStop const> const& color_stops, Floa
     };
 }
 
-static auto create_radial_gradient(IntRect const& physical_rect, Span<ColorStop const> const& color_stops, IntPoint center, IntSize size, Optional<float> repeat_length)
+static auto create_radial_gradient(IntRect const& physical_rect, Span<ColorStop const> color_stops, IntPoint center, IntSize size, Optional<float> repeat_length)
 {
     // A conservative guesstimate on how many colors we need to generate:
     auto max_dimension = max(physical_rect.width(), physical_rect.height());
@@ -232,7 +232,7 @@ static auto create_radial_gradient(IntRect const& physical_rect, Span<ColorStop 
     };
 }
 
-void Painter::fill_rect_with_linear_gradient(IntRect const& rect, Span<ColorStop const> const& color_stops, float angle, Optional<float> repeat_length)
+void Painter::fill_rect_with_linear_gradient(IntRect const& rect, Span<ColorStop const> color_stops, float angle, Optional<float> repeat_length)
 {
     auto a_rect = to_physical(rect);
     if (a_rect.intersected(clip_rect() * scale()).is_empty())
@@ -246,7 +246,7 @@ static FloatPoint pixel_center(IntPoint point)
     return point.to_type<float>().translated(0.5f, 0.5f);
 }
 
-void Painter::fill_rect_with_conic_gradient(IntRect const& rect, Span<ColorStop const> const& color_stops, IntPoint center, float start_angle, Optional<float> repeat_length)
+void Painter::fill_rect_with_conic_gradient(IntRect const& rect, Span<ColorStop const> color_stops, IntPoint center, float start_angle, Optional<float> repeat_length)
 {
     auto a_rect = to_physical(rect);
     if (a_rect.intersected(clip_rect() * scale()).is_empty())
@@ -257,7 +257,7 @@ void Painter::fill_rect_with_conic_gradient(IntRect const& rect, Span<ColorStop 
     conic_gradient.paint(*this, a_rect);
 }
 
-void Painter::fill_rect_with_radial_gradient(IntRect const& rect, Span<ColorStop const> const& color_stops, IntPoint center, IntSize size, Optional<float> repeat_length)
+void Painter::fill_rect_with_radial_gradient(IntRect const& rect, Span<ColorStop const> color_stops, IntPoint center, IntSize size, Optional<float> repeat_length)
 {
     auto a_rect = to_physical(rect);
     if (a_rect.intersected(clip_rect() * scale()).is_empty())

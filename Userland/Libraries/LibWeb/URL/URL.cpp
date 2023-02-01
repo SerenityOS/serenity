@@ -15,7 +15,7 @@ namespace Web::URL {
 
 JS::NonnullGCPtr<URL> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
-    return realm.heap().allocate<URL>(realm, realm, move(url), move(query));
+    return realm.heap().allocate<URL>(realm, realm, move(url), move(query)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, DeprecatedString const& url, DeprecatedString const& base)
@@ -61,10 +61,12 @@ URL::URL(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 
 URL::~URL() = default;
 
-void URL::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> URL::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::URLPrototype>(realm, "URL"));
+
+    return {};
 }
 
 void URL::visit_edges(Cell::Visitor& visitor)

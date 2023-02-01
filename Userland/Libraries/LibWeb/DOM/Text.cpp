@@ -24,10 +24,12 @@ Text::Text(Document& document, NodeType type, DeprecatedString const& data)
 {
 }
 
-void Text::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Text::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TextPrototype>(realm, "Text"));
+
+    return {};
 }
 
 void Text::visit_edges(Cell::Visitor& visitor)
@@ -41,7 +43,7 @@ JS::NonnullGCPtr<Text> Text::construct_impl(JS::Realm& realm, DeprecatedString c
 {
     // The new Text(data) constructor steps are to set this’s data to data and this’s node document to current global object’s associated Document.
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
-    return realm.heap().allocate<Text>(realm, window.associated_document(), data);
+    return realm.heap().allocate<Text>(realm, window.associated_document(), data).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 void Text::set_owner_input_element(Badge<HTML::HTMLInputElement>, HTML::HTMLInputElement& input_element)
@@ -67,7 +69,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> Text::split_text(size_t offset)
     auto new_data = TRY(substring_data(offset, count));
 
     // 5. Let new node be a new Text node, with the same node document as node. Set new node’s data to new data.
-    auto new_node = heap().allocate<Text>(realm(), document(), new_data);
+    auto new_node = MUST_OR_THROW_OOM(heap().allocate<Text>(realm(), document(), new_data));
 
     // 6. Let parent be node’s parent.
     JS::GCPtr<Node> parent = this->parent();

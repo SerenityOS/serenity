@@ -29,9 +29,9 @@ CalendarPrototype::CalendarPrototype(Realm& realm)
 {
 }
 
-void CalendarPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> CalendarPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -65,6 +65,8 @@ void CalendarPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.era, era, 1, attr);
     define_native_function(realm, vm.names.eraYear, era_year, 1, attr);
+
+    return {};
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id
@@ -559,7 +561,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
-        auto next_value_string = TRY(next_value.as_string().deprecated_string());
+        auto next_value_string = TRY(next_value.as_string().utf8_string());
 
         // iii. If fieldNames contains nextValue, then
         if (field_names.contains_slow(next_value)) {
@@ -627,7 +629,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
     auto* calendar = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(calendar).
-    return PrimitiveString::create(vm, TRY(Value(calendar).to_deprecated_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(calendar).to_string(vm)));
 }
 
 // 15.6.2.6 Temporal.Calendar.prototype.era ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.era

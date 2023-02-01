@@ -21,9 +21,11 @@ static Crypto::SignedBigInteger const s_one_billion_bigint { 1'000'000'000 };
 static Crypto::SignedBigInteger const s_one_million_bigint { 1'000'000 };
 static Crypto::SignedBigInteger const s_one_thousand_bigint { 1'000 };
 
+Crypto::SignedBigInteger const ns_per_day_bigint { static_cast<i64>(ns_per_day) };
+
 NonnullGCPtr<Date> Date::create(Realm& realm, double date_value)
 {
-    return realm.heap().allocate<Date>(realm, date_value, *realm.intrinsics().date_prototype());
+    return realm.heap().allocate<Date>(realm, date_value, *realm.intrinsics().date_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Date::Date(double date_value, Object& prototype)
@@ -57,7 +59,7 @@ DeprecatedString Date::iso_date_string() const
     builder.appendff("{:03}", ms_from_time(m_date_value));
     builder.append('Z');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 // DayWithinYear(t), https://tc39.es/ecma262/#eqn-DayWithinYear

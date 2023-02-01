@@ -73,7 +73,7 @@ static DeprecatedString convert_enumeration_value_to_cpp_enum_member(DeprecatedS
         builder.append('_');
 
     names_already_seen.set(builder.string_view());
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 namespace IDL {

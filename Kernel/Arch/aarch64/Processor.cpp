@@ -252,9 +252,9 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     saved_program_status_register_el1.I = 0;
     saved_program_status_register_el1.F = 0;
 
-    // Set exception origin mode to EL1t, so when the context is restored, we'll be executing in EL1 with SP_EL0
+    // Set exception origin mode to EL1h, so when the context is restored, we'll be executing in EL1 with SP_EL1
     // FIXME: This must be EL0t when aarch64 supports userspace applications.
-    saved_program_status_register_el1.M = Aarch64::SPSR_EL1::Mode::EL1t;
+    saved_program_status_register_el1.M = Aarch64::SPSR_EL1::Mode::EL1h;
     memcpy(&eretframe.spsr_el1, &saved_program_status_register_el1, sizeof(u64));
 
     // Push a TrapFrame onto the stack
@@ -292,10 +292,9 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
         auto& current_trap = current_thread->current_trap();
         trap.next_trap = current_trap;
         current_trap = &trap;
-        // FIXME: Determine PreviousMode from TrapFrame when userspace programs can run on aarch64
-        auto new_previous_mode = Thread::PreviousMode::KernelMode;
+        auto new_previous_mode = trap.regs->previous_mode();
         if (current_thread->set_previous_mode(new_previous_mode)) {
-            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == Thread::PreviousMode::KernelMode, false);
+            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == ExecutionMode::Kernel, false);
         }
     } else {
         trap.next_trap = nullptr;
@@ -321,15 +320,14 @@ void Processor::exit_trap(TrapFrame& trap)
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
-        Thread::PreviousMode new_previous_mode;
+        ExecutionMode new_previous_mode;
         if (current_trap) {
             VERIFY(current_trap->regs);
-            // FIXME: Determine PreviousMode from TrapFrame when userspace programs can run on aarch64
-            new_previous_mode = Thread::PreviousMode::KernelMode;
+            new_previous_mode = current_trap->regs->previous_mode();
         } else {
             // If we don't have a higher level trap then we're back in user mode.
             // Which means that the previous mode prior to being back in user mode was kernel mode
-            new_previous_mode = Thread::PreviousMode::KernelMode;
+            new_previous_mode = ExecutionMode::Kernel;
         }
 
         if (current_thread->set_previous_mode(new_previous_mode))
@@ -411,11 +409,21 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     Processor::set_current_thread(*to_thread);
 
+    auto& from_regs = from_thread->regs();
+    auto& to_regs = to_thread->regs();
+    if (from_regs.ttbr0_el1 != to_regs.ttbr0_el1)
+        Aarch64::Asm::set_ttbr0_el1(to_regs.ttbr0_el1);
+
     to_thread->set_cpu(Processor::current().id());
 
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
+}
+
+StringView Processor::platform_string()
+{
+    return "aarch64"sv;
 }
 
 }

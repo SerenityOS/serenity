@@ -16,10 +16,12 @@ HTMLParagraphElement::HTMLParagraphElement(DOM::Document& document, DOM::Qualifi
 
 HTMLParagraphElement::~HTMLParagraphElement() = default;
 
-void HTMLParagraphElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLParagraphElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLParagraphElementPrototype>(realm, "HTMLParagraphElement"));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2

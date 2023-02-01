@@ -13,7 +13,7 @@ namespace JS {
 
 NonnullGCPtr<AsyncFromSyncIterator> AsyncFromSyncIterator::create(Realm& realm, Iterator sync_iterator_record)
 {
-    return realm.heap().allocate<AsyncFromSyncIterator>(realm, realm, sync_iterator_record);
+    return realm.heap().allocate<AsyncFromSyncIterator>(realm, realm, sync_iterator_record).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterator_record)
@@ -22,9 +22,10 @@ AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterato
 {
 }
 
-void AsyncFromSyncIterator::initialize(Realm& realm)
+ThrowCompletionOr<void> AsyncFromSyncIterator::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    return {};
 }
 
 void AsyncFromSyncIterator::visit_edges(Cell::Visitor& visitor)

@@ -54,7 +54,7 @@ struct [[gnu::packed]] CompilationUnitHeader {
     u32 abbrev_offset() const { return (common.version <= 4) ? v4.abbrev_offset : v5.abbrev_offset; }
     u8 address_size() const { return (common.version <= 4) ? v4.address_size : v5.address_size; }
 
-    static ErrorOr<CompilationUnitHeader> read_from_stream(Core::Stream::Stream& stream)
+    static ErrorOr<CompilationUnitHeader> read_from_stream(AK::Stream& stream)
     {
         CompilationUnitHeader header;
         TRY(stream.read_entire_buffer(Bytes { &header.common, sizeof(header.common) }));

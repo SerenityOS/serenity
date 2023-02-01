@@ -34,7 +34,7 @@ public:
 protected:
     DOMRectReadOnly(JS::Realm&, double x, double y, double width, double height);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     Gfx::FloatRect m_rect;
 };

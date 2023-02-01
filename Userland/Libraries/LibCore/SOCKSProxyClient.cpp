@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <LibCore/SOCKSProxyClient.h>
 
 enum class Method : u8 {
@@ -122,7 +122,7 @@ ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Stream:
 
 ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::Version version, Core::SOCKSProxyClient::HostOrIPV4 target, int port, Core::SOCKSProxyClient::Command command)
 {
-    Core::Stream::AllocatingMemoryStream stream;
+    AllocatingMemoryStream stream;
 
     Socks5ConnectRequestHeader header {
         .version_identifier = to_underlying(version),
@@ -218,7 +218,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
 
 ErrorOr<u8> send_username_password_authentication_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::UsernamePasswordAuthenticationData const& auth_data)
 {
-    Core::Stream::AllocatingMemoryStream stream;
+    AllocatingMemoryStream stream;
 
     u8 version = 0x01;
     auto size = TRY(stream.write({ &version, sizeof(version) }));

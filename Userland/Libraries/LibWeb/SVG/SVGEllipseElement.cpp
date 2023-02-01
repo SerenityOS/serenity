@@ -16,10 +16,12 @@ SVGEllipseElement::SVGEllipseElement(DOM::Document& document, DOM::QualifiedName
 {
 }
 
-void SVGEllipseElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SVGEllipseElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGEllipseElementPrototype>(realm, "SVGEllipseElement"));
+
+    return {};
 }
 
 void SVGEllipseElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

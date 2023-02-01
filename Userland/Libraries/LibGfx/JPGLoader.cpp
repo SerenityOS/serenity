@@ -5,12 +5,15 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Endian.h>
 #include <AK/Error.h>
+#include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
+#include <AK/MemoryStream.h>
+#include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
-#include <LibCore/MemoryStream.h>
 #include <LibGfx/JPGLoader.h>
 
 #define JPG_INVALID 0X0000
@@ -165,11 +168,17 @@ struct HuffmanStreamState {
     size_t byte_offset { 0 };
 };
 
+struct ICCMultiChunkState {
+    u8 seen_number_of_icc_chunks { 0 };
+    FixedArray<ByteBuffer> chunks;
+};
+
 struct JPGLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
         FrameDecoded,
+        HeaderDecoded,
         BitmapDecoded
     };
 
@@ -190,6 +199,10 @@ struct JPGLoadingContext {
     HuffmanStreamState huffman_stream;
     i32 previous_dc_values[3] = { 0 };
     MacroblockMeta mblock_meta;
+    OwnPtr<FixedMemoryStream> stream;
+
+    Optional<ICCMultiChunkState> icc_multi_chunk_state;
+    Optional<ByteBuffer> icc_data;
 };
 
 static void generate_huffman_codes(HuffmanTableSpec& table)
@@ -447,7 +460,7 @@ static inline bool is_valid_marker(const Marker marker)
     return false;
 }
 
-static inline ErrorOr<Marker> read_marker_at_cursor(Core::Stream::Stream& stream)
+static inline ErrorOr<Marker> read_marker_at_cursor(AK::Stream& stream)
 {
     u16 marker = TRY(stream.read_value<BigEndian<u16>>());
     if (is_valid_marker(marker))
@@ -464,7 +477,7 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Core::Stream::Stream& stream
     return is_valid_marker(marker) ? marker : JPG_INVALID;
 }
 
-static ErrorOr<void> read_start_of_scan(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     if (context.state < JPGLoadingContext::State::FrameDecoded) {
         dbgln_if(JPG_DEBUG, "{}: SOS found before reading a SOF!", TRY(stream.tell()));
@@ -525,7 +538,7 @@ static ErrorOr<void> read_start_of_scan(Core::Stream::SeekableStream& stream, JP
     return {};
 }
 
-static ErrorOr<void> read_reset_marker(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_reset_marker(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     if (bytes_to_read != 2) {
@@ -536,7 +549,7 @@ static ErrorOr<void> read_reset_marker(Core::Stream::SeekableStream& stream, JPG
     return {};
 }
 
-static ErrorOr<void> read_huffman_table(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -588,6 +601,95 @@ static ErrorOr<void> read_huffman_table(Core::Stream::SeekableStream& stream, JP
     return {};
 }
 
+static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPGLoadingContext& context, int bytes_to_read)
+{
+    if (bytes_to_read <= 2)
+        return Error::from_string_literal("icc marker too small");
+
+    auto chunk_sequence_number = TRY(stream.read_value<u8>()); // 1-based
+    auto number_of_chunks = TRY(stream.read_value<u8>());
+    bytes_to_read -= 2;
+
+    if (!context.icc_multi_chunk_state.has_value())
+        context.icc_multi_chunk_state.emplace(ICCMultiChunkState { 0, TRY(FixedArray<ByteBuffer>::create(number_of_chunks)) });
+    auto& chunk_state = context.icc_multi_chunk_state;
+
+    if (chunk_state->seen_number_of_icc_chunks >= number_of_chunks)
+        return Error::from_string_literal("Too many ICC chunks");
+
+    if (chunk_state->chunks.size() != number_of_chunks)
+        return Error::from_string_literal("Inconsistent number of total ICC chunks");
+
+    if (chunk_sequence_number == 0)
+        return Error::from_string_literal("ICC chunk sequence number not 1 based");
+    u8 index = chunk_sequence_number - 1;
+
+    if (index >= chunk_state->chunks.size())
+        return Error::from_string_literal("ICC chunk sequence number larger than number of chunks");
+
+    if (!chunk_state->chunks[index].is_empty())
+        return Error::from_string_literal("Duplicate ICC chunk at sequence number");
+
+    chunk_state->chunks[index] = TRY(ByteBuffer::create_zeroed(bytes_to_read));
+    TRY(stream.read_entire_buffer(chunk_state->chunks[index]));
+
+    chunk_state->seen_number_of_icc_chunks++;
+
+    if (chunk_state->seen_number_of_icc_chunks != chunk_state->chunks.size())
+        return {};
+
+    if (number_of_chunks == 1) {
+        context.icc_data = move(chunk_state->chunks[0]);
+        return {};
+    }
+
+    size_t total_size = 0;
+    for (auto const& chunk : chunk_state->chunks)
+        total_size += chunk.size();
+
+    auto icc_bytes = TRY(ByteBuffer::create_zeroed(total_size));
+    size_t start = 0;
+    for (auto const& chunk : chunk_state->chunks) {
+        memcpy(icc_bytes.data() + start, chunk.data(), chunk.size());
+        start += chunk.size();
+    }
+
+    context.icc_data = move(icc_bytes);
+
+    return {};
+}
+
+static ErrorOr<void> read_app_marker(SeekableStream& stream, JPGLoadingContext& context, int app_marker_number)
+{
+    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+
+    if (bytes_to_read <= 2)
+        return Error::from_string_literal("app marker size too small");
+    bytes_to_read -= 2;
+
+    StringBuilder builder;
+    for (;;) {
+        if (bytes_to_read == 0)
+            return Error::from_string_literal("app marker size too small for identifier");
+
+        auto c = TRY(stream.read_value<char>());
+        bytes_to_read--;
+
+        if (c == '\0')
+            break;
+
+        TRY(builder.try_append(c));
+    }
+
+    auto app_id = TRY(builder.to_string());
+
+    if (app_marker_number == 2 && app_id == "ICC_PROFILE"sv)
+        return read_icc_profile(stream, context, bytes_to_read);
+
+    return stream.discard(bytes_to_read);
+}
+
 static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPGLoadingContext& context)
 {
     if ((luma.hsample_factor == 1 || luma.hsample_factor == 2) && (luma.vsample_factor == 1 || luma.vsample_factor == 2)) {
@@ -617,7 +719,7 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
-static ErrorOr<void> read_start_of_frame(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     if (context.state == JPGLoadingContext::FrameDecoded) {
         dbgln_if(JPG_DEBUG, "{}: SOF repeated!", TRY(stream.tell()));
@@ -701,7 +803,7 @@ static ErrorOr<void> read_start_of_frame(Core::Stream::SeekableStream& stream, J
     return {};
 }
 
-static ErrorOr<void> read_quantization_table(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -737,7 +839,7 @@ static ErrorOr<void> read_quantization_table(Core::Stream::SeekableStream& strea
     return {};
 }
 
-static ErrorOr<void> skip_marker_with_length(Core::Stream::Stream& stream)
+static ErrorOr<void> skip_marker_with_length(AK::Stream& stream)
 {
     u16 bytes_to_skip = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(stream.discard(bytes_to_skip));
@@ -985,7 +1087,7 @@ static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macrobloc
     return {};
 }
 
-static ErrorOr<void> parse_header(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPG_SOI) {
@@ -1017,6 +1119,24 @@ static ErrorOr<void> parse_header(Core::Stream::SeekableStream& stream, JPGLoadi
         case JPG_EOI:
             dbgln_if(JPG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Unexpected marker");
+        case JPG_APPN0:
+        case JPG_APPN1:
+        case JPG_APPN2:
+        case JPG_APPN3:
+        case JPG_APPN4:
+        case JPG_APPN5:
+        case JPG_APPN6:
+        case JPG_APPN7:
+        case JPG_APPN8:
+        case JPG_APPN9:
+        case JPG_APPNA:
+        case JPG_APPNB:
+        case JPG_APPNC:
+        case JPG_APPND:
+        case JPG_APPNE:
+        case JPG_APPNF:
+            TRY(read_app_marker(stream, context, marker - JPG_APPN0));
+            break;
         case JPG_SOF0:
             TRY(read_start_of_frame(stream, context));
             context.state = JPGLoadingContext::FrameDecoded;
@@ -1044,7 +1164,7 @@ static ErrorOr<void> parse_header(Core::Stream::SeekableStream& stream, JPGLoadi
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(Core::Stream::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingContext& context)
 {
     u8 last_byte;
     u8 current_byte = TRY(stream.read_value<u8>());
@@ -1079,17 +1199,30 @@ static ErrorOr<void> scan_huffman_stream(Core::Stream::SeekableStream& stream, J
     VERIFY_NOT_REACHED();
 }
 
+static ErrorOr<void> decode_header(JPGLoadingContext& context)
+{
+    if (context.state < JPGLoadingContext::State::HeaderDecoded) {
+        context.stream = TRY(FixedMemoryStream::construct({ context.data, context.data_size }));
+
+        if (auto result = parse_header(*context.stream, context); result.is_error()) {
+            context.state = JPGLoadingContext::State::Error;
+            return result.release_error();
+        }
+        context.state = JPGLoadingContext::State::HeaderDecoded;
+    }
+    return {};
+}
+
 static ErrorOr<void> decode_jpg(JPGLoadingContext& context)
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct({ context.data, context.data_size }));
-
-    TRY(parse_header(*stream, context));
-    TRY(scan_huffman_stream(*stream, context));
+    TRY(decode_header(context));
+    TRY(scan_huffman_stream(*context.stream, context));
     auto macroblocks = TRY(decode_huffman_stream(context));
     dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
     ycbcr_to_rgb(context, macroblocks);
     TRY(compose_bitmap(context, macroblocks));
+    context.stream.clear();
     return {};
 }
 
@@ -1176,6 +1309,15 @@ ErrorOr<ImageFrameDescriptor> JPGImageDecoderPlugin::frame(size_t index)
     }
 
     return ImageFrameDescriptor { m_context->bitmap, 0 };
+}
+
+ErrorOr<Optional<ReadonlyBytes>> JPGImageDecoderPlugin::icc_data()
+{
+    TRY(decode_header(*m_context));
+
+    if (m_context->icc_data.has_value())
+        return *m_context->icc_data;
+    return OptionalNone {};
 }
 
 }

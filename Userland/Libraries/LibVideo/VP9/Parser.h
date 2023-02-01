@@ -45,7 +45,6 @@ private:
      * See also section 5.26. */
     Vector<size_t> parse_superframe_sizes(ReadonlyBytes);
 
-    DecoderErrorOr<FrameType> read_frame_type();
     DecoderErrorOr<ColorRange> read_color_range();
 
     /* (6.1) Frame Syntax */
@@ -56,7 +55,6 @@ private:
     DecoderErrorOr<FrameContext> uncompressed_header();
     DecoderErrorOr<void> frame_sync_code();
     DecoderErrorOr<ColorConfig> parse_color_config(FrameContext const&);
-    DecoderErrorOr<void> set_frame_size_and_compute_image_size();
     DecoderErrorOr<Gfx::Size<u32>> parse_frame_size();
     DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs(Array<u8, 3> const& reference_indices);
     DecoderErrorOr<Gfx::Size<u32>> parse_render_size(Gfx::Size<u32> frame_size);

@@ -290,7 +290,7 @@ JS::NonnullGCPtr<Document> Document::construct_impl(JS::Realm& realm)
 
 JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url)
 {
-    return realm.heap().allocate<Document>(realm, realm, url);
+    return realm.heap().allocate<Document>(realm, realm, url).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Document::Document(JS::Realm& realm, const AK::URL& url)
@@ -314,10 +314,12 @@ Document::~Document()
     HTML::main_thread_event_loop().unregister_document({}, *this);
 }
 
-void Document::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Document::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
+
+    return {};
 }
 
 void Document::visit_edges(Cell::Visitor& visitor)
@@ -386,7 +388,7 @@ WebIDL::ExceptionOr<void> Document::write(Vector<DeprecatedString> const& string
     StringBuilder builder;
     builder.join(""sv, strings);
 
-    return run_the_document_write_steps(builder.build());
+    return run_the_document_write_steps(builder.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
@@ -396,7 +398,7 @@ WebIDL::ExceptionOr<void> Document::writeln(Vector<DeprecatedString> const& stri
     builder.join(""sv, strings);
     builder.append("\n"sv);
 
-    return run_the_document_write_steps(builder.build());
+    return run_the_document_write_steps(builder.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
@@ -685,7 +687,7 @@ void Document::set_title(DeprecatedString const& title)
     }
 
     title_element->remove_all_children(true);
-    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title)));
+    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title).release_allocated_value_but_fixme_should_propagate_errors()));
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
@@ -1228,17 +1230,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 {
-    return heap().allocate<DocumentFragment>(realm(), *this);
+    return heap().allocate<DocumentFragment>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 {
-    return heap().allocate<Text>(realm(), *this, data);
+    return heap().allocate<Text>(realm(), *this, data).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
 {
-    return heap().allocate<Comment>(realm(), *this, data);
+    return heap().allocate<Comment>(realm(), *this, data).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
@@ -1249,7 +1251,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_pr
     // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
 
     // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
-    return JS::NonnullGCPtr { *heap().allocate<ProcessingInstruction>(realm(), *this, data, target) };
+    return MUST_OR_THROW_OOM(heap().allocate<ProcessingInstruction>(realm(), *this, data, target));
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()

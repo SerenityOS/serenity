@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
@@ -111,9 +112,9 @@ struct CalendarPattern {
         callback(time_zone_name, other.time_zone_name, Field::TimeZoneName);
     }
 
-    DeprecatedString skeleton {};
-    DeprecatedString pattern {};
-    Optional<DeprecatedString> pattern12 {};
+    String skeleton {};
+    String pattern {};
+    Optional<String> pattern12 {};
     Optional<HourCycle> hour_cycle {};
 
     // https://unicode.org/reports/tr35/tr35-dates.html#Calendar_Fields
@@ -145,9 +146,9 @@ struct CalendarRangePattern : public CalendarPattern {
     };
 
     Optional<Field> field {};
-    DeprecatedString start_range {};
+    String start_range {};
     StringView separator {};
-    DeprecatedString end_range {};
+    String end_range {};
 };
 
 enum class CalendarFormatType : u8 {
@@ -189,43 +190,43 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style);
 
 Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_region);
 Vector<HourCycle> get_regional_hour_cycles(StringView region);
-Vector<HourCycle> get_locale_hour_cycles(StringView locale);
-Optional<HourCycle> get_default_regional_hour_cycle(StringView locale);
+ErrorOr<Vector<HourCycle>> get_locale_hour_cycles(StringView locale);
+ErrorOr<Optional<HourCycle>> get_default_regional_hour_cycle(StringView locale);
 
 Optional<MinimumDaysRegion> minimum_days_region_from_string(StringView minimum_days_region);
 Optional<u8> get_regional_minimum_days(StringView region);
-Optional<u8> get_locale_minimum_days(StringView region);
+ErrorOr<Optional<u8>> get_locale_minimum_days(StringView locale);
 
 Optional<FirstDayRegion> first_day_region_from_string(StringView first_day_region);
 Optional<Weekday> get_regional_first_day(StringView region);
-Optional<Weekday> get_locale_first_day(StringView region);
+ErrorOr<Optional<Weekday>> get_locale_first_day(StringView locale);
 
 Optional<WeekendStartRegion> weekend_start_region_from_string(StringView weekend_start_region);
 Optional<Weekday> get_regional_weekend_start(StringView region);
-Optional<Weekday> get_locale_weekend_start(StringView region);
+ErrorOr<Optional<Weekday>> get_locale_weekend_start(StringView locale);
 
 Optional<WeekendEndRegion> weekend_end_region_from_string(StringView weekend_end_region);
 Optional<Weekday> get_regional_weekend_end(StringView region);
-Optional<Weekday> get_locale_weekend_end(StringView region);
+ErrorOr<Optional<Weekday>> get_locale_weekend_end(StringView locale);
 
-DeprecatedString combine_skeletons(StringView first, StringView second);
+ErrorOr<String> combine_skeletons(StringView first, StringView second);
 
-Optional<CalendarFormat> get_calendar_date_format(StringView locale, StringView calendar);
-Optional<CalendarFormat> get_calendar_time_format(StringView locale, StringView calendar);
-Optional<CalendarFormat> get_calendar_date_time_format(StringView locale, StringView calendar);
-Optional<CalendarFormat> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
-Vector<CalendarPattern> get_calendar_available_formats(StringView locale, StringView calendar);
-Optional<CalendarRangePattern> get_calendar_default_range_format(StringView locale, StringView calendar);
-Vector<CalendarRangePattern> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton);
-Vector<CalendarRangePattern> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton);
+ErrorOr<Optional<CalendarFormat>> get_calendar_date_format(StringView locale, StringView calendar);
+ErrorOr<Optional<CalendarFormat>> get_calendar_time_format(StringView locale, StringView calendar);
+ErrorOr<Optional<CalendarFormat>> get_calendar_date_time_format(StringView locale, StringView calendar);
+ErrorOr<Optional<CalendarFormat>> get_calendar_format(StringView locale, StringView calendar, CalendarFormatType type);
+ErrorOr<Vector<CalendarPattern>> get_calendar_available_formats(StringView locale, StringView calendar);
+ErrorOr<Optional<CalendarRangePattern>> get_calendar_default_range_format(StringView locale, StringView calendar);
+ErrorOr<Vector<CalendarRangePattern>> get_calendar_range_formats(StringView locale, StringView calendar, StringView skeleton);
+ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView locale, StringView calendar, StringView skeleton);
 
-Optional<StringView> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value);
-Optional<StringView> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Month value);
-Optional<StringView> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Weekday value);
-Optional<StringView> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value);
-Optional<StringView> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
+ErrorOr<Optional<StringView>> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value);
+ErrorOr<Optional<StringView>> get_calendar_month_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Month value);
+ErrorOr<Optional<StringView>> get_calendar_weekday_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Weekday value);
+ErrorOr<Optional<StringView>> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value);
+ErrorOr<Optional<StringView>> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
 
-DeprecatedString format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time);
+ErrorOr<String> format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time);
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style, TimeZone::InDST in_dst);
 Optional<TimeZoneFormat> get_time_zone_format(StringView locale);
 

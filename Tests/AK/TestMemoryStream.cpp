@@ -1,137 +1,94 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
+#include <AK/String.h>
+#include <LibCore/Stream.h>
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/MemoryStream.h>
-
-TEST_CASE(read_an_integer)
+TEST_CASE(allocating_memory_stream_empty)
 {
-    u32 expected = 0x01020304, actual;
+    AllocatingMemoryStream stream;
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
-    stream >> actual;
+    EXPECT_EQ(stream.used_buffer_size(), 0ul);
 
-    EXPECT(!stream.has_any_error() && stream.eof());
-    EXPECT_EQ(expected, actual);
+    {
+        Array<u8, 32> array;
+        auto read_bytes = MUST(stream.read(array));
+        EXPECT_EQ(read_bytes.size(), 0ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("test"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
 }
 
-TEST_CASE(read_a_bool)
+TEST_CASE(allocating_memory_stream_offset_of)
 {
-    bool expected = true, actual;
+    AllocatingMemoryStream stream;
+    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
-    stream >> actual;
+    {
+        auto offset = MUST(stream.offset_of(" "sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 4ul);
+    }
 
-    EXPECT(!stream.has_any_error() && stream.eof());
-    EXPECT_EQ(expected, actual);
+    {
+        auto offset = MUST(stream.offset_of("W"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 0ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of(")"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 22ul);
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("-"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+
+    MUST(stream.discard(1));
+
+    {
+        auto offset = MUST(stream.offset_of("W"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
+
+    {
+        auto offset = MUST(stream.offset_of("e"sv.bytes()));
+        EXPECT(offset.has_value());
+        EXPECT_EQ(offset.value(), 0ul);
+    }
 }
 
-TEST_CASE(read_a_double)
+TEST_CASE(allocating_memory_stream_offset_of_oob)
 {
-    double expected = 3.141592653589793, actual;
+    AllocatingMemoryStream stream;
+    // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
+    //       So we have to assume some things about the behaviour of this class:
+    //       - The chunk size is 4096 bytes.
+    //       - A chunk is moved to the end when it's fully read from
+    //       - A free chunk is used as-is, no new ones are allocated if one exists.
 
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
-    stream >> actual;
+    // First, fill exactly one chunk.
+    for (size_t i = 0; i < 256; ++i)
+        MUST(stream.write_entire_buffer("AAAAAAAAAAAAAAAA"sv.bytes()));
 
-    EXPECT(!stream.has_any_error() && stream.eof());
-    EXPECT_EQ(expected, actual);
-}
+    // Then discard it all.
+    MUST(stream.discard(4096));
+    // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
+    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
 
-TEST_CASE(recoverable_error)
-{
-    u32 expected = 0x01020304, actual = 0;
-    u64 to_large_value = 0;
-
-    InputMemoryStream stream { { &expected, sizeof(expected) } };
-
-    EXPECT(!stream.has_any_error() && !stream.eof());
-    stream >> to_large_value;
-    EXPECT(stream.has_recoverable_error() && !stream.eof());
-
-    EXPECT(stream.handle_recoverable_error());
-    EXPECT(!stream.has_any_error() && !stream.eof());
-
-    stream >> actual;
-    EXPECT(!stream.has_any_error() && stream.eof());
-    EXPECT_EQ(expected, actual);
-}
-
-TEST_CASE(chain_stream_operator)
-{
-    Array<u8, 4> const expected { 0, 1, 2, 3 };
-    Array<u8, 4> actual;
-
-    InputMemoryStream stream { expected };
-
-    stream >> actual[0] >> actual[1] >> actual[2] >> actual[3];
-    EXPECT(!stream.has_any_error() && stream.eof());
-
-    EXPECT_EQ(expected, actual);
-}
-
-TEST_CASE(seeking_slicing_offset)
-{
-    Array<u8, 8> const input { 0, 1, 2, 3, 4, 5, 6, 7 };
-    Array<u8, 4> const expected0 { 0, 1, 2, 3 };
-    Array<u8, 4> const expected1 { 4, 5, 6, 7 };
-    Array<u8, 4> const expected2 { 1, 2, 3, 4 };
-
-    Array<u8, 4> actual0 {}, actual1 {}, actual2 {};
-
-    InputMemoryStream stream { input };
-
-    stream >> actual0;
-    EXPECT(!stream.has_any_error() && !stream.eof());
-    EXPECT_EQ(expected0, actual0);
-
-    stream.seek(4);
-    stream >> actual1;
-    EXPECT(!stream.has_any_error() && stream.eof());
-    EXPECT_EQ(expected1, actual1);
-
-    stream.seek(1);
-    stream >> actual2;
-    EXPECT(!stream.has_any_error() && !stream.eof());
-    EXPECT_EQ(expected2, actual2);
-}
-
-TEST_CASE(read_endian_values)
-{
-    Array<u8, 8> const input { 0, 1, 2, 3, 4, 5, 6, 7 };
-    InputMemoryStream stream { input };
-
-    LittleEndian<u32> value1;
-    BigEndian<u32> value2;
-    stream >> value1 >> value2;
-
-    EXPECT_EQ(value1, 0x03020100u);
-    EXPECT_EQ(value2, 0x04050607u);
-}
-
-TEST_CASE(new_output_memory_stream)
-{
-    Array<u8, 16> buffer;
-    OutputMemoryStream stream { buffer };
-
-    EXPECT_EQ(stream.size(), 0u);
-    EXPECT_EQ(stream.remaining(), 16u);
-
-    stream << LittleEndian<u16>(0x12'87);
-
-    EXPECT_EQ(stream.size(), 2u);
-    EXPECT_EQ(stream.remaining(), 14u);
-
-    stream << buffer;
-
-    EXPECT(stream.handle_recoverable_error());
-    EXPECT_EQ(stream.size(), 2u);
-    EXPECT_EQ(stream.remaining(), 14u);
-
-    EXPECT_EQ(stream.bytes().data(), buffer.data());
-    EXPECT_EQ(stream.bytes().size(), 2u);
+    {
+        auto offset = MUST(stream.offset_of("A"sv.bytes()));
+        EXPECT(!offset.has_value());
+    }
 }

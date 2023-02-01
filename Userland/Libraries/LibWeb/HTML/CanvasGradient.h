@@ -16,7 +16,7 @@ class CanvasGradient final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(CanvasGradient, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<CanvasGradient> create_radial(JS::Realm&, double x0, double y0, double r0, double x1, double y1, double r1);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasGradient>> create_radial(JS::Realm&, double x0, double y0, double r0, double x1, double y1, double r1);
     static JS::NonnullGCPtr<CanvasGradient> create_linear(JS::Realm&, double x0, double y0, double x1, double y1);
     static JS::NonnullGCPtr<CanvasGradient> create_conic(JS::Realm&, double start_angle, double x, double y);
 
@@ -29,7 +29,7 @@ public:
 private:
     CanvasGradient(JS::Realm&, Gfx::GradientPaintStyle& gradient);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     NonnullRefPtr<Gfx::GradientPaintStyle> m_gradient;
 };

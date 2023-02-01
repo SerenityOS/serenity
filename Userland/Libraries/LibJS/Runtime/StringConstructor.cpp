@@ -22,10 +22,10 @@ StringConstructor::StringConstructor(Realm& realm)
 {
 }
 
-void StringConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> StringConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().string_prototype(), 0);
@@ -36,6 +36,8 @@ void StringConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.fromCodePoint, from_code_point, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
@@ -61,7 +63,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> StringConstructor::construct(FunctionObj
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
-    return StringObject::create(realm, *primitive_string, *prototype);
+    return MUST_OR_THROW_OOM(StringObject::create(realm, *primitive_string, *prototype));
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
@@ -94,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
             builder.append(next_sub);
         }
     }
-    return PrimitiveString::create(vm, builder.build());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode

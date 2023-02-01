@@ -58,8 +58,6 @@ public:
     TagType process(ReadonlyBytes aad, ReadonlyBytes cipher);
 
 private:
-    inline void transform(ReadonlyBytes, ReadonlyBytes);
-
     u32 m_key[4];
 };
 

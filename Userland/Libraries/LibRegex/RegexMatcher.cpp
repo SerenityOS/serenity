@@ -96,7 +96,7 @@ DeprecatedString Regex<Parser>::error_string(Optional<DeprecatedString> message)
         eb.append(' ');
 
     eb.appendff("^---- {}", message.value_or(get_error_string(parser_result.error)));
-    return eb.build();
+    return eb.to_deprecated_string();
 }
 
 template<typename Parser>

@@ -146,7 +146,7 @@ public:
 protected:
     void initialize_event(DeprecatedString const&, bool, bool);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 
 private:

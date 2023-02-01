@@ -29,7 +29,7 @@ public:
 private:
     HTMLStyleElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://www.w3.org/TR/cssom/#associated-css-style-sheet

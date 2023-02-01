@@ -183,7 +183,6 @@ public:
     Symbol symbol(unsigned) const;
     Section section(unsigned) const;
     ProgramHeader program_header(unsigned) const;
-    FlatPtr program_header_table_offset() const;
 
     template<IteratorFunction<Image::Section> F>
     void for_each_section(F) const;

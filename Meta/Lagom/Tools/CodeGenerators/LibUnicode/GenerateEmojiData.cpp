@@ -45,7 +45,7 @@ static void set_image_path_for_emoji(StringView emoji_resource_path, Emoji& emoj
         builder.appendff("U+{:X}", code_point);
     }
 
-    auto path = DeprecatedString::formatted("{}/{}.png", emoji_resource_path, builder.build());
+    auto path = DeprecatedString::formatted("{}/{}.png", emoji_resource_path, builder.to_deprecated_string());
     if (Core::File::exists(path))
         emoji.image_path = move(path);
 }
@@ -153,7 +153,7 @@ static ErrorOr<void> parse_emoji_serenity_data(Core::Stream::BufferedFile& file,
             }
         });
 
-        auto name = builder.build();
+        auto name = builder.to_deprecated_string();
         if (!any_of(name, is_ascii_lower_alpha))
             name = name.to_titlecase();
 

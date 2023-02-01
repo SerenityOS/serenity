@@ -58,7 +58,8 @@ static void sigchld_handler(int)
             continue;
         }
 
-        service->did_exit(status);
+        if (auto result = service->did_exit(status); result.is_error())
+            dbgln("{}: {}", service->name(), result.release_error());
     }
 }
 
@@ -530,8 +531,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // After we've set them all up, activate them!
     dbgln("Activating {} services...", g_services.size());
-    for (auto& service : g_services)
-        service.activate();
+    for (auto& service : g_services) {
+        if (auto result = service.activate(); result.is_error())
+            dbgln("{}: {}", service.name(), result.release_error());
+    }
 
     return event_loop.exec();
 }

@@ -28,10 +28,10 @@ RemoteProcess::RemoteProcess(pid_t pid)
 
 void RemoteProcess::handle_identify_response(JsonObject const& response)
 {
-    int pid = response.get_deprecated("pid"sv).to_int();
+    int pid = response.get_i32("pid"sv).value_or(0);
     VERIFY(pid == m_pid);
 
-    m_process_name = response.get_deprecated("process_name"sv).as_string_or({});
+    m_process_name = response.get_deprecated_string("process_name"sv).value_or({});
 
     if (on_update)
         on_update();
@@ -40,8 +40,7 @@ void RemoteProcess::handle_identify_response(JsonObject const& response)
 void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
 {
     // FIXME: It would be good if we didn't have to make a local copy of the array value here!
-    auto objects = response.get_deprecated("objects"sv);
-    auto& object_array = objects.as_array();
+    auto& object_array = response.get_array("objects"sv).value();
 
     NonnullOwnPtrVector<RemoteObject> remote_objects;
     HashMap<FlatPtr, RemoteObject*> objects_by_address;
@@ -50,10 +49,10 @@ void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
         VERIFY(value.is_object());
         auto& object = value.as_object();
         auto remote_object = make<RemoteObject>();
-        remote_object->address = object.get_deprecated("address"sv).to_number<FlatPtr>();
-        remote_object->parent_address = object.get_deprecated("parent"sv).to_number<FlatPtr>();
-        remote_object->name = object.get_deprecated("name"sv).to_deprecated_string();
-        remote_object->class_name = object.get_deprecated("class_name"sv).to_deprecated_string();
+        remote_object->address = object.get_addr("address"sv).value_or(0);
+        remote_object->parent_address = object.get_addr("parent"sv).value_or(0);
+        remote_object->name = object.get_deprecated_string("name"sv).value_or({});
+        remote_object->class_name = object.get_deprecated_string("class_name"sv).value_or({});
         remote_object->json = object;
         objects_by_address.set(remote_object->address, remote_object);
         remote_objects.append(move(remote_object));

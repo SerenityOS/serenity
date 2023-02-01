@@ -211,7 +211,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
         builder.append('$');
 
         // FIXME: We should probably cache this regex.
-        auto regex = Regex<PosixBasic>(builder.build());
+        auto regex = Regex<PosixBasic>(builder.to_deprecated_string());
         auto result = regex.match(lhs_value.to_deprecated_string(), PosixFlags::Insensitive | PosixFlags::Unicode);
         return Value(invert_expression() ? !result.success : result.success);
     }
@@ -226,7 +226,7 @@ ResultOr<Value> MatchExpression::evaluate(ExecutionContext& context) const
             builder.append("Regular expression: "sv);
             builder.append(get_error_string(err));
 
-            return Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, builder.build() };
+            return Result { SQLCommand::Unknown, SQLErrorCode::SyntaxError, builder.to_deprecated_string() };
         }
 
         auto result = regex.match(lhs_value.to_deprecated_string(), PosixFlags::Insensitive | PosixFlags::Unicode);

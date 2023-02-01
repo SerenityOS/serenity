@@ -35,7 +35,7 @@ public:
         StringBuilder builder;
         builder.append(this->cipher().class_name());
         builder.append("_CBC"sv);
-        return builder.build();
+        return builder.to_deprecated_string();
     }
 #endif
 

@@ -41,10 +41,12 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLInputElement::~HTMLInputElement() = default;
 
-void HTMLInputElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLInputElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLInputElementPrototype>(realm, "HTMLInputElement"));
+
+    return {};
 }
 
 void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
@@ -380,13 +382,13 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         break;
     }
 
-    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this);
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this).release_allocated_value_but_fixme_should_propagate_errors();
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
     MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px"));
-    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
+    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
 
@@ -870,32 +872,32 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 e
     return {};
 }
 
-DeprecatedFlyString HTMLInputElement::default_role() const
+Optional<ARIA::Role> HTMLInputElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-input-button
     if (type_state() == TypeAttributeState::Button)
-        return DOM::ARIARoleNames::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-checkbox
     if (type_state() == TypeAttributeState::Checkbox)
-        return DOM::ARIARoleNames::checkbox;
+        return ARIA::Role::checkbox;
     // https://www.w3.org/TR/html-aria/#el-input-email
     if (type_state() == TypeAttributeState::Email && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-image
     if (type_state() == TypeAttributeState::ImageButton)
-        return DOM::ARIARoleNames::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-number
     if (type_state() == TypeAttributeState::Number)
-        return DOM::ARIARoleNames::spinbutton;
+        return ARIA::Role::spinbutton;
     // https://www.w3.org/TR/html-aria/#el-input-radio
     if (type_state() == TypeAttributeState::RadioButton)
-        return DOM::ARIARoleNames::radio;
+        return ARIA::Role::radio;
     // https://www.w3.org/TR/html-aria/#el-input-range
     if (type_state() == TypeAttributeState::Range)
-        return DOM::ARIARoleNames::slider;
+        return ARIA::Role::slider;
     // https://www.w3.org/TR/html-aria/#el-input-reset
     if (type_state() == TypeAttributeState::ResetButton)
-        return DOM::ARIARoleNames::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-text-list
     if ((type_state() == TypeAttributeState::Text
             || type_state() == TypeAttributeState::Search
@@ -903,22 +905,22 @@ DeprecatedFlyString HTMLInputElement::default_role() const
             || type_state() == TypeAttributeState::URL
             || type_state() == TypeAttributeState::Email)
         && !attribute("list").is_null())
-        return DOM::ARIARoleNames::combobox;
+        return ARIA::Role::combobox;
     // https://www.w3.org/TR/html-aria/#el-input-search
     if (type_state() == TypeAttributeState::Search && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-submit
     if (type_state() == TypeAttributeState::SubmitButton)
-        return DOM::ARIARoleNames::button;
+        return ARIA::Role::button;
     // https://www.w3.org/TR/html-aria/#el-input-tel
     if (type_state() == TypeAttributeState::Telephone)
-        return DOM::ARIARoleNames::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-text
     if (type_state() == TypeAttributeState::Text && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return ARIA::Role::textbox;
     // https://www.w3.org/TR/html-aria/#el-input-url
     if (type_state() == TypeAttributeState::URL && attribute("list").is_null())
-        return DOM::ARIARoleNames::textbox;
+        return ARIA::Role::textbox;
 
     // https://www.w3.org/TR/html-aria/#el-input-color
     // https://www.w3.org/TR/html-aria/#el-input-date

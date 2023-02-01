@@ -18,9 +18,9 @@ SegmentIteratorPrototype::SegmentIteratorPrototype(Realm& realm)
 {
 }
 
-void SegmentIteratorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> SegmentIteratorPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void SegmentIteratorPrototype::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.next, next, 0, attr);
+
+    return {};
 }
 
 // 18.6.2.1 %SegmentIteratorPrototype%.next ( ), https://tc39.es/ecma402/#sec-%segmentiteratorprototype%.next

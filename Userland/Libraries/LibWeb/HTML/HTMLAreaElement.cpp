@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -17,10 +17,12 @@ HTMLAreaElement::HTMLAreaElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLAreaElement::~HTMLAreaElement() = default;
 
-void HTMLAreaElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLAreaElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAreaElementPrototype>(realm, "HTMLAreaElement"));
+
+    return {};
 }
 
 void HTMLAreaElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
@@ -48,13 +50,13 @@ i32 HTMLAreaElement::default_tab_index_value() const
     return 0;
 }
 
-DeprecatedFlyString HTMLAreaElement::default_role() const
+Optional<ARIA::Role> HTMLAreaElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-area-no-href
     if (!href().is_null())
-        return DOM::ARIARoleNames::link;
+        return ARIA::Role::link;
     // https://www.w3.org/TR/html-aria/#el-area
-    return DOM::ARIARoleNames::generic;
+    return ARIA::Role::generic;
 }
 
 }

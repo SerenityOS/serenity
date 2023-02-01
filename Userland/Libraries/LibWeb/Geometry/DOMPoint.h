@@ -35,7 +35,7 @@ public:
 private:
     DOMPoint(JS::Realm&, double x, double y, double z, double w);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

@@ -15,7 +15,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<AccessibilityTreeNode> AccessibilityTreeNode::create(Document* document, DOM::Node const* value)
 {
-    return *document->heap().allocate<AccessibilityTreeNode>(document->realm(), value);
+    return *document->heap().allocate<AccessibilityTreeNode>(document->realm(), value).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 AccessibilityTreeNode::AccessibilityTreeNode(JS::GCPtr<DOM::Node> value)
@@ -35,10 +35,10 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
             MUST(object.add("type"sv, "element"sv));
 
             auto role = element->role_or_default();
-            bool has_role = !role.is_null() && !role.is_empty() && !ARIARoleNames::is_abstract_aria_role(role);
+            bool has_role = role.has_value() && !ARIA::is_abstract_role(*role);
 
             if (has_role)
-                MUST(object.add("role"sv, role.view()));
+                MUST(object.add("role"sv, ARIA::role_name(*role)));
             else
                 MUST(object.add("role"sv, ""sv));
         } else {

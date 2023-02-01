@@ -25,7 +25,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -50,7 +49,6 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
-#include <QSocketNotifier>
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolTip>
@@ -608,8 +606,10 @@ void WebContentView::create_client()
     auto new_client = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(std::move(socket), *this)));
     new_client->set_fd_passing_socket(MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
-    auto* notifier = new QSocketNotifier(new_client->socket().fd().value(), QSocketNotifier::Type::Read);
-    QObject::connect(notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
+    m_web_content_notifier.setSocket(new_client->socket().fd().value());
+    m_web_content_notifier.setEnabled(true);
+
+    QObject::connect(&m_web_content_notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
         if (auto notifier = new_client->socket().notifier())
             notifier->on_ready_to_read();
     });
@@ -800,6 +800,8 @@ void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, A
     m_url = url;
     if (is_inspector_open())
         inspect_dom_tree();
+    if (on_load_finish)
+        on_load_finish(url);
 }
 
 void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
@@ -1052,4 +1054,9 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
 void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const&)
 {
     dbgln("TODO: support accessibility tree in Ladybird");
+}
+
+ErrorOr<String> WebContentView::dump_layout_tree()
+{
+    return String::from_deprecated_string(client().dump_layout_tree());
 }

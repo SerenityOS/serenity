@@ -19,10 +19,12 @@ HTMLBodyElement::HTMLBodyElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLBodyElement::~HTMLBodyElement() = default;
 
-void HTMLBodyElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLBodyElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBodyElementPrototype>(realm, "HTMLBodyElement"));
+
+    return {};
 }
 
 void HTMLBodyElement::apply_presentational_hints(CSS::StyleProperties& style) const

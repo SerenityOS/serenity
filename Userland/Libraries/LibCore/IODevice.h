@@ -9,6 +9,7 @@
 
 #include <AK/EnumBits.h>
 #include <AK/Forward.h>
+#include <AK/Stream.h>
 #include <LibCore/Object.h>
 
 namespace Core {
@@ -60,12 +61,6 @@ enum class OpenMode : unsigned {
     Truncate = 8,
     MustBeNew = 16,
     KeepOnExec = 32,
-};
-
-enum class SeekMode {
-    SetPosition,
-    FromCurrentPosition,
-    FromEndPosition,
 };
 
 AK_ENUM_BITWISE_OPERATORS(OpenMode)

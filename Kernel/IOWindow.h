@@ -29,9 +29,6 @@ public:
 
     SpaceType space_type() const { return m_space_type; }
 
-    template<typename V>
-    void write();
-
 #if ARCH(X86_64)
     static ErrorOr<NonnullOwnPtr<IOWindow>> create_for_io_space(IOAddress, u64 space_length);
 #endif
@@ -40,8 +37,6 @@ public:
 
     ErrorOr<NonnullOwnPtr<IOWindow>> create_from_io_window_with_offset(u64 offset, u64 space_length);
     ErrorOr<NonnullOwnPtr<IOWindow>> create_from_io_window_with_offset(u64 offset);
-
-    bool is_access_valid(u64 offset, size_t byte_size_access) const;
 
     u8 read8(u64 offset);
     u16 read16(u64 offset);

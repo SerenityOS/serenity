@@ -112,14 +112,14 @@ void MemoryStatsWidget::refresh()
     auto json_result = JsonValue::from_string(file_contents).release_value_but_fixme_should_propagate_errors();
     auto const& json = json_result.as_object();
 
-    u32 kmalloc_allocated = json.get_deprecated("kmalloc_allocated"sv).to_u32();
-    u32 kmalloc_available = json.get_deprecated("kmalloc_available"sv).to_u32();
-    u64 physical_allocated = json.get_deprecated("physical_allocated"sv).to_u64();
-    u64 physical_available = json.get_deprecated("physical_available"sv).to_u64();
-    u64 physical_committed = json.get_deprecated("physical_committed"sv).to_u64();
-    u64 physical_uncommitted = json.get_deprecated("physical_uncommitted"sv).to_u64();
-    u32 kmalloc_call_count = json.get_deprecated("kmalloc_call_count"sv).to_u32();
-    u32 kfree_call_count = json.get_deprecated("kfree_call_count"sv).to_u32();
+    u32 kmalloc_allocated = json.get_u32("kmalloc_allocated"sv).value_or(0);
+    u32 kmalloc_available = json.get_u32("kmalloc_available"sv).value_or(0);
+    u64 physical_allocated = json.get_u64("physical_allocated"sv).value_or(0);
+    u64 physical_available = json.get_u64("physical_available"sv).value_or(0);
+    u64 physical_committed = json.get_u64("physical_committed"sv).value_or(0);
+    u64 physical_uncommitted = json.get_u64("physical_uncommitted"sv).value_or(0);
+    u32 kmalloc_call_count = json.get_u32("kmalloc_call_count"sv).value_or(0);
+    u32 kfree_call_count = json.get_u32("kfree_call_count"sv).value_or(0);
 
     u64 kmalloc_bytes_total = kmalloc_allocated + kmalloc_available;
     u64 physical_pages_total = physical_allocated + physical_available;

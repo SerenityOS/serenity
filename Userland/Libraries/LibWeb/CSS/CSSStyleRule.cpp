@@ -13,7 +13,7 @@ namespace Web::CSS {
 
 CSSStyleRule* CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
 {
-    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration);
+    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
@@ -23,10 +23,12 @@ CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& sel
 {
 }
 
-void CSSStyleRule::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSStyleRule::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleRulePrototype>(realm, "CSSStyleRule"));
+
+    return {};
 }
 
 void CSSStyleRule::visit_edges(Cell::Visitor& visitor)

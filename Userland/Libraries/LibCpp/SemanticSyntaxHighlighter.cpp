@@ -32,8 +32,8 @@ void SemanticSyntaxHighlighter::rehighlight(Palette const& palette)
         for (Cpp::Token const& token : m_saved_tokens)
             previous_tokens_as_lines.appendff("{}\n", token.type_as_deprecated_string());
 
-        auto previous = previous_tokens_as_lines.build();
-        auto current = current_tokens_as_lines.build();
+        auto previous = previous_tokens_as_lines.to_deprecated_string();
+        auto current = current_tokens_as_lines.to_deprecated_string();
 
         // FIXME: Computing the diff on the entire document's tokens is quite inefficient.
         //        An improvement over this could be only including the tokens that are in edited text ranges in the diff.

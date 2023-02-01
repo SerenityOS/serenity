@@ -55,7 +55,7 @@ public:
         return my_drawing_state().stroke_style.to_js_fill_or_stoke_style();
     }
 
-    JS::NonnullGCPtr<CanvasGradient> create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1)
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasGradient>> create_radial_gradient(double x0, double y0, double r0, double x1, double y1, double r1)
     {
         auto& realm = static_cast<IncludingClass&>(*this).realm();
         return CanvasGradient::create_radial(realm, x0, y0, r0, x1, y1, r1);

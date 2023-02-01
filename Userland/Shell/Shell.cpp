@@ -846,7 +846,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     // as the child will run this chain.
     if (command.should_immediately_execute_next)
         command_copy.next_chain.clear();
-    auto job = Job::create(child, pgid, cmd.build(), find_last_job_id() + 1, move(command_copy));
+    auto job = Job::create(child, pgid, cmd.to_deprecated_string(), find_last_job_id() + 1, move(command_copy));
     jobs.set((u64)child, job);
 
     job->on_exit = [this](auto job) {
@@ -1159,7 +1159,7 @@ DeprecatedString Shell::escape_token_for_single_quotes(StringView token)
     if (started_single_quote)
         builder.append("'"sv);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
@@ -1185,7 +1185,7 @@ DeprecatedString Shell::escape_token_for_double_quotes(StringView token)
 
     builder.append('"');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point, EscapeMode mode)
@@ -1290,7 +1290,7 @@ static DeprecatedString do_escape(Shell::EscapeMode escape_mode, auto& token)
         }
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Shell::escape_token(Utf32View token, EscapeMode escape_mode)
@@ -1333,7 +1333,7 @@ DeprecatedString Shell::unescape_token(StringView token)
     if (state == Escaped)
         builder.append('\\');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 void Shell::cache_path()
@@ -1477,7 +1477,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringV
         path_builder.append('/');
         path_builder.append(init_slash_part);
     }
-    path = path_builder.build();
+    path = path_builder.to_deprecated_string();
     token = last_slash_part;
 
     // the invariant part of the token is actually just the last segment
@@ -1745,7 +1745,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto list = pop_list();
             StringBuilder builder;
             builder.join(""sv, list);
-            this->list().append(builder.build());
+            this->list().append(builder.to_deprecated_string());
         }
 
         virtual void visit(AST::Glob const* node) override
@@ -1764,7 +1764,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto list = pop_list();
             StringBuilder builder;
             builder.join(""sv, list);
-            this->list().append(builder.build());
+            this->list().append(builder.to_deprecated_string());
         }
 
         virtual void visit(AST::ImmediateExpression const* node) override
@@ -1813,7 +1813,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                 for (auto& right_entry : right) {
                     builder.append(left_entry);
                     builder.append(right_entry);
-                    list().append(builder.build());
+                    list().append(builder.to_deprecated_string());
                     builder.clear();
                 }
             }
@@ -1880,32 +1880,32 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto parsed = parsed_result.release_value();
             if (parsed.is_object()) {
                 auto& object = parsed.as_object();
-                auto kind = object.get_deprecated("kind"sv).as_string_or("plain");
+                auto kind = object.get_deprecated_string("kind"sv).value_or("plain");
                 if (kind == "path") {
-                    auto base = object.get_deprecated("base"sv).as_string_or("");
-                    auto part = object.get_deprecated("part"sv).as_string_or("");
-                    auto executable_only = object.get_deprecated("executable_only"sv).to_bool(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
+                    auto base = object.get_deprecated_string("base"sv).value_or("");
+                    auto part = object.get_deprecated_string("part"sv).value_or("");
+                    auto executable_only = object.get_bool("executable_only"sv).value_or(false) ? ExecutableOnly::Yes : ExecutableOnly::No;
                     suggestions.extend(complete_path(base, part, part.length(), executable_only, nullptr, nullptr));
                 } else if (kind == "program") {
-                    auto name = object.get_deprecated("name"sv).as_string_or("");
+                    auto name = object.get_deprecated_string("name"sv).value_or("");
                     suggestions.extend(complete_program_name(name, name.length()));
                 } else if (kind == "proxy") {
                     if (m_completion_stack_info.size_free() < 4 * KiB) {
                         dbgln("Not enough stack space, recursion?");
                         return IterationDecision::Continue;
                     }
-                    auto argv = object.get_deprecated("argv"sv).as_string_or("");
+                    auto argv = object.get_deprecated_string("argv"sv).value_or("");
                     dbgln("Proxy completion for {}", argv);
                     suggestions.extend(complete(argv));
                 } else if (kind == "plain") {
                     Line::CompletionSuggestion suggestion {
-                        object.get_deprecated("completion"sv).as_string_or(""),
-                        object.get_deprecated("trailing_trivia"sv).as_string_or(""),
-                        object.get_deprecated("display_trivia"sv).as_string_or(""),
+                        object.get_deprecated_string("completion"sv).value_or(""),
+                        object.get_deprecated_string("trailing_trivia"sv).value_or(""),
+                        object.get_deprecated_string("display_trivia"sv).value_or(""),
                     };
-                    suggestion.static_offset = object.get_deprecated("static_offset"sv).to_u64(0);
-                    suggestion.invariant_offset = object.get_deprecated("invariant_offset"sv).to_u64(0);
-                    suggestion.allow_commit_without_listing = object.get_deprecated("allow_commit_without_listing"sv).to_bool(true);
+                    suggestion.static_offset = object.get_u64("static_offset"sv).value_or(0);
+                    suggestion.invariant_offset = object.get_u64("invariant_offset"sv).value_or(0);
+                    suggestion.allow_commit_without_listing = object.get_bool("allow_commit_without_listing"sv).value_or(true);
                     suggestions.append(move(suggestion));
                 } else {
                     dbgln("LibLine: Unhandled completion kind: {}", kind);

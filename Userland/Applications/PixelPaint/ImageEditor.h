@@ -148,6 +148,8 @@ private:
 
     virtual void selection_did_change() override;
 
+    Gfx::IntRect subtract_rulers_from_rect(Gfx::IntRect const& rect) const;
+
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 

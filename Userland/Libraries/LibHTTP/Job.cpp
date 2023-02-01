@@ -8,12 +8,12 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
+#include <AK/MemoryStream.h>
 #include <AK/Try.h>
 #include <LibCompress/Brotli.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
 #include <LibCore/Event.h>
-#include <LibCore/MemoryStream.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
 #include <stdio.h>
@@ -70,7 +70,7 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
     } else if (content_encoding == "br") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is brotli compressed!");
 
-        auto bufstream = TRY(Core::Stream::FixedMemoryStream::construct({ buf.data(), buf.size() }));
+        auto bufstream = TRY(FixedMemoryStream::construct({ buf.data(), buf.size() }));
         auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
 
         auto uncompressed = TRY(brotli_stream.read_until_eof());
@@ -86,7 +86,7 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
     return buf;
 }
 
-Job::Job(HttpRequest&& request, Core::Stream::Stream& output_stream)
+Job::Job(HttpRequest&& request, AK::Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(move(request))
 {
@@ -371,7 +371,7 @@ void Job::on_socket_connected()
                 builder.append(existing_value.value());
                 builder.append(',');
                 builder.append(value);
-                m_headers.set(name, builder.build());
+                m_headers.set(name, builder.to_deprecated_string());
             } else {
                 m_headers.set(name, value);
             }

@@ -9,9 +9,10 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Endian.h>
+#include <AK/Forward.h>
+#include <AK/MaybeOwned.h>
 #include <AK/Vector.h>
 #include <LibCompress/DeflateTables.h>
-#include <LibCore/BitStream.h>
 #include <LibCore/Stream.h>
 
 namespace Compress {
@@ -19,8 +20,8 @@ namespace Compress {
 class CanonicalCode {
 public:
     CanonicalCode() = default;
-    ErrorOr<u32> read_symbol(Core::Stream::LittleEndianInputBitStream&) const;
-    ErrorOr<void> write_symbol(Core::Stream::LittleEndianOutputBitStream&, u32) const;
+    ErrorOr<u32> read_symbol(LittleEndianInputBitStream&) const;
+    ErrorOr<void> write_symbol(LittleEndianOutputBitStream&, u32) const;
 
     static CanonicalCode const& fixed_literal_codes();
     static CanonicalCode const& fixed_distance_codes();
@@ -37,7 +38,7 @@ private:
     Array<u16, 288> m_bit_code_lengths {};
 };
 
-class DeflateDecompressor final : public Core::Stream::Stream {
+class DeflateDecompressor final : public AK::Stream {
 private:
     class CompressedBlock {
     public:
@@ -74,7 +75,7 @@ public:
     friend CompressedBlock;
     friend UncompressedBlock;
 
-    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(Core::Stream::Handle<Core::Stream::Stream> stream);
+    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(MaybeOwned<AK::Stream> stream);
     ~DeflateDecompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -86,7 +87,7 @@ public:
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream, CircularBuffer buffer);
+    DeflateDecompressor(MaybeOwned<AK::Stream> stream, CircularBuffer buffer);
 
     ErrorOr<u32> decode_length(u32);
     ErrorOr<u32> decode_distance(u32);
@@ -100,11 +101,11 @@ private:
         UncompressedBlock m_uncompressed_block;
     };
 
-    Core::Stream::Handle<Core::Stream::LittleEndianInputBitStream> m_input_stream;
+    MaybeOwned<LittleEndianInputBitStream> m_input_stream;
     CircularBuffer m_output_buffer;
 };
 
-class DeflateCompressor final : public Core::Stream::Stream {
+class DeflateCompressor final : public AK::Stream {
 public:
     static constexpr size_t block_size = 32 * KiB - 1; // TODO: this can theoretically be increased to 64 KiB - 2
     static constexpr size_t window_size = block_size * 2;
@@ -139,7 +140,7 @@ public:
         BEST // WARNING: this one can take an unreasonable amount of time!
     };
 
-    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(Core::Stream::Handle<Core::Stream::Stream>, CompressionLevel = CompressionLevel::GOOD);
+    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(MaybeOwned<AK::Stream>, CompressionLevel = CompressionLevel::GOOD);
     ~DeflateCompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -152,7 +153,7 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, CompressionLevel = CompressionLevel::GOOD);
 
 private:
-    DeflateCompressor(NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream>, CompressionLevel = CompressionLevel::GOOD);
+    DeflateCompressor(NonnullOwnPtr<LittleEndianOutputBitStream>, CompressionLevel = CompressionLevel::GOOD);
 
     Bytes pending_block() { return { m_rolling_window + block_size, block_size }; }
 
@@ -184,7 +185,7 @@ private:
     bool m_finished { false };
     CompressionLevel m_compression_level;
     CompressionConstants m_compression_constants;
-    NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream> m_output_stream;
+    NonnullOwnPtr<LittleEndianOutputBitStream> m_output_stream;
 
     u8 m_rolling_window[window_size];
     size_t m_pending_block_size { 0 };

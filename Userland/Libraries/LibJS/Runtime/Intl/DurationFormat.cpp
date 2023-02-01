@@ -268,10 +268,10 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 }
 
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, DeprecatedString const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
 {
     // 1. Let style be ? GetOption(options, unit, string, stylesList, undefined).
-    auto style_value = TRY(get_option(vm, options, unit, OptionType::String, styles_list, Empty {}));
+    auto style_value = TRY(get_option(vm, options, unit.to_deprecated_string(), OptionType::String, styles_list, Empty {}));
 
     // 2. Let displayDefault be "always".
     auto display_default = "always"sv;
@@ -312,10 +312,10 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
     }
 
     // 4. Let displayField be the string-concatenation of unit and "Display".
-    auto display_field = DeprecatedString::formatted("{}Display", unit);
+    auto display_field = TRY_OR_THROW_OOM(vm, String::formatted("{}Display", unit));
 
     // 5. Let display be ? GetOption(options, displayField, string, « "auto", "always" », displayDefault).
-    auto display = TRY(get_option(vm, options, display_field, OptionType::String, { "auto"sv, "always"sv }, display_default));
+    auto display = TRY(get_option(vm, options, display_field.to_deprecated_string(), OptionType::String, { "auto"sv, "always"sv }, display_default));
 
     // 6. If prevStyle is "numeric" or "2-digit", then
     if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {
@@ -332,7 +332,7 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
     }
 
     // 7. Return the Record { [[Style]]: style, [[Display]]: display }.
-    return DurationUnitOptions { .style = move(style), .display = TRY(display.as_string().deprecated_string()) };
+    return DurationUnitOptions { .style = TRY_OR_THROW_OOM(vm, String::from_utf8(style)), .display = TRY(display.as_string().utf8_string()) };
 }
 
 // 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
@@ -481,7 +481,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                     // c. If nextValue is not 0 or nextDisplay is not "auto", then
                     if (next_value != 0.0 || next_display != DurationFormat::Display::Auto) {
                         // i. Let separator be dataLocaleData.[[formats]].[[digital]].[[separator]].
-                        auto separator = ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator).value_or(":"sv);
+                        auto separator = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator)).value_or(":"sv);
 
                         // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
                         result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) });

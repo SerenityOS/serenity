@@ -8,16 +8,13 @@
 
 #include "FlacTypes.h"
 #include "Loader.h"
+#include <AK/BitStream.h>
 #include <AK/Error.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
-#include <LibCore/BitStream.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 
 namespace Audio {
-
-using Core::Stream::BigEndianInputBitStream;
 
 // Experimentally determined to be a decent buffer size on i686:
 // 4K (the default) is slightly worse, and 64K is much worse.
@@ -47,11 +44,11 @@ ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBi
 //      https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03 (newer IETF draft that uses incompatible numberings and names)
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
-    explicit FlacLoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
+    explicit FlacLoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
     virtual ~FlacLoaderPlugin() override = default;
 
-    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> try_create(StringView path);
-    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> try_create(Bytes buffer);
+    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(StringView path);
+    static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(Bytes buffer);
 
     virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 

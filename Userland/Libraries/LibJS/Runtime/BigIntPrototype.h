@@ -14,7 +14,7 @@ class BigIntPrototype final : public Object {
     JS_OBJECT(BigIntPrototype, Object);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~BigIntPrototype() override = default;
 
 private:

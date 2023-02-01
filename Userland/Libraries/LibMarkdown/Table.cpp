@@ -44,12 +44,12 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
         write_aligned(col.header, width, col.alignment);
     }
 
-    lines.append(builder.build());
+    lines.append(builder.to_deprecated_string());
     builder.clear();
 
     for (size_t i = 0; i < view_width; ++i)
         builder.append('-');
-    lines.append(builder.build());
+    lines.append(builder.to_deprecated_string());
     builder.clear();
 
     for (size_t i = 0; i < m_row_count; ++i) {
@@ -65,7 +65,7 @@ Vector<DeprecatedString> Table::render_lines_for_terminal(size_t view_width) con
             size_t width = col.relative_width * unit_width_length;
             write_aligned(cell, width, col.alignment);
         }
-        lines.append(builder.build());
+        lines.append(builder.to_deprecated_string());
         builder.clear();
     }
 

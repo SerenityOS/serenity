@@ -18,9 +18,9 @@ ListFormatPrototype::ListFormatPrototype(Realm& realm)
 {
 }
 
-void ListFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ListFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -31,6 +31,8 @@ void ListFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.format, format, 1, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 13.3.3 Intl.ListFormat.prototype.format ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.format

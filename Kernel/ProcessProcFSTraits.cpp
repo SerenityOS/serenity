@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/FileSystem/ProcFS/ProcessDirectoryInode.h>
+#include <Kernel/FileSystem/ProcFS/Inode.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>
 
@@ -39,13 +39,13 @@ InodeIndex Process::ProcessProcFSTraits::component_index() const
     return SegmentedProcFSIndex::build_segmented_index_for_pid_directory(process->pid());
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::ProcessProcFSTraits::to_inode(ProcFS const& procfs_instance) const
+ErrorOr<NonnullLockRefPtr<ProcFSInode>> Process::ProcessProcFSTraits::to_inode(ProcFS const& procfs_instance) const
 {
     auto process = m_process.strong_ref();
     if (!process)
         return ESRCH;
 
-    return TRY(ProcFSProcessDirectoryInode::try_create(procfs_instance, process->pid()));
+    return TRY(ProcFSInode::try_create_as_process_directory_inode(procfs_instance, process->pid()));
 }
 
 ErrorOr<void> Process::ProcessProcFSTraits::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const

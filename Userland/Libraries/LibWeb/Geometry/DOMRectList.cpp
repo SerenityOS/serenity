@@ -16,7 +16,7 @@ JS::NonnullGCPtr<DOMRectList> DOMRectList::create(JS::Realm& realm, Vector<JS::H
     Vector<JS::NonnullGCPtr<DOMRect>> rects;
     for (auto& rect : rect_handles)
         rects.append(*rect);
-    return realm.heap().allocate<DOMRectList>(realm, realm, move(rects));
+    return realm.heap().allocate<DOMRectList>(realm, realm, move(rects)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rects)
@@ -27,10 +27,12 @@ DOMRectList::DOMRectList(JS::Realm& realm, Vector<JS::NonnullGCPtr<DOMRect>> rec
 
 DOMRectList::~DOMRectList() = default;
 
-void DOMRectList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> DOMRectList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMRectListPrototype>(realm, "DOMRectList"));
+
+    return {};
 }
 
 // https://drafts.fxtf.org/geometry-1/#dom-domrectlist-length

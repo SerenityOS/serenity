@@ -150,7 +150,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString dates_path, CLDR& cldr)
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.build();
+        return builder.to_deprecated_string();
     };
 
     while (dates_iterator.has_next()) {

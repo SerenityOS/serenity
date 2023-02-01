@@ -13,7 +13,7 @@ namespace Web::CSS {
 
 CSSSupportsRule* CSSSupportsRule::create(JS::Realm& realm, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
 {
-    return realm.heap().allocate<CSSSupportsRule>(realm, realm, move(supports), rules);
+    return realm.heap().allocate<CSSSupportsRule>(realm, realm, move(supports), rules).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& supports, CSSRuleList& rules)
@@ -22,10 +22,12 @@ CSSSupportsRule::CSSSupportsRule(JS::Realm& realm, NonnullRefPtr<Supports>&& sup
 {
 }
 
-void CSSSupportsRule::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSSupportsRule::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSSupportsRulePrototype>(realm, "CSSSupportsRule"));
+
+    return {};
 }
 
 DeprecatedString CSSSupportsRule::condition_text() const

@@ -120,7 +120,7 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return type_state() != TypeAttributeState::Hidden; }
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
@@ -134,7 +134,7 @@ private:
     // ^DOM::Element
     virtual i32 default_tab_index_value() const override;
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     static TypeAttributeState parse_type_attribute(StringView);

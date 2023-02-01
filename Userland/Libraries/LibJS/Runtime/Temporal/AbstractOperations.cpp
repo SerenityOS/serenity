@@ -7,7 +7,6 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/DateTimeLexer.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
@@ -147,7 +146,7 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     if (!values.is_empty()) {
         // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        if (auto value_string = TRY(value.as_string().deprecated_string()); !values.contains_slow(value_string))
+        if (auto value_string = TRY(value.as_string().utf8_string()); !values.contains_slow(value_string))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
     }
 
@@ -391,7 +390,7 @@ ThrowCompletionOr<SecondsStringPrecision> to_seconds_string_precision(VM& vm, Ob
         // a. If fractionalDigitsVal is not undefined, then
         if (!fractional_digits_value.is_undefined()) {
             // i. If ? ToString(fractionalDigitsVal) is not "auto", throw a RangeError exception.
-            if (TRY(fractional_digits_value.to_deprecated_string(vm)) != "auto"sv)
+            if (TRY(fractional_digits_value.to_string(vm)) != "auto"sv)
                 return vm.template throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, fractional_digits_value, "fractionalSecondDigits"sv);
         }
 
@@ -691,7 +690,7 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
     if (offset_behavior == OffsetBehavior::Option) {
         // a. Set offsetString to ? ToString(offsetString).
         // NOTE: offsetString is not used after this path, so we don't need to put this into the original offset_string which is of type JS::Value.
-        auto actual_offset_string = TRY(offset_string.to_deprecated_string(vm));
+        auto actual_offset_string = TRY(offset_string.to_string(vm));
 
         // b. If IsTimeZoneOffsetString(offsetString) is false, throw a RangeError exception.
         if (!is_time_zone_offset_string(actual_offset_string))
@@ -854,8 +853,7 @@ ThrowCompletionOr<String> format_seconds_string_part(VM& vm, u8 second, u16 mill
         fraction_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", fraction));
 
         // c. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
-        // FIXME: Add String::trim()
-        fraction_string = TRY_OR_THROW_OOM(vm, String::from_utf8(fraction_string.bytes_as_string_view().trim("0"sv, TrimMode::Right)));
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.trim("0"sv, TrimMode::Right));
     }
     // 6. Else,
     else {
@@ -1807,8 +1805,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     // 4. If requiredFields is partial and any is false, then
     if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
-        // FIXME: Add & use String::join()
-        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, DeprecatedString::join(", "sv, field_names));
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, TRY_OR_THROW_OOM(vm, String::join(", "sv, field_names)));
     }
 
     // 5. Return result.

@@ -143,7 +143,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         // First in ere
         b.clear();
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -153,7 +153,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append("a|"sv);
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -163,7 +163,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('^');
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -173,7 +173,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('$');
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -184,7 +184,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.append('(');
         b.append(ch);
         b.append(')');
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         l.set_source(pattern);
         p.parse();
         EXPECT(p.has_error());
@@ -722,7 +722,7 @@ TEST_CASE(ECMA262_unicode_match)
     StringBuilder builder;
     for (u32 code_point : space_and_line_terminator_code_points)
         builder.append_code_point(code_point);
-    auto space_and_line_terminators = builder.build();
+    auto space_and_line_terminators = builder.to_deprecated_string();
 
     struct _test {
         StringView pattern;

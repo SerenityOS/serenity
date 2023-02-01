@@ -252,7 +252,7 @@ TEST_CASE(builder_zero_initial_capacity)
 {
     StringBuilder builder(0);
     builder.append(""sv);
-    auto built = builder.build();
+    auto built = builder.to_deprecated_string();
     EXPECT_EQ(built.is_null(), false);
     EXPECT_EQ(built.length(), 0u);
 }

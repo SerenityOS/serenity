@@ -92,7 +92,7 @@ public:
             cert_name.append("/CN="sv);
             cert_name.append(subject.subject);
         }
-        return cert_name.build();
+        return cert_name.to_deprecated_string();
     }
 
     DeprecatedString issuer_identifier_string() const
@@ -122,7 +122,7 @@ public:
             cert_name.append("/CN="sv);
             cert_name.append(issuer.subject);
         }
-        return cert_name.build();
+        return cert_name.to_deprecated_string();
     }
 };
 

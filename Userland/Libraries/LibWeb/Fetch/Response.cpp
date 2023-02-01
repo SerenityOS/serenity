@@ -26,10 +26,12 @@ Response::Response(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> 
 
 Response::~Response() = default;
 
-void Response::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Response::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ResponsePrototype>(realm, "Response"));
+
+    return {};
 }
 
 void Response::visit_edges(Cell::Visitor& visitor)
@@ -75,10 +77,10 @@ JS::NonnullGCPtr<Response> Response::create(JS::Realm& realm, JS::NonnullGCPtr<I
 {
     // 1. Let responseObject be a new Response object with realm.
     // 2. Set responseObject’s response to response.
-    auto response_object = realm.heap().allocate<Response>(realm, realm, response);
+    auto response_object = realm.heap().allocate<Response>(realm, realm, response).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 3. Set responseObject’s headers to a new Headers object with realm, whose headers list is response’s headers list and guard is guard.
-    response_object->m_headers = realm.heap().allocate<Headers>(realm, realm, response->header_list());
+    response_object->m_headers = realm.heap().allocate<Headers>(realm, realm, response->header_list()).release_allocated_value_but_fixme_should_propagate_errors();
     response_object->m_headers->set_guard(guard);
 
     // 4. Return responseObject.
@@ -134,14 +136,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::construct_impl(JS::Rea
     auto& vm = realm.vm();
 
     // Referred to as 'this' in the spec.
-    auto response_object = realm.heap().allocate<Response>(realm, realm, Infrastructure::Response::create(vm));
+    auto response_object = MUST_OR_THROW_OOM(realm.heap().allocate<Response>(realm, realm, Infrastructure::Response::create(vm)));
 
     // 1. Set this’s response to a new response.
     // NOTE: This is done at the beginning as the 'this' value Response object
     //       cannot exist with a null Infrastructure::Response.
 
     // 2. Set this’s headers to a new Headers object with this’s relevant Realm, whose header list is this’s response’s header list and guard is "response".
-    response_object->m_headers = realm.heap().allocate<Headers>(realm, realm, response_object->response()->header_list());
+    response_object->m_headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, response_object->response()->header_list()));
     response_object->m_headers->set_guard(Headers::Guard::Response);
 
     // 3. Let bodyWithType be null.

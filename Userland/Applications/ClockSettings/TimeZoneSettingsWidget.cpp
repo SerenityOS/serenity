@@ -135,8 +135,8 @@ void TimeZoneSettingsWidget::set_time_zone_location()
     auto locale = Locale::default_locale();
     auto now = AK::Time::now_realtime();
 
-    auto name = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::Long, now);
-    auto offset = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::LongOffset, now);
+    auto name = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::Long, now).release_value_but_fixme_should_propagate_errors();
+    auto offset = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::LongOffset, now).release_value_but_fixme_should_propagate_errors();
 
     m_time_zone_text = DeprecatedString::formatted("{}\n({})", name, offset);
 }

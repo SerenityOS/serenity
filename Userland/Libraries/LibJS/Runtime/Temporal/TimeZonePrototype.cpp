@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,9 +23,9 @@ TimeZonePrototype::TimeZonePrototype(Realm& realm)
 {
 }
 
-void TimeZonePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> TimeZonePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -43,6 +43,8 @@ void TimeZonePrototype::initialize(Realm& realm)
 
     // 11.4.2 Temporal.TimeZone.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.timezone.prototype-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.TimeZone"), Attribute::Configurable);
+
+    return {};
 }
 
 // 11.4.3 get Temporal.TimeZone.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.timezone.prototype.id
@@ -244,7 +246,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
     auto* time_zone = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(timeZone).
-    return PrimitiveString::create(vm, TRY(Value(time_zone).to_deprecated_string(vm)));
+    return PrimitiveString::create(vm, TRY(Value(time_zone).to_string(vm)));
 }
 
 }

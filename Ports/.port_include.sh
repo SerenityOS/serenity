@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-SCRIPT="$(realpath $(dirname "${0}"))"
+SCRIPT="$(realpath $(dirname "${BASH_SOURCE[0]}"))"
 
 if [ -z "${SERENITY_STRIPPED_ENV:-}" ]; then
     exec "${SCRIPT}/.strip_env.sh" "${@}"
@@ -528,7 +528,17 @@ package_install_state() {
 installdepends() {
     for depend in "${depends[@]}"; do
         if [ -z "$(package_install_state $depend)" ]; then
-            (cd "${PORT_META_DIR}/../$depend" && ./package.sh --auto)
+            # Split colon seperated string into a list
+            IFS=':' read -ra port_directories <<< "$SERENITY_PORT_DIRS"
+            for port_dir in "${port_directories[@]}"; do
+                if [ -d "${port_dir}/$depend" ]; then
+                    (cd "${port_dir}/$depend" && ./package.sh --auto)
+                    return
+                fi
+            done
+
+            >&2 echo "Error: Dependency $depend could not be found."
+            exit 1
         fi
     done
 }

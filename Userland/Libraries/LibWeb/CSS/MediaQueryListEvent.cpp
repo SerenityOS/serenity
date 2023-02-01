@@ -12,7 +12,7 @@ namespace Web::CSS {
 
 MediaQueryListEvent* MediaQueryListEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init)
 {
-    return realm.heap().allocate<MediaQueryListEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<MediaQueryListEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MediaQueryListEvent::MediaQueryListEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init)
@@ -24,10 +24,12 @@ MediaQueryListEvent::MediaQueryListEvent(JS::Realm& realm, DeprecatedFlyString c
 
 MediaQueryListEvent::~MediaQueryListEvent() = default;
 
-void MediaQueryListEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> MediaQueryListEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListEventPrototype>(realm, "MediaQueryListEvent"));
+
+    return {};
 }
 
 }

@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DurationFormatPrototype.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -17,9 +18,9 @@ DurationFormatPrototype::DurationFormatPrototype(Realm& realm)
 {
 }
 
-void DurationFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> DurationFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -30,6 +31,8 @@ void DurationFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.format, format, 1, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 1.4.3 Intl.DurationFormat.prototype.format ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.format
@@ -46,16 +49,16 @@ JS_DEFINE_NATIVE_FUNCTION(DurationFormatPrototype::format)
     auto parts = MUST_OR_THROW_OOM(partition_duration_format_pattern(vm, *duration_format, record));
 
     // 5. Let result be a new empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 6. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto const& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(part.value);
+        MUST_OR_THROW_OOM(result.append(part.value));
     }
 
     // 7. Return result.
-    return PrimitiveString::create(vm, result.build());
+    return PrimitiveString::create(vm, MUST_OR_THROW_OOM(result.to_string()));
 }
 
 // 1.4.4 Intl.DurationFormat.prototype.formatToParts ( duration ), https://tc39.es/proposal-intl-duration-format/#sec-Intl.DurationFormat.prototype.formatToParts

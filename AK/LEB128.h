@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedStream.h>
 #include <AK/NumericLimits.h>
-#include <AK/Stream.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -19,7 +19,7 @@ struct LEB128 {
         [[maybe_unused]] size_t backup_offset = 0;
         if constexpr (requires { stream.offset(); })
             backup_offset = stream.offset();
-        InputStream& input_stream { stream };
+        DeprecatedInputStream& input_stream { stream };
 
         result = 0;
         size_t num_bytes = 0;
@@ -62,7 +62,7 @@ struct LEB128 {
         [[maybe_unused]] size_t backup_offset = 0;
         if constexpr (requires { stream.offset(); })
             backup_offset = stream.offset();
-        InputStream& input_stream { stream };
+        DeprecatedInputStream& input_stream { stream };
 
         i64 temp = 0;
         size_t num_bytes = 0;

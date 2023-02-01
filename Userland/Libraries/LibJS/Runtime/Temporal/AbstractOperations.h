@@ -9,6 +9,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Variant.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/GlobalObject.h>

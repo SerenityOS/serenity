@@ -61,7 +61,7 @@ public:
     virtual void set_should_buffer_all_input(bool) = 0;
     virtual bool stop() = 0;
 
-    virtual void stream_into(Core::Stream::Stream&) = 0;
+    virtual void stream_into(AK::Stream&) = 0;
 
     Function<void(bool success, u32 total_size, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
     Function<void(bool success, u32 total_size)> on_finish;

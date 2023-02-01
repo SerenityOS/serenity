@@ -75,7 +75,7 @@ static IntVector3 vector_for_direction(Direction direction)
 }
 
 Tubes::Tubes(int interval)
-    : m_grid(MUST(FixedArray<u8>::try_create(grid_resolution * grid_resolution * grid_resolution)))
+    : m_grid(MUST(FixedArray<u8>::create(grid_resolution * grid_resolution * grid_resolution)))
 {
     on_screensaver_exit = []() { GUI::Application::the()->quit(); };
     start_timer(interval);

@@ -180,7 +180,7 @@ ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
         return Error::from_string_literal("Kern table does not contain any subtables");
 
     // Read all subtable offsets
-    auto subtable_offsets = TRY(FixedArray<size_t>::try_create(number_of_subtables));
+    auto subtable_offsets = TRY(FixedArray<size_t>::create(number_of_subtables));
     size_t offset = sizeof(Header);
     for (size_t i = 0; i < number_of_subtables; ++i) {
         if (slice.size() < offset + sizeof(SubtableHeader))
@@ -517,6 +517,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         if (!platform.has_value())
             return Error::from_string_literal("Invalid Platform ID");
 
+        /* NOTE: The encoding records are sorted first by platform ID, then by encoding ID.
+           This means that the Windows platform will take precedence over Macintosh, which is
+           usually what we want here. */
         if (platform.value() == Cmap::Subtable::Platform::Windows) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
                 cmap.set_active_index(i);
@@ -528,7 +531,6 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
             }
         } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
             cmap.set_active_index(i);
-            break;
         }
     }
 
@@ -722,6 +724,40 @@ Optional<ReadonlyBytes> Font::glyph_program(u32 glyph_id) const
     auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
     auto glyph = m_glyf.glyph(glyph_offset);
     return glyph.program();
+}
+
+u32 Font::glyph_id_for_code_point(u32 code_point) const
+{
+    return glyph_page(code_point / GlyphPage::glyphs_per_page).glyph_ids[code_point % GlyphPage::glyphs_per_page];
+}
+
+Font::GlyphPage const& Font::glyph_page(size_t page_index) const
+{
+    if (page_index == 0) {
+        if (!m_glyph_page_zero) {
+            m_glyph_page_zero = make<GlyphPage>();
+            populate_glyph_page(*m_glyph_page_zero, 0);
+        }
+        return *m_glyph_page_zero;
+    }
+    if (auto it = m_glyph_pages.find(page_index); it != m_glyph_pages.end()) {
+        return *it->value;
+    }
+
+    auto glyph_page = make<GlyphPage>();
+    populate_glyph_page(*glyph_page, page_index);
+    auto const* glyph_page_ptr = glyph_page.ptr();
+    m_glyph_pages.set(page_index, move(glyph_page));
+    return *glyph_page_ptr;
+}
+
+void Font::populate_glyph_page(GlyphPage& glyph_page, size_t page_index) const
+{
+    u32 first_code_point = page_index * GlyphPage::glyphs_per_page;
+    for (size_t i = 0; i < GlyphPage::glyphs_per_page; ++i) {
+        u32 code_point = first_code_point + i;
+        glyph_page.glyph_ids[i] = m_cmap.glyph_id_for_code_point(code_point);
+    }
 }
 
 }

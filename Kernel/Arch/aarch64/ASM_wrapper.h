@@ -24,6 +24,14 @@ inline void set_ttbr0_el1(FlatPtr ttbr0_el1)
     asm("msr ttbr0_el1, %[value]" ::[value] "r"(ttbr0_el1));
 }
 
+inline FlatPtr get_ttbr0_el1()
+{
+    FlatPtr ttbr0_el1;
+    asm("mrs %[value], ttbr0_el1\n"
+        : [value] "=r"(ttbr0_el1));
+    return ttbr0_el1;
+}
+
 inline void set_sp_el1(FlatPtr sp_el1)
 {
     asm("msr sp_el1, %[value]" ::[value] "r"(sp_el1));
@@ -75,7 +83,11 @@ inline void load_el1_vector_table(void* vector_table)
 
 inline void enter_el2_from_el3()
 {
-    asm volatile("    adr x0, entered_el2\n"
+    // NOTE: This also copies the current stack pointer into SP_EL2, as
+    //       the processor is set up to use SP_EL2 when jumping into EL2.
+    asm volatile("    mov x0, sp\n"
+                 "    msr sp_el2, x0\n"
+                 "    adr x0, entered_el2\n"
                  "    msr elr_el3, x0\n"
                  "    eret\n"
                  "entered_el2:" ::
@@ -84,7 +96,11 @@ inline void enter_el2_from_el3()
 
 inline void enter_el1_from_el2()
 {
-    asm volatile("    adr x0, entered_el1\n"
+    // NOTE: This also copies the current stack pointer into SP_EL1, as
+    //       the processor is set up to use SP_EL1 when jumping into EL1.
+    asm volatile("    mov x0, sp\n"
+                 "    msr sp_el1, x0\n"
+                 "    adr x0, entered_el1\n"
                  "    msr elr_el2, x0\n"
                  "    eret\n"
                  "entered_el1:" ::

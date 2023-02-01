@@ -5,9 +5,9 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/EventNames.h>
@@ -48,10 +48,12 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLImageElement::~HTMLImageElement() = default;
 
-void HTMLImageElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLImageElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"));
+
+    return {};
 }
 
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
@@ -202,14 +204,14 @@ bool HTMLImageElement::complete() const
     return false;
 }
 
-DeprecatedFlyString HTMLImageElement::default_role() const
+Optional<ARIA::Role> HTMLImageElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-img
     // https://www.w3.org/TR/html-aria/#el-img-no-alt
     if (alt().is_null() || !alt().is_empty())
-        return DOM::ARIARoleNames::img;
+        return ARIA::Role::img;
     // https://www.w3.org/TR/html-aria/#el-img-empty-alt
-    return DOM::ARIARoleNames::presentation;
+    return ARIA::Role::presentation;
 }
 
 }

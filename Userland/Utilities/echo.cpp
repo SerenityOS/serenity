@@ -94,7 +94,7 @@ static DeprecatedString interpret_backslash_escapes(StringView string, bool& no_
         }
     }
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

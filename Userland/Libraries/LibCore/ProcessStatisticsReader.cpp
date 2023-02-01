@@ -15,9 +15,9 @@ namespace Core {
 
 HashMap<uid_t, DeprecatedString> ProcessStatisticsReader::s_usernames;
 
-ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(Core::Stream::SeekableStream& proc_all_file, bool include_usernames)
+ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream& proc_all_file, bool include_usernames)
 {
-    TRY(proc_all_file.seek(0, Core::Stream::SeekMode::SetPosition));
+    TRY(proc_all_file.seek(0, SeekMode::SetPosition));
 
     AllProcessesStatistics all_processes_statistics;
 

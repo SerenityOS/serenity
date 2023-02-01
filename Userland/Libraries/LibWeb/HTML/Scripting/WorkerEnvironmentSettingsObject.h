@@ -27,10 +27,10 @@ public:
     {
         auto* realm = execution_context->realm;
         VERIFY(realm);
-        auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context));
+        auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context)).release_allocated_value_but_fixme_should_propagate_errors();
         settings_object->target_browsing_context = nullptr;
 
-        auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
+        auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm).release_allocated_value_but_fixme_should_propagate_errors();
         auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics);
         realm->set_host_defined(move(host_defined));
 

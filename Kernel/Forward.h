@@ -40,7 +40,6 @@ class MasterPTY;
 class Mount;
 class PerformanceEventBuffer;
 class ProcFS;
-class ProcFSDirectoryInode;
 class ProcFSExposedComponent;
 class ProcFSExposedDirectory;
 class ProcFSInode;

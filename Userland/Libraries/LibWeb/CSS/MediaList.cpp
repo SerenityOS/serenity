@@ -14,7 +14,7 @@ namespace Web::CSS {
 
 MediaList* MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return realm.heap().allocate<MediaList>(realm, realm, move(media));
+    return realm.heap().allocate<MediaList>(realm, realm, move(media)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
@@ -23,10 +23,12 @@ MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
 {
 }
 
-void MediaList::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> MediaList::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"));
+
+    return {};
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext

@@ -13,7 +13,7 @@ namespace Web::Encoding {
 
 JS::NonnullGCPtr<TextEncoder> TextEncoder::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<TextEncoder>(realm, realm);
+    return realm.heap().allocate<TextEncoder>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 TextEncoder::TextEncoder(JS::Realm& realm)
@@ -23,10 +23,12 @@ TextEncoder::TextEncoder(JS::Realm& realm)
 
 TextEncoder::~TextEncoder() = default;
 
-void TextEncoder::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> TextEncoder::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TextEncoderPrototype>(realm, "TextEncoder"));
+
+    return {};
 }
 
 // https://encoding.spec.whatwg.org/#dom-textencoder-encode

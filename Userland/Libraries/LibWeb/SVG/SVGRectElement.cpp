@@ -18,10 +18,12 @@ SVGRectElement::SVGRectElement(DOM::Document& document, DOM::QualifiedName quali
 {
 }
 
-void SVGRectElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SVGRectElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGRectElementPrototype>(realm, "SVGRectElement"));
+
+    return {};
 }
 
 void SVGRectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)

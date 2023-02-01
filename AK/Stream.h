@@ -1,167 +1,133 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Concepts.h>
-#include <AK/Endian.h>
+#include <AK/Error.h>
 #include <AK/Forward.h>
-#include <AK/Optional.h>
-#include <AK/Span.h>
-#include <AK/StdLibExtras.h>
-
-namespace AK::Detail {
-
-class Stream {
-public:
-    virtual ~Stream() { VERIFY(!has_any_error()); }
-
-    virtual bool has_recoverable_error() const { return m_recoverable_error; }
-    virtual bool has_fatal_error() const { return m_fatal_error; }
-    virtual bool has_any_error() const { return has_recoverable_error() || has_fatal_error(); }
-
-    virtual bool handle_recoverable_error()
-    {
-        VERIFY(!has_fatal_error());
-        return exchange(m_recoverable_error, false);
-    }
-    virtual bool handle_fatal_error() { return exchange(m_fatal_error, false); }
-    virtual bool handle_any_error()
-    {
-        if (has_any_error()) {
-            m_recoverable_error = false;
-            m_fatal_error = false;
-
-            return true;
-        }
-
-        return false;
-    }
-
-    ErrorOr<void> try_handle_any_error()
-    {
-        if (!handle_any_error())
-            return {};
-        return Error::from_string_literal("Stream error");
-    }
-
-    virtual void set_recoverable_error() const { m_recoverable_error = true; }
-    virtual void set_fatal_error() const { m_fatal_error = true; }
-
-private:
-    mutable bool m_recoverable_error { false };
-    mutable bool m_fatal_error { false };
-};
-
-}
+#include <AK/Traits.h>
 
 namespace AK {
 
-class InputStream : public virtual Detail::Stream {
+/// The base, abstract class for stream operations. This class defines the
+/// operations one can perform on every stream.
+/// Operations without a sensible default that are unsupported by an implementation
+/// of a Stream should return EBADF as an error.
+class Stream {
 public:
-    // Reads at least one byte unless none are requested or none are available. Does nothing
-    // and returns zero if there is already an error.
-    virtual size_t read(Bytes) = 0;
+    /// Reads into a buffer, with the maximum size being the size of the buffer.
+    /// The amount of bytes read can be smaller than the size of the buffer.
+    /// Returns either the bytes that were read, or an errno in the case of
+    /// failure.
+    virtual ErrorOr<Bytes> read(Bytes) = 0;
+    /// Tries to fill the entire buffer through reading. Returns whether the
+    /// buffer was filled without an error.
+    virtual ErrorOr<void> read_entire_buffer(Bytes);
+    /// Reads the stream until EOF, storing the contents into a ByteBuffer which
+    /// is returned once EOF is encountered. The block size determines the size
+    /// of newly allocated chunks while reading.
+    virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096);
+    /// Discards the given number of bytes from the stream. As this is usually used
+    /// as an efficient version of `read_entire_buffer`, it returns an error
+    /// if reading failed or if not all bytes could be discarded.
+    /// Unless specifically overwritten, this just uses read() to read into an
+    /// internal stack-based buffer.
+    virtual ErrorOr<void> discard(size_t discarded_bytes);
 
-    // If this function returns true, then no more data can be read. If read(Bytes) previously
-    // returned zero even though bytes were requested, then the inverse is true as well.
-    virtual bool unreliable_eof() const = 0;
+    /// Tries to write the entire contents of the buffer. It is possible for
+    /// less than the full buffer to be written. Returns either the amount of
+    /// bytes written into the stream, or an errno in the case of failure.
+    virtual ErrorOr<size_t> write(ReadonlyBytes) = 0;
+    /// Same as write, but does not return until either the entire buffer
+    /// contents are written or an error occurs.
+    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);
 
-    // Some streams additionally define a method with the signature:
-    //
-    //     bool eof() const;
-    //
-    // This method has the same semantics as unreliable_eof() but returns true if and only if no
-    // more data can be read. (A failed read is not necessary.)
+    template<typename T>
+    requires(requires(Stream& stream) { { T::read_from_stream(stream) } -> SameAs<ErrorOr<T>>; })
+    ErrorOr<T> read_value()
+    {
+        return T::read_from_stream(*this);
+    }
 
-    virtual bool read_or_error(Bytes) = 0;
-    virtual bool discard_or_error(size_t count) = 0;
+    template<typename T>
+    requires(Traits<T>::is_trivially_serializable())
+    ErrorOr<T> read_value()
+    {
+        alignas(T) u8 buffer[sizeof(T)] = {};
+        TRY(read_entire_buffer({ &buffer, sizeof(buffer) }));
+        return bit_cast<T>(buffer);
+    }
+
+    template<typename T>
+    requires(requires(T t, Stream& stream) { { t.write_to_stream(stream) } -> SameAs<ErrorOr<void>>; })
+    ErrorOr<void> write_value(T const& value)
+    {
+        return value.write_to_stream(*this);
+    }
+
+    template<typename T>
+    requires(Traits<T>::is_trivially_serializable())
+    ErrorOr<void> write_value(T const& value)
+    {
+        return write_entire_buffer({ &value, sizeof(value) });
+    }
+
+    /// Returns whether the stream has reached the end of file. For sockets,
+    /// this most likely means that the protocol has disconnected (in the case
+    /// of TCP). For seekable streams, this means the end of the file. Note that
+    /// is_eof will only return true _after_ a read with 0 length, so this
+    /// method should be called after a read.
+    virtual bool is_eof() const = 0;
+
+    virtual bool is_open() const = 0;
+    virtual void close() = 0;
+
+    virtual ~Stream()
+    {
+    }
+
+protected:
+    /// Provides a default implementation of read_until_eof that works for streams
+    /// that behave like POSIX file descriptors. expected_file_size can be
+    /// passed as a heuristic for what the Stream subclass expects the file
+    /// content size to be in order to reduce allocations (does not affect
+    /// actual reading).
+    ErrorOr<ByteBuffer> read_until_eof_impl(size_t block_size, size_t expected_file_size = 0);
 };
 
-class OutputStream : public virtual Detail::Stream {
+enum class SeekMode {
+    SetPosition,
+    FromCurrentPosition,
+    FromEndPosition,
+};
+
+/// Adds seekability to a Stream. Classes inheriting from SeekableStream
+/// will be seekable to any point in the stream.
+class SeekableStream : public Stream {
 public:
-    virtual size_t write(ReadonlyBytes) = 0;
-    virtual bool write_or_error(ReadonlyBytes) = 0;
+    /// Seeks to the given position in the given mode. Returns either the
+    /// current position of the file, or an errno in the case of an error.
+    virtual ErrorOr<size_t> seek(i64 offset, SeekMode) = 0;
+    /// Returns the current position of the file, or an errno in the case of
+    /// an error.
+    virtual ErrorOr<size_t> tell() const;
+    /// Returns the total size of the stream, or an errno in the case of an
+    /// error. May not preserve the original position on the stream on failure.
+    virtual ErrorOr<size_t> size();
+    /// Shrinks or extends the stream to the given size. Returns an errno in
+    /// the case of an error.
+    virtual ErrorOr<void> truncate(off_t length) = 0;
+    /// Seeks until after the given amount of bytes to be discarded instead of
+    /// reading and discarding everything manually;
+    virtual ErrorOr<void> discard(size_t discarded_bytes) override;
 };
 
-class DuplexStream
-    : public InputStream
-    , public OutputStream {
-};
-
-inline InputStream& operator>>(InputStream& stream, Bytes bytes)
-{
-    stream.read_or_error(bytes);
-    return stream;
-}
-inline OutputStream& operator<<(OutputStream& stream, ReadonlyBytes bytes)
-{
-    stream.write_or_error(bytes);
-    return stream;
 }
 
-template<typename T>
-InputStream& operator>>(InputStream& stream, LittleEndian<T>& value)
-{
-    return stream >> Bytes { &value.m_value, sizeof(value.m_value) };
-}
-template<typename T>
-OutputStream& operator<<(OutputStream& stream, LittleEndian<T> value)
-{
-    return stream << ReadonlyBytes { &value.m_value, sizeof(value.m_value) };
-}
-
-template<typename T>
-InputStream& operator>>(InputStream& stream, BigEndian<T>& value)
-{
-    return stream >> Bytes { &value.m_value, sizeof(value.m_value) };
-}
-template<typename T>
-OutputStream& operator<<(OutputStream& stream, BigEndian<T> value)
-{
-    return stream << ReadonlyBytes { &value.m_value, sizeof(value.m_value) };
-}
-
-template<typename T>
-InputStream& operator>>(InputStream& stream, Optional<T>& value)
-{
-    T temporary;
-    stream >> temporary;
-    value = temporary;
-    return stream;
-}
-
-template<Integral I>
-InputStream& operator>>(InputStream& stream, I& value)
-{
-    stream.read_or_error({ &value, sizeof(value) });
-    return stream;
-}
-template<Integral I>
-OutputStream& operator<<(OutputStream& stream, I value)
-{
-    stream.write_or_error({ &value, sizeof(value) });
-    return stream;
-}
-
-#ifndef KERNEL
-
-template<FloatingPoint F>
-InputStream& operator>>(InputStream& stream, F& value)
-{
-    stream.read_or_error({ &value, sizeof(value) });
-    return stream;
-}
-template<FloatingPoint F>
-OutputStream& operator<<(OutputStream& stream, F value)
-{
-    stream.write_or_error({ &value, sizeof(value) });
-    return stream;
-}
-
+#if USING_AK_GLOBALLY
+using AK::SeekMode;
 #endif
-
-}

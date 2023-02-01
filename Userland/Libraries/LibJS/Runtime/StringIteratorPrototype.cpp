@@ -18,14 +18,16 @@ StringIteratorPrototype::StringIteratorPrototype(Realm& realm)
 {
 }
 
-void StringIteratorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> StringIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_native_function(realm, vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
 
     // 22.1.5.1.2 %StringIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%stringiteratorprototype%-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "String Iterator"), Attribute::Configurable);
+
+    return {};
 }
 
 // 22.1.5.1.1 %StringIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next

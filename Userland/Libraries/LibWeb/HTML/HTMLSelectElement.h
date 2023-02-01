@@ -60,12 +60,12 @@ public:
 
     DeprecatedString const& type() const;
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^DOM::Element

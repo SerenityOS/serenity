@@ -13,7 +13,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<WorkerNavigator> WorkerNavigator::create(WorkerGlobalScope& global_scope)
 {
-    return global_scope.heap().allocate<WorkerNavigator>(global_scope.realm(), global_scope);
+    return global_scope.heap().allocate<WorkerNavigator>(global_scope.realm(), global_scope).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 WorkerNavigator::WorkerNavigator(WorkerGlobalScope& global_scope)
@@ -23,10 +23,12 @@ WorkerNavigator::WorkerNavigator(WorkerGlobalScope& global_scope)
 
 WorkerNavigator::~WorkerNavigator() = default;
 
-void WorkerNavigator::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WorkerNavigator::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerNavigatorPrototype>(realm, "WorkerNavigator"));
+
+    return {};
 }
 
 }

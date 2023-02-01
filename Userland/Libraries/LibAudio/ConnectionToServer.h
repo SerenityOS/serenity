@@ -36,7 +36,7 @@ public:
     template<ArrayLike<Sample> Samples>
     ErrorOr<void> async_enqueue(Samples&& samples)
     {
-        return async_enqueue(TRY(FixedArray<Sample>::try_create(samples.span())));
+        return async_enqueue(TRY(FixedArray<Sample>::create(samples.span())));
     }
 
     ErrorOr<void> async_enqueue(FixedArray<Sample>&& samples);

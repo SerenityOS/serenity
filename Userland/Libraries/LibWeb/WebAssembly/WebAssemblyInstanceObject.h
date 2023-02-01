@@ -20,7 +20,7 @@ class WebAssemblyInstanceObject final : public JS::Object {
 
 public:
     explicit WebAssemblyInstanceObject(JS::Realm&, size_t index);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~WebAssemblyInstanceObject() override = default;
 
     size_t index() const { return m_index; }

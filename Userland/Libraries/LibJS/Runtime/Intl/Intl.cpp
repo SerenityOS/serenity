@@ -32,9 +32,9 @@ Intl::Intl(Realm& realm)
 {
 }
 
-void Intl::initialize(Realm& realm)
+ThrowCompletionOr<void> Intl::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -55,6 +55,8 @@ void Intl::initialize(Realm& realm)
 
     define_native_function(realm, vm.names.getCanonicalLocales, get_canonical_locales, 1, attr);
     define_native_function(realm, vm.names.supportedValuesOf, supported_values_of, 1, attr);
+
+    return {};
 }
 
 // 8.3.1 Intl.getCanonicalLocales ( locales ), https://tc39.es/ecma402/#sec-intl.getcanonicallocales

@@ -26,7 +26,7 @@ extern u8 page_tables_phys_end[];
 extern u8 start_of_kernel_image[];
 extern u8 end_of_kernel_image[];
 
-namespace Kernel {
+namespace Kernel::Memory {
 
 // physical memory
 constexpr u32 START_OF_NORMAL_MEMORY = 0x00000000;
@@ -239,6 +239,17 @@ static u64* get_page_directory(u64* root_table, VirtualAddress virtual_addr)
     return descriptor_to_pointer(level2_table[level1_idx]);
 }
 
+static u64* get_page_directory_table(u64* root_table, VirtualAddress virtual_addr)
+{
+    u64 level0_idx = (virtual_addr.get() >> 39) & 0x1FF;
+    u64* level1_table = root_table;
+
+    if (level1_table[level0_idx] == 0)
+        return nullptr;
+
+    return descriptor_to_pointer(level1_table[level0_idx]);
+}
+
 static void setup_kernel_page_directory(u64* root_table)
 {
     auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) });
@@ -246,6 +257,12 @@ static void setup_kernel_page_directory(u64* root_table)
         panic_without_mmu("Could not find kernel page directory!"sv);
 
     *adjust_by_mapping_base(&boot_pd_kernel) = PhysicalAddress(kernel_page_directory);
+
+    // FIXME: Rename boot_pml4t to something architecture agnostic.
+    *adjust_by_mapping_base(&boot_pml4t) = PhysicalAddress((PhysicalPtr)root_table);
+
+    // FIXME: Rename to directory_table or similar
+    *adjust_by_mapping_base(&boot_pdpt) = PhysicalAddress((PhysicalPtr)get_page_directory_table(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) }));
 }
 
 void init_page_tables()

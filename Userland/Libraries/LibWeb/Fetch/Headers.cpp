@@ -17,7 +17,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Headers>> Headers::construct_impl(JS::Realm
     auto& vm = realm.vm();
 
     // The new Headers(init) constructor steps are:
-    auto headers = realm.heap().allocate<Headers>(realm, realm, Infrastructure::HeaderList::create(vm));
+    auto headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, Infrastructure::HeaderList::create(vm)));
 
     // 1. Set this’s guard to "none".
     headers->m_guard = Guard::None;
@@ -37,10 +37,12 @@ Headers::Headers(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::HeaderList> 
 
 Headers::~Headers() = default;
 
-void Headers::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Headers::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersPrototype>(realm, "Headers"));
+
+    return {};
 }
 
 void Headers::visit_edges(JS::Cell::Visitor& visitor)

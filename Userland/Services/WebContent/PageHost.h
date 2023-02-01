@@ -97,7 +97,7 @@ private:
     virtual void page_did_set_cookie(const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override;
     virtual void page_did_update_cookie(Web::Cookie::Cookie) override;
     virtual void page_did_update_resource_count(i32) override;
-    virtual void request_file(NonnullRefPtr<Web::FileRequest>&) override;
+    virtual void request_file(Web::FileRequest) override;
 
     explicit PageHost(ConnectionFromClient&);
 

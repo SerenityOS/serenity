@@ -49,6 +49,7 @@ public:
     StringView(ByteBuffer const&);
 #ifndef KERNEL
     StringView(String const&);
+    StringView(FlyString const&);
     StringView(DeprecatedString const&);
     StringView(DeprecatedFlyString const&);
 #endif
@@ -56,9 +57,13 @@ public:
     explicit StringView(ByteBuffer&&) = delete;
 #ifndef KERNEL
     explicit StringView(String&&) = delete;
+    explicit StringView(FlyString&&) = delete;
     explicit StringView(DeprecatedString&&) = delete;
     explicit StringView(DeprecatedFlyString&&) = delete;
 #endif
+
+    template<OneOf<String, FlyString, DeprecatedString, DeprecatedFlyString, ByteBuffer> StringType>
+    StringView& operator=(StringType&&) = delete;
 
     [[nodiscard]] constexpr bool is_null() const
     {

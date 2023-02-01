@@ -14,7 +14,7 @@
 
 namespace Debug::Dwarf {
 
-LineProgram::LineProgram(DwarfInfo& dwarf_info, Core::Stream::SeekableStream& stream)
+LineProgram::LineProgram(DwarfInfo& dwarf_info, SeekableStream& stream)
     : m_dwarf_info(dwarf_info)
     , m_stream(stream)
 {

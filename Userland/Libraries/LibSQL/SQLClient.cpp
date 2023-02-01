@@ -69,7 +69,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
             auto server_pid_file = TRY(Core::Stream::File::open(pid_path, Core::Stream::OpenMode::Write));
             TRY(server_pid_file->write(DeprecatedString::number(server_pid).bytes()));
 
-            exit(0);
+            TRY(Core::System::kill(getpid(), SIGTERM));
         }
 
         server_fd = TRY(Core::System::dup(server_fd));

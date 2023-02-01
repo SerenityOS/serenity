@@ -22,10 +22,12 @@ TreeWalker::TreeWalker(Node& root)
 
 TreeWalker::~TreeWalker() = default;
 
-void TreeWalker::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> TreeWalker::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::TreeWalkerPrototype>(realm, "TreeWalker"));
+
+    return {};
 }
 
 void TreeWalker::visit_edges(Cell::Visitor& visitor)
@@ -42,7 +44,7 @@ JS::NonnullGCPtr<TreeWalker> TreeWalker::create(Node& root, unsigned what_to_sho
     // 1. Let walker be a new TreeWalker object.
     // 2. Set walker’s root and walker’s current to root.
     auto& realm = root.realm();
-    auto walker = realm.heap().allocate<TreeWalker>(realm, root);
+    auto walker = realm.heap().allocate<TreeWalker>(realm, root).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 3. Set walker’s whatToShow to whatToShow.
     walker->m_what_to_show = what_to_show;
@@ -81,7 +83,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::parent_node()
         //    then set this’s current to node and return node.
         if (node) {
             auto result = TRY(filter(*node));
-            if (result == NodeFilter::FILTER_ACCEPT) {
+            if (result == NodeFilter::Result::FILTER_ACCEPT) {
                 m_current = *node;
                 return node;
             }
@@ -135,7 +137,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::previous_node()
             auto result = TRY(filter(*node));
 
             // 3. While result is not FILTER_REJECT and node has a child:
-            while (result != NodeFilter::FILTER_REJECT && node->has_children()) {
+            while (result != NodeFilter::Result::FILTER_REJECT && node->has_children()) {
                 // 1. Set node to node’s last child.
                 node = *node->last_child();
 
@@ -144,7 +146,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::previous_node()
             }
 
             // 4. If result is FILTER_ACCEPT, then set this’s current to node and return node.
-            if (result == NodeFilter::FILTER_ACCEPT) {
+            if (result == NodeFilter::Result::FILTER_ACCEPT) {
                 m_current = node;
                 return node;
             }
@@ -161,7 +163,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::previous_node()
         node = *node->parent();
 
         // 5. If the return value of filtering node within this is FILTER_ACCEPT, then set this’s current to node and return node.
-        if (TRY(filter(*node)) == NodeFilter::FILTER_ACCEPT) {
+        if (TRY(filter(*node)) == NodeFilter::Result::FILTER_ACCEPT) {
             m_current = node;
             return node;
         }
@@ -177,20 +179,20 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::next_node()
     JS::NonnullGCPtr<Node> node = m_current;
 
     // 2. Let result be FILTER_ACCEPT.
-    auto result = NodeFilter::FILTER_ACCEPT;
+    auto result = NodeFilter::Result::FILTER_ACCEPT;
 
     // 3. While true:
     while (true) {
         // 1. While result is not FILTER_REJECT and node has a child:
-        while (result != NodeFilter::FILTER_REJECT && node->has_children()) {
+        while (result != NodeFilter::Result::FILTER_REJECT && node->has_children()) {
             // 1. Set node to its first child.
             node = *node->first_child();
 
             // 2. Set result to the result of filtering node within this.
-            auto result = TRY(filter(*node));
+            result = TRY(filter(*node));
 
             // 3. If result is FILTER_ACCEPT, then set this’s current to node and return node.
-            if (result == NodeFilter::FILTER_ACCEPT) {
+            if (result == NodeFilter::Result::FILTER_ACCEPT) {
                 m_current = *node;
                 return node;
             }
@@ -225,7 +227,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::next_node()
         result = TRY(filter(*node));
 
         // 6. If result is FILTER_ACCEPT, then set this’s current to node and return node.
-        if (result == NodeFilter::FILTER_ACCEPT) {
+        if (result == NodeFilter::Result::FILTER_ACCEPT) {
             m_current = *node;
             return node;
         }
@@ -244,11 +246,11 @@ JS::ThrowCompletionOr<NodeFilter::Result> TreeWalker::filter(Node& node)
 
     // 3. If the nth bit (where 0 is the least significant bit) of traverser’s whatToShow is not set, then return FILTER_SKIP.
     if (!(m_what_to_show & (1u << n)))
-        return NodeFilter::FILTER_SKIP;
+        return NodeFilter::Result::FILTER_SKIP;
 
     // 4. If traverser’s filter is null, then return FILTER_ACCEPT.
     if (!m_filter)
-        return NodeFilter::FILTER_ACCEPT;
+        return NodeFilter::Result::FILTER_ACCEPT;
 
     // 5. Set traverser’s active flag.
     m_active = true;
@@ -284,13 +286,13 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::traverse_children(ChildTraver
         auto result = TRY(filter(*node));
 
         // 2. If result is FILTER_ACCEPT, then set walker’s current to node and return node.
-        if (result == NodeFilter::FILTER_ACCEPT) {
+        if (result == NodeFilter::Result::FILTER_ACCEPT) {
             m_current = *node;
             return node;
         }
 
         // 3. If result is FILTER_SKIP, then:
-        if (result == NodeFilter::FILTER_SKIP) {
+        if (result == NodeFilter::Result::FILTER_SKIP) {
             // 1. Let child be node’s first child if type is first, and node’s last child if type is last.
             JS::GCPtr<Node> child = type == ChildTraversalType::First ? node->first_child() : node->last_child();
 
@@ -352,7 +354,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::traverse_siblings(SiblingTrav
             auto result = TRY(filter(*node));
 
             // 3. If result is FILTER_ACCEPT, then set walker’s current to node and return node.
-            if (result == NodeFilter::FILTER_ACCEPT) {
+            if (result == NodeFilter::Result::FILTER_ACCEPT) {
                 m_current = *node;
                 return node;
             }
@@ -361,7 +363,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::traverse_siblings(SiblingTrav
             sibling = type == SiblingTraversalType::Next ? node->first_child() : node->last_child();
 
             // 5. If result is FILTER_REJECT or sibling is null, then set sibling to node’s next sibling if type is next, and node’s previous sibling if type is previous.
-            if (result == NodeFilter::FILTER_REJECT || !sibling)
+            if (result == NodeFilter::Result::FILTER_REJECT || !sibling)
                 sibling = type == SiblingTraversalType::Next ? node->next_sibling() : node->previous_sibling();
         }
 
@@ -373,7 +375,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> TreeWalker::traverse_siblings(SiblingTrav
             return nullptr;
 
         // 5. If the return value of filtering node within walker is FILTER_ACCEPT, then return null.
-        if (TRY(filter(*node)) == NodeFilter::FILTER_ACCEPT)
+        if (TRY(filter(*node)) == NodeFilter::Result::FILTER_ACCEPT)
             return nullptr;
     }
 }

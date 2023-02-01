@@ -5,11 +5,10 @@
  */
 
 #include <AK/Format.h>
+#include <AK/MaybeOwned.h>
 #include <AK/String.h>
-#include <LibCore/BitStream.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/TCPServer.h>
 #include <LibCore/Timer.h>
@@ -88,17 +87,17 @@ TEST_CASE(file_seeking_around)
 
     StringView buffer_contents { buffer.bytes() };
 
-    EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(500, SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
-    EXPECT(!file->seek(234, Core::Stream::SeekMode::FromCurrentPosition).is_error());
+    EXPECT(!file->seek(234, SeekMode::FromCurrentPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 750ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents2);
 
-    EXPECT(!file->seek(-105, Core::Stream::SeekMode::FromEndPosition).is_error());
+    EXPECT(!file->seek(-105, SeekMode::FromEndPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 8597ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents3);
@@ -121,7 +120,7 @@ TEST_CASE(file_adopt_fd)
 
     StringView buffer_contents { buffer.bytes() };
 
-    EXPECT(!file->seek(500, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(500, SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500ul);
     EXPECT(!file->read_entire_buffer(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
@@ -427,14 +426,14 @@ TEST_CASE(buffered_long_file_read)
     auto file = maybe_buffered_file.release_value();
 
     auto buffer = ByteBuffer::create_uninitialized(4096).release_value();
-    EXPECT(!file->seek(255, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(255, SeekMode::SetPosition).is_error());
     EXPECT(file->can_read_line().release_value());
     auto maybe_line = file->read_line(buffer);
     EXPECT(!maybe_line.is_error());
     EXPECT_EQ(maybe_line.value().length(), 4095ul); // 4095 bytes on the third line
 
     // Testing that buffering with seeking works properly
-    EXPECT(!file->seek(365, Core::Stream::SeekMode::SetPosition).is_error());
+    EXPECT(!file->seek(365, SeekMode::SetPosition).is_error());
     auto maybe_after_seek_line = file->read_line(buffer);
     EXPECT(!maybe_after_seek_line.is_error());
     EXPECT_EQ(maybe_after_seek_line.value().length(), 3985ul); // 4095 - 110
@@ -498,7 +497,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek seven characters forward.
     {
-        auto current_offset = buffered_file->seek(7, Core::Stream::SeekMode::FromCurrentPosition).release_value();
+        auto current_offset = buffered_file->seek(7, SeekMode::FromCurrentPosition).release_value();
         EXPECT_EQ(current_offset, 9ul);
     }
 
@@ -512,7 +511,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek five characters backwards.
     {
-        auto current_offset = buffered_file->seek(-5, Core::Stream::SeekMode::FromCurrentPosition).release_value();
+        auto current_offset = buffered_file->seek(-5, SeekMode::FromCurrentPosition).release_value();
         EXPECT_EQ(current_offset, 5ul);
     }
 
@@ -526,7 +525,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek back to the beginning.
     {
-        auto current_offset = buffered_file->seek(0, Core::Stream::SeekMode::SetPosition).release_value();
+        auto current_offset = buffered_file->seek(0, SeekMode::SetPosition).release_value();
         EXPECT_EQ(current_offset, 0ul);
     }
 
@@ -540,7 +539,7 @@ TEST_CASE(buffered_file_tell_and_seek)
 
     // Seek beyond the buffer size, which should invalidate the buffer.
     {
-        auto current_offset = buffered_file->seek(12, Core::Stream::SeekMode::SetPosition).release_value();
+        auto current_offset = buffered_file->seek(12, SeekMode::SetPosition).release_value();
         EXPECT_EQ(current_offset, 12ul);
     }
 
@@ -593,240 +592,4 @@ TEST_CASE(buffered_tcp_socket_read)
     EXPECT(!maybe_second_received_line.is_error());
     auto second_received_line = maybe_second_received_line.value();
     EXPECT_EQ(second_received_line, second_line);
-}
-
-// Allocating memory stream tests
-
-TEST_CASE(allocating_memory_stream_empty)
-{
-    Core::Stream::AllocatingMemoryStream stream;
-
-    EXPECT_EQ(stream.used_buffer_size(), 0ul);
-
-    {
-        Array<u8, 32> array;
-        auto read_bytes = MUST(stream.read(array));
-        EXPECT_EQ(read_bytes.size(), 0ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("test"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-}
-
-TEST_CASE(allocating_memory_stream_offset_of)
-{
-    Core::Stream::AllocatingMemoryStream stream;
-    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
-
-    {
-        auto offset = MUST(stream.offset_of(" "sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 4ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("W"sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 0ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of(")"sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 22ul);
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("-"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-
-    MUST(stream.discard(1));
-
-    {
-        auto offset = MUST(stream.offset_of("W"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-
-    {
-        auto offset = MUST(stream.offset_of("e"sv.bytes()));
-        EXPECT(offset.has_value());
-        EXPECT_EQ(offset.value(), 0ul);
-    }
-}
-
-TEST_CASE(allocating_memory_stream_offset_of_oob)
-{
-    Core::Stream::AllocatingMemoryStream stream;
-    // NOTE: This test is to make sure that offset_of() doesn't read past the end of the "initialized" data.
-    //       So we have to assume some things about the behaviour of this class:
-    //       - The chunk size is 4096 bytes.
-    //       - A chunk is moved to the end when it's fully read from
-    //       - A free chunk is used as-is, no new ones are allocated if one exists.
-
-    // First, fill exactly one chunk.
-    for (size_t i = 0; i < 256; ++i)
-        MUST(stream.write_entire_buffer("AAAAAAAAAAAAAAAA"sv.bytes()));
-
-    // Then discard it all.
-    MUST(stream.discard(4096));
-    // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
-    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
-
-    {
-        auto offset = MUST(stream.offset_of("A"sv.bytes()));
-        EXPECT(!offset.has_value());
-    }
-}
-
-TEST_CASE(allocating_memory_stream_10kb)
-{
-    auto file = MUST(Core::Stream::File::open("/usr/Tests/LibCore/10kb.txt"sv, Core::Stream::OpenMode::Read));
-    size_t const file_size = MUST(file->size());
-    size_t constexpr test_chunk_size = 4096;
-
-    // Read file contents into the memory stream.
-    Core::Stream::AllocatingMemoryStream stream;
-    while (!file->is_eof()) {
-        Array<u8, test_chunk_size> array;
-        MUST(stream.write(MUST(file->read(array))));
-    }
-
-    EXPECT_EQ(stream.used_buffer_size(), file_size);
-
-    MUST(file->seek(0, Core::Stream::SeekMode::SetPosition));
-
-    // Check the stream contents when reading back.
-    size_t offset = 0;
-    while (!file->is_eof()) {
-        Array<u8, test_chunk_size> file_array;
-        Array<u8, test_chunk_size> stream_array;
-        auto file_span = MUST(file->read(file_array));
-        auto stream_span = MUST(stream.read(stream_array));
-        EXPECT_EQ(file_span.size(), stream_span.size());
-
-        for (size_t i = 0; i < file_span.size(); i++) {
-            if (file_array[i] == stream_array[i])
-                continue;
-
-            FAIL(String::formatted("Data started to diverge at index {}: file={}, stream={}", offset + i, file_array[i], stream_array[i]));
-        }
-        offset += file_span.size();
-    }
-}
-
-// Bit stream tests
-
-// Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
-TEST_CASE(little_endian_bit_stream_input_output_match)
-{
-    auto memory_stream = make<Core::Stream::AllocatingMemoryStream>();
-
-    // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
-    // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(Core::Stream::LittleEndianOutputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
-    auto bit_read_stream = MUST(Core::Stream::LittleEndianInputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
-
-    // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
-    {
-        MUST(bit_write_stream->write_bits(0b1111u, 4));
-        MUST(bit_write_stream->write_bits(0b1111u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1111u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1111u, result);
-    }
-    {
-        MUST(bit_write_stream->write_bits(0b0000u, 4));
-        MUST(bit_write_stream->write_bits(0b0000u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b0000u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b0000u, result);
-    }
-
-    // Test two mirrored chunks of a non-mirrored pattern to check that we are writing bits within a pattern in the correct order.
-    {
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1000u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1000u, result);
-    }
-
-    // Test two different chunks to check that we are not confusing their order.
-    {
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        MUST(bit_write_stream->write_bits(0b0100u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1000u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b0100u, result);
-    }
-
-    // Test a pattern that spans multiple bytes.
-    {
-        MUST(bit_write_stream->write_bits(0b1101001000100001u, 16));
-        auto result = MUST(bit_read_stream->read_bits(16));
-        EXPECT_EQ(0b1101001000100001u, result);
-    }
-}
-
-// Note: This does not do any checks on the internal representation, it just ensures that the behavior of the input and output streams match.
-TEST_CASE(big_endian_bit_stream_input_output_match)
-{
-    auto memory_stream = make<Core::Stream::AllocatingMemoryStream>();
-
-    // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
-    // so testing with sizes that will not trigger a write will yield unexpected results.
-    auto bit_write_stream = MUST(Core::Stream::BigEndianOutputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
-    auto bit_read_stream = MUST(Core::Stream::BigEndianInputBitStream::construct(Core::Stream::Handle<Core::Stream::Stream>(*memory_stream)));
-
-    // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
-    {
-        MUST(bit_write_stream->write_bits(0b1111u, 4));
-        MUST(bit_write_stream->write_bits(0b1111u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1111u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1111u, result);
-    }
-    {
-        MUST(bit_write_stream->write_bits(0b0000u, 4));
-        MUST(bit_write_stream->write_bits(0b0000u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b0000u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b0000u, result);
-    }
-
-    // Test two mirrored chunks of a non-mirrored pattern to check that we are writing bits within a pattern in the correct order.
-    {
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1000u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1000u, result);
-    }
-
-    // Test two different chunks to check that we are not confusing their order.
-    {
-        MUST(bit_write_stream->write_bits(0b1000u, 4));
-        MUST(bit_write_stream->write_bits(0b0100u, 4));
-        auto result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b1000u, result);
-        result = MUST(bit_read_stream->read_bits(4));
-        EXPECT_EQ(0b0100u, result);
-    }
-
-    // Test a pattern that spans multiple bytes.
-    {
-        MUST(bit_write_stream->write_bits(0b1101001000100001u, 16));
-        auto result = MUST(bit_read_stream->read_bits(16));
-        EXPECT_EQ(0b1101001000100001u, result);
-    }
 }

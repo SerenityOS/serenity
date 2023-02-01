@@ -139,7 +139,7 @@ inline typename Builder::OutputType JsonObject::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 template<typename Builder>
@@ -190,7 +190,7 @@ inline typename Builder::OutputType JsonValue::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

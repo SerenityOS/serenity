@@ -14,7 +14,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<Path2D> Path2D::construct_impl(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path)
 {
-    return realm.heap().allocate<Path2D>(realm, realm, path);
+    return realm.heap().allocate<Path2D>(realm, realm, path).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d
@@ -54,10 +54,12 @@ Path2D::Path2D(JS::Realm& realm, Optional<Variant<JS::Handle<Path2D>, Deprecated
 
 Path2D::~Path2D() = default;
 
-void Path2D::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Path2D::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::Path2DPrototype>(realm, "Path2D"));
+
+    return {};
 }
 
 }

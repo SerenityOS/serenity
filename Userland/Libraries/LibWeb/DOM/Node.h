@@ -12,7 +12,6 @@
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/DOM/AccessibilityTreeNode.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOMParsing/XMLSerializer.h>
@@ -312,8 +311,6 @@ public:
     bool is_inclusive_descendant_of(Node const&) const;
 
     bool is_following(Node const&) const;
-
-    void prepend_child(JS::NonnullGCPtr<Node> node);
 
     Node* next_in_pre_order()
     {

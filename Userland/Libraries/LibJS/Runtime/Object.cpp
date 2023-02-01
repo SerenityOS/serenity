@@ -30,11 +30,10 @@ static HashMap<Object const*, HashMap<DeprecatedFlyString, Object::IntrinsicAcce
 NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
-    else if (prototype == realm.intrinsics().object_prototype())
-        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
-    else
-        return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape()).release_allocated_value_but_fixme_should_propagate_errors();
+    if (prototype == realm.intrinsics().object_prototype())
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Object::Object(GlobalObjectTag, Realm& realm)
@@ -74,8 +73,9 @@ Object::~Object()
     s_intrinsics.remove(this);
 }
 
-void Object::initialize(Realm&)
+ThrowCompletionOr<void> Object::initialize(Realm&)
 {
+    return {};
 }
 
 // 7.2 Testing and Comparison Operations, https://tc39.es/ecma262/#sec-testing-and-comparison-operations

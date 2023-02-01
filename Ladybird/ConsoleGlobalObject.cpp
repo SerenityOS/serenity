@@ -18,12 +18,14 @@ ConsoleGlobalObject::ConsoleGlobalObject(JS::Realm& realm, Web::HTML::Window& pa
 {
 }
 
-void ConsoleGlobalObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ConsoleGlobalObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     // $0 magic variable
     define_native_accessor(realm, "$0", inspected_node_getter, nullptr, 0);
+
+    return {};
 }
 
 void ConsoleGlobalObject::visit_edges(Visitor& visitor)

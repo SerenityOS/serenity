@@ -9,6 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Directory.h>
@@ -83,11 +84,12 @@ void Service::setup_notifier()
 
     m_socket_notifier = Core::Notifier::construct(m_sockets[0].fd, Core::Notifier::Event::Read, this);
     m_socket_notifier->on_ready_to_read = [this] {
-        handle_socket_connection();
+        if (auto result = handle_socket_connection(); result.is_error())
+            dbgln("{}", result.release_error());
     };
 }
 
-void Service::handle_socket_connection()
+ErrorOr<void> Service::handle_socket_connection()
 {
     VERIFY(m_sockets.size() == 1);
     dbgln_if(SERVICE_DEBUG, "Ready to read on behalf of {}", name());
@@ -95,59 +97,46 @@ void Service::handle_socket_connection()
     int socket_fd = m_sockets[0].fd;
 
     if (m_accept_socket_connections) {
-        // FIXME: Propagate errors
-        auto maybe_accepted_fd = Core::System::accept(socket_fd, nullptr, nullptr);
-        if (maybe_accepted_fd.is_error()) {
-            dbgln("accept: {}", maybe_accepted_fd.error());
-            return;
-        }
+        auto const accepted_fd = TRY(Core::System::accept(socket_fd, nullptr, nullptr));
 
-        int accepted_fd = maybe_accepted_fd.release_value();
-        // FIXME: Propagate errors
-        MUST(determine_account(accepted_fd));
-        spawn(accepted_fd);
-        close(accepted_fd);
+        TRY(determine_account(accepted_fd));
+        TRY(spawn(accepted_fd));
+        TRY(Core::System::close(accepted_fd));
     } else {
         remove_child(*m_socket_notifier);
         m_socket_notifier = nullptr;
-        spawn(socket_fd);
+        TRY(spawn(socket_fd));
     }
+    return {};
 }
 
-void Service::activate()
+ErrorOr<void> Service::activate()
 {
     VERIFY(m_pid < 0);
 
     if (m_lazy)
         setup_notifier();
     else
-        spawn();
+        TRY(spawn());
+    return {};
 }
 
-void Service::spawn(int socket_fd)
+ErrorOr<void> Service::spawn(int socket_fd)
 {
     if (!Core::File::exists(m_executable_path)) {
         dbgln("{}: binary \"{}\" does not exist, skipping service.", name(), m_executable_path);
-        return;
+        return Error::from_errno(ENOENT);
     }
 
     dbgln_if(SERVICE_DEBUG, "Spawning {}", name());
 
     m_run_timer.start();
-    pid_t pid = fork();
+    pid_t pid = TRY(Core::System::fork());
 
-    if (pid < 0) {
-        perror("fork");
-        dbgln("Failed to spawn {}. Sucks, dude :(", name());
-    } else if (pid == 0) {
+    if (pid == 0) {
         // We are the child.
-
-        if (!m_working_directory.is_null()) {
-            if (chdir(m_working_directory.characters()) < 0) {
-                perror("chdir");
-                VERIFY_NOT_REACHED();
-            }
-        }
+        if (!m_working_directory.is_null())
+            TRY(Core::System::chdir(m_working_directory));
 
         struct sched_param p;
         p.sched_priority = m_priority;
@@ -159,12 +148,9 @@ void Service::spawn(int socket_fd)
 
         if (!m_stdio_file_path.is_null()) {
             close(STDIN_FILENO);
-            int fd = open(m_stdio_file_path.characters(), O_RDWR, 0);
-            VERIFY(fd <= 0);
-            if (fd < 0) {
-                perror("open");
-                VERIFY_NOT_REACHED();
-            }
+            auto const fd = TRY(Core::System::open(m_stdio_file_path, O_RDWR, 0));
+            VERIFY(fd == 0);
+
             dup2(STDIN_FILENO, STDOUT_FILENO);
             dup2(STDIN_FILENO, STDERR_FILENO);
 
@@ -179,13 +165,13 @@ void Service::spawn(int socket_fd)
             close(STDOUT_FILENO);
             close(STDERR_FILENO);
 
-            int fd = open("/dev/null", O_RDWR);
+            auto const fd = TRY(Core::System::open("/dev/null"sv, O_RDWR));
             VERIFY(fd == STDIN_FILENO);
             dup2(STDIN_FILENO, STDOUT_FILENO);
             dup2(STDIN_FILENO, STDERR_FILENO);
         }
 
-        StringBuilder builder;
+        StringBuilder socket_takeover_builder;
 
         if (socket_fd >= 0) {
             // We were spawned by socket activation. We currently only support
@@ -193,7 +179,7 @@ void Service::spawn(int socket_fd)
             VERIFY(m_sockets.size() == 1);
 
             int fd = dup(socket_fd);
-            builder.appendff("{}:{}", m_sockets[0].path, fd);
+            TRY(socket_takeover_builder.try_appendff("{}:{}", m_sockets[0].path, fd));
         } else {
             // We were spawned as a regular process, so dup every socket for this
             // service and let the service know via SOCKET_TAKEOVER.
@@ -202,46 +188,42 @@ void Service::spawn(int socket_fd)
 
                 int new_fd = dup(socket.fd);
                 if (i != 0)
-                    builder.append(';');
-                builder.appendff("{}:{}", socket.path, new_fd);
+                    TRY(socket_takeover_builder.try_append(';'));
+                TRY(socket_takeover_builder.try_appendff("{}:{}", socket.path, new_fd));
             }
         }
 
+        auto environment = TRY(StringBuilder::create());
+        TRY(environment.try_append(m_environment));
+
         if (!m_sockets.is_empty()) {
             // The new descriptor is !CLOEXEC here.
-            setenv("SOCKET_TAKEOVER", builder.to_deprecated_string().characters(), true);
+            TRY(environment.try_appendff(" SOCKET_TAKEOVER={}", TRY(socket_takeover_builder.to_string())));
         }
 
         if (m_account.has_value() && m_account.value().uid() != getuid()) {
             auto& account = m_account.value();
-            if (setgid(account.gid()) < 0 || setgroups(account.extra_gids().size(), account.extra_gids().data()) < 0 || setuid(account.uid()) < 0) {
+            if (account.login().is_error()) {
                 dbgln("Failed to drop privileges (GID={}, UID={})\n", account.gid(), account.uid());
                 exit(1);
             }
-            setenv("HOME", account.home_directory().characters(), true);
+            TRY(environment.try_appendff(" HOME={}", account.home_directory()));
         }
 
-        for (DeprecatedString& env : m_environment)
-            putenv(const_cast<char*>(env.characters()));
+        auto arguments = TRY(StringBuilder::create());
+        TRY(arguments.try_appendff("{} {}", m_executable_path, m_extra_arguments));
 
-        char* argv[m_extra_arguments.size() + 2];
-        argv[0] = const_cast<char*>(m_executable_path.characters());
-        for (size_t i = 0; i < m_extra_arguments.size(); i++)
-            argv[i + 1] = const_cast<char*>(m_extra_arguments[i].characters());
-        argv[m_extra_arguments.size() + 1] = nullptr;
-
-        rc = execv(argv[0], argv);
-        warnln("Failed to execv({}, ...): {}", argv[0], strerror(errno));
-        dbgln("Failed to execv({}, ...): {}", argv[0], strerror(errno));
-        VERIFY_NOT_REACHED();
+        TRY(Core::System::exec(m_executable_path, arguments.string_view().split_view(' '), Core::System::SearchInPath::No, environment.string_view().split_view(' ')));
     } else if (!m_multi_instance) {
         // We are the parent.
         m_pid = pid;
         s_service_map.set(pid, this);
     }
+
+    return {};
 }
 
-void Service::did_exit(int exit_code)
+ErrorOr<void> Service::did_exit(int exit_code)
 {
     using namespace AK::TimeLiterals;
 
@@ -254,7 +236,7 @@ void Service::did_exit(int exit_code)
     m_pid = -1;
 
     if (!m_keep_alive)
-        return;
+        return {};
 
     auto run_time = m_run_timer.elapsed_time();
     bool exited_successfully = exit_code == 0;
@@ -269,12 +251,13 @@ void Service::did_exit(int exit_code)
             break;
         default:
             dbgln("Giving up on {}. Good luck!", name());
-            return;
+            return {};
         }
         m_restart_attempts++;
     }
 
-    activate();
+    TRY(activate());
+    return {};
 }
 
 Service::Service(Core::ConfigFile const& config, StringView name)
@@ -284,7 +267,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
 
     set_name(name);
     m_executable_path = config.read_entry(name, "Executable", DeprecatedString::formatted("/bin/{}", this->name()));
-    m_extra_arguments = config.read_entry(name, "Arguments", "").split(' ');
+    m_extra_arguments = config.read_entry(name, "Arguments", "");
     m_stdio_file_path = config.read_entry(name, "StdIO");
 
     DeprecatedString prio = config.read_entry(name, "Priority");
@@ -310,7 +293,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     }
 
     m_working_directory = config.read_entry(name, "WorkingDirectory");
-    m_environment = config.read_entry(name, "Environment").split(' ');
+    m_environment = config.read_entry(name, "Environment");
     m_system_modes = config.read_entry(name, "SystemModes", "graphical").split(',');
     m_multi_instance = config.read_bool_entry(name, "MultiInstance");
     m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");

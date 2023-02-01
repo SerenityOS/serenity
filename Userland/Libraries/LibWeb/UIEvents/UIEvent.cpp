@@ -11,12 +11,12 @@ namespace Web::UIEvents {
 
 UIEvent* UIEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name)
 {
-    return realm.heap().allocate<UIEvent>(realm, realm, event_name);
+    return realm.heap().allocate<UIEvent>(realm, realm, event_name).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 UIEvent* UIEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, UIEventInit const& event_init)
 {
-    return realm.heap().allocate<UIEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<UIEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name)
@@ -33,10 +33,12 @@ UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, UIEven
 
 UIEvent::~UIEvent() = default;
 
-void UIEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> UIEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::UIEventPrototype>(realm, "UIEvent"));
+
+    return {};
 }
 
 void UIEvent::visit_edges(Cell::Visitor& visitor)

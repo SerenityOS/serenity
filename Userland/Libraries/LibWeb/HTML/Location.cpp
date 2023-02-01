@@ -35,9 +35,9 @@ void Location::visit_edges(Cell::Visitor& visitor)
         visitor.visit(property);
 }
 
-void Location::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Location::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::LocationPrototype>(realm, "Location"));
 
     // FIXME: Implement steps 2.-4.
@@ -45,6 +45,8 @@ void Location::initialize(JS::Realm& realm)
     // 5. Set the value of the [[DefaultProperties]] internal slot of location to location.[[OwnPropertyKeys]]().
     // NOTE: In LibWeb this happens before the ESO is set up, so we must avoid location's custom [[OwnPropertyKeys]].
     m_default_properties.extend(MUST(Object::internal_own_property_keys()));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#relevant-document

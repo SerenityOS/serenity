@@ -16,10 +16,12 @@ HTMLHeadingElement::HTMLHeadingElement(DOM::Document& document, DOM::QualifiedNa
 
 HTMLHeadingElement::~HTMLHeadingElement() = default;
 
-void HTMLHeadingElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLHeadingElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLHeadingElementPrototype>(realm, "HTMLHeadingElement"));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/rendering.html#tables-2

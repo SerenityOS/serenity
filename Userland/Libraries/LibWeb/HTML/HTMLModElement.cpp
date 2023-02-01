@@ -17,20 +17,22 @@ HTMLModElement::HTMLModElement(DOM::Document& document, DOM::QualifiedName quali
 
 HTMLModElement::~HTMLModElement() = default;
 
-void HTMLModElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLModElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLModElementPrototype>(realm, "HTMLModElement"));
+
+    return {};
 }
 
-DeprecatedFlyString HTMLModElement::default_role() const
+Optional<ARIA::Role> HTMLModElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-del
     if (local_name() == TagNames::del)
-        return DOM::ARIARoleNames::deletion;
+        return ARIA::Role::deletion;
     // https://www.w3.org/TR/html-aria/#el-ins
     if (local_name() == TagNames::ins)
-        return DOM::ARIARoleNames::insertion;
+        return ARIA::Role::insertion;
     VERIFY_NOT_REACHED();
 }
 

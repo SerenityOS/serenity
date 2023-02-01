@@ -36,16 +36,18 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyInstanceConstruct
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
     auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
     auto result = TRY(WebAssemblyObject::instantiate_module(vm, module_object.module()));
-    return heap().allocate<WebAssemblyInstanceObject>(realm, realm, result);
+    return MUST_OR_THROW_OOM(heap().allocate<WebAssemblyInstanceObject>(realm, realm, result));
 }
 
-void WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyInstanceConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
     define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyInstancePrototype>(realm, "WebAssembly.Instance"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+
+    return {};
 }
 
 }

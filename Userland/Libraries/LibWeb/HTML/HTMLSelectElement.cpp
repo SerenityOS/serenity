@@ -20,10 +20,12 @@ HTMLSelectElement::HTMLSelectElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLSelectElement::~HTMLSelectElement() = default;
 
-void HTMLSelectElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLSelectElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSelectElementPrototype>(realm, "HTMLSelectElement"));
+
+    return {};
 }
 
 void HTMLSelectElement::visit_edges(Cell::Visitor& visitor)
@@ -161,18 +163,18 @@ DeprecatedString const& HTMLSelectElement::type() const
     return select_multiple;
 }
 
-DeprecatedFlyString HTMLSelectElement::default_role() const
+Optional<ARIA::Role> HTMLSelectElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-select-multiple-or-size-greater-1
     if (has_attribute("multiple"))
-        return DOM::ARIARoleNames::listbox;
+        return ARIA::Role::listbox;
     if (has_attribute("size")) {
         auto size_attribute = attribute("size").to_int();
         if (size_attribute.has_value() && size_attribute.value() > 1)
-            return DOM::ARIARoleNames::listbox;
+            return ARIA::Role::listbox;
     }
     // https://www.w3.org/TR/html-aria/#el-select
-    return DOM::ARIARoleNames::combobox;
+    return ARIA::Role::combobox;
 }
 
 }

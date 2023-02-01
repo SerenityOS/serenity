@@ -6,8 +6,8 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/DOM/ARIARoleNames.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
@@ -25,10 +25,12 @@ HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLOptionElement::~HTMLOptionElement() = default;
 
-void HTMLOptionElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLOptionElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionElementPrototype>(realm, "HTMLOptionElement"));
+
+    return {};
 }
 
 void HTMLOptionElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
@@ -146,11 +148,11 @@ bool HTMLOptionElement::disabled() const
         || (parent() && is<HTMLOptGroupElement>(parent()) && static_cast<HTMLOptGroupElement const&>(*parent()).has_attribute(AttributeNames::disabled));
 }
 
-DeprecatedFlyString HTMLOptionElement::default_role() const
+Optional<ARIA::Role> HTMLOptionElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-option
     // TODO: Only an option element that is in a list of options or that represents a suggestion in a datalist should return option
-    return DOM::ARIARoleNames::option;
+    return ARIA::Role::option;
 }
 
 }

@@ -11,13 +11,15 @@
 
 namespace Web::Bindings {
 
-void WebAssemblyTablePrototype::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyTablePrototype::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
     define_native_accessor(realm, "length", length_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function(realm, "grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function(realm, "get", get, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function(realm, "set", set, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)

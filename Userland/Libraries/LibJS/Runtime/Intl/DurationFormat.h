@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <LibJS/Runtime/Intl/AbstractOperations.h>
 #include <LibJS/Runtime/Object.h>
@@ -218,14 +217,14 @@ static constexpr AK::Array<DurationInstanceComponent, 10> duration_instances_com
 };
 
 struct DurationUnitOptions {
-    DeprecatedString style;
-    DeprecatedString display;
+    String style;
+    String display;
 };
 
 ThrowCompletionOr<Temporal::DurationRecord> to_duration_record(VM&, Value input);
 i8 duration_record_sign(Temporal::DurationRecord const&);
 bool is_valid_duration_record(Temporal::DurationRecord const&);
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM&, DeprecatedString const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style);
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM&, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style);
 ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM&, DurationFormat const&, Temporal::DurationRecord const& duration);
 
 }

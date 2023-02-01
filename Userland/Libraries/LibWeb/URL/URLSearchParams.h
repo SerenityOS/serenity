@@ -48,7 +48,7 @@ private:
 
     URLSearchParams(JS::Realm&, Vector<QueryParam> list);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     void update();

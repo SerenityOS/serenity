@@ -153,16 +153,14 @@ void GradientTool::on_keyup(GUI::KeyEvent& event)
     }
 }
 
-void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent&)
+void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
     if (!layer || !has_gradient_start_end())
         return;
 
-    // FIXME: Clipping still does overwrite the ruler if we are zoomed in.
-    auto clipping_rect = m_editor->rect().contains(m_editor->content_rect()) ? m_editor->content_rect() : m_editor->rect();
     GUI::Painter painter(*m_editor);
-    painter.add_clip_rect(clipping_rect);
-    draw_gradient(painter, true, m_editor->content_to_frame_position(Gfx::IntPoint(0, 0)), m_editor->scale());
+    painter.add_clip_rect(event.rect());
+    draw_gradient(painter, true, m_editor->content_to_frame_position(Gfx::IntPoint(0, 0)), m_editor->scale(), m_editor->content_rect());
 }
 
 void GradientTool::on_tool_activation()
@@ -218,12 +216,14 @@ void GradientTool::rasterize_gradient()
 {
     if (!has_gradient_start_end())
         return;
+    auto layer = m_editor->active_layer();
+    if (!layer)
+        return;
 
-    GUI::Painter painter(m_editor->active_layer()->get_scratch_edited_bitmap());
+    GUI::Painter painter(layer->get_scratch_edited_bitmap());
     draw_gradient(painter);
-
-    m_editor->did_complete_action("Gradient Tool"sv);
-
+    layer->did_modify_bitmap(layer->get_scratch_edited_bitmap().rect());
+    m_editor->did_complete_action(tool_name());
     reset();
 }
 
@@ -250,7 +250,7 @@ void GradientTool::calculate_gradient_lines()
     m_editor->update();
 }
 
-void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, const Gfx::FloatPoint drawing_offset, float scale)
+void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, const Gfx::FloatPoint drawing_offset, float scale, Optional<Gfx::IntRect const&> gradient_clip)
 {
     auto t_gradient_begin_line = m_gradient_begin_line.scaled(scale, scale).translated(drawing_offset);
     auto t_gradient_center_line = m_gradient_center_line.scaled(scale, scale).translated(drawing_offset);
@@ -288,7 +288,12 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
     auto gradient_start_color = color_to_use;
     gradient_start_color.set_alpha(0);
 
-    painter.fill_rect_with_linear_gradient(gradient_rect, Array { Gfx::ColorStop { gradient_start_color, 0.5f - gradient_half_width_percentage_offset }, Gfx::ColorStop { color_to_use, 0.5f + gradient_half_width_percentage_offset } }, rotation_degrees);
+    {
+        Gfx::PainterStateSaver saver(painter);
+        if (gradient_clip.has_value())
+            painter.add_clip_rect(*gradient_clip);
+        painter.fill_rect_with_linear_gradient(gradient_rect, Array { Gfx::ColorStop { gradient_start_color, 0.5f - gradient_half_width_percentage_offset }, Gfx::ColorStop { color_to_use, 0.5f + gradient_half_width_percentage_offset } }, rotation_degrees);
+    }
 
     if (with_guidelines) {
         Gfx::AntiAliasingPainter aa_painter = Gfx::AntiAliasingPainter(painter);

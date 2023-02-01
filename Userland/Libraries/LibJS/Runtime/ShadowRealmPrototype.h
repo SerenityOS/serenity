@@ -15,7 +15,7 @@ class ShadowRealmPrototype final : public PrototypeObject<ShadowRealmPrototype, 
     JS_PROTOTYPE_OBJECT(ShadowRealmPrototype, ShadowRealm, ShadowRealm);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~ShadowRealmPrototype() override = default;
 
 private:

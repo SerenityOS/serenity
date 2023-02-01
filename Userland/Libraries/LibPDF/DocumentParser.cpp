@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
+#include <AK/Endian.h>
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
-#include <LibCore/BitStream.h>
-#include <LibCore/MemoryStream.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/DocumentParser.h>
@@ -596,10 +596,10 @@ PDFErrorOr<DocumentParser::PageOffsetHintTable> DocumentParser::parse_page_offse
 
 PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes hint_stream_bytes)
 {
-    auto input_stream = TRY(Core::Stream::FixedMemoryStream::construct(hint_stream_bytes));
+    auto input_stream = TRY(FixedMemoryStream::construct(hint_stream_bytes));
     TRY(input_stream->seek(sizeof(PageOffsetHintTable)));
 
-    auto bit_stream = TRY(Core::Stream::LittleEndianInputBitStream::construct(move(input_stream)));
+    auto bit_stream = TRY(LittleEndianInputBitStream::construct(move(input_stream)));
 
     auto number_of_pages = m_linearization_dictionary.value().number_of_pages;
     Vector<PageOffsetHintTableEntry> entries;

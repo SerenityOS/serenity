@@ -16,10 +16,12 @@ HTMLDataListElement::HTMLDataListElement(DOM::Document& document, DOM::Qualified
 
 HTMLDataListElement::~HTMLDataListElement() = default;
 
-void HTMLDataListElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLDataListElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLDataListElementPrototype>(realm, "HTMLDataListElement"));
+
+    return {};
 }
 
 }

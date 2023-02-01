@@ -45,15 +45,15 @@ protected:
 
 class Image : public RefCounted<Image> {
 public:
-    static ErrorOr<NonnullRefPtr<Image>> try_create_with_size(Gfx::IntSize);
-    static ErrorOr<NonnullRefPtr<Image>> try_create_from_pixel_paint_json(JsonObject const&);
-    static ErrorOr<NonnullRefPtr<Image>> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
+    static ErrorOr<NonnullRefPtr<Image>> create_with_size(Gfx::IntSize);
+    static ErrorOr<NonnullRefPtr<Image>> create_from_pixel_paint_json(JsonObject const&);
+    static ErrorOr<NonnullRefPtr<Image>> create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const&);
 
-    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_decode_bitmap(ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> decode_bitmap(ReadonlyBytes);
 
     // This generates a new Bitmap with the final image (all layers composed according to their attributes.)
-    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> try_compose_bitmap(Gfx::BitmapFormat format) const;
-    RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> compose_bitmap(Gfx::BitmapFormat format) const;
+    RefPtr<Gfx::Bitmap> copy_bitmap(Selection const&) const;
 
     Selection& selection() { return m_selection; }
     Selection const& selection() const { return m_selection; }
@@ -69,12 +69,12 @@ public:
     ErrorOr<NonnullRefPtr<Image>> take_snapshot() const;
     ErrorOr<void> restore_snapshot(Image const&);
 
-    void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect) const;
+    void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect, float scale) const;
 
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
-    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream>, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_png_to_file(NonnullOwnPtr<Core::Stream::Stream>, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<Core::Stream::Stream>) const;
+    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_png_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<AK::Stream>) const;
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);

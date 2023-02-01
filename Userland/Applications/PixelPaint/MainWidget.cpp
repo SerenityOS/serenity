@@ -152,13 +152,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(&window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                auto image_result = PixelPaint::Image::try_create_with_size(dialog->image_size());
+                auto image_result = PixelPaint::Image::create_with_size(dialog->image_size());
                 if (image_result.is_error()) {
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image with size {}, error: {}", dialog->image_size(), image_result.error()));
                     return;
                 }
                 auto image = image_result.release_value();
-                auto bg_layer_result = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background");
+                auto bg_layer_result = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
                 if (bg_layer_result.is_error()) {
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer with size {}, error: {}", image->size(), bg_layer_result.error()));
                     return;
@@ -285,9 +285,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             dbgln("Cannot cut with no active layer selected");
             return;
         }
-        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->image().selection());
+        auto bitmap = editor->active_layer()->copy_bitmap(editor->image().selection());
         if (!bitmap) {
-            dbgln("try_copy_bitmap() from Layer failed");
+            dbgln("copy_bitmap() from Layer failed");
             return;
         }
         GUI::Clipboard::the().set_bitmap(*bitmap);
@@ -302,9 +302,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             dbgln("Cannot copy with no active layer selected");
             return;
         }
-        auto bitmap = editor->active_layer()->try_copy_bitmap(editor->image().selection());
+        auto bitmap = editor->active_layer()->copy_bitmap(editor->image().selection());
         if (!bitmap) {
-            dbgln("try_copy_bitmap() from Layer failed");
+            dbgln("copy_bitmap() from Layer failed");
             return;
         }
         auto layer_rect = editor->active_layer()->relative_rect();
@@ -320,9 +320,9 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
 
-            auto bitmap = editor->image().try_copy_bitmap(editor->image().selection());
+            auto bitmap = editor->image().copy_bitmap(editor->image().selection());
             if (!bitmap) {
-                dbgln("try_copy_bitmap() from Image failed");
+                dbgln("copy_bitmap() from Image failed");
                 return;
             }
             GUI::Clipboard::the().set_bitmap(*bitmap);
@@ -343,7 +343,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         if (!bitmap)
             return;
 
-        auto layer_result = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer");
+        auto layer_result = PixelPaint::Layer::create_with_bitmap(editor->image(), *bitmap, "Pasted layer");
         if (layer_result.is_error()) {
             GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Could not create bitmap when pasting: {}", layer_result.error()));
             return;
@@ -701,7 +701,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             VERIFY(editor);
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), &window);
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
-                auto layer_or_error = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
+                auto layer_or_error = PixelPaint::Layer::create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
                 if (layer_or_error.is_error()) {
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Unable to create layer with size {}", dialog->size()));
                     return;
@@ -825,7 +825,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 auto& next_active_layer = editor->image().layer(active_layer_index > 0 ? active_layer_index - 1 : 0);
                 editor->set_active_layer(&next_active_layer);
             } else {
-                auto layer_result = PixelPaint::Layer::try_create_with_size(editor->image(), editor->image().size(), "Background");
+                auto layer_result = PixelPaint::Layer::create_with_size(editor->image(), editor->image().size(), "Background");
                 if (layer_result.is_error()) {
                     GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer with size {}, error: {}", editor->image().size(), layer_result.error()));
                     return;
@@ -1097,7 +1097,7 @@ void MainWidget::set_actions_enabled(bool enabled)
 
 void MainWidget::open_image(FileSystemAccessClient::File file)
 {
-    auto try_load = m_loader.try_load_from_file(file.release_stream());
+    auto try_load = m_loader.load_from_file(file.release_stream());
     if (try_load.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
         return;
@@ -1113,9 +1113,9 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
 
 ErrorOr<void> MainWidget::create_default_image()
 {
-    auto image = TRY(Image::try_create_with_size({ 510, 356 }));
+    auto image = TRY(Image::create_with_size({ 510, 356 }));
 
-    auto bg_layer = TRY(Layer::try_create_with_size(*image, image->size(), "Background"));
+    auto bg_layer = TRY(Layer::create_with_size(*image, image->size(), "Background"));
     image->add_layer(*bg_layer);
     bg_layer->content_bitmap().fill(Color::Transparent);
 
@@ -1136,8 +1136,8 @@ ErrorOr<void> MainWidget::create_image_from_clipboard()
         return Error::from_string_view("There is no image in a clipboard to paste."sv);
     }
 
-    auto image = TRY(PixelPaint::Image::try_create_with_size(bitmap->size()));
-    auto layer = TRY(PixelPaint::Layer::try_create_with_bitmap(image, *bitmap, "Pasted layer"));
+    auto image = TRY(PixelPaint::Image::create_with_size(bitmap->size()));
+    auto layer = TRY(PixelPaint::Layer::create_with_bitmap(image, *bitmap, "Pasted layer"));
     image->add_layer(*layer);
 
     auto& editor = create_new_editor(*image);
@@ -1237,15 +1237,15 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             if (!value.is_object())
                 return;
             auto& json_object = value.as_object();
-            auto orientation_value = json_object.get_deprecated("orientation"sv);
-            if (!orientation_value.is_string())
+            auto orientation_value = json_object.get_deprecated_string("orientation"sv);
+            if (!orientation_value.has_value())
                 return;
 
-            auto offset_value = json_object.get_deprecated("offset"sv);
-            if (!offset_value.is_number())
+            auto offset_value = json_object.get("offset"sv);
+            if (!offset_value.has_value() || !offset_value->is_number())
                 return;
 
-            auto orientation_string = orientation_value.as_string();
+            auto orientation_string = orientation_value.value();
             PixelPaint::Guide::Orientation orientation;
             if (orientation_string == "horizontal"sv)
                 orientation = PixelPaint::Guide::Orientation::Horizontal;
@@ -1254,7 +1254,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             else
                 return;
 
-            image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value.to_number<float>()));
+            image_editor.add_guide(PixelPaint::Guide::construct(orientation, offset_value->to_number<float>()));
         });
     }
 

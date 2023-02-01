@@ -9,7 +9,7 @@
 #include "DwarfInfo.h"
 #include <AK/ByteBuffer.h>
 #include <AK/LEB128.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 
 namespace Debug::Dwarf {
 
@@ -23,7 +23,7 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
 {
     m_offset = offset;
 
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
+    auto stream = TRY(FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
     // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
     TRY(stream->seek(m_offset));
     Core::Stream::WrapInAKInputStream wrapped_stream { *stream };
@@ -52,7 +52,7 @@ ErrorOr<void> DIE::rehydrate_from(u32 offset, Optional<u32> parent_offset)
 
 ErrorOr<Optional<AttributeValue>> DIE::get_attribute(Attribute const& attribute) const
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
+    auto stream = TRY(FixedMemoryStream::construct(m_compilation_unit.dwarf_info().debug_info_data()));
     // Note: We can't just slice away from the input data here, since get_attribute_value will try to recover the original offset using seek().
     TRY(stream->seek(m_data_offset));
 

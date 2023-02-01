@@ -398,7 +398,7 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
         // b. If x < 0, let isNegative be true; else let isNegative be false.
         is_negative = number.is_negative();
 
-        // c. If isNegative, then
+        // c. If isNegative is true, then
         if (is_negative) {
             // i. Set x to -x.
             number.negate();
@@ -472,7 +472,7 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
         VERIFY_NOT_REACHED();
     }
 
-    // 7. Let x be result.[[RoundedNumber]].
+    // 7. Set x to result.[[RoundedNumber]].
     number = move(result.rounded_number);
 
     // 8. Let string be result.[[FormattedString]].
@@ -480,11 +480,12 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
 
     // 9. If intlObject.[[TrailingZeroDisplay]] is "stripIfInteger" and x modulo 1 = 0, then
     if ((intl_object.trailing_zero_display() == NumberFormat::TrailingZeroDisplay::StripIfInteger) && number.modulo_is_zero(1)) {
-        // a. If string contains ".", then
-        if (auto index = string.find_byte_offset('.'); index.has_value()) {
-            // i. Set string to the substring of string from index 0 to the index of ".".
+        // a. Let i be StringIndexOf(string, ".", 0).
+        auto index = string.find_byte_offset('.');
+
+        // b. If i ≠ -1, set string to the substring of string from 0 to i.
+        if (index.has_value())
             string = TRY_OR_THROW_OOM(vm, string.substring_from_byte_offset(0, *index));
-        }
     }
 
     // 10. Let int be result.[[IntegerDigitsCount]].
@@ -502,18 +503,16 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
         string = TRY_OR_THROW_OOM(vm, String::formatted("{}{}", forward_zeros, string));
     }
 
-    // 13. If isNegative and x is 0, then
-    if (is_negative && number.is_zero()) {
-        // a. Let x be -0.
-        number = MathematicalValue { MathematicalValue::Symbol::NegativeZero };
-    }
-    // 14. Else if isNegative, then
-    else if (is_negative) {
-        // b. Let x be -x.
-        number.negate();
+    // 13. If isNegative is true, then
+    if (is_negative) {
+        // a. If x is 0, set x to negative-zero. Otherwise, set x to -x.
+        if (number.is_zero())
+            number = MathematicalValue { MathematicalValue::Symbol::NegativeZero };
+        else
+            number.negate();
     }
 
-    // 15. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
+    // 14. Return the Record { [[RoundedNumber]]: x, [[FormattedString]]: string }.
     return FormatResult { move(string), move(number) };
 }
 
@@ -529,13 +528,13 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
     // 2. If x is not-a-number, then
     if (number.is_nan()) {
         // a. Let n be an implementation- and locale-dependent (ILD) String value indicating the NaN value.
-        auto symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::NaN).value_or("NaN"sv);
+        auto symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::NaN)).value_or("NaN"sv);
         formatted_string = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol));
     }
     // 3. Else if x is positive-infinity, then
     else if (number.is_positive_infinity()) {
         // a. Let n be an ILD String value indicating positive infinity.
-        auto symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Infinity).value_or("infinity"sv);
+        auto symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Infinity)).value_or("infinity"sv);
         formatted_string = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol));
     }
     // 4. Else if x is negative-infinity, then
@@ -543,7 +542,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         // a. Let n be an ILD String value indicating negative infinity.
         // NOTE: The CLDR does not contain unique strings for negative infinity. The negative sign will
         //       be inserted by the pattern returned from GetNumberFormatPattern.
-        auto symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Infinity).value_or("infinity"sv);
+        auto symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Infinity)).value_or("infinity"sv);
         formatted_string = TRY_OR_THROW_OOM(vm, String::from_utf8(symbol));
     }
     // 5. Else,
@@ -609,7 +608,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         // d. Else if p is equal to "plusSign", then
         else if (part == "plusSign"sv) {
             // i. Let plusSignSymbol be the ILND String representing the plus sign.
-            auto plus_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PlusSign).value_or("+"sv);
+            auto plus_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PlusSign)).value_or("+"sv);
             // ii. Append a new Record { [[Type]]: "plusSign", [[Value]]: plusSignSymbol } as the last element of result.
             result.append({ "plusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(plus_sign_symbol)) });
         }
@@ -617,7 +616,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         // e. Else if p is equal to "minusSign", then
         else if (part == "minusSign"sv) {
             // i. Let minusSignSymbol be the ILND String representing the minus sign.
-            auto minus_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign).value_or("-"sv);
+            auto minus_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign)).value_or("-"sv);
             // ii. Append a new Record { [[Type]]: "minusSign", [[Value]]: minusSignSymbol } as the last element of result.
             result.append({ "minusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) });
         }
@@ -625,7 +624,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         // f. Else if p is equal to "percentSign" and numberFormat.[[Style]] is "percent", then
         else if ((part == "percentSign"sv) && (number_format.style() == NumberFormat::Style::Percent)) {
             // i. Let percentSignSymbol be the ILND String representing the percent sign.
-            auto percent_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PercentSign).value_or("%"sv);
+            auto percent_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PercentSign)).value_or("%"sv);
             // ii. Append a new Record { [[Type]]: "percentSign", [[Value]]: percentSignSymbol } as the last element of result.
             result.append({ "percentSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(percent_sign_symbol)) });
         }
@@ -725,16 +724,16 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
     // 1. Let result be a new empty List.
     Vector<PatternPartition> result;
 
-    auto grouping_sizes = ::Locale::get_number_system_groupings(number_format.data_locale(), number_format.numbering_system());
+    auto grouping_sizes = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_groupings(number_format.data_locale(), number_format.numbering_system()));
     if (!grouping_sizes.has_value())
         return Vector<PatternPartition> {};
 
-    // 2. If x is NaN, then
+    // 2. If x is not-a-number, then
     if (number.is_nan()) {
         // a. Append a new Record { [[Type]]: "nan", [[Value]]: n } as the last element of result.
         result.append({ "nan"sv, move(formatted_string) });
     }
-    // 3. Else if x is a non-finite Number, then
+    // 3. Else if x is positive-infinity or negative-infinity, then
     else if (number.is_positive_infinity() || number.is_negative_infinity()) {
         // a. Append a new Record { [[Type]]: "infinity", [[Value]]: n } as the last element of result.
         result.append({ "infinity"sv, move(formatted_string) });
@@ -742,7 +741,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
     // 4. Else,
     else {
         // a. Let notationSubPattern be GetNotationSubPattern(numberFormat, exponent).
-        auto notation_sub_pattern = get_notation_sub_pattern(number_format, exponent);
+        auto notation_sub_pattern = MUST_OR_THROW_OOM(get_notation_sub_pattern(vm, number_format, exponent));
         if (!notation_sub_pattern.has_value())
             return Vector<PatternPartition> {};
 
@@ -808,7 +807,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 // 7. Else,
                 else {
                     // a. Let groupSepSymbol be the implementation-, locale-, and numbering system-dependent (ILND) String representing the grouping separator.
-                    auto group_sep_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Group).value_or(","sv);
+                    auto group_sep_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Group)).value_or(","sv);
 
                     // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer, which may depend on the value of numberFormat.[[UseGrouping]].
                     auto groups = separate_integer_into_groups(*grouping_sizes, integer, number_format.use_grouping());
@@ -835,7 +834,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 // 8. If fraction is not undefined, then
                 if (fraction.has_value()) {
                     // a. Let decimalSepSymbol be the ILND String representing the decimal separator.
-                    auto decimal_sep_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Decimal).value_or("."sv);
+                    auto decimal_sep_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Decimal)).value_or("."sv);
                     // b. Append a new Record { [[Type]]: "decimal", [[Value]]: decimalSepSymbol } as the last element of result.
                     result.append({ "decimal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_sep_symbol)) });
                     // c. Append a new Record { [[Type]]: "fraction", [[Value]]: fraction } as the last element of result.
@@ -859,7 +858,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
             // vi. Else if p is equal to "scientificSeparator", then
             else if (part == "scientificSeparator"sv) {
                 // 1. Let scientificSeparator be the ILND String representing the exponent separator.
-                auto scientific_separator = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Exponential).value_or("E"sv);
+                auto scientific_separator = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Exponential)).value_or("E"sv);
                 // 2. Append a new Record { [[Type]]: "exponentSeparator", [[Value]]: scientificSeparator } as the last element of result.
                 result.append({ "exponentSeparator"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(scientific_separator)) });
             }
@@ -868,7 +867,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 // 1. If exponent < 0, then
                 if (exponent < 0) {
                     // a. Let minusSignSymbol be the ILND String representing the minus sign.
-                    auto minus_sign_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign).value_or("-"sv);
+                    auto minus_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign)).value_or("-"sv);
 
                     // b. Append a new Record { [[Type]]: "exponentMinusSign", [[Value]]: minusSignSymbol } as the last element of result.
                     result.append({ "exponentMinusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) });
@@ -995,7 +994,7 @@ struct RawPrecisionResult {
 static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, MathematicalValue const& number, int precision, PreferredResult mode)
 {
     RawPrecisionResult result {};
-    result.exponent = number.logarithmic_floor();
+    result.exponent = MUST_OR_THROW_OOM(number.logarithmic_floor(vm));
 
     if (number.is_number()) {
         result.number = number.divided_by_power(result.exponent - precision + 1);
@@ -1276,6 +1275,13 @@ ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const&
     return result;
 }
 
+enum class NumberCategory {
+    NegativeNonZero,
+    NegativeZero,
+    PositiveNonZero,
+    PositiveZero,
+};
+
 // 15.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
 // 1.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getnumberformatpattern
 ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_pattern(VM& vm, NumberFormat& number_format, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern)
@@ -1292,7 +1298,7 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
     // 7. If style is "percent", then
     case NumberFormat::Style::Percent:
         // a. Let patterns be patterns.[[percent]].
-        patterns = ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Percent);
+        patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Percent));
         break;
 
     // 8. Else if style is "unit", then
@@ -1307,7 +1313,7 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         auto formats = ::Locale::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display());
         auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, number_format, ::Locale::PluralForm::Cardinal, number.to_value(vm)));
 
-        if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality; }); it != formats.end())
+        if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality.plural_category; }); it != formats.end())
             patterns = move(*it);
 
         break;
@@ -1327,10 +1333,10 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
 
         // Handling of other [[CurrencyDisplay]] options will occur after [[SignDisplay]].
         if (number_format.currency_display() == NumberFormat::CurrencyDisplay::Name) {
-            auto formats = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::CurrencyUnit);
+            auto formats = TRY_OR_THROW_OOM(vm, ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::CurrencyUnit));
             auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, number_format, ::Locale::PluralForm::Cardinal, number.to_value(vm)));
 
-            if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality; }); it != formats.end()) {
+            if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality.plural_category; }); it != formats.end()) {
                 patterns = move(*it);
                 break;
             }
@@ -1338,10 +1344,10 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
 
         switch (number_format.currency_sign()) {
         case NumberFormat::CurrencySign::Standard:
-            patterns = ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Currency);
+            patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Currency));
             break;
         case NumberFormat::CurrencySign::Accounting:
-            patterns = ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Accounting);
+            patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Accounting));
             break;
         }
 
@@ -1351,7 +1357,7 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
     case NumberFormat::Style::Decimal:
         // a. Assert: style is "decimal".
         // b. Let patterns be patterns.[[decimal]].
-        patterns = ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Decimal);
+        patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Decimal));
         break;
 
     default:
@@ -1361,20 +1367,64 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
     if (!patterns.has_value())
         return OptionalNone {};
 
+    NumberCategory category;
+
+    // 11. If x is negative-infinity, then
+    if (number.is_negative_infinity()) {
+        // a. Let category be negative-nonzero.
+        category = NumberCategory::NegativeNonZero;
+    }
+    // 12. Else if x is negative-zero, then
+    else if (number.is_negative_zero()) {
+        // a. Let category be negative-zero.
+        category = NumberCategory::NegativeZero;
+    }
+    // 13. Else if x is not-a-number, then
+    else if (number.is_nan()) {
+        // a. Let category be positive-zero.
+        category = NumberCategory::PositiveZero;
+    }
+    // 14. Else if x is positive-infinity, then
+    else if (number.is_positive_infinity()) {
+        // a. Let category be positive-nonzero.
+        category = NumberCategory::PositiveNonZero;
+    }
+    // 15. Else,
+    else {
+        // a. Assert: x is a mathematical value.
+        VERIFY(number.is_mathematical_value());
+
+        // b. If x < 0, then
+        if (number.is_negative()) {
+            // i. Let category be negative-nonzero.
+            category = NumberCategory::NegativeNonZero;
+        }
+        // c. Else if x > 0, then
+        else if (number.is_positive()) {
+            // i. Let category be positive-nonzero.
+            category = NumberCategory::PositiveNonZero;
+        }
+        // d. Else,
+        else {
+            // i. Let category be positive-zero.
+            category = NumberCategory::PositiveZero;
+        }
+    }
+
     StringView pattern;
 
-    // 11. Let signDisplay be numberFormat.[[SignDisplay]].
+    // 16. Let signDisplay be numberFormat.[[SignDisplay]].
     switch (number_format.sign_display()) {
-    // 12. If signDisplay is "never", then
+    // 17. If signDisplay is "never", then
     case NumberFormat::SignDisplay::Never:
         // a. Let pattern be patterns.[[zeroPattern]].
         pattern = patterns->zero_format;
         break;
 
-    // 13. Else if signDisplay is "auto", then
+    // 18. Else if signDisplay is "auto", then
     case NumberFormat::SignDisplay::Auto:
-        // a. If x is 0 or x > 0 or x is NaN, then
-        if (number.is_zero() || number.is_positive() || number.is_nan()) {
+        // a. If category is positive-nonzero or positive-zero, then
+        if (category == NumberCategory::PositiveNonZero || category == NumberCategory::PositiveZero) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
@@ -1385,10 +1435,10 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         }
         break;
 
-    // 14. Else if signDisplay is "always", then
+    // 19. Else if signDisplay is "always", then
     case NumberFormat::SignDisplay::Always:
-        // a. If x is 0 or x > 0 or x is NaN, then
-        if (number.is_zero() || number.is_positive() || number.is_nan()) {
+        // a. If category is positive-nonzero or positive-zero, then
+        if (category == NumberCategory::PositiveNonZero || category == NumberCategory::PositiveZero) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1399,15 +1449,15 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         }
         break;
 
-    // 15. Else if signDisplay is "exceptZero", then
+    // 20. Else if signDisplay is "exceptZero", then
     case NumberFormat::SignDisplay::ExceptZero:
-        // a. If x is 0 or x is -0 or x is NaN, then
-        if (number.is_zero() || number.is_negative_zero() || number.is_nan()) {
+        // a. If category is positive-zero or negative-zero, then
+        if (category == NumberCategory::PositiveZero || category == NumberCategory::NegativeZero) {
             // i. Let pattern be patterns.[[zeroPattern]].
             pattern = patterns->zero_format;
         }
-        // b. Else if x > 0, then
-        else if (number.is_positive()) {
+        // b. Else if category is positive-nonzero, then
+        else if (category == NumberCategory::PositiveNonZero) {
             // i. Let pattern be patterns.[[positivePattern]].
             pattern = patterns->positive_format;
         }
@@ -1418,18 +1468,18 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         }
         break;
 
-    // 16. Else,
+    // 21. Else,
     case NumberFormat::SignDisplay::Negative:
         // a. Assert: signDisplay is "negative".
-        // b. If x is 0 or x is -0 or x > 0 or x is NaN, then
-        if (number.is_zero() || number.is_negative_zero() || number.is_positive() || number.is_nan()) {
-            // i. Let pattern be patterns.[[zeroPattern]].
-            pattern = patterns->zero_format;
+        // b. If category is negative-nonzero, then
+        if (category == NumberCategory::NegativeNonZero) {
+            // i. Let pattern be patterns.[[negativePattern]].
+            pattern = patterns->negative_format;
         }
         // c. Else,
         else {
-            // i. Let pattern be patterns.[[negativePattern]].
-            pattern = patterns->negative_format;
+            // i. Let pattern be patterns.[[zeroPattern]].
+            pattern = patterns->zero_format;
         }
         break;
 
@@ -1448,12 +1498,12 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
             return modified_pattern.release_value();
     }
 
-    // 16. Return pattern.
+    // 22. Return pattern.
     return pattern;
 }
 
 // 15.5.12 GetNotationSubPattern ( numberFormat, exponent ), https://tc39.es/ecma402/#sec-getnotationsubpattern
-Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int exponent)
+ThrowCompletionOr<Optional<StringView>> get_notation_sub_pattern(VM& vm, NumberFormat& number_format, int exponent)
 {
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
     // 2. Let dataLocale be numberFormat.[[DataLocale]].
@@ -1467,9 +1517,9 @@ Optional<StringView> get_notation_sub_pattern(NumberFormat& number_format, int e
     // 7. If notation is "scientific" or notation is "engineering", then
     if ((notation == NumberFormat::Notation::Scientific) || (notation == NumberFormat::Notation::Engineering)) {
         // a. Return notationSubPatterns.[[scientific]].
-        auto notation_sub_patterns = ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Scientific);
+        auto notation_sub_patterns = TRY_OR_THROW_OOM(vm, ::Locale::get_standard_number_system_format(number_format.data_locale(), number_format.numbering_system(), ::Locale::StandardNumberFormatType::Scientific));
         if (!notation_sub_patterns.has_value())
-            return {};
+            return OptionalNone {};
 
         return notation_sub_patterns->zero_format;
     }
@@ -1506,10 +1556,10 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 3. Let magnitude be the base 10 logarithm of x rounded down to the nearest integer.
-    int magnitude = number.logarithmic_floor();
+    int magnitude = MUST_OR_THROW_OOM(number.logarithmic_floor(vm));
 
     // 4. Let exponent be ComputeExponentForMagnitude(numberFormat, magnitude).
-    int exponent = compute_exponent_for_magnitude(number_format, magnitude);
+    int exponent = MUST_OR_THROW_OOM(compute_exponent_for_magnitude(vm, number_format, magnitude));
 
     // 5. Let x be x × 10^(-exponent).
     number = number.multiplied_by_power(-exponent);
@@ -1524,7 +1574,7 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 8. Let newMagnitude be the base 10 logarithm of formatNumberResult.[[RoundedNumber]] rounded down to the nearest integer.
-    int new_magnitude = format_number_result.rounded_number.logarithmic_floor();
+    int new_magnitude = MUST_OR_THROW_OOM(format_number_result.rounded_number.logarithmic_floor(vm));
 
     // 9. If newMagnitude is magnitude - exponent, then
     if (new_magnitude == magnitude - exponent) {
@@ -1533,11 +1583,11 @@ ThrowCompletionOr<int> compute_exponent(VM& vm, NumberFormat& number_format, Mat
     }
 
     // 10. Return ComputeExponentForMagnitude(numberFormat, magnitude + 1).
-    return compute_exponent_for_magnitude(number_format, magnitude + 1);
+    return MUST_OR_THROW_OOM(compute_exponent_for_magnitude(vm, number_format, magnitude + 1));
 }
 
 // 15.5.14 ComputeExponentForMagnitude ( numberFormat, magnitude ), https://tc39.es/ecma402/#sec-computeexponentformagnitude
-int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
+ThrowCompletionOr<int> compute_exponent_for_magnitude(VM& vm, NumberFormat& number_format, int magnitude)
 {
     // 1. Let notation be numberFormat.[[Notation]].
     switch (number_format.notation()) {
@@ -1570,11 +1620,11 @@ int compute_exponent_for_magnitude(NumberFormat& number_format, int magnitude)
         Vector<::Locale::NumberFormat> format_rules;
 
         if (number_format.style() == NumberFormat::Style::Currency)
-            format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::CurrencyShort);
+            format_rules = TRY_OR_THROW_OOM(vm, ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::CurrencyShort));
         else if (number_format.compact_display() == NumberFormat::CompactDisplay::Long)
-            format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::DecimalLong);
+            format_rules = TRY_OR_THROW_OOM(vm, ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::DecimalLong));
         else
-            format_rules = ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::DecimalShort);
+            format_rules = TRY_OR_THROW_OOM(vm, ::Locale::get_compact_number_system_formats(number_format.data_locale(), number_format.numbering_system(), ::Locale::CompactNumberFormatType::DecimalShort));
 
         ::Locale::NumberFormat const* best_number_format = nullptr;
 
@@ -1782,7 +1832,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     result = move(start_result);
 
     // 8. Let rangeSeparator be an ILND String value used to separate two numbers.
-    auto range_separator_symbol = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::RangeSeparator).value_or("-"sv);
+    auto range_separator_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::RangeSeparator)).value_or("-"sv);
     auto range_separator = TRY_OR_THROW_OOM(vm, ::Locale::augment_range_pattern(range_separator_symbol, result.last().value, end_result[0].value));
 
     // 9. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
@@ -1812,16 +1862,18 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM& v
 {
     // 1. Let i be an index into result, determined by an implementation-defined algorithm based on numberFormat and result.
     // 2. Let approximatelySign be an ILND String value used to signify that a number is approximate.
-    auto approximately_sign = ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::ApproximatelySign).value_or("~"sv);
+    auto approximately_sign = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::ApproximatelySign));
 
-    // 3. Insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
-    PatternPartitionWithSource partition;
-    partition.type = "approximatelySign"sv;
-    partition.value = TRY_OR_THROW_OOM(vm, String::from_utf8(approximately_sign));
+    // 3. If approximatelySign is not empty, insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
+    if (approximately_sign.has_value() && !approximately_sign->is_empty()) {
+        PatternPartitionWithSource partition;
+        partition.type = "approximatelySign"sv;
+        partition.value = TRY_OR_THROW_OOM(vm, String::from_utf8(*approximately_sign));
 
-    result.insert_before_matching(move(partition), [](auto const& part) {
-        return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);
-    });
+        result.insert_before_matching(move(partition), [](auto const& part) {
+            return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);
+        });
+    }
 
     // 4. Return result.
     return result;

@@ -34,7 +34,7 @@ static void drop_el3_to_el2()
     saved_program_status_register_el3.D = 1;
 
     // Indicate EL1 as exception origin mode (so we go back there)
-    saved_program_status_register_el3.M = Aarch64::SPSR_EL3::Mode::EL2t;
+    saved_program_status_register_el3.M = Aarch64::SPSR_EL3::Mode::EL2h;
 
     // Set the register
     Aarch64::SPSR_EL3::write(saved_program_status_register_el3);
@@ -49,10 +49,6 @@ static void drop_el2_to_el1()
     hypervisor_configuration_register_el2.RW = 1; // EL1 to use 64-bit mode
     Aarch64::HCR_EL2::write(hypervisor_configuration_register_el2);
 
-    // Set up initial exception stack
-    // FIXME: Define in linker script
-    Aarch64::Asm::set_sp_el1(0x40000);
-
     Aarch64::SPSR_EL2 saved_program_status_register_el2 = {};
 
     // Mask (disable) all interrupts
@@ -61,7 +57,7 @@ static void drop_el2_to_el1()
     saved_program_status_register_el2.F = 1;
 
     // Indicate EL1 as exception origin mode (so we go back there)
-    saved_program_status_register_el2.M = Aarch64::SPSR_EL2::Mode::EL1t;
+    saved_program_status_register_el2.M = Aarch64::SPSR_EL2::Mode::EL1h;
 
     Aarch64::SPSR_EL2::write(saved_program_status_register_el2);
     Aarch64::Asm::enter_el1_from_el2();

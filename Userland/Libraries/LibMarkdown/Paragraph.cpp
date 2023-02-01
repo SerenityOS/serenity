@@ -25,7 +25,7 @@ DeprecatedString Paragraph::render_to_html(bool tight) const
 
     builder.append('\n');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Vector<DeprecatedString> Paragraph::render_lines_for_terminal(size_t) const

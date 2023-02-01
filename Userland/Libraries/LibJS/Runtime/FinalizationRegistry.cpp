@@ -23,15 +23,25 @@ void FinalizationRegistry::add_finalization_record(Cell& target, Value held_valu
     m_records.append({ &target, held_value, unregister_token });
 }
 
+// Extracted from FinalizationRegistry.prototype.unregister ( unregisterToken )
 bool FinalizationRegistry::remove_by_token(Cell& unregister_token)
 {
+    // 4. Let removed be false.
     auto removed = false;
+
+    // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell of finalizationRegistry.[[Cells]], do
     for (auto it = m_records.begin(); it != m_records.end(); ++it) {
+        //  a. If cell.[[UnregisterToken]] is not empty and SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
         if (it->unregister_token == &unregister_token) {
+            // i. Remove cell from finalizationRegistry.[[Cells]].
             it.remove(m_records);
+
+            // ii. Set removed to true.
             removed = true;
         }
     }
+
+    // 6. Return removed.
     return removed;
 }
 

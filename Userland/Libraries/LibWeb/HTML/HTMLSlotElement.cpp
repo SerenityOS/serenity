@@ -16,10 +16,12 @@ HTMLSlotElement::HTMLSlotElement(DOM::Document& document, DOM::QualifiedName qua
 
 HTMLSlotElement::~HTMLSlotElement() = default;
 
-void HTMLSlotElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLSlotElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSlotElementPrototype>(realm, "HTMLSlotElement"));
+
+    return {};
 }
 
 }

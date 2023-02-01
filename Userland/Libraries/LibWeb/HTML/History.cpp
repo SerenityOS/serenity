@@ -12,7 +12,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<History> History::create(JS::Realm& realm, DOM::Document& document)
 {
-    return realm.heap().allocate<History>(realm, realm, document);
+    return realm.heap().allocate<History>(realm, realm, document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 History::History(JS::Realm& realm, DOM::Document& document)
@@ -23,10 +23,12 @@ History::History(JS::Realm& realm, DOM::Document& document)
 
 History::~History() = default;
 
-void History::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> History::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HistoryPrototype>(realm, "History"));
+
+    return {};
 }
 
 void History::visit_edges(Cell::Visitor& visitor)

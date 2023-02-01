@@ -6,7 +6,7 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Debug.h>
-#include <AK/MemoryStream.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/Types.h>
 #include <LibCrypto/Authentication/GHash.h>
 
@@ -47,7 +47,7 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
         if (i > buf.size()) {
             static u8 buffer[16];
             Bytes buffer_bytes { buffer, 16 };
-            OutputMemoryStream stream { buffer_bytes };
+            DeprecatedOutputMemoryStream stream { buffer_bytes };
             stream.write(buf.slice(i - 16));
             stream.fill_to_end(0);
 

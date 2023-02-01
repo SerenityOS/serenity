@@ -22,7 +22,7 @@ namespace Web::DOMParsing {
 
 JS::NonnullGCPtr<XMLSerializer> XMLSerializer::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<XMLSerializer>(realm, realm);
+    return (realm.heap().allocate<XMLSerializer>(realm, realm)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 XMLSerializer::XMLSerializer(JS::Realm& realm)
@@ -32,10 +32,12 @@ XMLSerializer::XMLSerializer(JS::Realm& realm)
 
 XMLSerializer::~XMLSerializer() = default;
 
-void XMLSerializer::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> XMLSerializer::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::XMLSerializerPrototype>(realm, "XMLSerializer"));
+
+    return {};
 }
 
 // https://w3c.github.io/DOM-Parsing/#dom-xmlserializer-serializetostring

@@ -14,13 +14,15 @@ AsyncGeneratorPrototype::AsyncGeneratorPrototype(Realm& realm)
 {
 }
 
-void AsyncGeneratorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> AsyncGeneratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     // 27.6.1.5 AsyncGenerator.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-asyncgenerator-prototype-tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "AsyncGenerator"), Attribute::Configurable);
+
+    return {};
 }
 
 }

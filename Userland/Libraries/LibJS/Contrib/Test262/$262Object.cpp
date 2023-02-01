@@ -24,12 +24,12 @@ $262Object::$262Object(Realm& realm)
 {
 }
 
-void $262Object::initialize(Realm& realm)
+ThrowCompletionOr<void> $262Object::initialize(Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
-    m_agent = vm().heap().allocate<AgentObject>(realm, realm);
-    m_is_htmldda = vm().heap().allocate<IsHTMLDDA>(realm, realm);
+    m_agent = MUST_OR_THROW_OOM(vm().heap().allocate<AgentObject>(realm, realm));
+    m_is_htmldda = MUST_OR_THROW_OOM(vm().heap().allocate<IsHTMLDDA>(realm, realm));
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, "clearKeptObjects", clear_kept_objects, 0, attr);
@@ -41,6 +41,8 @@ void $262Object::initialize(Realm& realm)
     define_direct_property("gc", realm.global_object().get_without_side_effects("gc"), attr);
     define_direct_property("global", &realm.global_object(), attr);
     define_direct_property("IsHTMLDDA", m_is_htmldda, attr);
+
+    return {};
 }
 
 void $262Object::visit_edges(Cell::Visitor& visitor)

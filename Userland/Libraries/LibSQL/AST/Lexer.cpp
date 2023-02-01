@@ -109,7 +109,7 @@ Token Lexer::next()
         }
     }
 
-    Token token(token_type, current_token.build(),
+    Token token(token_type, current_token.to_deprecated_string(),
         { value_start_line_number, value_start_column_number },
         { m_line_number, m_line_column });
 

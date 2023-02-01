@@ -144,7 +144,7 @@ void do_copy(Vector<DeprecatedString> const& selected_file_paths, FileOperation 
         auto url = URL::create_with_file_scheme(path);
         copy_text.appendff("{}\n", url);
     }
-    GUI::Clipboard::the().set_data(copy_text.build().bytes(), "text/uri-list");
+    GUI::Clipboard::the().set_data(copy_text.to_deprecated_string().bytes(), "text/uri-list");
 }
 
 void do_paste(DeprecatedString const& target_directory, GUI::Window* window)
@@ -213,7 +213,7 @@ void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI:
         if (!archive_name.ends_with(".zip"sv))
             path_builder.append(".zip"sv);
     }
-    auto output_path = path_builder.build();
+    auto output_path = path_builder.to_deprecated_string();
 
     pid_t zip_pid = fork();
     if (zip_pid < 0) {

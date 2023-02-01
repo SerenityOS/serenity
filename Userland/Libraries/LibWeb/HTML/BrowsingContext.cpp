@@ -115,7 +115,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         Bindings::main_thread_vm(),
         [&](JS::Realm& realm) -> JS::Object* {
-            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm);
+            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
             // - For the global object, create a new Window object.
             window = HTML::Window::create(realm);

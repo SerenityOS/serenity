@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
-#include <LibCore/MemoryStream.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 RefPtr<Line::Editor> g_line_editor;
-static OwnPtr<Core::Stream::Stream> g_stdout {};
+static OwnPtr<AK::Stream> g_stdout {};
 static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);
@@ -252,7 +252,7 @@ static Optional<Wasm::Module> parse(StringView filename)
         return {};
     }
 
-    auto stream = Core::Stream::FixedMemoryStream::construct(ReadonlyBytes { result.value()->data(), result.value()->size() }).release_value_but_fixme_should_propagate_errors();
+    auto stream = FixedMemoryStream::construct(ReadonlyBytes { result.value()->data(), result.value()->size() }).release_value_but_fixme_should_propagate_errors();
     auto parse_result = Wasm::Module::parse(*stream);
     if (parse_result.is_error()) {
         warnln("Something went wrong, either the file is invalid, or there's a bug with LibWasm!");
@@ -398,7 +398,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         StringBuilder argument_builder;
                         bool first = true;
                         for (auto& argument : arguments) {
-                            Core::Stream::AllocatingMemoryStream stream;
+                            AllocatingMemoryStream stream;
                             Wasm::Printer { stream }.print(argument);
                             if (first)
                                 first = false;

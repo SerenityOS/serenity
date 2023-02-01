@@ -83,7 +83,6 @@ private:
         Content,
     };
     ErrorOr<DeprecatedString, ParseError> resolve_reference(EntityReference const&, ReferencePlacement);
-    ErrorOr<DeprecatedString, ParseError> resolve_parameter_entity_reference(EntityReference const&);
 
     enum class Required {
         No,

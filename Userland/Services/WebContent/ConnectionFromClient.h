@@ -34,7 +34,7 @@ public:
 
     void initialize_js_console(Badge<PageHost>);
 
-    void request_file(NonnullRefPtr<Web::FileRequest>&);
+    void request_file(Web::FileRequest);
 
     Optional<int> fd() { return socket().fd(); }
 
@@ -117,7 +117,7 @@ private:
     OwnPtr<WebContentConsoleClient> m_console_client;
     JS::Handle<JS::GlobalObject> m_console_global_object;
 
-    HashMap<int, NonnullRefPtr<Web::FileRequest>> m_requested_files {};
+    HashMap<int, Web::FileRequest> m_requested_files {};
     int last_id { 0 };
 };
 

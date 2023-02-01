@@ -976,6 +976,18 @@ public:
     }
 };
 
+class UsingNamespaceDeclaration : public Declaration {
+public:
+    virtual ~UsingNamespaceDeclaration() override = default;
+    virtual StringView class_name() const override { return "UsingNamespaceDeclaration"sv; }
+    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+
+    UsingNamespaceDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+        : Declaration(parent, start, end, filename)
+    {
+    }
+};
+
 template<>
 inline bool ASTNode::fast_is<Identifier>() const { return is_identifier(); }
 template<>

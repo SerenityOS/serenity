@@ -92,12 +92,14 @@ private:
     void detect_victory();
     void move_focused_cards(CardStack& stack);
     void clear_hovered_stack();
+    void deal_next_card();
 
-    void paint_event(GUI::PaintEvent&) override;
-    void mousedown_event(GUI::MouseEvent&) override;
-    void mouseup_event(GUI::MouseEvent&) override;
-    void mousemove_event(GUI::MouseEvent&) override;
-    void timer_event(Core::TimerEvent&) override;
+    virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
+    virtual void timer_event(Core::TimerEvent&) override;
 
     Mode m_mode { Mode::SingleSuit };
 
@@ -107,12 +109,17 @@ private:
 
     bool m_mouse_down { false };
 
-    bool m_waiting_for_new_game { true };
-    bool m_new_game_animation { false };
+    enum class State {
+        WaitingForNewGame,
+        NewGameAnimation,
+        GameInProgress,
+        DrawAnimation,
+        Victory,
+    };
+    State m_state { State::WaitingForNewGame };
     uint8_t m_new_game_animation_delay { 0 };
     uint8_t m_new_game_animation_pile { 0 };
 
-    bool m_draw_animation { false };
     uint8_t m_draw_animation_delay { 0 };
     uint8_t m_draw_animation_pile { 0 };
     Gfx::IntRect m_original_stock_rect;

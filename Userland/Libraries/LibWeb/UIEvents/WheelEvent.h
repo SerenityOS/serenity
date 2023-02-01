@@ -42,7 +42,7 @@ public:
 private:
     WheelEvent(JS::Realm&, DeprecatedFlyString const& event_name, WheelEventInit const& event_init);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     void set_event_characteristics();
 

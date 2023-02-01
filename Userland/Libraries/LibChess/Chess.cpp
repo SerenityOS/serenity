@@ -82,7 +82,7 @@ DeprecatedString Square::to_algebraic() const
     StringBuilder builder;
     builder.append(file + 'a');
     builder.append(rank + '1');
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Move::Move(StringView long_algebraic)
@@ -98,7 +98,7 @@ DeprecatedString Move::to_long_algebraic() const
     builder.append(from.to_algebraic());
     builder.append(to.to_algebraic());
     builder.append(char_for_piece(promote_to).to_lowercase());
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& board)
@@ -216,7 +216,7 @@ DeprecatedString Move::to_algebraic() const
     else if (is_check)
         builder.append('+');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Board::Board()

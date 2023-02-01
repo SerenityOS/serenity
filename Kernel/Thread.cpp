@@ -10,6 +10,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
@@ -18,7 +19,6 @@
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
@@ -631,7 +631,7 @@ void Thread::update_time_scheduled(u64 current_scheduler_time, bool is_kernel, b
 
 bool Thread::tick()
 {
-    if (previous_mode() == PreviousMode::KernelMode) {
+    if (previous_mode() == ExecutionMode::Kernel) {
         ++m_process->m_ticks_in_kernel;
         ++m_ticks_in_kernel;
     } else {

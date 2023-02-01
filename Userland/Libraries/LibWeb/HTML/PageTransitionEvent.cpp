@@ -11,7 +11,7 @@ namespace Web::HTML {
 
 PageTransitionEvent* PageTransitionEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init)
 {
-    return realm.heap().allocate<PageTransitionEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<PageTransitionEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 PageTransitionEvent* PageTransitionEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init)
@@ -27,10 +27,12 @@ PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, DeprecatedFlyString c
 
 PageTransitionEvent::~PageTransitionEvent() = default;
 
-void PageTransitionEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> PageTransitionEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PageTransitionEventPrototype>(realm, "PageTransitionEvent"));
+
+    return {};
 }
 
 }

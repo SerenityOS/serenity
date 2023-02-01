@@ -11,7 +11,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<DocumentType> DocumentType::create(Document& document)
 {
-    return document.heap().allocate<DocumentType>(document.realm(), document);
+    return document.heap().allocate<DocumentType>(document.realm(), document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DocumentType::DocumentType(Document& document)
@@ -19,10 +19,12 @@ DocumentType::DocumentType(Document& document)
 {
 }
 
-void DocumentType::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> DocumentType::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentTypePrototype>(realm, "DocumentType"));
+
+    return {};
 }
 
 }

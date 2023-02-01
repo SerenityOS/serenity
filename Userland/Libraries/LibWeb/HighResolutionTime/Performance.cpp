@@ -22,10 +22,12 @@ Performance::Performance(HTML::Window& window)
 
 Performance::~Performance() = default;
 
-void Performance::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Performance::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::PerformancePrototype>(realm, "Performance"));
+
+    return {};
 }
 
 void Performance::visit_edges(Cell::Visitor& visitor)
@@ -38,7 +40,7 @@ void Performance::visit_edges(Cell::Visitor& visitor)
 JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 {
     if (!m_timing)
-        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window);
+        m_timing = heap().allocate<NavigationTiming::PerformanceTiming>(realm(), *m_window).release_allocated_value_but_fixme_should_propagate_errors();
     return m_timing;
 }
 

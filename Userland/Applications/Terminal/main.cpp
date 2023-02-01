@@ -159,7 +159,7 @@ static ErrorOr<void> run_command(DeprecatedString command, bool keep_open)
         arguments.append("-c"sv);
         arguments.append(command);
     }
-    auto env = TRY(FixedArray<StringView>::try_create({ "TERM=xterm"sv, "PAGER=more"sv, "PATH="sv DEFAULT_PATH_SV }));
+    auto env = TRY(FixedArray<StringView>::create({ "TERM=xterm"sv, "PAGER=more"sv, "PATH="sv DEFAULT_PATH_SV }));
     TRY(Core::System::exec(shell, arguments, Core::System::SearchInPath::No, env.span()));
     VERIFY_NOT_REACHED();
 }

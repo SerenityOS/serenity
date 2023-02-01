@@ -500,7 +500,7 @@ void Emulator::dump_backtrace()
     dump_backtrace(raw_backtrace());
 }
 
-void Emulator::emit_profile_sample(Core::Stream::Stream& output)
+void Emulator::emit_profile_sample(AK::Stream& output)
 {
     if (!is_in_region_of_interest())
         return;
@@ -513,7 +513,7 @@ void Emulator::emit_profile_sample(Core::Stream::Stream& output)
     output.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
-void Emulator::emit_profile_event(Core::Stream::Stream& output, StringView event_name, DeprecatedString const& contents)
+void Emulator::emit_profile_event(AK::Stream& output, StringView event_name, DeprecatedString const& contents)
 {
     StringBuilder builder;
     timeval tv {};

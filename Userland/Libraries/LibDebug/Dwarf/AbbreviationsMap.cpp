@@ -8,7 +8,7 @@
 #include "DwarfInfo.h"
 
 #include <AK/LEB128.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 
 namespace Debug::Dwarf {
 
@@ -21,7 +21,7 @@ AbbreviationsMap::AbbreviationsMap(DwarfInfo const& dwarf_info, u32 offset)
 
 ErrorOr<void> AbbreviationsMap::populate_map()
 {
-    auto abbreviation_stream = TRY(Core::Stream::FixedMemoryStream::construct(m_dwarf_info.abbreviation_data()));
+    auto abbreviation_stream = TRY(FixedMemoryStream::construct(m_dwarf_info.abbreviation_data()));
     TRY(abbreviation_stream->discard(m_offset));
     Core::Stream::WrapInAKInputStream wrapped_abbreviation_stream { *abbreviation_stream };
 
@@ -54,7 +54,7 @@ ErrorOr<void> AbbreviationsMap::populate_map()
 
             if (current_attribute_specification.form == AttributeDataForm::ImplicitConst) {
                 ssize_t data_value;
-                LEB128::read_unsigned(wrapped_abbreviation_stream, data_value);
+                LEB128::read_signed(wrapped_abbreviation_stream, data_value);
                 current_attribute_specification.value = data_value;
             }
 

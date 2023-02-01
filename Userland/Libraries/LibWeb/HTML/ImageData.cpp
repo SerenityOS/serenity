@@ -28,7 +28,7 @@ JS::GCPtr<ImageData> ImageData::create_with_size(JS::Realm& realm, int width, in
     auto bitmap_or_error = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
     if (bitmap_or_error.is_error())
         return nullptr;
-    return realm.heap().allocate<ImageData>(realm, realm, bitmap_or_error.release_value(), move(data));
+    return realm.heap().allocate<ImageData>(realm, realm, bitmap_or_error.release_value(), move(data)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ImageData::ImageData(JS::Realm& realm, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::NonnullGCPtr<JS::Uint8ClampedArray> data)
@@ -40,10 +40,12 @@ ImageData::ImageData(JS::Realm& realm, NonnullRefPtr<Gfx::Bitmap> bitmap, JS::No
 
 ImageData::~ImageData() = default;
 
-void ImageData::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ImageData::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ImageDataPrototype>(realm, "ImageData"));
+
+    return {};
 }
 
 void ImageData::visit_edges(Cell::Visitor& visitor)

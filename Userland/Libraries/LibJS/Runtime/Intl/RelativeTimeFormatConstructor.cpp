@@ -24,9 +24,9 @@ RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(Realm& realm)
 {
 }
 
-void RelativeTimeFormatConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> RelativeTimeFormatConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -36,6 +36,8 @@ void RelativeTimeFormatConstructor::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+
+    return {};
 }
 
 // 17.1.1 Intl.RelativeTimeFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat

@@ -180,10 +180,10 @@ DateConstructor::DateConstructor(Realm& realm)
 {
 }
 
-void DateConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> DateConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().date_prototype(), 0);
@@ -194,6 +194,8 @@ void DateConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.UTC, utc, 7, attr);
 
     define_direct_property(vm.names.length, Value(7), Attribute::Configurable);
+
+    return {};
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date

@@ -10,8 +10,8 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
+#include <AK/MemoryStream.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
@@ -88,7 +88,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     update_preview();
 }
 
-auto CSVExportDialogPage::generate(Core::Stream::Stream& stream, GenerationType type) -> ErrorOr<void>
+auto CSVExportDialogPage::generate(AK::Stream& stream, GenerationType type) -> ErrorOr<void>
 {
     auto delimiter = TRY([this]() -> ErrorOr<DeprecatedString> {
         if (m_delimiter_other_radio->is_checked()) {
@@ -167,7 +167,7 @@ auto CSVExportDialogPage::generate(Core::Stream::Stream& stream, GenerationType 
 void CSVExportDialogPage::update_preview()
 {
     auto maybe_error = [this]() -> ErrorOr<void> {
-        Core::Stream::AllocatingMemoryStream memory_stream;
+        AllocatingMemoryStream memory_stream;
         TRY(generate(memory_stream, GenerationType::Preview));
         auto buffer = TRY(memory_stream.read_until_eof());
         m_data_preview_text_editor->set_text(StringView(buffer));

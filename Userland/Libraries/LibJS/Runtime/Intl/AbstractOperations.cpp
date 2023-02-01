@@ -264,6 +264,7 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/ecma402/#sec-bestavailablelocale
+// 1.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-bestavailablelocale
 Optional<StringView> best_available_locale(StringView locale)
 {
     // 1. Let candidate be locale.
@@ -271,7 +272,7 @@ Optional<StringView> best_available_locale(StringView locale)
 
     // 2. Repeat,
     while (true) {
-        // a. If availableLocales contains an element equal to candidate, return candidate.
+        // a. If availableLocales contains candidate, return candidate.
         if (::Locale::is_locale_available(candidate))
             return candidate;
 
@@ -433,7 +434,7 @@ ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& req
         // NOTE: ECMA-402 assumes keyLocaleData is sorted by locale preference. Our list is sorted
         //       alphabetically, so we get the locale's preferred value from LibUnicode.
         Optional<String> value;
-        if (auto preference = ::Locale::get_preferred_keyword_value_for_locale(found_locale, key); preference.has_value())
+        if (auto preference = TRY_OR_THROW_OOM(vm, ::Locale::get_preferred_keyword_value_for_locale(found_locale, key)); preference.has_value())
             value = TRY_OR_THROW_OOM(vm, String::from_utf8(*preference));
 
         // g. Let supportedExtensionAddition be "".
@@ -607,8 +608,8 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
 
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
 
-// 1.2.12 GetStringOrBooleanOption ( options, property, values, trueValue, falsyValue, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getstringorbooleanoption
-ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> values, StringOrBoolean true_value, StringOrBoolean falsy_value, StringOrBoolean fallback)
+// 1.2.14 GetBooleanOrStringNumberFormatOption ( options, property, stringValues, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getbooleanorstringnumberformatoption
+ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> string_values, StringOrBoolean fallback)
 {
     // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));
@@ -617,31 +618,23 @@ ThrowCompletionOr<StringOrBoolean> get_string_or_boolean_option(VM& vm, Object c
     if (value.is_undefined())
         return fallback;
 
-    // 3. If value is true, return trueValue.
+    // 3. If value is true, return true.
     if (value.is_boolean() && value.as_bool())
-        return true_value;
+        return StringOrBoolean { true };
 
-    // 4. Let valueBoolean be ToBoolean(value).
-    auto value_boolean = value.to_boolean();
+    // 4. If ToBoolean(value) is false, return false.
+    if (!value.to_boolean())
+        return StringOrBoolean { false };
 
-    // 5. If valueBoolean is false, return falsyValue.
-    if (!value_boolean)
-        return falsy_value;
-
-    // 6. Let value be ? ToString(value).
+    // 5. Let value be ? ToString(value).
     auto value_string = TRY(value.to_string(vm));
 
-    // 7. NOTE: For historical reasons, the strings "true" and "false" are treated the same as the boolean value true.
-    // 8. If value is "true" or "false", return fallback.
-    if (value_string.is_one_of("true"sv, "false"sv))
-        return fallback;
-
-    // 9. If values does not contain an element equal to value, throw a RangeError exception.
-    auto it = find(values.begin(), values.end(), value_string.bytes_as_string_view());
-    if (it == values.end())
+    // 6. If stringValues does not contain value, throw a RangeError exception.
+    auto it = find(string_values.begin(), string_values.end(), value_string.bytes_as_string_view());
+    if (it == string_values.end())
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
 
-    // 10. Return value.
+    // 7. Return value.
     return StringOrBoolean { *it };
 }
 

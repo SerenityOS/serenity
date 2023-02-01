@@ -27,10 +27,10 @@ void FilterApplicationCommand::execute()
 static Singleton<ImageProcessor> s_image_processor;
 
 ImageProcessor::ImageProcessor()
-    : m_command_queue(MUST(Queue::try_create()))
+    : m_command_queue(MUST(Queue::create()))
     , m_processor_thread(Threading::Thread::construct([this]() {
         while (true) {
-            if (auto next_command = m_command_queue.try_dequeue(); !next_command.is_error()) {
+            if (auto next_command = m_command_queue.dequeue(); !next_command.is_error()) {
                 next_command.value()->execute();
             } else {
                 Threading::MutexLocker locker { m_wakeup_mutex };
@@ -51,7 +51,7 @@ ImageProcessor* ImageProcessor::the()
 
 ErrorOr<void> ImageProcessor::enqueue_command(NonnullRefPtr<ImageProcessingCommand> command)
 {
-    if (auto queue_status = m_command_queue.try_enqueue(move(command)); queue_status.is_error())
+    if (auto queue_status = m_command_queue.enqueue(move(command)); queue_status.is_error())
         return ENOSPC;
 
     if (!m_processor_thread->is_started()) {

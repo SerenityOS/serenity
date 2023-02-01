@@ -16,10 +16,12 @@ HTMLSourceElement::HTMLSourceElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLSourceElement::~HTMLSourceElement() = default;
 
-void HTMLSourceElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLSourceElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLSourceElementPrototype>(realm, "HTMLSourceElement"));
+
+    return {};
 }
 
 }

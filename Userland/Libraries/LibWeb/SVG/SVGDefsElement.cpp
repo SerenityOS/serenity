@@ -18,10 +18,12 @@ SVGDefsElement::~SVGDefsElement()
 {
 }
 
-void SVGDefsElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SVGDefsElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGDefsElementPrototype>(realm, "SVGDefsElement"));
+
+    return {};
 }
 
 JS::GCPtr<Layout::Node> SVGDefsElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties>)

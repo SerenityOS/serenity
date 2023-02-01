@@ -19,7 +19,6 @@
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
-#include <LibJS/Runtime/BigInt.h>
 #include <math.h>
 
 // 2 ** 53 - 1
@@ -524,12 +523,6 @@ inline Value js_infinity()
 inline Value js_negative_infinity()
 {
     return Value(-INFINITY);
-}
-
-inline void Cell::Visitor::visit(Value value)
-{
-    if (value.is_cell())
-        visit_impl(value.as_cell());
 }
 
 ThrowCompletionOr<Value> greater_than(VM&, Value lhs, Value rhs);

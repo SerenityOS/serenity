@@ -389,7 +389,7 @@ ThrowCompletionOr<Value> calendar_era(VM& vm, Object& calendar, Object& date_lik
 
     // 3. If result is not undefined, set result to ? ToString(result).
     if (!result.is_undefined())
-        result = PrimitiveString::create(vm, TRY(result.to_deprecated_string(vm)));
+        result = PrimitiveString::create(vm, TRY(result.to_string(vm)));
 
     // 4. Return result.
     return result;
@@ -609,10 +609,10 @@ ThrowCompletionOr<bool> calendar_equals(VM& vm, Object& one, Object& two)
         return true;
 
     // 2. Let calendarOne be ? ToString(one).
-    auto calendar_one = TRY(Value(&one).to_deprecated_string(vm));
+    auto calendar_one = TRY(Value(&one).to_string(vm));
 
     // 3. Let calendarTwo be ? ToString(two).
-    auto calendar_two = TRY(Value(&two).to_deprecated_string(vm));
+    auto calendar_two = TRY(Value(&two).to_string(vm));
 
     // 4. If calendarOne is calendarTwo, return true.
     if (calendar_one == calendar_two)
@@ -630,10 +630,10 @@ ThrowCompletionOr<Object*> consolidate_calendars(VM& vm, Object& one, Object& tw
         return &two;
 
     // 2. Let calendarOne be ? ToString(one).
-    auto calendar_one = TRY(Value(&one).to_deprecated_string(vm));
+    auto calendar_one = TRY(Value(&one).to_string(vm));
 
     // 3. Let calendarTwo be ? ToString(two).
-    auto calendar_two = TRY(Value(&two).to_deprecated_string(vm));
+    auto calendar_two = TRY(Value(&two).to_string(vm));
 
     // 4. If calendarOne is calendarTwo, return two.
     if (calendar_one == calendar_two)

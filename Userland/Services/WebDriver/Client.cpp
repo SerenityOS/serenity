@@ -81,20 +81,20 @@ void Client::close_session(unsigned session_id)
 static void initialize_session_from_capabilities(WebContentConnection& web_content_connection, JsonObject& capabilities)
 {
     // 1. Let strategy be the result of getting property "pageLoadStrategy" from capabilities.
-    auto const* strategy = capabilities.get_ptr("pageLoadStrategy"sv);
+    auto strategy = capabilities.get_deprecated_string("pageLoadStrategy"sv);
 
     // 2. If strategy is a string, set the current session’s page loading strategy to strategy. Otherwise, set the page loading strategy to normal and set a property of capabilities with name "pageLoadStrategy" and value "normal".
-    if (strategy && strategy->is_string())
-        web_content_connection.async_set_page_load_strategy(Web::WebDriver::page_load_strategy_from_string(strategy->as_string()));
+    if (strategy.has_value())
+        web_content_connection.async_set_page_load_strategy(Web::WebDriver::page_load_strategy_from_string(*strategy));
     else
         capabilities.set("pageLoadStrategy"sv, "normal"sv);
 
     // 3. Let strictFileInteractability be the result of getting property "strictFileInteractability" from capabilities.
-    auto const* strict_file_interactiblity = capabilities.get_ptr("strictFileInteractability"sv);
+    auto strict_file_interactiblity = capabilities.get_bool("strictFileInteractability"sv);
 
     // 4. If strictFileInteractability is a boolean, set the current session’s strict file interactability to strictFileInteractability. Otherwise set the current session’s strict file interactability to false.
-    if (strict_file_interactiblity && strict_file_interactiblity->is_bool())
-        web_content_connection.async_set_strict_file_interactability(strict_file_interactiblity->as_bool());
+    if (strict_file_interactiblity.has_value())
+        web_content_connection.async_set_strict_file_interactability(*strict_file_interactiblity);
     else
         capabilities.set("strictFileInteractability"sv, false);
 
@@ -105,7 +105,7 @@ static void initialize_session_from_capabilities(WebContentConnection& web_conte
     // FIXME:         Set a property of capabilities with name "proxy" and a value that is a new JSON Object.
 
     // 6. If capabilities has a property with the key "timeouts":
-    if (auto const* timeouts = capabilities.get_ptr("timeouts"sv); timeouts && timeouts->is_object()) {
+    if (auto timeouts = capabilities.get_object("timeouts"sv); timeouts.has_value()) {
         // a. Let timeouts be the result of trying to JSON deserialize as a timeouts configuration the value of the "timeouts" property.
         // NOTE: This happens on the remote end.
 
@@ -117,9 +117,9 @@ static void initialize_session_from_capabilities(WebContentConnection& web_conte
     }
 
     // 8. Apply changes to the user agent for any implementation-defined capabilities selected during the capabilities processing step.
-    auto const* behavior = capabilities.get_ptr("unhandledPromptBehavior"sv);
-    if (behavior && behavior->is_string())
-        web_content_connection.async_set_unhandled_prompt_behavior(Web::WebDriver::unhandled_prompt_behavior_from_string(behavior->as_string()));
+    auto behavior = capabilities.get_deprecated_string("unhandledPromptBehavior"sv);
+    if (behavior.has_value())
+        web_content_connection.async_set_unhandled_prompt_behavior(Web::WebDriver::unhandled_prompt_behavior_from_string(*behavior));
     else
         capabilities.set("unhandledPromptBehavior"sv, "dismiss and notify"sv);
 }
@@ -544,11 +544,11 @@ Web::WebDriver::Response Client::get_computed_role(Web::WebDriver::Parameters pa
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
 // POST /session/{session id}/element/{element id}/click
-Web::WebDriver::Response Client::click(Web::WebDriver::Parameters parameters, JsonValue)
+Web::WebDriver::Response Client::element_click(Web::WebDriver::Parameters parameters, JsonValue)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/click");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().click(parameters[1]);
+    return session->web_content_connection().element_click(parameters[1]);
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source

@@ -6,14 +6,14 @@
  */
 
 #include <Kernel/API/VirtualMemoryAnnotations.h>
+#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/Arch/x86_64/MSR.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -21,6 +21,10 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <LibELF/Validation.h>
+
+#if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/MSR.h>
+#endif
 
 namespace Kernel {
 
@@ -562,8 +566,10 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
 
         TRY(main_thread->make_thread_specific_region({}));
 
+#if ARCH(X86_64)
         MSR fs_base_msr(MSR_FS_BASE);
         fs_base_msr.set(main_thread->thread_specific_data().get());
+#endif
 
         return m_master_tls_region.unsafe_ptr()->vaddr().get();
     });

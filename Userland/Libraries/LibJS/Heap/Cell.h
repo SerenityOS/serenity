@@ -13,6 +13,8 @@
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
@@ -30,7 +32,7 @@ class Cell {
     AK_MAKE_NONMOVABLE(Cell);
 
 public:
-    virtual void initialize(Realm&) { }
+    virtual ThrowCompletionOr<void> initialize(Realm&) { return {}; }
     virtual ~Cell() = default;
 
     bool is_marked() const { return m_mark; }
@@ -53,22 +55,30 @@ public:
             if (cell)
                 visit_impl(*cell);
         }
+
         void visit(Cell& cell)
         {
             visit_impl(cell);
         }
+
         template<typename T>
         void visit(GCPtr<T> cell)
         {
             if (cell)
                 visit_impl(*cell.ptr());
         }
+
         template<typename T>
         void visit(NonnullGCPtr<T> cell)
         {
             visit_impl(*cell.ptr());
         }
-        void visit(Value);
+
+        void visit(Value value)
+        {
+            if (value.is_cell())
+                visit_impl(value.as_cell());
+        }
 
     protected:
         virtual void visit_impl(Cell&) = 0;

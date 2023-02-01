@@ -15,7 +15,7 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
 {
-    return root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter));
+    return root.heap().allocate<HTMLOptionsCollection>(root.realm(), root, move(filter)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<bool(DOM::Element const&)> filter)
@@ -25,10 +25,12 @@ HTMLOptionsCollection::HTMLOptionsCollection(DOM::ParentNode& root, Function<boo
 
 HTMLOptionsCollection::~HTMLOptionsCollection() = default;
 
-void HTMLOptionsCollection::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLOptionsCollection::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionsCollectionPrototype>(realm, "HTMLOptionsCollection"));
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#dom-htmloptionscollection-add

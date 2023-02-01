@@ -13,7 +13,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<MutationObserver> MutationObserver::construct_impl(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackType> callback)
 {
-    return realm.heap().allocate<MutationObserver>(realm, realm, callback);
+    return realm.heap().allocate<MutationObserver>(realm, realm, callback).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#dom-mutationobserver-mutationobserver
@@ -31,10 +31,12 @@ MutationObserver::MutationObserver(JS::Realm& realm, JS::GCPtr<WebIDL::CallbackT
 
 MutationObserver::~MutationObserver() = default;
 
-void MutationObserver::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> MutationObserver::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationObserverPrototype>(realm, "MutationObserver"));
+
+    return {};
 }
 
 void MutationObserver::visit_edges(Cell::Visitor& visitor)

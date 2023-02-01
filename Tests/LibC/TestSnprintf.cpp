@@ -43,7 +43,7 @@ static DeprecatedString show(ByteBuffer const& buf)
             builder.append('_');
     }
     builder.append(')');
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 template<typename TArg>

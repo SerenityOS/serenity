@@ -21,10 +21,12 @@ HTMLTableSectionElement::HTMLTableSectionElement(DOM::Document& document, DOM::Q
 
 HTMLTableSectionElement::~HTMLTableSectionElement() = default;
 
-void HTMLTableSectionElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLTableSectionElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableSectionElementPrototype>(realm, "HTMLTableSectionElement"));
+
+    return {};
 }
 
 void HTMLTableSectionElement::visit_edges(Cell::Visitor& visitor)

@@ -17,10 +17,12 @@ SVGTextContentElement::SVGTextContentElement(DOM::Document& document, DOM::Quali
 {
 }
 
-void SVGTextContentElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SVGTextContentElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGTextContentElementPrototype>(realm, "SVGTextContentElement"));
+
+    return {};
 }
 
 // https://svgwg.org/svg2-draft/text.html#__svg__SVGTextContentElement__getNumberOfChars

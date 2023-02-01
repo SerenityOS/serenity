@@ -9,7 +9,6 @@
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
-#include <AK/Stream.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringImpl.h>
 #include <AK/StringUtils.h>
@@ -95,6 +94,8 @@ public:
 
     DeprecatedString(DeprecatedFlyString const&);
 
+    static ErrorOr<DeprecatedString> from_utf8(ReadonlyBytes);
+
     [[nodiscard]] static DeprecatedString repeated(char, size_t count);
     [[nodiscard]] static DeprecatedString repeated(StringView, size_t count);
 
@@ -106,7 +107,7 @@ public:
     {
         StringBuilder builder;
         builder.join(separator, collection, fmtstr);
-        return builder.build();
+        return builder.to_deprecated_string();
     }
 
     [[nodiscard]] bool matches(StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
@@ -128,6 +129,8 @@ public:
     [[nodiscard]] DeprecatedString invert_case() const;
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
+
+    [[nodiscard]] DeprecatedStringCodePointIterator code_points() const;
 
     [[nodiscard]] DeprecatedString trim(StringView characters, TrimMode mode = TrimMode::Both) const
     {
@@ -215,12 +218,10 @@ public:
     bool operator==(DeprecatedFlyString const&) const;
 
     bool operator<(DeprecatedString const&) const;
-    bool operator<(char const*) const;
     bool operator>=(DeprecatedString const& other) const { return !(*this < other); }
     bool operator>=(char const* other) const { return !(*this < other); }
 
     bool operator>(DeprecatedString const&) const;
-    bool operator>(char const*) const;
     bool operator<=(DeprecatedString const& other) const { return !(*this > other); }
     bool operator<=(char const* other) const { return !(*this > other); }
 
@@ -337,7 +338,7 @@ struct CaseInsensitiveStringTraits : public Traits<DeprecatedString> {
 
 DeprecatedString escape_html_entities(StringView html);
 
-InputStream& operator>>(InputStream& stream, DeprecatedString& string);
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, DeprecatedString& string);
 
 }
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/Window.h>
 
@@ -20,10 +20,12 @@ HTMLAnchorElement::HTMLAnchorElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLAnchorElement::~HTMLAnchorElement() = default;
 
-void HTMLAnchorElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLAnchorElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLAnchorElementPrototype>(realm, "HTMLAnchorElement"));
+
+    return {};
 }
 
 void HTMLAnchorElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
@@ -89,13 +91,13 @@ i32 HTMLAnchorElement::default_tab_index_value() const
     return 0;
 }
 
-DeprecatedFlyString HTMLAnchorElement::default_role() const
+Optional<ARIA::Role> HTMLAnchorElement::default_role() const
 {
     // https://www.w3.org/TR/html-aria/#el-a-no-href
     if (!href().is_null())
-        return DOM::ARIARoleNames::link;
+        return ARIA::Role::link;
     // https://www.w3.org/TR/html-aria/#el-a
-    return DOM::ARIARoleNames::generic;
+    return ARIA::Role::generic;
 }
 
 }

@@ -18,10 +18,12 @@ File::File(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString file_name,
 {
 }
 
-void File::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> File::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::FilePrototype>(realm, "File"));
+
+    return {};
 }
 
 File::~File() = default;
@@ -64,7 +66,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
     //    4. F.name is set to n.
     //    5. F.type is set to t.
     //    6. F.lastModified is set to d.
-    return realm.heap().allocate<File>(realm, realm, move(bytes), move(name), move(type), last_modified);
+    return MUST_OR_THROW_OOM(realm.heap().allocate<File>(realm, realm, move(bytes), move(name), move(type), last_modified));
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)

@@ -67,7 +67,6 @@ private:
 
     u8 read_redirection_entry_vector(u8 index) const;
     Optional<int> find_redirection_entry_by_vector(u8 vector) const;
-    void configure_redirections() const;
 
     void write_register(u32 index, u32 value) const;
     u32 read_register(u32 index) const;

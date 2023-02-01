@@ -19,9 +19,9 @@ NumberFormatPrototype::NumberFormatPrototype(Realm& realm)
 {
 }
 
-void NumberFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> NumberFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -35,6 +35,8 @@ void NumberFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.formatRange, format_range, 2, attr);
     define_native_function(realm, vm.names.formatRangeToParts, format_range_to_parts, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 15.3.3 get Intl.NumberFormat.prototype.format, https://tc39.es/ecma402/#sec-intl.numberformat.prototype.format

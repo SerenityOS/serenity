@@ -15,12 +15,12 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<Attr> Attr::create(Document& document, DeprecatedFlyString local_name, DeprecatedString value, Element const* owner_element)
 {
-    return document.heap().allocate<Attr>(document.realm(), document, QualifiedName(move(local_name), {}, {}), move(value), owner_element);
+    return document.heap().allocate<Attr>(document.realm(), document, QualifiedName(move(local_name), {}, {}), move(value), owner_element).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Attr> Attr::clone(Document& document)
 {
-    return *heap().allocate<Attr>(realm(), document, m_qualified_name, m_value, nullptr);
+    return *heap().allocate<Attr>(realm(), document, m_qualified_name, m_value, nullptr).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Attr::Attr(Document& document, QualifiedName qualified_name, DeprecatedString value, Element const* owner_element)
@@ -31,10 +31,12 @@ Attr::Attr(Document& document, QualifiedName qualified_name, DeprecatedString va
 {
 }
 
-void Attr::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Attr::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AttrPrototype>(realm, "Attr"));
+
+    return {};
 }
 
 void Attr::visit_edges(Cell::Visitor& visitor)

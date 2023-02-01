@@ -1377,8 +1377,6 @@ public:
 
     virtual ~ConicGradientStyleValue() override = default;
 
-    CSSPixelPoint resolve_position(Layout::Node const&, CSSPixelRect const&) const;
-
     bool is_repeating() const { return m_repeating == GradientRepeating::Yes; }
 
 private:

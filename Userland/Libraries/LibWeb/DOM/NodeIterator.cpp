@@ -21,10 +21,12 @@ NodeIterator::NodeIterator(Node& root)
 
 NodeIterator::~NodeIterator() = default;
 
-void NodeIterator::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> NodeIterator::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::NodeIteratorPrototype>(realm, "NodeIterator"));
+
+    return {};
 }
 
 void NodeIterator::finalize()
@@ -51,7 +53,7 @@ JS::NonnullGCPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to
     // 2. Set iterator’s root and iterator’s reference to root.
     // 3. Set iterator’s pointer before reference to true.
     auto& realm = root.realm();
-    auto iterator = realm.heap().allocate<NodeIterator>(realm, root);
+    auto iterator = realm.heap().allocate<NodeIterator>(realm, root).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 4. Set iterator’s whatToShow to whatToShow.
     iterator->m_what_to_show = what_to_show;
@@ -122,7 +124,7 @@ JS::ThrowCompletionOr<JS::GCPtr<Node>> NodeIterator::traverse(Direction directio
         auto result = TRY(filter(*m_traversal_pointer->node));
 
         // 3. If result is FILTER_ACCEPT, then break.
-        if (result == NodeFilter::FILTER_ACCEPT)
+        if (result == NodeFilter::Result::FILTER_ACCEPT)
             break;
     }
 
@@ -146,11 +148,11 @@ JS::ThrowCompletionOr<NodeFilter::Result> NodeIterator::filter(Node& node)
 
     // 3. If the nth bit (where 0 is the least significant bit) of traverser’s whatToShow is not set, then return FILTER_SKIP.
     if (!(m_what_to_show & (1u << n)))
-        return NodeFilter::FILTER_SKIP;
+        return NodeFilter::Result::FILTER_SKIP;
 
     // 4. If traverser’s filter is null, then return FILTER_ACCEPT.
     if (!m_filter)
-        return NodeFilter::FILTER_ACCEPT;
+        return NodeFilter::Result::FILTER_ACCEPT;
 
     // 5. Set traverser’s active flag.
     m_active = true;

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/DOM/ARIARoleNames.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 
@@ -24,12 +24,12 @@ public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
     // https://www.w3.org/TR/html-aria/#el-body
-    virtual DeprecatedFlyString default_role() const override { return DOM::ARIARoleNames::generic; };
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::generic; };
 
 private:
     HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const& event_name) override;

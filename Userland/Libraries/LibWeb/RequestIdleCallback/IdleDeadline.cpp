@@ -14,7 +14,7 @@ namespace Web::RequestIdleCallback {
 
 JS::NonnullGCPtr<IdleDeadline> IdleDeadline::create(JS::Realm& realm, bool did_timeout)
 {
-    return realm.heap().allocate<IdleDeadline>(realm, realm, did_timeout);
+    return realm.heap().allocate<IdleDeadline>(realm, realm, did_timeout).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 IdleDeadline::IdleDeadline(JS::Realm& realm, bool did_timeout)
@@ -23,10 +23,12 @@ IdleDeadline::IdleDeadline(JS::Realm& realm, bool did_timeout)
 {
 }
 
-void IdleDeadline::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> IdleDeadline::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::IdleDeadlinePrototype>(realm, "IdleDeadline"));
+
+    return {};
 }
 
 IdleDeadline::~IdleDeadline() = default;

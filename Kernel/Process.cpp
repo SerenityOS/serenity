@@ -19,6 +19,7 @@
 #endif
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/sys/limits.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -26,7 +27,6 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
@@ -246,8 +246,8 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create_user_process(LockRefPtr<
     }));
 
     Thread* new_main_thread = nullptr;
-    u32 prev_flags = 0;
-    if (auto result = process->exec(move(path_string), move(arguments), move(environment), new_main_thread, prev_flags); result.is_error()) {
+    InterruptsState previous_interrupts_state = InterruptsState::Enabled;
+    if (auto result = process->exec(move(path_string), move(arguments), move(environment), new_main_thread, previous_interrupts_state); result.is_error()) {
         dbgln("Failed to exec {}: {}", path, result.error());
         first_thread = nullptr;
         return result.release_error();

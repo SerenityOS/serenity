@@ -14,7 +14,7 @@ namespace Web::CSS {
 
 CSSMediaRule* CSSMediaRule::create(JS::Realm& realm, MediaList& media_queries, CSSRuleList& rules)
 {
-    return realm.heap().allocate<CSSMediaRule>(realm, realm, media_queries, rules);
+    return realm.heap().allocate<CSSMediaRule>(realm, realm, media_queries, rules).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSMediaRule::CSSMediaRule(JS::Realm& realm, MediaList& media, CSSRuleList& rules)
@@ -23,10 +23,12 @@ CSSMediaRule::CSSMediaRule(JS::Realm& realm, MediaList& media, CSSRuleList& rule
 {
 }
 
-void CSSMediaRule::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CSSMediaRule::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSMediaRulePrototype>(realm, "CSSMediaRule"));
+
+    return {};
 }
 
 void CSSMediaRule::visit_edges(Cell::Visitor& visitor)

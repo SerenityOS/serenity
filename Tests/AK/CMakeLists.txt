@@ -10,6 +10,7 @@ set(AK_TEST_SOURCES
     TestBinarySearch.cpp
     TestBitCast.cpp
     TestBitmap.cpp
+    TestBitStream.cpp
     TestBuiltinWrappers.cpp
     TestByteBuffer.cpp
     TestCharacterTypes.cpp
@@ -18,6 +19,7 @@ set(AK_TEST_SOURCES
     TestCircularDeque.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
+    TestDeprecatedMemoryStream.cpp
     TestDeprecatedString.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp

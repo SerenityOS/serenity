@@ -15,7 +15,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<HTMLCollection> HTMLCollection::create(ParentNode& root, Function<bool(Element const&)> filter)
 {
-    return root.heap().allocate<HTMLCollection>(root.realm(), root, move(filter));
+    return root.heap().allocate<HTMLCollection>(root.realm(), root, move(filter)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> filter)
@@ -27,10 +27,12 @@ HTMLCollection::HTMLCollection(ParentNode& root, Function<bool(Element const&)> 
 
 HTMLCollection::~HTMLCollection() = default;
 
-void HTMLCollection::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLCollection::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLCollectionPrototype>(realm, "HTMLCollection"));
+
+    return {};
 }
 
 void HTMLCollection::visit_edges(Cell::Visitor& visitor)

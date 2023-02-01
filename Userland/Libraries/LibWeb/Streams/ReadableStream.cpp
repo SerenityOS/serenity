@@ -14,7 +14,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#rs-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<ReadableStream>(realm, realm);
+    return realm.heap().allocate<ReadableStream>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ReadableStream::ReadableStream(JS::Realm& realm)
@@ -24,10 +24,12 @@ ReadableStream::ReadableStream(JS::Realm& realm)
 
 ReadableStream::~ReadableStream() = default;
 
-void ReadableStream::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ReadableStream::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ReadableStreamPrototype>(realm, "ReadableStream"));
+
+    return {};
 }
 
 void ReadableStream::visit_edges(Cell::Visitor& visitor)

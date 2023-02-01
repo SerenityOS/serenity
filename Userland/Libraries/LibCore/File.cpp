@@ -394,7 +394,7 @@ static DeprecatedString get_duplicate_name(DeprecatedString const& path, int dup
     if (!lexical_path.extension().is_empty()) {
         duplicated_name.appendff(".{}", lexical_path.extension());
     }
-    return duplicated_name.build();
+    return duplicated_name.to_deprecated_string();
 }
 
 ErrorOr<void, File::CopyError> File::copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)

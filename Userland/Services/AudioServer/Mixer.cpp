@@ -7,8 +7,8 @@
 
 #include "Mixer.h"
 #include <AK/Array.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/Format.h>
-#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ConnectionFromClient.h>
 #include <AudioServer/Mixer.h>
@@ -99,7 +99,7 @@ void Mixer::mix()
         if (m_muted || m_main_volume < 0.01) {
             m_device->write(m_zero_filled_buffer.data(), static_cast<int>(m_zero_filled_buffer.size()));
         } else {
-            OutputMemoryStream stream { m_stream_buffer };
+            DeprecatedOutputMemoryStream stream { m_stream_buffer };
 
             for (auto& mixed_sample : mixed_buffer) {
                 mixed_sample.log_multiply(static_cast<float>(m_main_volume));

@@ -7,13 +7,13 @@
 #include "AST.h"
 #include "Shell.h"
 #include <AK/DeprecatedString.h>
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibCore/MemoryStream.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -198,7 +198,7 @@ static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& i
         for (auto& index : indices)
             builder.append(input_value[index]);
 
-        input_value = builder.build();
+        input_value = builder.to_deprecated_string();
     }
 
     return move(input_value);
@@ -1641,7 +1641,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
         Core::EventLoop loop;
 
         auto notifier = Core::Notifier::construct(pipefd[0], Core::Notifier::Read);
-        Core::Stream::AllocatingMemoryStream stream;
+        AllocatingMemoryStream stream;
 
         enum {
             Continue,

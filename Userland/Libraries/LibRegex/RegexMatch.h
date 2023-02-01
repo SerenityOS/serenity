@@ -273,7 +273,7 @@ public:
                 StringBuilder builder;
                 for (auto ch : data)
                     builder.append(ch); // Note: The type conversion is intentional.
-                optional_string_storage = builder.build();
+                optional_string_storage = builder.to_deprecated_string();
                 return RegexStringView { T { *optional_string_storage } };
             },
             [&](Utf32View) {

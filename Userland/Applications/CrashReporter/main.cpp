@@ -100,7 +100,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
 
     return {
         DeprecatedString::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
-        builder.build()
+        builder.to_deprecated_string()
     };
 }
 
@@ -125,7 +125,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 
     return {
         DeprecatedString::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
-        builder.build()
+        builder.to_deprecated_string()
     };
 }
 

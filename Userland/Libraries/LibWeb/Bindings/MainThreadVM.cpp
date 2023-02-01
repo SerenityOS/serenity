@@ -375,7 +375,7 @@ JS::VM& main_thread_vm()
         custom_data.root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(*vm, nullptr, nullptr));
 
         auto* root_realm = custom_data.root_execution_context->realm;
-        auto intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm);
+        auto intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm).release_allocated_value_but_fixme_should_propagate_errors();
         auto host_defined = make<HostDefined>(nullptr, intrinsics);
         root_realm->set_host_defined(move(host_defined));
         custom_data.internal_realm = root_realm;

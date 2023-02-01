@@ -8,6 +8,8 @@
 
 #include <LibC/sys/arch/aarch64/regs.h>
 
+#include <Kernel/ExecutionMode.h>
+
 #include <AK/Platform.h>
 VALIDATE_IS_AARCH64()
 
@@ -33,12 +35,34 @@ struct RegisterState {
         TODO_AARCH64();
     }
     FlatPtr bp() const { TODO_AARCH64(); }
+
+    ExecutionMode previous_mode() const
+    {
+        return ((spsr_el1 & 0b1111) == 0) ? ExecutionMode::User : ExecutionMode::Kernel;
+    }
+
+    void set_return_reg(FlatPtr value) { x[0] = value; }
+    void capture_syscall_params(FlatPtr& function, FlatPtr& arg1, FlatPtr& arg2, FlatPtr& arg3, FlatPtr& arg4) const
+    {
+        function = x[8];
+        arg1 = x[1];
+        arg2 = x[2];
+        arg3 = x[3];
+        arg4 = x[4];
+    }
 };
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)
 {
     (void)ptrace_regs;
     (void)kernel_regs;
+    TODO_AARCH64();
+}
+
+inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, PtraceRegisters const& ptrace_regs)
+{
+    (void)kernel_regs;
+    (void)ptrace_regs;
     TODO_AARCH64();
 }
 

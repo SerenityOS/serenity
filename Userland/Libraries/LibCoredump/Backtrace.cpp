@@ -131,7 +131,7 @@ DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
     builder.appendff("{:p}: ", eip);
     if (object_name.is_empty()) {
         builder.append("???"sv);
-        return builder.build();
+        return builder.to_deprecated_string();
     }
     builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
     builder.append(" ("sv);
@@ -158,7 +158,7 @@ DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
 
     builder.append(')');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

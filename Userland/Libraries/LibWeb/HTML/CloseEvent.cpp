@@ -11,7 +11,7 @@ namespace Web::HTML {
 
 CloseEvent* CloseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, CloseEventInit const& event_init)
 {
-    return realm.heap().allocate<CloseEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<CloseEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CloseEvent* CloseEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, CloseEventInit const& event_init)
@@ -29,10 +29,12 @@ CloseEvent::CloseEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, 
 
 CloseEvent::~CloseEvent() = default;
 
-void CloseEvent::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> CloseEvent::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CloseEventPrototype>(realm, "CloseEvent"));
+
+    return {};
 }
 
 }

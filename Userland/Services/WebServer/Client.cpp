@@ -17,7 +17,6 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
@@ -176,7 +175,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     return true;
 }
 
-ErrorOr<void> Client::send_response(Core::Stream::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
+ErrorOr<void> Client::send_response(AK::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);
@@ -337,7 +336,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     builder.append("</html>\n"sv);
 
     auto response = builder.to_deprecated_string();
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(response.bytes()));
+    auto stream = TRY(FixedMemoryStream::construct(response.bytes()));
     return send_response(*stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
 }
 

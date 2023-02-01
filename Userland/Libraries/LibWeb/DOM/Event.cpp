@@ -16,7 +16,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
 {
-    return realm.heap().allocate<Event>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<Event>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
@@ -41,10 +41,12 @@ Event::Event(JS::Realm& realm, DeprecatedFlyString const& type, EventInit const&
 {
 }
 
-void Event::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Event::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::EventPrototype>(realm, "Event"));
+
+    return {};
 }
 
 void Event::visit_edges(Visitor& visitor)

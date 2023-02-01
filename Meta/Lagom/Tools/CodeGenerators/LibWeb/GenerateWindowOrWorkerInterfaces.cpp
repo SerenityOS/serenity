@@ -174,10 +174,10 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 {
     auto& vm = realm.vm();
 
-    auto prototype = heap().allocate<@prototype_class@>(realm, realm);
+    auto prototype = heap().allocate<@prototype_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_prototypes.set("@interface_name@"sv, prototype);
 
-    auto constructor = heap().allocate<@constructor_class@>(realm, realm);
+    auto constructor = heap().allocate<@constructor_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_constructors.set("@interface_name@"sv, constructor);
 
     prototype->define_direct_property(vm.names.constructor, constructor.ptr(), JS::Attribute::Writable | JS::Attribute::Configurable);
@@ -188,7 +188,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
             gen.set("legacy_interface_name", legacy_constructor->name);
             gen.set("legacy_constructor_class", legacy_constructor->constructor_class);
             gen.append(R"~~~(
-    auto legacy_constructor = heap().allocate<@legacy_constructor_class@>(realm, realm);
+    auto legacy_constructor = heap().allocate<@legacy_constructor_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_constructors.set("@legacy_interface_name@"sv, legacy_constructor);
 
     legacy_constructor->define_direct_property(vm.names.name, JS::PrimitiveString::create(vm, "@legacy_interface_name@"sv), JS::Attribute::Configurable);)~~~");

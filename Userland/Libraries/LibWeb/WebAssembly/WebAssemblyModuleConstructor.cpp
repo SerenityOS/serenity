@@ -33,16 +33,18 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyModuleConstructor
     auto* buffer_object = TRY(vm.argument(0).to_object(vm));
     auto result = TRY(parse_module(vm, buffer_object));
 
-    return heap().allocate<WebAssemblyModuleObject>(realm, realm, result);
+    return MUST_OR_THROW_OOM(heap().allocate<WebAssemblyModuleObject>(realm, realm, result));
 }
 
-void WebAssemblyModuleConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyModuleConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
     define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyModulePrototype>(realm, "WebAssembly.Module"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+
+    return {};
 }
 
 }

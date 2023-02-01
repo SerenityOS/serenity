@@ -23,7 +23,7 @@ public:
 private:
     HTMLAreaElement(DOM::Document&, DOM::QualifiedName);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     // ^DOM::Element
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
@@ -42,7 +42,7 @@ private:
         queue_an_element_task(source, move(steps));
     }
 
-    virtual DeprecatedFlyString default_role() const override;
+    virtual Optional<ARIA::Role> default_role() const override;
 };
 
 }

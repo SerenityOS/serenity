@@ -320,8 +320,11 @@ TEST_CASE(find_byte_offset)
 {
     {
         String string {};
-        auto index = string.find_byte_offset(0);
-        EXPECT(!index.has_value());
+        auto index1 = string.find_byte_offset(0);
+        EXPECT(!index1.has_value());
+
+        auto index2 = string.find_byte_offset(""sv);
+        EXPECT(!index2.has_value());
     }
     {
         auto string = MUST(String::from_utf8("foo"sv));
@@ -336,6 +339,21 @@ TEST_CASE(find_byte_offset)
         EXPECT_EQ(index3, 2u);
 
         auto index4 = string.find_byte_offset('b');
+        EXPECT(!index4.has_value());
+    }
+    {
+        auto string = MUST(String::from_utf8("foo"sv));
+
+        auto index1 = string.find_byte_offset("fo"sv);
+        EXPECT_EQ(index1, 0u);
+
+        auto index2 = string.find_byte_offset("oo"sv);
+        EXPECT_EQ(index2, 1u);
+
+        auto index3 = string.find_byte_offset("o"sv, *index2 + 1);
+        EXPECT_EQ(index3, 2u);
+
+        auto index4 = string.find_byte_offset("fooo"sv);
         EXPECT(!index4.has_value());
     }
     {
@@ -354,6 +372,24 @@ TEST_CASE(find_byte_offset)
         EXPECT_EQ(index4, 6u);
 
         auto index5 = string.find_byte_offset(0x03C9U, 6);
+        EXPECT_EQ(index5, 8u);
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto index1 = string.find_byte_offset("ω"sv);
+        EXPECT_EQ(index1, 0u);
+
+        auto index2 = string.find_byte_offset("Σ"sv);
+        EXPECT_EQ(index2, 2u);
+
+        auto index3 = string.find_byte_offset("ω"sv, 2);
+        EXPECT_EQ(index3, 4u);
+
+        auto index4 = string.find_byte_offset("Σ"sv, 4);
+        EXPECT_EQ(index4, 6u);
+
+        auto index5 = string.find_byte_offset("ω"sv, 6);
         EXPECT_EQ(index5, 8u);
     }
 }
@@ -434,4 +470,140 @@ TEST_CASE(repeated)
         (void)String::repeated(0xffffffff, 1);
         return Test::Crash::Failure::DidNotCrash;
     });
+}
+
+TEST_CASE(join)
+{
+    auto string1 = MUST(String::join(',', Vector<i32> {}));
+    EXPECT(string1.is_empty());
+
+    auto string2 = MUST(String::join(',', Array { 1 }));
+    EXPECT_EQ(string2, "1"sv);
+
+    auto string3 = MUST(String::join(':', Array { 1 }, "[{}]"sv));
+    EXPECT_EQ(string3, "[1]"sv);
+
+    auto string4 = MUST(String::join(',', Array { 1, 2, 3 }));
+    EXPECT_EQ(string4, "1,2,3"sv);
+
+    auto string5 = MUST(String::join(',', Array { 1, 2, 3 }, "[{}]"sv));
+    EXPECT_EQ(string5, "[1],[2],[3]"sv);
+
+    auto string6 = MUST(String::join(String::from_utf8_short_string("!!!"sv), Array { "foo"sv, "bar"sv, "baz"sv }));
+    EXPECT_EQ(string6, "foo!!!bar!!!baz"sv);
+
+    auto string7 = MUST(String::join(" - "sv, Array { 1, 16, 256, 4096 }, "[{:#04x}]"sv));
+    EXPECT_EQ(string7, "[0x0001] - [0x0010] - [0x0100] - [0x1000]"sv);
+}
+
+TEST_CASE(trim)
+{
+    {
+        String string {};
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT(result.is_empty());
+    }
+    {
+        auto string = MUST(String::from_utf8("word"sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("    word"sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "    word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("word    "sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word    "sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("    word    "sv));
+
+        auto result = MUST(string.trim(" "sv, TrimMode::Both));
+        EXPECT_EQ(result, "word"sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Left));
+        EXPECT_EQ(result, "word    "sv);
+
+        result = MUST(string.trim(" "sv, TrimMode::Right));
+        EXPECT_EQ(result, "    word"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("    word    "sv));
+
+        auto result = MUST(string.trim("\t"sv, TrimMode::Both));
+        EXPECT_EQ(result, "    word    "sv);
+
+        result = MUST(string.trim("\t"sv, TrimMode::Left));
+        EXPECT_EQ(result, "    word    "sv);
+
+        result = MUST(string.trim("\t"sv, TrimMode::Right));
+        EXPECT_EQ(result, "    word    "sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto result = MUST(string.trim("ω"sv, TrimMode::Both));
+        EXPECT_EQ(result, "ΣωΣ"sv);
+
+        result = MUST(string.trim("ω"sv, TrimMode::Left));
+        EXPECT_EQ(result, "ΣωΣω"sv);
+
+        result = MUST(string.trim("ω"sv, TrimMode::Right));
+        EXPECT_EQ(result, "ωΣωΣ"sv);
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto result = MUST(string.trim("ωΣ"sv, TrimMode::Both));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("ωΣ"sv, TrimMode::Left));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("ωΣ"sv, TrimMode::Right));
+        EXPECT(result.is_empty());
+    }
+    {
+        auto string = MUST(String::from_utf8("ωΣωΣω"sv));
+
+        auto result = MUST(string.trim("Σω"sv, TrimMode::Both));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("Σω"sv, TrimMode::Left));
+        EXPECT(result.is_empty());
+
+        result = MUST(string.trim("Σω"sv, TrimMode::Right));
+        EXPECT(result.is_empty());
+    }
 }

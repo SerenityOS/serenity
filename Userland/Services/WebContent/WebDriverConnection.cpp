@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
@@ -20,16 +20,24 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/NodeFilter.h>
+#include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
+#include <LibWeb/HTML/HTMLDataListElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
+#include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWeb/WebDriver/Screenshot.h>
 #include <WebContent/WebDriverConnection.h>
@@ -222,9 +230,9 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
     if (!payload.is_object())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
 
-    auto const* property = payload.as_object().get_ptr(key);
+    auto property = payload.as_object().get(key);
 
-    if (!property)
+    if (!property.has_value())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("No property called '{}' present", key));
 
     if constexpr (IsSame<PropertyType, DeprecatedString>) {
@@ -251,6 +259,63 @@ static ErrorOr<PropertyType, Web::WebDriver::Error> get_property(JsonValue const
         static_assert(DependentFalse<PropertyType>, "get_property invoked with unknown property type");
         VERIFY_NOT_REACHED();
     }
+}
+
+// https://w3c.github.io/webdriver/#dfn-container
+static Optional<Web::DOM::Element&> container_for_element(Web::DOM::Element& element)
+{
+    auto first_element_reached_by_traversing_the_tree_in_reverse_order = [](Web::DOM::Element& element, auto filter) -> Optional<Web::DOM::Element&> {
+        auto node_iterator = element.document().create_node_iterator(element, to_underlying(Web::DOM::NodeFilter::WhatToShow::SHOW_ALL), nullptr);
+
+        auto current_node = node_iterator->previous_node();
+        while (current_node.has_value() && current_node.value() != nullptr && current_node.value()->is_element()) {
+            if (filter(current_node.value()))
+                return static_cast<Web::DOM::Element&>(*current_node.release_value());
+        }
+
+        return {};
+    };
+
+    // An element’s container is:
+    // -> option element in a valid element context
+    // -> optgroup element in a valid element context
+    // FIXME: Determine if the element is in a valid element context. (https://html.spec.whatwg.org/#concept-element-contexts)
+    if (is<Web::HTML::HTMLOptionElement>(element) || is<Web::HTML::HTMLOptGroupElement>(element)) {
+        // The element’s element context, which is determined by:
+        // 1. Let datalist parent be the first datalist element reached by traversing the tree in reverse order from element, or undefined if the root of the tree is reached.
+        auto datalist_parent = first_element_reached_by_traversing_the_tree_in_reverse_order(element, [](auto& node) { return is<Web::HTML::HTMLDataListElement>(*node); });
+
+        // 2. Let select parent be the first select element reached by traversing the tree in reverse order from element, or undefined if the root of the tree is reached.
+        auto select_parent = first_element_reached_by_traversing_the_tree_in_reverse_order(element, [](auto& node) { return is<Web::HTML::HTMLSelectElement>(*node); });
+
+        // 3. If datalist parent is undefined, the element context is select parent. Otherwise, the element context is datalist parent.
+        if (!datalist_parent.has_value())
+            return select_parent;
+        return datalist_parent;
+    }
+    // -> option element in an invalid element context
+    else if (is<Web::HTML::HTMLOptionElement>(element)) {
+        // The element does not have a container.
+        return {};
+    }
+    // -> Otherwise
+    else {
+        // The container is the element itself.
+        return element;
+    }
+}
+
+template<typename T>
+static bool fire_an_event(DeprecatedString name, Optional<Web::DOM::Element&> target)
+{
+    // FIXME: This is supposed to call the https://dom.spec.whatwg.org/#concept-event-fire DOM algorithm,
+    //        but that doesn't seem to be implemented elsewhere. So, we'll ad-hack it for now. :^)
+
+    if (!target.has_value())
+        return false;
+
+    auto event = T::create(target->realm(), name);
+    return target->dispatch_event(*event);
 }
 
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
@@ -335,7 +400,7 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // 2. Let url be the result of getting the property url from the parameters argument.
     if (!payload.is_object() || !payload.as_object().has_string("url"sv))
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload doesn't have a string `url`"sv);
-    URL url(payload.as_object().get_ptr("url"sv)->as_string());
+    URL url(payload.as_object().get_deprecated_string("url"sv).value());
 
     // FIXME: 3. If url is not an absolute URL or is not an absolute URL with fragment or not a local scheme, return error with error code invalid argument.
 
@@ -548,13 +613,13 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
 
     auto const& properties = payload.as_object();
 
-    auto resolve_property = [](auto name, auto const* property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
-        if (!property)
+    auto resolve_property = [](auto name, auto const& property, auto min, auto max) -> ErrorOr<Optional<i32>, Web::WebDriver::Error> {
+        if (property.is_null())
             return Optional<i32> {};
-        if (!property->is_number())
+        if (!property.is_number())
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' is not a Number", name));
 
-        auto number = property->template to_number<i64>();
+        auto number = property.template to_number<i64>();
 
         if (number < min)
             return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, DeprecatedString::formatted("Property '{}' value {} exceeds the minimum allowed value {}", name, number, min));
@@ -565,16 +630,16 @@ Messages::WebDriverClient::SetWindowRectResponse WebDriverConnection::set_window
     };
 
     // 1. Let width be the result of getting a property named width from the parameters argument, else let it be null.
-    auto const* width_property = properties.get_ptr("width"sv);
+    auto width_property = properties.get("width"sv).value_or(JsonValue());
 
     // 2. Let height be the result of getting a property named height from the parameters argument, else let it be null.
-    auto const* height_property = properties.get_ptr("height"sv);
+    auto height_property = properties.get("height"sv).value_or(JsonValue());
 
     // 3. Let x be the result of getting a property named x from the parameters argument, else let it be null.
-    auto const* x_property = properties.get_ptr("x"sv);
+    auto x_property = properties.get("x"sv).value_or(JsonValue());
 
     // 4. Let y be the result of getting a property named y from the parameters argument, else let it be null.
-    auto const* y_property = properties.get_ptr("y"sv);
+    auto y_property = properties.get("y"sv).value_or(JsonValue());
 
     // 5. If width or height is neither null nor a Number from 0 to 2^31 − 1, return error with error code invalid argument.
     auto width = TRY(resolve_property("width"sv, width_property, 0, NumericLimits<i32>::max()));
@@ -1188,11 +1253,13 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
     auto role = element->role_or_default();
 
     // 5. Return success with data role.
-    return DeprecatedString { role };
+    if (role.has_value())
+        return Web::ARIA::role_name(*role);
+    return ""sv;
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
-Messages::WebDriverClient::ClickResponse WebDriverConnection::click(DeprecatedString const& element_id)
+Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_click(DeprecatedString const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1214,17 +1281,100 @@ Messages::WebDriverClient::ClickResponse WebDriverConnection::click(DeprecatedSt
     }
 
     // 5. Scroll into view the element’s container.
-    auto scroll_or_error = scroll_element_into_view(*element);
-
-    // 6. If element’s container is still not in view, return error with error code element not interactable.
+    auto element_container = container_for_element(*element);
+    auto scroll_or_error = scroll_element_into_view(*element_container);
     if (scroll_or_error.is_error())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::ElementNotInteractable, "Element’s container is still not in view after scrolling"sv);
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnknownError, scroll_or_error.error().string_literal());
+
+    // FIXME: 6. If element’s container is still not in view, return error with error code element not interactable.
 
     // FIXME: 7. If element’s container is obscured by another element, return error with error code element click intercepted.
 
     // 8. Matching on element:
-    // FIXME: option element
-    // FIXME: Otherwise
+    // -> option element
+    if (is<Web::HTML::HTMLOptionElement>(*element)) {
+        auto& option_element = static_cast<Web::HTML::HTMLOptionElement&>(*element);
+
+        // 1. Let parent node be the element’s container.
+        auto parent_node = element_container;
+
+        // 2. Fire a mouseOver event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseOver", parent_node);
+
+        // 3. Fire a mouseMove event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseMove", parent_node);
+
+        // 4. Fire a mouseDown event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseDown", parent_node);
+
+        // 5. Run the focusing steps on parent node.
+        Web::HTML::run_focusing_steps(parent_node.has_value() ? &*parent_node : nullptr);
+
+        // 6. If element is not disabled:
+        if (!option_element.is_actually_disabled()) {
+            // 1. Fire an input event at parent node.
+            fire_an_event<Web::DOM::Event>("input", parent_node);
+
+            // 2. Let previous selectedness be equal to element selectedness.
+            auto previous_selectedness = option_element.selected();
+
+            // 3. If element’s container has the multiple attribute, toggle the element’s selectedness state
+            //    by setting it to the opposite value of its current selectedness.
+            if (parent_node.has_value() && parent_node->has_attribute("multiple")) {
+                option_element.set_selected(!option_element.selected());
+            }
+            //    Otherwise, set the element’s selectedness state to true.
+            else {
+                option_element.set_selected(true);
+            }
+
+            // 4. If previous selectedness is false, fire a change event at parent node.
+            if (!previous_selectedness) {
+                fire_an_event<Web::DOM::Event>("change", parent_node);
+            }
+        }
+        // 7. Fire a mouseUp event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("mouseUp", parent_node);
+
+        // 8. Fire a click event at parent node.
+        fire_an_event<Web::UIEvents::MouseEvent>("click", parent_node);
+    }
+    // -> Otherwise
+    else {
+        // FIXME: 1. Let input state be the result of get the input state given current session and current top-level browsing context.
+
+        // FIXME: 2. Let actions options be a new actions options with the is element origin steps set to represents a web element, and the get element origin steps set to get a WebElement origin.
+
+        // FIXME: 3. Let input id be a the result of generating a UUID.
+
+        // FIXME: 4. Let source be the result of create an input source with input state, and "pointer".
+
+        // FIXME: 5. Add an input source with input state, input id and source.
+
+        // FIXME: 6. Let click point be the element’s in-view center point.
+
+        // FIXME: 7. Let pointer move action be an action object constructed with arguments input id, "pointer", and "pointerMove".
+
+        // FIXME: 8. Set a property x to 0 on pointer move action.
+
+        // FIXME: 9. Set a property y to 0 on pointer move action.
+
+        // FIXME: 10. Set a property origin to element on pointer move action.
+
+        // FIXME: 11. Let pointer down action be an action object constructed with arguments input id, "pointer", and "pointerDown".
+
+        // FIXME: 12. Set a property button to 0 on pointer down action.
+
+        // FIXME: 13. Let pointer up action be an action object constructed with arguments input id, "mouse", and "pointerUp" as arguments.
+
+        // FIXME: 14. Set a property button to 0 on pointer up action.
+
+        // FIXME: 15. Let actions be the list «pointer move action, pointer down action, pointer move action».
+
+        // FIXME: 16. Dispatch a list of actions with input state, actions, current browsing context, and actions options.
+
+        // FIXME: 17. Remove an input source with input state and input id.
+    }
 
     // FIXME: 9. Wait until the user agent event loop has spun enough times to process the DOM events generated by the previous step.
     // FIXME: 10. Perform implementation-defined steps to allow any navigations triggered by the click to start.
@@ -1232,7 +1382,7 @@ Messages::WebDriverClient::ClickResponse WebDriverConnection::click(DeprecatedSt
     // FIXME: 12. Try to run the post-navigation checks.
     // FIXME: 13. Return success with data null.
 
-    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Click not implemented"sv);
+    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnsupportedOperation, "Click not implemented"sv);
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source

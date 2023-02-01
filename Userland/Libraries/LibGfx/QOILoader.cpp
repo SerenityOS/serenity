@@ -5,7 +5,7 @@
  */
 
 #include <AK/Endian.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/QOILoader.h>
 
@@ -21,7 +21,7 @@ static constexpr u8 QOI_OP_RUN = 0b11000000;
 static constexpr u8 QOI_MASK_2 = 0b11000000;
 static constexpr u8 END_MARKER[] = { 0, 0, 0, 0, 0, 0, 0, 1 };
 
-static ErrorOr<QOIHeader> decode_qoi_header(Core::Stream::Stream& stream)
+static ErrorOr<QOIHeader> decode_qoi_header(AK::Stream& stream)
 {
     auto header = TRY(stream.read_value<QOIHeader>());
     if (StringView { header.magic, array_size(header.magic) } != QOI_MAGIC)
@@ -31,7 +31,7 @@ static ErrorOr<QOIHeader> decode_qoi_header(Core::Stream::Stream& stream)
     return header;
 }
 
-static ErrorOr<Color> decode_qoi_op_rgb(Core::Stream::Stream& stream, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_rgb(AK::Stream& stream, u8 first_byte, Color pixel)
 {
     VERIFY(first_byte == QOI_OP_RGB);
     u8 bytes[3];
@@ -41,7 +41,7 @@ static ErrorOr<Color> decode_qoi_op_rgb(Core::Stream::Stream& stream, u8 first_b
     return Color { bytes[0], bytes[1], bytes[2], pixel.alpha() };
 }
 
-static ErrorOr<Color> decode_qoi_op_rgba(Core::Stream::Stream& stream, u8 first_byte)
+static ErrorOr<Color> decode_qoi_op_rgba(AK::Stream& stream, u8 first_byte)
 {
     VERIFY(first_byte == QOI_OP_RGBA);
     u8 bytes[4];
@@ -49,7 +49,7 @@ static ErrorOr<Color> decode_qoi_op_rgba(Core::Stream::Stream& stream, u8 first_
     return Color { bytes[0], bytes[1], bytes[2], bytes[3] };
 }
 
-static ErrorOr<u8> decode_qoi_op_index(Core::Stream::Stream&, u8 first_byte)
+static ErrorOr<u8> decode_qoi_op_index(AK::Stream&, u8 first_byte)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_INDEX);
     u8 index = first_byte & ~QOI_MASK_2;
@@ -57,7 +57,7 @@ static ErrorOr<u8> decode_qoi_op_index(Core::Stream::Stream&, u8 first_byte)
     return index;
 }
 
-static ErrorOr<Color> decode_qoi_op_diff(Core::Stream::Stream&, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_diff(AK::Stream&, u8 first_byte, Color pixel)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_DIFF);
     u8 dr = (first_byte & 0b00110000) >> 4;
@@ -74,7 +74,7 @@ static ErrorOr<Color> decode_qoi_op_diff(Core::Stream::Stream&, u8 first_byte, C
     };
 }
 
-static ErrorOr<Color> decode_qoi_op_luma(Core::Stream::Stream& stream, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_luma(AK::Stream& stream, u8 first_byte, Color pixel)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_LUMA);
     auto byte = TRY(stream.read_value<u8>());
@@ -91,7 +91,7 @@ static ErrorOr<Color> decode_qoi_op_luma(Core::Stream::Stream& stream, u8 first_
     };
 }
 
-static ErrorOr<u8> decode_qoi_op_run(Core::Stream::Stream&, u8 first_byte)
+static ErrorOr<u8> decode_qoi_op_run(AK::Stream&, u8 first_byte)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_RUN);
     u8 run = first_byte & ~QOI_MASK_2;
@@ -107,7 +107,7 @@ static ErrorOr<u8> decode_qoi_op_run(Core::Stream::Stream&, u8 first_byte)
     return run;
 }
 
-static ErrorOr<void> decode_qoi_end_marker(Core::Stream::Stream& stream)
+static ErrorOr<void> decode_qoi_end_marker(AK::Stream& stream)
 {
     u8 bytes[array_size(END_MARKER)];
     TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
@@ -118,7 +118,7 @@ static ErrorOr<void> decode_qoi_end_marker(Core::Stream::Stream& stream)
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(Core::Stream::Stream& stream, u32 width, u32 height)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(AK::Stream& stream, u32 width, u32 height)
 {
     // FIXME: Why is Gfx::Bitmap's size signed? Makes no sense whatsoever.
     if (width > NumericLimits<int>::max())
@@ -162,7 +162,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(Core::Stream::Stream& str
     return { move(bitmap) };
 }
 
-QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Core::Stream::Stream> stream)
+QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<AK::Stream> stream)
 {
     m_context = make<QOILoadingContext>();
     m_context->stream = move(stream);
@@ -202,13 +202,13 @@ bool QOIImageDecoderPlugin::initialize()
 
 ErrorOr<bool> QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct({ data.data(), data.size() }));
+    auto stream = TRY(FixedMemoryStream::construct({ data.data(), data.size() }));
     return !decode_qoi_header(*stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> QOIImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    auto stream = TRY(Core::Stream::FixedMemoryStream::construct(data));
+    auto stream = TRY(FixedMemoryStream::construct(data));
     return adopt_nonnull_own_or_enomem(new (nothrow) QOIImageDecoderPlugin(move(stream)));
 }
 
@@ -234,7 +234,7 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
     return *m_context->error;
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(Core::Stream::Stream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(AK::Stream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::HeaderDecoded);
     auto error_or_header = decode_qoi_header(stream);
@@ -248,7 +248,7 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(Core::Stre
     return {};
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(Core::Stream::Stream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(AK::Stream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::ImageDecoded);
     auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height);
@@ -260,6 +260,11 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(Core::Strea
     m_context->state = QOILoadingContext::State::ImageDecoded;
     m_context->bitmap = error_or_bitmap.release_value();
     return {};
+}
+
+ErrorOr<Optional<ReadonlyBytes>> QOIImageDecoderPlugin::icc_data()
+{
+    return OptionalNone {};
 }
 
 }

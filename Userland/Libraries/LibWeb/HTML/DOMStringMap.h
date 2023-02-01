@@ -31,7 +31,7 @@ public:
 private:
     explicit DOMStringMap(DOM::Element&);
 
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^LegacyPlatformObject

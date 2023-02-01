@@ -11,7 +11,6 @@
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/MemoryStream.h>
 #include <arpa/inet.h>
 
 namespace DNS {
@@ -49,7 +48,7 @@ ErrorOr<ByteBuffer> Packet::to_byte_buffer() const
     header.set_question_count(m_questions.size());
     header.set_answer_count(m_answers.size());
 
-    Core::Stream::AllocatingMemoryStream stream;
+    AllocatingMemoryStream stream;
 
     TRY(stream.write_value(header));
     for (auto& question : m_questions) {

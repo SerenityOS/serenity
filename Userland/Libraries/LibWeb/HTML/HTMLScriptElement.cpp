@@ -30,10 +30,12 @@ HTMLScriptElement::HTMLScriptElement(DOM::Document& document, DOM::QualifiedName
 
 HTMLScriptElement::~HTMLScriptElement() = default;
 
-void HTMLScriptElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLScriptElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLScriptElementPrototype>(realm, "HTMLScriptElement"));
+
+    return {};
 }
 
 void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)

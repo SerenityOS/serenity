@@ -147,7 +147,7 @@ ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(Re
         }
 
         // 3. Remove all HTTP tab or space from the start and end of temporaryValue.
-        auto temporary_value = temporary_value_builder.build().trim(HTTP_TAB_OR_SPACE, TrimMode::Both);
+        auto temporary_value = temporary_value_builder.to_deprecated_string().trim(HTTP_TAB_OR_SPACE, TrimMode::Both);
 
         // 4. Append temporaryValue to values.
         values.append(move(temporary_value));

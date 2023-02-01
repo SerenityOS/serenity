@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/ICCProfile.h>
+#include <LibGfx/ICC/Profile.h>
 #include <stddef.h>
 #include <stdint.h>
 

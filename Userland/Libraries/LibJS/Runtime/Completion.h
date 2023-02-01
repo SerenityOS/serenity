@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +42,7 @@ namespace JS {
             /* We can't explicitly check for OOM because InternalError does not store the ErrorType */ \
             VERIFY(_completion.value().has_value());                                                   \
             VERIFY(_completion.value()->is_object());                                                  \
-            VERIFY(is<JS::InternalError>(_completion.value()->as_object()));                           \
+            VERIFY(::AK::is<JS::InternalError>(_completion.value()->as_object()));                     \
                                                                                                        \
             return _completion;                                                                        \
         }                                                                                              \
@@ -332,6 +332,12 @@ public:
     [[nodiscard]] ValueType release_value() { return m_value.release_value(); }
     Completion release_error() { return m_throw_completion.release_value(); }
 
+    ValueType release_allocated_value_but_fixme_should_propagate_errors()
+    {
+        VERIFY(!is_error());
+        return release_value();
+    }
+
 private:
     Optional<Completion> m_throw_completion;
     Optional<ValueType> m_value;
@@ -345,13 +351,14 @@ public:
 
 ThrowCompletionOr<Value> await(VM&, Value);
 
-// 6.2.3.2 NormalCompletion ( value ), https://tc39.es/ecma262/#sec-normalcompletion
+// 6.2.4.1 NormalCompletion ( value ), https://tc39.es/ecma262/#sec-normalcompletion
 inline Completion normal_completion(Optional<Value> value)
 {
+    // 1. Return Completion Record { [[Type]]: normal, [[Value]]: value, [[Target]]: empty }.
     return { Completion::Type::Normal, move(value), {} };
 }
 
-// 6.2.3.3 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
+// 6.2.4.2 ThrowCompletion ( value ), https://tc39.es/ecma262/#sec-throwcompletion
 Completion throw_completion(Value);
 
 }

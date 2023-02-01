@@ -39,7 +39,7 @@ static DeprecatedString get_salt()
     auto salt_string = MUST(encode_base64({ random_data, sizeof(random_data) }));
     builder.append(salt_string);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 static Vector<gid_t> get_extra_gids(passwd const& pwd)
@@ -196,7 +196,7 @@ void Account::set_password_enabled(bool enabled)
         StringBuilder builder;
         builder.append('!');
         builder.append(m_password_hash);
-        m_password_hash = builder.build();
+        m_password_hash = builder.to_deprecated_string();
     }
 }
 

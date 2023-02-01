@@ -8,10 +8,10 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
+#include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
-#include <LibWeb/DOM/ARIAMixin.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/ChildNode.h>
 #include <LibWeb/DOM/NamedNodeMap.h>
@@ -42,7 +42,7 @@ class Element
     : public ParentNode
     , public ChildNode<Element>
     , public NonDocumentTypeChildNode<Element>
-    , public ARIAMixin {
+    , public ARIA::ARIAMixin {
     WEB_PLATFORM_OBJECT(Element, ParentNode);
 
 public:
@@ -251,7 +251,7 @@ public:
 
 protected:
     Element(Document&, DOM::QualifiedName);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     virtual void children_changed() override;
     virtual i32 default_tab_index_value() const;

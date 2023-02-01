@@ -17,9 +17,9 @@ RegExpStringIteratorPrototype::RegExpStringIteratorPrototype(Realm& realm)
 {
 }
 
-void RegExpStringIteratorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> RegExpStringIteratorPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -27,6 +27,8 @@ void RegExpStringIteratorPrototype::initialize(Realm& realm)
 
     // 22.2.7.2.2 %RegExpStringIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "RegExp String Iterator"), Attribute::Configurable);
+
+    return {};
 }
 
 // 22.2.7.2.1 %RegExpStringIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next

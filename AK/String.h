@@ -14,6 +14,7 @@
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
@@ -129,10 +130,14 @@ public:
     ErrorOr<String> replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const;
     ErrorOr<String> reverse() const;
 
+    ErrorOr<String> trim(Utf8View const& code_points_to_trim, TrimMode mode = TrimMode::Both) const;
+    ErrorOr<String> trim(StringView code_points_to_trim, TrimMode mode = TrimMode::Both) const;
+
     ErrorOr<Vector<String>> split_limit(u32 separator, size_t limit, SplitBehavior = SplitBehavior::Nothing) const;
     ErrorOr<Vector<String>> split(u32 separator, SplitBehavior = SplitBehavior::Nothing) const;
 
     Optional<size_t> find_byte_offset(u32 code_point, size_t from_byte_offset = 0) const;
+    Optional<size_t> find_byte_offset(StringView substring, size_t from_byte_offset = 0) const;
 
     [[nodiscard]] bool operator==(String const&) const;
     [[nodiscard]] bool operator!=(String const& other) const { return !(*this == other); }
@@ -182,6 +187,14 @@ public:
     {
         VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_parameters { parameters... };
         return vformatted(fmtstr.view(), variadic_format_parameters);
+    }
+
+    template<class SeparatorType, class CollectionType>
+    static ErrorOr<String> join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
+    {
+        StringBuilder builder;
+        TRY(builder.try_join(separator, collection, fmtstr));
+        return builder.to_string();
     }
 
     // NOTE: This is primarily interesting to unit tests.

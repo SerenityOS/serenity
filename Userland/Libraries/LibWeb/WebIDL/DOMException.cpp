@@ -11,12 +11,12 @@ namespace Web::WebIDL {
 
 JS::NonnullGCPtr<DOMException> DOMException::create(JS::Realm& realm, DeprecatedFlyString const& name, DeprecatedFlyString const& message)
 {
-    return realm.heap().allocate<DOMException>(realm, realm, name, message);
+    return realm.heap().allocate<DOMException>(realm, realm, name, message).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<DOMException> DOMException::construct_impl(JS::Realm& realm, DeprecatedFlyString const& message, DeprecatedFlyString const& name)
 {
-    return realm.heap().allocate<DOMException>(realm, realm, name, message);
+    return realm.heap().allocate<DOMException>(realm, realm, name, message).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DOMException::DOMException(JS::Realm& realm, DeprecatedFlyString const& name, DeprecatedFlyString const& message)
@@ -28,10 +28,12 @@ DOMException::DOMException(JS::Realm& realm, DeprecatedFlyString const& name, De
 
 DOMException::~DOMException() = default;
 
-void DOMException::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> DOMException::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMExceptionPrototype>(realm, "DOMException"));
+
+    return {};
 }
 
 }

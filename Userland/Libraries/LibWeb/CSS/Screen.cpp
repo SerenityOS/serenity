@@ -15,7 +15,7 @@ namespace Web::CSS {
 
 JS::NonnullGCPtr<Screen> Screen::create(HTML::Window& window)
 {
-    return window.heap().allocate<Screen>(window.realm(), window);
+    return window.heap().allocate<Screen>(window.realm(), window).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Screen::Screen(HTML::Window& window)
@@ -24,10 +24,12 @@ Screen::Screen(HTML::Window& window)
 {
 }
 
-void Screen::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Screen::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ScreenPrototype>(realm, "Screen"));
+
+    return {};
 }
 
 void Screen::visit_edges(Cell::Visitor& visitor)

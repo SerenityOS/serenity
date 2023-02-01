@@ -16,7 +16,7 @@ namespace JS::Intl {
 
 ThrowCompletionOr<NonnullGCPtr<Locale>> Locale::create(Realm& realm, ::Locale::LocaleID locale_id)
 {
-    auto locale = realm.heap().allocate<Locale>(realm, *realm.intrinsics().intl_locale_prototype());
+    auto locale = MUST_OR_THROW_OOM(realm.heap().allocate<Locale>(realm, *realm.intrinsics().intl_locale_prototype()));
     locale->set_locale(TRY_OR_THROW_OOM(realm.vm(), locale_id.to_string()));
 
     for (auto& extension : locale_id.extensions) {
@@ -80,7 +80,7 @@ ThrowCompletionOr<NonnullGCPtr<Array>> calendars_of_locale(VM& vm, Locale const&
     VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical calendar identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for date and time formatting in locale.
-    auto list = ::Locale::get_keywords_for_locale(locale, "ca"sv);
+    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "ca"sv));
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -99,7 +99,7 @@ ThrowCompletionOr<NonnullGCPtr<Array>> collations_of_locale(VM& vm, Locale const
     VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical collation identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, ordered as if an Array of the same values had been sorted, using %Array.prototype.sort% using undefined as comparefn, of those in common use for string comparison in locale. The values "standard" and "search" must be excluded from list.
-    auto list = ::Locale::get_keywords_for_locale(locale, "co"sv);
+    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "co"sv));
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -118,7 +118,7 @@ ThrowCompletionOr<NonnullGCPtr<Array>> hour_cycles_of_locale(VM& vm, Locale cons
     VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
 
     // 4. Let list be a List of 1 or more unique hour cycle identifiers, which must be lower case String values indicating either the 12-hour format ("h11", "h12") or the 24-hour format ("h23", "h24"), sorted in descending preference of those in common use for date and time formatting in locale.
-    auto list = ::Locale::get_keywords_for_locale(locale, "hc"sv);
+    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "hc"sv));
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -137,7 +137,7 @@ ThrowCompletionOr<NonnullGCPtr<Array>> numbering_systems_of_locale(VM& vm, Local
     VERIFY(TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale)).has_value());
 
     // 4. Let list be a List of 1 or more unique canonical numbering system identifiers, which must be lower case String values conforming to the type sequence from UTS 35 Unicode Locale Identifier, section 3.2, sorted in descending preference of those in common use for formatting numeric values in locale.
-    auto list = ::Locale::get_keywords_for_locale(locale, "nu"sv);
+    auto list = TRY_OR_THROW_OOM(vm, ::Locale::get_keywords_for_locale(locale, "nu"sv));
 
     // 5. Return ! CreateArrayFromListOrRestricted( list, restricted ).
     return create_array_from_list_or_restricted(vm, move(list), move(restricted));
@@ -206,17 +206,17 @@ static u8 weekday_to_integer(Optional<::Locale::Weekday> weekday, ::Locale::Week
     VERIFY_NOT_REACHED();
 }
 
-static Vector<u8> weekend_of_locale(StringView locale)
+static ThrowCompletionOr<Vector<u8>> weekend_of_locale(VM& vm, StringView locale)
 {
-    auto weekend_start = weekday_to_integer(::Locale::get_locale_weekend_start(locale), ::Locale::Weekday::Saturday);
-    auto weekend_end = weekday_to_integer(::Locale::get_locale_weekend_end(locale), ::Locale::Weekday::Sunday);
+    auto weekend_start = weekday_to_integer(TRY_OR_THROW_OOM(vm, ::Locale::get_locale_weekend_start(locale)), ::Locale::Weekday::Saturday);
+    auto weekend_end = weekday_to_integer(TRY_OR_THROW_OOM(vm, ::Locale::get_locale_weekend_end(locale)), ::Locale::Weekday::Sunday);
 
     // There currently aren't any regions in the CLDR which wrap around from Sunday (7) to Monday (1).
     // If this changes, this logic will need to be updated to handle that.
     VERIFY(weekend_start <= weekend_end);
 
     Vector<u8> weekend;
-    weekend.ensure_capacity(weekend_end - weekend_start + 1);
+    TRY_OR_THROW_OOM(vm, weekend.try_ensure_capacity(weekend_end - weekend_start + 1));
 
     for (auto day = weekend_start; day <= weekend_end; ++day)
         weekend.unchecked_append(day);
@@ -235,9 +235,9 @@ ThrowCompletionOr<WeekInfo> week_info_of_locale(VM& vm, Locale const& locale_obj
 
     // 3. Return a record whose fields are defined by Table 1, with values based on locale.
     WeekInfo week_info {};
-    week_info.minimal_days = ::Locale::get_locale_minimum_days(locale).value_or(1);
-    week_info.first_day = weekday_to_integer(::Locale::get_locale_first_day(locale), ::Locale::Weekday::Monday);
-    week_info.weekend = weekend_of_locale(locale);
+    week_info.minimal_days = TRY_OR_THROW_OOM(vm, ::Locale::get_locale_minimum_days(locale)).value_or(1);
+    week_info.first_day = weekday_to_integer(TRY_OR_THROW_OOM(vm, ::Locale::get_locale_first_day(locale)), ::Locale::Weekday::Monday);
+    week_info.weekend = MUST_OR_THROW_OOM(weekend_of_locale(vm, locale));
 
     return week_info;
 }

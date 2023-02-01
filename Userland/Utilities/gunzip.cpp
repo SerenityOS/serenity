@@ -10,7 +10,7 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-static ErrorOr<void> decompress_file(NonnullOwnPtr<Core::Stream::File> input_stream, Core::Stream::Stream& output_stream)
+static ErrorOr<void> decompress_file(NonnullOwnPtr<Core::Stream::File> input_stream, AK::Stream& output_stream)
 {
     auto gzip_stream = Compress::GzipDecompressor { move(input_stream) };
 

@@ -14,7 +14,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<MutationRecord> MutationRecord::create(JS::Realm& realm, DeprecatedFlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value)
 {
-    return realm.heap().allocate<MutationRecord>(realm, realm, type, target, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, old_value);
+    return realm.heap().allocate<MutationRecord>(realm, realm, type, target, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, old_value).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MutationRecord::MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value)
@@ -33,10 +33,12 @@ MutationRecord::MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type
 
 MutationRecord::~MutationRecord() = default;
 
-void MutationRecord::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> MutationRecord::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::MutationRecordPrototype>(realm, "MutationRecord"));
+
+    return {};
 }
 
 void MutationRecord::visit_edges(Cell::Visitor& visitor)

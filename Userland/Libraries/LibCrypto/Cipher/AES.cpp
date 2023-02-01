@@ -30,7 +30,7 @@ DeprecatedString AESCipherBlock::to_deprecated_string() const
     StringBuilder builder;
     for (auto value : m_data)
         builder.appendff("{:02x}", value);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString AESCipherKey::to_deprecated_string() const
@@ -38,7 +38,7 @@ DeprecatedString AESCipherKey::to_deprecated_string() const
     StringBuilder builder;
     for (size_t i = 0; i < (rounds() + 1) * 4; ++i)
         builder.appendff("{:02x}", m_rd_keys[i]);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 #endif
 

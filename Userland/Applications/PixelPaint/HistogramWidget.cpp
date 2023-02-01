@@ -21,7 +21,7 @@ ErrorOr<void> HistogramWidget::rebuild_histogram_data()
     if (!m_image)
         return {};
 
-    auto full_bitmap = TRY(m_image->try_compose_bitmap(Gfx::BitmapFormat::BGRA8888));
+    auto full_bitmap = TRY(m_image->compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
     m_data.red.clear_with_capacity();
     m_data.green.clear_with_capacity();

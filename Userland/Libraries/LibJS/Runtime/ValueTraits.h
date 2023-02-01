@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Value.h>
 

@@ -9,7 +9,8 @@
 #include <AK/Assertions.h>
 #include <AK/BinaryHeap.h>
 #include <AK/BinarySearch.h>
-#include <LibCore/MemoryStream.h>
+#include <AK/BitStream.h>
+#include <AK/MemoryStream.h>
 #include <string.h>
 
 #include <LibCompress/Deflate.h>
@@ -98,7 +99,7 @@ Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
     return code;
 }
 
-ErrorOr<u32> CanonicalCode::read_symbol(Core::Stream::LittleEndianInputBitStream& stream) const
+ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& stream) const
 {
     u32 code_bits = 1;
 
@@ -115,7 +116,7 @@ ErrorOr<u32> CanonicalCode::read_symbol(Core::Stream::LittleEndianInputBitStream
     }
 }
 
-ErrorOr<void> CanonicalCode::write_symbol(Core::Stream::LittleEndianOutputBitStream& stream, u32 symbol) const
+ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& stream, u32 symbol) const
 {
     TRY(stream.write_bits(m_bit_codes[symbol], m_bit_code_lengths[symbol]));
     return {};
@@ -188,14 +189,14 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream)
+ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(MaybeOwned<AK::Stream> stream)
 {
     auto output_buffer = TRY(CircularBuffer::create_empty(32 * KiB));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateDecompressor(move(stream), move(output_buffer))));
 }
 
-DeflateDecompressor::DeflateDecompressor(Core::Stream::Handle<Core::Stream::Stream> stream, CircularBuffer output_buffer)
-    : m_input_stream(make<Core::Stream::LittleEndianInputBitStream>(move(stream)))
+DeflateDecompressor::DeflateDecompressor(MaybeOwned<AK::Stream> stream, CircularBuffer output_buffer)
+    : m_input_stream(make<LittleEndianInputBitStream>(move(stream)))
     , m_output_buffer(move(output_buffer))
 {
 }
@@ -316,9 +317,9 @@ void DeflateDecompressor::close()
 
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
+    auto memory_stream = TRY(FixedMemoryStream::construct(bytes));
     auto deflate_stream = TRY(DeflateDecompressor::construct(move(memory_stream)));
-    Core::Stream::AllocatingMemoryStream output_stream;
+    AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!deflate_stream->is_eof()) {
@@ -446,14 +447,14 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<DeflateCompressor>> DeflateCompressor::construct(Core::Stream::Handle<Core::Stream::Stream> stream, CompressionLevel compression_level)
+ErrorOr<NonnullOwnPtr<DeflateCompressor>> DeflateCompressor::construct(MaybeOwned<AK::Stream> stream, CompressionLevel compression_level)
 {
-    auto bit_stream = TRY(Core::Stream::LittleEndianOutputBitStream::construct(move(stream)));
+    auto bit_stream = TRY(LittleEndianOutputBitStream::construct(move(stream)));
     auto deflate_compressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateCompressor(move(bit_stream), compression_level)));
     return deflate_compressor;
 }
 
-DeflateCompressor::DeflateCompressor(NonnullOwnPtr<Core::Stream::LittleEndianOutputBitStream> stream, CompressionLevel compression_level)
+DeflateCompressor::DeflateCompressor(NonnullOwnPtr<LittleEndianOutputBitStream> stream, CompressionLevel compression_level)
     : m_compression_level(compression_level)
     , m_compression_constants(compression_constants[static_cast<int>(m_compression_level)])
     , m_output_stream(move(stream))
@@ -1016,8 +1017,8 @@ ErrorOr<void> DeflateCompressor::final_flush()
 
 ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, CompressionLevel compression_level)
 {
-    auto output_stream = TRY(try_make<Core::Stream::AllocatingMemoryStream>());
-    auto deflate_stream = TRY(DeflateCompressor::construct(Core::Stream::Handle<Core::Stream::Stream>(*output_stream), compression_level));
+    auto output_stream = TRY(try_make<AllocatingMemoryStream>());
+    auto deflate_stream = TRY(DeflateCompressor::construct(MaybeOwned<AK::Stream>(*output_stream), compression_level));
 
     TRY(deflate_stream->write_entire_buffer(bytes));
     TRY(deflate_stream->final_flush());

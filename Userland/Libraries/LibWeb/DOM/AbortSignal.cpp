@@ -14,7 +14,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<AbortSignal> AbortSignal::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<AbortSignal>(realm, realm);
+    return realm.heap().allocate<AbortSignal>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 AbortSignal::AbortSignal(JS::Realm& realm)
@@ -22,10 +22,12 @@ AbortSignal::AbortSignal(JS::Realm& realm)
 {
 }
 
-void AbortSignal::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> AbortSignal::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::AbortSignalPrototype>(realm, "AbortSignal"));
+
+    return {};
 }
 
 // https://dom.spec.whatwg.org/#abortsignal-add

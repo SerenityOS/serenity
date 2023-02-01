@@ -21,7 +21,7 @@
 
 namespace PixelPaint {
 
-ErrorOr<NonnullRefPtr<Image>> Image::try_create_with_size(Gfx::IntSize size)
+ErrorOr<NonnullRefPtr<Image>> Image::create_with_size(Gfx::IntSize size)
 {
     VERIFY(!size.is_empty());
 
@@ -37,21 +37,20 @@ Image::Image(Gfx::IntSize size)
 {
 }
 
-void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) const
+void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect, float scale) const
 {
-    float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(dest_rect);
     for (auto const& layer : m_layers) {
         if (!layer.is_visible())
             continue;
-        auto target = dest_rect.translated(layer.location().x() * scale, layer.location().y() * scale);
+        auto target = dest_rect.to_type<float>().translated(layer.location().x() * scale, layer.location().y() * scale);
         target.set_size(layer.size().width() * scale, layer.size().height() * scale);
-        painter.draw_scaled_bitmap(target, layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+        painter.draw_scaled_bitmap(target.to_type<int>(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
     }
 }
 
-ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitmap_data)
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::decode_bitmap(ReadonlyBytes bitmap_data)
 {
     // Spawn a new ImageDecoder service process and connect to it.
     auto client = TRY(ImageDecoderClient::Client::try_create());
@@ -72,47 +71,48 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_decode_bitmap(ReadonlyBytes bitma
     return decoded_bitmap.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const& bitmap)
+ErrorOr<NonnullRefPtr<Image>> Image::create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> const& bitmap)
 {
-    auto image = TRY(try_create_with_size({ bitmap->width(), bitmap->height() }));
-    auto layer = TRY(Layer::try_create_with_bitmap(*image, *bitmap, "Background"));
+    auto image = TRY(create_with_size({ bitmap->width(), bitmap->height() }));
+    auto layer = TRY(Layer::create_with_bitmap(*image, *bitmap, "Background"));
     image->add_layer(move(layer));
     return image;
 }
 
-ErrorOr<NonnullRefPtr<Image>> Image::try_create_from_pixel_paint_json(JsonObject const& json)
+ErrorOr<NonnullRefPtr<Image>> Image::create_from_pixel_paint_json(JsonObject const& json)
 {
-    auto image = TRY(try_create_with_size({ json.get_deprecated("width"sv).to_i32(), json.get_deprecated("height"sv).to_i32() }));
+    // FIXME: Handle invalid JSON data
+    auto image = TRY(create_with_size({ json.get_i32("width"sv).value_or(0), json.get_i32("height"sv).value_or(0) }));
 
-    auto layers_value = json.get_deprecated("layers"sv);
-    for (auto& layer_value : layers_value.as_array().values()) {
+    auto layers_value = json.get_array("layers"sv).value();
+    for (auto& layer_value : layers_value.values()) {
         auto const& layer_object = layer_value.as_object();
-        auto name = layer_object.get_deprecated("name"sv).as_string();
+        auto name = layer_object.get_deprecated_string("name"sv).value();
 
-        auto bitmap_base64_encoded = layer_object.get_deprecated("bitmap"sv).as_string();
+        auto bitmap_base64_encoded = layer_object.get_deprecated_string("bitmap"sv).value();
         auto bitmap_data = TRY(decode_base64(bitmap_base64_encoded));
-        auto bitmap = TRY(try_decode_bitmap(bitmap_data));
-        auto layer = TRY(Layer::try_create_with_bitmap(*image, move(bitmap), name));
+        auto bitmap = TRY(decode_bitmap(bitmap_data));
+        auto layer = TRY(Layer::create_with_bitmap(*image, move(bitmap), name));
 
-        if (auto const& mask_object = layer_object.get_deprecated("mask"sv); !mask_object.is_null()) {
-            auto mask_base64_encoded = mask_object.as_string();
+        if (auto const& mask_object = layer_object.get_deprecated_string("mask"sv); mask_object.has_value()) {
+            auto mask_base64_encoded = mask_object.value();
             auto mask_data = TRY(decode_base64(mask_base64_encoded));
-            auto mask = TRY(try_decode_bitmap(mask_data));
-            TRY(layer->try_set_bitmaps(layer->content_bitmap(), mask));
+            auto mask = TRY(decode_bitmap(mask_data));
+            TRY(layer->set_bitmaps(layer->content_bitmap(), mask));
         }
 
-        auto width = layer_object.get_deprecated("width"sv).to_i32();
-        auto height = layer_object.get_deprecated("height"sv).to_i32();
+        auto width = layer_object.get_i32("width"sv).value_or(0);
+        auto height = layer_object.get_i32("height"sv).value_or(0);
 
         if (width != layer->size().width() || height != layer->size().height())
             return Error::from_string_literal("Decoded layer bitmap has wrong size");
 
         image->add_layer(*layer);
 
-        layer->set_location({ layer_object.get_deprecated("locationx"sv).to_i32(), layer_object.get_deprecated("locationy"sv).to_i32() });
-        layer->set_opacity_percent(layer_object.get_deprecated("opacity_percent"sv).to_i32());
-        layer->set_visible(layer_object.get_deprecated("visible"sv).as_bool());
-        layer->set_selected(layer_object.get_deprecated("selected"sv).as_bool());
+        layer->set_location({ layer_object.get_i32("locationx"sv).value_or(0), layer_object.get_i32("locationy"sv).value_or(0) });
+        layer->set_opacity_percent(layer_object.get_i32("opacity_percent"sv).value());
+        layer->set_visible(layer_object.get_bool("visible"sv).value());
+        layer->set_selected(layer_object.get_bool("selected"sv).value());
     }
 
     return image;
@@ -145,22 +145,22 @@ ErrorOr<void> Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::try_compose_bitmap(Gfx::BitmapFormat format) const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Image::compose_bitmap(Gfx::BitmapFormat format) const
 {
     auto bitmap = TRY(Gfx::Bitmap::create(format, m_size));
     GUI::Painter painter(bitmap);
-    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
     return bitmap;
 }
 
-RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
+RefPtr<Gfx::Bitmap> Image::copy_bitmap(Selection const& selection) const
 {
     if (selection.is_empty())
         return {};
     auto selection_rect = selection.bounding_rect();
 
     // FIXME: Add a way to only compose a certain part of the image
-    auto bitmap_or_error = try_compose_bitmap(Gfx::BitmapFormat::BGRA8888);
+    auto bitmap_or_error = compose_bitmap(Gfx::BitmapFormat::BGRA8888);
     if (bitmap_or_error.is_error())
         return {};
     auto full_bitmap = bitmap_or_error.release_value();
@@ -171,10 +171,10 @@ RefPtr<Gfx::Bitmap> Image::try_copy_bitmap(Selection const& selection) const
     return cropped_bitmap_or_error.release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream> stream, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<AK::Stream> stream, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
-    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
+    auto bitmap = TRY(compose_bitmap(bitmap_format));
 
     Gfx::BMPWriter dumper;
     auto encoded_data = dumper.dump(bitmap);
@@ -182,19 +182,19 @@ ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Core::Stream::Stream> stre
     return {};
 }
 
-ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<Core::Stream::Stream> stream, bool preserve_alpha_channel) const
+ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<AK::Stream> stream, bool preserve_alpha_channel) const
 {
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
-    auto bitmap = TRY(try_compose_bitmap(bitmap_format));
+    auto bitmap = TRY(compose_bitmap(bitmap_format));
 
     auto encoded_data = TRY(Gfx::PNGWriter::encode(*bitmap));
     TRY(stream->write_entire_buffer(encoded_data));
     return {};
 }
 
-ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Core::Stream::Stream> stream) const
+ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<AK::Stream> stream) const
 {
-    auto bitmap = TRY(try_compose_bitmap(Gfx::BitmapFormat::BGRA8888));
+    auto bitmap = TRY(compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
     auto encoded_data = Gfx::QOIWriter::encode(bitmap);
     TRY(stream->write_entire_buffer(encoded_data));
@@ -216,9 +216,9 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
 
 ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
 {
-    auto snapshot = TRY(try_create_with_size(m_size));
+    auto snapshot = TRY(create_with_size(m_size));
     for (auto const& layer : m_layers) {
-        auto layer_snapshot = TRY(Layer::try_create_snapshot(*snapshot, layer));
+        auto layer_snapshot = TRY(Layer::create_snapshot(*snapshot, layer));
         snapshot->add_layer(move(layer_snapshot));
     }
     snapshot->m_selection.set_mask(m_selection.mask());
@@ -232,7 +232,7 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 
     bool layer_selected = false;
     for (auto const& snapshot_layer : snapshot.m_layers) {
-        auto layer = TRY(Layer::try_create_snapshot(*this, snapshot_layer));
+        auto layer = TRY(Layer::create_snapshot(*this, snapshot_layer));
         if (layer->is_selected()) {
             select_layer(layer.ptr());
             layer_selected = true;
@@ -342,7 +342,7 @@ void Image::flatten_all_layers()
     auto& bottom_layer = m_layers.at(0);
 
     GUI::Painter painter(bottom_layer.content_bitmap());
-    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+    paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
 
     for (size_t index = m_layers.size() - 1; index > 0; index--) {
         auto& layer = m_layers.at(index);
@@ -363,7 +363,7 @@ void Image::merge_visible_layers()
         if (m_layers.at(index).is_visible()) {
             auto& bottom_layer = m_layers.at(index);
             GUI::Painter painter(bottom_layer.content_bitmap());
-            paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+            paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
             select_layer(&bottom_layer);
             index++;
             break;
@@ -492,7 +492,7 @@ ErrorOr<void> Image::flip(Gfx::Orientation orientation)
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;
@@ -523,7 +523,7 @@ ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;
@@ -555,7 +555,7 @@ ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;
@@ -625,7 +625,7 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
     size_t selected_layer_index = 0;
     for (size_t i = 0; i < m_layers.size(); ++i) {
         auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::try_create_snapshot(*this, layer));
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
         if (layer.is_selected())
             selected_layer_index = i;

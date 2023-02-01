@@ -317,9 +317,9 @@ int Shell::builtin_type(int argc, char const** argv)
                 if (fn.body) {
                     auto formatter = Formatter(*fn.body);
                     builder.append(formatter.format());
-                    printf("%s\n}\n", builder.build().characters());
+                    printf("%s\n}\n", builder.to_deprecated_string().characters());
                 } else {
-                    printf("%s\n}\n", builder.build().characters());
+                    printf("%s\n}\n", builder.to_deprecated_string().characters());
                 }
             }
             continue;

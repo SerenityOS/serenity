@@ -90,6 +90,6 @@ void CharacterSearchWidget::search()
         StringBuilder builder;
         builder.append_code_point(code_point);
 
-        model.add_result({ code_point, builder.build(), move(display_name) });
+        model.add_result({ code_point, builder.to_deprecated_string(), move(display_name) });
     });
 }
