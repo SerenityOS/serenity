@@ -4,7 +4,7 @@
         margins: [8]
     }
 
-    @GamesSettings::Preview {
+    @GamesSettings::CardGamePreview {
         name: "cards_preview"
         fill_with_background_color: true
         fixed_height: 160
