@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +12,13 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <LibChess/Chess.h>
+#include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 
-class ChessWidget final : public GUI::Frame {
+class ChessWidget final
+    : public GUI::Frame
+    , public Config::Listener {
     C_OBJECT(ChessWidget);
 
 public:
@@ -106,6 +110,9 @@ public:
 
 private:
     ChessWidget();
+
+    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
+    virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
 
     Chess::Board m_board;
     Chess::Board m_board_playback;
