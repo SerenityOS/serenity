@@ -110,8 +110,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window.resize(800, 600);
     window.show();
 
-    if (auto url = get_formatted_url(raw_url); url.is_valid())
+    if (auto url = get_formatted_url(raw_url); url.is_valid()) {
         window.view().load(url);
+    } else if (!s_settings->homepage().isEmpty()) {
+        auto home_url = TRY(ak_string_from_qstring(s_settings->homepage()));
+        window.view().load(get_formatted_url(home_url.bytes_as_string_view()));
+    }
 
     return app.exec();
 }
