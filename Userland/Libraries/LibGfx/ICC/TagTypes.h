@@ -34,6 +34,8 @@ public:
     u32 size() const { return m_size; }
     TagTypeSignature type() const { return m_type; }
 
+    virtual ~TagData() = default;
+
 protected:
     TagData(u32 offset, u32 size, TagTypeSignature type)
         : m_offset(offset)
