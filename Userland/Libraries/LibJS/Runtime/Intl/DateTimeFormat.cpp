@@ -1235,8 +1235,8 @@ ThrowCompletionOr<LocalTime> to_local_time(VM& vm, Crypto::SignedBigInteger cons
         return LocalTime {
             // WeekDay(𝔽(floor(tz / 10^6)))
             .weekday = week_day(zoned_time),
-            // Let year be YearFromTime(𝔽(floor(tz / 10^6))). If year < -0𝔽, return "BC", else return "AD".
-            .era = year < 0 ? ::Locale::Era::BC : ::Locale::Era::AD,
+            // Let year be YearFromTime(𝔽(floor(tz / 10^6))). If year < 1𝔽, return "BC", else return "AD".
+            .era = year < 1 ? ::Locale::Era::BC : ::Locale::Era::AD,
             // YearFromTime(𝔽(floor(tz / 10^6)))
             .year = year,
             // undefined.
