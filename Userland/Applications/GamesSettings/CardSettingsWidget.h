@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,15 +18,17 @@ namespace GamesSettings {
 class CardGamePreview;
 
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(CardSettingsWidget)
+    C_OBJECT_ABSTRACT(CardSettingsWidget)
 public:
+    static ErrorOr<NonnullRefPtr<CardSettingsWidget>> try_create();
     virtual ~CardSettingsWidget() override = default;
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    CardSettingsWidget();
+    CardSettingsWidget() = default;
+    ErrorOr<void> initialize();
 
     bool set_card_back_image_path(DeprecatedString const&);
     DeprecatedString card_back_image_path() const;
