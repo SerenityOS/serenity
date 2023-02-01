@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    Config::pledge_domain("Chess");
+    Config::pledge_domain("Games");
 
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man6/Chess.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
@@ -49,10 +49,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    widget->set_piece_set(Config::read_string("Chess"sv, "Style"sv, "PieceSet"sv, "stelar7"sv));
-    widget->set_board_theme(Config::read_string("Chess"sv, "Style"sv, "BoardTheme"sv, "Beige"sv));
-    widget->set_coordinates(Config::read_bool("Chess"sv, "Style"sv, "Coordinates"sv, true));
-    widget->set_show_available_moves(Config::read_bool("Chess"sv, "Style"sv, "ShowAvailableMoves"sv, true));
+    widget->set_piece_set(Config::read_string("Games"sv, "Chess"sv, "PieceSet"sv, "stelar7"sv));
+    widget->set_board_theme(Config::read_string("Games"sv, "Chess"sv, "BoardTheme"sv, "Beige"sv));
+    widget->set_coordinates(Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true));
+    widget->set_show_available_moves(Config::read_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, true));
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
@@ -114,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto action = GUI::Action::create_checkable(set, [&](auto& action) {
             widget->set_piece_set(action.text());
             widget->update();
-            Config::write_string("Chess"sv, "Style"sv, "PieceSet"sv, action.text());
+            Config::write_string("Games"sv, "Chess"sv, "PieceSet"sv, action.text());
         });
 
         piece_set_action_group.add_action(*action);
@@ -132,7 +132,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto action = GUI::Action::create_checkable(theme, [&](auto& action) {
             widget->set_board_theme(action.text());
             widget->update();
-            Config::write_string("Chess"sv, "Style"sv, "BoardTheme"sv, action.text());
+            Config::write_string("Games"sv, "Chess"sv, "BoardTheme"sv, action.text());
         });
         board_theme_action_group.add_action(*action);
         if (widget->board_theme().name == theme)
@@ -143,7 +143,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto coordinates_action = GUI::Action::create_checkable("Coordinates", [&](auto& action) {
         widget->set_coordinates(action.is_checked());
         widget->update();
-        Config::write_bool("Chess"sv, "Style"sv, "Coordinates"sv, action.is_checked());
+        Config::write_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, action.is_checked());
     });
     coordinates_action->set_checked(widget->coordinates());
     TRY(style_menu->try_add_action(coordinates_action));
@@ -151,7 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto show_available_moves_action = GUI::Action::create_checkable("Show Available Moves", [&](auto& action) {
         widget->set_show_available_moves(action.is_checked());
         widget->update();
-        Config::write_bool("Chess"sv, "Style"sv, "ShowAvailableMoves"sv, action.is_checked());
+        Config::write_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, action.is_checked());
     });
     show_available_moves_action->set_checked(widget->show_available_moves());
     TRY(style_menu->try_add_action(show_available_moves_action));
