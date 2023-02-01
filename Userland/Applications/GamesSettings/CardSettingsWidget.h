@@ -15,7 +15,7 @@
 
 namespace GamesSettings {
 
-class Preview;
+class CardGamePreview;
 
 class CardSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT(CardSettingsWidget)
@@ -31,7 +31,7 @@ private:
     bool set_card_back_image_path(DeprecatedString const&);
     DeprecatedString card_back_image_path() const;
 
-    RefPtr<Preview> m_preview_frame;
+    RefPtr<CardGamePreview> m_preview_frame;
     RefPtr<GUI::ColorInput> m_background_color_input;
     RefPtr<GUI::IconView> m_card_back_image_view;
 
