@@ -111,6 +111,7 @@ private:
     Vector<Triangle> m_processed_triangles;
     Vector<GPU::Vertex> m_clipped_vertices;
     Array<Sampler, GPU::NUM_TEXTURE_UNITS> m_samplers;
+    bool m_samplers_need_texture_staging { false };
     Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<GPU::Material, 2u> m_materials;
     GPU::RasterPosition m_raster_position;
