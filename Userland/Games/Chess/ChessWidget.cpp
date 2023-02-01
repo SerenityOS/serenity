@@ -35,7 +35,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect({ 0, 0, width(), height() }, Color::Black);
+    painter.fill_rect(frame_inner_rect(), Color::Black);
 
     painter.translate(frame_thickness() + widget_offset_x, frame_thickness() + widget_offset_y);
 
