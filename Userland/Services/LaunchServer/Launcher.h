@@ -51,7 +51,7 @@ private:
     HashMap<DeprecatedString, DeprecatedString> m_mime_handlers;
 
     bool has_mime_handlers(DeprecatedString const&);
-    Optional<DeprecatedString> mime_type_for_file(DeprecatedString path);
+    Optional<StringView> mime_type_for_file(DeprecatedString path);
     Handler get_handler_for_executable(Handler::Type, DeprecatedString const&) const;
     size_t for_each_handler(DeprecatedString const& key, HashMap<DeprecatedString, DeprecatedString> const& user_preferences, Function<bool(Handler const&)> f);
     void for_each_handler_for_path(DeprecatedString const&, Function<bool(Handler const&)> f);

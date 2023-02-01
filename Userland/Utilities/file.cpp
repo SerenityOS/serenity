@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibAudio/Loader.h>
 #include <LibCompress/Gzip.h>
@@ -20,23 +21,23 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static Optional<DeprecatedString> description_only(StringView description, StringView)
+static ErrorOr<Optional<String>> description_only(StringView description, StringView)
 {
-    return description;
+    return String::from_utf8(description);
 }
 
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
-static Optional<DeprecatedString> image_details(StringView description, StringView path)
+static ErrorOr<Optional<String>> image_details(StringView description, StringView path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
-        return {};
+        return OptionalNone {};
 
     auto& mapped_file = *file_or_error.value();
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
     auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file.bytes(), mime_type);
     if (!image_decoder)
-        return {};
+        return OptionalNone {};
 
     StringBuilder builder;
     builder.appendff("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
@@ -49,14 +50,14 @@ static Optional<DeprecatedString> image_details(StringView description, StringVi
             builder.appendff(" {} {}", loop_count, loop_count == 1 ? "time" : "times");
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-static Optional<DeprecatedString> audio_details(StringView description, StringView path)
+static ErrorOr<Optional<String>> audio_details(StringView description, StringView path)
 {
     auto loader_or_error = Audio::Loader::create(path);
     if (loader_or_error.is_error())
-        return {};
+        return OptionalNone {};
 
     auto loader = loader_or_error.release_value();
     StringBuilder builder;
@@ -91,41 +92,41 @@ static Optional<DeprecatedString> audio_details(StringView description, StringVi
         builder.join(" "sv, metadata_parts);
     }
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-static Optional<DeprecatedString> gzip_details(StringView description, StringView path)
+static ErrorOr<Optional<String>> gzip_details(StringView description, StringView path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
-        return {};
+        return OptionalNone {};
 
     auto& mapped_file = *file_or_error.value();
     if (!Compress::GzipDecompressor::is_likely_compressed(mapped_file.bytes()))
-        return {};
+        return OptionalNone {};
 
     auto gzip_details = Compress::GzipDecompressor::describe_header(mapped_file.bytes());
     if (!gzip_details.has_value())
-        return {};
+        return OptionalNone {};
 
-    return DeprecatedString::formatted("{}, {}", description, gzip_details.value());
+    return TRY(String::formatted("{}, {}", description, gzip_details.value()));
 }
 
-static Optional<DeprecatedString> elf_details(StringView description, StringView path)
+static ErrorOr<Optional<String>> elf_details(StringView description, StringView path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
-        return {};
+        return OptionalNone {};
     auto& mapped_file = *file_or_error.value();
     auto elf_data = mapped_file.bytes();
     ELF::Image elf_image(elf_data);
     if (!elf_image.is_valid())
-        return {};
+        return OptionalNone {};
 
     StringBuilder interpreter_path_builder;
     auto result_or_error = ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_data.data(), elf_data.size(), elf_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value())
-        return {};
+        return OptionalNone {};
     auto interpreter_path = interpreter_path_builder.string_view();
 
     auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_data.data());
@@ -134,9 +135,9 @@ static Optional<DeprecatedString> elf_details(StringView description, StringView
     auto byteorder = header.e_ident[EI_DATA] == ELFDATA2LSB ? "LSB" : "MSB";
 
     bool is_dynamically_linked = !interpreter_path.is_empty();
-    DeprecatedString dynamic_section = DeprecatedString::formatted(", dynamically linked, interpreter {}", interpreter_path);
+    auto dynamic_section = TRY(String::formatted(", dynamically linked, interpreter {}", interpreter_path));
 
-    return DeprecatedString::formatted("{} {}-bit {} {}, {}, version {} ({}){}",
+    return TRY(String::formatted("{} {}-bit {} {}, {}, version {} ({}){}",
         description,
         bitness,
         byteorder,
@@ -144,7 +145,7 @@ static Optional<DeprecatedString> elf_details(StringView description, StringView
         ELF::Image::object_machine_type_to_string(header.e_machine).value_or("(?)"sv),
         header.e_ident[EI_ABIVERSION],
         ELF::Image::object_abi_type_to_string(header.e_ident[EI_OSABI]).value_or("(?)"sv),
-        is_dynamically_linked ? dynamic_section : "");
+        is_dynamically_linked ? dynamic_section : String {}));
 }
 
 #define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                                \
@@ -186,14 +187,14 @@ static Optional<DeprecatedString> elf_details(StringView description, StringView
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown"sv, "Markdown document"sv, description_only)                       \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript"sv, "POSIX shell script text executable"sv, description_only)
 
-static Optional<DeprecatedString> get_description_from_mime_type(StringView mime, StringView path)
+static ErrorOr<Optional<String>> get_description_from_mime_type(StringView mime, StringView path)
 {
 #define __ENUMERATE_MIME_TYPE_DESCRIPTION(mime_type, description, details) \
     if (mime_type == mime)                                                 \
         return details(description, path);
     ENUMERATE_MIME_TYPE_DESCRIPTIONS;
 #undef __ENUMERATE_MIME_TYPE_DESCRIPTION
-    return {};
+    return OptionalNone {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -230,8 +231,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else {
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
             auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(*file).value_or(file_name_guess);
-            auto human_readable_description = get_description_from_mime_type(mime_type, path).value_or(mime_type);
-            outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
+            auto human_readable_description = TRY(get_description_from_mime_type(mime_type, path));
+            if (!human_readable_description.has_value())
+                human_readable_description = TRY(String::from_utf8(mime_type));
+            outln("{}: {}", path, flag_mime_only ? mime_type : *human_readable_description);
         }
     }
 

@@ -50,7 +50,7 @@ private:
 
 StringView guess_mime_type_based_on_filename(StringView);
 
-Optional<DeprecatedString> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes);
-Optional<DeprecatedString> guess_mime_type_based_on_sniffed_bytes(Core::File&);
+Optional<StringView> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes);
+Optional<StringView> guess_mime_type_based_on_sniffed_bytes(Core::File&);
 
 }
