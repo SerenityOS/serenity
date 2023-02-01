@@ -10,6 +10,7 @@
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -118,8 +119,8 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
         general_tab->remove_child(*link_location_widget);
     }
 
-    auto* size = general_tab->find_descendant_of_type_named<GUI::Label>("size");
-    size->set_text(human_readable_size_long(st.st_size));
+    m_size_label = general_tab->find_descendant_of_type_named<GUI::Label>("size");
+    m_size_label->set_text(S_ISDIR(st.st_mode) ? "Calculating..." : human_readable_size_long(st.st_size));
 
     auto* owner = general_tab->find_descendant_of_type_named<GUI::Label>("owner");
     owner->set_text(DeprecatedString::formatted("{} ({})", owner_name, st.st_uid));
@@ -168,6 +169,17 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     m_apply_button = TRY(make_button("Apply", button_widget));
     m_apply_button->on_click = [this](auto) { apply_changes(); };
     m_apply_button->set_enabled(false);
+
+    if (S_ISDIR(m_old_mode)) {
+        m_directory_statistics_calculator = make_ref_counted<DirectoryStatisticsCalculator>(m_path);
+        m_directory_statistics_calculator->on_update = [this, origin_event_loop = &Core::EventLoop::current()](off_t total_size_in_bytes, size_t file_count, size_t directory_count) {
+            origin_event_loop->deferred_invoke([=, weak_this = make_weak_ptr<PropertiesWindow>()] {
+                if (auto strong_this = weak_this.strong_ref())
+                    strong_this->m_size_label->set_text(DeprecatedString::formatted("{}\n{} files, {} subdirectories", human_readable_size_long(total_size_in_bytes), file_count, directory_count));
+            });
+        };
+        m_directory_statistics_calculator->start();
+    }
 
     update();
     return {};
@@ -261,4 +273,70 @@ ErrorOr<NonnullRefPtr<GUI::Button>> PropertiesWindow::make_button(DeprecatedStri
     auto button = TRY(parent.try_add<GUI::Button>(text));
     button->set_fixed_size(70, 22);
     return button;
+}
+
+void PropertiesWindow::close()
+{
+    GUI::Window::close();
+    if (m_directory_statistics_calculator)
+        m_directory_statistics_calculator->stop();
+}
+
+PropertiesWindow::DirectoryStatisticsCalculator::DirectoryStatisticsCalculator(DeprecatedString path)
+{
+    m_work_queue.enqueue(path);
+}
+
+void PropertiesWindow::DirectoryStatisticsCalculator::start()
+{
+    using namespace AK::TimeLiterals;
+    VERIFY(!m_background_action);
+
+    m_background_action = Threading::BackgroundAction<int>::construct(
+        [this, strong_this = NonnullRefPtr(*this)](auto& task) {
+            auto timer = Core::ElapsedTimer();
+            while (!m_work_queue.is_empty()) {
+                auto base_directory = m_work_queue.dequeue();
+                Core::DirIterator di(base_directory, Core::DirIterator::SkipParentAndBaseDir);
+                while (di.has_next()) {
+                    if (task.is_cancelled())
+                        return ECANCELED;
+
+                    auto path = di.next_path();
+                    struct stat st = {};
+                    if (fstatat(di.fd(), path.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
+                        perror("fstatat");
+                        continue;
+                    }
+
+                    if (S_ISDIR(st.st_mode)) {
+                        auto full_path = LexicalPath::join("/"sv, base_directory, path).string();
+                        m_directory_count++;
+                        m_work_queue.enqueue(full_path);
+                    } else if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)) {
+                        m_file_count++;
+                        m_total_size_in_bytes += st.st_size;
+                    }
+
+                    // Show the first update, then show any subsequent updates every 100ms.
+                    if (!task.is_cancelled() && on_update && (!timer.is_valid() || timer.elapsed_time() > 100_ms)) {
+                        timer.start();
+                        on_update(m_total_size_in_bytes, m_file_count, m_directory_count);
+                    }
+                }
+            }
+            return ESUCCESS;
+        },
+        [this](auto result) -> ErrorOr<void> {
+            if (on_update && result == ESUCCESS)
+                on_update(m_total_size_in_bytes, m_file_count, m_directory_count);
+
+            return {};
+        });
+}
+
+void PropertiesWindow::DirectoryStatisticsCalculator::stop()
+{
+    VERIFY(m_background_action);
+    m_background_action->cancel();
 }
