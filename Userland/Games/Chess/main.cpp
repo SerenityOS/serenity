@@ -42,11 +42,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto size = Config::read_i32("Chess"sv, "Display"sv, "size"sv, 512);
     window->set_title("Chess");
     window->set_base_size({ 4, 4 });
     window->set_size_increment({ 8, 8 });
-    window->resize(size - 4, size - 4);
+    window->resize(508, 508);
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
