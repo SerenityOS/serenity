@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -103,89 +103,6 @@ static Vector4<f32x4> to_vec4(u32x4 bgra)
     };
 }
 
-void Device::setup_blend_factors()
-{
-    m_alpha_blend_factors = {};
-
-    switch (m_options.blend_source_factor) {
-    case GPU::BlendFactor::Zero:
-        break;
-    case GPU::BlendFactor::One:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        break;
-    case GPU::BlendFactor::SrcColor:
-        m_alpha_blend_factors.src_factor_src_color = 1;
-        break;
-    case GPU::BlendFactor::OneMinusSrcColor:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_src_color = -1;
-        break;
-    case GPU::BlendFactor::SrcAlpha:
-        m_alpha_blend_factors.src_factor_src_alpha = 1;
-        break;
-    case GPU::BlendFactor::OneMinusSrcAlpha:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_src_alpha = -1;
-        break;
-    case GPU::BlendFactor::DstAlpha:
-        m_alpha_blend_factors.src_factor_dst_alpha = 1;
-        break;
-    case GPU::BlendFactor::OneMinusDstAlpha:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_dst_alpha = -1;
-        break;
-    case GPU::BlendFactor::DstColor:
-        m_alpha_blend_factors.src_factor_dst_color = 1;
-        break;
-    case GPU::BlendFactor::OneMinusDstColor:
-        m_alpha_blend_factors.src_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.src_factor_dst_color = -1;
-        break;
-    case GPU::BlendFactor::SrcAlphaSaturate:
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    switch (m_options.blend_destination_factor) {
-    case GPU::BlendFactor::Zero:
-        break;
-    case GPU::BlendFactor::One:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        break;
-    case GPU::BlendFactor::SrcColor:
-        m_alpha_blend_factors.dst_factor_src_color = 1;
-        break;
-    case GPU::BlendFactor::OneMinusSrcColor:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_src_color = -1;
-        break;
-    case GPU::BlendFactor::SrcAlpha:
-        m_alpha_blend_factors.dst_factor_src_alpha = 1;
-        break;
-    case GPU::BlendFactor::OneMinusSrcAlpha:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_src_alpha = -1;
-        break;
-    case GPU::BlendFactor::DstAlpha:
-        m_alpha_blend_factors.dst_factor_dst_alpha = 1;
-        break;
-    case GPU::BlendFactor::OneMinusDstAlpha:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_dst_alpha = -1;
-        break;
-    case GPU::BlendFactor::DstColor:
-        m_alpha_blend_factors.dst_factor_dst_color = 1;
-        break;
-    case GPU::BlendFactor::OneMinusDstColor:
-        m_alpha_blend_factors.dst_constant = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_alpha_blend_factors.dst_factor_dst_color = -1;
-        break;
-    case GPU::BlendFactor::SrcAlphaSaturate:
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
 ALWAYS_INLINE static void test_alpha(PixelQuad& quad, GPU::AlphaTestFunction alpha_test_function, f32x4 const& reference_value)
 {
     auto const alpha = quad.get_output_float(SHADER_OUTPUT_FIRST_COLOR + 3);
@@ -213,6 +130,44 @@ ALWAYS_INLINE static void test_alpha(PixelQuad& quad, GPU::AlphaTestFunction alp
         quad.mask &= alpha != reference_value;
         break;
     case GPU::AlphaTestFunction::Never:
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+ALWAYS_INLINE static bool is_blend_factor_constant(GPU::BlendFactor blend_factor)
+{
+    return (blend_factor == GPU::BlendFactor::One || blend_factor == GPU::BlendFactor::Zero);
+}
+
+// OpenGL 1.5 § 4.1.8, table 4.1
+ALWAYS_INLINE static Vector4<f32x4> get_blend_factor(GPU::BlendFactor blend_factor, Vector4<f32x4> const& source_color, Vector4<f32x4> const& destination_color)
+{
+    switch (blend_factor) {
+    case GPU::BlendFactor::DstAlpha:
+        return to_vec4(destination_color.w());
+    case GPU::BlendFactor::DstColor:
+        return destination_color;
+    case GPU::BlendFactor::One:
+        return to_vec4(expand4(1.f));
+    case GPU::BlendFactor::OneMinusDstAlpha:
+        return to_vec4(1.f - destination_color.w());
+    case GPU::BlendFactor::OneMinusDstColor:
+        return to_vec4(expand4(1.f)) - destination_color;
+    case GPU::BlendFactor::OneMinusSrcAlpha:
+        return to_vec4(1.f - source_color.w());
+    case GPU::BlendFactor::OneMinusSrcColor:
+        return to_vec4(expand4(1.f)) - source_color;
+    case GPU::BlendFactor::SrcAlpha:
+        return to_vec4(source_color.w());
+    case GPU::BlendFactor::SrcAlphaSaturate: {
+        auto saturated = min(source_color.w(), 1.f - destination_color.w());
+        return { saturated, saturated, saturated, expand4(1.f) };
+    }
+    case GPU::BlendFactor::SrcColor:
+        return source_color;
+    case GPU::BlendFactor::Zero:
+        return to_vec4(expand4(0.f));
     default:
         VERIFY_NOT_REACHED();
     }
@@ -283,6 +238,18 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
     auto const qx1 = render_bounds_right & ~1;
     auto const qy0 = render_bounds_top & ~1;
     auto const qy1 = render_bounds_bottom & ~1;
+
+    // Blend factors
+    Vector4<f32x4> src_factor;
+    Vector4<f32x4> dst_factor;
+    auto const src_factor_is_constant = is_blend_factor_constant(m_options.blend_source_factor);
+    auto const dst_factor_is_constant = is_blend_factor_constant(m_options.blend_destination_factor);
+    if (m_options.enable_blending) {
+        if (src_factor_is_constant)
+            src_factor = get_blend_factor(m_options.blend_source_factor, {}, {});
+        if (dst_factor_is_constant)
+            dst_factor = get_blend_factor(m_options.blend_destination_factor, {}, {});
+    }
 
     // Rasterize all quads
     // FIXME: this could be embarrassingly parallel
@@ -474,19 +441,12 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
 
                 // Blend color values from pixel_staging into color_buffer
                 auto const& src = out_color;
-                auto dst = to_vec4(dst_u32);
+                auto const dst = to_vec4(dst_u32);
 
-                auto src_factor = expand4(m_alpha_blend_factors.src_constant)
-                    + src * m_alpha_blend_factors.src_factor_src_color
-                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * m_alpha_blend_factors.src_factor_src_alpha
-                    + dst * m_alpha_blend_factors.src_factor_dst_color
-                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * m_alpha_blend_factors.src_factor_dst_alpha;
-
-                auto dst_factor = expand4(m_alpha_blend_factors.dst_constant)
-                    + src * m_alpha_blend_factors.dst_factor_src_color
-                    + Vector4<f32x4> { src.w(), src.w(), src.w(), src.w() } * m_alpha_blend_factors.dst_factor_src_alpha
-                    + dst * m_alpha_blend_factors.dst_factor_dst_color
-                    + Vector4<f32x4> { dst.w(), dst.w(), dst.w(), dst.w() } * m_alpha_blend_factors.dst_factor_dst_alpha;
+                if (!src_factor_is_constant)
+                    src_factor = get_blend_factor(m_options.blend_source_factor, src, dst);
+                if (!dst_factor_is_constant)
+                    dst_factor = get_blend_factor(m_options.blend_destination_factor, src, dst);
 
                 out_color = src * src_factor + dst * dst_factor;
             }
@@ -1595,9 +1555,6 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 void Device::set_options(GPU::RasterizerOptions const& options)
 {
     m_options = options;
-
-    if (m_options.enable_blending)
-        setup_blend_factors();
 }
 
 void Device::set_light_model_params(GPU::LightModelParameters const& lighting_model)
