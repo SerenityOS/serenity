@@ -16,16 +16,23 @@ namespace Web::HTML {
 
 JS::NonnullGCPtr<MessagePort> MessagePort::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<MessagePort>(realm, realm);
+    return realm.heap().allocate<MessagePort>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MessagePort::MessagePort(JS::Realm& realm)
     : DOM::EventTarget(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MessagePort"));
 }
 
 MessagePort::~MessagePort() = default;
+
+JS::ThrowCompletionOr<void> MessagePort::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MessagePortPrototype>(realm, "MessagePort"));
+
+    return {};
+}
 
 void MessagePort::visit_edges(Cell::Visitor& visitor)
 {

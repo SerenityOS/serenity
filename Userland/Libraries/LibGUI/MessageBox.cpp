@@ -76,13 +76,13 @@ RefPtr<Gfx::Bitmap> MessageBox::icon() const
 {
     switch (m_type) {
     case Type::Information:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-information.png"sv).release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-information.png"sv).release_value_but_fixme_should_propagate_errors();
     case Type::Warning:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-warning.png"sv).release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-warning.png"sv).release_value_but_fixme_should_propagate_errors();
     case Type::Error:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-error.png"sv).release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-error.png"sv).release_value_but_fixme_should_propagate_errors();
     case Type::Question:
-        return Gfx::Bitmap::try_load_from_file("/res/icons/32x32/msgbox-question.png"sv).release_value_but_fixme_should_propagate_errors();
+        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-question.png"sv).release_value_but_fixme_should_propagate_errors();
     default:
         return nullptr;
     }
@@ -110,21 +110,21 @@ bool MessageBox::should_include_no_button() const
 
 void MessageBox::build()
 {
-    auto& widget = set_main_widget<Widget>();
+    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
 
-    int text_width = widget.font().width(m_text);
+    int text_width = widget->font().width(m_text);
     auto number_of_lines = m_text.split('\n').size();
-    int padded_text_height = widget.font().glyph_height() * 1.6;
+    int padded_text_height = widget->font().glyph_height() * 1.6;
     int total_text_height = number_of_lines * padded_text_height;
     int icon_width = 0;
 
-    widget.set_layout<VerticalBoxLayout>();
-    widget.set_fill_with_background_color(true);
+    widget->set_layout<VerticalBoxLayout>();
+    widget->set_fill_with_background_color(true);
 
-    widget.layout()->set_margins(8);
-    widget.layout()->set_spacing(6);
+    widget->layout()->set_margins(8);
+    widget->layout()->set_spacing(6);
 
-    auto& message_container = widget.add<Widget>();
+    auto& message_container = widget->add<Widget>();
     message_container.set_layout<HorizontalBoxLayout>();
     message_container.layout()->set_spacing(8);
 
@@ -143,7 +143,7 @@ void MessageBox::build()
     if (m_type != Type::None)
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto& button_container = widget.add<Widget>();
+    auto& button_container = widget->add<Widget>();
     button_container.set_layout<HorizontalBoxLayout>();
     button_container.set_fixed_height(24);
     button_container.layout()->set_spacing(8);

@@ -23,7 +23,6 @@ public:
 private:
     ISAIDEController();
 
-    LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
     ErrorOr<void> initialize_channels();
 };
 }

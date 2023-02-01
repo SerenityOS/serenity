@@ -15,8 +15,11 @@
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
 
+#define KERNEL_MAPPING_BASE 0x2000000000
+
 #define KERNEL_PD_END (kernel_mapping_base + KERNEL_PD_SIZE)
-#define KERNEL_PT1024_BASE (kernel_mapping_base + 0x3FE00000)
+#define KERNEL_PT1024_OFFSET 0x3FE00000
+#define KERNEL_PT1024_BASE (kernel_mapping_base + KERNEL_PT1024_OFFSET)
 
 #define KERNEL_MAX_CPU_COUNT 64
 #define KERNEL_QUICKMAP_PT_PER_CPU_BASE (KERNEL_PT1024_BASE + (1 * KERNEL_MAX_CPU_COUNT * PAGE_SIZE))

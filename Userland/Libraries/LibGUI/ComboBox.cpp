@@ -102,7 +102,7 @@ ComboBox::ComboBox()
 
     m_open_button = add<Button>();
     m_open_button->set_button_style(Gfx::ButtonStyle::ThickCap);
-    m_open_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_open_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors());
     m_open_button->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_open_button->on_click = [this](auto) {
         if (!m_list_view->item_count())
@@ -116,7 +116,7 @@ ComboBox::ComboBox()
     m_list_window = add<Window>(window());
     m_list_window->set_window_type(GUI::WindowType::Popup);
 
-    m_list_view = m_list_window->set_main_widget<ListView>();
+    m_list_view = m_list_window->set_main_widget<ListView>().release_value_but_fixme_should_propagate_errors();
     m_list_view->set_should_hide_unnecessary_scrollbars(true);
     m_list_view->set_alternating_row_colors(false);
     m_list_view->set_hover_highlighting(true);

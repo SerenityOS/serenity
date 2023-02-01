@@ -25,10 +25,10 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
     auto theme_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}", cursor_theme, "Config.ini");
     auto cursor_theme_config = TRY(Core::ConfigFile::open(theme_path));
     auto load_bitmap = [](StringView path, StringView default_path) {
-        auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
+        auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
         if (!maybe_bitmap.is_error())
             return maybe_bitmap;
-        return Gfx::Bitmap::try_load_from_file(default_path);
+        return Gfx::Bitmap::load_from_file(default_path);
     };
     constexpr auto default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
     auto cursor_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}",
@@ -37,10 +37,10 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
     m_cursor_params = Gfx::CursorParams::parse_from_filename(cursor_path, m_cursor_bitmap->rect().center()).constrained(*m_cursor_bitmap);
     // Setup cursor animation:
     if (m_cursor_params.frames() > 1 && m_cursor_params.frame_ms() > 0) {
-        m_frame_timer = Core::Timer::create_repeating(m_cursor_params.frame_ms(), [&] {
+        m_frame_timer = TRY(Core::Timer::create_repeating(m_cursor_params.frame_ms(), [&] {
             m_cursor_frame = (m_cursor_frame + 1) % m_cursor_params.frames();
             update();
-        });
+        }));
         m_frame_timer->start();
     } else {
         m_frame_timer = nullptr;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,9 +21,9 @@ PluralRulesConstructor::PluralRulesConstructor(Realm& realm)
 {
 }
 
-void PluralRulesConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> PluralRulesConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -33,6 +33,8 @@ void PluralRulesConstructor::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+
+    return {};
 }
 
 // 16.1.1 Intl.PluralRules ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.pluralrules
@@ -50,7 +52,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PluralRulesConstructor::construct(Functi
     auto locales = vm.argument(0);
     auto options = vm.argument(1);
 
-    // 2. Let pluralRules be ? OrdinaryCreateFromConstructor(NewTarget, "%PluralRules.prototype%", « [[InitializedPluralRules]], [[Locale]], [[Type]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]] »).
+    // 2. Let pluralRules be ? OrdinaryCreateFromConstructor(NewTarget, "%PluralRules.prototype%", « [[InitializedPluralRules]], [[Locale]], [[Type]], [[MinimumIntegerDigits]], [[MinimumFractionDigits]], [[MaximumFractionDigits]], [[MinimumSignificantDigits]], [[MaximumSignificantDigits]], [[RoundingType]], [[RoundingMode]], [[RoundingIncrement]], [[TrailingZeroDisplay]] »).
     auto plural_rules = TRY(ordinary_create_from_constructor<PluralRules>(vm, new_target, &Intrinsics::intl_plural_rules_prototype));
 
     // 3. Return ? InitializePluralRules(pluralRules, locales, options).
@@ -84,24 +86,24 @@ ThrowCompletionOr<PluralRules*> initialize_plural_rules(VM& vm, PluralRules& plu
     // 3. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 4. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 4. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, AK::Array { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 5. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
-    // 6. Let t be ? GetOption(options, "type", "string", « "cardinal", "ordinal" », "cardinal").
+    // 6. Let t be ? GetOption(options, "type", string, « "cardinal", "ordinal" », "cardinal").
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, AK::Array { "cardinal"sv, "ordinal"sv }, "cardinal"sv));
 
     // 7. Set pluralRules.[[Type]] to t.
-    plural_rules.set_type(type.as_string().deprecated_string());
+    plural_rules.set_type(TRY(type.as_string().utf8_string_view()));
 
     // 8. Perform ? SetNumberFormatDigitOptions(pluralRules, options, +0𝔽, 3𝔽, "standard").
     TRY(set_number_format_digit_options(vm, plural_rules, *options, 0, 3, NumberFormat::Notation::Standard));
 
     // 9. Let localeData be %PluralRules%.[[LocaleData]].
     // 10. Let r be ResolveLocale(%PluralRules%.[[AvailableLocales]], requestedLocales, opt, %PluralRules%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, {});
+    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
 
     // 11. Set pluralRules.[[Locale]] to r.[[locale]].
     plural_rules.set_locale(move(result.locale));

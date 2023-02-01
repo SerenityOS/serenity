@@ -121,7 +121,7 @@ void Backtrace::add_entry(Reader const& coredump, FlatPtr ip)
     }
 
     auto function_name = object_info->debug_info->elf().symbolicate(ip - region->region_start);
-    auto source_position = object_info->debug_info->get_source_position_with_inlines(ip - region->region_start);
+    auto source_position = object_info->debug_info->get_source_position_with_inlines(ip - region->region_start).release_value_but_fixme_should_propagate_errors();
     m_entries.append({ ip, object_name, function_name, source_position });
 }
 
@@ -131,7 +131,7 @@ DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
     builder.appendff("{:p}: ", eip);
     if (object_name.is_empty()) {
         builder.append("???"sv);
-        return builder.build();
+        return builder.to_deprecated_string();
     }
     builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
     builder.append(" ("sv);
@@ -158,7 +158,7 @@ DeprecatedString Backtrace::Entry::to_deprecated_string(bool color) const
 
     builder.append(')');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

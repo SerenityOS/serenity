@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -19,9 +19,9 @@ DurationConstructor::DurationConstructor(Realm& realm)
 {
 }
 
-void DurationConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> DurationConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -33,6 +33,8 @@ void DurationConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.compare, compare, 2, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    return {};
 }
 
 // 7.1.1 Temporal.Duration ( [ years [ , months [ , weeks [ , days [ , hours [ , minutes [ , seconds [ , milliseconds [ , microseconds [ , nanoseconds ] ] ] ] ] ] ] ] ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration
@@ -128,10 +130,10 @@ JS_DEFINE_NATIVE_FUNCTION(DurationConstructor::compare)
     // 7. If any of one.[[Years]], two.[[Years]], one.[[Months]], two.[[Months]], one.[[Weeks]], or two.[[Weeks]] are not 0, then
     if (one->years() != 0 || two->years() != 0 || one->months() != 0 || two->months() != 0 || one->weeks() != 0 || two->weeks() != 0) {
         // a. Let unbalanceResult1 be ? UnbalanceDurationRelative(one.[[Years]], one.[[Months]], one.[[Weeks]], one.[[Days]], "day", relativeTo).
-        auto unbalance_result1 = TRY(unbalance_duration_relative(vm, one->years(), one->months(), one->weeks(), one->days(), "day", relative_to));
+        auto unbalance_result1 = TRY(unbalance_duration_relative(vm, one->years(), one->months(), one->weeks(), one->days(), "day"sv, relative_to));
 
         // b. Let unbalanceResult2 be ? UnbalanceDurationRelative(two.[[Years]], two.[[Months]], two.[[Weeks]], two.[[Days]], "day", relativeTo).
-        auto unbalance_result2 = TRY(unbalance_duration_relative(vm, two->years(), two->months(), two->weeks(), two->days(), "day", relative_to));
+        auto unbalance_result2 = TRY(unbalance_duration_relative(vm, two->years(), two->months(), two->weeks(), two->days(), "day"sv, relative_to));
 
         // c. Let days1 be unbalanceResult1.[[Days]].
         days1 = unbalance_result1.days;

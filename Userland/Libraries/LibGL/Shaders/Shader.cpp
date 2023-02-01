@@ -24,7 +24,7 @@ ErrorOr<void> Shader::add_source(StringView source_code)
 
 ErrorOr<void> Shader::compile()
 {
-    m_info_log = TRY(String::from_utf8(""sv));
+    m_info_log = String {};
 
     GLSL::Compiler compiler;
 

@@ -63,7 +63,7 @@ bool NoteTrack::check_processor_chain_valid() const
 
 ErrorOr<void> Track::resize_internal_buffers_to(size_t buffer_size)
 {
-    m_secondary_sample_buffer = TRY(FixedArray<Sample>::try_create(buffer_size));
+    m_secondary_sample_buffer = TRY(FixedArray<Sample>::create(buffer_size));
     return {};
 }
 

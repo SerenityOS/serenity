@@ -9,10 +9,10 @@
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/OwnPtr.h>
-#include <AK/Stream.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibCore/Stream.h>
 
 namespace Writer {
 
@@ -23,16 +23,7 @@ enum class WriterBehavior : u32 {
     QuoteOnlyInFieldStart = WriteHeaders << 2,
     QuoteAll = WriteHeaders << 3,
 };
-
-inline WriterBehavior operator&(WriterBehavior left, WriterBehavior right)
-{
-    return static_cast<WriterBehavior>(static_cast<u32>(left) & static_cast<u32>(right));
-}
-
-inline WriterBehavior operator|(WriterBehavior left, WriterBehavior right)
-{
-    return static_cast<WriterBehavior>(static_cast<u32>(left) | static_cast<u32>(right));
-}
+AK_ENUM_BITWISE_OPERATORS(WriterBehavior);
 
 struct WriterTraits {
     DeprecatedString separator;
@@ -43,17 +34,6 @@ struct WriterTraits {
     } quote_escape { Repeat };
 };
 
-#define ENUMERATE_WRITE_ERRORS()                                                  \
-    E(None, "No errors")                                                          \
-    E(NonConformingColumnCount, "Header count does not match given column count") \
-    E(InternalError, "Internal error")
-
-enum class WriteError {
-#define E(name, _) name,
-    ENUMERATE_WRITE_ERRORS()
-#undef E
-};
-
 constexpr WriterBehavior default_behaviors()
 {
     return WriterBehavior::None;
@@ -62,138 +42,135 @@ constexpr WriterBehavior default_behaviors()
 template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    XSV(OutputStream& output, ContainerType const& data, WriterTraits const& traits, HeaderType const& headers = {}, WriterBehavior behaviors = default_behaviors())
+    static ErrorOr<void> generate(AK::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
+    {
+        auto writer = XSV(output, data, traits, headers, behaviors);
+        auto with_headers = has_flag(writer.m_behaviors, WriterBehavior::WriteHeaders);
+        if (with_headers) {
+            TRY(writer.write_row(writer.m_names));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
+        }
+
+        for (auto&& row : writer.m_data) {
+            if (with_headers) {
+                if (row.size() != writer.m_names.size())
+                    return Error::from_string_literal("Header count does not match given column count");
+            }
+
+            TRY(writer.write_row(row));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
+        }
+        return {};
+    }
+
+    static ErrorOr<void> generate_preview(AK::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
+    {
+        auto writer = XSV(output, data, traits, headers, behaviors);
+        auto lines_written = 0;
+        constexpr auto max_preview_lines = 8;
+
+        auto with_headers = has_flag(writer.m_behaviors, WriterBehavior::WriteHeaders);
+        if (with_headers) {
+            TRY(writer.write_row(writer.m_names));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
+            ++lines_written;
+        }
+
+        for (auto&& row : writer.m_data) {
+            if (with_headers) {
+                if (row.size() != writer.m_names.size())
+                    return Error::from_string_literal("Header count does not match given column count");
+            }
+
+            TRY(writer.write_row(row));
+            TRY(writer.m_output.write_entire_buffer({ "\n", 1 }));
+            ++lines_written;
+
+            if (lines_written >= max_preview_lines)
+                break;
+        }
+        return {};
+    }
+
+private:
+    XSV(AK::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
         : m_data(data)
-        , m_traits(traits)
+        , m_traits(move(traits))
         , m_behaviors(behaviors)
         , m_names(headers)
         , m_output(output)
     {
         if (!headers.is_empty())
             m_behaviors = m_behaviors | WriterBehavior::WriteHeaders;
-
-        generate();
-    }
-
-    virtual ~XSV() = default;
-
-    bool has_error() const { return m_error != WriteError::None; }
-    WriteError error() const { return m_error; }
-    DeprecatedString error_string() const
-    {
-        switch (m_error) {
-#define E(x, y)         \
-    case WriteError::x: \
-        return y;
-
-            ENUMERATE_WRITE_ERRORS();
-#undef E
-        }
-        VERIFY_NOT_REACHED();
-    }
-
-private:
-    void set_error(WriteError error)
-    {
-        if (m_error == WriteError::None)
-            m_error = error;
-    }
-
-    void generate()
-    {
-        auto with_headers = (m_behaviors & WriterBehavior::WriteHeaders) != WriterBehavior::None;
-        if (with_headers) {
-            write_row(m_names);
-            if (m_output.write({ "\n", 1 }) != 1)
-                set_error(WriteError::InternalError);
-        }
-
-        for (auto&& row : m_data) {
-            if (with_headers) {
-                if (row.size() != m_names.size())
-                    set_error(WriteError::NonConformingColumnCount);
-            }
-
-            write_row(row);
-            if (m_output.write({ "\n", 1 }) != 1)
-                set_error(WriteError::InternalError);
-        }
     }
 
     template<typename T>
-    void write_row(T&& row)
+    ErrorOr<void> write_row(T&& row)
     {
         bool first = true;
         for (auto&& entry : row) {
             if (!first) {
-                if (m_output.write(m_traits.separator.bytes()) != m_traits.separator.length())
-                    set_error(WriteError::InternalError);
+                TRY(m_output.write_entire_buffer(m_traits.separator.bytes()));
             }
             first = false;
-            write_entry(entry);
+            TRY(write_entry(entry));
         }
+        return {};
     }
 
     template<typename T>
-    void write_entry(T&& entry)
+    ErrorOr<void> write_entry(T&& entry)
     {
         auto string = DeprecatedString::formatted("{}", FormatIfSupported(entry));
 
-        auto safe_to_write_normally = (m_behaviors & WriterBehavior::QuoteAll) == WriterBehavior::None
+        auto safe_to_write_normally = !has_flag(m_behaviors, WriterBehavior::QuoteAll)
             && !string.contains('\n')
             && !string.contains(m_traits.separator);
 
         if (safe_to_write_normally) {
-            if ((m_behaviors & WriterBehavior::QuoteOnlyInFieldStart) == WriterBehavior::None)
-                safe_to_write_normally = !string.contains(m_traits.quote);
-            else
+            if (has_flag(m_behaviors, WriterBehavior::QuoteOnlyInFieldStart))
                 safe_to_write_normally = !string.starts_with(m_traits.quote);
+            else
+                safe_to_write_normally = !string.contains(m_traits.quote);
         }
 
         if (safe_to_write_normally) {
-            if (m_output.write(string.bytes()) != string.length())
-                set_error(WriteError::InternalError);
-            return;
+            if (!string.is_empty())
+                TRY(m_output.write_entire_buffer(string.bytes()));
+            return {};
         }
 
-        if (m_output.write(m_traits.quote.bytes()) != m_traits.quote.length())
-            set_error(WriteError::InternalError);
+        TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
 
         GenericLexer lexer(string);
         while (!lexer.is_eof()) {
             if (lexer.consume_specific(m_traits.quote)) {
                 switch (m_traits.quote_escape) {
                 case WriterTraits::Repeat:
-                    if (m_output.write(m_traits.quote.bytes()) != m_traits.quote.length())
-                        set_error(WriteError::InternalError);
-                    if (m_output.write(m_traits.quote.bytes()) != m_traits.quote.length())
-                        set_error(WriteError::InternalError);
+                    TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
+                    TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
                     break;
                 case WriterTraits::Backslash:
-                    if (m_output.write({ "\\", 1 }) != 1)
-                        set_error(WriteError::InternalError);
-                    if (m_output.write(m_traits.quote.bytes()) != m_traits.quote.length())
-                        set_error(WriteError::InternalError);
+                    TRY(m_output.write_entire_buffer({ "\\", 1 }));
+                    TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
                     break;
                 }
                 continue;
             }
 
             auto ch = lexer.consume();
-            if (m_output.write({ &ch, 1 }) != 1)
-                set_error(WriteError::InternalError);
+            TRY(m_output.write_entire_buffer({ &ch, 1 }));
         }
 
-        if (m_output.write(m_traits.quote.bytes()) != m_traits.quote.length())
-            set_error(WriteError::InternalError);
+        TRY(m_output.write_entire_buffer(m_traits.quote.bytes()));
+        return {};
     }
 
     ContainerType const& m_data;
-    WriterTraits const& m_traits;
+    WriterTraits m_traits;
     WriterBehavior m_behaviors;
-    HeaderType const& m_names;
-    WriteError m_error { WriteError::None };
-    OutputStream& m_output;
+    HeaderType m_names;
+    AK::Stream& m_output;
 };
 
 }

@@ -34,7 +34,7 @@ Optional<OpCode> instruction_from_name(StringView name)
 void Printer::print_indent()
 {
     for (size_t i = 0; i < m_indent; ++i)
-        m_stream.write_or_error("  "sv.bytes());
+        m_stream.write_entire_buffer("  "sv.bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
 void Printer::print(Wasm::BlockType const& type)

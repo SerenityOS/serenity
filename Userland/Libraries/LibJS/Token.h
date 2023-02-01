@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 
@@ -181,9 +181,9 @@ class Token {
 public:
     Token() = default;
 
-    Token(TokenType type, DeprecatedString message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
+    Token(TokenType type, String message, StringView trivia, StringView value, StringView filename, size_t line_number, size_t line_column, size_t offset)
         : m_type(type)
-        , m_message(message)
+        , m_message(move(message))
         , m_trivia(trivia)
         , m_original_value(value)
         , m_value(value)
@@ -200,23 +200,23 @@ public:
     char const* name() const;
     static char const* name(TokenType);
 
-    DeprecatedString const& message() const { return m_message; }
+    String const& message() const { return m_message; }
     StringView trivia() const { return m_trivia; }
     StringView original_value() const { return m_original_value; }
     StringView value() const
     {
         return m_value.visit(
             [](StringView view) { return view; },
-            [](FlyString const& identifier) { return identifier.view(); },
+            [](DeprecatedFlyString const& identifier) { return identifier.view(); },
             [](Empty) -> StringView { VERIFY_NOT_REACHED(); });
     }
 
-    FlyString flystring_value() const
+    DeprecatedFlyString DeprecatedFlyString_value() const
     {
         return m_value.visit(
-            [](StringView view) -> FlyString { return view; },
-            [](FlyString const& identifier) -> FlyString { return identifier; },
-            [](Empty) -> FlyString { VERIFY_NOT_REACHED(); });
+            [](StringView view) -> DeprecatedFlyString { return view; },
+            [](DeprecatedFlyString const& identifier) -> DeprecatedFlyString { return identifier; },
+            [](Empty) -> DeprecatedFlyString { VERIFY_NOT_REACHED(); });
     }
 
     StringView filename() const { return m_filename; }
@@ -236,7 +236,7 @@ public:
     DeprecatedString string_value(StringValueStatus& status) const;
     DeprecatedString raw_template_value() const;
 
-    void set_identifier_value(FlyString value)
+    void set_identifier_value(DeprecatedFlyString value)
     {
         m_value = move(value);
     }
@@ -246,10 +246,10 @@ public:
 
 private:
     TokenType m_type { TokenType::Invalid };
-    DeprecatedString m_message;
+    String m_message;
     StringView m_trivia;
     StringView m_original_value;
-    Variant<Empty, StringView, FlyString> m_value {};
+    Variant<Empty, StringView, DeprecatedFlyString> m_value {};
     StringView m_filename;
     size_t m_line_number { 0 };
     size_t m_line_column { 0 };

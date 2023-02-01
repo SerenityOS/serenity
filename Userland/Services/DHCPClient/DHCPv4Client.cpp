@@ -139,7 +139,8 @@ DHCPv4Client::DHCPv4Client(Vector<DeprecatedString> interfaces_with_dhcp_enabled
     }
 
     m_check_timer = Core::Timer::create_repeating(
-        1000, [this] { try_discover_ifs(); }, this);
+        1000, [this] { try_discover_ifs(); }, this)
+                        .release_value_but_fixme_should_propagate_errors();
 
     m_check_timer->start();
 
@@ -192,13 +193,13 @@ ErrorOr<DHCPv4Client::Interfaces> DHCPv4Client::get_discoverable_interfaces()
     json.value().as_array().for_each([&ifnames_to_immediately_discover, &ifnames_to_attempt_later](auto& value) {
         auto if_object = value.as_object();
 
-        if (if_object.get("class_name"sv).to_deprecated_string() == "LoopbackAdapter")
+        if (if_object.get_deprecated_string("class_name"sv).value_or({}) == "LoopbackAdapter")
             return;
 
-        auto name = if_object.get("name"sv).to_deprecated_string();
-        auto mac = if_object.get("mac_address"sv).to_deprecated_string();
-        auto is_up = if_object.get("link_up"sv).to_bool();
-        auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get("ipv4_address"sv).to_deprecated_string());
+        auto name = if_object.get_deprecated_string("name"sv).value_or({});
+        auto mac = if_object.get_deprecated_string("mac_address"sv).value_or({});
+        auto is_up = if_object.get_bool("link_up"sv).value_or(false);
+        auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get_deprecated_string("ipv4_address"sv).value_or({}));
         auto ipv4_addr = ipv4_addr_maybe.has_value() ? ipv4_addr_maybe.value() : IPv4Address { 0, 0, 0, 0 };
         if (is_up) {
             dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);
@@ -260,7 +261,8 @@ void DHCPv4Client::handle_ack(DHCPv4Packet const& packet, ParsedDHCPv4Options co
             transaction->has_ip = false;
             dhcp_discover(interface);
         },
-        this);
+        this)
+        .release_value_but_fixme_should_propagate_errors();
 
     Optional<IPv4Address> gateway;
     if (auto routers = options.get_many<IPv4Address>(DHCPOption::Router, 1); !routers.is_empty())
@@ -287,7 +289,8 @@ void DHCPv4Client::handle_nak(DHCPv4Packet const& packet, ParsedDHCPv4Options co
         [this, iface = InterfaceDescriptor { iface }] {
             dhcp_discover(iface);
         },
-        this);
+        this)
+        .release_value_but_fixme_should_propagate_errors();
 }
 
 void DHCPv4Client::process_incoming(DHCPv4Packet const& packet)

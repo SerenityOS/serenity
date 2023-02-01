@@ -22,7 +22,7 @@ JS::ThrowCompletionOr<DeprecatedString> IdentityCell::display(Cell& cell, CellTy
     if (!metadata.format.is_empty())
         data = TRY(cell.sheet().evaluate(metadata.format, &cell));
 
-    return data.to_string(vm);
+    return data.to_deprecated_string(vm);
 }
 
 JS::ThrowCompletionOr<JS::Value> IdentityCell::js_value(Cell& cell, CellTypeMetadata const&) const

@@ -4,18 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <grp.h>
-#include <string.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath chown"));
 
-    char const* gid_arg = nullptr;
+    StringView gid_arg;
     StringView path {};
     bool dont_follow_symlinks = false;
 
@@ -28,17 +26,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     gid_t new_gid = -1;
 
-    if (DeprecatedString(gid_arg).is_empty()) {
+    if (gid_arg.is_empty()) {
         warnln("Empty gid option");
         return 1;
     }
 
-    auto number = DeprecatedString(gid_arg).to_uint();
+    auto number = gid_arg.to_uint();
     if (number.has_value()) {
         new_gid = number.value();
     } else {
-        auto* group = getgrnam(gid_arg);
-        if (!group) {
+        auto group = TRY(Core::System::getgrnam(gid_arg));
+        if (!group.has_value()) {
             warnln("Unknown group '{}'", gid_arg);
             return 1;
         }

@@ -12,12 +12,12 @@
 namespace Web::SVG {
 
 class SVGEllipseElement final : public SVGGeometryElement {
-    WEB_PLATFORM_OBJECT(SVGEllipseElement, SVGGraphicsElement);
+    WEB_PLATFORM_OBJECT(SVGEllipseElement, SVGGeometryElement);
 
 public:
     virtual ~SVGEllipseElement() override = default;
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     virtual Gfx::Path& get_path() override;
 
@@ -28,6 +28,8 @@ public:
 
 private:
     SVGEllipseElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     Optional<Gfx::Path> m_path;
 

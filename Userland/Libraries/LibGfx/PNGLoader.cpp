@@ -27,6 +27,31 @@ struct PNG_IHDR {
 
 static_assert(AssertSize<PNG_IHDR, 13>());
 
+struct ChromaticitiesAndWhitepoint {
+    NetworkOrdered<u32> white_point_x;
+    NetworkOrdered<u32> white_point_y;
+    NetworkOrdered<u32> red_x;
+    NetworkOrdered<u32> red_y;
+    NetworkOrdered<u32> green_x;
+    NetworkOrdered<u32> green_y;
+    NetworkOrdered<u32> blue_x;
+    NetworkOrdered<u32> blue_y;
+};
+static_assert(AssertSize<ChromaticitiesAndWhitepoint, 32>());
+
+struct CodingIndependentCodePoints {
+    u8 color_primaries;
+    u8 transfer_function;
+    u8 matrix_coefficients;
+    u8 video_full_range_flag;
+};
+static_assert(AssertSize<CodingIndependentCodePoints, 4>());
+
+struct EmbeddedICCProfile {
+    StringView profile_name;
+    ReadonlyBytes compressed_data;
+};
+
 struct Scanline {
     PNG::FilterType filter;
     ReadonlyBytes data {};
@@ -67,6 +92,13 @@ enum PngInterlaceMethod {
     Adam7 = 1
 };
 
+enum RenderingIntent {
+    Perceptual = 0,
+    RelativeColorimetric = 1,
+    Saturation = 2,
+    AbsoluteColorimetric = 3,
+};
+
 struct PNGLoadingContext {
     enum State {
         NotDecoded = 0,
@@ -96,6 +128,13 @@ struct PNGLoadingContext {
     Vector<u8> compressed_data;
     Vector<PaletteEntry> palette_data;
     Vector<u8> palette_transparency_data;
+
+    Optional<ChromaticitiesAndWhitepoint> chromaticities_and_whitepoint;
+    Optional<CodingIndependentCodePoints> coding_independent_code_points;
+    Optional<u32> gamma;
+    Optional<EmbeddedICCProfile> embedded_icc_profile;
+    Optional<ByteBuffer> decompressed_icc_profile;
+    Optional<RenderingIntent> sRGB_rendering_intent;
 
     Checked<int> compute_row_size_for_width(int width)
     {
@@ -574,7 +613,7 @@ static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
         }
     }
 
-    context.bitmap = TRY(Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
+    context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     return unfilter(context);
 }
 
@@ -669,7 +708,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
         }
     }
 
-    subimage_context.bitmap = TRY(Bitmap::try_create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
+    subimage_context.bitmap = TRY(Bitmap::create(context.bitmap->format(), { subimage_context.width, subimage_context.height }));
     TRY(unfilter(subimage_context));
 
     // Copy the subimage data into the main image according to the pass pattern
@@ -684,7 +723,7 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
 static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context)
 {
     Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
-    context.bitmap = TRY(Bitmap::try_create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
+    context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     for (int pass = 1; pass <= 7; ++pass)
         TRY(decode_adam7_pass(context, streamer, pass));
     return {};
@@ -841,6 +880,73 @@ static bool process_tRNS(ReadonlyBytes data, PNGLoadingContext& context)
     return true;
 }
 
+static bool process_cHRM(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11cHRM
+    if (data.size() != 32)
+        return false;
+    context.chromaticities_and_whitepoint = *bit_cast<ChromaticitiesAndWhitepoint* const>(data.data());
+    return true;
+}
+
+static bool process_cICP(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#cICP-chunk
+    if (data.size() != 4)
+        return false;
+    context.coding_independent_code_points = *bit_cast<CodingIndependentCodePoints* const>(data.data());
+    return true;
+}
+
+static bool process_iCCP(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11iCCP
+    size_t profile_name_length_max = min(80u, data.size());
+    size_t profile_name_length = strnlen((char const*)data.data(), profile_name_length_max);
+    if (profile_name_length == 0 || profile_name_length == profile_name_length_max)
+        return false;
+
+    if (data.size() < profile_name_length + 2)
+        return false;
+
+    u8 compression_method = data[profile_name_length + 1];
+    if (compression_method != 0)
+        return false;
+
+    context.embedded_icc_profile = EmbeddedICCProfile { { data.data(), profile_name_length }, data.slice(profile_name_length + 2) };
+
+    return true;
+}
+
+static bool process_gAMA(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11gAMA
+    if (data.size() != 4)
+        return false;
+
+    u32 gamma = *bit_cast<NetworkOrdered<u32> const*>(data.data());
+    if (gamma & 0x8000'0000)
+        return false;
+    context.gamma = gamma;
+
+    return true;
+}
+
+static bool process_sRGB(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#srgb-standard-colour-space
+    if (data.size() != 1)
+        return false;
+
+    u8 rendering_intent = data[0];
+    if (rendering_intent > 3)
+        return false;
+
+    context.sRGB_rendering_intent = (RenderingIntent)rendering_intent;
+
+    return true;
+}
+
 static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
@@ -872,6 +978,16 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         return process_IDAT(chunk_data, context);
     if (!strcmp((char const*)chunk_type, "PLTE"))
         return process_PLTE(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "cHRM"))
+        return process_cHRM(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "cICP"))
+        return process_cICP(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "iCCP"))
+        return process_iCCP(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "gAMA"))
+        return process_gAMA(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "sRGB"))
+        return process_sRGB(chunk_data, context);
     if (!strcmp((char const*)chunk_type, "tRNS"))
         return process_tRNS(chunk_data, context);
     return true;
@@ -913,9 +1029,22 @@ bool PNGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool PNGImageDecoderPlugin::sniff()
+bool PNGImageDecoderPlugin::initialize()
 {
     return decode_png_header(*m_context);
+}
+
+ErrorOr<bool> PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    PNGLoadingContext context;
+    context.data = data.data();
+    context.data_size = data.size();
+    return decode_png_header(context);
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) PNGImageDecoderPlugin(data.data(), data.size()));
 }
 
 bool PNGImageDecoderPlugin::is_animated()
@@ -948,6 +1077,35 @@ ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 
     VERIFY(m_context->bitmap);
     return ImageFrameDescriptor { m_context->bitmap, 0 };
+}
+
+ErrorOr<Optional<ReadonlyBytes>> PNGImageDecoderPlugin::icc_data()
+{
+    if (!decode_png_chunks(*m_context))
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding chunks failed");
+
+    if (m_context->embedded_icc_profile.has_value()) {
+        if (!m_context->decompressed_icc_profile.has_value()) {
+            auto result = Compress::ZlibDecompressor::decompress_all(m_context->embedded_icc_profile->compressed_data);
+            if (!result.has_value()) {
+                m_context->embedded_icc_profile.clear();
+                return Error::from_string_literal("PNGImageDecoderPlugin: Decompression of ICC profile failed");
+            }
+            m_context->decompressed_icc_profile = move(*result);
+        }
+
+        return m_context->decompressed_icc_profile.value();
+    }
+
+    // FIXME: Eventually, look at coding_independent_code_points, chromaticities_and_whitepoint, gamma, sRGB_rendering_intent too.
+    // The order is:
+    // 1. Use coding_independent_code_points if it exists, ignore the rest.
+    // 2. Use embedded_icc_profile if it exists, ignore the rest.
+    // 3. Use sRGB_rendering_intent if it exists, ignore the rest.
+    // 4. Use gamma to adjust gamma and chromaticities_and_whitepoint to adjust color.
+    // (Order between 2 and 3 isn't fully clear, but "It is recommended that the sRGB and iCCP chunks do not appear simultaneously in a PNG datastream."
+
+    return OptionalNone {};
 }
 
 }

@@ -58,6 +58,7 @@ Heap::Heap(VM& vm)
 Heap::~Heap()
 {
     vm().string_cache().clear();
+    vm().deprecated_string_cache().clear();
     collect_garbage(CollectionType::CollectEverything);
 }
 
@@ -96,7 +97,10 @@ void Heap::collect_garbage(CollectionType collection_type, bool print_report)
     perf_event(PERF_EVENT_SIGNPOST, gc_perf_string_id, global_gc_counter++);
 #endif
 
-    auto collection_measurement_timer = Core::ElapsedTimer::start_new();
+    Core::ElapsedTimer collection_measurement_timer;
+    if (print_report)
+        collection_measurement_timer.start();
+
     if (collection_type == CollectionType::CollectGarbage) {
         if (m_gc_deferrals) {
             m_should_gc_when_deferral_ends = true;
@@ -205,7 +209,12 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
 class MarkingVisitor final : public Cell::Visitor {
 public:
-    MarkingVisitor() = default;
+    explicit MarkingVisitor(HashTable<Cell*> const& roots)
+    {
+        for (auto* root : roots) {
+            visit(root);
+        }
+    }
 
     virtual void visit_impl(Cell& cell) override
     {
@@ -214,17 +223,26 @@ public:
         dbgln_if(HEAP_DEBUG, "  ! {}", &cell);
 
         cell.set_marked(true);
-        cell.visit_edges(*this);
+        m_work_queue.append(cell);
     }
+
+    void mark_all_live_cells()
+    {
+        while (!m_work_queue.is_empty()) {
+            m_work_queue.take_last().visit_edges(*this);
+        }
+    }
+
+private:
+    Vector<Cell&> m_work_queue;
 };
 
 void Heap::mark_live_cells(HashTable<Cell*> const& roots)
 {
     dbgln_if(HEAP_DEBUG, "mark_live_cells:");
 
-    MarkingVisitor visitor;
-    for (auto* root : roots)
-        visitor.visit(root);
+    MarkingVisitor visitor(roots);
+    visitor.mark_all_live_cells();
 
     for (auto& inverse_root : m_uprooted_cells)
         inverse_root->set_marked(false);
@@ -304,9 +322,8 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
         });
     }
 
-    int time_spent = measurement_timer.elapsed();
-
     if (print_report) {
+        Time const time_spent = measurement_timer.elapsed_time();
         size_t live_block_count = 0;
         for_each_block([&](auto&) {
             ++live_block_count;
@@ -315,7 +332,7 @@ void Heap::sweep_dead_cells(bool print_report, Core::ElapsedTimer const& measure
 
         dbgln("Garbage collection report");
         dbgln("=============================================");
-        dbgln("     Time spent: {} ms", time_spent);
+        dbgln("     Time spent: {} ms", time_spent.to_milliseconds());
         dbgln("     Live cells: {} ({} bytes)", live_cells, live_cell_bytes);
         dbgln("Collected cells: {} ({} bytes)", collected_cells, collected_cell_bytes);
         dbgln("    Live blocks: {} ({} bytes)", live_block_count, live_block_count * HeapBlock::block_size);

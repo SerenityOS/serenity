@@ -12,9 +12,16 @@ namespace Web::HTML {
 HTMLUnknownElement::HTMLUnknownElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLUnknownElement"));
 }
 
 HTMLUnknownElement::~HTMLUnknownElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLUnknownElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLUnknownElementPrototype>(realm, "HTMLUnknownElement"));
+
+    return {};
+}
 
 }

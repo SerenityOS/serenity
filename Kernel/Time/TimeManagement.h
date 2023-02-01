@@ -55,7 +55,6 @@ public:
 
     bool is_system_timer(HardwareTimerBase const&) const;
 
-    static void update_time_hpet(RegisterState const&);
     void increment_time_since_boot();
 
     static bool is_hpet_periodic_mode_allowed();
@@ -96,8 +95,6 @@ private:
     NonnullLockRefPtrVector<HardwareTimerBase> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
     static void system_timer_tick(RegisterState const&);
-
-    static u64 scheduling_current_time(bool);
 
     // Variables between m_update1 and m_update2 are synchronized
     // FIXME: Replace m_update1 and m_update2 with a SpinlockLocker

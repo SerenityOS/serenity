@@ -19,20 +19,28 @@ namespace Web::CSS {
 
 CSSRuleList* CSSRuleList::create(JS::Realm& realm, JS::MarkedVector<CSSRule*> const& rules)
 {
-    auto rule_list = realm.heap().allocate<CSSRuleList>(realm, realm);
+    auto rule_list = realm.heap().allocate<CSSRuleList>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     for (auto* rule : rules)
         rule_list->m_rules.append(*rule);
     return rule_list;
 }
 
 CSSRuleList::CSSRuleList(JS::Realm& realm)
-    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"))
+    : Bindings::LegacyPlatformObject(realm)
 {
 }
 
 CSSRuleList* CSSRuleList::create_empty(JS::Realm& realm)
 {
-    return realm.heap().allocate<CSSRuleList>(realm, realm);
+    return realm.heap().allocate<CSSRuleList>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+}
+
+JS::ThrowCompletionOr<void> CSSRuleList::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSRuleListPrototype>(realm, "CSSRuleList"));
+
+    return {};
 }
 
 void CSSRuleList::visit_edges(Cell::Visitor& visitor)

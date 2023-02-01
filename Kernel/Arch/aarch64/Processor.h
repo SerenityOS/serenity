@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
+#include <Kernel/Arch/aarch64/CPUID.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/VirtualAddress.h>
 
@@ -43,7 +44,8 @@ class Processor {
 public:
     Processor() = default;
 
-    void initialize(u32 cpu);
+    void install(u32 cpu);
+    void initialize();
 
     template<typename T>
     T* get_specific()
@@ -82,14 +84,12 @@ public:
 
     ALWAYS_INLINE u8 physical_address_bit_width() const
     {
-        TODO_AARCH64();
-        return 0;
+        return m_physical_address_bit_width;
     }
 
     ALWAYS_INLINE u8 virtual_address_bit_width() const
     {
-        TODO_AARCH64();
-        return 0;
+        return m_virtual_address_bit_width;
     }
 
     ALWAYS_INLINE static bool is_initialized()
@@ -134,6 +134,11 @@ public:
     ALWAYS_INLINE bool has_pat() const
     {
         return false;
+    }
+
+    ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
+    {
+        return m_features.has_flag(feature);
     }
 
     ALWAYS_INLINE static FlatPtr current_in_irq()
@@ -274,8 +279,15 @@ public:
     void enter_trap(TrapFrame& trap, bool raise_irq);
     void exit_trap(TrapFrame& trap);
 
+    static StringView platform_string();
+
 private:
     Processor(Processor const&) = delete;
+
+    u32 m_cpu;
+    CPUFeature::Type m_features;
+    u8 m_physical_address_bit_width;
+    u8 m_virtual_address_bit_width;
 
     Thread* m_current_thread;
     Thread* m_idle_thread;

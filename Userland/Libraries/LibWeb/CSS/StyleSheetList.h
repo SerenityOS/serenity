@@ -41,6 +41,7 @@ public:
 private:
     explicit StyleSheetList(DOM::Document&);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     void sort_sheets();

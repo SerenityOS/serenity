@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -32,8 +33,13 @@ public:
 
     bool using_system_appearance() const;
 
+    // https://www.w3.org/TR/html-aria/#el-progress
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::progressbar; }
+
 private:
     HTMLProgressElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     void progress_position_updated();
 

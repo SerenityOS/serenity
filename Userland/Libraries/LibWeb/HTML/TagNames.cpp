@@ -8,7 +8,7 @@
 
 namespace Web::HTML::TagNames {
 
-#define __ENUMERATE_HTML_TAG(name) FlyString name;
+#define __ENUMERATE_HTML_TAG(name) DeprecatedFlyString name;
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
 

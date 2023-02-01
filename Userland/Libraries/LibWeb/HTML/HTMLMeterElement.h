@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -21,8 +22,13 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
 
+    // https://www.w3.org/TR/html-aria/#el-meter
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::meter; }
+
 private:
     HTMLMeterElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

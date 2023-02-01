@@ -14,13 +14,20 @@ namespace Web::CSS {
 CSSConditionRule::CSSConditionRule(JS::Realm& realm, CSSRuleList& rules)
     : CSSGroupingRule(realm, rules)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSConditionRulePrototype>(realm, "CSSConditionRule"));
 }
 
 void CSSConditionRule::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
     if (condition_matches())
         CSSGroupingRule::for_each_effective_style_rule(callback);
+}
+
+JS::ThrowCompletionOr<void> CSSConditionRule::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSConditionRulePrototype>(realm, "CSSConditionRule"));
+
+    return {};
 }
 
 }

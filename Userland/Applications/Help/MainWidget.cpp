@@ -42,7 +42,7 @@ namespace Help {
 
 MainWidget::MainWidget()
 {
-    load_from_gml(help_window_gml);
+    load_from_gml(help_window_gml).release_value_but_fixme_should_propagate_errors();
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_search_container = find_descendant_of_type_named<GUI::Widget>("search_container");
@@ -216,7 +216,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
     auto help_menu = TRY(window.try_add_menu("&Help"));
     String help_page_path = TRY(TRY(try_make_ref_counted<Manual::PageNode>(Manual::sections[1 - 1], TRY(String::from_utf8("Help"sv))))->path());
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
-    TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
+    TRY(help_menu->try_add_action(GUI::Action::create("&Contents", { Key_F1 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"sv)), [this, help_page_path = move(help_page_path)](auto&) {
         open_page(help_page_path);
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Help", TRY(GUI::Icon::try_create_default_icon("app-help"sv)), &window)));
@@ -250,7 +250,10 @@ void MainWidget::open_url(URL const& url)
         GUI::Application::the()->deferred_invoke([&, path = url.path()] {
             auto browse_view_index = m_manual_model->index_from_path(path);
             if (browse_view_index.has_value()) {
-                m_browse_view->expand_all_parents_of(browse_view_index.value());
+                if (browse_view_index.value() != m_browse_view->selection_start_index()) {
+                    m_browse_view->expand_all_parents_of(browse_view_index.value());
+                    m_browse_view->set_cursor(browse_view_index.value(), GUI::AbstractView::SelectionUpdate::Set);
+                }
 
                 auto page_and_section = m_manual_model->page_and_section(browse_view_index.value());
                 if (!page_and_section.has_value())

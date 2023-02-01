@@ -17,7 +17,14 @@ CharacterData::CharacterData(Document& document, NodeType type, DeprecatedString
     : Node(document, type)
     , m_data(data)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CharacterDataPrototype>(document.realm(), "CharacterData"));
+}
+
+JS::ThrowCompletionOr<void> CharacterData::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CharacterDataPrototype>(realm, "CharacterData"));
+
+    return {};
 }
 
 // https://dom.spec.whatwg.org/#dom-characterdata-data

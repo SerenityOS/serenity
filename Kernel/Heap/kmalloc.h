@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibC/limits.h>
+#include <Kernel/API/POSIX/sys/limits.h> // For PAGE_SIZE. Everyone needs PAGE_SIZE
 
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa

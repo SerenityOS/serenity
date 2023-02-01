@@ -14,10 +14,17 @@ namespace Web::HTML {
 HTMLTableCellElement::HTMLTableCellElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableCellElement"));
 }
 
 HTMLTableCellElement::~HTMLTableCellElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLTableCellElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableCellElementPrototype>(realm, "HTMLTableCellElement"));
+
+    return {};
+}
 
 void HTMLTableCellElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
@@ -67,6 +74,21 @@ unsigned int HTMLTableCellElement::row_span() const
 void HTMLTableCellElement::set_row_span(unsigned int value)
 {
     MUST(set_attribute(HTML::AttributeNames::rowspan, DeprecatedString::number(value)));
+}
+
+Optional<ARIA::Role> HTMLTableCellElement::default_role() const
+{
+    // TODO: For td:
+    //       role=cell if the ancestor table element is exposed as a role=table
+    //       role=gridcell if the ancestor table element is exposed as a role=grid or treegrid
+    //       No corresponding role if the ancestor table element is not exposed as a role=table, grid or treegrid
+    //       For th:
+    //       role=columnheader, rowheader or cell if the ancestor table element is exposed as a role=table
+    //        role=columnheader, rowheader or gridcell if the ancestor table element is exposed as a role=grid or treegrid
+    //        No corresponding role if the ancestor table element is not exposed as a role=table, grid or treegrid
+    // https://www.w3.org/TR/html-aria/#el-td
+    // https://www.w3.org/TR/html-aria/#el-th
+    return {};
 }
 
 }

@@ -14,7 +14,12 @@
 #include <Kernel/API/serenity_limits.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
-#include <limits.h>
+
+#ifdef KERNEL
+#    include <Kernel/StdLib.h>
+#else
+#    include <string.h>
+#endif
 
 namespace ELF {
 

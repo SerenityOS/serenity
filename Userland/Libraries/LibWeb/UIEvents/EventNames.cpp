@@ -8,7 +8,7 @@
 
 namespace Web::UIEvents::EventNames {
 
-#define __ENUMERATE_UI_EVENT(name) FlyString name;
+#define __ENUMERATE_UI_EVENT(name) DeprecatedFlyString name;
 ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 

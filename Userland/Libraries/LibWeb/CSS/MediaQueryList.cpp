@@ -17,7 +17,7 @@ namespace Web::CSS {
 
 JS::NonnullGCPtr<MediaQueryList> MediaQueryList::create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return document.heap().allocate<MediaQueryList>(document.realm(), document, move(media));
+    return document.heap().allocate<MediaQueryList>(document.realm(), document, move(media)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
@@ -25,8 +25,15 @@ MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<Medi
     , m_document(document)
     , m_media(move(media))
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListPrototype>(document.realm(), "MediaQueryList"));
     evaluate();
+}
+
+JS::ThrowCompletionOr<void> MediaQueryList::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaQueryListPrototype>(realm, "MediaQueryList"));
+
+    return {};
 }
 
 void MediaQueryList::visit_edges(Cell::Visitor& visitor)

@@ -35,7 +35,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
     auto element_value = TRY(descriptor->get("element"));
     if (!element_value.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
-    auto& element = element_value.as_string().deprecated_string();
+    auto element = TRY(element_value.as_string().deprecated_string());
 
     Optional<Wasm::ValueType> reference_type;
     if (element == "anyfunc"sv)
@@ -77,16 +77,18 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
     for (auto& element : table.elements())
         element = reference;
 
-    return vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address);
+    return MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyTableObject>(realm, realm, *address));
 }
 
-void WebAssemblyTableConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyTableConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssemblyTablePrototype"), 0);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    define_direct_property(vm.names.prototype, &Bindings::ensure_web_prototype<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"), 0);
     define_direct_property(vm.names.length, JS::Value(1), JS::Attribute::Configurable);
+
+    return {};
 }
 
 }

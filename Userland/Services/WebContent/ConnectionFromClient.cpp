@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
@@ -221,7 +221,8 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     if (request == "dump-style-sheets") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             for (auto& sheet : doc->style_sheets().sheets()) {
-                Web::dump_sheet(sheet);
+                if (auto result = Web::dump_sheet(sheet); result.is_error())
+                    dbgln("Failed to dump style sheets: {}", result.error());
             }
         }
     }
@@ -306,7 +307,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
 
             auto serializer = MUST(JsonObjectSerializer<>::try_create(builder));
             properties.for_each_property([&](auto property_id, auto& value) {
-                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_deprecated_string()));
+                MUST(serializer.add(Web::CSS::string_from_property_id(property_id), value.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string()));
             });
             MUST(serializer.finish());
 
@@ -323,7 +324,7 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
                 for (auto const& property : element_to_check->custom_properties()) {
                     if (!seen_properties.contains(property.key)) {
                         seen_properties.set(property.key);
-                        MUST(serializer.add(property.key, property.value.value->to_deprecated_string()));
+                        MUST(serializer.add(property.key, property.value.value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string()));
                     }
                 }
 
@@ -463,7 +464,7 @@ Messages::WebContentServer::TakeDocumentScreenshotResponse ConnectionFromClient:
     auto const& content_size = m_page_host->content_size();
     Web::DevicePixelRect rect { { 0, 0 }, content_size };
 
-    auto bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
+    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect.size().to_type<int>()).release_value_but_fixme_should_propagate_errors();
     m_page_host->paint(rect, *bitmap);
 
     return { bitmap->to_shareable_bitmap() };
@@ -530,6 +531,11 @@ void ConnectionFromClient::set_is_scripting_enabled(bool is_scripting_enabled)
     m_page_host->set_is_scripting_enabled(is_scripting_enabled);
 }
 
+void ConnectionFromClient::set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel)
+{
+    m_page_host->set_device_pixels_per_css_pixel(device_pixels_per_css_pixel);
+}
+
 void ConnectionFromClient::set_window_position(Gfx::IntPoint position)
 {
     m_page_host->set_window_position(position.to_type<Web::DevicePixels>());
@@ -556,20 +562,23 @@ Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClien
 
 void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
 {
-    auto result = m_requested_files.get(request_id);
-    VERIFY(result.has_value());
+    auto file_request = m_requested_files.get(request_id);
 
-    VERIFY(result.value()->on_file_request_finish);
-    result.value()->on_file_request_finish(error != 0 ? Error::from_errno(error) : ErrorOr<i32> { file->take_fd() });
+    VERIFY(file_request.has_value());
+    VERIFY(file_request.value().on_file_request_finish);
+
+    file_request.value().on_file_request_finish(error != 0 ? Error::from_errno(error) : ErrorOr<i32> { file->take_fd() });
     m_requested_files.remove(request_id);
 }
 
-void ConnectionFromClient::request_file(NonnullRefPtr<Web::FileRequest>& file_request)
+void ConnectionFromClient::request_file(Web::FileRequest file_request)
 {
     i32 const id = last_id++;
-    m_requested_files.set(id, file_request);
 
-    async_did_request_file(file_request->path(), id);
+    auto path = file_request.path();
+    m_requested_files.set(id, move(file_request));
+
+    async_did_request_file(path, id);
 }
 
 void ConnectionFromClient::set_system_visibility_state(bool visible)
@@ -593,6 +602,13 @@ void ConnectionFromClient::confirm_closed(bool accepted)
 void ConnectionFromClient::prompt_closed(DeprecatedString const& response)
 {
     m_page_host->prompt_closed(response);
+}
+
+void ConnectionFromClient::inspect_accessibility_tree()
+{
+    if (auto* doc = page().top_level_browsing_context().active_document()) {
+        async_did_get_accessibility_tree(doc->dump_accessibility_tree_as_json());
+    }
 }
 
 }

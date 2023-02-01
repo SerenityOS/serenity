@@ -39,5 +39,5 @@ this man page should be located at `/usr/share/man/man1/man.md`.
 ## See Also
 
 * [`less`(1)](help://man/1/less) For the terminal pager that `man` uses by default
-* [`Help`(1)](help://man/1/Help) To read these same man pages in a GUI
+* [`Help`(1)](help://man/1/Applications/Help) To read these same man pages in a GUI
 * [`man`(7)](help://man/7/man) For an overview on how manpages are organized

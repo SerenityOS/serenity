@@ -121,7 +121,7 @@ void CardStack::rebound_cards()
         card.set_position(m_stack_positions.at(card_index++));
 }
 
-void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
+ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
 {
     VERIFY(grabbed.is_empty());
 
@@ -129,9 +129,9 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPt
         auto& top_card = peek();
         if (top_card.rect().contains(click_location)) {
             top_card.set_moving(true);
-            grabbed.append(top_card);
+            TRY(grabbed.try_append(top_card));
         }
-        return;
+        return {};
     }
 
     RefPtr<Card> last_intersect;
@@ -144,22 +144,22 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPt
             last_intersect = card;
         } else if (!last_intersect.is_null()) {
             if (grabbed.is_empty()) {
-                grabbed.append(*last_intersect);
+                TRY(grabbed.try_append(*last_intersect));
                 last_intersect->set_moving(true);
             }
 
             if (card.is_upside_down()) {
                 grabbed.clear();
-                return;
+                return {};
             }
 
             card.set_moving(true);
-            grabbed.append(card);
+            TRY(grabbed.try_append(card));
         }
     }
 
     if (grabbed.is_empty() && !last_intersect.is_null()) {
-        grabbed.append(*last_intersect);
+        TRY(grabbed.try_append(*last_intersect));
         last_intersect->set_moving(true);
     }
 
@@ -198,6 +198,8 @@ void CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPt
         }
         grabbed.clear();
     }
+
+    return {};
 }
 
 bool CardStack::is_allowed_to_push(Card const& card, size_t stack_size, MovementRule movement_rule) const
@@ -290,7 +292,7 @@ bool CardStack::make_top_card_visible()
     return false;
 }
 
-void CardStack::push(NonnullRefPtr<Card> card)
+ErrorOr<void> CardStack::push(NonnullRefPtr<Card> card)
 {
     auto top_most_position = m_stack_positions.is_empty() ? m_position : m_stack_positions.last();
 
@@ -306,9 +308,10 @@ void CardStack::push(NonnullRefPtr<Card> card)
 
     card->set_position(top_most_position);
 
-    m_stack.append(card);
-    m_stack_positions.append(top_most_position);
+    TRY(m_stack.try_append(card));
+    TRY(m_stack_positions.try_append(top_most_position));
     calculate_bounding_box();
+    return {};
 }
 
 NonnullRefPtr<Card> CardStack::pop()
@@ -323,15 +326,16 @@ NonnullRefPtr<Card> CardStack::pop()
     return card;
 }
 
-void CardStack::move_to_stack(CardStack& stack)
+ErrorOr<void> CardStack::take_all(CardStack& stack)
 {
     while (!m_stack.is_empty()) {
         auto card = m_stack.take_first();
         m_stack_positions.take_first();
-        stack.push(move(card));
+        TRY(stack.push(move(card)));
     }
 
     calculate_bounding_box();
+    return {};
 }
 
 void CardStack::calculate_bounding_box()

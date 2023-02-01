@@ -21,12 +21,16 @@ set(SOURCES
     Font/OpenType/Cmap.cpp
     Font/OpenType/Font.cpp
     Font/OpenType/Glyf.cpp
+    Font/OpenType/Hinting/Opcodes.cpp
     Font/PathRasterizer.cpp
     Font/ScaledFont.cpp
     Font/Typeface.cpp
     Font/WOFF/Font.cpp
+    GradientPainting.cpp
     GIFLoader.cpp
-    ICCProfile.cpp
+    ICC/Profile.cpp
+    ICC/Tags.cpp
+    ICC/TagTypes.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
     JPGLoader.cpp
@@ -48,6 +52,7 @@ set(SOURCES
     SystemTheme.cpp
     TextDirection.cpp
     TextLayout.cpp
+    TGALoader.cpp
     Triangle.cpp
     WindowTheme.cpp
 )

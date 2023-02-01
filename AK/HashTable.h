@@ -594,7 +594,7 @@ private:
                     }
                 } else if (target_bucket->state == BucketState::Rehashed) {
                     // If the target bucket is already re-hashed, we do normal probing.
-                    target_hash = double_hash(target_hash);
+                    target_hash = rehash_for_collision(target_hash);
                     target_bucket = &m_buckets[target_hash % m_capacity];
                 } else {
                     VERIFY(target_bucket->state != BucketState::End);
@@ -676,7 +676,7 @@ private:
             if (bucket.state != BucketState::Used && bucket.state != BucketState::Deleted)
                 return nullptr;
 
-            hash = double_hash(hash);
+            hash = rehash_for_collision(hash);
         }
     }
 
@@ -703,7 +703,7 @@ private:
                     return const_cast<BucketType*>(first_empty_bucket);
             }
 
-            hash = double_hash(hash);
+            hash = rehash_for_collision(hash);
         }
     }
     [[nodiscard]] BucketType& lookup_for_writing(T const& value)

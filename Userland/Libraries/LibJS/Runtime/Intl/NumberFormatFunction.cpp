@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,10 +11,10 @@
 namespace JS::Intl {
 
 // 15.5.2 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
-// 1.1.4 Number Format Functions, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
+// 1.5.2 Number Format Functions, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
 NonnullGCPtr<NumberFormatFunction> NumberFormatFunction::create(Realm& realm, NumberFormat& number_format)
 {
-    return realm.heap().allocate<NumberFormatFunction>(realm, number_format, *realm.intrinsics().function_prototype());
+    return realm.heap().allocate<NumberFormatFunction>(realm, number_format, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NumberFormatFunction::NumberFormatFunction(NumberFormat& number_format, Object& prototype)
@@ -23,13 +23,15 @@ NumberFormatFunction::NumberFormatFunction(NumberFormat& number_format, Object& 
 {
 }
 
-void NumberFormatFunction::initialize(Realm& realm)
+ThrowCompletionOr<void> NumberFormatFunction::initialize(Realm& realm)
 {
     auto& vm = this->vm();
 
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
-    define_direct_property(vm.names.name, PrimitiveString::create(vm, DeprecatedString::empty()), Attribute::Configurable);
+    define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
+
+    return {};
 }
 
 ThrowCompletionOr<Value> NumberFormatFunction::call()
@@ -45,8 +47,7 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
     auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 5. Return ? FormatNumeric(nf, x).
-    // Note: Our implementation of FormatNumeric does not throw.
-    auto formatted = format_numeric(vm, m_number_format, move(mathematical_value));
+    auto formatted = TRY(format_numeric(vm, m_number_format, move(mathematical_value)));
     return PrimitiveString::create(vm, move(formatted));
 }
 

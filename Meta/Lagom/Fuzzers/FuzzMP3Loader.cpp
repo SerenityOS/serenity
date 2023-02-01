@@ -11,7 +11,7 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     auto flac_data = ByteBuffer::copy(data, size).release_value();
-    auto mp3_or_error = Audio::MP3LoaderPlugin::try_create(flac_data.bytes());
+    auto mp3_or_error = Audio::MP3LoaderPlugin::create(flac_data.bytes());
 
     if (mp3_or_error.is_error())
         return 0;

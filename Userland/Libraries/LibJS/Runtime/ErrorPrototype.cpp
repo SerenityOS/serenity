@@ -19,10 +19,10 @@ ErrorPrototype::ErrorPrototype(Realm& realm)
 {
 }
 
-void ErrorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ErrorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, PrimitiveString::create(vm, "Error"), attr);
     define_direct_property(vm.names.message, PrimitiveString::create(vm, ""), attr);
@@ -31,6 +31,8 @@ void ErrorPrototype::initialize(Realm& realm)
     // Every other engine seems to have this in some way or another, and the spec
     // proposal for this is only Stage 1
     define_native_accessor(realm, vm.names.stack, stack_getter, stack_setter, attr);
+
+    return {};
 }
 
 // 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
@@ -46,7 +48,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
     auto name = name_property.is_undefined()
         ? DeprecatedString { "Error"sv }
-        : TRY(name_property.to_string(vm));
+        : TRY(name_property.to_deprecated_string(vm));
 
     // 5. Let msg be ? Get(O, "message").
     auto message_property = TRY(this_object->get(vm.names.message));
@@ -54,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
     // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
     auto message = message_property.is_undefined()
         ? DeprecatedString::empty()
-        : TRY(message_property.to_string(vm));
+        : TRY(message_property.to_deprecated_string(vm));
 
     // 7. If name is the empty String, return msg.
     if (name.is_empty())
@@ -87,12 +89,12 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     DeprecatedString name = "Error";
     auto name_property = TRY(error.get(vm.names.name));
     if (!name_property.is_undefined())
-        name = TRY(name_property.to_string(vm));
+        name = TRY(name_property.to_deprecated_string(vm));
 
     DeprecatedString message = "";
     auto message_property = TRY(error.get(vm.names.message));
     if (!message_property.is_undefined())
-        message = TRY(message_property.to_string(vm));
+        message = TRY(message_property.to_deprecated_string(vm));
 
     DeprecatedString header = name;
     if (!message.is_empty())
@@ -128,13 +130,15 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
     {                                                                                         \
     }                                                                                         \
                                                                                               \
-    void PrototypeName::initialize(Realm& realm)                                              \
+    ThrowCompletionOr<void> PrototypeName::initialize(Realm& realm)                           \
     {                                                                                         \
         auto& vm = this->vm();                                                                \
-        Object::initialize(realm);                                                            \
+        MUST_OR_THROW_OOM(Base::initialize(realm));                                           \
         u8 attr = Attribute::Writable | Attribute::Configurable;                              \
         define_direct_property(vm.names.name, PrimitiveString::create(vm, #ClassName), attr); \
         define_direct_property(vm.names.message, PrimitiveString::create(vm, ""), attr);      \
+                                                                                              \
+        return {};                                                                            \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

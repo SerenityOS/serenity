@@ -26,12 +26,16 @@ TEST_CASE(file_watcher_child_events)
 
     int event_count = 0;
     file_watcher->on_change = [&](Core::FileWatcherEvent const& event) {
+        // Ignore path events under /tmp that can occur for anything else the OS is
+        // doing to create/delete files there.
+        if (event.event_path != "/tmp/testfile"sv)
+            return;
+
         if (event_count == 0) {
-            EXPECT_EQ(event.event_path, "/tmp/testfile");
-            EXPECT_EQ(event.type, Core::FileWatcherEvent::Type::ChildCreated);
+            EXPECT(has_flag(event.type, Core::FileWatcherEvent::Type::ChildCreated));
         } else if (event_count == 1) {
-            EXPECT_EQ(event.event_path, "/tmp/testfile");
-            EXPECT_EQ(event.type, Core::FileWatcherEvent::Type::ChildDeleted);
+            EXPECT(has_flag(event.type, Core::FileWatcherEvent::Type::ChildDeleted));
+            EXPECT(MUST(file_watcher->remove_watch("/tmp/"sv)));
 
             event_loop.quit(0);
         }
@@ -39,21 +43,21 @@ TEST_CASE(file_watcher_child_events)
         event_count++;
     };
 
-    auto timer1 = Core::Timer::create_single_shot(500, [&] {
+    auto timer1 = MUST(Core::Timer::create_single_shot(500, [&] {
         int rc = creat("/tmp/testfile", 0777);
         EXPECT_NE(rc, -1);
-    });
+    }));
     timer1->start();
 
-    auto timer2 = Core::Timer::create_single_shot(1000, [&] {
+    auto timer2 = MUST(Core::Timer::create_single_shot(1000, [&] {
         int rc = unlink("/tmp/testfile");
         EXPECT_NE(rc, -1);
-    });
+    }));
     timer2->start();
 
-    auto catchall_timer = Core::Timer::create_single_shot(2000, [&] {
+    auto catchall_timer = MUST(Core::Timer::create_single_shot(2000, [&] {
         VERIFY_NOT_REACHED();
-    });
+    }));
     catchall_timer->start();
 
     event_loop.exec();

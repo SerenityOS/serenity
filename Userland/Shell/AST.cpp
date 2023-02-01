@@ -198,7 +198,7 @@ static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& i
         for (auto& index : indices)
             builder.append(input_value[index]);
 
-        input_value = builder.build();
+        input_value = builder.to_deprecated_string();
     }
 
     return move(input_value);
@@ -1641,7 +1641,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
         Core::EventLoop loop;
 
         auto notifier = Core::Notifier::construct(pipefd[0], Core::Notifier::Read);
-        DuplexMemoryStream stream;
+        AllocatingMemoryStream stream;
 
         enum {
             Continue,
@@ -1651,11 +1651,10 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
         auto check_and_call = [&] {
             auto ifs = shell->local_variable_or("IFS"sv, "\n"sv);
 
-            if (auto offset = stream.offset_of(ifs.bytes()); offset.has_value()) {
+            if (auto offset = stream.offset_of(ifs.bytes()).release_value_but_fixme_should_propagate_errors(); offset.has_value()) {
                 auto line_end = offset.value();
                 if (line_end == 0) {
-                    auto rc = stream.discard_or_error(ifs.length());
-                    VERIFY(rc);
+                    stream.discard(ifs.length()).release_value_but_fixme_should_propagate_errors();
 
                     if (shell->options.inline_exec_keep_empty_segments)
                         if (callback(make_ref_counted<StringValue>("")) == IterationDecision::Break) {
@@ -1671,8 +1670,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                         return Break;
                     }
                     auto entry = entry_result.release_value();
-                    auto rc = stream.read_or_error(entry);
-                    VERIFY(rc);
+                    stream.read_entire_buffer(entry).release_value_but_fixme_should_propagate_errors();
 
                     auto str = StringView(entry.data(), entry.size() - ifs.length());
                     if (callback(make_ref_counted<StringValue>(str)) == IterationDecision::Break) {
@@ -1723,7 +1721,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     break;
 
                 should_enable_notifier = true;
-                stream.write({ buffer, (size_t)read_size });
+                stream.write_entire_buffer({ buffer, (size_t)read_size }).release_value_but_fixme_should_propagate_errors();
             }
 
             loop.quit(NothingLeft);
@@ -1747,7 +1745,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
             dbgln("close() failed: {}", strerror(errno));
         }
 
-        if (exit_reason != Break && !stream.eof()) {
+        if (exit_reason != Break && !stream.is_eof()) {
             auto action = Continue;
             do {
                 action = check_and_call();
@@ -1755,15 +1753,14 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     return;
             } while (action == Continue);
 
-            if (!stream.eof()) {
-                auto entry_result = ByteBuffer::create_uninitialized(stream.size());
+            if (!stream.is_eof()) {
+                auto entry_result = ByteBuffer::create_uninitialized(stream.used_buffer_size());
                 if (entry_result.is_error()) {
                     shell->raise_error(Shell::ShellError::OutOfMemory, {}, position());
                     return;
                 }
                 auto entry = entry_result.release_value();
-                auto rc = stream.read_or_error(entry);
-                VERIFY(rc);
+                stream.read_entire_buffer(entry).release_value_but_fixme_should_propagate_errors();
                 callback(make_ref_counted<StringValue>(DeprecatedString::copy(entry)));
             }
         }

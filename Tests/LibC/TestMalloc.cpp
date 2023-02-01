@@ -6,8 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <LibC/mallocdefs.h>
 #include <errno.h>
+#include <mallocdefs.h>
 #include <stdlib.h>
 
 TEST_CASE(malloc_limits)

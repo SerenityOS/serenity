@@ -28,10 +28,12 @@ public:
 private:
     HTMLIFrameElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
     // ^DOM::Element
     virtual void inserted() override;
     virtual void removed_from(Node*) override;
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual i32 default_tab_index_value() const override;
 
     // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#process-the-iframe-attributes

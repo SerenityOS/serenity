@@ -6,15 +6,15 @@
 
 #pragma once
 
+#include <AK/BitStream.h>
 #include <AK/CircularQueue.h>
 #include <AK/FixedArray.h>
-#include <LibCore/InputBitStream.h>
 #include <LibCore/Stream.h>
 
 namespace Compress {
 
-using Core::Stream::LittleEndianInputBitStream;
-using Core::Stream::Stream;
+using AK::LittleEndianInputBitStream;
+using AK::Stream;
 
 class BrotliDecompressionStream : public Stream {
 public:
@@ -67,7 +67,7 @@ public:
     public:
         static ErrorOr<LookbackBuffer> try_create(size_t size)
         {
-            auto buffer = TRY(FixedArray<u8>::try_create(size));
+            auto buffer = TRY(FixedArray<u8>::create(size));
             return LookbackBuffer { buffer };
         }
 

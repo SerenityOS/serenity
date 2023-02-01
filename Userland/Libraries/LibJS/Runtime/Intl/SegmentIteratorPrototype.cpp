@@ -18,9 +18,9 @@ SegmentIteratorPrototype::SegmentIteratorPrototype(Realm& realm)
 {
 }
 
-void SegmentIteratorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> SegmentIteratorPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void SegmentIteratorPrototype::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.next, next, 0, attr);
+
+    return {};
 }
 
 // 18.6.2.1 %SegmentIteratorPrototype%.next ( ), https://tc39.es/ecma402/#sec-%segmentiteratorprototype%.next
@@ -60,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentIteratorPrototype::next)
     iterator->set_iterated_string_next_segment_code_unit_index(end_index);
 
     // 9. Let segmentData be ! CreateSegmentDataObject(segmenter, string, startIndex, endIndex).
-    auto* segment_data = create_segment_data_object(vm, segmenter, string, start_index, end_index);
+    auto segment_data = TRY(create_segment_data_object(vm, segmenter, string, start_index, end_index));
 
     // 10. Return CreateIterResultObject(segmentData, false).
     return create_iterator_result_object(vm, segment_data, false);

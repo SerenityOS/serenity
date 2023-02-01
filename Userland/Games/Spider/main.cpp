@@ -117,8 +117,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (statistic_display >= StatisticDisplay::__Count)
         update_statistic_display(StatisticDisplay::HighScore);
 
-    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    TRY(widget->try_load_from_gml(spider_gml));
+    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(widget->load_from_gml(spider_gml));
 
     auto& game = *widget->find_descendant_of_type_named<Spider::Game>("game");
     game.set_focus(true);
@@ -158,11 +158,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     uint64_t seconds_elapsed = 0;
 
-    auto timer = Core::Timer::create_repeating(1000, [&]() {
+    auto timer = TRY(Core::Timer::create_repeating(1000, [&]() {
         ++seconds_elapsed;
 
         statusbar.set_text(2, DeprecatedString::formatted("Time: {}", format_seconds(seconds_elapsed)));
-    });
+    }));
 
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
@@ -195,22 +195,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         statusbar.set_text(2, "Timer starts after your first move");
     };
 
-    window->on_close_request = [&]() {
+    auto confirm_end_current_game = [&]() {
         auto game_in_progress = timer->is_active();
         if (game_in_progress) {
             auto result = GUI::MessageBox::show(window,
-                "A game is still in progress, are you sure you would like to quit? Doing so will count as a loss."sv,
+                "A game is still in progress, are you sure you would like to end it? Doing so will count as a loss."sv,
                 "Game in progress"sv,
                 GUI::MessageBox::Type::Warning,
                 GUI::MessageBox::InputType::YesNo);
 
-            if (result == GUI::MessageBox::ExecResult::Yes)
-                return GUI::Window::CloseRequestDecision::Close;
-            else
-                return GUI::Window::CloseRequestDecision::StayOpen;
+            return result == GUI::MessageBox::ExecResult::Yes;
         }
 
-        return GUI::Window::CloseRequestDecision::Close;
+        return true;
+    };
+
+    window->on_close_request = [&]() {
+        if (confirm_end_current_game())
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
     };
     window->on_close = [&]() {
         game.on_game_end(Spider::GameOverReason::Quit, 0);
@@ -221,6 +224,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto single_suit_action = GUI::Action::create_checkable("&Single Suit", [&](auto&) {
         update_mode(Spider::Mode::SingleSuit);
+
+        if (!confirm_end_current_game())
+            return;
+
         reset_statistic_status();
         game.setup(mode);
     });
@@ -229,6 +236,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto two_suit_action = GUI::Action::create_checkable("&Two Suit", [&](auto&) {
         update_mode(Spider::Mode::TwoSuit);
+
+        if (!confirm_end_current_game())
+            return;
+
         reset_statistic_status();
         game.setup(mode);
     });
@@ -236,7 +247,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     suit_actions.add_action(two_suit_action);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+        if (!confirm_end_current_game())
+            return;
+
         game.setup(mode);
     })));
     TRY(game_menu->try_add_separator());

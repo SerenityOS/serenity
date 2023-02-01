@@ -217,7 +217,7 @@ Parser::SequenceParseResult Parser::parse_sequence()
                                 error_builder.appendff(", {} (at {}:{})", entry.end, entry.node->position().start_line.line_column, entry.node->position().start_line.line_number);
                             first = false;
                         }
-                        left.append(create<AST::SyntaxError>(error_builder.build(), true));
+                        left.append(create<AST::SyntaxError>(error_builder.to_deprecated_string(), true));
                         // Just read the rest of the newlines
                         goto discard_terminators;
                     }

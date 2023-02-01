@@ -17,9 +17,9 @@ CollatorPrototype::CollatorPrototype(Realm& realm)
 {
 }
 
-void CollatorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> CollatorPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void CollatorPrototype::initialize(Realm& realm)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_accessor(realm, vm.names.compare, compare_getter, {}, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 10.3.3 get Intl.Collator.prototype.compare, https://tc39.es/ecma402/#sec-intl.collator.prototype.compare

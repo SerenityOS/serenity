@@ -237,6 +237,6 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
     NONSTOP_TSC = CPUFeature(1u) << 191u,             // Invariant TSC
     __End = CPUFeature(1u) << 255u);
 
-StringView cpu_feature_to_string_view(CPUFeature::Type const&);
+StringView cpu_feature_to_name(CPUFeature::Type const&);
 
 }

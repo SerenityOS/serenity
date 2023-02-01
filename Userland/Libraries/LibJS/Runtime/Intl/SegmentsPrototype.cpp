@@ -17,15 +17,17 @@ SegmentsPrototype::SegmentsPrototype(Realm& realm)
 {
 }
 
-void SegmentsPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> SegmentsPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, *vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
     define_native_function(realm, vm.names.containing, containing, 1, attr);
+
+    return {};
 }
 
 // 18.5.2.1 %SegmentsPrototype%.containing ( index ), https://tc39.es/ecma402/#sec-%segmentsprototype%.containing
@@ -58,7 +60,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::containing)
     auto end_index = find_boundary(segmenter, string, n, Direction::After, segments->boundaries_cache());
 
     // 10. Return ! CreateSegmentDataObject(segmenter, string, startIndex, endIndex).
-    return create_segment_data_object(vm, segmenter, string, start_index, end_index);
+    return TRY(create_segment_data_object(vm, segmenter, string, start_index, end_index));
 }
 
 // 18.5.2.2 %SegmentsPrototype% [ @@iterator ] ( ), https://tc39.es/ecma402/#sec-%segmentsprototype%-@@iterator

@@ -53,13 +53,13 @@ public:
     virtual void determine_height_of_child(Box const&, AvailableSpace const&) override;
 
 private:
-    virtual bool is_block_formatting_context() const final { return true; }
-
     CSSPixels compute_auto_height_for_block_level_element(Box const&, AvailableSpace const&);
 
     void compute_width_for_floating_box(Box const&, AvailableSpace const&);
 
     void compute_width_for_block_level_replaced_element_in_normal_flow(ReplacedBox const&, AvailableSpace const&);
+
+    CSSPixels compute_width_for_table_wrapper(Box const&, AvailableSpace const&);
 
     void layout_initial_containing_block(LayoutMode, AvailableSpace const&);
 

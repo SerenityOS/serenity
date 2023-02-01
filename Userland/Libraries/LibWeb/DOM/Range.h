@@ -9,6 +9,7 @@
 #pragma once
 
 #include <LibWeb/DOM/AbstractRange.h>
+#include <LibWeb/Selection/Selection.h>
 
 namespace Web::DOM {
 
@@ -84,12 +85,21 @@ public:
 
     JS::NonnullGCPtr<Geometry::DOMRect> get_bounding_client_rect() const;
 
+    bool contains_node(Node const&) const;
+
+    void set_associated_selection(Badge<Selection::Selection>, JS::GCPtr<Selection::Selection>);
+
 private:
     explicit Range(Document&);
     Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
+
     Node& root();
     Node const& root() const;
+
+    void update_associated_selection();
 
     enum class StartOrEnd {
         Start,
@@ -103,8 +113,9 @@ private:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> clone_the_contents();
     WebIDL::ExceptionOr<void> insert(JS::NonnullGCPtr<Node>);
 
-    bool contains_node(Node const&) const;
     bool partially_contains_node(Node const&) const;
+
+    JS::GCPtr<Selection::Selection> m_associated_selection;
 };
 
 }

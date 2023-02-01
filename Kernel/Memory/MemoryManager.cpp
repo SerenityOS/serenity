@@ -18,7 +18,6 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PageDirectory.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Multiboot.h>
@@ -72,9 +71,8 @@ bool MemoryManager::is_initialized()
 static UNMAP_AFTER_INIT VirtualRange kernel_virtual_range()
 {
 #if ARCH(AARCH64)
-    // NOTE: We currently identity map the kernel image for aarch64, so the kernel virtual range
-    //       is the complete memory range.
-    return VirtualRange { VirtualAddress((FlatPtr)0), 0x3F000000 };
+    // NOTE: This is not the same as x86_64, because the aarch64 kernel currently doesn't use the pre-kernel.
+    return VirtualRange { VirtualAddress(kernel_mapping_base), KERNEL_PD_END - kernel_mapping_base };
 #else
     size_t kernel_range_start = kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
     return VirtualRange { VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start };
@@ -652,6 +650,7 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
 
 UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 {
+    dmesgln("Initialize MMU");
     ProcessorSpecific<MemoryManagerData>::initialize();
 
     if (cpu == 0) {

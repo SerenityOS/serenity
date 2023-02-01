@@ -6,19 +6,30 @@
 
 #pragma once
 
-#include <LibWeb/Layout/BlockContainer.h>
+#include <LibWeb/Layout/Box.h>
 
 namespace Web::Layout {
 
-class TableBox final : public Layout::BlockContainer {
-    JS_CELL(TableBox, BlockContainer);
+class TableBox final : public Layout::Box {
+    JS_CELL(TableBox, Box);
 
 public:
     TableBox(DOM::Document&, DOM::Element*, NonnullRefPtr<CSS::StyleProperties>);
     TableBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableBox() override;
 
-    static CSS::Display static_display() { return CSS::Display::from_short(CSS::Display::Short::Table); }
+    static CSS::Display static_display(bool inline_outside)
+    {
+        if (inline_outside)
+            return CSS::Display::from_short(CSS::Display::Short::InlineTable);
+        return CSS::Display::from_short(CSS::Display::Short::Table);
+    }
+
+private:
+    virtual bool is_table() const override { return true; }
 };
+
+template<>
+inline bool Node::fast_is<TableBox>() const { return is_table(); }
 
 }

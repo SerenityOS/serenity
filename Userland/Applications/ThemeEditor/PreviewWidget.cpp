@@ -29,7 +29,7 @@ public:
     static ErrorOr<NonnullRefPtr<MiniWidgetGallery>> try_create()
     {
         auto gallery = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MiniWidgetGallery()));
-        TRY(gallery->try_load_from_gml(window_preview_gml));
+        TRY(gallery->load_from_gml(window_preview_gml));
 
         gallery->for_each_child_widget([](auto& child) {
             child.set_focus_policy(GUI::FocusPolicy::NoFocus);
@@ -147,37 +147,6 @@ void PreviewWidget::second_paint_event(GUI::PaintEvent&)
 void PreviewWidget::resize_event(GUI::ResizeEvent&)
 {
     update_preview_window_locations();
-}
-
-void PreviewWidget::drag_enter_event(GUI::DragEvent& event)
-{
-    auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/uri-list"))
-        event.accept();
-}
-
-void PreviewWidget::drop_event(GUI::DropEvent& event)
-{
-    event.accept();
-    window()->move_to_front();
-
-    if (event.mime_data().has_urls()) {
-        auto urls = event.mime_data().urls();
-        if (urls.is_empty())
-            return;
-        if (urls.size() > 1) {
-            GUI::MessageBox::show(window(), "ThemeEditor can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), urls.first().path(), Core::OpenMode::ReadOnly);
-        if (response.is_error())
-            return;
-
-        auto set_theme_from_file_result = set_theme_from_file(response.release_value());
-        if (set_theme_from_file_result.is_error())
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Setting theme from file has failed: {}", set_theme_from_file_result.error()));
-    }
 }
 
 }

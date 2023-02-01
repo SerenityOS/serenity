@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/IntegralMath.h>
 #include <LibGUI/Model.h>
 
 namespace Profiler {

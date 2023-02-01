@@ -475,3 +475,18 @@ TEST_CASE(years_to_days_since_epoch_span)
         EXPECT_EQ(actual_days, expected_days);
     }
 }
+
+TEST_CASE(user_defined_literals)
+{
+    using namespace AK::TimeLiterals;
+    static_assert(Time::from_nanoseconds(123) == 123_ns, "Factory is same as UDL");
+
+    static_assert(100_ms > 10_ms, "LT UDL");
+    static_assert(1000_ns == 1_us, "EQ UDL");
+    static_assert(1_sec > 1_ms, "GT UDL");
+    static_assert(100_ms >= 100'000_us, "GE UDL (eq)");
+    static_assert(100_ms >= 99'999_us, "GE UDL (gt)");
+    static_assert(100_ms <= 100'000_us, "LE UDL (eq)");
+    static_assert(100_ms <= 100'001_us, "LE UDL (lt)");
+    static_assert(1_sec != 2_sec, "NE UDL");
+}

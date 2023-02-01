@@ -122,7 +122,6 @@ private:
     void calculate_document_range(TextEditor&);
     void calculate_line_range(TextEditor&, bool normalize_for_position);
     void calculate_word_range(VimCursor&, int amount, bool normalize_for_position);
-    void calculate_WORD_range(VimCursor&, int amount, bool normalize_for_position);
     void calculate_character_range(VimCursor&, int amount, bool normalize_for_position);
     void calculate_find_range(VimCursor&, int amount);
 

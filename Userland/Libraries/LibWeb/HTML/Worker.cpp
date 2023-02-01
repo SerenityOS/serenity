@@ -17,7 +17,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
-Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
     : DOM::EventTarget(document.realm())
     , m_script_url(script_url)
     , m_options(options)
@@ -28,7 +28,14 @@ Worker::Worker(FlyString const& script_url, WorkerOptions const options, DOM::Do
     , m_interpreter_scope(*m_interpreter)
     , m_implicit_port(MessagePort::create(document.realm()))
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Worker"));
+}
+
+JS::ThrowCompletionOr<void> Worker::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WorkerPrototype>(realm, "Worker"));
+
+    return {};
 }
 
 void Worker::visit_edges(Cell::Visitor& visitor)
@@ -40,7 +47,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
@@ -70,7 +77,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(FlyString const& sc
     // 5. Let worker URL be the resulting URL record.
 
     // 6. Let worker be a new Worker object.
-    auto worker = document.heap().allocate<Worker>(document.realm(), script_url, options, document);
+    auto worker = MUST_OR_THROW_OOM(document.heap().allocate<Worker>(document.realm(), script_url, options, document));
 
     // 7. Let outside port be a new MessagePort in outside settings's Realm.
     auto outside_port = MessagePort::create(outside_settings.realm());

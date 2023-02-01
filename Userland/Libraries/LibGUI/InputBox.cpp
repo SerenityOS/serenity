@@ -49,20 +49,20 @@ void InputBox::on_done(ExecResult result)
 
 void InputBox::build(InputType input_type)
 {
-    auto& widget = set_main_widget<Widget>();
+    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
 
-    int text_width = widget.font().width(m_prompt);
-    int title_width = widget.font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
+    int text_width = widget->font().width(m_prompt);
+    int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
     int max_width = max(text_width, title_width);
 
-    widget.set_layout<VerticalBoxLayout>();
-    widget.set_fill_with_background_color(true);
-    widget.set_preferred_height(SpecialDimension::Fit);
+    widget->set_layout<VerticalBoxLayout>();
+    widget->set_fill_with_background_color(true);
+    widget->set_preferred_height(SpecialDimension::Fit);
 
-    widget.layout()->set_margins(6);
-    widget.layout()->set_spacing(6);
+    widget->layout()->set_margins(6);
+    widget->layout()->set_spacing(6);
 
-    auto& label_editor_container = widget.add<Widget>();
+    auto& label_editor_container = widget->add<Widget>();
     label_editor_container.set_layout<HorizontalBoxLayout>();
     label_editor_container.set_preferred_height(SpecialDimension::Fit);
 
@@ -83,7 +83,7 @@ void InputBox::build(InputType input_type)
     if (!m_placeholder.is_null())
         m_text_editor->set_placeholder(m_placeholder);
 
-    auto& button_container_outer = widget.add<Widget>();
+    auto& button_container_outer = widget->add<Widget>();
     button_container_outer.set_preferred_height(SpecialDimension::Fit);
     button_container_outer.set_layout<VerticalBoxLayout>();
 
@@ -113,7 +113,7 @@ void InputBox::build(InputType input_type)
     };
     m_text_editor->set_focus(true);
 
-    set_rect(x(), y(), max_width + 140, widget.effective_preferred_size().height().as_int());
+    set_rect(x(), y(), max_width + 140, widget->effective_preferred_size().height().as_int());
 }
 
 }

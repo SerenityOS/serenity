@@ -5,8 +5,8 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/Endian.h>
-#include <AK/MemoryStream.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -141,7 +141,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         // length (2)
                         u8 aad[13];
                         Bytes aad_bytes { aad, 13 };
-                        OutputMemoryStream aad_stream { aad_bytes };
+                        DeprecatedOutputMemoryStream aad_stream { aad_bytes };
 
                         u64 seq_no = AK::convert_between_host_and_network_endian(m_context.local_sequence_number);
                         u16 len = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
@@ -382,7 +382,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 // length (2)
                 u8 aad[13];
                 Bytes aad_bytes { aad, 13 };
-                OutputMemoryStream aad_stream { aad_bytes };
+                DeprecatedOutputMemoryStream aad_stream { aad_bytes };
 
                 u64 seq_no = AK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
                 u16 len = AK::convert_between_host_and_network_endian((u16)packet_length);

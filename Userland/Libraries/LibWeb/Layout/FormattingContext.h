@@ -21,6 +21,7 @@ public:
         Block,
         Inline,
         Flex,
+        Grid,
         Table,
         SVG,
     };
@@ -102,7 +103,7 @@ protected:
 
     static CSSPixels tentative_width_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_width, AvailableSpace const&);
     static CSSPixels tentative_height_for_replaced_element(LayoutState const&, ReplacedBox const&, CSS::Size const& computed_height, AvailableSpace const&);
-    CSSPixels compute_auto_height_for_block_formatting_context_root(BlockContainer const&) const;
+    CSSPixels compute_auto_height_for_block_formatting_context_root(Box const&) const;
 
     ShrinkToFitResult calculate_shrink_to_fit_widths(Box const&);
 
@@ -110,9 +111,14 @@ protected:
     void compute_width_for_absolutely_positioned_element(Box const&, AvailableSpace const&);
     void compute_width_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&);
     void compute_width_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&);
-    void compute_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&);
-    void compute_height_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&);
-    void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&);
+
+    enum class BeforeOrAfterInsideLayout {
+        Before,
+        After,
+    };
+    void compute_height_for_absolutely_positioned_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
+    void compute_height_for_absolutely_positioned_non_replaced_element(Box const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
+    void compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const&, AvailableSpace const&, BeforeOrAfterInsideLayout);
 
     Type m_type {};
 

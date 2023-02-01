@@ -16,15 +16,17 @@ ErrorConstructor::ErrorConstructor(Realm& realm)
 {
 }
 
-void ErrorConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> ErrorConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 20.5.2.1 Error.prototype, https://tc39.es/ecma262/#sec-error.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 20.5.1.1 Error ( message [ , options ] ), https://tc39.es/ecma262/#sec-error-message
@@ -48,7 +50,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObje
     // 3. If message is not undefined, then
     if (!message.is_undefined()) {
         // a. Let msg be ? ToString(message).
-        auto msg = TRY(message.to_string(vm));
+        auto msg = TRY(message.to_deprecated_string(vm));
 
         // b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
         error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, move(msg)));
@@ -67,15 +69,17 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObje
     {                                                                                                                           \
     }                                                                                                                           \
                                                                                                                                 \
-    void ConstructorName::initialize(Realm& realm)                                                                              \
+    ThrowCompletionOr<void> ConstructorName::initialize(Realm& realm)                                                           \
     {                                                                                                                           \
         auto& vm = this->vm();                                                                                                  \
-        NativeFunction::initialize(realm);                                                                                      \
+        MUST_OR_THROW_OOM(NativeFunction::initialize(realm));                                                                   \
                                                                                                                                 \
         /* 20.5.6.2.1 NativeError.prototype, https://tc39.es/ecma262/#sec-nativeerror.prototype */                              \
         define_direct_property(vm.names.prototype, realm.intrinsics().snake_name##_prototype(), 0);                             \
                                                                                                                                 \
         define_direct_property(vm.names.length, Value(1), Attribute::Configurable);                                             \
+                                                                                                                                \
+        return {};                                                                                                              \
     }                                                                                                                           \
                                                                                                                                 \
     ConstructorName::~ConstructorName() = default;                                                                              \
@@ -101,7 +105,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ErrorConstructor::construct(FunctionObje
         /* 3. If message is not undefined, then */                                                                              \
         if (!message.is_undefined()) {                                                                                          \
             /* a. Let msg be ? ToString(message). */                                                                            \
-            auto msg = TRY(message.to_string(vm));                                                                              \
+            auto msg = TRY(message.to_deprecated_string(vm));                                                                   \
                                                                                                                                 \
             /* b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg). */                                         \
             error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, move(msg)));      \

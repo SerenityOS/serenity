@@ -168,7 +168,7 @@ void CardPainter::set_background_color(Color background_color)
 
 NonnullRefPtr<Gfx::Bitmap> CardPainter::create_card_bitmap()
 {
-    return Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { Card::width, Card::height }).release_value_but_fixme_should_propagate_errors();
+    return Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { Card::width, Card::height }).release_value_but_fixme_should_propagate_errors();
 }
 
 void CardPainter::paint_card_front(Gfx::Bitmap& bitmap, Cards::Suit suit, Cards::Rank rank)
@@ -225,7 +225,7 @@ void CardPainter::paint_card_back(Gfx::Bitmap& bitmap)
     auto inner_paint_rect = paint_rect.shrunken(2, 2);
     painter.fill_rect_with_rounded_corners(inner_paint_rect, Color::White, Card::card_radius - 1);
 
-    auto image = Gfx::Bitmap::try_load_from_file(m_background_image_path).release_value_but_fixme_should_propagate_errors();
+    auto image = Gfx::Bitmap::load_from_file(m_background_image_path).release_value_but_fixme_should_propagate_errors();
     painter.blit({ (bitmap.width() - image->width()) / 2, (bitmap.height() - image->height()) / 2 }, image, image->rect());
 }
 

@@ -9,8 +9,8 @@
 #include "Forward.h"
 #include "RegexOptions.h"
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/MemMem.h>
 #include <AK/RedBlackTree.h>
@@ -266,21 +266,21 @@ public:
         return view;
     }
 
-    RegexStringView construct_as_same(Span<u32> data, Optional<DeprecatedString>& optional_string_storage, Vector<u16, 1>& optional_utf16_storage) const
+    RegexStringView construct_as_same(Span<u32> data, Optional<DeprecatedString>& optional_string_storage, Utf16Data& optional_utf16_storage) const
     {
         auto view = m_view.visit(
             [&]<typename T>(T const&) {
                 StringBuilder builder;
                 for (auto ch : data)
                     builder.append(ch); // Note: The type conversion is intentional.
-                optional_string_storage = builder.build();
+                optional_string_storage = builder.to_deprecated_string();
                 return RegexStringView { T { *optional_string_storage } };
             },
             [&](Utf32View) {
                 return RegexStringView { Utf32View { data.data(), data.size() } };
             },
             [&](Utf16View) {
-                optional_utf16_storage = AK::utf32_to_utf16(Utf32View { data.data(), data.size() });
+                optional_utf16_storage = AK::utf32_to_utf16(Utf32View { data.data(), data.size() }).release_value_but_fixme_should_propagate_errors();
                 return RegexStringView { Utf16View { optional_utf16_storage } };
             });
 
@@ -385,7 +385,7 @@ public:
     {
         return m_view.visit(
             [](StringView view) { return view.to_deprecated_string(); },
-            [](Utf16View view) { return view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes); },
+            [](Utf16View view) { return view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes).release_value_but_fixme_should_propagate_errors(); },
             [](auto& view) {
                 StringBuilder builder;
                 for (auto it = view.begin(); it != view.end(); ++it)
@@ -558,7 +558,7 @@ private:
 
 class Match final {
 private:
-    Optional<FlyString> string;
+    Optional<DeprecatedFlyString> string;
 
 public:
     Match() = default;
@@ -603,7 +603,7 @@ public:
     }
 
     RegexStringView view {};
-    Optional<FlyString> capture_group_name {};
+    Optional<DeprecatedFlyString> capture_group_name {};
     size_t line { 0 };
     size_t column { 0 };
     size_t global_offset { 0 };

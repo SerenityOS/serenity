@@ -118,7 +118,7 @@ void AutocompleteProvider::provide_completions(Function<void(Vector<CodeComprehe
             fuzzy_str_builder.append(character);
             fuzzy_str_builder.append('*');
         }
-        return fuzzy_str_builder.build();
+        return fuzzy_str_builder.to_deprecated_string();
     };
 
     Vector<CodeComprehension::AutocompleteResultEntry> class_entries, identifier_entries;

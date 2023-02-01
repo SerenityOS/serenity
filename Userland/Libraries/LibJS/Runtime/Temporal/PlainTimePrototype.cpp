@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -25,9 +25,9 @@ PlainTimePrototype::PlainTimePrototype(Realm& realm)
 {
 }
 
-void PlainTimePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> PlainTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -57,6 +57,8 @@ void PlainTimePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+
+    return {};
 }
 
 // 4.3.3 get Temporal.PlainTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plaintime.prototype.calendar
@@ -299,7 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::round)
     auto smallest_unit = TRY(get_temporal_unit(vm, *round_to, vm.names.smallestUnit, UnitGroup::Time, TemporalUnitRequired {}));
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"sv));
 
     // 8. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).
     auto maximum = maximum_temporal_duration_rounding_increment(*smallest_unit);
@@ -472,7 +474,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
     auto round_result = round_time(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), precision.increment, precision.unit, rounding_mode);
 
     // 7. Return ! TemporalTimeToString(roundResult.[[Hour]], roundResult.[[Minute]], roundResult.[[Second]], roundResult.[[Millisecond]], roundResult.[[Microsecond]], roundResult.[[Nanosecond]], precision.[[Precision]]).
-    auto string = temporal_time_to_string(round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision.precision);
+    auto string = MUST_OR_THROW_OOM(temporal_time_to_string(vm, round_result.hour, round_result.minute, round_result.second, round_result.millisecond, round_result.microsecond, round_result.nanosecond, precision.precision));
     return PrimitiveString::create(vm, move(string));
 }
 
@@ -484,7 +486,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
     auto* temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ! TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
-    auto string = temporal_time_to_string(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv);
+    auto string = MUST_OR_THROW_OOM(temporal_time_to_string(vm, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv));
     return PrimitiveString::create(vm, move(string));
 }
 
@@ -496,7 +498,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_json)
     auto* temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ! TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
-    auto string = temporal_time_to_string(temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv);
+    auto string = MUST_OR_THROW_OOM(temporal_time_to_string(vm, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv));
     return PrimitiveString::create(vm, move(string));
 }
 

@@ -117,7 +117,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Optional<Gfx::IntRect> crop_region;
     if (select_region) {
         auto window = GUI::Window::construct();
-        auto& container = window->set_main_widget<SelectableLayover>(window);
+        auto container = TRY(window->set_main_widget<SelectableLayover>(window));
 
         window->set_title("shot");
         window->set_has_alpha_channel(true);
@@ -125,7 +125,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->show();
         app->exec();
 
-        crop_region = container.region();
+        crop_region = container->region();
         if (crop_region.value().is_empty()) {
             dbgln("cancelled...");
             return 0;

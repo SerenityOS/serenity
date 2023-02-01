@@ -10,106 +10,141 @@
 
 namespace Kernel::PCI {
 
-void write8(Address address, PCI::RegisterOffset field, u8 value) { Access::the().write8_field(address, to_underlying(field), value); }
-void write16(Address address, PCI::RegisterOffset field, u16 value) { Access::the().write16_field(address, to_underlying(field), value); }
-void write32(Address address, PCI::RegisterOffset field, u32 value) { Access::the().write32_field(address, to_underlying(field), value); }
-u8 read8(Address address, PCI::RegisterOffset field) { return Access::the().read8_field(address, to_underlying(field)); }
-u16 read16(Address address, PCI::RegisterOffset field) { return Access::the().read16_field(address, to_underlying(field)); }
-u32 read32(Address address, PCI::RegisterOffset field) { return Access::the().read32_field(address, to_underlying(field)); }
+void write8_locked(DeviceIdentifier const& identifier, PCI::RegisterOffset field, u8 value)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    Access::the().write8_field(identifier, to_underlying(field), value);
+}
+void write16_locked(DeviceIdentifier const& identifier, PCI::RegisterOffset field, u16 value)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    Access::the().write16_field(identifier, to_underlying(field), value);
+}
+void write32_locked(DeviceIdentifier const& identifier, PCI::RegisterOffset field, u32 value)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    Access::the().write32_field(identifier, to_underlying(field), value);
+}
+
+u8 read8_locked(DeviceIdentifier const& identifier, PCI::RegisterOffset field)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    return Access::the().read8_field(identifier, to_underlying(field));
+}
+u16 read16_locked(DeviceIdentifier const& identifier, PCI::RegisterOffset field)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    return Access::the().read16_field(identifier, to_underlying(field));
+}
+u32 read32_locked(DeviceIdentifier const& identifier, PCI::RegisterOffset field)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    return Access::the().read32_field(identifier, to_underlying(field));
+}
 
 ErrorOr<void> enumerate(Function<void(DeviceIdentifier const&)> callback)
 {
     return Access::the().fast_enumerate(callback);
 }
 
-DeviceIdentifier get_device_identifier(Address address)
+HardwareID get_hardware_id(DeviceIdentifier const& identifier)
 {
-    return Access::the().get_device_identifier(address);
+    SpinlockLocker locker(identifier.operation_lock());
+    return { read16_locked(identifier, PCI::RegisterOffset::VENDOR_ID), read16_locked(identifier, PCI::RegisterOffset::DEVICE_ID) };
 }
 
-HardwareID get_hardware_id(Address address)
+void enable_io_space(DeviceIdentifier const& identifier)
 {
-    return { read16(address, PCI::RegisterOffset::VENDOR_ID), read16(address, PCI::RegisterOffset::DEVICE_ID) };
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, read16_locked(identifier, PCI::RegisterOffset::COMMAND) | (1 << 0));
+}
+void disable_io_space(DeviceIdentifier const& identifier)
+{
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, read16_locked(identifier, PCI::RegisterOffset::COMMAND) & ~(1 << 0));
 }
 
-void enable_io_space(Address address)
+void enable_memory_space(DeviceIdentifier const& identifier)
 {
-    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) | (1 << 0));
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, read16_locked(identifier, PCI::RegisterOffset::COMMAND) | (1 << 1));
 }
-void disable_io_space(Address address)
+void disable_memory_space(DeviceIdentifier const& identifier)
 {
-    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) & ~(1 << 0));
-}
-
-void enable_memory_space(Address address)
-{
-    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) | (1 << 1));
-}
-void disable_memory_space(Address address)
-{
-    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) & ~(1 << 1));
-}
-bool is_io_space_enabled(Address address)
-{
-    return (read16(address, PCI::RegisterOffset::COMMAND) & 1) != 0;
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, read16_locked(identifier, PCI::RegisterOffset::COMMAND) & ~(1 << 1));
 }
 
-void enable_interrupt_line(Address address)
+bool is_io_space_enabled(DeviceIdentifier const& identifier)
 {
-    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) & ~(1 << 10));
+    SpinlockLocker locker(identifier.operation_lock());
+    return (read16_locked(identifier, PCI::RegisterOffset::COMMAND) & 1) != 0;
 }
 
-void disable_interrupt_line(Address address)
+void enable_interrupt_line(DeviceIdentifier const& identifier)
 {
-    write16(address, PCI::RegisterOffset::COMMAND, read16(address, PCI::RegisterOffset::COMMAND) | 1 << 10);
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, read16_locked(identifier, PCI::RegisterOffset::COMMAND) & ~(1 << 10));
 }
 
-u32 get_BAR0(Address address)
+void disable_interrupt_line(DeviceIdentifier const& identifier)
 {
-    return read32(address, PCI::RegisterOffset::BAR0);
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, read16_locked(identifier, PCI::RegisterOffset::COMMAND) | 1 << 10);
 }
 
-u32 get_BAR1(Address address)
+u32 get_BAR0(DeviceIdentifier const& identifier)
 {
-    return read32(address, PCI::RegisterOffset::BAR1);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_locked(identifier, PCI::RegisterOffset::BAR0);
 }
 
-u32 get_BAR2(Address address)
+u32 get_BAR1(DeviceIdentifier const& identifier)
 {
-    return read32(address, PCI::RegisterOffset::BAR2);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_locked(identifier, PCI::RegisterOffset::BAR1);
 }
 
-u32 get_BAR3(Address address)
+u32 get_BAR2(DeviceIdentifier const& identifier)
 {
-    return read16(address, PCI::RegisterOffset::BAR3);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_locked(identifier, PCI::RegisterOffset::BAR2);
 }
 
-u32 get_BAR4(Address address)
+u32 get_BAR3(DeviceIdentifier const& identifier)
 {
-    return read32(address, PCI::RegisterOffset::BAR4);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_locked(identifier, PCI::RegisterOffset::BAR3);
 }
 
-u32 get_BAR5(Address address)
+u32 get_BAR4(DeviceIdentifier const& identifier)
 {
-    return read32(address, PCI::RegisterOffset::BAR5);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_locked(identifier, PCI::RegisterOffset::BAR4);
 }
 
-u32 get_BAR(Address address, HeaderType0BaseRegister pci_bar)
+u32 get_BAR5(DeviceIdentifier const& identifier)
+{
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_locked(identifier, PCI::RegisterOffset::BAR5);
+}
+
+u32 get_BAR(DeviceIdentifier const& identifier, HeaderType0BaseRegister pci_bar)
 {
     VERIFY(to_underlying(pci_bar) <= 5);
     switch (to_underlying(pci_bar)) {
     case 0:
-        return get_BAR0(address);
+        return get_BAR0(identifier);
     case 1:
-        return get_BAR1(address);
+        return get_BAR1(identifier);
     case 2:
-        return get_BAR2(address);
+        return get_BAR2(identifier);
     case 3:
-        return get_BAR3(address);
+        return get_BAR3(identifier);
     case 4:
-        return get_BAR4(address);
+        return get_BAR4(identifier);
     case 5:
-        return get_BAR5(address);
+        return get_BAR5(identifier);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -133,89 +168,126 @@ BARSpaceType get_BAR_space_type(u32 pci_bar_value)
     }
 }
 
-void enable_bus_mastering(Address address)
+void enable_bus_mastering(DeviceIdentifier const& identifier)
 {
-    auto value = read16(address, PCI::RegisterOffset::COMMAND);
+    SpinlockLocker locker(identifier.operation_lock());
+    auto value = read16_locked(identifier, PCI::RegisterOffset::COMMAND);
     value |= (1 << 2);
     value |= (1 << 0);
-    write16(address, PCI::RegisterOffset::COMMAND, value);
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, value);
 }
 
-void disable_bus_mastering(Address address)
+void disable_bus_mastering(DeviceIdentifier const& identifier)
 {
-    auto value = read16(address, PCI::RegisterOffset::COMMAND);
+    SpinlockLocker locker(identifier.operation_lock());
+    auto value = read16_locked(identifier, PCI::RegisterOffset::COMMAND);
     value &= ~(1 << 2);
     value |= (1 << 0);
-    write16(address, PCI::RegisterOffset::COMMAND, value);
+    write16_locked(identifier, PCI::RegisterOffset::COMMAND, value);
 }
 
-static void write8_offsetted(Address address, u32 field, u8 value) { Access::the().write8_field(address, field, value); }
-static void write16_offsetted(Address address, u32 field, u16 value) { Access::the().write16_field(address, field, value); }
-static void write32_offsetted(Address address, u32 field, u32 value) { Access::the().write32_field(address, field, value); }
-static u8 read8_offsetted(Address address, u32 field) { return Access::the().read8_field(address, field); }
-static u16 read16_offsetted(Address address, u32 field) { return Access::the().read16_field(address, field); }
-static u32 read32_offsetted(Address address, u32 field) { return Access::the().read32_field(address, field); }
-
-size_t get_BAR_space_size(Address address, HeaderType0BaseRegister pci_bar)
+static void write8_offsetted(DeviceIdentifier const& identifier, u32 field, u8 value)
 {
+    VERIFY(identifier.operation_lock().is_locked());
+    Access::the().write8_field(identifier, field, value);
+}
+static void write16_offsetted(DeviceIdentifier const& identifier, u32 field, u16 value)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    Access::the().write16_field(identifier, field, value);
+}
+static void write32_offsetted(DeviceIdentifier const& identifier, u32 field, u32 value)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    Access::the().write32_field(identifier, field, value);
+}
+static u8 read8_offsetted(DeviceIdentifier const& identifier, u32 field)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    return Access::the().read8_field(identifier, field);
+}
+static u16 read16_offsetted(DeviceIdentifier const& identifier, u32 field)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    return Access::the().read16_field(identifier, field);
+}
+static u32 read32_offsetted(DeviceIdentifier const& identifier, u32 field)
+{
+    VERIFY(identifier.operation_lock().is_locked());
+    return Access::the().read32_field(identifier, field);
+}
+
+size_t get_BAR_space_size(DeviceIdentifier const& identifier, HeaderType0BaseRegister pci_bar)
+{
+    SpinlockLocker locker(identifier.operation_lock());
     // See PCI Spec 2.3, Page 222
     VERIFY(to_underlying(pci_bar) < 6);
     u8 field = to_underlying(PCI::RegisterOffset::BAR0) + (to_underlying(pci_bar) << 2);
-    u32 bar_reserved = read32_offsetted(address, field);
-    write32_offsetted(address, field, 0xFFFFFFFF);
-    u32 space_size = read32_offsetted(address, field);
-    write32_offsetted(address, field, bar_reserved);
+    u32 bar_reserved = read32_offsetted(identifier, field);
+    write32_offsetted(identifier, field, 0xFFFFFFFF);
+    u32 space_size = read32_offsetted(identifier, field);
+    write32_offsetted(identifier, field, bar_reserved);
     space_size &= 0xfffffff0;
     space_size = (~space_size) + 1;
     return space_size;
 }
 
-void raw_access(Address address, u32 field, size_t access_size, u32 value)
+size_t get_expansion_rom_space_size(DeviceIdentifier const& identifier)
 {
+    SpinlockLocker locker(identifier.operation_lock());
+    u8 field = to_underlying(PCI::RegisterOffset::EXPANSION_ROM_POINTER);
+    u32 bar_reserved = read32_offsetted(identifier, field);
+    write32_offsetted(identifier, field, 0xFFFFFFFF);
+    u32 space_size = read32_offsetted(identifier, field);
+    write32_offsetted(identifier, field, bar_reserved);
+    space_size &= 0xfffffff0;
+    space_size = (~space_size) + 1;
+    return space_size;
+}
+
+void raw_access(DeviceIdentifier const& identifier, u32 field, size_t access_size, u32 value)
+{
+    SpinlockLocker locker(identifier.operation_lock());
     VERIFY(access_size != 0);
     if (access_size == 1) {
-        write8_offsetted(address, field, value);
+        write8_offsetted(identifier, field, value);
         return;
     }
     if (access_size == 2) {
-        write16_offsetted(address, field, value);
+        write16_offsetted(identifier, field, value);
         return;
     }
     if (access_size == 4) {
-        write32_offsetted(address, field, value);
+        write32_offsetted(identifier, field, value);
         return;
     }
     VERIFY_NOT_REACHED();
 }
 
-u8 Capability::read8(u32 field) const
+u8 Capability::read8(size_t offset) const
 {
-    return read8_offsetted(m_address, m_ptr + field);
+    auto& identifier = get_device_identifier(m_address);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read8_offsetted(identifier, m_ptr + offset);
 }
 
-u16 Capability::read16(u32 field) const
+u16 Capability::read16(size_t offset) const
 {
-    return read16_offsetted(m_address, m_ptr + field);
+    auto& identifier = get_device_identifier(m_address);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read16_offsetted(identifier, m_ptr + offset);
 }
 
-u32 Capability::read32(u32 field) const
+u32 Capability::read32(size_t offset) const
 {
-    return read32_offsetted(m_address, m_ptr + field);
+    auto& identifier = get_device_identifier(m_address);
+    SpinlockLocker locker(identifier.operation_lock());
+    return read32_offsetted(identifier, m_ptr + offset);
 }
 
-void Capability::write8(u32 field, u8 value)
+DeviceIdentifier const& get_device_identifier(Address address)
 {
-    write8_offsetted(m_address, m_ptr + field, value);
-}
-
-void Capability::write16(u32 field, u16 value)
-{
-    write16_offsetted(m_address, m_ptr + field, value);
-}
-
-void Capability::write32(u32 field, u32 value)
-{
-    write32_offsetted(m_address, m_ptr + field, value);
+    return Access::the().get_device_identifier(address);
 }
 
 }

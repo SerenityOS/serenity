@@ -10,7 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/API/VirGL.h>
-#include <LibCore/File.h>
+#include <LibCore/Stream.h>
 #include <LibGPU/Device.h>
 #include <LibVirtGPU/VirGLProtocol.h>
 
@@ -18,7 +18,7 @@ namespace VirtGPU {
 
 class Device final : public GPU::Device {
 public:
-    Device(NonnullRefPtr<Core::File>);
+    Device(NonnullOwnPtr<Core::Stream::File>);
 
     static ErrorOr<NonnullOwnPtr<Device>> create(Gfx::IntSize min_size);
 
@@ -66,7 +66,7 @@ private:
     ErrorOr<Protocol::ResourceID> create_virgl_resource(VirGL3DResourceSpec&);
     ErrorOr<void> upload_command_buffer(Vector<u32> const&);
 
-    NonnullRefPtr<Core::File> m_gpu_file;
+    NonnullOwnPtr<Core::Stream::File> m_gpu_file;
 
     Protocol::ResourceID m_vbo_resource_id { 0 };
     Protocol::ResourceID m_drawtarget { 0 };

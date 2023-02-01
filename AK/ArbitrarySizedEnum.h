@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/DistinctNumeric.h>
 
 namespace AK {
@@ -66,22 +67,22 @@ struct ArbitrarySizedEnum : public T {
 
     [[nodiscard]] constexpr ArbitrarySizedEnum<T> operator|(ArbitrarySizedEnum<T> const& other) const
     {
-        return { T(this->value() | other.value()), {} };
+        return { T(this->value() | other.value()), Badge<ArbitrarySizedEnum<T>> {} };
     }
 
     [[nodiscard]] constexpr ArbitrarySizedEnum<T> operator&(ArbitrarySizedEnum<T> const& other) const
     {
-        return { T(this->value() & other.value()), {} };
+        return { T(this->value() & other.value()), Badge<ArbitrarySizedEnum<T>> {} };
     }
 
     [[nodiscard]] constexpr ArbitrarySizedEnum<T> operator^(ArbitrarySizedEnum<T> const& other) const
     {
-        return { T(this->value() ^ other.value()), {} };
+        return { T(this->value() ^ other.value()), Badge<ArbitrarySizedEnum<T>> {} };
     }
 
     [[nodiscard]] constexpr ArbitrarySizedEnum<T> operator~() const
     {
-        return { T(~this->value()), {} };
+        return { T(~this->value()), Badge<ArbitrarySizedEnum<T>> {} };
     }
 
     constexpr ArbitrarySizedEnum<T>& operator|=(ArbitrarySizedEnum<T> const& other)

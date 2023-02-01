@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -24,6 +25,8 @@ class HTMLButtonElement final
 
 public:
     virtual ~HTMLButtonElement() override;
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     enum class TypeAttributeState {
 #define __ENUMERATE_HTML_BUTTON_TYPE_ATTRIBUTE(_, state) state,
@@ -52,6 +55,9 @@ public:
     // ^HTMLElement
     // https://html.spec.whatwg.org/multipage/forms.html#category-label
     virtual bool is_labelable() const override { return true; }
+
+    // https://www.w3.org/TR/html-aria/#el-button
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::button; }
 
 private:
     HTMLButtonElement(DOM::Document&, DOM::QualifiedName);

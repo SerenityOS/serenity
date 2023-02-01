@@ -19,15 +19,17 @@ AggregateErrorConstructor::AggregateErrorConstructor(Realm& realm)
 {
 }
 
-void AggregateErrorConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> AggregateErrorConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 20.5.7.2.1 AggregateError.prototype, https://tc39.es/ecma262/#sec-aggregate-error.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().aggregate_error_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    return {};
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message [ , options ] ), https://tc39.es/ecma262/#sec-aggregate-error
@@ -53,7 +55,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> AggregateErrorConstructor::construct(Fun
     // 3. If message is not undefined, then
     if (!message.is_undefined()) {
         // a. Let msg be ? ToString(message).
-        auto msg = TRY(message.to_string(vm));
+        auto msg = TRY(message.to_deprecated_string(vm));
 
         // b. Perform CreateNonEnumerableDataPropertyOrThrow(O, "message", msg).
         aggregate_error->create_non_enumerable_data_property_or_throw(vm.names.message, PrimitiveString::create(vm, msg));

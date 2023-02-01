@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -110,7 +110,7 @@ ThrowCompletionOr<Instant*> to_temporal_instant(VM& vm, Value item)
 }
 
 // 8.5.4 ParseTemporalInstant ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstant
-ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<BigInt*> parse_temporal_instant(VM& vm, StringView iso_string)
 {
     // 1. Assert: Type(isoString) is String.
 
@@ -239,7 +239,7 @@ BigInt* round_temporal_instant(VM& vm, BigInt const& nanoseconds, u64 increment,
 }
 
 // 8.5.9 TemporalInstantToString ( instant, timeZone, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporalinstanttostring
-ThrowCompletionOr<DeprecatedString> temporal_instant_to_string(VM& vm, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<String> temporal_instant_to_string(VM& vm, Instant& instant, Value time_zone, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: Type(instant) is Object.
     // 2. Assert: instant has an [[InitializedTemporalInstant]] internal slot.
@@ -250,7 +250,7 @@ ThrowCompletionOr<DeprecatedString> temporal_instant_to_string(VM& vm, Instant& 
     // 4. If outputTimeZone is undefined, then
     if (output_time_zone.is_undefined()) {
         // a. Set outputTimeZone to ! CreateTemporalTimeZone("UTC").
-        output_time_zone = MUST(create_temporal_time_zone(vm, "UTC"sv));
+        output_time_zone = MUST_OR_THROW_OOM(create_temporal_time_zone(vm, "UTC"sv));
     }
 
     // 5. Let isoCalendar be ! GetISO8601Calendar().
@@ -259,15 +259,15 @@ ThrowCompletionOr<DeprecatedString> temporal_instant_to_string(VM& vm, Instant& 
     // 6. Let dateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(outputTimeZone, instant, isoCalendar).
     auto* date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, output_time_zone, instant, *iso_calendar));
 
-    // 7. Let dateTimeString be ? TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
-    auto date_time_string = TRY(temporal_date_time_to_string(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), nullptr, precision, "never"sv));
+    // 7. Let dateTimeString be ! TemporalDateTimeToString(dateTime.[[ISOYear]], dateTime.[[ISOMonth]], dateTime.[[ISODay]], dateTime.[[ISOHour]], dateTime.[[ISOMinute]], dateTime.[[ISOSecond]], dateTime.[[ISOMillisecond]], dateTime.[[ISOMicrosecond]], dateTime.[[ISONanosecond]], undefined, precision, "never").
+    auto date_time_string = MUST_OR_THROW_OOM(temporal_date_time_to_string(vm, date_time->iso_year(), date_time->iso_month(), date_time->iso_day(), date_time->iso_hour(), date_time->iso_minute(), date_time->iso_second(), date_time->iso_millisecond(), date_time->iso_microsecond(), date_time->iso_nanosecond(), nullptr, precision, "never"sv));
 
-    DeprecatedString time_zone_string;
+    String time_zone_string;
 
     // 8. If timeZone is undefined, then
     if (time_zone.is_undefined()) {
         // a. Let timeZoneString be "Z".
-        time_zone_string = "Z"sv;
+        time_zone_string = String::from_utf8_short_string("Z"sv);
     }
     // 9. Else,
     else {
@@ -275,11 +275,11 @@ ThrowCompletionOr<DeprecatedString> temporal_instant_to_string(VM& vm, Instant& 
         auto offset_ns = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
 
         // b. Let timeZoneString be ! FormatISOTimeZoneOffsetString(offsetNs).
-        time_zone_string = format_iso_time_zone_offset_string(offset_ns);
+        time_zone_string = MUST_OR_THROW_OOM(format_iso_time_zone_offset_string(vm, offset_ns));
     }
 
     // 10. Return the string-concatenation of dateTimeString and timeZoneString.
-    return DeprecatedString::formatted("{}{}", date_time_string, time_zone_string);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{}", date_time_string, time_zone_string));
 }
 
 // 8.5.10 DifferenceTemporalInstant ( operation, instant, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalinstant

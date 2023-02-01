@@ -13,7 +13,14 @@ namespace Web::SVG {
 SVGGeometryElement::SVGGeometryElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGGeometryElement"));
+}
+
+JS::ThrowCompletionOr<void> SVGGeometryElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGGeometryElementPrototype>(realm, "SVGGeometryElement"));
+
+    return {};
 }
 
 JS::GCPtr<Layout::Node> SVGGeometryElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)

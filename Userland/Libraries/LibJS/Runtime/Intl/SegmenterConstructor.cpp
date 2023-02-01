@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,9 +21,9 @@ SegmenterConstructor::SegmenterConstructor(Realm& realm)
 {
 }
 
-void SegmenterConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> SegmenterConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -32,6 +33,8 @@ void SegmenterConstructor::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+
+    return {};
 }
 
 // 18.1.1 Intl.Segmenter ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.segmenter
@@ -62,7 +65,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     // 6. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 7. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 7. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 8. Set opt.[[localeMatcher]] to matcher.
@@ -71,16 +74,16 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SegmenterConstructor::construct(Function
     // 9. Let localeData be %Segmenter%.[[LocaleData]].
 
     // 10. Let r be ResolveLocale(%Segmenter%.[[AvailableLocales]], requestedLocales, opt, %Segmenter%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, {});
+    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
 
     // 11. Set segmenter.[[Locale]] to r.[[locale]].
     segmenter->set_locale(move(result.locale));
 
-    // 12. Let granularity be ? GetOption(options, "granularity", "string", « "grapheme", "word", "sentence" », "grapheme").
+    // 12. Let granularity be ? GetOption(options, "granularity", string, « "grapheme", "word", "sentence" », "grapheme").
     auto granularity = TRY(get_option(vm, *options, vm.names.granularity, OptionType::String, { "grapheme"sv, "word"sv, "sentence"sv }, "grapheme"sv));
 
     // 13. Set segmenter.[[SegmenterGranularity]] to granularity.
-    segmenter->set_segmenter_granularity(granularity.as_string().deprecated_string());
+    segmenter->set_segmenter_granularity(TRY(granularity.as_string().utf8_string_view()));
 
     // 14. Return segmenter.
     return segmenter;

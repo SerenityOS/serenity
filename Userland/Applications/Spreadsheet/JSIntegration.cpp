@@ -144,9 +144,9 @@ JS::ThrowCompletionOr<bool> SheetGlobalObject::internal_set(const JS::PropertyKe
     return Base::internal_set(property_name, value, receiver);
 }
 
-void SheetGlobalObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> SheetGlobalObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "get_real_cell_contents", get_real_cell_contents, 1, attr);
@@ -157,6 +157,8 @@ void SheetGlobalObject::initialize(JS::Realm& realm)
     define_native_function(realm, "column_index", column_index, 1, attr);
     define_native_function(realm, "get_column_bound", get_column_bound, 1, attr);
     define_native_accessor(realm, "name", get_name, nullptr, attr);
+
+    return {};
 }
 
 void SheetGlobalObject::visit_edges(Visitor& visitor)
@@ -196,7 +198,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_real_cell_contents)
     auto name_value = vm.argument(0);
     if (!name_value.is_string())
         return vm.throw_completion<JS::TypeError>("Expected a String argument to get_real_cell_contents()");
-    auto position = sheet_object->m_sheet.parse_cell_name(name_value.as_string().deprecated_string());
+    auto position = sheet_object->m_sheet.parse_cell_name(TRY(name_value.as_string().deprecated_string()));
     if (!position.has_value())
         return vm.throw_completion<JS::TypeError>("Invalid cell name");
 
@@ -225,7 +227,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
     auto name_value = vm.argument(0);
     if (!name_value.is_string())
         return vm.throw_completion<JS::TypeError>("Expected the first argument of set_real_cell_contents() to be a String");
-    auto position = sheet_object->m_sheet.parse_cell_name(name_value.as_string().deprecated_string());
+    auto position = sheet_object->m_sheet.parse_cell_name(TRY(name_value.as_string().deprecated_string()));
     if (!position.has_value())
         return vm.throw_completion<JS::TypeError>("Invalid cell name");
 
@@ -234,7 +236,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::set_real_cell_contents)
         return vm.throw_completion<JS::TypeError>("Expected the second argument of set_real_cell_contents() to be a String");
 
     auto& cell = sheet_object->m_sheet.ensure(position.value());
-    auto& new_contents = new_contents_value.as_string().deprecated_string();
+    auto new_contents = TRY(new_contents_value.as_string().deprecated_string());
     cell.set_data(new_contents);
     return JS::js_null();
 }
@@ -255,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     auto name_value = vm.argument(0);
     if (!name_value.is_string())
         return vm.throw_completion<JS::TypeError>("Expected a String argument to parse_cell_name()");
-    auto position = sheet_object->m_sheet.parse_cell_name(name_value.as_string().deprecated_string());
+    auto position = sheet_object->m_sheet.parse_cell_name(TRY(name_value.as_string().deprecated_string()));
     if (!position.has_value())
         return JS::js_undefined();
 
@@ -301,7 +303,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_index)
     if (!column_name.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "String");
 
-    auto& column_name_str = column_name.as_string().deprecated_string();
+    auto column_name_str = TRY(column_name.as_string().deprecated_string());
 
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
@@ -326,7 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
     if (!column_name.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "String");
 
-    auto& column_name_str = column_name.as_string().deprecated_string();
+    auto column_name_str = TRY(column_name.as_string().deprecated_string());
 
     auto offset = TRY(vm.argument(1).to_number(vm));
     auto offset_number = static_cast<i32>(offset.as_double());
@@ -354,7 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::get_column_bound)
     if (!column_name.is_string())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "String");
 
-    auto& column_name_str = column_name.as_string().deprecated_string();
+    auto column_name_str = TRY(column_name.as_string().deprecated_string());
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (!is<SheetGlobalObject>(this_object))
@@ -376,10 +378,12 @@ WorkbookObject::WorkbookObject(JS::Realm& realm, Workbook& workbook)
 {
 }
 
-void WorkbookObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WorkbookObject::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
     define_native_function(realm, "sheet", sheet, 1, JS::default_attributes);
+
+    return {};
 }
 
 void WorkbookObject::visit_edges(Visitor& visitor)
@@ -405,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
     auto& workbook = static_cast<WorkbookObject*>(this_object)->m_workbook;
 
     if (name_value.is_string()) {
-        auto& name = name_value.as_string().deprecated_string();
+        auto name = TRY(name_value.as_string().deprecated_string());
         for (auto& sheet : workbook.sheets()) {
             if (sheet.name() == name)
                 return JS::Value(&sheet.global_object());

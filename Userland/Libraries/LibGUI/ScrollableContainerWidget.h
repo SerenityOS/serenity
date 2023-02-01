@@ -30,7 +30,7 @@ private:
     void update_widget_size();
     void update_widget_position();
     void update_widget_min_size();
-    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&)) override;
+    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler) override;
 
     ScrollableContainerWidget();
 

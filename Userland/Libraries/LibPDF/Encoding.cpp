@@ -171,6 +171,14 @@ CharDescriptor const& Encoding::get_char_code_descriptor(u16 char_code) const
     return const_cast<Encoding*>(this)->m_descriptors.ensure(char_code);
 }
 
+u16 Encoding::get_char_code(DeprecatedString const& name) const
+{
+    auto code_iterator = m_name_mapping.find(name);
+    if (code_iterator != m_name_mapping.end())
+        return code_iterator->value;
+    return 0;
+}
+
 bool Encoding::should_map_to_bullet(u16 char_code) const
 {
     // PDF Annex D table D.2, note 3:

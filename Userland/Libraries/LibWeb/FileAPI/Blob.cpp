@@ -7,6 +7,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/Blob.h>
@@ -16,7 +17,7 @@ namespace Web::FileAPI {
 
 JS::NonnullGCPtr<Blob> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
 {
-    return realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type));
+    return realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
@@ -114,7 +115,6 @@ bool is_basic_latin(StringView view)
 Blob::Blob(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Blob"));
 }
 
 Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
@@ -122,29 +122,35 @@ Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
     , m_byte_buffer(move(byte_buffer))
     , m_type(move(type))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Blob"));
 }
 
 Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer)
     : PlatformObject(realm)
     , m_byte_buffer(move(byte_buffer))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Blob"));
 }
 
 Blob::~Blob() = default;
+
+JS::ThrowCompletionOr<void> Blob::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::BlobPrototype>(realm, "Blob"));
+
+    return {};
+}
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
     // 1. If invoked with zero parameters, return a new Blob object consisting of 0 bytes, with size set to 0, and with type set to the empty string.
     if (!blob_parts.has_value() && !options.has_value())
-        return realm.heap().allocate<Blob>(realm, realm);
+        return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm));
 
     ByteBuffer byte_buffer {};
     // 2. Let bytes be the result of processing blob parts given blobParts and options.
     if (blob_parts.has_value()) {
-        byte_buffer = TRY_OR_RETURN_OOM(realm, process_blob_parts(blob_parts.value(), options));
+        byte_buffer = TRY_OR_THROW_OOM(realm.vm(), process_blob_parts(blob_parts.value(), options));
     }
 
     auto type = DeprecatedString::empty();
@@ -164,7 +170,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optio
     }
 
     // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
-    return realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type));
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)));
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::construct_impl(JS::Realm& realm, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
@@ -232,8 +238,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
     // a. S refers to span consecutive bytes from this, beginning with the byte at byte-order position relativeStart.
     // b. S.size = span.
     // c. S.type = relativeContentType.
-    auto byte_buffer = TRY_OR_RETURN_OOM(realm(), m_byte_buffer.slice(relative_start, span));
-    return heap().allocate<Blob>(realm(), realm(), move(byte_buffer), move(relative_content_type));
+    auto byte_buffer = TRY_OR_THROW_OOM(realm().vm(), m_byte_buffer.slice(relative_start, span));
+    return MUST_OR_THROW_OOM(heap().allocate<Blob>(realm(), realm(), move(byte_buffer), move(relative_content_type)));
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text

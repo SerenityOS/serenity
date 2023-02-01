@@ -14,6 +14,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>
+#include <LibCore/Stream.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibELF/Image.h>
 
@@ -39,23 +40,23 @@ public:
     ReadonlyBytes debug_ranges_data() const { return m_debug_ranges_data; }
 
     template<typename Callback>
-    void for_each_compilation_unit(Callback) const;
+    ErrorOr<void> for_each_compilation_unit(Callback) const;
 
-    AttributeValue get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
-        InputMemoryStream& debug_info_stream, CompilationUnit const* unit = nullptr) const;
+    ErrorOr<AttributeValue> get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
+        SeekableStream& debug_info_stream, CompilationUnit const* unit = nullptr) const;
 
-    Optional<DIE> get_die_at_address(FlatPtr) const;
+    ErrorOr<Optional<DIE>> get_die_at_address(FlatPtr) const;
 
     // Note that even if there is a DIE at the given offset,
     // but it does not exist in the DIE cache (because for example
     // it does not contain an address range), then this function will not return it.
     // To get any DIE object at a given offset in a compilation unit,
     // use CompilationUnit::get_die_at_offset.
-    Optional<DIE> get_cached_die_at_offset(FlatPtr) const;
+    ErrorOr<Optional<DIE>> get_cached_die_at_offset(FlatPtr) const;
 
 private:
-    void populate_compilation_units();
-    void build_cached_dies() const;
+    ErrorOr<void> populate_compilation_units();
+    ErrorOr<void> build_cached_dies() const;
 
     ReadonlyBytes section_data(StringView section_name) const;
 
@@ -90,11 +91,12 @@ private:
 };
 
 template<typename Callback>
-void DwarfInfo::for_each_compilation_unit(Callback callback) const
+ErrorOr<void> DwarfInfo::for_each_compilation_unit(Callback callback) const
 {
     for (auto const& unit : m_compilation_units) {
-        callback(unit);
+        TRY(callback(unit));
     }
+    return {};
 }
 
 }

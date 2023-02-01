@@ -126,13 +126,13 @@ void FileProvider::query(DeprecatedString const& query, Function<void(NonnullRef
     if (m_fuzzy_match_work)
         m_fuzzy_match_work->cancel();
 
-    m_fuzzy_match_work = Threading::BackgroundAction<NonnullRefPtrVector<Result>>::construct(
-        [this, query](auto& task) {
+    m_fuzzy_match_work = Threading::BackgroundAction<Optional<NonnullRefPtrVector<Result>>>::construct(
+        [this, query](auto& task) -> Optional<NonnullRefPtrVector<Result>> {
             NonnullRefPtrVector<Result> results;
 
             for (auto& path : m_full_path_cache) {
                 if (task.is_cancelled())
-                    return results;
+                    return {};
 
                 auto match_result = fuzzy_match(query, path);
                 if (!match_result.matched)
@@ -145,7 +145,9 @@ void FileProvider::query(DeprecatedString const& query, Function<void(NonnullRef
             return results;
         },
         [on_complete = move(on_complete)](auto results) -> ErrorOr<void> {
-            on_complete(move(results));
+            if (results.has_value())
+                on_complete(move(results.value()));
+
             return {};
         });
 }

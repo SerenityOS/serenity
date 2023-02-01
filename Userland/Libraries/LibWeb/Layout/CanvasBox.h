@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-class CanvasBox : public ReplacedBox {
+class CanvasBox final : public ReplacedBox {
     JS_CELL(CanvasBox, ReplacedBox);
 
 public:
@@ -22,7 +22,7 @@ public:
 
     const HTML::HTMLCanvasElement& dom_node() const { return static_cast<const HTML::HTMLCanvasElement&>(ReplacedBox::dom_node()); }
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

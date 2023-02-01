@@ -51,7 +51,7 @@ ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
         m_marching_ants_offset %= (marching_ant_length * 2);
         if (!m_image->selection().is_empty() || m_image->selection().in_interactive_selection())
             update();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_marching_ants_timer->start();
 }
 
@@ -134,6 +134,16 @@ void ImageEditor::update_modified()
         on_modified_change(is_modified());
 }
 
+Gfx::IntRect ImageEditor::subtract_rulers_from_rect(Gfx::IntRect const& rect) const
+{
+    Gfx::IntRect clipped_rect {};
+    clipped_rect.set_top(max(rect.y(), m_ruler_thickness + 1));
+    clipped_rect.set_left(max(rect.x(), m_ruler_thickness + 1));
+    clipped_rect.set_bottom(rect.bottom());
+    clipped_rect.set_right(rect.right());
+    return clipped_rect;
+}
+
 void ImageEditor::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
@@ -153,10 +163,10 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     Gfx::StylePainter::paint_transparency_grid(painter, content_rect(), palette());
 
     painter.draw_rect(content_rect().inflated(2, 2), Color::Black);
-    m_image->paint_into(painter, content_rect());
+    m_image->paint_into(painter, content_rect(), scale());
 
     if (m_active_layer && m_show_active_layer_boundary)
-        painter.draw_rect(content_to_frame_rect(m_active_layer->relative_rect()).to_rounded<int>().inflated(2, 2), Color::Black);
+        painter.draw_rect(content_to_frame_rect(m_active_layer->relative_rect()).to_type<int>().inflated(2, 2), Color::Black);
 
     if (m_show_pixel_grid && scale() > m_pixel_grid_threshold) {
         auto event_image_rect = enclosing_int_rect(frame_to_content_rect(event.rect())).inflated(1, 1);
@@ -282,11 +292,7 @@ void ImageEditor::second_paint_event(GUI::PaintEvent& event)
 {
     if (m_active_tool) {
         if (m_show_rulers) {
-            auto clipped_event = GUI::PaintEvent(Gfx::IntRect { event.rect().x() + m_ruler_thickness,
-                                                     event.rect().y() + m_ruler_thickness,
-                                                     event.rect().width() - m_ruler_thickness,
-                                                     event.rect().height() - m_ruler_thickness },
-                event.window_size());
+            auto clipped_event = GUI::PaintEvent(subtract_rulers_from_rect(event.rect()), event.window_size());
             m_active_tool->on_second_paint(m_active_layer, clipped_event);
         } else {
             m_active_tool->on_second_paint(m_active_layer, event);
@@ -364,21 +370,20 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (event.alt() && !m_active_tool->is_overriding_alt()) {
-        set_editor_color_to_color_at_mouse_position(event);
-        return; // Pick Color instead of acivating active tool when holding alt.
-    }
-
     if (!m_active_tool)
         return;
 
-    if (is<MoveTool>(*m_active_tool)) {
-        if (auto* other_layer = layer_at_editor_position(event.position())) {
-            set_active_layer(other_layer);
-        }
+    if (auto* tool = dynamic_cast<MoveTool*>(m_active_tool); tool && tool->layer_selection_mode() == MoveTool::LayerSelectionMode::ForegroundLayer) {
+        if (auto* foreground_layer = layer_at_editor_position(event.position()))
+            set_active_layer(foreground_layer);
     }
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
+    if (event.alt() && !m_active_tool->is_overriding_alt()) {
+        set_editor_color_to_color_at_mouse_position(layer_event);
+        return; // Pick Color instead of acivating active tool when holding alt.
+    }
+
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
     m_active_tool->on_mousedown(m_active_layer.ptr(), tool_event);
@@ -386,6 +391,8 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 
 void ImageEditor::doubleclick_event(GUI::MouseEvent& event)
 {
+    if (!m_active_tool || (event.alt() && !m_active_tool->is_overriding_alt()))
+        return;
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::DoubleClick, layer_event, image_event, event);
@@ -405,28 +412,33 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
         return;
     }
 
-    if (!m_active_tool)
-        return;
-
     auto image_event = event_with_pan_and_scale_applied(event);
     if (on_image_mouse_position_change) {
         on_image_mouse_position_change(image_event.position());
     }
 
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
+    if (m_active_tool && event.alt() && !m_active_tool->is_overriding_alt()) {
+        set_override_cursor(Gfx::StandardCursor::Eyedropper);
+        set_editor_color_to_color_at_mouse_position(layer_event);
+        return;
+    }
+
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
     m_active_tool->on_mousemove(m_active_layer.ptr(), tool_event);
 }
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
 {
-    set_override_cursor(m_active_cursor);
+    if (!(m_active_tool && event.alt() && !m_active_tool->is_overriding_alt()))
+        set_override_cursor(m_active_cursor);
+
     if (event.button() == GUI::MouseButton::Middle) {
         stop_panning();
         return;
     }
 
-    if (!m_active_tool)
+    if (!m_active_tool || (event.alt() && !m_active_tool->is_overriding_alt()))
         return;
     auto layer_event = m_active_layer ? event_adjusted_for_layer(event, *m_active_layer) : event;
     auto image_event = event_with_pan_and_scale_applied(event);
@@ -449,7 +461,13 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
-    if (m_active_tool && m_active_tool->on_keydown(event))
+    if (!m_active_tool)
+        return;
+
+    if (!m_active_tool->is_overriding_alt() && event.key() == Key_Alt)
+        set_override_cursor(Gfx::StandardCursor::Eyedropper);
+
+    if (m_active_tool->on_keydown(event))
         return;
 
     if (event.key() == Key_Escape && !m_image->selection().is_empty()) {
@@ -463,8 +481,13 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
 
 void ImageEditor::keyup_event(GUI::KeyEvent& event)
 {
-    if (m_active_tool)
-        m_active_tool->on_keyup(event);
+    if (!m_active_tool)
+        return;
+
+    if (!m_active_tool->is_overriding_alt() && event.key() == Key_Alt)
+        update_tool_cursor();
+
+    m_active_tool->on_keyup(event);
 }
 
 void ImageEditor::enter_event(Core::Event&)
@@ -512,11 +535,11 @@ ErrorOr<void> ImageEditor::add_new_layer_from_selection()
     // save offsets of selection so we know where to place the new layer
     auto selection_offset = current_layer_selection.bounding_rect().location();
 
-    auto selection_bitmap = active_layer()->try_copy_bitmap(current_layer_selection);
+    auto selection_bitmap = active_layer()->copy_bitmap(current_layer_selection);
     if (selection_bitmap.is_null())
         return Error::from_string_literal("Unable to create bitmap from selection.");
 
-    auto layer_or_error = PixelPaint::Layer::try_create_with_bitmap(image(), selection_bitmap.release_nonnull(), "New Layer"sv);
+    auto layer_or_error = PixelPaint::Layer::create_with_bitmap(image(), selection_bitmap.release_nonnull(), "New Layer"sv);
     if (layer_or_error.is_error())
         return Error::from_string_literal("Unable to create layer from selection.");
 
@@ -710,10 +733,10 @@ void ImageEditor::save_project()
         save_project_as();
         return;
     }
-    auto response = FileSystemAccessClient::Client::the().try_request_file(window(), path(), Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+    auto response = FileSystemAccessClient::Client::the().request_file(window(), path(), Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
     if (response.is_error())
         return;
-    auto result = save_project_to_file(*response.value());
+    auto result = save_project_to_file(response.value().release_stream());
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", path(), result.error()));
         return;
@@ -723,21 +746,21 @@ void ImageEditor::save_project()
 
 void ImageEditor::save_project_as()
 {
-    auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_title, "pp");
+    auto response = FileSystemAccessClient::Client::the().save_file(window(), m_title, "pp");
     if (response.is_error())
         return;
-    auto file = response.value();
-    auto result = save_project_to_file(*file);
+    auto file = response.release_value();
+    auto result = save_project_to_file(file.release_stream());
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", file->filename(), result.error()));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", file.filename(), result.error()));
         return;
     }
-    set_path(file->filename());
+    set_path(file.filename().to_deprecated_string());
     set_loaded_from_image(false);
     set_unmodified();
 }
 
-ErrorOr<void> ImageEditor::save_project_to_file(Core::File& file) const
+ErrorOr<void> ImageEditor::save_project_to_file(NonnullOwnPtr<Core::Stream::File> file) const
 {
     StringBuilder builder;
     auto json = TRY(JsonObjectSerializer<>::try_create(builder));
@@ -755,8 +778,7 @@ ErrorOr<void> ImageEditor::save_project_to_file(Core::File& file) const
     TRY(json_guides.finish());
     TRY(json.finish());
 
-    if (!file.write(builder.string_view()))
-        return Error::from_errno(file.error());
+    TRY(file->write_entire_buffer(builder.string_view().bytes()));
     return {};
 }
 

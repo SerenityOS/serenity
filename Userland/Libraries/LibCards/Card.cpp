@@ -55,40 +55,34 @@ void Card::clear_and_paint(GUI::Painter& painter, Color background_color, bool h
     save_old_position();
 }
 
-NonnullRefPtrVector<Card> create_standard_deck(Shuffle shuffle)
+ErrorOr<NonnullRefPtrVector<Card>> create_standard_deck(Shuffle shuffle)
 {
     return create_deck(1, 1, 1, 1, shuffle);
 }
 
-NonnullRefPtrVector<Card> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle shuffle)
+ErrorOr<NonnullRefPtrVector<Card>> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle shuffle)
 {
     NonnullRefPtrVector<Card> deck;
-    deck.ensure_capacity(Card::card_count * (full_club_suit_count + full_diamond_suit_count + full_heart_suit_count + full_spade_suit_count));
+    TRY(deck.try_ensure_capacity(Card::card_count * (full_club_suit_count + full_diamond_suit_count + full_heart_suit_count + full_spade_suit_count)));
 
-    auto add_cards_for_suit = [&deck](Cards::Suit suit, unsigned number_of_suits) {
+    auto add_cards_for_suit = [&deck](Cards::Suit suit, unsigned number_of_suits) -> ErrorOr<void> {
         for (auto i = 0u; i < number_of_suits; ++i) {
             for (auto rank = 0; rank < Card::card_count; ++rank) {
-                deck.append(Card::construct(suit, static_cast<Cards::Rank>(rank)));
+                deck.unchecked_append(TRY(Card::try_create(suit, static_cast<Cards::Rank>(rank))));
             }
         }
+        return {};
     };
 
-    add_cards_for_suit(Cards::Suit::Clubs, full_club_suit_count);
-    add_cards_for_suit(Cards::Suit::Diamonds, full_diamond_suit_count);
-    add_cards_for_suit(Cards::Suit::Hearts, full_heart_suit_count);
-    add_cards_for_suit(Cards::Suit::Spades, full_spade_suit_count);
+    TRY(add_cards_for_suit(Cards::Suit::Clubs, full_club_suit_count));
+    TRY(add_cards_for_suit(Cards::Suit::Diamonds, full_diamond_suit_count));
+    TRY(add_cards_for_suit(Cards::Suit::Hearts, full_heart_suit_count));
+    TRY(add_cards_for_suit(Cards::Suit::Spades, full_spade_suit_count));
 
     if (shuffle == Shuffle::Yes)
-        shuffle_deck(deck);
+        AK::shuffle(deck);
 
     return deck;
-}
-
-void shuffle_deck(NonnullRefPtrVector<Card>& deck)
-{
-    auto iteration_count = deck.size() * 4;
-    for (auto i = 0u; i < iteration_count; ++i)
-        deck.append(deck.take(get_random_uniform(deck.size())));
 }
 
 }

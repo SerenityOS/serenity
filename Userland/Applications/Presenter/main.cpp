@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to ImageDecoder and WindowServer.
+    // rpath is required to load .presenter files, unix, sendfd and recvfd are required to talk to WindowServer and WebContent.
     TRY(Core::System::pledge("stdio rpath unix sendfd recvfd"));
 
     DeprecatedString file_to_load;
@@ -25,8 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Presenter");
-    window->set_icon(GUI::Icon::default_icon("app-display-settings"sv).bitmap_for_size(16));
-    auto main_widget = TRY(window->try_set_main_widget<PresenterWidget>());
+    window->set_icon(GUI::Icon::default_icon("app-presenter"sv).bitmap_for_size(16));
+    auto main_widget = TRY(window->set_main_widget<PresenterWidget>());
     TRY(main_widget->initialize_menubar());
     window->show();
 

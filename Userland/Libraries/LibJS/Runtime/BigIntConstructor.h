@@ -14,7 +14,7 @@ class BigIntConstructor final : public NativeFunction {
     JS_OBJECT(BigIntConstructor, NativeFunction);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~BigIntConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;

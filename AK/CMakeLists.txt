@@ -2,6 +2,7 @@ set(AK_SOURCES
     Assertions.cpp
     Base64.cpp
     CircularBuffer.cpp
+    DeprecatedFlyString.cpp
     DeprecatedString.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp
@@ -9,14 +10,17 @@ set(AK_SOURCES
     FuzzyMatch.cpp
     GenericLexer.cpp
     Hex.cpp
+    JsonObject.cpp
     JsonParser.cpp
     JsonPath.cpp
     JsonValue.cpp
     kmalloc.cpp
     LexicalPath.cpp
+    MemoryStream.cpp
     NumberFormat.cpp
     Random.cpp
     StackInfo.cpp
+    Stream.cpp
     String.cpp
     StringBuilder.cpp
     StringFloatingPointConversions.cpp

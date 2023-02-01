@@ -19,17 +19,44 @@ namespace Web::HTML {
 HTMLObjectElement::HTMLObjectElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : BrowsingContextContainer(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLObjectElement"));
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+    // Whenever one of the following conditions occur:
+    // - the element is created,
+    // ...the user agent must queue an element task on the DOM manipulation task source given
+    // the object element to run the following steps to (re)determine what the object element represents.
+    // This task being queued or actively running must delay the load event of the element's node document.
+    queue_element_task_to_run_object_representation_steps();
 }
 
 HTMLObjectElement::~HTMLObjectElement() = default;
 
-void HTMLObjectElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+JS::ThrowCompletionOr<void> HTMLObjectElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLObjectElementPrototype>(realm, "HTMLObjectElement"));
+
+    return {};
+}
+
+void HTMLObjectElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     BrowsingContextContainer::parse_attribute(name, value);
 
-    if (name == HTML::AttributeNames::data)
+    // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#the-object-element
+    // Whenever one of the following conditions occur:
+    if (
+        // - the element's classid attribute is set, changed, or removed,
+        (name == HTML::AttributeNames::classid) ||
+        // - the element's classid attribute is not present, and its data attribute is set, changed, or removed,
+        (!has_attribute(HTML::AttributeNames::classid) && name == HTML::AttributeNames::data) ||
+        // - neither the element's classid attribute nor its data attribute are present, and its type attribute is set, changed, or removed,
+        (!has_attribute(HTML::AttributeNames::classid) && !has_attribute(HTML::AttributeNames::data) && name == HTML::AttributeNames::type)) {
+
+        // ...the user agent must queue an element task on the DOM manipulation task source given
+        // the object element to run the following steps to (re)determine what the object element represents.
+        // This task being queued or actively running must delay the load event of the element's node document.
         queue_element_task_to_run_object_representation_steps();
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#attr-object-data

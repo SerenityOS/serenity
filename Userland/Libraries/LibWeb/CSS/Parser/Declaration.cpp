@@ -10,7 +10,7 @@
 
 namespace Web::CSS::Parser {
 
-Declaration::Declaration(FlyString name, Vector<ComponentValue> values, Important important)
+Declaration::Declaration(DeprecatedFlyString name, Vector<ComponentValue> values, Important important)
     : m_name(move(name))
     , m_values(move(values))
     , m_important(move(important))

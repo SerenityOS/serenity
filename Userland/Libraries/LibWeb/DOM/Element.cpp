@@ -56,16 +56,19 @@ Element::Element(Document& document, DOM::QualifiedName qualified_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_qualified_name(move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Element"));
     make_html_uppercased_qualified_name();
 }
 
 Element::~Element() = default;
 
-void Element::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Element::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
+
     m_attributes = NamedNodeMap::create(*this);
+
+    return {};
 }
 
 void Element::visit_edges(Cell::Visitor& visitor)
@@ -80,7 +83,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattribute
-DeprecatedString Element::get_attribute(FlyString const& name) const
+DeprecatedString Element::get_attribute(DeprecatedFlyString const& name) const
 {
     // 1. Let attr be the result of getting an attribute given qualifiedName and this.
     auto const* attribute = m_attributes->get_attribute(name);
@@ -94,14 +97,14 @@ DeprecatedString Element::get_attribute(FlyString const& name) const
 }
 
 // https://dom.spec.whatwg.org/#dom-element-getattributenode
-JS::GCPtr<Attr> Element::get_attribute_node(FlyString const& name) const
+JS::GCPtr<Attr> Element::get_attribute_node(DeprecatedFlyString const& name) const
 {
     // The getAttributeNode(qualifiedName) method steps are to return the result of getting an attribute given qualifiedName and this.
     return m_attributes->get_attribute(name);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattribute
-WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -136,7 +139,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(FlyString const& name, Deprecat
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyString namespace_, FlyString qualified_name)
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name)
 {
     // 1. If namespace is the empty string, then set it to null.
     if (namespace_.is_empty())
@@ -146,7 +149,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyStr
     TRY(Document::validate_qualified_name(realm, qualified_name));
 
     // 3. Let prefix be null.
-    FlyString prefix = {};
+    DeprecatedFlyString prefix = {};
 
     // 4. Let localName be qualifiedName.
     auto local_name = qualified_name;
@@ -179,7 +182,7 @@ WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm& realm, FlyStr
 }
 
 // https://dom.spec.whatwg.org/#dom-element-setattributens
-WebIDL::ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value)
 {
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
@@ -191,7 +194,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(FlyString const& namespace_,
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute
-void Element::remove_attribute(FlyString const& name)
+void Element::remove_attribute(DeprecatedFlyString const& name)
 {
     m_attributes->remove_attribute(name);
 
@@ -201,13 +204,13 @@ void Element::remove_attribute(FlyString const& name)
 }
 
 // https://dom.spec.whatwg.org/#dom-element-hasattribute
-bool Element::has_attribute(FlyString const& name) const
+bool Element::has_attribute(DeprecatedFlyString const& name) const
 {
     return m_attributes->get_attribute(name) != nullptr;
 }
 
 // https://dom.spec.whatwg.org/#dom-element-toggleattribute
-WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional<bool> force)
+WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
     // FIXME: Proper name validation
@@ -264,7 +267,7 @@ Vector<DeprecatedString> Element::get_attribute_names() const
     return names;
 }
 
-bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
+bool Element::has_class(DeprecatedFlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
     if (case_sensitivity == CaseSensitivity::CaseSensitive) {
         return any_of(m_classes, [&](auto& it) {
@@ -314,12 +317,15 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
         if (display.is_flow_inside())
             return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
         if (display.is_flex_inside())
-            return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
+            return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
         dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_deprecated_string());
         return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
     }
 
-    if (display.is_flow_inside() || display.is_flow_root_inside() || display.is_flex_inside() || display.is_grid_inside())
+    if (display.is_flex_inside() || display.is_grid_inside())
+        return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
+
+    if (display.is_flow_inside() || display.is_flow_root_inside())
         return document.heap().allocate_without_realm<Layout::BlockContainer>(document, element, move(style));
 
     TODO();
@@ -330,7 +336,7 @@ CSS::CSSStyleDeclaration const* Element::inline_style() const
     return m_inline_style.ptr();
 }
 
-void Element::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void Element::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     if (name == HTML::AttributeNames::class_) {
         auto new_classes = value.split_view(Infra::is_ascii_whitespace);
@@ -350,7 +356,7 @@ void Element::parse_attribute(FlyString const& name, DeprecatedString const& val
     }
 }
 
-void Element::did_remove_attribute(FlyString const& name)
+void Element::did_remove_attribute(DeprecatedFlyString const& name)
 {
     if (name == HTML::AttributeNames::style) {
         if (m_inline_style) {
@@ -516,9 +522,9 @@ bool Element::is_active() const
     return document().active_element() == this;
 }
 
-JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(FlyString const& class_names)
+JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
-    Vector<FlyString> list_of_class_names;
+    Vector<DeprecatedFlyString> list_of_class_names;
     for (auto& name : class_names.view().split_view_if(Infra::is_ascii_whitespace)) {
         list_of_class_names.append(name);
     }
@@ -822,14 +828,14 @@ double Element::scroll_top() const
         return window->scroll_y();
 
     // 8. If the element does not have any associated box, return zero and terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
-    auto const* block_container = static_cast<Layout::BlockContainer const*>(layout_node());
+    auto const* box = static_cast<Layout::Box const*>(layout_node());
 
     // 9. Return the y-coordinate of the scrolling area at the alignment point with the top of the padding edge of the element.
     // FIXME: Is this correct?
-    return block_container->scroll_offset().y().value();
+    return box->scroll_offset().y().value();
 }
 
 double Element::scroll_left() const
@@ -864,14 +870,14 @@ double Element::scroll_left() const
         return window->scroll_x();
 
     // 8. If the element does not have any associated box, return zero and terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return 0.0;
 
-    auto const* block_container = static_cast<Layout::BlockContainer const*>(layout_node());
+    auto const* box = static_cast<Layout::Box const*>(layout_node());
 
     // 9. Return the x-coordinate of the scrolling area at the alignment point with the left of the padding edge of the element.
     // FIXME: Is this correct?
-    return block_container->scroll_offset().x().value();
+    return box->scroll_offset().x().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -923,20 +929,20 @@ void Element::set_scroll_left(double x)
     }
 
     // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return;
 
-    auto* block_container = static_cast<Layout::BlockContainer*>(layout_node());
-    if (!block_container->is_scrollable())
+    auto* box = static_cast<Layout::Box*>(layout_node());
+    if (!box->is_scrollable())
         return;
 
     // FIXME: or the element has no overflow.
 
     // 11. Scroll the element to x,scrollTop, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
-    auto scroll_offset = block_container->scroll_offset();
+    auto scroll_offset = box->scroll_offset();
     scroll_offset.set_x(static_cast<float>(x));
-    block_container->set_scroll_offset(scroll_offset);
+    box->set_scroll_offset(scroll_offset);
 }
 
 void Element::set_scroll_top(double y)
@@ -987,20 +993,20 @@ void Element::set_scroll_top(double y)
     }
 
     // 10. If the element does not have any associated box, the element has no associated scrolling box, or the element has no overflow, terminate these steps.
-    if (!layout_node() || !is<Layout::BlockContainer>(layout_node()))
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
         return;
 
-    auto* block_container = static_cast<Layout::BlockContainer*>(layout_node());
-    if (!block_container->is_scrollable())
+    auto* box = static_cast<Layout::Box*>(layout_node());
+    if (!box->is_scrollable())
         return;
 
     // FIXME: or the element has no overflow.
 
     // 11. Scroll the element to scrollLeft,y, with the scroll behavior being "auto".
     // FIXME: Implement this in terms of calling "scroll the element".
-    auto scroll_offset = block_container->scroll_offset();
+    auto scroll_offset = box->scroll_offset();
     scroll_offset.set_y(static_cast<float>(y));
-    block_container->set_scroll_offset(scroll_offset);
+    box->set_scroll_offset(scroll_offset);
 }
 
 int Element::scroll_width() const
@@ -1174,7 +1180,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> Element::insert_adjacent_element(Depreca
 WebIDL::ExceptionOr<void> Element::insert_adjacent_text(DeprecatedString const& where, DeprecatedString const& data)
 {
     // 1. Let text be a new Text node whose data is data and node document is this’s node document.
-    auto text = heap().allocate<DOM::Text>(realm(), document(), data);
+    auto text = MUST_OR_THROW_OOM(heap().allocate<DOM::Text>(realm(), document(), data));
 
     // 2. Run insert adjacent, given this, where, and text.
     // Spec Note: This method returns nothing because it existed before we had a chance to design it.
@@ -1258,13 +1264,72 @@ ErrorOr<void> Element::scroll_into_view(Optional<Variant<bool, ScrollIntoViewOpt
     // FIXME: 8. Optionally perform some other action that brings the element to the user’s attention.
 }
 
-void Element::invalidate_style_after_attribute_change(FlyString const& attribute_name)
+void Element::invalidate_style_after_attribute_change(DeprecatedFlyString const& attribute_name)
 {
     // FIXME: Only invalidate if the attribute can actually affect style.
     (void)attribute_name;
 
     // FIXME: This will need to become smarter when we implement the :has() selector.
     invalidate_style();
+}
+
+// https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion
+bool Element::exclude_from_accessibility_tree() const
+{
+    // The following elements are not exposed via the accessibility API and user agents MUST NOT include them in the accessibility tree:
+
+    // Elements, including their descendent elements, that have host language semantics specifying that the element is not displayed, such as CSS display:none, visibility:hidden, or the HTML hidden attribute.
+    if (!layout_node())
+        return true;
+
+    // Elements with none or presentation as the first role in the role attribute. However, their exclusion is conditional. In addition, the element's descendants and text content are generally included. These exceptions and conditions are documented in the presentation (role) section.
+    // FIXME: Handle exceptions to excluding presentation role
+    auto role = role_or_default();
+    if (role == ARIA::Role::none || role == ARIA::Role::presentation)
+        return true;
+
+    // TODO: If not already excluded from the accessibility tree per the above rules, user agents SHOULD NOT include the following elements in the accessibility tree:
+    //    Elements, including their descendants, that have aria-hidden set to true. In other words, aria-hidden="true" on a parent overrides aria-hidden="false" on descendants.
+    //    Any descendants of elements that have the characteristic "Children Presentational: True" unless the descendant is not allowed to be presentational because it meets one of the conditions for exception described in Presentational Roles Conflict Resolution. However, the text content of any excluded descendants is included.
+    //    Elements with the following roles have the characteristic "Children Presentational: True":
+    //      button
+    //      checkbox
+    //      img
+    //      menuitemcheckbox
+    //      menuitemradio
+    //      meter
+    //      option
+    //      progressbar
+    //      radio
+    //      scrollbar
+    //      separator
+    //      slider
+    //      switch
+    //      tab
+    return false;
+}
+
+// https://www.w3.org/TR/wai-aria-1.2/#tree_inclusion
+bool Element::include_in_accessibility_tree() const
+{
+    // If not excluded from or marked as hidden in the accessibility tree per the rules above in Excluding Elements in the Accessibility Tree, user agents MUST provide an accessible object in the accessibility tree for DOM elements that meet any of the following criteria:
+    if (exclude_from_accessibility_tree())
+        return false;
+    // Elements that are not hidden and may fire an accessibility API event, including:
+    // Elements that are currently focused, even if the element or one of its ancestor elements has its aria-hidden attribute set to true.
+    if (is_focused())
+        return true;
+    // TODO: Elements that are a valid target of an aria-activedescendant attribute.
+
+    // Elements that have an explicit role or a global WAI-ARIA attribute and do not have aria-hidden set to true. (See Excluding Elements in the Accessibility Tree for additional guidance on aria-hidden.)
+    // NOTE: The spec says only explicit roles count, but playing around in other browsers, this does not seem to be true in practice (for example button elements are always exposed with their implicit role if none is set)
+    //       This issue https://github.com/w3c/aria/issues/1851 seeks clarification on this point
+    if ((role_or_default().has_value() || has_global_aria_attribute()) && aria_hidden() != "true")
+        return true;
+
+    // TODO: Elements that are not hidden and have an ID that is referenced by another element via a WAI-ARIA property.
+
+    return false;
 }
 
 }

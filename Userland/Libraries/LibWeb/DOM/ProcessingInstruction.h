@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibWeb/DOM/CharacterData.h>
 
 namespace Web::DOM {
@@ -17,12 +17,14 @@ class ProcessingInstruction final : public CharacterData {
 public:
     virtual ~ProcessingInstruction() override = default;
 
-    virtual FlyString node_name() const override { return m_target; }
+    virtual DeprecatedFlyString node_name() const override { return m_target; }
 
     DeprecatedString const& target() const { return m_target; }
 
 private:
     ProcessingInstruction(Document&, DeprecatedString const& data, DeprecatedString const& target);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     DeprecatedString m_target;
 };

@@ -13,9 +13,7 @@
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Net/NE2000/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/Realtek/RTL8139NetworkAdapter.h>
 #include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
 #include <Kernel/Sections.h>
 
@@ -93,18 +91,32 @@ ErrorOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_fr
     return name;
 }
 
+struct PCINetworkDriverInitializer {
+    ErrorOr<bool> (*probe)(PCI::DeviceIdentifier const&) = nullptr;
+    ErrorOr<NonnullLockRefPtr<NetworkAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
+};
+
+static constexpr PCINetworkDriverInitializer s_initializers[] = {
+    { RTL8168NetworkAdapter::probe, RTL8168NetworkAdapter::create },
+    { E1000NetworkAdapter::probe, E1000NetworkAdapter::create },
+    { E1000ENetworkAdapter::probe, E1000ENetworkAdapter::create },
+};
+
 UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
 {
-    if (auto candidate = TRY(E1000NetworkAdapter::try_to_initialize(device_identifier)))
-        return candidate.release_nonnull();
-    if (auto candidate = TRY(E1000ENetworkAdapter::try_to_initialize(device_identifier)))
-        return candidate.release_nonnull();
-    if (auto candidate = TRY(RTL8139NetworkAdapter::try_to_initialize(device_identifier)))
-        return candidate.release_nonnull();
-    if (auto candidate = TRY(RTL8168NetworkAdapter::try_to_initialize(device_identifier)))
-        return candidate.release_nonnull();
-    if (auto candidate = TRY(NE2000NetworkAdapter::try_to_initialize(device_identifier)))
-        return candidate.release_nonnull();
+    for (auto& initializer : s_initializers) {
+        auto initializer_probe_found_driver_match_or_error = initializer.probe(device_identifier);
+        if (initializer_probe_found_driver_match_or_error.is_error()) {
+            dmesgln("Networking: Failed to probe device {}, due to {}", device_identifier.address(), initializer_probe_found_driver_match_or_error.error());
+            continue;
+        }
+        auto initializer_probe_found_driver_match = initializer_probe_found_driver_match_or_error.release_value();
+        if (initializer_probe_found_driver_match) {
+            auto adapter = TRY(initializer.create(device_identifier));
+            TRY(adapter->initialize({}));
+            return adapter;
+        }
+    }
     return Error::from_string_literal("Unsupported network adapter");
 }
 

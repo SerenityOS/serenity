@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
@@ -18,16 +18,16 @@ public:
     StringOrSymbol() = default;
 
     StringOrSymbol(char const* chars)
-        : StringOrSymbol(FlyString(chars))
+        : StringOrSymbol(DeprecatedFlyString(chars))
     {
     }
 
     StringOrSymbol(DeprecatedString const& string)
-        : StringOrSymbol(FlyString(string))
+        : StringOrSymbol(DeprecatedFlyString(string))
     {
     }
 
-    StringOrSymbol(FlyString const& string)
+    StringOrSymbol(DeprecatedFlyString const& string)
         : m_ptr(string.impl())
     {
         VERIFY(!string.is_null());
@@ -62,10 +62,10 @@ public:
     ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ul); }
     ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ul); }
 
-    ALWAYS_INLINE FlyString as_string() const
+    ALWAYS_INLINE DeprecatedFlyString as_string() const
     {
         VERIFY(is_string());
-        return FlyString::from_fly_impl(as_string_impl());
+        return DeprecatedFlyString::from_fly_impl(as_string_impl());
     }
 
     ALWAYS_INLINE Symbol const* as_symbol() const

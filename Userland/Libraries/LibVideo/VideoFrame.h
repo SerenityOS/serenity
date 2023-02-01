@@ -23,7 +23,7 @@ public:
     virtual DecoderErrorOr<void> output_to_bitmap(Gfx::Bitmap& bitmap) = 0;
     virtual DecoderErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_bitmap()
     {
-        auto bitmap = DECODER_TRY_ALLOC(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, m_size));
+        auto bitmap = DECODER_TRY_ALLOC(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_size));
         TRY(output_to_bitmap(bitmap));
         return bitmap;
     }

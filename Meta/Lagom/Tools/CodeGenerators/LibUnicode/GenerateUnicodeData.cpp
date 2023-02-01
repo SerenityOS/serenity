@@ -30,8 +30,7 @@ struct CodePointRange {
     u32 last;
 };
 
-// SpecialCasing source: https://www.unicode.org/Public/13.0.0/ucd/SpecialCasing.txt
-// Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#SpecialCasing.txt
+// https://www.unicode.org/reports/tr44/#SpecialCasing.txt
 struct SpecialCasing {
     u32 index { 0 };
     u32 code_point { 0 };
@@ -42,7 +41,14 @@ struct SpecialCasing {
     DeprecatedString condition;
 };
 
-// Field descriptions: https://www.unicode.org/reports/tr44/#Character_Decomposition_Mappings
+// https://www.unicode.org/reports/tr44/#CaseFolding.txt
+struct CaseFolding {
+    u32 code_point { 0 };
+    StringView status { "Common"sv };
+    Vector<u32> mapping { 0 };
+};
+
+// https://www.unicode.org/reports/tr44/#Character_Decomposition_Mappings
 struct CodePointDecomposition {
     // `tag` is a string since it's used for codegen as an enum value.
     DeprecatedString tag { "Canonical"sv };
@@ -50,12 +56,10 @@ struct CodePointDecomposition {
     size_t decomposition_size { 0 };
 };
 
-// PropList source: https://www.unicode.org/Public/13.0.0/ucd/PropList.txt
-// Property descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#PropList.txt
+// https://www.unicode.org/reports/tr44/#PropList.txt
 using PropList = HashMap<DeprecatedString, Vector<CodePointRange>>;
 
-// Normalization source: https://www.unicode.org/Public/13.0.0/ucd/DerivedNormalizationProps.txt
-// Normalization descriptions: https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
+// https://www.unicode.org/reports/tr44/#DerivedNormalizationProps.txt
 enum class QuickCheck {
     Yes,
     No,
@@ -75,9 +79,7 @@ struct CodePointName {
     size_t name { 0 };
 };
 
-// UnicodeData source: https://www.unicode.org/Public/13.0.0/ucd/UnicodeData.txt
-// Field descriptions: https://www.unicode.org/reports/tr44/tr44-13.html#UnicodeData.txt
-//                     https://www.unicode.org/reports/tr44/#General_Category_Values
+// https://www.unicode.org/reports/tr44/#UnicodeData.txt
 struct CodePointData {
     u32 code_point { 0 };
     DeprecatedString name;
@@ -95,6 +97,7 @@ struct CodePointData {
     Optional<u32> simple_lowercase_mapping;
     Optional<u32> simple_titlecase_mapping;
     Vector<u32> special_casing_indices;
+    Vector<u32> case_folding_indices;
 };
 
 struct BlockName {
@@ -113,13 +116,20 @@ struct UnicodeData {
 
     u32 simple_uppercase_mapping_size { 0 };
     u32 simple_lowercase_mapping_size { 0 };
+    u32 simple_titlecase_mapping_size { 0 };
 
     Vector<SpecialCasing> special_casing;
     u32 code_points_with_special_casing { 0 };
-    u32 largest_casing_transform_size { 0 };
+    u32 largest_special_casing_mapping_size { 0 };
     u32 largest_special_casing_size { 0 };
     Vector<DeprecatedString> conditions;
     Vector<DeprecatedString> locales;
+
+    Vector<CaseFolding> case_folding;
+    u32 code_points_with_case_folding { 0 };
+    u32 largest_case_folding_mapping_size { 0 };
+    u32 largest_case_folding_size { 0 };
+    Vector<StringView> statuses;
 
     Vector<CodePointData> code_point_data;
 
@@ -127,6 +137,7 @@ struct UnicodeData {
     HashMap<u32, size_t> code_point_display_name_aliases;
     Vector<CodePointName> code_point_display_names;
 
+    // https://www.unicode.org/reports/tr44/#General_Category_Values
     PropList general_categories;
     Vector<Alias> general_category_aliases;
 
@@ -256,9 +267,9 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
                 unicode_data.conditions.append(casing.condition);
         }
 
-        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.lowercase_mapping.size());
-        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.titlecase_mapping.size());
-        unicode_data.largest_casing_transform_size = max(unicode_data.largest_casing_transform_size, casing.uppercase_mapping.size());
+        unicode_data.largest_special_casing_mapping_size = max(unicode_data.largest_special_casing_mapping_size, casing.lowercase_mapping.size());
+        unicode_data.largest_special_casing_mapping_size = max(unicode_data.largest_special_casing_mapping_size, casing.titlecase_mapping.size());
+        unicode_data.largest_special_casing_mapping_size = max(unicode_data.largest_special_casing_mapping_size, casing.uppercase_mapping.size());
 
         unicode_data.special_casing.append(move(casing));
     }
@@ -275,6 +286,54 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
 
     for (u32 i = 0; i < unicode_data.special_casing.size(); ++i)
         unicode_data.special_casing[i].index = i;
+
+    return {};
+}
+
+static ErrorOr<void> parse_case_folding(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+{
+    Array<u8, 1024> buffer;
+
+    while (TRY(file.can_read_line())) {
+        auto line = TRY(file.read_line(buffer));
+        if (line.is_empty() || line.starts_with('#'))
+            continue;
+
+        auto segments = line.split_view(';', SplitBehavior::KeepEmpty);
+        VERIFY(segments.size() == 4);
+
+        CaseFolding folding {};
+        folding.code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segments[0]).value();
+        folding.mapping = parse_code_point_list(segments[2]);
+
+        switch (segments[1].trim_whitespace()[0]) {
+        case 'C':
+            folding.status = "Common"sv;
+            break;
+        case 'F':
+            folding.status = "Full"sv;
+            break;
+        case 'S':
+            folding.status = "Simple"sv;
+            break;
+        case 'T':
+            folding.status = "Special"sv;
+            break;
+        }
+
+        unicode_data.largest_case_folding_mapping_size = max(unicode_data.largest_case_folding_mapping_size, folding.mapping.size());
+
+        if (!unicode_data.statuses.contains_slow(folding.status))
+            unicode_data.statuses.append(folding.status);
+
+        unicode_data.case_folding.append(move(folding));
+    }
+
+    quick_sort(unicode_data.case_folding, [](auto const& lhs, auto const& rhs) {
+        if (lhs.code_point != rhs.code_point)
+            return lhs.code_point < rhs.code_point;
+        return lhs.status < rhs.status;
+    });
 
     return {};
 }
@@ -391,7 +450,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
 
 static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
-    TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
+    TRY(file.seek(0, SeekMode::SetPosition));
     Array<u8, 1024> buffer;
 
     auto append_alias = [&](auto alias, auto value) {
@@ -587,7 +646,7 @@ static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file,
         unicode_data.block_display_names.append({ code_point_range, index });
     }
 
-    TRY(file.seek(0, Core::Stream::SeekMode::SetPosition));
+    TRY(file.seek(0, SeekMode::SetPosition));
 
     return {};
 }
@@ -663,7 +722,6 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
         }
 
         bool has_special_casing { false };
-
         for (auto const& casing : unicode_data.special_casing) {
             if (casing.code_point == data.code_point) {
                 data.special_casing_indices.append(casing.index);
@@ -671,15 +729,27 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
             }
         }
 
+        bool has_case_folding { false };
+        for (size_t i = 0; i < unicode_data.case_folding.size(); ++i) {
+            if (auto const& folding = unicode_data.case_folding[i]; folding.code_point == data.code_point) {
+                data.case_folding_indices.append(i);
+                has_case_folding = true;
+            }
+        }
+
         unicode_data.code_points_with_non_zero_combining_class += data.canonical_combining_class != 0;
         unicode_data.simple_uppercase_mapping_size += data.simple_uppercase_mapping.has_value();
         unicode_data.simple_lowercase_mapping_size += data.simple_lowercase_mapping.has_value();
+        unicode_data.simple_titlecase_mapping_size += data.simple_titlecase_mapping.has_value();
         unicode_data.code_points_with_decomposition_mapping += data.decomposition_mapping.has_value();
 
         unicode_data.code_points_with_special_casing += has_special_casing;
         unicode_data.largest_special_casing_size = max(unicode_data.largest_special_casing_size, data.special_casing_indices.size());
-        previous_code_point = data.code_point;
 
+        unicode_data.code_points_with_case_folding += has_case_folding;
+        unicode_data.largest_case_folding_size = max(unicode_data.largest_case_folding_size, data.case_folding_indices.size());
+
+        previous_code_point = data.code_point;
         unicode_data.code_point_data.append(move(data));
     }
 
@@ -690,9 +760,10 @@ static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& fi
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.set("casing_transform_size", DeprecatedString::number(unicode_data.largest_casing_transform_size));
+    generator.set("special_casing_mapping_size", DeprecatedString::number(unicode_data.largest_special_casing_mapping_size));
+    generator.set("case_folding_mapping_size", DeprecatedString::number(unicode_data.largest_case_folding_mapping_size));
 
-    auto generate_enum = [&](StringView name, StringView default_, Vector<DeprecatedString> values, Vector<Alias> aliases = {}) {
+    auto generate_enum = [&](StringView name, StringView default_, auto values, Vector<Alias> aliases = {}) {
         quick_sort(values);
         quick_sort(aliases, [](auto& alias1, auto& alias2) { return alias1.alias < alias2.alias; });
 
@@ -740,6 +811,7 @@ namespace Unicode {
 
     generate_enum("Locale"sv, "None"sv, unicode_data.locales);
     generate_enum("Condition"sv, "None"sv, move(unicode_data.conditions));
+    generate_enum("CaseFoldingStatus"sv, {}, move(unicode_data.statuses));
     generate_enum("GeneralCategory"sv, {}, unicode_data.general_categories.keys(), unicode_data.general_category_aliases);
     generate_enum("Property"sv, {}, unicode_data.prop_list.keys(), unicode_data.prop_aliases);
     generate_enum("Script"sv, {}, unicode_data.script_list.keys(), unicode_data.script_aliases);
@@ -753,17 +825,25 @@ namespace Unicode {
 struct SpecialCasing {
     u32 code_point { 0 };
 
-    u32 lowercase_mapping[@casing_transform_size@];
+    u32 lowercase_mapping[@special_casing_mapping_size@];
     u32 lowercase_mapping_size { 0 };
 
-    u32 uppercase_mapping[@casing_transform_size@];
+    u32 uppercase_mapping[@special_casing_mapping_size@];
     u32 uppercase_mapping_size { 0 };
 
-    u32 titlecase_mapping[@casing_transform_size@];
+    u32 titlecase_mapping[@special_casing_mapping_size@];
     u32 titlecase_mapping_size { 0 };
 
     Locale locale { Locale::None };
     Condition condition { Condition::None };
+};
+
+struct CaseFolding {
+    u32 code_point { 0 };
+    CaseFoldingStatus status { CaseFoldingStatus::Common };
+
+    u32 mapping[@case_folding_mapping_size@];
+    u32 mapping_size { 0 };
 };
 
 struct CodePointDecompositionRaw {
@@ -781,6 +861,9 @@ struct CodePointDecomposition {
 
 Optional<Locale> locale_from_string(StringView locale);
 
+Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
+Span<CaseFolding const* const> case_folding_mapping(u32 code_point);
+
 }
 )~~~");
 
@@ -796,6 +879,8 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::Buffered
     generator.set("string_index_type"sv, unicode_data.unique_strings.type_that_fits());
     generator.set("largest_special_casing_size", DeprecatedString::number(unicode_data.largest_special_casing_size));
     generator.set("special_casing_size", DeprecatedString::number(unicode_data.special_casing.size()));
+    generator.set("largest_case_folding_size", DeprecatedString::number(unicode_data.largest_case_folding_size));
+    generator.set("case_folding_size", DeprecatedString::number(unicode_data.case_folding.size()));
 
     generator.append(R"~~~(
 #include <AK/Array.h>
@@ -831,7 +916,7 @@ namespace Unicode {
     };
 
     generator.append(R"~~~(
-static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { {)~~~");
+static constexpr Array<SpecialCasing, @special_casing_size@> s_special_case { {)~~~");
 
     for (auto const& casing : unicode_data.special_casing) {
         generator.set("code_point", DeprecatedString::formatted("{:#x}", casing.code_point));
@@ -855,6 +940,21 @@ static constexpr Array<SpecialCasing, @special_casing_size@> s_special_casing { 
     generator.append(R"~~~(
 } };
 
+static constexpr Array<CaseFolding, @case_folding_size@> s_case_folding { {)~~~");
+
+    for (auto const& folding : unicode_data.case_folding) {
+        generator.set("code_point", DeprecatedString::formatted("{:#x}", folding.code_point));
+        generator.set("status", folding.status);
+        generator.append(R"~~~(
+    { @code_point@, CaseFoldingStatus::@status@)~~~");
+
+        append_list_and_size(folding.mapping, "0x{:x}"sv);
+        generator.append(" },");
+    }
+
+    generator.append(R"~~~(
+} };
+
 struct CodePointMapping {
     u32 code_point { 0 };
     u32 mapping { 0 };
@@ -864,6 +964,12 @@ struct SpecialCaseMapping {
     u32 code_point { 0 };
     Array<SpecialCasing const*, @largest_special_casing_size@> special_casing {};
     u32 special_casing_size { 0 };
+};
+
+struct CaseFoldingMapping {
+    u32 code_point { 0 };
+    Array<CaseFolding const*, @largest_case_folding_size@> case_folding {};
+    u32 case_folding_size { 0 };
 };
 
 struct CodePointAbbreviation {
@@ -954,7 +1060,7 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
                 generator.set("size", DeprecatedString::number(mapping->decomposition_size));
                 generator.append(", CompatibilityFormattingTag::@tag@, @start@, @size@ },");
             } else {
-                append_list_and_size(data.special_casing_indices, "&s_special_casing[{}]"sv);
+                append_list_and_size(mapping, "&s_@name@[{}]"sv);
                 generator.append(" },");
             }
 
@@ -976,7 +1082,9 @@ static constexpr Array<@mapping_type@, @size@> s_@name@_mappings { {
         });
     append_code_point_mappings("uppercase"sv, "CodePointMapping"sv, unicode_data.simple_uppercase_mapping_size, [](auto const& data) { return data.simple_uppercase_mapping; });
     append_code_point_mappings("lowercase"sv, "CodePointMapping"sv, unicode_data.simple_lowercase_mapping_size, [](auto const& data) { return data.simple_lowercase_mapping; });
+    append_code_point_mappings("titlecase"sv, "CodePointMapping"sv, unicode_data.simple_titlecase_mapping_size, [](auto const& data) { return data.simple_titlecase_mapping; });
     append_code_point_mappings("special_case"sv, "SpecialCaseMapping"sv, unicode_data.code_points_with_special_casing, [](auto const& data) { return data.special_casing_indices; });
+    append_code_point_mappings("case_folding"sv, "CaseFoldingMapping"sv, unicode_data.code_points_with_case_folding, [](auto const& data) { return data.case_folding_indices; });
     append_code_point_mappings("abbreviation"sv, "CodePointAbbreviation"sv, unicode_data.code_point_abbreviations.size(), [](auto const& data) { return data.abbreviation; });
 
     append_code_point_mappings("decomposition"sv, "CodePointDecompositionRaw"sv, unicode_data.code_points_with_decomposition_mapping,
@@ -1136,6 +1244,7 @@ u32 @method@(u32 code_point)
     append_code_point_mapping_search("canonical_combining_class"sv, "s_combining_class_mappings"sv, "0"sv);
     append_code_point_mapping_search("to_unicode_uppercase"sv, "s_uppercase_mappings"sv, "code_point"sv);
     append_code_point_mapping_search("to_unicode_lowercase"sv, "s_lowercase_mappings"sv, "code_point"sv);
+    append_code_point_mapping_search("to_unicode_titlecase"sv, "s_titlecase_mappings"sv, "code_point"sv);
 
     generator.append(R"~~~(
 Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
@@ -1145,6 +1254,15 @@ Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
         return {};
 
     return mapping->special_casing.span().slice(0, mapping->special_casing_size);
+}
+
+Span<CaseFolding const* const> case_folding_mapping(u32 code_point)
+{
+    auto const* mapping = binary_search(s_case_folding_mappings, code_point, nullptr, CodePointComparator<CaseFoldingMapping> {});
+    if (mapping == nullptr)
+        return {};
+
+    return mapping->case_folding.span().slice(0, mapping->case_folding_size);
 }
 
 Optional<StringView> code_point_abbreviation(u32 code_point)
@@ -1372,6 +1490,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView generated_implementation_path;
     StringView unicode_data_path;
     StringView special_casing_path;
+    StringView case_folding_path;
     StringView derived_general_category_path;
     StringView prop_list_path;
     StringView derived_core_prop_path;
@@ -1393,6 +1512,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
     args_parser.add_option(unicode_data_path, "Path to UnicodeData.txt file", "unicode-data-path", 'u', "unicode-data-path");
     args_parser.add_option(special_casing_path, "Path to SpecialCasing.txt file", "special-casing-path", 's', "special-casing-path");
+    args_parser.add_option(case_folding_path, "Path to CaseFolding.txt file", "case-folding-path", 'o', "case-folding-path");
     args_parser.add_option(derived_general_category_path, "Path to DerivedGeneralCategory.txt file", "derived-general-category-path", 'g', "derived-general-category-path");
     args_parser.add_option(prop_list_path, "Path to PropList.txt file", "prop-list-path", 'p', "prop-list-path");
     args_parser.add_option(derived_core_prop_path, "Path to DerivedCoreProperties.txt file", "derived-core-prop-path", 'd', "derived-core-prop-path");
@@ -1415,6 +1535,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto unicode_data_file = TRY(open_file(unicode_data_path, Core::Stream::OpenMode::Read));
     auto derived_general_category_file = TRY(open_file(derived_general_category_path, Core::Stream::OpenMode::Read));
     auto special_casing_file = TRY(open_file(special_casing_path, Core::Stream::OpenMode::Read));
+    auto case_folding_file = TRY(open_file(case_folding_path, Core::Stream::OpenMode::Read));
     auto prop_list_file = TRY(open_file(prop_list_path, Core::Stream::OpenMode::Read));
     auto derived_core_prop_file = TRY(open_file(derived_core_prop_path, Core::Stream::OpenMode::Read));
     auto derived_binary_prop_file = TRY(open_file(derived_binary_prop_path, Core::Stream::OpenMode::Read));
@@ -1432,6 +1553,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     UnicodeData unicode_data {};
     TRY(parse_special_casing(*special_casing_file, unicode_data));
+    TRY(parse_case_folding(*case_folding_file, unicode_data));
     TRY(parse_prop_list(*derived_general_category_file, unicode_data.general_categories));
     TRY(parse_prop_list(*prop_list_file, unicode_data.prop_list));
     TRY(parse_prop_list(*derived_core_prop_file, unicode_data.prop_list));

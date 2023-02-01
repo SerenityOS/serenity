@@ -1,19 +1,23 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <errno.h>
 #include <spawn.h>
+#include <unistd.h>
 
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>
+#    include <syscall.h>
 #endif
 
 extern char** environ;
@@ -95,6 +99,39 @@ ErrorOr<pid_t> Process::spawn(StringView path, Span<char const* const> arguments
         argv.append(arg);
     argv.set_working_directory(working_directory);
     return argv.spawn();
+}
+
+ErrorOr<String> Process::get_name()
+{
+#if defined(AK_OS_SERENITY)
+    char buffer[BUFSIZ];
+    int rc = get_process_name(buffer, BUFSIZ);
+    if (rc != 0)
+        return Error::from_syscall("get_process_name"sv, -rc);
+    return String::from_utf8(StringView { buffer, strlen(buffer) });
+#else
+    // FIXME: Implement Process::get_name() for other platforms.
+    return String::from_utf8_short_string("???"sv);
+#endif
+}
+
+ErrorOr<void> Process::set_name([[maybe_unused]] StringView name, [[maybe_unused]] SetThreadName set_thread_name)
+{
+#if defined(AK_OS_SERENITY)
+    int rc = set_process_name(name.characters_without_null_termination(), name.length());
+    if (rc != 0)
+        return Error::from_syscall("set_process_name"sv, -rc);
+    if (set_thread_name == SetThreadName::No)
+        return {};
+
+    rc = syscall(SC_set_thread_name, gettid(), name.characters_without_null_termination(), name.length());
+    if (rc != 0)
+        return Error::from_syscall("set_thread_name"sv, -rc);
+    return {};
+#else
+    // FIXME: Implement Process::set_name() for other platforms.
+    return {};
+#endif
 }
 
 }

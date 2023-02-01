@@ -160,7 +160,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
 
     bool handled_event = false;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
@@ -208,7 +208,7 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
 
     bool handled_event = false;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
@@ -327,7 +327,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
     JS::GCPtr<DOM::Node> node;
 
     {
-        RefPtr<Painting::Paintable> paintable;
+        JS::GCPtr<Painting::Paintable> paintable;
         if (m_mouse_event_tracking_layout_node) {
             paintable = m_mouse_event_tracking_layout_node->paintable();
         } else {
@@ -399,7 +399,9 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
                 // FIXME: This is all rather strange. Find a better solution.
                 if (!did_focus_something) {
                     m_browsing_context.set_cursor_position(DOM::Position(*paintable->dom_node(), result->index_in_node));
-                    layout_root()->set_selection({ { paintable->layout_node(), result->index_in_node }, {} });
+                    if (auto selection = document->get_selection()) {
+                        (void)selection->set_base_and_extent(*paintable->dom_node(), result->index_in_node, *paintable->dom_node(), result->index_in_node);
+                    }
                     m_in_mouse_selection = true;
                 }
             }
@@ -422,7 +424,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
     bool is_hovering_link = false;
     Gfx::StandardCursor hovered_node_cursor = Gfx::StandardCursor::None;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     Optional<int> start_index;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
@@ -495,7 +497,13 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
             auto hit = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
             if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
                 m_browsing_context.set_cursor_position(DOM::Position(*hit->dom_node(), *start_index));
-                layout_root()->set_selection_end({ hit->paintable->layout_node(), hit->index_in_node });
+                if (auto selection = document.get_selection()) {
+                    auto anchor_node = selection->anchor_node();
+                    if (anchor_node)
+                        (void)selection->set_base_and_extent(*anchor_node, selection->anchor_offset(), *hit->paintable->dom_node(), hit->index_in_node);
+                    else
+                        (void)selection->set_base_and_extent(*hit->paintable->dom_node(), hit->index_in_node, *hit->paintable->dom_node(), hit->index_in_node);
+                }
                 m_browsing_context.set_needs_display();
             }
             if (auto* page = m_browsing_context.page())
@@ -530,7 +538,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     if (!paint_root())
         return false;
 
-    RefPtr<Painting::Paintable> paintable;
+    JS::GCPtr<Painting::Paintable> paintable;
     if (m_mouse_event_tracking_layout_node) {
         paintable = m_mouse_event_tracking_layout_node->paintable();
     } else {
@@ -607,7 +615,9 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
             }();
 
             m_browsing_context.set_cursor_position(DOM::Position(*paintable->dom_node(), first_word_break_after));
-            layout_root()->set_selection({ { paintable->layout_node(), first_word_break_before }, { paintable->layout_node(), first_word_break_after } });
+            if (auto selection = node->document().get_selection()) {
+                (void)selection->set_base_and_extent(*paintable->dom_node(), first_word_break_before, *paintable->dom_node(), first_word_break_after);
+            }
         }
     }
 
@@ -661,7 +671,7 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
     return code_point == 0 || code_point == 27;
 }
 
-bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
+bool EventHandler::fire_keyboard_event(DeprecatedFlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
 {
     JS::NonnullGCPtr<DOM::Document> document = *browsing_context.active_document();
     if (!document)
@@ -696,18 +706,16 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
     if (!document->layout_node())
         return false;
 
-    JS::NonnullGCPtr<Layout::InitialContainingBlock> layout_root = *document->layout_node();
-
     if (key == KeyCode::Key_Tab) {
         if (modifiers & KeyModifier::Mod_Shift)
             return focus_previous_element();
         return focus_next_element();
     }
 
-    if (layout_root->selection().is_valid()) {
-        auto range = layout_root->selection().to_dom_range()->normalized();
-        if (range->start_container()->is_editable()) {
-            layout_root->set_selection({});
+    if (auto selection = document->get_selection()) {
+        auto range = selection->range();
+        if (range && range->start_container()->is_editable()) {
+            selection->remove_all_ranges();
 
             // FIXME: This doesn't work for some reason?
             m_browsing_context.set_cursor_position({ *range->start_container(), range->start_offset() });

@@ -22,10 +22,10 @@ StringConstructor::StringConstructor(Realm& realm)
 {
 }
 
-void StringConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> StringConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().string_prototype(), 0);
@@ -36,6 +36,8 @@ void StringConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.fromCodePoint, from_code_point, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
@@ -43,7 +45,7 @@ ThrowCompletionOr<Value> StringConstructor::call()
 {
     auto& vm = this->vm();
     if (!vm.argument_count())
-        return PrimitiveString::create(vm, "");
+        return PrimitiveString::create(vm, String {});
     if (vm.argument(0).is_symbol())
         return PrimitiveString::create(vm, vm.argument(0).as_symbol().to_deprecated_string());
     return TRY(vm.argument(0).to_primitive_string(vm));
@@ -61,7 +63,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> StringConstructor::construct(FunctionObj
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
-    return StringObject::create(realm, *primitive_string, *prototype);
+    return MUST_OR_THROW_OOM(StringObject::create(realm, *primitive_string, *prototype));
 }
 
 // 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
@@ -81,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     for (size_t i = 0; i < literal_segments; ++i) {
         auto next_key = DeprecatedString::number(i);
         auto next_segment_value = TRY(raw->get(next_key));
-        auto next_segment = TRY(next_segment_value.to_string(vm));
+        auto next_segment = TRY(next_segment_value.to_deprecated_string(vm));
 
         builder.append(next_segment);
 
@@ -90,29 +92,29 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 
         if (i < number_of_substituions) {
             auto next = vm.argument(i + 1);
-            auto next_sub = TRY(next.to_string(vm));
+            auto next_sub = TRY(next.to_deprecated_string(vm));
             builder.append(next_sub);
         }
     }
-    return PrimitiveString::create(vm, builder.build());
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
-    Vector<u16, 1> string;
+    Utf16Data string;
     string.ensure_capacity(vm.argument_count());
 
     for (size_t i = 0; i < vm.argument_count(); ++i)
         string.append(TRY(vm.argument(i).to_u16(vm)));
 
-    return PrimitiveString::create(vm, Utf16String(move(string)));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
 {
-    Vector<u16, 1> string;
+    Utf16Data string;
     string.ensure_capacity(vm.argument_count()); // This will be an under-estimate if any code point is > 0xffff.
 
     for (size_t i = 0; i < vm.argument_count(); ++i) {
@@ -123,10 +125,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         if (code_point < 0 || code_point > 0x10FFFF)
             return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
 
-        AK::code_point_to_utf16(string, static_cast<u32>(code_point));
+        TRY_OR_THROW_OOM(vm, code_point_to_utf16(string, static_cast<u32>(code_point)));
     }
 
-    return PrimitiveString::create(vm, Utf16String(move(string)));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
 }
 
 }

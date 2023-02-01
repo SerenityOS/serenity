@@ -23,15 +23,17 @@ FunctionConstructor::FunctionConstructor(Realm& realm)
 {
 }
 
-void FunctionConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> FunctionConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 20.2.2.2 Function.prototype, https://tc39.es/ecma262/#sec-function.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().function_prototype(), 0);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 20.2.1.1.1 CreateDynamicFunction ( constructor, newTarget, kind, args ), https://tc39.es/ecma262/#sec-createdynamicfunction
@@ -145,7 +147,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
 
             // ii. Let nextArgString be ? ToString(nextArg).
             // iii. Set P to the string-concatenation of P, "," (a comma), and nextArgString.
-            parameters.append(TRY(next_arg.to_string(vm)));
+            parameters.append(TRY(next_arg.to_deprecated_string(vm)));
 
             // iv. Set k to k + 1.
         }
@@ -156,7 +158,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     }
 
     // 13. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-    auto body_string = DeprecatedString::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_string(vm)) : "");
+    auto body_string = DeprecatedString::formatted("\n{}\n", body_arg.has_value() ? TRY(body_arg->to_deprecated_string(vm)) : "");
 
     // 14. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
     // 15. Let sourceText be StringToCodePoints(sourceString).

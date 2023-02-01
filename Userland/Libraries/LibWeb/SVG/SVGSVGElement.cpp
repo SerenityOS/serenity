@@ -20,7 +20,14 @@ namespace Web::SVG {
 SVGSVGElement::SVGSVGElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGraphicsElement(document, qualified_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGSVGElement"));
+}
+
+JS::ThrowCompletionOr<void> SVGSVGElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGSVGElementPrototype>(realm, "SVGSVGElement"));
+
+    return {};
 }
 
 JS::GCPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -52,7 +59,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
     }
 }
 
-void SVGSVGElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void SVGSVGElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGraphicsElement::parse_attribute(name, value);
 

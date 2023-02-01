@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,9 +20,9 @@ DurationPrototype::DurationPrototype(Realm& realm)
 {
 }
 
-void DurationPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> DurationPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -54,6 +54,8 @@ void DurationPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
+
+    return {};
 }
 
 // 7.3.3 get Temporal.Duration.prototype.years, https://tc39.es/proposal-temporal/#sec-get-temporal.duration.prototype.years
@@ -367,7 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
         smallest_unit_present = false;
 
         // b. Set smallestUnit to "nanosecond".
-        smallest_unit = "nanosecond"sv;
+        smallest_unit = TRY_OR_THROW_OOM(vm, String::from_utf8("nanosecond"sv));
     }
 
     // 10. Let defaultLargestUnit be ! DefaultTemporalLargestUnit(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]]).
@@ -385,12 +387,12 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
         largest_unit_present = false;
 
         // b. Set largestUnit to defaultLargestUnit.
-        largest_unit = default_largest_unit;
+        largest_unit = TRY_OR_THROW_OOM(vm, String::from_utf8(default_largest_unit));
     }
     // 14. Else if largestUnit is "auto", then
     else if (*largest_unit == "auto"sv) {
         // a. Set largestUnit to defaultLargestUnit.
-        largest_unit = default_largest_unit;
+        largest_unit = TRY_OR_THROW_OOM(vm, String::from_utf8(default_largest_unit));
     }
 
     // 15. If smallestUnitPresent is false and largestUnitPresent is false, then
@@ -586,7 +588,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_string)
     auto result = TRY(round_duration(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), precision.increment, precision.unit, rounding_mode)).duration_record;
 
     // 8. Return ! TemporalDurationToString(result.[[Years]], result.[[Months]], result.[[Weeks]], result.[[Days]], result.[[Hours]], result.[[Minutes]], result.[[Seconds]], result.[[Milliseconds]], result.[[Microseconds]], result.[[Nanoseconds]], precision.[[Precision]]).
-    return PrimitiveString::create(vm, temporal_duration_to_string(result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, precision.precision));
+    return PrimitiveString::create(vm, MUST_OR_THROW_OOM(temporal_duration_to_string(vm, result.years, result.months, result.weeks, result.days, result.hours, result.minutes, result.seconds, result.milliseconds, result.microseconds, result.nanoseconds, precision.precision)));
 }
 
 // 7.3.23 Temporal.Duration.prototype.toJSON ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tojson
@@ -597,7 +599,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_json)
     auto* duration = TRY(typed_this_object(vm));
 
     // 3. Return ! TemporalDurationToString(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "auto").
-    return PrimitiveString::create(vm, temporal_duration_to_string(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), "auto"sv));
+    return PrimitiveString::create(vm, MUST_OR_THROW_OOM(temporal_duration_to_string(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), "auto"sv)));
 }
 
 // 7.3.24 Temporal.Duration.prototype.toLocaleString ( [ locales [ , options ] ] ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.tolocalestring
@@ -609,7 +611,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::to_locale_string)
     auto* duration = TRY(typed_this_object(vm));
 
     // 3. Return ! TemporalDurationToString(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]], duration.[[Nanoseconds]], "auto").
-    return PrimitiveString::create(vm, temporal_duration_to_string(duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), "auto"sv));
+    return PrimitiveString::create(vm, MUST_OR_THROW_OOM(temporal_duration_to_string(vm, duration->years(), duration->months(), duration->weeks(), duration->days(), duration->hours(), duration->minutes(), duration->seconds(), duration->milliseconds(), duration->microseconds(), duration->nanoseconds(), "auto"sv)));
 }
 
 // 7.3.25 Temporal.Duration.prototype.valueOf ( ), https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype.valueof

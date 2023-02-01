@@ -101,17 +101,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get("destination"sv).to_deprecated_string() < b.as_object().get("destination"sv).to_deprecated_string();
+            return a.as_object().get_deprecated("destination"sv).to_deprecated_string() < b.as_object().get_deprecated("destination"sv).to_deprecated_string();
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto destination = if_object.get("destination"sv).to_deprecated_string();
-            auto gateway = if_object.get("gateway"sv).to_deprecated_string();
-            auto genmask = if_object.get("genmask"sv).to_deprecated_string();
-            auto interface = if_object.get("interface"sv).to_deprecated_string();
-            auto flags = if_object.get("flags"sv).to_u32();
+            auto destination = if_object.get_deprecated("destination"sv).to_deprecated_string();
+            auto gateway = if_object.get_deprecated("gateway"sv).to_deprecated_string();
+            auto genmask = if_object.get_deprecated("genmask"sv).to_deprecated_string();
+            auto interface = if_object.get_deprecated("interface"sv).to_deprecated_string();
+            auto flags = if_object.get_deprecated("flags"sv).to_u32();
 
             StringBuilder flags_builder;
             if (flags & RTF_UP)

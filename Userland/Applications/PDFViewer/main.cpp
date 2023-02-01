@@ -34,12 +34,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto pdf_viewer_widget = TRY(window->try_set_main_widget<PDFViewerWidget>());
+    auto pdf_viewer_widget = TRY(window->set_main_widget<PDFViewerWidget>());
 
     pdf_viewer_widget->initialize_menubar(*window);
 
@@ -47,10 +46,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (file_path) {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, file_path);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, file_path);
         if (response.is_error())
             return 1;
-        pdf_viewer_widget->open_file(*response.value());
+        pdf_viewer_widget->open_file(response.value().filename(), response.value().release_stream());
     }
 
     return app->exec();

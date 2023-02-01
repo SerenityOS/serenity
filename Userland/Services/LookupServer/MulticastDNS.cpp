@@ -110,7 +110,7 @@ void MulticastDNS::announce()
 
 ErrorOr<size_t> MulticastDNS::emit_packet(Packet const& packet, sockaddr_in const* destination)
 {
-    auto buffer = packet.to_byte_buffer();
+    auto buffer = TRY(packet.to_byte_buffer());
     if (!destination)
         destination = &mdns_addr;
 
@@ -132,7 +132,7 @@ Vector<IPv4Address> MulticastDNS::local_addresses() const
 
     json.as_array().for_each([&addresses](auto& value) {
         auto if_object = value.as_object();
-        auto address = if_object.get("ipv4_address"sv).to_deprecated_string();
+        auto address = if_object.get_deprecated_string("ipv4_address"sv).value_or({});
         auto ipv4_address = IPv4Address::from_string(address);
         // Skip unconfigured interfaces.
         if (!ipv4_address.has_value())

@@ -13,16 +13,19 @@ namespace Web::HTML {
 HTMLTemplateElement::HTMLTemplateElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTemplateElement"));
 }
 
 HTMLTemplateElement::~HTMLTemplateElement() = default;
 
-void HTMLTemplateElement::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> HTMLTemplateElement::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
-    m_content = heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document());
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTemplateElementPrototype>(realm, "HTMLTemplateElement"));
+
+    m_content = MUST_OR_THROW_OOM(heap().allocate<DOM::DocumentFragment>(realm, m_document->appropriate_template_contents_owner_document()));
     m_content->set_host(this);
+
+    return {};
 }
 
 void HTMLTemplateElement::visit_edges(Cell::Visitor& visitor)

@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
@@ -67,7 +67,7 @@ public:
         return token;
     }
 
-    static HTMLToken make_start_tag(FlyString const& tag_name)
+    static HTMLToken make_start_tag(DeprecatedFlyString const& tag_name)
     {
         HTMLToken token { Type::StartTag };
         token.set_tag_name(tag_name);
@@ -134,7 +134,7 @@ public:
         m_data.get<u32>() = code_point;
     }
 
-    FlyString const& comment() const
+    DeprecatedFlyString const& comment() const
     {
         VERIFY(is_comment());
         return m_string_data;
@@ -146,7 +146,7 @@ public:
         m_string_data = move(comment);
     }
 
-    FlyString const& tag_name() const
+    DeprecatedFlyString const& tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());
         return m_string_data;
@@ -247,7 +247,7 @@ public:
         }
     }
 
-    StringView attribute(FlyString const& attribute_name)
+    StringView attribute(DeprecatedFlyString const& attribute_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
 
@@ -261,19 +261,19 @@ public:
         return {};
     }
 
-    bool has_attribute(FlyString const& attribute_name)
+    bool has_attribute(DeprecatedFlyString const& attribute_name)
     {
         return !attribute(attribute_name).is_null();
     }
 
-    void adjust_tag_name(FlyString const& old_name, FlyString const& new_name)
+    void adjust_tag_name(DeprecatedFlyString const& old_name, DeprecatedFlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         if (old_name == tag_name())
             set_tag_name(new_name);
     }
 
-    void adjust_attribute_name(FlyString const& old_name, FlyString const& new_name)
+    void adjust_attribute_name(DeprecatedFlyString const& old_name, DeprecatedFlyString const& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for_each_attribute([&](Attribute& attribute) {
@@ -283,7 +283,7 @@ public:
         });
     }
 
-    void adjust_foreign_attribute(FlyString const& old_name, FlyString const& prefix, FlyString const& local_name, FlyString const& namespace_)
+    void adjust_foreign_attribute(DeprecatedFlyString const& old_name, DeprecatedFlyString const& prefix, DeprecatedFlyString const& local_name, DeprecatedFlyString const& namespace_)
     {
         VERIFY(is_start_tag() || is_end_tag());
         for_each_attribute([&](Attribute& attribute) {
@@ -350,7 +350,7 @@ private:
     bool m_tag_self_closing_acknowledged { false };
 
     // Type::Comment (comment data), Type::StartTag and Type::EndTag (tag name)
-    FlyString m_string_data;
+    DeprecatedFlyString m_string_data;
 
     Variant<Empty, u32, OwnPtr<DoctypeData>, OwnPtr<Vector<Attribute>>> m_data {};
 

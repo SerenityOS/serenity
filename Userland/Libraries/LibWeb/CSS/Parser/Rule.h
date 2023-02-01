@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/Block.h>
@@ -22,7 +22,7 @@ public:
         Qualified,
     };
 
-    static NonnullRefPtr<Rule> make_at_rule(FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
+    static NonnullRefPtr<Rule> make_at_rule(DeprecatedFlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
     {
         return adopt_ref(*new Rule(Type::At, move(name), move(prelude), move(block)));
     }
@@ -44,10 +44,10 @@ public:
     DeprecatedString to_deprecated_string() const;
 
 private:
-    Rule(Type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);
+    Rule(Type, DeprecatedFlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);
 
     Type const m_type;
-    FlyString m_at_rule_name;
+    DeprecatedFlyString m_at_rule_name;
     Vector<ComponentValue> m_prelude;
     RefPtr<Block> m_block;
 };

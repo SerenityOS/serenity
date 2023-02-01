@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,9 +29,9 @@ CalendarPrototype::CalendarPrototype(Realm& realm)
 {
 }
 
-void CalendarPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> CalendarPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -65,6 +65,8 @@ void CalendarPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toJSON, to_json, 0, attr);
     define_native_function(realm, vm.names.era, era, 1, attr);
     define_native_function(realm, vm.names.eraYear, era_year, 1, attr);
+
+    return {};
 }
 
 // 12.4.3 get Temporal.Calendar.prototype.id, https://tc39.es/proposal-temporal/#sec-get-temporal.calendar.prototype.id
@@ -214,7 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
 
     // 8. If largestUnit is "auto", set largestUnit to "day".
     if (largest_unit == "auto")
-        largest_unit = "day"sv;
+        largest_unit = String::from_utf8_short_string("day"sv);
 
     // 9. Let result be DifferenceISODate(one.[[ISOYear]], one.[[ISOMonth]], one.[[ISODay]], two.[[ISOYear]], two.[[ISOMonth]], two.[[ISODay]], largestUnit).
     auto result = difference_iso_date(vm, one->iso_year(), one->iso_month(), one->iso_day(), two->iso_year(), two->iso_month(), two->iso_day(), *largest_unit);
@@ -301,7 +303,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
     // NOTE: The assertion happens in iso_month() call.
 
     // 6. Return ISOMonthCode(temporalDateLike.[[ISOMonth]]).
-    return PrimitiveString::create(vm, iso_month_code(iso_month(temporal_date_like.as_object())));
+    return PrimitiveString::create(vm, TRY(iso_month_code(vm, iso_month(temporal_date_like.as_object()))));
 }
 
 // 12.4.12 Temporal.Calendar.prototype.day ( temporalDateLike ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.day
@@ -559,19 +561,21 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
+        auto next_value_string = TRY(next_value.as_string().utf8_string());
+
         // iii. If fieldNames contains nextValue, then
         if (field_names.contains_slow(next_value)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value.as_string().deprecated_string());
+            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value_string);
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
-        if (!next_value.as_string().deprecated_string().is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
+        if (!next_value_string.is_one_of("year"sv, "month"sv, "monthCode"sv, "day"sv, "hour"sv, "minute"sv, "second"sv, "millisecond"sv, "microsecond"sv, "nanosecond"sv)) {
             // 1. Let completion be ThrowCompletion(a newly created RangeError object).
-            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value.as_string().deprecated_string());
+            auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value_string);
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
             return TRY(iterator_close(vm, iterator_record, move(completion)));

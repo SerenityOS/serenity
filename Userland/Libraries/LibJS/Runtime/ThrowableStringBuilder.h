@@ -23,6 +23,7 @@ public:
     ThrowCompletionOr<void> append(StringView);
     ThrowCompletionOr<void> append(Utf16View const&);
     ThrowCompletionOr<void> append_code_point(u32 value);
+    ThrowCompletionOr<String> to_string() const;
 
 private:
     VM& m_vm;

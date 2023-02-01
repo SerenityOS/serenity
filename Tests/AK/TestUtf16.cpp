@@ -7,14 +7,14 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Utf16View.h>
 
 TEST_CASE(decode_ascii)
 {
-    auto string = AK::utf8_to_utf16("Hello World!11"sv);
+    auto string = MUST(AK::utf8_to_utf16("Hello World!11"sv));
     Utf16View view { string };
 
     size_t valid_code_units = 0;
@@ -33,7 +33,7 @@ TEST_CASE(decode_ascii)
 
 TEST_CASE(decode_utf8)
 {
-    auto string = AK::utf8_to_utf16("Привет, мир! 😀 γειά σου κόσμος こんにちは世界"sv);
+    auto string = MUST(AK::utf8_to_utf16("Привет, мир! 😀 γειά σου κόσμος こんにちは世界"sv));
     Utf16View view { string };
 
     size_t valid_code_units = 0;
@@ -53,17 +53,17 @@ TEST_CASE(decode_utf8)
 TEST_CASE(encode_utf8)
 {
     {
-        DeprecatedString utf8_string("Привет, мир! 😀 γειά σου κόσμος こんにちは世界");
-        auto string = AK::utf8_to_utf16(utf8_string);
+        auto utf8_string = MUST(String::from_utf8("Привет, мир! 😀 γειά σου κόσμος こんにちは世界"sv));
+        auto string = MUST(AK::utf8_to_utf16(utf8_string));
         Utf16View view { string };
-        EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes), utf8_string);
-        EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No), utf8_string);
+        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), utf8_string);
+        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), utf8_string);
     }
     {
         auto encoded = Array { (u16)0xd83d };
         Utf16View view { encoded };
-        EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes), "\xed\xa0\xbd"sv);
-        EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No), "\ufffd"sv);
+        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), "\xed\xa0\xbd"sv);
+        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
     }
 }
 
@@ -91,7 +91,7 @@ TEST_CASE(decode_utf16)
 
 TEST_CASE(iterate_utf16)
 {
-    auto string = AK::utf8_to_utf16("Привет 😀"sv);
+    auto string = MUST(AK::utf8_to_utf16("Привет 😀"sv));
     Utf16View view { string };
     auto iterator = view.begin();
 
@@ -263,20 +263,20 @@ TEST_CASE(decode_invalid_utf16)
 
 TEST_CASE(substring_view)
 {
-    auto string = AK::utf8_to_utf16("Привет 😀"sv);
+    auto string = MUST(AK::utf8_to_utf16("Привет 😀"sv));
     {
         Utf16View view { string };
         view = view.substring_view(7, 2);
 
         EXPECT(view.length_in_code_units() == 2);
-        EXPECT_EQ(view.to_utf8(), "😀"sv);
+        EXPECT_EQ(MUST(view.to_utf8()), "😀"sv);
     }
     {
         Utf16View view { string };
         view = view.substring_view(7, 1);
 
         EXPECT(view.length_in_code_units() == 1);
-        EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes), "\xed\xa0\xbd"sv);
-        EXPECT_EQ(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No), "\ufffd"sv);
+        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes)), "\xed\xa0\xbd"sv);
+        EXPECT_EQ(MUST(view.to_utf8(Utf16View::AllowInvalidCodeUnits::No)), "\ufffd"sv);
     }
 }

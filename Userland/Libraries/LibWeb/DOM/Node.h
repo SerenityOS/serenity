@@ -12,6 +12,7 @@
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
+#include <LibWeb/DOM/AccessibilityTreeNode.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/DOMParsing/XMLSerializer.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -49,9 +50,6 @@ public:
     Element const* parent_or_shadow_host_element() const { return const_cast<Node*>(this)->parent_or_shadow_host_element(); }
 
     virtual ~Node();
-
-    // FIXME: Move cleanup to the regular destructor.
-    void removed_last_ref();
 
     NodeType type() const { return m_type; }
     bool is_element() const { return type() == NodeType::ELEMENT_NODE; }
@@ -106,7 +104,7 @@ public:
     JS::NonnullGCPtr<NodeList> child_nodes();
     Vector<JS::Handle<Node>> children_as_vector() const;
 
-    virtual FlyString node_name() const = 0;
+    virtual DeprecatedFlyString node_name() const = 0;
 
     DeprecatedString base_uri() const;
 
@@ -124,7 +122,7 @@ public:
 
     const HTML::HTMLAnchorElement* enclosing_link_element() const;
     const HTML::HTMLElement* enclosing_html_element() const;
-    const HTML::HTMLElement* enclosing_html_element_with_attribute(FlyString const&) const;
+    const HTML::HTMLElement* enclosing_html_element_with_attribute(DeprecatedFlyString const&) const;
 
     DeprecatedString child_text_content() const;
 
@@ -221,7 +219,7 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
-    void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
+    void queue_mutation_record(DeprecatedFlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>
@@ -313,8 +311,6 @@ public:
     bool is_inclusive_descendant_of(Node const&) const;
 
     bool is_following(Node const&) const;
-
-    void prepend_child(JS::NonnullGCPtr<Node> node);
 
     Node* next_in_pre_order()
     {
@@ -639,6 +635,8 @@ protected:
     // https://dom.spec.whatwg.org/#registered-observer-list
     // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
     Vector<RegisteredObserver&> m_registered_observer_list;
+
+    void build_accessibility_tree(AccessibilityTreeNode& parent) const;
 
 private:
     void queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);

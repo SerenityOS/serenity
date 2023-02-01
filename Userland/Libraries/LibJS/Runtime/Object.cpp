@@ -24,17 +24,16 @@
 
 namespace JS {
 
-static HashMap<Object const*, HashMap<FlyString, Object::IntrinsicAccessor>> s_intrinsics;
+static HashMap<Object const*, HashMap<DeprecatedFlyString, Object::IntrinsicAccessor>> s_intrinsics;
 
 // 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate
 NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
 {
     if (!prototype)
-        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape());
-    else if (prototype == realm.intrinsics().object_prototype())
-        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape());
-    else
-        return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype);
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().empty_object_shape()).release_allocated_value_but_fixme_should_propagate_errors();
+    if (prototype == realm.intrinsics().object_prototype())
+        return realm.heap().allocate<Object>(realm, *realm.intrinsics().new_object_shape()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Object>(realm, ConstructWithPrototypeTag::Tag, *prototype).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Object::Object(GlobalObjectTag, Realm& realm)
@@ -74,8 +73,9 @@ Object::~Object()
     s_intrinsics.remove(this);
 }
 
-void Object::initialize(Realm&)
+ThrowCompletionOr<void> Object::initialize(Realm&)
 {
+    return {};
 }
 
 // 7.2 Testing and Comparison Operations, https://tc39.es/ecma262/#sec-testing-and-comparison-operations
@@ -1259,7 +1259,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
     //    * Enumerating the properties of the target object includes enumerating properties of its prototype, and the prototype of the prototype, and so on, recursively.
     //    * A property of a prototype is not processed if it has the same name as a property that has already been processed.
 
-    HashTable<FlyString> visited;
+    HashTable<DeprecatedFlyString> visited;
 
     auto const* target = this;
     while (target) {
@@ -1267,7 +1267,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
         for (auto& key : own_keys) {
             if (!key.is_string())
                 continue;
-            FlyString property_key = key.as_string().deprecated_string();
+            DeprecatedFlyString property_key = TRY(key.as_string().deprecated_string());
             if (visited.contains(property_key))
                 continue;
             auto descriptor = TRY(target->internal_get_own_property(property_key));

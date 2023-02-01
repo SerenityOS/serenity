@@ -15,8 +15,6 @@ class WorkerLocation : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(WorkerLocation, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<WorkerLocation> create(WorkerGlobalScope&);
-
     virtual ~WorkerLocation() override;
 
     DeprecatedString href() const;

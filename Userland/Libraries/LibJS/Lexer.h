@@ -10,6 +10,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace JS {
@@ -21,7 +22,7 @@ public:
     Token next();
 
     DeprecatedString const& source() const { return m_source; };
-    DeprecatedString const& filename() const { return m_filename; };
+    String const& filename() const { return m_filename; };
 
     void disallow_html_comments() { m_allow_html_comments = false; };
 
@@ -63,7 +64,7 @@ private:
     char m_current_char { 0 };
     bool m_eof { false };
 
-    DeprecatedString m_filename;
+    String m_filename;
     size_t m_line_number { 1 };
     size_t m_line_column { 0 };
 
@@ -79,7 +80,7 @@ private:
 
     Optional<size_t> m_hit_invalid_unicode;
 
-    static HashMap<FlyString, TokenType> s_keywords;
+    static HashMap<DeprecatedFlyString, TokenType> s_keywords;
     static HashMap<DeprecatedString, TokenType> s_three_char_tokens;
     static HashMap<DeprecatedString, TokenType> s_two_char_tokens;
     static HashMap<char, TokenType> s_single_char_tokens;
@@ -87,7 +88,7 @@ private:
     struct ParsedIdentifiers : public RefCounted<ParsedIdentifiers> {
         // Resolved identifiers must be kept alive for the duration of the parsing stage, otherwise
         // the only references to these strings are deleted by the Token destructor.
-        HashTable<FlyString> identifiers;
+        HashTable<DeprecatedFlyString> identifiers;
     };
 
     RefPtr<ParsedIdentifiers> m_parsed_identifiers;

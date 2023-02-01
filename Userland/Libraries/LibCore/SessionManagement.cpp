@@ -5,37 +5,26 @@
  */
 
 #include <LibCore/Directory.h>
-#include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 
+#ifdef AK_OS_SERENITY
+#    include <LibSystem/syscall.h>
+#endif
+
 namespace Core::SessionManagement {
 
-static ErrorOr<Core::ProcessStatistics const*> get_proc(Core::AllProcessesStatistics const& stats, pid_t pid)
+ErrorOr<pid_t> root_session_id([[maybe_unused]] Optional<pid_t> force_sid)
 {
-    for (auto& proc : stats.processes) {
-        if (proc.pid == pid)
-            return &proc;
+#ifdef AK_OS_SERENITY
+    int rc = syscall(SC_get_root_session_id, force_sid.value_or(-1));
+    if (rc < 0) {
+        return Error::from_syscall("get_root_session_id"sv, rc);
     }
-    return Error::from_string_literal("Could not find pid in process statistics.");
-}
-
-ErrorOr<pid_t> root_session_id(Optional<pid_t> force_sid)
-{
-    auto stats = TRY(Core::ProcessStatisticsReader::get_all(false));
-
-    pid_t sid = (force_sid.has_value()) ? force_sid.value() : TRY(System::getsid());
-    while (true) {
-        pid_t parent = TRY(get_proc(stats, sid))->ppid;
-        pid_t parent_sid = TRY(get_proc(stats, parent))->sid;
-
-        if (parent_sid == 0)
-            break;
-
-        sid = parent_sid;
-    }
-
-    return sid;
+    return static_cast<pid_t>(rc);
+#else
+    return 0;
+#endif
 }
 
 ErrorOr<void> logout(Optional<pid_t> force_sid)

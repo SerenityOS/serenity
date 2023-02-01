@@ -80,16 +80,16 @@ template<typename T>
 class LittleEndian;
 
 template<typename T>
-InputStream& operator>>(InputStream&, LittleEndian<T>&);
+DeprecatedInputStream& operator>>(DeprecatedInputStream&, LittleEndian<T>&);
 
 template<typename T>
-OutputStream& operator<<(OutputStream&, LittleEndian<T>);
+DeprecatedOutputStream& operator<<(DeprecatedOutputStream&, LittleEndian<T>);
 
 template<typename T>
 class [[gnu::packed]] LittleEndian {
 public:
-    friend InputStream& operator>><T>(InputStream&, LittleEndian<T>&);
-    friend OutputStream& operator<< <T>(OutputStream&, LittleEndian<T>);
+    friend DeprecatedInputStream& operator>><T>(DeprecatedInputStream&, LittleEndian<T>&);
+    friend DeprecatedOutputStream& operator<< <T>(DeprecatedOutputStream&, LittleEndian<T>);
 
     constexpr LittleEndian() = default;
 
@@ -112,16 +112,16 @@ template<typename T>
 class BigEndian;
 
 template<typename T>
-InputStream& operator>>(InputStream&, BigEndian<T>&);
+DeprecatedInputStream& operator>>(DeprecatedInputStream&, BigEndian<T>&);
 
 template<typename T>
-OutputStream& operator<<(OutputStream&, BigEndian<T>);
+DeprecatedOutputStream& operator<<(DeprecatedOutputStream&, BigEndian<T>);
 
 template<typename T>
 class [[gnu::packed]] BigEndian {
 public:
-    friend InputStream& operator>><T>(InputStream&, BigEndian<T>&);
-    friend OutputStream& operator<< <T>(OutputStream&, BigEndian<T>);
+    friend DeprecatedInputStream& operator>><T>(DeprecatedInputStream&, BigEndian<T>&);
+    friend DeprecatedOutputStream& operator<< <T>(DeprecatedOutputStream&, BigEndian<T>);
 
     constexpr BigEndian() = default;
 
@@ -149,6 +149,16 @@ requires(HasFormatter<T>) struct Formatter<LittleEndian<T>> : Formatter<T> {
 
 template<typename T>
 requires(HasFormatter<T>) struct Formatter<BigEndian<T>> : Formatter<T> {
+};
+
+template<typename T>
+struct Traits<LittleEndian<T>> : public GenericTraits<LittleEndian<T>> {
+    static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
+};
+
+template<typename T>
+struct Traits<BigEndian<T>> : public GenericTraits<BigEndian<T>> {
+    static constexpr bool is_trivially_serializable() { return Traits<T>::is_trivially_serializable(); }
 };
 
 }

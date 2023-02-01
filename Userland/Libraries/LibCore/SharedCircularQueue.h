@@ -62,16 +62,16 @@ public:
     SharedSingleProducerCircularQueue& operator=(SharedSingleProducerCircularQueue&& queue) = default;
 
     // Allocates a new circular queue in shared memory.
-    static ErrorOr<SharedSingleProducerCircularQueue<T, Size>> try_create()
+    static ErrorOr<SharedSingleProducerCircularQueue<T, Size>> create()
     {
         auto fd = TRY(System::anon_create(sizeof(SharedMemorySPCQ), O_CLOEXEC));
-        return try_create_internal(fd, true);
+        return create_internal(fd, true);
     }
 
     // Uses an existing circular queue from given shared memory.
-    static ErrorOr<SharedSingleProducerCircularQueue<T, Size>> try_create(int fd)
+    static ErrorOr<SharedSingleProducerCircularQueue<T, Size>> create(int fd)
     {
-        return try_create_internal(fd, false);
+        return create_internal(fd, false);
     }
 
     constexpr size_t size() const { return Size; }
@@ -90,7 +90,7 @@ public:
     ALWAYS_INLINE constexpr size_t weak_head() const { return m_queue->m_queue->m_head.load(AK::MemoryOrder::memory_order_relaxed); }
     ALWAYS_INLINE constexpr size_t weak_tail() const { return m_queue->m_queue->m_tail.load(AK::MemoryOrder::memory_order_relaxed); }
 
-    ErrorOr<void, QueueStatus> try_enqueue(ValueType to_insert)
+    ErrorOr<void, QueueStatus> enqueue(ValueType to_insert)
     {
         VERIFY(!m_queue.is_null());
         if (!can_enqueue())
@@ -108,11 +108,11 @@ public:
     }
 
     // Repeatedly try to enqueue, using the wait_function to wait if it's not possible
-    ErrorOr<void> try_blocking_enqueue(ValueType to_insert, Function<void()> wait_function)
+    ErrorOr<void> blocking_enqueue(ValueType to_insert, Function<void()> wait_function)
     {
         ErrorOr<void, QueueStatus> result;
         while (true) {
-            result = try_enqueue(to_insert);
+            result = enqueue(to_insert);
             if (!result.is_error())
                 break;
             if (result.error() != QueueStatus::Full)
@@ -123,7 +123,7 @@ public:
         return {};
     }
 
-    ErrorOr<ValueType, QueueStatus> try_dequeue()
+    ErrorOr<ValueType, QueueStatus> dequeue()
     {
         VERIFY(!m_queue.is_null());
         while (true) {
@@ -198,7 +198,7 @@ private:
         }
     };
 
-    static ErrorOr<SharedSingleProducerCircularQueue<T, Size>> try_create_internal(int fd, bool is_new)
+    static ErrorOr<SharedSingleProducerCircularQueue<T, Size>> create_internal(int fd, bool is_new)
     {
         auto name = DeprecatedString::formatted("SharedSingleProducerCircularQueue@{:x}", fd);
         auto* raw_mapping = TRY(System::mmap(nullptr, sizeof(SharedMemorySPCQ), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0, 0, name));

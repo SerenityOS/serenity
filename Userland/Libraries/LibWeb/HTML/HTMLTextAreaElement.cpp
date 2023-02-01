@@ -12,10 +12,17 @@ namespace Web::HTML {
 HTMLTextAreaElement::HTMLTextAreaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTextAreaElement"));
 }
 
 HTMLTextAreaElement::~HTMLTextAreaElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLTextAreaElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTextAreaElementPrototype>(realm, "HTMLTextAreaElement"));
+
+    return {};
+}
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-tabindex
 i32 HTMLTextAreaElement::default_tab_index_value() const

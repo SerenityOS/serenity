@@ -20,13 +20,15 @@ OptionConstructor::OptionConstructor(JS::Realm& realm)
 {
 }
 
-void OptionConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> OptionConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
 
-    NativeFunction::initialize(realm);
-    define_direct_property(vm.names.prototype, &cached_web_prototype(realm, "HTMLOptionElement"), 0);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    define_direct_property(vm.names.prototype, &ensure_web_prototype<Bindings::HTMLOptionElementPrototype>(realm, "HTMLOptionElement"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
+
+    return {};
 }
 
 JS::ThrowCompletionOr<JS::Value> OptionConstructor::call()
@@ -49,16 +51,16 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> OptionConstructor::construct
 
     // 3. If text is not the empty string, then append to option a new Text node whose data is text.
     if (vm.argument_count() > 0) {
-        auto text = TRY(vm.argument(0).to_string(vm));
+        auto text = TRY(vm.argument(0).to_deprecated_string(vm));
         if (!text.is_empty()) {
-            auto new_text_node = vm.heap().allocate<DOM::Text>(realm, document, text);
+            auto new_text_node = MUST_OR_THROW_OOM(vm.heap().allocate<DOM::Text>(realm, document, text));
             MUST(option_element->append_child(*new_text_node));
         }
     }
 
     // 4. If value is given, then set an attribute value for option using "value" and value.
     if (vm.argument_count() > 1) {
-        auto value = TRY(vm.argument(1).to_string(vm));
+        auto value = TRY(vm.argument(1).to_deprecated_string(vm));
         MUST(option_element->set_attribute(HTML::AttributeNames::value, value));
     }
 

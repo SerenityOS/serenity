@@ -118,8 +118,8 @@ DeprecatedString Keypad::to_deprecated_string() const
 
     StringBuilder builder;
 
-    DeprecatedString const integer_value = m_int_value.to_base(10);
-    DeprecatedString const frac_value = m_frac_value.to_base(10);
+    DeprecatedString const integer_value = m_int_value.to_base_deprecated(10);
+    DeprecatedString const frac_value = m_frac_value.to_base_deprecated(10);
     unsigned const number_pre_zeros = m_frac_length.to_u64() - (frac_value.length() - 1) - (frac_value == "0" ? 0 : 1);
 
     builder.append(integer_value);

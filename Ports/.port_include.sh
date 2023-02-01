@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-SCRIPT="$(realpath $(dirname "${0}"))"
+SCRIPT="$(realpath $(dirname "${BASH_SOURCE[0]}"))"
 
 if [ -z "${SERENITY_STRIPPED_ENV:-}" ]; then
     exec "${SCRIPT}/.strip_env.sh" "${@}"
@@ -30,14 +30,16 @@ buildstep_intro() {
     echo -e "\x1b[1;32m=> $@\x1b[0m"
 }
 
-maybe_source() {
-    if [ -f "$1" ]; then
-        . "$1"
-    fi
-}
-
 target_env() {
-    maybe_source "${SCRIPT}/.hosted_defs.sh"
+    if [ -f "${SCRIPT}/.hosted_defs.sh" ]; then
+        . "${SCRIPT}/.hosted_defs.sh"
+    elif [ "$(uname -s)" = "SerenityOS" ]; then
+        export SERENITY_ARCH="$(uname -m)"
+        export SERENITY_INSTALL_ROOT=""
+    else
+        >&2 echo "Error: .hosted_defs.sh is missing and we are not running on Serenity."
+        exit 1
+    fi
 }
 
 target_env
@@ -64,6 +66,7 @@ enable_ccache
 host_env() {
     export CC="${HOST_CC}"
     export CXX="${HOST_CXX}"
+    export LD="${HOST_LD}"
     export AR="${HOST_AR}"
     export RANLIB="${HOST_RANLIB}"
     export PATH="${HOST_PATH}"
@@ -106,7 +109,12 @@ shift
 : "${workdir:=$port-$version}"
 
 PORT_META_DIR="$(pwd)"
-PORT_BUILD_DIR="${SERENITY_BUILD_DIR}/Ports/${port}"
+if [[ -z ${SERENITY_BUILD_DIR:-} ]]; then
+    PORT_BUILD_DIR="${PORT_META_DIR}"
+else
+    PORT_BUILD_DIR="${SERENITY_BUILD_DIR}/Ports/${port}"
+fi
+
 
 mkdir -p "${PORT_BUILD_DIR}"
 cd "${PORT_BUILD_DIR}"
@@ -138,6 +146,14 @@ run_replace_in_file() {
         run sed -i "$1" $2
     else
         run perl -p -i -e "$1" $2
+    fi
+}
+
+sed_in_place() {
+    if [ "$(uname -s)" = "Darwin" ]; then
+        sed -i '' "${@}"
+    else
+        sed -i "${@}"
     fi
 }
 
@@ -446,7 +462,11 @@ func_defined pre_configure || pre_configure() {
 }
 func_defined configure || configure() {
     chmod +x "${workdir}"/"$configscript"
-    run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" "${configopts[@]}"
+    if [[ -n "${SERENITY_SOURCE_DIR:-}" ]]; then
+        run ./"$configscript" --host="${SERENITY_ARCH}-pc-serenity" "${configopts[@]}"
+    else
+        run ./"$configscript" --build="${SERENITY_ARCH}-pc-serenity" "${configopts[@]}"
+    fi
 }
 func_defined post_configure || post_configure() {
     :
@@ -508,7 +528,17 @@ package_install_state() {
 installdepends() {
     for depend in "${depends[@]}"; do
         if [ -z "$(package_install_state $depend)" ]; then
-            (cd "${PORT_META_DIR}/../$depend" && ./package.sh --auto)
+            # Split colon seperated string into a list
+            IFS=':' read -ra port_directories <<< "$SERENITY_PORT_DIRS"
+            for port_dir in "${port_directories[@]}"; do
+                if [ -d "${port_dir}/$depend" ]; then
+                    (cd "${port_dir}/$depend" && ./package.sh --auto)
+                    return
+                fi
+            done
+
+            >&2 echo "Error: Dependency $depend could not be found."
+            exit 1
         fi
     done
 }

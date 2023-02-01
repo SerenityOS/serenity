@@ -15,8 +15,9 @@ static Atomic<u32> s_vmd_pci_domain_number = 0x10000;
 
 NonnullOwnPtr<VolumeManagementDevice> VolumeManagementDevice::must_create(PCI::DeviceIdentifier const& device_identifier)
 {
+    SpinlockLocker locker(device_identifier.operation_lock());
     u8 start_bus = 0;
-    switch ((PCI::read16(device_identifier.address(), static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3) {
+    switch ((PCI::read16_locked(device_identifier, static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3) {
     case 0:
         break;
     case 1:
@@ -27,7 +28,7 @@ NonnullOwnPtr<VolumeManagementDevice> VolumeManagementDevice::must_create(PCI::D
         break;
     default:
         dbgln("VMD @ {}: Unknown bus offset option was set to {}", device_identifier.address(),
-            ((PCI::read16(device_identifier.address(), static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3));
+            ((PCI::read16_locked(device_identifier, static_cast<PCI::RegisterOffset>(0x44)) >> 8) & 0x3));
         VERIFY_NOT_REACHED();
     }
 
@@ -35,7 +36,7 @@ NonnullOwnPtr<VolumeManagementDevice> VolumeManagementDevice::must_create(PCI::D
     // resource size of BAR0.
     dbgln("VMD Host bridge @ {}: Start bus at {}, end bus {}", device_identifier.address(), start_bus, 0xff);
     PCI::Domain domain { s_vmd_pci_domain_number++, start_bus, 0xff };
-    auto start_address = PhysicalAddress(PCI::get_BAR0(device_identifier.address())).page_base();
+    auto start_address = PhysicalAddress(PCI::get_BAR0(device_identifier)).page_base();
     return adopt_own_if_nonnull(new (nothrow) VolumeManagementDevice(domain, start_address)).release_nonnull();
 }
 

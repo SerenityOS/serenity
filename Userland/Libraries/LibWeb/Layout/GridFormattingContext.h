@@ -7,8 +7,6 @@
 #pragma once
 
 #include <LibWeb/CSS/Length.h>
-#include <LibWeb/Layout/BlockFormattingContext.h>
-#include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FormattingContext.h>
 
 namespace Web::Layout {
@@ -31,9 +29,9 @@ private:
     Vector<Vector<bool>> m_occupation_grid;
 };
 
-class GridFormattingContext final : public BlockFormattingContext {
+class GridFormattingContext final : public FormattingContext {
 public:
-    explicit GridFormattingContext(LayoutState&, BlockContainer const&, FormattingContext* parent);
+    explicit GridFormattingContext(LayoutState&, Box const& grid_container, FormattingContext* parent);
     ~GridFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const& available_space) override;
@@ -89,6 +87,15 @@ private:
         }
     };
 
+    struct GridArea {
+        String name;
+        int row_start { 0 };
+        int row_end { 1 };
+        int column_start { 0 };
+        int column_end { 1 };
+    };
+    Vector<GridArea> m_valid_grid_areas;
+
     Vector<TemporaryTrack> m_grid_rows;
     Vector<TemporaryTrack> m_grid_columns;
 
@@ -99,13 +106,16 @@ private:
     CSSPixels get_free_space_x(AvailableSpace const& available_space);
     CSSPixels get_free_space_y(Box const&);
 
-    int get_line_index_by_line_name(DeprecatedString const& line_name, CSS::GridTrackSizeList);
+    int get_line_index_by_line_name(String const& line_name, CSS::GridTrackSizeList);
     CSSPixels resolve_definite_track_size(CSS::GridSize const&, AvailableSpace const&, Box const&);
     size_t count_of_gap_columns();
     size_t count_of_gap_rows();
     CSSPixels resolve_size(CSS::Size const&, AvailableSize const&, Box const&);
     int count_of_repeated_auto_fill_or_fit_tracks(Vector<CSS::ExplicitGridTrack> const& track_list, AvailableSpace const&, Box const&);
     int get_count_of_tracks(Vector<CSS::ExplicitGridTrack> const&, AvailableSpace const&, Box const&);
+
+    void build_valid_grid_areas(Box const&);
+    int find_valid_grid_area(String const& needle);
 
     void place_item_with_row_and_column_position(Box const& box, Box const& child_box);
     void place_item_with_row_position(Box const& box, Box const& child_box);

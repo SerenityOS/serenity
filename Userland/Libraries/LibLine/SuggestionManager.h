@@ -78,7 +78,7 @@ public:
     size_t next_index() const { return m_next_suggestion_index; }
     void set_start_index(size_t index) const { m_last_displayed_suggestion_index = index; }
 
-    size_t for_each_suggestion(Function<IterationDecision(CompletionSuggestion const&, size_t)>) const;
+    ErrorOr<size_t> for_each_suggestion(Function<ErrorOr<IterationDecision>(CompletionSuggestion const&, size_t)>) const;
 
     enum CompletionMode {
         DontComplete,

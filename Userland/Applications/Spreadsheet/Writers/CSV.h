@@ -12,12 +12,18 @@
 
 namespace Writer {
 
-template<typename ContainerType>
-class CSV : public XSV<ContainerType> {
+class CSV {
 public:
-    CSV(OutputStream& output, ContainerType const& data, Vector<StringView> const& headers = {}, WriterBehavior behaviors = default_behaviors())
-        : XSV<ContainerType>(output, data, { ",", "\"", WriterTraits::Repeat }, headers, behaviors)
+    template<typename ContainerType>
+    static ErrorOr<void> generate(AK::Stream& output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
     {
+        return XSV<ContainerType>::generate(output, data, { ",", "\"", WriterTraits::Repeat }, move(headers), behaviors);
+    }
+
+    template<typename ContainerType>
+    static ErrorOr<void> generate_preview(AK::Stream& output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
+    {
+        return XSV<ContainerType>::generate_preview(output, data, { ",", "\"", WriterTraits::Repeat }, move(headers), behaviors);
     }
 };
 

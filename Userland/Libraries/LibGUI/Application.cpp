@@ -44,7 +44,7 @@ private:
     {
         set_window_type(WindowType::Tooltip);
         set_obey_widget_min_size(false);
-        m_label = set_main_widget<Label>();
+        m_label = set_main_widget<Label>().release_value_but_fixme_should_propagate_errors();
         m_label->set_background_role(Gfx::ColorRole::Tooltip);
         m_label->set_foreground_role(Gfx::ColorRole::TooltipText);
         m_label->set_fill_with_background_color(true);
@@ -95,11 +95,11 @@ Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable
 
     m_tooltip_show_timer = Core::Timer::create_single_shot(700, [this] {
         request_tooltip_show();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 
     m_tooltip_hide_timer = Core::Timer::create_single_shot(50, [this] {
         tooltip_hide_timer_did_fire();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 static bool s_in_teardown;

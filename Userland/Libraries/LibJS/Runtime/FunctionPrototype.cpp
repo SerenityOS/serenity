@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,10 +25,10 @@ FunctionPrototype::FunctionPrototype(Realm& realm)
 {
 }
 
-void FunctionPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> FunctionPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.apply, apply, 2, attr);
     define_native_function(realm, vm.names.bind, bind, 1, attr);
@@ -37,6 +37,8 @@ void FunctionPrototype::initialize(Realm& realm)
     define_native_function(realm, *vm.well_known_symbol_has_instance(), symbol_has_instance, 1, 0);
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
     define_direct_property(vm.names.name, PrimitiveString::create(vm, ""), Attribute::Configurable);
+
+    return {};
 }
 
 ThrowCompletionOr<Value> FunctionPrototype::internal_call(Value, MarkedVector<Value>)
@@ -145,7 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     // 1. Let func be the this value.
     auto function_value = vm.this_value();
 
-    // If func is not a function, let's bail out early. The order of this step is not observable.
+    // OPTIMIZATION: If func is not a function, bail out early. The order of this step is not observable.
     if (!function_value.is_function()) {
         // 5. Throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Function");
@@ -175,6 +177,8 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 // 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
 {
+    // 1. Let F be the this value.
+    // 2. Return ? OrdinaryHasInstance(F, V).
     return TRY(ordinary_has_instance(vm, vm.argument(0), vm.this_value()));
 }
 

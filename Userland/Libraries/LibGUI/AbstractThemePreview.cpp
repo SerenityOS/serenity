@@ -21,12 +21,12 @@ namespace GUI {
 AbstractThemePreview::AbstractThemePreview(Gfx::Palette const& preview_palette)
     : m_preview_palette(preview_palette)
 {
-    m_active_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_inactive_window_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_active_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_inactive_window_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv).release_value_but_fixme_should_propagate_errors();
 
-    m_default_close_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_default_maximize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_default_minimize_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_close_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_maximize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_default_minimize_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png"sv).release_value_but_fixme_should_propagate_errors();
 
     VERIFY(m_active_window_icon);
     VERIFY(m_inactive_window_icon);
@@ -44,7 +44,7 @@ void AbstractThemePreview::load_theme_bitmaps()
             last_path = DeprecatedString::empty();
             bitmap = nullptr;
         } else if (last_path != path) {
-            auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(path);
+            auto bitmap_or_error = Gfx::Bitmap::load_from_file(path);
             if (bitmap_or_error.is_error()) {
                 last_path = DeprecatedString::empty();
                 bitmap = nullptr;
@@ -85,15 +85,13 @@ void AbstractThemePreview::set_theme(Core::AnonymousBuffer const& theme_buffer)
     set_preview_palette(m_preview_palette);
 }
 
-ErrorOr<void> AbstractThemePreview::set_theme_from_file(Core::File& file)
+ErrorOr<void> AbstractThemePreview::set_theme_from_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
 {
-    auto config_file = TRY(Core::ConfigFile::open(file.filename(), file.leak_fd()));
+    auto config_file = TRY(Core::ConfigFile::open(path, move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
 
     m_preview_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
     set_preview_palette(m_preview_palette);
-    if (on_theme_load_from_file)
-        on_theme_load_from_file(file.filename());
     return {};
 }
 

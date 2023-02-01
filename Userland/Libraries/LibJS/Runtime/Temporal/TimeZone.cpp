@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DateTimeLexer.h>
 #include <AK/Time.h>
 #include <AK/TypeCasts.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
@@ -43,7 +42,7 @@ bool is_available_time_zone_name(StringView time_zone)
 
 // 11.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-canonicalizetimezonename
 // 15.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sup-canonicalizetimezonename
-DeprecatedString canonicalize_time_zone_name(DeprecatedString const& time_zone)
+ThrowCompletionOr<String> canonicalize_time_zone_name(VM& vm, StringView time_zone)
 {
     // 1. Let ianaTimeZone be the String value of the Zone or Link name of the IANA Time Zone Database that is an ASCII-case-insensitive match of timeZone as described in 6.1.
     // 2. If ianaTimeZone is a Link name, let ianaTimeZone be the String value of the corresponding Zone name as specified in the file backward of the IANA Time Zone Database.
@@ -53,11 +52,11 @@ DeprecatedString canonicalize_time_zone_name(DeprecatedString const& time_zone)
     // NOTE: This is already done in canonicalize_time_zone().
 
     // 4. Return ianaTimeZone.
-    return *iana_time_zone;
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(*iana_time_zone));
 }
 
 // 11.6.1 CreateTemporalTimeZone ( identifier [ , newTarget ] ), https://tc39.es/proposal-temporal/#sec-temporal-createtemporaltimezone
-ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString const& identifier, FunctionObject const* new_target)
+ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, StringView identifier, FunctionObject const* new_target)
 {
     auto& realm = *vm.current_realm();
 
@@ -74,7 +73,7 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
         auto offset_nanoseconds_result = parse_time_zone_offset_string(identifier);
 
         // b. Set object.[[Identifier]] to ! FormatTimeZoneOffsetString(offsetNanosecondsResult).
-        object->set_identifier(format_time_zone_offset_string(offset_nanoseconds_result));
+        object->set_identifier(MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds_result)));
 
         // c. Set object.[[OffsetNanoseconds]] to offsetNanosecondsResult.
         object->set_offset_nanoseconds(offset_nanoseconds_result);
@@ -82,10 +81,10 @@ ThrowCompletionOr<TimeZone*> create_temporal_time_zone(VM& vm, DeprecatedString 
     // 4. Else,
     else {
         // a. Assert: ! CanonicalizeTimeZoneName(identifier) is identifier.
-        VERIFY(canonicalize_time_zone_name(identifier) == identifier);
+        VERIFY(MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, identifier)) == identifier);
 
         // b. Set object.[[Identifier]] to identifier.
-        object->set_identifier(identifier);
+        object->set_identifier(TRY_OR_THROW_OOM(vm, String::from_utf8(identifier)));
 
         // c. Set object.[[OffsetNanoseconds]] to undefined.
         // NOTE: No-op.
@@ -165,51 +164,8 @@ BigInt* get_named_time_zone_previous_transition(VM&, [[maybe_unused]] StringView
     return nullptr;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeZoneNumericUTCOffset
-static bool parse_time_zone_numeric_utc_offset_syntax(DeprecatedString const& offset_string, StringView& sign, StringView& hours, Optional<StringView>& minutes, Optional<StringView>& seconds, Optional<StringView>& fraction)
-{
-    DateTimeLexer lexer(offset_string);
-    auto sign_part = lexer.consume_sign();
-    if (!sign_part.has_value())
-        return false;
-    sign = *sign_part;
-    auto hours_part = lexer.consume_hours();
-    if (!hours_part.has_value())
-        return false;
-    hours = *hours_part;
-    if (!lexer.tell_remaining())
-        return true;
-    auto uses_separator = lexer.consume_specific(':');
-    minutes = lexer.consume_minutes_or_seconds();
-    if (!minutes.has_value())
-        return false;
-    if (!lexer.tell_remaining())
-        return true;
-    if (lexer.consume_specific(':') != uses_separator)
-        return false;
-    seconds = lexer.consume_minutes_or_seconds();
-    if (!seconds.has_value())
-        return false;
-    if (!lexer.tell_remaining())
-        return true;
-    if (!lexer.consume_specific('.') && !lexer.consume_specific(','))
-        return false;
-    fraction = lexer.consume_fractional_seconds();
-    if (!fraction.has_value())
-        return false;
-    return !lexer.tell_remaining();
-}
-
-bool is_valid_time_zone_numeric_utc_offset_syntax(DeprecatedString const& offset_string)
-{
-    StringView discarded;
-    Optional<StringView> optionally_discarded;
-    // FIXME: This is very wasteful
-    return parse_time_zone_numeric_utc_offset_syntax(offset_string, discarded, discarded, optionally_discarded, optionally_discarded, optionally_discarded);
-}
-
 // 11.6.5 FormatTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formattimezoneoffsetstring
-DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
+ThrowCompletionOr<String> format_time_zone_offset_string(VM& vm, double offset_nanoseconds)
 {
     auto offset = static_cast<i64>(offset_nanoseconds);
 
@@ -246,9 +202,13 @@ DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
     // 11. If nanoseconds ≠ 0, then
     if (nanoseconds != 0) {
         // a. Let fraction be ToZeroPaddedDecimalString(nanoseconds, 9).
+        auto fraction = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", nanoseconds));
+
         // b. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
+        fraction = TRY_OR_THROW_OOM(vm, fraction.trim("0"sv, TrimMode::Right));
+
         // c. Let post be the string-concatenation of the code unit 0x003A (COLON), s, the code unit 0x002E (FULL STOP), and fraction.
-        builder.appendff(":{:02}.{}", seconds, DeprecatedString::formatted("{:09}", nanoseconds).trim("0"sv, TrimMode::Right));
+        builder.appendff(":{:02}.{}", seconds, fraction);
     }
     // 12. Else if seconds ≠ 0, then
     else if (seconds != 0) {
@@ -259,11 +219,11 @@ DeprecatedString format_time_zone_offset_string(double offset_nanoseconds)
     //    a. Let post be the empty String.
 
     // 14. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), m, and post.
-    return builder.to_deprecated_string();
+    return TRY_OR_THROW_OOM(vm, builder.to_string());
 }
 
 // 11.6.6 FormatISOTimeZoneOffsetString ( offsetNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-formatisotimezoneoffsetstring
-DeprecatedString format_iso_time_zone_offset_string(double offset_nanoseconds)
+ThrowCompletionOr<String> format_iso_time_zone_offset_string(VM& vm, double offset_nanoseconds)
 {
     // 1. Assert: offsetNanoseconds is an integer.
     VERIFY(trunc(offset_nanoseconds) == offset_nanoseconds);
@@ -286,7 +246,7 @@ DeprecatedString format_iso_time_zone_offset_string(double offset_nanoseconds)
     // 7. Let h be ToZeroPaddedDecimalString(hours, 2).
     // 8. Let m be ToZeroPaddedDecimalString(minutes, 2).
     // 9. Return the string-concatenation of sign, h, the code unit 0x003A (COLON), and m.
-    return DeprecatedString::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{:02}:{:02}", sign, (u32)hours, (u32)minutes));
 }
 
 // 11.6.7 ToTemporalTimeZone ( temporalTimeZoneLike ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaltimezone
@@ -349,19 +309,19 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, name);
 
             // ii. Set name to ! CanonicalizeTimeZoneName(name).
-            name = canonicalize_time_zone_name(name);
+            name = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, name));
         }
 
         // c. Return ! CreateTemporalTimeZone(name).
-        return MUST(create_temporal_time_zone(vm, name));
+        return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, name));
     }
 
     // 5. If parseResult.[[Z]] is true, return ! CreateTemporalTimeZone("UTC").
     if (parse_result.z)
-        return MUST(create_temporal_time_zone(vm, "UTC"sv));
+        return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, "UTC"sv));
 
     // 6. Return ! CreateTemporalTimeZone(parseResult.[[OffsetString]]).
-    return MUST(create_temporal_time_zone(vm, *parse_result.offset_string));
+    return MUST_OR_THROW_OOM(create_temporal_time_zone(vm, *parse_result.offset_string));
 }
 
 // 11.6.8 GetOffsetNanosecondsFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-getoffsetnanosecondsfor
@@ -393,13 +353,13 @@ ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, In
 }
 
 // 11.6.9 BuiltinTimeZoneGetOffsetStringFor ( timeZone, instant ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetoffsetstringfor
-ThrowCompletionOr<DeprecatedString> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
+ThrowCompletionOr<String> builtin_time_zone_get_offset_string_for(VM& vm, Value time_zone, Instant& instant)
 {
     // 1. Let offsetNanoseconds be ? GetOffsetNanosecondsFor(timeZone, instant).
     auto offset_nanoseconds = TRY(get_offset_nanoseconds_for(vm, time_zone, instant));
 
     // 2. Return ! FormatTimeZoneOffsetString(offsetNanoseconds).
-    return format_time_zone_offset_string(offset_nanoseconds);
+    return MUST_OR_THROW_OOM(format_time_zone_offset_string(vm, offset_nanoseconds));
 }
 
 // 11.6.10 BuiltinTimeZoneGetPlainDateTimeFor ( timeZone, instant, calendar ), https://tc39.es/proposal-temporal/#sec-temporal-builtintimezonegetplaindatetimefor

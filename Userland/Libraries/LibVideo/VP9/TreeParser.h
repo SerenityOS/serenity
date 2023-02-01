@@ -30,35 +30,6 @@ struct TokensContext {
 
 class TreeParser {
 public:
-    // FIXME: Move or remove this class once it is unused in the header.
-    class TreeSelection {
-    public:
-        union TreeSelectionValue {
-            int const* m_tree;
-            int m_value;
-        };
-
-        constexpr TreeSelection(int const* values)
-            : m_is_single_value(false)
-            , m_value { .m_tree = values }
-        {
-        }
-
-        constexpr TreeSelection(int value)
-            : m_is_single_value(true)
-            , m_value { .m_value = value }
-        {
-        }
-
-        bool is_single_value() const { return m_is_single_value; }
-        int single_value() const { return m_value.m_value; }
-        int const* tree() const { return m_value.m_tree; }
-
-    private:
-        bool m_is_single_value;
-        TreeSelectionValue m_value;
-    };
-
     static ErrorOr<Partition> parse_partition(BitStream&, ProbabilityTables const&, SyntaxElementCounter&, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, PartitionContextView above_partition_context, PartitionContextView left_partition_context, u32 row, u32 column, bool frame_is_intra);
     static ErrorOr<PredictionMode> parse_default_intra_mode(BitStream&, ProbabilityTables const&, BlockSubsize mi_size, FrameBlockContext above, FrameBlockContext left, Array<PredictionMode, 4> const& block_sub_modes, u8 index_x, u8 index_y);
     static ErrorOr<PredictionMode> parse_default_uv_mode(BitStream&, ProbabilityTables const&, PredictionMode y_mode);

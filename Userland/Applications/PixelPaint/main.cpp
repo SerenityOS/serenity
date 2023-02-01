@@ -31,7 +31,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -41,14 +40,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint"sv);
 
-    PixelPaint::g_icon_bag = TRY(PixelPaint::IconBag::try_create());
+    PixelPaint::g_icon_bag = TRY(PixelPaint::IconBag::create());
 
     auto window = GUI::Window::construct();
     window->set_title("Pixel Paint");
-    window->resize(800, 510);
+    window->resize(800, 520);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget = TRY(window->try_set_main_widget<PixelPaint::MainWidget>());
+    auto main_widget = TRY(window->set_main_widget<PixelPaint::MainWidget>());
 
     TRY(main_widget->initialize_menubar(*window));
 
@@ -74,10 +73,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     if (image_file) {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, image_file);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, image_file);
         if (response.is_error())
             return 1;
-        main_widget->open_image(response.value());
+        main_widget->open_image(response.release_value());
     } else {
         TRY(main_widget->create_default_image());
     }

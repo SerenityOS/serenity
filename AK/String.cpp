@@ -4,11 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Checked.h>
+#include <AK/FlyString.h>
 #include <AK/Format.h>
+#include <AK/MemMem.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <AK/Vector.h>
 #include <stdlib.h>
 
 namespace AK {
@@ -59,6 +62,9 @@ public:
         return m_hash;
     }
 
+    bool is_fly_string() const { return m_is_fly_string; }
+    void set_fly_string(bool is_fly_string) { m_is_fly_string = is_fly_string; }
+
 private:
     explicit StringData(size_t byte_count);
     StringData(StringData const& superstring, size_t start, size_t byte_count);
@@ -69,6 +75,7 @@ private:
     mutable unsigned m_hash { 0 };
     mutable bool m_has_hash { false };
     bool m_substring { false };
+    bool m_is_fly_string { false };
 
     u8 m_bytes_or_substring_data[0];
 };
@@ -95,13 +102,15 @@ StringData::StringData(StringData const& superstring, size_t start, size_t byte_
 
 StringData::~StringData()
 {
+    if (m_is_fly_string)
+        FlyString::did_destroy_fly_string_data({}, bytes_as_string_view());
     if (m_substring)
         substring_data().superstring->unref();
 }
 
 constexpr size_t allocation_size_for_string_data(size_t length)
 {
-    return sizeof(StringData) + (sizeof(char) * length) + sizeof(char);
+    return sizeof(StringData) + (sizeof(char) * length);
 }
 
 ErrorOr<NonnullRefPtr<StringData>> StringData::create_uninitialized(size_t byte_count, u8*& buffer)
@@ -161,11 +170,6 @@ String::String(NonnullRefPtr<Detail::StringData> data)
 {
 }
 
-String::String(ShortString short_string)
-    : m_short_string(short_string)
-{
-}
-
 String::String(String const& other)
     : m_data(other.m_data)
 {
@@ -199,16 +203,10 @@ String& String::operator=(String const& other)
     return *this;
 }
 
-String::~String()
+void String::destroy_string()
 {
     if (!is_short_string())
         m_data->unref();
-}
-
-String::String()
-{
-    // This is an empty string, it's always short and zero-length.
-    m_short_string.byte_count_and_short_string_flag = SHORT_STRING_FLAG;
 }
 
 ErrorOr<String> String::from_utf8(StringView view)
@@ -222,6 +220,44 @@ ErrorOr<String> String::from_utf8(StringView view)
     }
     auto data = TRY(Detail::StringData::from_utf8(view.characters_without_null_termination(), view.length()));
     return String { move(data) };
+}
+
+ErrorOr<String> String::repeated(u32 code_point, size_t count)
+{
+    VERIFY(is_unicode(code_point));
+
+    Array<u8, 4> code_point_as_utf8;
+    size_t i = 0;
+
+    size_t code_point_byte_length = UnicodeUtils::code_point_to_utf8(code_point, [&](auto byte) {
+        code_point_as_utf8[i++] = static_cast<u8>(byte);
+    });
+
+    auto copy_to_buffer = [&](u8* buffer) {
+        if (code_point_byte_length == 1) {
+            memset(buffer, code_point_as_utf8[0], count);
+            return;
+        }
+
+        for (i = 0; i < count; ++i)
+            memcpy(buffer + (i * code_point_byte_length), code_point_as_utf8.data(), code_point_byte_length);
+    };
+
+    auto total_byte_count = code_point_byte_length * count;
+
+    if (total_byte_count <= MAX_SHORT_STRING_BYTE_COUNT) {
+        ShortString short_string;
+        copy_to_buffer(short_string.storage);
+        short_string.byte_count_and_short_string_flag = (total_byte_count << 1) | SHORT_STRING_FLAG;
+
+        return String { short_string };
+    }
+
+    u8* buffer = nullptr;
+    auto new_string_data = TRY(Detail::StringData::create_uninitialized(total_byte_count, buffer));
+    copy_to_buffer(buffer);
+
+    return String { move(new_string_data) };
 }
 
 StringView String::bytes_as_string_view() const
@@ -248,10 +284,76 @@ ErrorOr<String> String::vformatted(StringView fmtstr, TypeErasedFormatParams& pa
     return builder.to_string();
 }
 
+ErrorOr<Vector<String>> String::split(u32 separator, SplitBehavior split_behavior) const
+{
+    return split_limit(separator, 0, split_behavior);
+}
+
+ErrorOr<Vector<String>> String::split_limit(u32 separator, size_t limit, SplitBehavior split_behavior) const
+{
+    Vector<String> result;
+
+    if (is_empty())
+        return result;
+
+    bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+
+    size_t substring_start = 0;
+    for (auto it = code_points().begin(); it != code_points().end() && (result.size() + 1) != limit; ++it) {
+        u32 code_point = *it;
+        if (code_point == separator) {
+            size_t substring_length = code_points().iterator_offset(it) - substring_start;
+            if (substring_length != 0 || keep_empty)
+                TRY(result.try_append(TRY(substring_from_byte_offset_with_shared_superstring(substring_start, substring_length))));
+            substring_start = code_points().iterator_offset(it) + it.underlying_code_point_length_in_bytes();
+        }
+    }
+    size_t tail_length = code_points().byte_length() - substring_start;
+    if (tail_length != 0 || keep_empty)
+        TRY(result.try_append(TRY(substring_from_byte_offset_with_shared_superstring(substring_start, tail_length))));
+    return result;
+}
+
+Optional<size_t> String::find_byte_offset(u32 code_point, size_t from_byte_offset) const
+{
+    auto code_points = this->code_points();
+    if (from_byte_offset >= code_points.byte_length())
+        return {};
+
+    for (auto it = code_points.iterator_at_byte_offset(from_byte_offset); it != code_points.end(); ++it) {
+        if (*it == code_point)
+            return code_points.byte_offset_of(it);
+    }
+
+    return {};
+}
+
+Optional<size_t> String::find_byte_offset(StringView substring, size_t from_byte_offset) const
+{
+    auto view = bytes_as_string_view();
+    if (from_byte_offset >= view.length())
+        return {};
+
+    auto index = memmem_optional(
+        view.characters_without_null_termination() + from_byte_offset, view.length() - from_byte_offset,
+        substring.characters_without_null_termination(), substring.length());
+
+    if (index.has_value())
+        return *index + from_byte_offset;
+    return {};
+}
+
 bool String::operator==(String const& other) const
 {
     if (is_short_string())
         return m_data == other.m_data;
+    return bytes_as_string_view() == other.bytes_as_string_view();
+}
+
+bool String::operator==(FlyString const& other) const
+{
+    if (reinterpret_cast<uintptr_t>(m_data) == other.data({}))
+        return true;
     return bytes_as_string_view() == other.bytes_as_string_view();
 }
 
@@ -267,6 +369,12 @@ ErrorOr<String> String::substring_from_byte_offset(size_t start, size_t byte_cou
     return String::from_utf8(bytes_as_string_view().substring_view(start, byte_count));
 }
 
+ErrorOr<String> String::substring_from_byte_offset(size_t start) const
+{
+    VERIFY(start <= bytes_as_string_view().length());
+    return substring_from_byte_offset(start, bytes_as_string_view().length() - start);
+}
+
 ErrorOr<String> String::substring_from_byte_offset_with_shared_superstring(size_t start, size_t byte_count) const
 {
     if (!byte_count)
@@ -274,6 +382,12 @@ ErrorOr<String> String::substring_from_byte_offset_with_shared_superstring(size_
     if (byte_count <= MAX_SHORT_STRING_BYTE_COUNT)
         return String::from_utf8(bytes_as_string_view().substring_view(start, byte_count));
     return String { TRY(Detail::StringData::create_substring(*m_data, start, byte_count)) };
+}
+
+ErrorOr<String> String::substring_from_byte_offset_with_shared_superstring(size_t start) const
+{
+    VERIFY(start <= bytes_as_string_view().length());
+    return substring_from_byte_offset_with_shared_superstring(start, bytes_as_string_view().length() - start);
 }
 
 bool String::operator==(char const* c_string) const
@@ -305,9 +419,49 @@ ErrorOr<String> String::replace(StringView needle, StringView replacement, Repla
     return StringUtils::replace(*this, needle, replacement, replace_mode);
 }
 
+ErrorOr<String> String::reverse() const
+{
+    // FIXME: This handles multi-byte code points, but not e.g. grapheme clusters.
+    // FIXME: We could avoid allocating a temporary vector if Utf8View supports reverse iteration.
+    auto code_point_length = code_points().length();
+
+    Vector<u32> code_points;
+    TRY(code_points.try_ensure_capacity(code_point_length));
+
+    for (auto code_point : this->code_points())
+        code_points.unchecked_append(code_point);
+
+    auto builder = TRY(StringBuilder::create(code_point_length * sizeof(u32)));
+    while (!code_points.is_empty())
+        TRY(builder.try_append_code_point(code_points.take_last()));
+
+    return builder.to_string();
+}
+
+ErrorOr<String> String::trim(Utf8View const& code_points_to_trim, TrimMode mode) const
+{
+    auto trimmed = code_points().trim(code_points_to_trim, mode);
+    return String::from_utf8(trimmed.as_string());
+}
+
+ErrorOr<String> String::trim(StringView code_points_to_trim, TrimMode mode) const
+{
+    return trim(Utf8View { code_points_to_trim }, mode);
+}
+
+bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
+{
+    return StringUtils::contains(bytes_as_string_view(), needle, case_sensitivity);
+}
+
+bool String::contains(char needle, CaseSensitivity case_sensitivity) const
+{
+    return contains(StringView { &needle, 1 }, case_sensitivity);
+}
+
 bool String::is_short_string() const
 {
-    return reinterpret_cast<uintptr_t>(m_data) & SHORT_STRING_FLAG;
+    return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));
 }
 
 ReadonlyBytes String::ShortString::bytes() const
@@ -323,6 +477,55 @@ size_t String::ShortString::byte_count() const
 unsigned Traits<String>::hash(String const& string)
 {
     return string.hash();
+}
+
+String String::fly_string_data_to_string(Badge<FlyString>, uintptr_t const& data)
+{
+    if (has_short_string_bit(data))
+        return String { *reinterpret_cast<ShortString const*>(&data) };
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    return String { NonnullRefPtr<Detail::StringData>(*string_data) };
+}
+
+StringView String::fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const& data)
+{
+    if (has_short_string_bit(data)) {
+        auto const* short_string = reinterpret_cast<ShortString const*>(&data);
+        return short_string->bytes();
+    }
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    return string_data->bytes_as_string_view();
+}
+
+uintptr_t String::to_fly_string_data(Badge<FlyString>) const
+{
+    return reinterpret_cast<uintptr_t>(m_data);
+}
+
+void String::ref_fly_string_data(Badge<FlyString>, uintptr_t data)
+{
+    if (has_short_string_bit(data))
+        return;
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    string_data->ref();
+}
+
+void String::unref_fly_string_data(Badge<FlyString>, uintptr_t data)
+{
+    if (has_short_string_bit(data))
+        return;
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    string_data->unref();
+}
+
+void String::did_create_fly_string(Badge<FlyString>) const
+{
+    VERIFY(!is_short_string());
+    m_data->set_fly_string(true);
 }
 
 DeprecatedString String::to_deprecated_string() const

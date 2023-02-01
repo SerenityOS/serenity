@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -34,7 +34,7 @@ public:
 
     void initialize_js_console(Badge<PageHost>);
 
-    void request_file(NonnullRefPtr<Web::FileRequest>&);
+    void request_file(Web::FileRequest);
 
     Optional<int> fd() { return socket().fd(); }
 
@@ -68,6 +68,7 @@ private:
     virtual void get_source() override;
     virtual void inspect_dom_tree() override;
     virtual Messages::WebContentServer::InspectDomNodeResponse inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> const& pseudo_element) override;
+    virtual void inspect_accessibility_tree() override;
     virtual Messages::WebContentServer::GetHoveredNodeIdResponse get_hovered_node_id() override;
     virtual Messages::WebContentServer::DumpLayoutTreeResponse dump_layout_tree() override;
     virtual void set_content_filters(Vector<DeprecatedString> const&) override;
@@ -75,6 +76,7 @@ private:
     virtual void set_preferred_color_scheme(Web::CSS::PreferredColorScheme const&) override;
     virtual void set_has_focus(bool) override;
     virtual void set_is_scripting_enabled(bool) override;
+    virtual void set_device_pixels_per_css_pixel(float) override;
     virtual void set_window_position(Gfx::IntPoint) override;
     virtual void set_window_size(Gfx::IntSize) override;
     virtual void handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id) override;
@@ -115,7 +117,7 @@ private:
     OwnPtr<WebContentConsoleClient> m_console_client;
     JS::Handle<JS::GlobalObject> m_console_global_object;
 
-    HashMap<int, NonnullRefPtr<Web::FileRequest>> m_requested_files {};
+    HashMap<int, Web::FileRequest> m_requested_files {};
     int last_id { 0 };
 };
 

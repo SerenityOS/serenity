@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
@@ -27,6 +27,7 @@ static bool is_platform_object(Type const& type)
         "AbortSignal"sv,
         "Attr"sv,
         "Blob"sv,
+        "CanvasGradient"sv,
         "CanvasRenderingContext2D"sv,
         "Document"sv,
         "DocumentType"sv,
@@ -266,7 +267,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
     for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = TRY(vm.argument(i).to_string(vm));
+        auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
         @cpp_name@.append(move(to_string_result));
     }
 )~~~");
@@ -277,14 +278,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
         @cpp_name@ = DeprecatedString::empty();
     } else {
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
     }
 )~~~");
             } else {
                 scoped_generator.append(R"~~~(
     DeprecatedString @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
             }
         } else {
@@ -294,7 +295,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
             @cpp_name@ = DeprecatedString::empty();
         else
-            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+            @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
     })~~~");
             if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
                 scoped_generator.append(R"~~~( else {
@@ -586,7 +587,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
 
         enum_generator.append(R"~~~(
-    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(vm));
+    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
         auto first = true;
         VERIFY(enumeration.translated_cpp_names.size() >= 1);
@@ -1152,7 +1153,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 14. If types includes a string type, then return the result of converting V to that type.
             // NOTE: Currently all string types are converted to String.
             union_generator.append(R"~~~(
-        return TRY(@js_name@@js_suffix@.to_string(vm));
+        return TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
         } else if (numeric_type && includes_bigint) {
             // 15. If types includes a numeric type and bigint, then return the result of converting V to either that numeric type or bigint.
@@ -2000,7 +2001,7 @@ class @constructor_class@ : public JS::NativeFunction {
     JS_OBJECT(@constructor_class@, JS::NativeFunction);
 public:
     explicit @constructor_class@(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~@constructor_class@() override;
 
     virtual JS::ThrowCompletionOr<JS::Value> call() override;
@@ -2182,12 +2183,12 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
     generator.append(R"~~~(
 }
 
-void @constructor_class@::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> @constructor_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
     define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@name@"), 0);
     define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
@@ -2217,6 +2218,7 @@ void @constructor_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
+    return {};
 }
 )~~~");
 
@@ -2254,7 +2256,7 @@ class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
     explicit @prototype_class@(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~@prototype_class@() override;
 private:
 )~~~");
@@ -2380,7 +2382,6 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/DOM/Event.h>
@@ -2458,7 +2459,7 @@ namespace Web::Bindings {
 {
 }
 
-void @prototype_class@::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
 {
     [[maybe_unused]] auto& vm = this->vm();
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable;
@@ -2576,7 +2577,8 @@ void @prototype_class@::initialize(JS::Realm& realm)
     generator.append(R"~~~(
     define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@name@"), JS::Attribute::Configurable);
 
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
+    return {};
 }
 )~~~");
 
@@ -2811,7 +2813,7 @@ class @prototype_class@ : public JS::Object {
     JS_OBJECT(@prototype_class@, JS::Object);
 public:
     explicit @prototype_class@(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~@prototype_class@() override;
 
 private:
@@ -2881,13 +2883,15 @@ namespace Web::Bindings {
 {
 }
 
-void @prototype_class@::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "Iterator"), JS::Attribute::Configurable);
+
+    return {};
 }
 
 static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)

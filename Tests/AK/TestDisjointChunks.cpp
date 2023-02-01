@@ -61,15 +61,15 @@ TEST_CASE(fixed_array)
     EXPECT(chunks.is_empty());
     chunks.append({});
     EXPECT(chunks.is_empty());
-    chunks.append(MUST(FixedArray<size_t>::try_create({ 0, 1 })));
+    chunks.append(MUST(FixedArray<size_t>::create({ 0, 1 })));
     EXPECT(!chunks.is_empty());
     chunks.append({});
-    chunks.append(MUST(FixedArray<size_t>::try_create(3)));
+    chunks.append(MUST(FixedArray<size_t>::create(3)));
     chunks.last_chunk()[0] = 2;
     chunks.last_chunk()[1] = 3;
     chunks.last_chunk()[2] = 4;
     chunks.append({});
-    chunks.append(MUST(FixedArray<size_t>::try_create(1)));
+    chunks.append(MUST(FixedArray<size_t>::create(1)));
     chunks.last_chunk()[0] = 5;
 
     for (size_t i = 0; i < 6u; ++i)

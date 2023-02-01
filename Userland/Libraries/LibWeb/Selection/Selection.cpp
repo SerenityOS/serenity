@@ -13,17 +13,24 @@ namespace Web::Selection {
 
 JS::NonnullGCPtr<Selection> Selection::create(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
 {
-    return realm->heap().allocate<Selection>(realm, realm, document);
+    return realm->heap().allocate<Selection>(realm, realm, document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Selection::Selection(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
     : PlatformObject(realm)
     , m_document(document)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Selection"));
 }
 
 Selection::~Selection() = default;
+
+JS::ThrowCompletionOr<void> Selection::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SelectionPrototype>(realm, "Selection"));
+
+    return {};
+}
 
 // https://w3c.github.io/selection-api/#dfn-empty
 bool Selection::is_empty() const
@@ -131,7 +138,7 @@ void Selection::add_range(JS::NonnullGCPtr<DOM::Range> range)
         return;
 
     // 3. Set this's range to range by a strong reference (not by making a copy).
-    m_range = range;
+    set_range(range);
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-removerange
@@ -139,7 +146,7 @@ WebIDL::ExceptionOr<void> Selection::remove_range(JS::NonnullGCPtr<DOM::Range> r
 {
     // The method must make this empty by disassociating its range if this's range is range.
     if (m_range == range) {
-        m_range = nullptr;
+        set_range(nullptr);
         return {};
     }
 
@@ -151,7 +158,7 @@ WebIDL::ExceptionOr<void> Selection::remove_range(JS::NonnullGCPtr<DOM::Range> r
 void Selection::remove_all_ranges()
 {
     // The method must make this empty by disassociating its range if this has an associated range.
-    m_range = nullptr;
+    set_range(nullptr);
 }
 
 // https://w3c.github.io/selection-api/#dom-selection-empty
@@ -186,7 +193,7 @@ WebIDL::ExceptionOr<void> Selection::collapse(JS::GCPtr<DOM::Node> node, unsigne
     TRY(new_range->set_start(*node, offset));
 
     // 6. Set this's range to newRange.
-    m_range = new_range;
+    set_range(new_range);
 
     return {};
 }
@@ -214,7 +221,7 @@ WebIDL::ExceptionOr<void> Selection::collapse_to_start()
     TRY(new_range->set_end(*anchor_node(), m_range->start_offset()));
 
     // 4. Then set this's range to the newly-created range.
-    m_range = new_range;
+    set_range(new_range);
     return {};
 }
 
@@ -234,7 +241,8 @@ WebIDL::ExceptionOr<void> Selection::collapse_to_end()
     TRY(new_range->set_end(*anchor_node(), m_range->end_offset()));
 
     // 4. Then set this's range to the newly-created range.
-    m_range = new_range;
+    set_range(new_range);
+
     return {};
 }
 
@@ -275,7 +283,7 @@ WebIDL::ExceptionOr<void> Selection::extend(JS::NonnullGCPtr<DOM::Node> node, un
     }
 
     // 8. Set this's range to newRange.
-    m_range = new_range;
+    set_range(new_range);
 
     // 9. If newFocus is before oldAnchor, set this's direction to backwards. Otherwise, set it to forwards.
     if (new_focus_node->is_before(old_anchor_node)) {
@@ -320,7 +328,7 @@ WebIDL::ExceptionOr<void> Selection::set_base_and_extent(JS::NonnullGCPtr<DOM::N
     }
 
     // 6. Set this's range to newRange.
-    m_range = new_range;
+    set_range(new_range);
 
     // 7. If focus is before anchor, set this's direction to backwards. Otherwise, set it to forwards
     // NOTE: "Otherwise" can be seen as "focus is equal to or after anchor".
@@ -350,7 +358,7 @@ WebIDL::ExceptionOr<void> Selection::select_all_children(JS::NonnullGCPtr<DOM::N
     TRY(new_range->set_end(node, child_count));
 
     // 5. Set this's range to newRange.
-    m_range = new_range;
+    set_range(new_range);
 
     // 6. Set this's direction to forwards.
     m_direction = Direction::Forwards;
@@ -422,6 +430,30 @@ DeprecatedString Selection::to_deprecated_string() const
     if (!m_range)
         return DeprecatedString::empty();
     return m_range->to_deprecated_string();
+}
+
+JS::NonnullGCPtr<DOM::Document> Selection::document() const
+{
+    return m_document;
+}
+
+JS::GCPtr<DOM::Range> Selection::range() const
+{
+    return m_range;
+}
+
+void Selection::set_range(JS::GCPtr<DOM::Range> range)
+{
+    if (m_range == range)
+        return;
+
+    if (m_range)
+        m_range->set_associated_selection({}, nullptr);
+
+    m_range = range;
+
+    if (m_range)
+        m_range->set_associated_selection({}, this);
 }
 
 }

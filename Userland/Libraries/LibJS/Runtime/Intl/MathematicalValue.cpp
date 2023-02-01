@@ -229,17 +229,18 @@ bool MathematicalValue::modulo_is_zero(Checked<i32> mod) const
         [](auto) -> bool { VERIFY_NOT_REACHED(); });
 }
 
-int MathematicalValue::logarithmic_floor() const
+ThrowCompletionOr<int> MathematicalValue::logarithmic_floor(VM& vm) const
 {
     return m_value.visit(
-        [](double value) {
+        [](double value) -> ThrowCompletionOr<int> {
             return static_cast<int>(floor(log10(value)));
         },
-        [](Crypto::SignedBigInteger const& value) {
+        [&](Crypto::SignedBigInteger const& value) -> ThrowCompletionOr<int> {
             // FIXME: Can we do this without string conversion?
-            return static_cast<int>(value.to_base(10).length() - 1);
+            auto value_as_string = TRY_OR_THROW_OOM(vm, value.to_base(10));
+            return static_cast<int>(value_as_string.bytes_as_string_view().length() - 1);
         },
-        [](auto) -> int { VERIFY_NOT_REACHED(); });
+        [](auto) -> ThrowCompletionOr<int> { VERIFY_NOT_REACHED(); });
 }
 
 bool MathematicalValue::is_equal_to(MathematicalValue const& other) const
@@ -293,12 +294,16 @@ bool MathematicalValue::is_zero() const
         [](auto) { return false; });
 }
 
-DeprecatedString MathematicalValue::to_deprecated_string() const
+ThrowCompletionOr<String> MathematicalValue::to_string(VM& vm) const
 {
     return m_value.visit(
-        [](double value) { return number_to_string(value, NumberToStringMode::WithoutExponent); },
-        [](Crypto::SignedBigInteger const& value) { return value.to_base(10); },
-        [](auto) -> DeprecatedString { VERIFY_NOT_REACHED(); });
+        [&](double value) {
+            return number_to_string(vm, value, NumberToStringMode::WithoutExponent);
+        },
+        [&](Crypto::SignedBigInteger const& value) -> ThrowCompletionOr<String> {
+            return TRY_OR_THROW_OOM(vm, value.to_base(10));
+        },
+        [&](auto) -> ThrowCompletionOr<String> { VERIFY_NOT_REACHED(); });
 }
 
 Value MathematicalValue::to_value(VM& vm) const

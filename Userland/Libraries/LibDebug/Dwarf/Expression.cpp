@@ -12,13 +12,12 @@
 
 namespace Debug::Dwarf::Expression {
 
-Value evaluate(ReadonlyBytes bytes, [[maybe_unused]] PtraceRegisters const& regs)
+ErrorOr<Value> evaluate(ReadonlyBytes bytes, [[maybe_unused]] PtraceRegisters const& regs)
 {
-    InputMemoryStream stream(bytes);
+    auto stream = TRY(FixedMemoryStream::construct(bytes));
 
-    while (!stream.eof()) {
-        u8 opcode = 0;
-        stream >> opcode;
+    while (!stream->is_eof()) {
+        auto opcode = TRY(stream->read_value<u8>());
 
         switch (static_cast<Operations>(opcode)) {
 

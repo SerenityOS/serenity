@@ -42,4 +42,13 @@ ThrowCompletionOr<void> ThrowableStringBuilder::append_code_point(u32 value)
     return {};
 }
 
+ThrowCompletionOr<String> ThrowableStringBuilder::to_string() const
+{
+    auto result = StringBuilder::to_string();
+    if (result.is_error())
+        return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length());
+
+    return result.release_value();
+}
+
 }

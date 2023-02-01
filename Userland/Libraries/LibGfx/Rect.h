@@ -898,7 +898,8 @@ public:
             center_within(other);
             return;
         case TextAlignment::TopCenter:
-            set_x(other.x() + other.width() / 2);
+            center_horizontally_within(other);
+            set_y(other.y());
             return;
         case TextAlignment::TopLeft:
             set_location(other.location());
@@ -916,7 +917,7 @@ public:
             center_vertically_within(other);
             return;
         case TextAlignment::BottomCenter:
-            set_x(other.x() + other.width() / 2);
+            center_horizontally_within(other);
             set_y(other.y() + other.height() - height());
             return;
         case TextAlignment::BottomLeft:

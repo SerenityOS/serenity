@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,9 +24,9 @@ InstantPrototype::InstantPrototype(Realm& realm)
 {
 }
 
-void InstantPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> InstantPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -51,6 +51,8 @@ void InstantPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
     define_native_function(realm, vm.names.toZonedDateTime, to_zoned_date_time, 1, attr);
     define_native_function(realm, vm.names.toZonedDateTimeISO, to_zoned_date_time_iso, 1, attr);
+
+    return {};
 }
 
 // 8.3.3 get Temporal.Instant.prototype.epochSeconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochseconds
@@ -67,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_seconds_getter)
     auto [s, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000'000 });
 
     // 5. Return 𝔽(s).
-    return Value((double)s.to_base(10).to_int<i64>().value());
+    return Value((double)s.to_base_deprecated(10).to_int<i64>().value());
 }
 
 // 8.3.4 get Temporal.Instant.prototype.epochMilliseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmilliseconds
@@ -84,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::epoch_milliseconds_getter)
     auto [ms, _] = ns.big_integer().divided_by(Crypto::UnsignedBigInteger { 1'000'000 });
 
     // 5. Return 𝔽(ms).
-    return Value((double)ms.to_base(10).to_int<i64>().value());
+    return Value((double)ms.to_base_deprecated(10).to_int<i64>().value());
 }
 
 // 8.3.5 get Temporal.Instant.prototype.epochMicroseconds, https://tc39.es/proposal-temporal/#sec-get-temporal.instant.prototype.epochmicroseconds
@@ -216,7 +218,7 @@ JS_DEFINE_NATIVE_FUNCTION(InstantPrototype::round)
     auto& smallest_unit = *smallest_unit_value;
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"sv));
 
     double maximum;
     // 8. If smallestUnit is "hour", then

@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
@@ -28,7 +28,7 @@ public:
         DeprecatedString key;
         Vector<DeprecatedString> parameters;
         DeprecatedString value;
-        FlyString filename;
+        DeprecatedFlyString filename;
         size_t line { 0 };
         size_t column { 0 };
     };

@@ -48,13 +48,21 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 StyleSheetList* StyleSheetList::create(DOM::Document& document)
 {
     auto& realm = document.realm();
-    return realm.heap().allocate<StyleSheetList>(realm, document);
+    return realm.heap().allocate<StyleSheetList>(realm, document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 StyleSheetList::StyleSheetList(DOM::Document& document)
-    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(document.realm(), "StyleSheetList"))
+    : Bindings::LegacyPlatformObject(document.realm())
     , m_document(document)
 {
+}
+
+JS::ThrowCompletionOr<void> StyleSheetList::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::StyleSheetListPrototype>(realm, "StyleSheetList"));
+
+    return {};
 }
 
 void StyleSheetList::visit_edges(Cell::Visitor& visitor)

@@ -42,9 +42,13 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     WebIDL::ExceptionOr<void> delete_row(long index);
 
+    // https://www.w3.org/TR/html-aria/#el-table
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::table; }
+
 private:
     HTMLTableElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;

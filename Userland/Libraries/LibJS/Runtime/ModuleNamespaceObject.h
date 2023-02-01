@@ -29,14 +29,14 @@ public:
     virtual ThrowCompletionOr<bool> internal_set(PropertyKey const&, Value value, Value receiver) override;
     virtual ThrowCompletionOr<bool> internal_delete(PropertyKey const&) override;
     virtual ThrowCompletionOr<MarkedVector<Value>> internal_own_property_keys() const override;
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
 
 private:
-    ModuleNamespaceObject(Realm&, Module* module, Vector<FlyString> exports);
+    ModuleNamespaceObject(Realm&, Module* module, Vector<DeprecatedFlyString> exports);
 
     // FIXME: UHHH how do we want to store this to avoid cycles but be safe??
-    Module* m_module;            // [[Module]]
-    Vector<FlyString> m_exports; // [[Exports]]
+    Module* m_module;                      // [[Module]]
+    Vector<DeprecatedFlyString> m_exports; // [[Exports]]
 };
 
 }

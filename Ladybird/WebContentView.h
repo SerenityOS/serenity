@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,14 +17,13 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/StandardCursor.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/CSS/Selector.h>
-#include <LibWebView/ViewImplementation.h>
-
 #include <LibWeb/Forward.h>
+#include <LibWebView/ViewImplementation.h>
 #include <QAbstractScrollArea>
 #include <QPointer>
-
-#include "DOMNodeProperties.h"
+#include <QSocketNotifier>
 
 class QTextEdit;
 class QLineEdit;
@@ -39,12 +39,6 @@ class WebContentClient;
 
 using WebView::WebContentClient;
 
-enum class ColorScheme {
-    Auto,
-    Light,
-    Dark,
-};
-
 class Tab;
 
 class WebContentView final
@@ -54,9 +48,6 @@ class WebContentView final
 public:
     explicit WebContentView(StringView webdriver_content_ipc_path);
     virtual ~WebContentView() override;
-
-    void load(AK::URL const&);
-    void load_html(StringView html, AK::URL const&);
 
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
@@ -87,6 +78,8 @@ public:
     virtual void mouseMoveEvent(QMouseEvent*) override;
     virtual void mousePressEvent(QMouseEvent*) override;
     virtual void mouseReleaseEvent(QMouseEvent*) override;
+    virtual void dragEnterEvent(QDragEnterEvent*) override;
+    virtual void dropEvent(QDropEvent*) override;
     virtual void keyPressEvent(QKeyEvent* event) override;
     virtual void keyReleaseEvent(QKeyEvent* event) override;
     virtual void showEvent(QShowEvent*) override;
@@ -95,22 +88,16 @@ public:
     virtual void focusOutEvent(QFocusEvent*) override;
     virtual bool event(QEvent*) override;
 
-    void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
-
-    void get_source();
-
-    void run_javascript(DeprecatedString const& js_source);
-
     void did_output_js_console_message(i32 message_index);
     void did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages);
 
     void show_js_console();
     void show_inspector();
 
+    ErrorOr<String> dump_layout_tree();
+
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
-
-    void set_color_scheme(ColorScheme);
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
@@ -144,6 +131,7 @@ public:
     virtual void notify_server_did_get_source(const AK::URL& url, DeprecatedString const& source) override;
     virtual void notify_server_did_get_dom_tree(DeprecatedString const& dom_tree) override;
     virtual void notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& specified_style, DeprecatedString const& computed_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
+    virtual void notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree) override;
     virtual void notify_server_did_output_js_console_message(i32 message_index) override;
     virtual void notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages) override;
     virtual void notify_server_did_change_favicon(Gfx::Bitmap const& favicon) override;
@@ -175,6 +163,7 @@ signals:
     void navigate_forward();
     void refresh();
     void restore_window();
+    void urls_dropped(QList<QUrl> const&);
     Gfx::IntPoint reposition_window(Gfx::IntPoint);
     Gfx::IntSize resize_window(Gfx::IntSize);
     Gfx::IntRect maximize_window();
@@ -182,6 +171,10 @@ signals:
     Gfx::IntRect fullscreen_window();
 
 private:
+    // ^WebView::ViewImplementation
+    virtual void create_client() override;
+    virtual void update_zoom() override;
+
     void request_repaint();
     void update_viewport_rect();
     void handle_resize();
@@ -190,10 +183,7 @@ private:
     void ensure_inspector_widget();
 
     bool is_inspector_open() const;
-    void inspect_dom_tree();
-    void clear_inspected_dom_node();
     void close_sub_widgets();
-    ErrorOr<Ladybird::DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element);
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
@@ -205,27 +195,8 @@ private:
 
     Gfx::IntRect m_viewport_rect;
 
-    void create_client();
-    WebContentClient& client();
-
     void handle_web_content_process_crash();
-
-    AK::URL m_url;
-
-    struct SharedBitmap {
-        i32 id { -1 };
-        i32 pending_paints { 0 };
-        RefPtr<Gfx::Bitmap> bitmap;
-    };
-
-    struct ClientState {
-        RefPtr<WebContentClient> client;
-        SharedBitmap front_bitmap;
-        SharedBitmap back_bitmap;
-        i32 next_bitmap_id { 0 };
-        bool has_usable_bitmap { false };
-        bool got_repaint_requests_while_painting { false };
-    } m_client_state;
+    QSocketNotifier m_web_content_notifier { QSocketNotifier::Type::Read };
 
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
 

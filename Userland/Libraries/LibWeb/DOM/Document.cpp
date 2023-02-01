@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -53,6 +53,7 @@
 #include <LibWeb/HTML/HTMLLinkElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLTitleElement.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
@@ -289,7 +290,7 @@ JS::NonnullGCPtr<Document> Document::construct_impl(JS::Realm& realm)
 
 JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url)
 {
-    return realm.heap().allocate<Document>(realm, realm, url);
+    return realm.heap().allocate<Document>(realm, realm, url).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Document::Document(JS::Realm& realm, const AK::URL& url)
@@ -297,8 +298,6 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
     , m_style_computer(make<CSS::StyleComputer>(*this))
     , m_url(url)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Document"));
-
     HTML::main_thread_event_loop().register_document({}, *this);
 
     m_style_update_timer = Platform::Timer::create_single_shot(0, [this] {
@@ -313,6 +312,14 @@ Document::Document(JS::Realm& realm, const AK::URL& url)
 Document::~Document()
 {
     HTML::main_thread_event_loop().unregister_document({}, *this);
+}
+
+JS::ThrowCompletionOr<void> Document::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
+
+    return {};
 }
 
 void Document::visit_edges(Cell::Visitor& visitor)
@@ -381,7 +388,7 @@ WebIDL::ExceptionOr<void> Document::write(Vector<DeprecatedString> const& string
     StringBuilder builder;
     builder.join(""sv, strings);
 
-    return run_the_document_write_steps(builder.build());
+    return run_the_document_write_steps(builder.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-writeln
@@ -391,7 +398,7 @@ WebIDL::ExceptionOr<void> Document::writeln(Vector<DeprecatedString> const& stri
     builder.join(""sv, strings);
     builder.append("\n"sv);
 
-    return run_the_document_write_steps(builder.build());
+    return run_the_document_write_steps(builder.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#document-write-steps
@@ -680,7 +687,7 @@ void Document::set_title(DeprecatedString const& title)
     }
 
     title_element->remove_all_children(true);
-    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title)));
+    MUST(title_element->append_child(heap().allocate<Text>(realm(), *this, title).release_allocated_value_but_fixme_should_propagate_errors()));
 
     if (auto* page = this->page()) {
         if (browsing_context() == &page->top_level_browsing_context())
@@ -869,6 +876,8 @@ void Document::update_layout()
             page->client().page_did_layout();
     }
 
+    m_layout_root->recompute_selection_states();
+
     m_needs_layout = false;
     m_layout_update_timer->stop();
 }
@@ -1018,9 +1027,9 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString
     });
 }
 
-JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(FlyString const& class_names)
+JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
-    Vector<FlyString> list_of_class_names;
+    Vector<DeprecatedFlyString> list_of_class_names;
     for (auto& name : class_names.view().split_view(' ')) {
         list_of_class_names.append(name);
     }
@@ -1180,7 +1189,7 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyString const& a_local_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(DeprecatedFlyString const& a_local_name)
 {
     auto local_name = a_local_name;
 
@@ -1196,7 +1205,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(FlyStrin
     // FIXME: 4. If options is a dictionary and options["is"] exists, then set is to it.
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
-    FlyString namespace_;
+    DeprecatedFlyString namespace_;
     if (document_type() == Type::HTML || content_type() == "application/xhtml+xml"sv)
         namespace_ = Namespace::HTML;
 
@@ -1221,17 +1230,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
 {
-    return heap().allocate<DocumentFragment>(realm(), *this);
+    return heap().allocate<DocumentFragment>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Text> Document::create_text_node(DeprecatedString const& data)
 {
-    return heap().allocate<Text>(realm(), *this, data);
+    return heap().allocate<Text>(realm(), *this, data).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Comment> Document::create_comment(DeprecatedString const& data)
 {
-    return heap().allocate<Comment>(realm(), *this, data);
+    return heap().allocate<Comment>(realm(), *this, data).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createprocessinginstruction
@@ -1242,7 +1251,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_pr
     // FIXME: 2. If data contains the string "?>", then throw an "InvalidCharacterError" DOMException.
 
     // 3. Return a new ProcessingInstruction node, with target set to target, data set to data, and node document set to this.
-    return JS::NonnullGCPtr { *heap().allocate<ProcessingInstruction>(realm(), *this, data, target) };
+    return MUST_OR_THROW_OOM(heap().allocate<ProcessingInstruction>(realm(), *this, data, target));
 }
 
 JS::NonnullGCPtr<Range> Document::create_range()
@@ -1661,7 +1670,7 @@ bool Document::is_active() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
-Bindings::LocationObject* Document::location()
+HTML::Location* Document::location()
 {
     // The Document object's location attribute's getter must return this Document object's relevant global object's Location object,
     // if this Document object is fully active, and null otherwise.
@@ -1669,7 +1678,7 @@ Bindings::LocationObject* Document::location()
     if (!is_fully_active())
         return nullptr;
 
-    return window().location_object();
+    return window().location();
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden
@@ -2336,6 +2345,25 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
     }
     // 2. Return doc.
     return *this;
+}
+
+DeprecatedString Document::dump_accessibility_tree_as_json()
+{
+    StringBuilder builder;
+    auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr);
+    build_accessibility_tree(*&accessibility_tree);
+    auto json = MUST(JsonObjectSerializer<>::try_create(builder));
+
+    // Empty document
+    if (!accessibility_tree->value()) {
+        MUST(json.add("type"sv, "element"sv));
+        MUST(json.add("role"sv, "document"sv));
+    } else {
+        accessibility_tree->serialize_tree_as_json(json);
+    }
+
+    MUST(json.finish());
+    return builder.to_deprecated_string();
 }
 
 }

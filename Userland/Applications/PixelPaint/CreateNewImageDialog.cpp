@@ -27,31 +27,31 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     set_icon(parent_window->icon());
     resize(200, 220);
 
-    auto& main_widget = set_main_widget<GUI::Widget>();
-    main_widget.set_fill_with_background_color(true);
+    auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget.set_layout<GUI::VerticalBoxLayout>();
+    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins(4);
 
-    auto& name_label = main_widget.add<GUI::Label>("Name:");
+    auto& name_label = main_widget->add<GUI::Label>("Name:");
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_name_textbox = main_widget.add<GUI::TextBox>();
+    m_name_textbox = main_widget->add<GUI::TextBox>();
     m_name_textbox->on_change = [this] {
         m_image_name = m_name_textbox->text();
     };
     auto default_name = Config::read_string("PixelPaint"sv, "NewImage"sv, "Name"sv);
     m_name_textbox->set_text(default_name);
 
-    auto& width_label = main_widget.add<GUI::Label>("Width:");
+    auto& width_label = main_widget->add<GUI::Label>("Width:");
     width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto& width_spinbox = main_widget.add<GUI::SpinBox>();
+    auto& width_spinbox = main_widget->add<GUI::SpinBox>();
 
-    auto& height_label = main_widget.add<GUI::Label>("Height:");
+    auto& height_label = main_widget->add<GUI::Label>("Height:");
     height_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto& height_spinbox = main_widget.add<GUI::SpinBox>();
+    auto& height_spinbox = main_widget->add<GUI::SpinBox>();
 
     enum class BackgroundIndex {
         Transparent = 0,
@@ -81,10 +81,10 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         return BackgroundIndex::Custom;
     }();
 
-    auto& background_label = main_widget.add<GUI::Label>("Background:");
+    auto& background_label = main_widget->add<GUI::Label>("Background:");
     background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    auto& background_color_combo = main_widget.add<GUI::ComboBox>();
-    auto& background_color_input = main_widget.add<GUI::ColorInput>();
+    auto& background_color_combo = main_widget->add<GUI::ComboBox>();
+    auto& background_color_input = main_widget->add<GUI::ColorInput>();
     background_color_input.set_visible(false);
     background_color_combo.set_only_allow_values_from_model(true);
     background_color_combo.set_model(*GUI::ItemListModel<StringView, decltype(suggested_backgrounds)>::create(suggested_backgrounds));
@@ -110,10 +110,10 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         m_background_color = background_color_input.color();
     };
 
-    auto& set_defaults_checkbox = main_widget.add<GUI::CheckBox>();
+    auto& set_defaults_checkbox = main_widget->add<GUI::CheckBox>();
     set_defaults_checkbox.set_text("Use these settings as default");
 
-    auto& button_container = main_widget.add<GUI::Widget>();
+    auto& button_container = main_widget->add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
 
     auto& ok_button = button_container.add<GUI::Button>("OK");

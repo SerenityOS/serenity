@@ -102,7 +102,6 @@ public:
     static constexpr SeekMode DEFAULT_SEEK_MODE = SeekMode::Accurate;
 
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(Core::Object& event_handler, StringView file);
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(Core::Object& event_handler, Span<u8> data);
 
     PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder);
 
@@ -155,10 +154,10 @@ private:
     NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
     Optional<FrameQueueItem> m_next_frame;
 
-    NonnullRefPtr<Core::Timer> m_present_timer;
+    RefPtr<Core::Timer> m_present_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
-    NonnullRefPtr<Core::Timer> m_decode_timer;
+    RefPtr<Core::Timer> m_decode_timer;
 
     u64 m_skipped_frames;
 };
@@ -210,9 +209,6 @@ public:
     {
     }
     virtual ~PlaybackStatusChangeEvent() = default;
-
-    PlaybackStatus status();
-    PlaybackStatus previous_status();
 
 private:
     PlaybackStatus m_status;

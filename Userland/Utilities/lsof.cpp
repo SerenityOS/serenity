@@ -87,9 +87,9 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     json.as_array().for_each([pid, &files](JsonValue const& object) {
         OpenFile open_file;
         open_file.pid = pid;
-        open_file.fd = object.as_object().get("fd"sv).to_int();
+        open_file.fd = object.as_object().get_deprecated("fd"sv).to_int();
 
-        DeprecatedString name = object.as_object().get("absolute_path"sv).to_deprecated_string();
+        DeprecatedString name = object.as_object().get_deprecated("absolute_path"sv).to_deprecated_string();
         VERIFY(parse_name(name, open_file));
         open_file.full_name = name;
 

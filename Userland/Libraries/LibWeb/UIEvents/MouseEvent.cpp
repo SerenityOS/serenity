@@ -13,7 +13,7 @@
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent::MouseEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
     : UIEvent(realm, event_name, event_init)
     , m_offset_x(event_init.offset_x)
     , m_offset_y(event_init.offset_y)
@@ -24,11 +24,18 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_button(event_init.button)
     , m_buttons(event_init.buttons)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "MouseEvent"));
     set_event_characteristics();
 }
 
 MouseEvent::~MouseEvent() = default;
+
+JS::ThrowCompletionOr<void> MouseEvent::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MouseEventPrototype>(realm, "MouseEvent"));
+
+    return {};
+}
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button
 static i16 determine_button(unsigned mouse_button)
@@ -49,12 +56,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-MouseEvent* MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent* MouseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
 {
-    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
-MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
+MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = static_cast<double>(offset.x().value());

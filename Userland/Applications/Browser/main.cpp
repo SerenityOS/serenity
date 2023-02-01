@@ -88,7 +88,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!Browser::g_webdriver_content_ipc_path.is_empty())
         specified_urls.empend("about:blank");
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));

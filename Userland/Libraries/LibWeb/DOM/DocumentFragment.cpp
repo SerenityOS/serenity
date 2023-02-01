@@ -12,7 +12,14 @@ namespace Web::DOM {
 DocumentFragment::DocumentFragment(Document& document)
     : ParentNode(document, NodeType::DOCUMENT_FRAGMENT_NODE)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "DocumentFragment"));
+}
+
+JS::ThrowCompletionOr<void> DocumentFragment::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentFragmentPrototype>(realm, "DocumentFragment"));
+
+    return {};
 }
 
 void DocumentFragment::visit_edges(Cell::Visitor& visitor)
@@ -30,7 +37,7 @@ void DocumentFragment::set_host(Web::DOM::Element* element)
 JS::NonnullGCPtr<DocumentFragment> DocumentFragment::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return realm.heap().allocate<DocumentFragment>(realm, window.associated_document());
+    return realm.heap().allocate<DocumentFragment>(realm, window.associated_document()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 }

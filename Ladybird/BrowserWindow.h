@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,10 +32,15 @@ public:
 
     int tab_index(Tab*);
 
+    enum class Activate {
+        Yes,
+        No,
+    };
+
 public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
-    void new_tab();
+    void new_tab(QString const&, Activate);
     void close_tab(int index);
     void close_current_tab();
     void open_next_tab();
@@ -42,6 +48,11 @@ public slots:
     void enable_auto_color_scheme();
     void enable_light_color_scheme();
     void enable_dark_color_scheme();
+    void zoom_in();
+    void zoom_out();
+    void reset_zoom();
+    void select_all();
+    void copy_selected_text();
 
 private:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");

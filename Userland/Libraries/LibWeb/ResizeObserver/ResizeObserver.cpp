@@ -15,16 +15,23 @@ JS::NonnullGCPtr<ResizeObserver> ResizeObserver::construct_impl(JS::Realm& realm
 {
     // FIXME: Implement
     (void)callback;
-    return realm.heap().allocate<ResizeObserver>(realm, realm);
+    return realm.heap().allocate<ResizeObserver>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ResizeObserver::ResizeObserver(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "ResizeObserver"));
 }
 
 ResizeObserver::~ResizeObserver() = default;
+
+JS::ThrowCompletionOr<void> ResizeObserver::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::ResizeObserverPrototype>(realm, "ResizeObserver"));
+
+    return {};
+}
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-observe
 void ResizeObserver::observe(DOM::Element& target, ResizeObserverOptions options)

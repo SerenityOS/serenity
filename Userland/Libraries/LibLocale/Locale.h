@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,8 +7,9 @@
 #pragma once
 
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
@@ -17,29 +18,29 @@
 namespace Locale {
 
 struct LanguageID {
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(LanguageID const&) const = default;
 
     bool is_root { false };
-    Optional<DeprecatedString> language {};
-    Optional<DeprecatedString> script {};
-    Optional<DeprecatedString> region {};
-    Vector<DeprecatedString> variants {};
+    Optional<String> language {};
+    Optional<String> script {};
+    Optional<String> region {};
+    Vector<String> variants {};
 };
 
 struct Keyword {
-    DeprecatedString key {};
-    DeprecatedString value {};
+    String key {};
+    String value {};
 };
 
 struct LocaleExtension {
-    Vector<DeprecatedString> attributes {};
+    Vector<String> attributes {};
     Vector<Keyword> keywords {};
 };
 
 struct TransformedField {
-    DeprecatedString key {};
-    DeprecatedString value {};
+    String key {};
+    String value {};
 };
 
 struct TransformedExtension {
@@ -49,13 +50,13 @@ struct TransformedExtension {
 
 struct OtherExtension {
     char key {};
-    DeprecatedString value {};
+    String value {};
 };
 
 using Extension = AK::Variant<LocaleExtension, TransformedExtension, OtherExtension>;
 
 struct LocaleID {
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
 
     template<typename ExtensionType>
     Vector<Extension> remove_extension_type()
@@ -75,7 +76,7 @@ struct LocaleID {
 
     LanguageID language_id {};
     Vector<Extension> extensions {};
-    Vector<DeprecatedString> private_use_extensions {};
+    Vector<String> private_use_extensions {};
 };
 
 enum class Style : u8 {
@@ -136,13 +137,13 @@ constexpr bool is_unicode_variant_subtag(StringView subtag)
 
 bool is_type_identifier(StringView);
 
-Optional<LanguageID> parse_unicode_language_id(StringView);
-Optional<LocaleID> parse_unicode_locale_id(StringView);
+ErrorOr<Optional<LanguageID>> parse_unicode_language_id(StringView);
+ErrorOr<Optional<LocaleID>> parse_unicode_locale_id(StringView);
 
-void canonicalize_unicode_extension_values(StringView key, DeprecatedString& value, bool remove_true);
-Optional<DeprecatedString> canonicalize_unicode_locale_id(LocaleID&);
+ErrorOr<void> canonicalize_unicode_extension_values(StringView key, String& value, bool remove_true);
+ErrorOr<Optional<String>> canonicalize_unicode_locale_id(LocaleID&);
 
-DeprecatedString const& default_locale();
+StringView default_locale();
 bool is_locale_available(StringView locale);
 
 Span<StringView const> get_available_keyword_values(StringView key);
@@ -172,11 +173,11 @@ Optional<KeywordHours> keyword_hc_from_string(StringView hc);
 Optional<KeywordColCaseFirst> keyword_kf_from_string(StringView kf);
 Optional<KeywordColNumeric> keyword_kn_from_string(StringView kn);
 Optional<KeywordNumbers> keyword_nu_from_string(StringView nu);
-Vector<StringView> get_keywords_for_locale(StringView locale, StringView key);
-Optional<StringView> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
+ErrorOr<Vector<StringView>> get_keywords_for_locale(StringView locale, StringView key);
+ErrorOr<Optional<StringView>> get_preferred_keyword_value_for_locale(StringView locale, StringView key);
 
 Optional<DisplayPattern> get_locale_display_patterns(StringView locale);
-Optional<DeprecatedString> format_locale_for_display(StringView locale, LocaleID locale_id);
+ErrorOr<Optional<String>> format_locale_for_display(StringView locale, LocaleID locale_id);
 
 Optional<StringView> get_locale_language_mapping(StringView locale, StringView language);
 Optional<StringView> get_locale_territory_mapping(StringView locale, StringView territory);
@@ -201,12 +202,12 @@ Optional<StringView> resolve_territory_alias(StringView territory);
 Optional<StringView> resolve_script_tag_alias(StringView script_tag);
 Optional<StringView> resolve_variant_alias(StringView variant);
 Optional<StringView> resolve_subdivision_alias(StringView subdivision);
-void resolve_complex_language_aliases(LanguageID& language_id);
+ErrorOr<void> resolve_complex_language_aliases(LanguageID& language_id);
 
-Optional<LanguageID> add_likely_subtags(LanguageID const& language_id);
-Optional<LanguageID> remove_likely_subtags(LanguageID const& language_id);
+ErrorOr<Optional<LanguageID>> add_likely_subtags(LanguageID const& language_id);
+ErrorOr<Optional<LanguageID>> remove_likely_subtags(LanguageID const& language_id);
 
-Optional<DeprecatedString> resolve_most_likely_territory(LanguageID const& language_id);
-DeprecatedString resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
+ErrorOr<Optional<String>> resolve_most_likely_territory(LanguageID const& language_id);
+ErrorOr<String> resolve_most_likely_territory_alias(LanguageID const& language_id, StringView territory_alias);
 
 }

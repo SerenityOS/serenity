@@ -17,7 +17,7 @@ SVGSVGBox::SVGSVGBox(DOM::Document& document, SVG::SVGSVGElement& element, Nonnu
 {
 }
 
-RefPtr<Painting::Paintable> SVGSVGBox::create_paintable() const
+JS::GCPtr<Painting::Paintable> SVGSVGBox::create_paintable() const
 {
     return Painting::SVGSVGPaintable::create(*this);
 }

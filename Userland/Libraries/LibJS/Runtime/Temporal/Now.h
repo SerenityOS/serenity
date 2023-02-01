@@ -15,7 +15,7 @@ class Now final : public Object {
     JS_OBJECT(Now, Object);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~Now() override = default;
 
 private:

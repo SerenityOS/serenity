@@ -19,7 +19,7 @@ TESTJS_GLOBAL_FUNCTION(is_strict_mode, isStrictMode, 0)
 
 TESTJS_GLOBAL_FUNCTION(can_parse_source, canParseSource)
 {
-    auto source = TRY(vm.argument(0).to_string(vm));
+    auto source = TRY(vm.argument(0).to_deprecated_string(vm));
     auto parser = JS::Parser(JS::Lexer(source));
     (void)parser.parse_program();
     return JS::Value(!parser.has_errors());
@@ -62,14 +62,14 @@ TESTJS_GLOBAL_FUNCTION(mark_as_garbage, markAsGarbage)
         return execution_context->lexical_environment != nullptr;
     });
     if (!outer_environment.has_value())
-        return vm.throw_completion<JS::ReferenceError>(JS::ErrorType::UnknownIdentifier, variable_name.deprecated_string());
+        return vm.throw_completion<JS::ReferenceError>(JS::ErrorType::UnknownIdentifier, TRY(variable_name.deprecated_string()));
 
-    auto reference = TRY(vm.resolve_binding(variable_name.deprecated_string(), outer_environment.value()->lexical_environment));
+    auto reference = TRY(vm.resolve_binding(TRY(variable_name.deprecated_string()), outer_environment.value()->lexical_environment));
 
     auto value = TRY(reference.get_value(vm));
 
     if (!can_be_held_weakly(value))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, DeprecatedString::formatted("Variable with name {}", variable_name.deprecated_string()));
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::CannotBeHeldWeakly, DeprecatedString::formatted("Variable with name {}", TRY(variable_name.deprecated_string())));
 
     vm.heap().uproot_cell(&value.as_cell());
     TRY(reference.delete_(vm));

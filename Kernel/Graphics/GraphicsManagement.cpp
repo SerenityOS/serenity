@@ -120,40 +120,35 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
     return device_identifier.class_code().value() == 0x3;
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
+struct PCIGraphicsDriverInitializer {
+    ErrorOr<bool> (*probe)(PCI::DeviceIdentifier const&) = nullptr;
+    ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
+};
+
+static constexpr PCIGraphicsDriverInitializer s_initializers[] = {
+    { IntelNativeGraphicsAdapter::probe, IntelNativeGraphicsAdapter::create },
+    { BochsGraphicsAdapter::probe, BochsGraphicsAdapter::create },
+    { VirtIOGraphicsAdapter::probe, VirtIOGraphicsAdapter::create },
+    { VMWareGraphicsAdapter::probe, VMWareGraphicsAdapter::create },
+};
+
+UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
-    LockRefPtr<GenericGraphicsAdapter> adapter;
-
-    if (!adapter) {
-        switch (device_identifier.hardware_id().vendor_id) {
-        case PCI::VendorID::QEMUOld:
-            if (device_identifier.hardware_id().device_id == 0x1111)
-                adapter = BochsGraphicsAdapter::initialize(device_identifier);
-            break;
-        case PCI::VendorID::VirtualBox:
-            if (device_identifier.hardware_id().device_id == 0xbeef)
-                adapter = BochsGraphicsAdapter::initialize(device_identifier);
-            break;
-        case PCI::VendorID::Intel:
-            adapter = IntelNativeGraphicsAdapter::initialize(device_identifier);
-            break;
-        case PCI::VendorID::VirtIO:
-            dmesgln("Graphics: Using VirtIO console");
-            adapter = VirtIOGraphicsAdapter::initialize(device_identifier);
-            break;
-        case PCI::VendorID::VMWare:
-            adapter = VMWareGraphicsAdapter::try_initialize(device_identifier);
-            break;
-        default:
-            break;
+    for (auto& initializer : s_initializers) {
+        auto initializer_probe_found_driver_match_or_error = initializer.probe(device_identifier);
+        if (initializer_probe_found_driver_match_or_error.is_error()) {
+            dmesgln("Graphics: Failed to probe device {}, due to {}", device_identifier.address(), initializer_probe_found_driver_match_or_error.error());
+            continue;
+        }
+        auto initializer_probe_found_driver_match = initializer_probe_found_driver_match_or_error.release_value();
+        if (initializer_probe_found_driver_match) {
+            auto adapter = TRY(initializer.create(device_identifier));
+            TRY(m_graphics_devices.try_append(*adapter));
+            return {};
         }
     }
-
-    if (!adapter)
-        return false;
-    m_graphics_devices.append(*adapter);
-    return true;
+    return {};
 }
 
 UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_display_connector()
@@ -239,7 +234,8 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         // framebuffer console will take the control instead.
         if (!is_vga_compatible_pci_device(device_identifier) && !is_display_controller_pci_device(device_identifier))
             return;
-        determine_and_initialize_graphics_device(device_identifier);
+        if (auto result = determine_and_initialize_graphics_device(device_identifier); result.is_error())
+            dbgln("Failed to initialize device {}, due to {}", device_identifier.address(), result.error());
     }));
 
     // Note: If we failed to find any graphics device to be used natively, but the

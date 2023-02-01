@@ -20,9 +20,9 @@ class E1000NetworkAdapter : public NetworkAdapter
     , public PCI::Device
     , public IRQHandler {
 public:
-    static ErrorOr<LockRefPtr<E1000NetworkAdapter>> try_to_initialize(PCI::DeviceIdentifier const&);
-
-    virtual bool initialize();
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~E1000NetworkAdapter() override;
 
@@ -33,12 +33,20 @@ public:
 
     virtual StringView purpose() const override { return class_name(); }
     virtual StringView device_name() const override { return "E1000"sv; }
+    virtual Type adapter_type() const override { return Type::Ethernet; }
 
 protected:
+    static constexpr size_t rx_buffer_size = 8192;
+    static constexpr size_t tx_buffer_size = 8192;
+
     void setup_interrupts();
     void setup_link();
 
-    E1000NetworkAdapter(PCI::Address, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<KString>);
+    E1000NetworkAdapter(PCI::DeviceIdentifier const&, u8 irq,
+        NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
+        NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
+        NonnullOwnPtr<Memory::Region> tx_descriptors_region, NonnullOwnPtr<KString>);
+
     virtual bool handle_irq(RegisterState const&) override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
@@ -65,9 +73,6 @@ protected:
     virtual u32 read_eeprom(u8 address);
     void read_mac_address();
 
-    void write_command(u16 address, u32);
-    u32 read_command(u16 address);
-
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
 
@@ -85,10 +90,10 @@ protected:
 
     NonnullOwnPtr<IOWindow> m_registers_io_window;
 
-    OwnPtr<Memory::Region> m_rx_descriptors_region;
-    OwnPtr<Memory::Region> m_tx_descriptors_region;
-    OwnPtr<Memory::Region> m_rx_buffer_region;
-    OwnPtr<Memory::Region> m_tx_buffer_region;
+    NonnullOwnPtr<Memory::Region> m_rx_descriptors_region;
+    NonnullOwnPtr<Memory::Region> m_tx_descriptors_region;
+    NonnullOwnPtr<Memory::Region> m_rx_buffer_region;
+    NonnullOwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
     bool m_has_eeprom { false };

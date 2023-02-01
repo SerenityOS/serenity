@@ -24,8 +24,8 @@ class NetworkWidget final : public GUI::ImageWidget {
 public:
     static ErrorOr<NonnullRefPtr<NetworkWidget>> try_create(bool notifications)
     {
-        NonnullRefPtr<Gfx::Bitmap> connected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png"sv));
-        NonnullRefPtr<Gfx::Bitmap> disconnected_icon = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png"sv));
+        NonnullRefPtr<Gfx::Bitmap> connected_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/network.png"sv));
+        NonnullRefPtr<Gfx::Bitmap> disconnected_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/network-disconnected.png"sv));
         return adopt_nonnull_ref_or_enomem(new (nothrow) NetworkWidget(notifications, move(connected_icon), move(disconnected_icon)));
     }
 
@@ -127,10 +127,10 @@ private:
         int connected_adapters = 0;
         json.value().as_array().for_each([&adapter_info, &connected_adapters](auto& value) {
             auto& if_object = value.as_object();
-            auto ip_address = if_object.get("ipv4_address"sv).as_string_or("no IP");
-            auto ifname = if_object.get("name"sv).to_deprecated_string();
-            auto link_up = if_object.get("link_up"sv).as_bool();
-            auto link_speed = if_object.get("link_speed"sv).to_i32();
+            auto ip_address = if_object.get_deprecated_string("ipv4_address"sv).value_or("no IP");
+            auto ifname = if_object.get_deprecated_string("name"sv).value();
+            auto link_up = if_object.get_bool("link_up"sv).value();
+            auto link_speed = if_object.get_i32("link_speed"sv).value();
 
             if (ifname == "loop")
                 return;
@@ -187,7 +187,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_window_type(GUI::WindowType::Applet);
     window->set_has_alpha_channel(true);
     window->resize(16, 16);
-    auto icon = TRY(window->try_set_main_widget<NetworkWidget>(display_notifications));
+    auto icon = TRY(window->set_main_widget<NetworkWidget>(display_notifications));
     icon->load_from_file("/res/icons/16x16/network.png"sv);
     window->resize(16, 16);
     window->show();

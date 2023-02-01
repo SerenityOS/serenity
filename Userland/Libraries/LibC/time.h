@@ -28,9 +28,6 @@ extern long altzone;
 extern char* tzname[2];
 extern int daylight;
 
-typedef uint32_t clock_t;
-typedef int64_t time_t;
-
 struct tm* localtime(time_t const*);
 struct tm* gmtime(time_t const*);
 time_t mktime(struct tm*);

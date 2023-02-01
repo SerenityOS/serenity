@@ -2,6 +2,7 @@
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,9 +25,11 @@
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/TextEditor.h>
+#include <LibGUI/Toolbar.h>
 #include <LibGUI/VimEditingEngine.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+#include <Userland/DevTools/GMLPlayground/GMLPlaygroundWindowGML.h>
 
 namespace {
 
@@ -64,7 +67,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -84,14 +86,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(800, 600);
 
-    auto splitter = TRY(window->try_set_main_widget<GUI::HorizontalSplitter>());
-    auto editor = TRY(splitter->try_add<GUI::TextEditor>());
-    auto preview_frame_widget = TRY(splitter->try_add<GUI::Frame>());
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(main_widget->load_from_gml(gml_playground_window_gml));
+
+    auto toolbar = main_widget->find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    auto splitter = main_widget->find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
+    auto editor = main_widget->find_descendant_of_type_named<GUI::TextEditor>("text_editor");
+    auto preview_frame_widget = main_widget->find_descendant_of_type_named<GUI::Frame>("preview_frame");
 
     auto preview_window = TRY(GUI::Window::try_create());
     preview_window->set_title("Preview - GML Playground");
     preview_window->set_icon(app_icon.bitmap_for_size(16));
-    auto preview_window_widget = TRY(preview_window->try_set_main_widget<GUI::Widget>());
+    auto preview_window_widget = TRY(preview_window->set_main_widget<GUI::Widget>());
     preview_window_widget->set_fill_with_background_color(true);
 
     GUI::Widget* preview = preview_frame_widget;
@@ -119,7 +125,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     editor->on_change = [&] {
         preview->remove_all_children();
-        preview->load_from_gml(editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
+        // FIXME: Parsing errors happen while the user is typing. What should we do about them?
+        (void)preview->load_from_gml(editor->text(), [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
             return UnregisteredWidget::try_create(class_name);
         });
     };
@@ -132,16 +139,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, "Untitled", "gml");
+        auto response = FileSystemAccessClient::Client::the().save_file(window, "Untitled", "gml");
         if (response.is_error())
             return;
 
-        auto file = response.release_value();
-        if (!editor->write_to_file(file)) {
-            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        auto file = response.value().release_stream();
+        if (auto result = editor->write_to_file(*file); result.is_error()) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
-        file_path = file->filename();
+        file_path = response.value().filename().to_deprecated_string();
         update_title();
     });
 
@@ -150,19 +157,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window, file_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window, file_path, Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
         if (response.is_error())
             return;
 
-        auto file = response.release_value();
-        if (!editor->write_to_file(file)) {
-            GUI::MessageBox::show(window, "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        auto file = response.value().release_stream();
+        if (auto result = editor->write_to_file(*file); result.is_error()) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Unable to save file: {}\n"sv, result.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
         update_title();
     });
 
-    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    auto open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (window->is_modified()) {
             auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
             if (result == GUI::MessageBox::ExecResult::Yes)
@@ -171,17 +178,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window);
+        auto response = FileSystemAccessClient::Client::the().open_file(window);
         if (response.is_error())
             return;
 
         auto file = response.release_value();
-        file_path = file->filename();
-        editor->set_text(file->read_all());
+        file_path = file.filename().to_deprecated_string();
+        auto buffer_or_error = file.stream().read_until_eof();
+        if (buffer_or_error.is_error())
+            return;
+
+        editor->set_text(buffer_or_error.release_value());
         editor->set_focus(true);
         update_title();
-    })));
+    });
 
+    TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(save_action));
     TRY(file_menu->try_add_action(save_as_action));
     TRY(file_menu->try_add_separator());
@@ -203,7 +215,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(edit_menu->try_add_action(editor->go_to_line_action()));
     TRY(edit_menu->try_add_separator());
 
-    TRY(edit_menu->try_add_action(GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, [&](auto&) {
+    auto format_gml_action = GUI::Action::create("&Format GML", { Mod_Ctrl | Mod_Shift, Key_I }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reformat.png"sv)), [&](auto&) {
         auto formatted_gml_or_error = GUI::GML::format_gml(editor->text());
         if (!formatted_gml_or_error.is_error()) {
             editor->replace_all_text_without_resetting_undo_stack(formatted_gml_or_error.release_value());
@@ -214,7 +226,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 "Error"sv,
                 GUI::MessageBox::Type::Error);
         }
-    })));
+    });
+    TRY(edit_menu->try_add_action(format_gml_action));
 
     auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [&](auto& action) {
         if (action.is_checked())
@@ -264,6 +277,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("GML Playground", app_icon, window)));
 
+    (void)TRY(toolbar->try_add_action(open_action));
+    (void)TRY(toolbar->try_add_action(save_action));
+    (void)TRY(toolbar->try_add_action(save_as_action));
+    TRY(toolbar->try_add_separator());
+    (void)TRY(toolbar->try_add_action(editor->cut_action()));
+    (void)TRY(toolbar->try_add_action(editor->copy_action()));
+    (void)TRY(toolbar->try_add_action(editor->paste_action()));
+    TRY(toolbar->try_add_separator());
+    (void)TRY(toolbar->try_add_action(editor->undo_action()));
+    (void)TRY(toolbar->try_add_action(editor->redo_action()));
+    TRY(toolbar->try_add_separator());
+    (void)TRY(toolbar->try_add_action(format_gml_action));
+
     window->on_close_request = [&] {
         if (!window->is_modified())
             return GUI::Window::CloseRequestDecision::Close;
@@ -295,9 +321,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor->set_cursor(4, 28); // after "...widgets!"
         update_title();
     } else {
-        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path));
+        auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path));
         file_path = path;
-        editor->set_text(file->read_all());
+        editor->set_text(TRY(file.release_stream()->read_until_eof()));
         update_title();
     }
 

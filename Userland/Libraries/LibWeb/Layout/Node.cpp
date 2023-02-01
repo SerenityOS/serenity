@@ -13,6 +13,7 @@
 #include <LibWeb/Layout/FormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
@@ -35,6 +36,7 @@ void Node::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_dom_node);
+    visitor.visit(m_paintable);
     visitor.visit(m_browsing_context);
     TreeNode::visit_edges(visitor);
 }
@@ -60,26 +62,39 @@ bool Node::can_contain_boxes_with_position_absolute() const
     return computed_values().position() != CSS::Position::Static || is<InitialContainingBlock>(*this);
 }
 
-BlockContainer const* Node::containing_block() const
+static Box const* nearest_ancestor_capable_of_forming_a_containing_block(Node const& node)
+{
+    for (auto const* ancestor = node.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor->is_block_container()
+            || ancestor->display().is_flex_inside()
+            || ancestor->display().is_grid_inside()) {
+            return verify_cast<Box>(ancestor);
+        }
+    }
+    return nullptr;
+}
+
+Box const* Node::containing_block() const
 {
     if (is<TextNode>(*this))
-        return first_ancestor_of_type<BlockContainer>();
+        return nearest_ancestor_capable_of_forming_a_containing_block(*this);
 
     auto position = computed_values().position();
 
+    // https://drafts.csswg.org/css-position-3/#absolute-cb
     if (position == CSS::Position::Absolute) {
-        auto* ancestor = parent();
+        auto const* ancestor = parent();
         while (ancestor && !ancestor->can_contain_boxes_with_position_absolute())
             ancestor = ancestor->parent();
-        while (ancestor && (!is<BlockContainer>(*ancestor) || ancestor->is_anonymous()))
-            ancestor = ancestor->containing_block();
+        while (ancestor && ancestor->is_anonymous())
+            ancestor = nearest_ancestor_capable_of_forming_a_containing_block(*ancestor);
         return static_cast<BlockContainer const*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
         return &root();
 
-    return first_ancestor_of_type<BlockContainer>();
+    return nearest_ancestor_capable_of_forming_a_containing_block(*this);
 }
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Positioning/Understanding_z_index/The_stacking_context
@@ -156,7 +171,9 @@ void Node::set_needs_display()
         return;
     if (!containing_block->paint_box())
         return;
-    containing_block->paint_box()->for_each_fragment([&](auto& fragment) {
+    if (!is<Painting::PaintableWithLines>(*containing_block->paint_box()))
+        return;
+    static_cast<Painting::PaintableWithLines const&>(*containing_block->paint_box()).for_each_fragment([&](auto& fragment) {
         if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
             browsing_context().set_needs_display(fragment.absolute_rect());
         }
@@ -171,13 +188,15 @@ CSSPixelPoint Node::box_type_agnostic_position() const
     VERIFY(is_inline());
     CSSPixelPoint position;
     if (auto* block = containing_block()) {
-        block->paint_box()->for_each_fragment([&](auto& fragment) {
-            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.absolute_rect().location();
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
+        if (is<Painting::PaintableWithLines>(*block)) {
+            static_cast<Painting::PaintableWithLines const&>(*block->paint_box()).for_each_fragment([&](auto& fragment) {
+                if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+                    position = fragment.absolute_rect().location();
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        }
     }
     return position;
 }
@@ -590,6 +609,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_grid_column_start(computed_style.grid_column_start());
     computed_values.set_grid_row_end(computed_style.grid_row_end());
     computed_values.set_grid_row_start(computed_style.grid_row_start());
+    computed_values.set_grid_template_areas(computed_style.grid_template_areas());
 
     if (auto fill = computed_style.property(CSS::PropertyID::Fill); fill->has_color())
         computed_values.set_fill(fill->to_color(*this));
@@ -657,6 +677,12 @@ bool Node::is_inline_block() const
     return display.is_inline_outside() && display.is_flow_root_inside();
 }
 
+bool Node::is_inline_table() const
+{
+    auto display = this->display();
+    return display.is_inline_outside() && display.is_table_inside();
+}
+
 JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
     auto wrapper = heap().allocate_without_realm<BlockContainer>(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values());
@@ -666,12 +692,24 @@ JS::NonnullGCPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
     return *wrapper;
 }
 
-void Node::set_paintable(RefPtr<Painting::Paintable> paintable)
+void NodeWithStyle::reset_table_box_computed_values_used_by_wrapper_to_init_values()
+{
+    VERIFY(is<TableBox>(*this));
+
+    CSS::MutableComputedValues& mutable_computed_values = static_cast<CSS::MutableComputedValues&>(m_computed_values);
+    mutable_computed_values.set_position(CSS::Position::Static);
+    mutable_computed_values.set_float(CSS::Float::None);
+    mutable_computed_values.set_clear(CSS::Clear::None);
+    mutable_computed_values.set_inset({ CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto(), CSS::Length::make_auto() });
+    mutable_computed_values.set_margin({ CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0), CSS::Length::make_px(0) });
+}
+
+void Node::set_paintable(JS::GCPtr<Painting::Paintable> paintable)
 {
     m_paintable = move(paintable);
 }
 
-RefPtr<Painting::Paintable> Node::create_paintable() const
+JS::GCPtr<Painting::Paintable> Node::create_paintable() const
 {
     return nullptr;
 }

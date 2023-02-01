@@ -25,7 +25,7 @@ struct SourceRange {
     Position start;
     Position end;
 
-    DeprecatedString const& filename() const;
+    DeprecatedString filename() const;
 };
 
 }

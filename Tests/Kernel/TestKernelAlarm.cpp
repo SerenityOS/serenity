@@ -9,7 +9,6 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibTest/TestCase.h>
 #include <signal.h>
-#include <signal_numbers.h>
 #include <unistd.h>
 
 class SuccessContext {
@@ -22,7 +21,7 @@ public:
 
     static void test_signal_handler(int signal)
     {
-        auto actual_duration = Time::from_milliseconds(SuccessContext::signal_timer.elapsed());
+        auto actual_duration = SuccessContext::signal_timer.elapsed_time();
         auto expected_duration = SuccessContext::timer_value;
 
         // Add a small buffer to allow for latency on the system.

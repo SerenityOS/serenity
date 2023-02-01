@@ -13,10 +13,17 @@ namespace Web::HTML {
 HTMLTitleElement::HTMLTitleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTitleElement"));
 }
 
 HTMLTitleElement::~HTMLTitleElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLTitleElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTitleElementPrototype>(realm, "HTMLTitleElement"));
+
+    return {};
+}
 
 void HTMLTitleElement::children_changed()
 {

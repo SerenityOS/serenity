@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include "../CSV.h"
-#include "../XSV.h"
 #include <AK/MemoryStream.h>
 
 TEST_CASE(can_write)
@@ -18,17 +17,16 @@ TEST_CASE(can_write)
         { 7, 8, 9 },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
-    OutputMemoryStream stream { buffer };
-
-    Writer::CSV csv(stream, data);
+    AllocatingMemoryStream stream;
+    MUST(Writer::CSV::generate(stream, data));
 
     auto expected_output = R"~(1,2,3
 4,5,6
 7,8,9
-)~";
+)~"sv;
 
-    EXPECT_EQ(StringView { stream.bytes() }, expected_output);
+    auto buffer = MUST(stream.read_until_eof());
+    EXPECT_EQ(StringView { buffer.bytes() }, expected_output);
 }
 
 TEST_CASE(can_write_with_header)
@@ -39,18 +37,17 @@ TEST_CASE(can_write_with_header)
         { 7, 8, 9 },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
-    OutputMemoryStream stream { buffer };
-
-    Writer::CSV csv(stream, data, { "A"sv, "B\""sv, "C"sv });
+    AllocatingMemoryStream stream;
+    MUST(Writer::CSV::generate(stream, data, { "A"sv, "B\""sv, "C"sv }));
 
     auto expected_output = R"~(A,"B""",C
 1,2,3
 4,5,6
 7,8,9
-)~";
+)~"sv;
 
-    EXPECT_EQ(StringView { stream.bytes() }, expected_output);
+    auto buffer = MUST(stream.read_until_eof());
+    EXPECT_EQ(StringView { buffer.bytes() }, expected_output);
 }
 
 TEST_CASE(can_write_with_different_behaviors)
@@ -60,15 +57,14 @@ TEST_CASE(can_write_with_different_behaviors)
         { "We\"ll", "Hello,", "   Friends" },
     };
 
-    auto buffer = ByteBuffer::create_uninitialized(1024).release_value();
-    OutputMemoryStream stream { buffer };
-
-    Writer::CSV csv(stream, data, { "A"sv, "B\""sv, "C"sv }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders);
+    AllocatingMemoryStream stream;
+    MUST(Writer::CSV::generate(stream, data, { "A"sv, "B\""sv, "C"sv }, Writer::WriterBehavior::QuoteOnlyInFieldStart | Writer::WriterBehavior::WriteHeaders));
 
     auto expected_output = R"~(A,B",C
 Well,Hello",Friends
 We"ll,"Hello,",   Friends
-)~";
+)~"sv;
 
-    EXPECT_EQ(StringView { stream.bytes() }, expected_output);
+    auto buffer = MUST(stream.read_until_eof());
+    EXPECT_EQ(StringView { buffer.bytes() }, expected_output);
 }

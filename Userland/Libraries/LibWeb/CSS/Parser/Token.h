@@ -7,8 +7,8 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/Number.h>
 
@@ -151,7 +151,7 @@ public:
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
 
-    static Token of_string(FlyString str)
+    static Token of_string(DeprecatedFlyString str)
     {
         Token token;
         token.m_type = Type::String;
@@ -178,7 +178,7 @@ public:
 private:
     Type m_type { Type::Invalid };
 
-    FlyString m_value;
+    DeprecatedFlyString m_value;
     Number m_number_value;
     HashType m_hash_type { HashType::Unrestricted };
 

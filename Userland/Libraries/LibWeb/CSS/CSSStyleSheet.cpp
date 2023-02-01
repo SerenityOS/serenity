@@ -16,20 +16,26 @@ namespace Web::CSS {
 
 CSSStyleSheet* CSSStyleSheet::create(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
 {
-    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location));
+    return realm.heap().allocate<CSSStyleSheet>(realm, realm, rules, media, move(location)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& media, Optional<AK::URL> location)
     : StyleSheet(realm, media)
     , m_rules(&rules)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleSheetPrototype>(realm, "CSSStyleSheet"));
-
     if (location.has_value())
         set_location(location->to_deprecated_string());
 
     for (auto& rule : *m_rules)
         rule.set_parent_style_sheet(this);
+}
+
+JS::ThrowCompletionOr<void> CSSStyleSheet::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSStyleSheetPrototype>(realm, "CSSStyleSheet"));
+
+    return {};
 }
 
 void CSSStyleSheet::visit_edges(Cell::Visitor& visitor)

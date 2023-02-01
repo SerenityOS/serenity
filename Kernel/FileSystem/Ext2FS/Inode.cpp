@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/MemoryStream.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Ext2FS/Inode.h>
@@ -41,7 +41,7 @@ ErrorOr<void> Ext2FSInode::write_indirect_block(BlockBasedFileSystem::BlockIndex
     VERIFY(blocks_indices.size() <= entries_per_block);
 
     auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
-    OutputMemoryStream stream { block_contents };
+    DeprecatedOutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
 
     VERIFY(blocks_indices.size() <= EXT2_ADDR_PER_BLOCK(&fs().super_block()));
@@ -64,7 +64,7 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
 
     auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
     auto* block_as_pointers = (unsigned*)block_contents.data();
-    OutputMemoryStream stream { block_contents };
+    DeprecatedOutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
 
     if (old_blocks_length > 0) {
@@ -137,7 +137,7 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
 
     auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
     auto* block_as_pointers = (unsigned*)block_contents.data();
-    OutputMemoryStream stream { block_contents };
+    DeprecatedOutputMemoryStream stream { block_contents };
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
 
     if (old_blocks_length > 0) {
@@ -790,7 +790,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): New directory contents to write (size {}):", identifier(), directory_size);
 
     auto directory_data = TRY(ByteBuffer::create_uninitialized(directory_size));
-    OutputMemoryStream stream { directory_data };
+    DeprecatedOutputMemoryStream stream { directory_data };
 
     for (auto& entry : entries) {
         dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name->length()), u16(entry.record_length), u8(entry.file_type), entry.name);
@@ -992,11 +992,11 @@ ErrorOr<void> Ext2FSInode::update_timestamps(Optional<Time> atime, Optional<Time
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
-    if (atime.value_or({}).to_timespec().tv_sec > INT32_MAX)
+    if (atime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max())
         return EINVAL;
-    if (ctime.value_or({}).to_timespec().tv_sec > INT32_MAX)
+    if (ctime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max())
         return EINVAL;
-    if (mtime.value_or({}).to_timespec().tv_sec > INT32_MAX)
+    if (mtime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max())
         return EINVAL;
     if (atime.has_value())
         m_raw_inode.i_atime = atime.value().to_timespec().tv_sec;

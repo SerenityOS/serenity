@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
@@ -73,11 +73,18 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    HashMap<DeprecatedString, PrimitiveString*>& string_cache()
+    HashMap<String, PrimitiveString*>& string_cache()
     {
         return m_string_cache;
     }
+
+    HashMap<DeprecatedString, PrimitiveString*>& deprecated_string_cache()
+    {
+        return m_deprecated_string_cache;
+    }
+
     PrimitiveString& empty_string() { return *m_empty_string; }
+
     PrimitiveString& single_ascii_character_string(u8 character)
     {
         VERIFY(character < 0x80);
@@ -175,8 +182,8 @@ public:
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
 
-    ThrowCompletionOr<Reference> resolve_binding(FlyString const&, Environment* = nullptr);
-    ThrowCompletionOr<Reference> get_identifier_reference(Environment*, FlyString, bool strict, size_t hops = 0);
+    ThrowCompletionOr<Reference> resolve_binding(DeprecatedFlyString const&, Environment* = nullptr);
+    ThrowCompletionOr<Reference> get_identifier_reference(Environment*, DeprecatedFlyString, bool strict, size_t hops = 0);
 
     // 5.2.3.2 Throw an Exception, https://tc39.es/ecma262/#sec-throw-an-exception
     template<typename T, typename... Args>
@@ -213,10 +220,10 @@ public:
     CustomData* custom_data() { return m_custom_data; }
 
     ThrowCompletionOr<void> destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value);
-    ThrowCompletionOr<void> binding_initialization(FlyString const& target, Value value, Environment* environment);
+    ThrowCompletionOr<void> binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment);
     ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment);
 
-    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, FlyString const& name);
+    ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name);
 
     void save_execution_context_stack();
     void restore_execution_context_stack();
@@ -257,7 +264,8 @@ private:
     void import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
 
-    HashMap<DeprecatedString, PrimitiveString*> m_string_cache;
+    HashMap<String, PrimitiveString*> m_string_cache;
+    HashMap<DeprecatedString, PrimitiveString*> m_deprecated_string_cache;
 
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;

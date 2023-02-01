@@ -14,7 +14,6 @@
 #include "Bitmap.h"
 #include "Font/Emoji.h"
 #include "Font/Font.h"
-#include "Font/FontDatabase.h"
 #include "Gamma.h"
 #include <AK/Assertions.h>
 #include <AK/Debug.h>
@@ -151,6 +150,25 @@ void Painter::fill_rect(IntRect const& a_rect, Color color)
     fill_physical_rect(rect * scale(), color);
 }
 
+void Painter::fill_rect(IntRect const& rect, PaintStyle const& paint_style)
+{
+    auto a_rect = rect.translated(translation());
+    auto clipped_rect = a_rect.intersected(clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    a_rect *= scale();
+    clipped_rect *= scale();
+    auto start_offset = clipped_rect.location() - a_rect.location();
+    paint_style.paint(a_rect, [&](PaintStyle::SamplerFunction sample) {
+        for (int y = 0; y < clipped_rect.height(); ++y) {
+            for (int x = 0; x < clipped_rect.width(); ++x) {
+                IntPoint point(x, y);
+                set_physical_pixel(point + clipped_rect.location(), sample(point + start_offset), true);
+            }
+        }
+    });
+}
+
 void Painter::fill_rect_with_dither_pattern(IntRect const& a_rect, Color color_a, Color color_b)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
@@ -235,47 +253,7 @@ void Painter::fill_rect_with_gradient(Orientation orientation, IntRect const& a_
         fill_rect(a_rect, gradient_start);
         return;
     }
-
-    auto rect = to_physical(a_rect);
-    auto clipped_rect = IntRect::intersection(rect, clip_rect() * scale());
-    if (clipped_rect.is_empty())
-        return;
-
-    int offset = clipped_rect.primary_offset_for_orientation(orientation) - rect.primary_offset_for_orientation(orientation);
-
-    ARGB32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
-    size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
-
-    float increment = (1.0 / ((rect.primary_size_for_orientation(orientation))));
-    float alpha_increment = increment * ((float)gradient_end.alpha() - (float)gradient_start.alpha());
-
-    if (orientation == Orientation::Horizontal) {
-        for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            float c = offset * increment;
-            float c_alpha = gradient_start.alpha() + offset * alpha_increment;
-            for (int j = 0; j < clipped_rect.width(); ++j) {
-                auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
-                color.set_alpha(c_alpha);
-                dst[j] = Color::from_argb(dst[j]).blend(color).value();
-                c_alpha += alpha_increment;
-                c += increment;
-            }
-            dst += dst_skip;
-        }
-    } else {
-        float c = offset * increment;
-        float c_alpha = gradient_start.alpha() + offset * alpha_increment;
-        for (int i = clipped_rect.height() - 1; i >= 0; --i) {
-            auto color = gamma_accurate_blend(gradient_start, gradient_end, c);
-            color.set_alpha(c_alpha);
-            for (int j = 0; j < clipped_rect.width(); ++j) {
-                dst[j] = Color::from_argb(dst[j]).blend(color).value();
-            }
-            c_alpha += alpha_increment;
-            c += increment;
-            dst += dst_skip;
-        }
-    }
+    return fill_rect_with_linear_gradient(a_rect, Array { ColorStop { gradient_start, 0 }, ColorStop { gradient_end, 1 } }, orientation == Orientation::Horizontal ? 90.0f : 0.0f);
 }
 
 void Painter::fill_rect_with_gradient(IntRect const& a_rect, Color gradient_start, Color gradient_end)
@@ -2055,9 +2033,6 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         return;
     }
 
-    // FIXME: Implement dotted/dashed diagonal lines.
-    VERIFY(style == LineStyle::Solid);
-
     int const adx = abs(point2.x() - point1.x());
     int const ady = abs(point2.y() - point1.y());
 
@@ -2069,10 +2044,26 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
             swap(point1, point2);
     }
 
-    // FIXME: Implement clipping below.
     int const dx = point2.x() - point1.x();
     int const dy = point2.y() - point1.y();
     int error = 0;
+
+    size_t number_of_pixels_drawn = 0;
+
+    auto draw_pixel_in_line = [&](int x, int y) {
+        bool should_draw_line = true;
+        if (style == LineStyle::Dotted && number_of_pixels_drawn % 2 == 1)
+            should_draw_line = false;
+        else if (style == LineStyle::Dashed && number_of_pixels_drawn % 6 >= 3)
+            should_draw_line = false;
+
+        if (should_draw_line)
+            draw_physical_pixel({ x, y }, color, thickness);
+        else if (!alternate_color_is_transparent)
+            draw_physical_pixel({ x, y }, alternate_color, thickness);
+
+        number_of_pixels_drawn++;
+    };
 
     if (dx > dy) {
         int const y_step = dy == 0 ? 0 : (dy > 0 ? 1 : -1);
@@ -2080,7 +2071,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int y = point1.y();
         for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_pixel_in_line(x, y);
             error += delta_error;
             if (error >= dx) {
                 y += y_step;
@@ -2093,7 +2084,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
         int x = point1.x();
         for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
-                draw_physical_pixel({ x, y }, color, thickness);
+                draw_pixel_in_line(x, y);
             error += delta_error;
             if (error >= dy) {
                 x += x_step;
@@ -2400,7 +2391,16 @@ void Painter::stroke_path(Path const& path, Color color, int thickness)
 void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
-    Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(*this, path, color, winding_rule);
+    Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(
+        *this, path, [=](IntPoint) { return color; }, winding_rule);
+}
+
+void Painter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)
+{
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    paint_style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
+        Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(*this, path, move(sampler), rule);
+    });
 }
 
 void Painter::blit_disabled(IntPoint location, Gfx::Bitmap const& bitmap, IntRect const& rect, Palette const& palette)

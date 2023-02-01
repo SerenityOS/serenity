@@ -10,6 +10,7 @@
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
 #include <LibGfx/Rect.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleProperties.h>
@@ -51,9 +52,9 @@ public:
 
     Painting::Paintable* paintable() { return m_paintable; }
     Painting::Paintable const* paintable() const { return m_paintable; }
-    void set_paintable(RefPtr<Painting::Paintable>);
+    void set_paintable(JS::GCPtr<Painting::Paintable>);
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const;
 
     DOM::Document& document();
     DOM::Document const& document() const;
@@ -76,6 +77,7 @@ public:
 
     bool is_inline() const;
     bool is_inline_block() const;
+    bool is_inline_table() const;
 
     bool is_out_of_flow(FormattingContext const&) const;
 
@@ -90,6 +92,8 @@ public:
     virtual bool is_label() const { return false; }
     virtual bool is_replaced_box() const { return false; }
     virtual bool is_list_item_marker_box() const { return false; }
+    virtual bool is_table_wrapper() const { return false; }
+    virtual bool is_table() const { return false; }
 
     template<typename T>
     bool fast_is() const = delete;
@@ -102,8 +106,8 @@ public:
     bool is_flex_item() const { return m_is_flex_item; }
     void set_flex_item(bool b) { m_is_flex_item = b; }
 
-    BlockContainer const* containing_block() const;
-    BlockContainer* containing_block() { return const_cast<BlockContainer*>(const_cast<Node const*>(this)->containing_block()); }
+    Box const* containing_block() const;
+    Box* containing_block() { return const_cast<Box*>(const_cast<Node const*>(this)->containing_block()); }
 
     bool establishes_stacking_context() const;
 
@@ -150,7 +154,7 @@ private:
     friend class NodeWithStyle;
 
     JS::NonnullGCPtr<DOM::Node> m_dom_node;
-    RefPtr<Painting::Paintable> m_paintable;
+    JS::GCPtr<Painting::Paintable> m_paintable;
 
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
 
@@ -182,6 +186,8 @@ public:
     const CSS::AbstractImageStyleValue* list_style_image() const { return m_list_style_image; }
 
     JS::NonnullGCPtr<NodeWithStyle> create_anonymous_wrapper() const;
+
+    void reset_table_box_computed_values_used_by_wrapper_to_init_values();
 
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);

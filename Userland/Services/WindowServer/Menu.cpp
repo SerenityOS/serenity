@@ -537,7 +537,7 @@ void Menu::start_activation_animation(MenuItem& item)
 
         float opacity = (float)animation->step / 10.0f;
         animation->window->set_opacity(opacity);
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     timer->start();
 }
 

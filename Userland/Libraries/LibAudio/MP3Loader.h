@@ -8,10 +8,9 @@
 
 #include "Loader.h"
 #include "MP3Types.h"
+#include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
-#include <LibCore/InputBitStream.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibDSP/MDCT.h>
 
@@ -23,11 +22,11 @@ struct ScaleFactorBand;
 
 class MP3LoaderPlugin : public LoaderPlugin {
 public:
-    explicit MP3LoaderPlugin(NonnullOwnPtr<Core::Stream::SeekableStream> stream);
+    explicit MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
     virtual ~MP3LoaderPlugin() = default;
 
-    static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> try_create(StringView path);
-    static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> try_create(Bytes buffer);
+    static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(StringView path);
+    static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(Bytes buffer);
 
     virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
@@ -47,10 +46,10 @@ private:
     MaybeLoaderError build_seek_table();
     ErrorOr<MP3::Header, LoaderError> read_header();
     ErrorOr<MP3::MP3Frame, LoaderError> read_next_frame();
-    ErrorOr<MP3::MP3Frame, LoaderError> read_frame_data(MP3::Header const&, bool is_first_frame);
+    ErrorOr<MP3::MP3Frame, LoaderError> read_frame_data(MP3::Header const&);
     MaybeLoaderError read_side_information(MP3::MP3Frame&);
-    ErrorOr<size_t, LoaderError> read_scale_factors(MP3::MP3Frame&, InputBitStream& reservoir, size_t granule_index, size_t channel_index);
-    MaybeLoaderError read_huffman_data(MP3::MP3Frame&, InputBitStream& reservoir, size_t granule_index, size_t channel_index, size_t granule_bits_read);
+    ErrorOr<size_t, LoaderError> read_scale_factors(MP3::MP3Frame&, BigEndianInputBitStream& reservoir, size_t granule_index, size_t channel_index);
+    MaybeLoaderError read_huffman_data(MP3::MP3Frame&, BigEndianInputBitStream& reservoir, size_t granule_index, size_t channel_index, size_t granule_bits_read);
     static AK::Array<float, 576> calculate_frame_exponents(MP3::MP3Frame const&, size_t granule_index, size_t channel_index);
     static void reorder_samples(MP3::Granule&, u32 sample_rate);
     static void reduce_alias(MP3::Granule&, size_t max_subband_index = 576);
@@ -70,12 +69,11 @@ private:
     PcmSampleFormat m_sample_format { PcmSampleFormat::Int16 };
     int m_total_samples { 0 };
     size_t m_loaded_samples { 0 };
-    bool m_is_first_frame { true };
 
     AK::Optional<MP3::MP3Frame> m_current_frame;
     u32 m_current_frame_read;
-    OwnPtr<Core::Stream::BigEndianInputBitStream> m_bitstream;
-    DuplexMemoryStream m_bit_reservoir;
+    OwnPtr<BigEndianInputBitStream> m_bitstream;
+    AllocatingMemoryStream m_bit_reservoir;
 };
 
 }

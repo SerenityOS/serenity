@@ -47,7 +47,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
     Config::pledge_domain("Magnifier");
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -61,23 +60,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(window_dimensions, window_dimensions);
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
-    auto magnifier = TRY(window->try_set_main_widget<MagnifierWidget>());
+    auto magnifier = TRY(window->set_main_widget<MagnifierWidget>());
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
-            auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window, "Capture", "png");
+            auto response = FileSystemAccessClient::Client::the().save_file(window, "Capture", "png");
             if (response.is_error())
                 return {};
-            auto file = response.release_value();
-            auto path = AK::LexicalPath(file->filename());
+            auto file = response.value().release_stream();
+            auto path = AK::LexicalPath(response.value().filename().to_deprecated_string());
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
 
-            if (!file->write(encoded.data(), encoded.size())) {
-                return Error::from_errno(file->error());
-            }
+            TRY(file->write(encoded));
             return {};
         };
 
@@ -158,13 +155,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
     auto previous_frame_action = GUI::Action::create(
-        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
+        "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_previous_frame();
         });
     auto next_frame_action = GUI::Action::create(
-        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
+        "&Next frame", { Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
             magnifier->pause_capture(true);
             magnifier->display_next_frame();

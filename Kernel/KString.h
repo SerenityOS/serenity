@@ -26,7 +26,7 @@ public:
     template<typename... Parameters>
     [[nodiscard]] static ErrorOr<NonnullOwnPtr<KString>> formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        AK::VariadicFormatParams variadic_format_parameters { parameters... };
+        AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Parameters...> variadic_format_parameters { parameters... };
         return vformatted(fmtstr.view(), variadic_format_parameters);
     }
 

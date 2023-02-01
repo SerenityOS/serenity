@@ -100,7 +100,6 @@ public:
     [[nodiscard]] NonnullOwnPtrVector<KString> userspace_init_args() const;
     [[nodiscard]] StringView root_device() const;
     [[nodiscard]] bool is_nvme_polling_enabled() const;
-    [[nodiscard]] bool is_i8042_force_scan_code_2() const;
     [[nodiscard]] size_t switch_to_tty() const;
 
 private:

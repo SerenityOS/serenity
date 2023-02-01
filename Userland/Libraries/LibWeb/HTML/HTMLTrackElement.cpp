@@ -12,9 +12,16 @@ namespace Web::HTML {
 HTMLTrackElement::HTMLTrackElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTrackElement"));
 }
 
 HTMLTrackElement::~HTMLTrackElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLTrackElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTrackElementPrototype>(realm, "HTMLTrackElement"));
+
+    return {};
+}
 
 }

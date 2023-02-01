@@ -39,7 +39,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         path = Core::File::absolute_path(file_to_edit);
 
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath unix"));
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -47,17 +46,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-theme-editor"sv);
     auto window = GUI::Window::construct();
 
-    auto main_widget = TRY(window->try_set_main_widget<ThemeEditor::MainWidget>());
+    auto main_widget = TRY(window->set_main_widget<ThemeEditor::MainWidget>());
 
     if (path.has_value()) {
         // Note: This is deferred to ensure that the window has already popped and thus proper window stealing can be performed.
         app->event_loop().deferred_invoke(
             [&window, &path, &main_widget]() {
-                auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, path.value());
+                auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path.value());
                 if (response.is_error())
                     GUI::MessageBox::show_error(window, DeprecatedString::formatted("Opening \"{}\" failed: {}", path.value(), response.error()));
                 else {
-                    auto load_from_file_result = main_widget->load_from_file(response.release_value());
+                    auto load_from_file_result = main_widget->load_from_file(response.value().filename(), response.value().release_stream());
                     if (load_from_file_result.is_error())
                         GUI::MessageBox::show_error(window, DeprecatedString::formatted("Loading theme from file has failed: {}", load_from_file_result.error()));
                 }

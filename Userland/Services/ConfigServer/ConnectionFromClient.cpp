@@ -39,7 +39,7 @@ static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
 
     auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
     // FIXME: Use a single FileWatcher with multiple watches inside.
-    auto watcher_or_error = Core::FileWatcher::create(InodeWatcherFlags::Nonblock);
+    auto watcher_or_error = Core::FileWatcher::create(Core::FileWatcherFlags::Nonblock);
     VERIFY(!watcher_or_error.is_error());
     auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
     VERIFY(!result.is_error());
@@ -76,7 +76,7 @@ static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> client_socket, int client_id)
     : IPC::ConnectionFromClient<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(client_socket), client_id)
-    , m_sync_timer(Core::Timer::create_single_shot(s_disk_sync_delay_ms, [this]() { sync_dirty_domains_to_disk(); }))
+    , m_sync_timer(Core::Timer::create_single_shot(s_disk_sync_delay_ms, [this]() { sync_dirty_domains_to_disk(); }).release_value_but_fixme_should_propagate_errors())
 {
     s_connections.set(client_id, *this);
 }

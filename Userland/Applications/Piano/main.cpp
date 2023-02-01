@@ -42,19 +42,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-piano"sv);
     auto window = GUI::Window::construct();
-    auto main_widget = TRY(window->try_set_main_widget<MainWidget>(track_manager, audio_loop));
+    auto main_widget = TRY(window->set_main_widget<MainWidget>(track_manager, audio_loop));
     window->set_title("Piano");
     window->resize(840, 600);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget_updater = Core::Timer::construct(static_cast<int>((1 / 30.0) * 1000), [&] {
+    auto main_widget_updater = TRY(Core::Timer::create_repeating(static_cast<int>((1 / 30.0) * 1000), [&] {
         if (window->is_active())
             Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
-    });
+    }));
     main_widget_updater->start();
 
     auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/file-export.png"sv)), [&](const GUI::Action&) {
+    file_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/file-export.png"sv)), [&](const GUI::Action&) {
         save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;

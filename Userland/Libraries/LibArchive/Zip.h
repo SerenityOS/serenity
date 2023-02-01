@@ -8,9 +8,9 @@
 #pragma once
 
 #include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/IterationDecision.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Stream.h>
 #include <string.h>
@@ -55,7 +55,7 @@ struct [[gnu::packed]] EndOfCentralDirectory {
         return true;
     }
 
-    ErrorOr<void> write(Core::Stream::Stream& stream) const
+    ErrorOr<void> write(AK::Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -141,7 +141,7 @@ struct [[gnu::packed]] CentralDirectoryRecord {
         return true;
     }
 
-    ErrorOr<void> write(Core::Stream::Stream& stream) const
+    ErrorOr<void> write(AK::Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -210,7 +210,7 @@ struct [[gnu::packed]] LocalFileHeader {
         return true;
     }
 
-    ErrorOr<void> write(Core::Stream::Stream& stream) const
+    ErrorOr<void> write(AK::Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -238,7 +238,7 @@ struct [[gnu::packed]] LocalFileHeader {
 };
 
 struct ZipMember {
-    DeprecatedString name;
+    String name;
     ReadonlyBytes compressed_data; // TODO: maybe the decompression/compression should be handled by LibArchive instead of the user?
     ZipCompressionMethod compression_method;
     u32 uncompressed_size;
@@ -249,7 +249,7 @@ struct ZipMember {
 class Zip {
 public:
     static Optional<Zip> try_create(ReadonlyBytes buffer);
-    bool for_each_member(Function<IterationDecision(ZipMember const&)>);
+    ErrorOr<bool> for_each_member(Function<IterationDecision(ZipMember const&)>);
 
 private:
     static bool find_end_of_central_directory_offset(ReadonlyBytes, size_t& offset);
@@ -267,13 +267,13 @@ private:
 
 class ZipOutputStream {
 public:
-    ZipOutputStream(NonnullOwnPtr<Core::Stream::Stream>);
+    ZipOutputStream(NonnullOwnPtr<AK::Stream>);
 
     ErrorOr<void> add_member(ZipMember const&);
     ErrorOr<void> finish();
 
 private:
-    NonnullOwnPtr<Core::Stream::Stream> m_stream;
+    NonnullOwnPtr<AK::Stream> m_stream;
     Vector<ZipMember> m_members;
 
     bool m_finished { false };

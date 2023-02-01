@@ -102,7 +102,7 @@ void ScrollableContainerWidget::set_widget(GUI::Widget* widget)
     update_widget_position();
 }
 
-ErrorOr<void> ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> ScrollableContainerWidget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler unregistered_child_handler)
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);

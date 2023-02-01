@@ -18,13 +18,10 @@ public:
     TableCellBox(DOM::Document&, DOM::Element*, CSS::ComputedValues);
     virtual ~TableCellBox() override;
 
-    TableCellBox* next_cell() { return next_sibling_of_type<TableCellBox>(); }
-    TableCellBox const* next_cell() const { return next_sibling_of_type<TableCellBox>(); }
-
     size_t colspan() const;
     size_t rowspan() const;
 
-    static CSS::Display static_display() { return CSS::Display { CSS::Display::Internal::TableCell }; }
+    static CSS::Display static_display(bool) { return CSS::Display { CSS::Display::Internal::TableCell }; }
 };
 
 }

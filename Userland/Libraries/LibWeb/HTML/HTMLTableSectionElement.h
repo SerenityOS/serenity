@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -21,9 +22,15 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> insert_row(long index);
     WebIDL::ExceptionOr<void> delete_row(long index);
 
+    // https://www.w3.org/TR/html-aria/#el-tbody
+    // https://www.w3.org/TR/html-aria/#el-tfoot
+    // https://www.w3.org/TR/html-aria/#el-thead
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::rowgroup; }
+
 private:
     HTMLTableSectionElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<DOM::HTMLCollection> mutable m_rows;

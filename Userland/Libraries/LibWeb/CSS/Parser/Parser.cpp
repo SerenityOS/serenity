@@ -561,7 +561,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                 return ParseError::SyntaxError;
             }
             // FIXME: Support multiple, comma-separated, language ranges.
-            Vector<FlyString> languages;
+            Vector<DeprecatedFlyString> languages;
             languages.append(pseudo_function.values().first().token().to_deprecated_string());
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
@@ -1518,7 +1518,7 @@ NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     // NOTE: We create the Rule fully initialized when we return it instead.
-    FlyString at_rule_name = ((Token)name_ident).at_keyword();
+    DeprecatedFlyString at_rule_name = ((Token)name_ident).at_keyword();
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
 
@@ -1801,7 +1801,7 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
     // NOTE: We create the Function fully initialized when we return it instead.
-    FlyString function_name = ((Token)name_ident).function();
+    DeprecatedFlyString function_name = ((Token)name_ident).function();
     Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
@@ -1856,7 +1856,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
     // NOTE: We create a fully-initialized Declaration just before returning it instead.
-    FlyString declaration_name = ((Token)token).ident();
+    DeprecatedFlyString declaration_name = ((Token)token).ident();
     Vector<ComponentValue> declaration_values;
     Important declaration_important = Important::No;
 
@@ -3966,7 +3966,7 @@ RefPtr<StyleValue> Parser::parse_color_value(ComponentValue const& component_val
 RefPtr<StyleValue> Parser::parse_string_value(ComponentValue const& component_value)
 {
     if (component_value.is(Token::Type::String))
-        return StringStyleValue::create(component_value.token().string());
+        return StringStyleValue::create(String::from_utf8(component_value.token().string()).release_value_but_fixme_should_propagate_errors());
 
     return {};
 }
@@ -5238,7 +5238,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
                 return nullptr;
             if (!is_comma_or_eof(i + 1))
                 return nullptr;
-            font_families.append(StringStyleValue::create(part.token().string()));
+            font_families.append(StringStyleValue::create(String::from_utf8(part.token().string()).release_value_but_fixme_should_propagate_errors()));
             i++;
             continue;
         }
@@ -5266,7 +5266,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
         if (part.is(Token::Type::Comma)) {
             if (current_name_parts.is_empty())
                 return nullptr;
-            font_families.append(StringStyleValue::create(DeprecatedString::join(' ', current_name_parts)));
+            font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()));
             current_name_parts.clear();
             // Can't have a trailing comma
             if (i + 1 == component_values.size())
@@ -5276,7 +5276,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     }
 
     if (!current_name_parts.is_empty()) {
-        font_families.append(StringStyleValue::create(DeprecatedString::join(' ', current_name_parts)));
+        font_families.append(StringStyleValue::create(String::from_utf8(DeprecatedString::join(' ', current_name_parts)).release_value_but_fixme_should_propagate_errors()));
         current_name_parts.clear();
     }
 
@@ -5289,7 +5289,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
 
-    Optional<FlyString> font_family;
+    Optional<DeprecatedFlyString> font_family;
     Vector<FontFace::Source> src;
     Vector<UnicodeRange> unicode_range;
 
@@ -5412,7 +5412,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
         if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
-            Optional<FlyString> format;
+            Optional<DeprecatedFlyString> format;
 
             source_tokens.skip_whitespace();
             if (!source_tokens.has_next_token()) {
@@ -5934,6 +5934,10 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
     }
     if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
         return GridSize::make_auto();
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("max-content"sv))
+        return GridSize(GridSize::Type::MaxContent);
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("min-content"sv))
+        return GridSize(GridSize::Type::MinContent);
     auto dimension = parse_dimension(token);
     if (!dimension.has_value())
         return {};
@@ -6014,11 +6018,11 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
         return {};
 
     Vector<CSS::ExplicitGridTrack> repeat_params;
-    Vector<Vector<DeprecatedString>> line_names_list;
+    Vector<Vector<String>> line_names_list;
     auto last_object_was_line_names = false;
     while (part_two_tokens.has_next_token()) {
         auto token = part_two_tokens.next_token();
-        Vector<DeprecatedString> line_names;
+        Vector<String> line_names;
         if (token.is_block()) {
             if (last_object_was_line_names)
                 return {};
@@ -6028,7 +6032,10 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
-                line_names.append(current_block_token.token().ident());
+                auto maybe_string = String::from_utf8(current_block_token.token().ident());
+                if (maybe_string.is_error())
+                    return {};
+                line_names.append(maybe_string.value());
                 block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
@@ -6112,7 +6119,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
 {
     Vector<CSS::ExplicitGridTrack> track_list;
-    Vector<Vector<DeprecatedString>> line_names_list;
+    Vector<Vector<String>> line_names_list;
     auto last_object_was_line_names = false;
     TokenStream tokens { component_values };
     while (tokens.has_next_token()) {
@@ -6121,13 +6128,16 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             if (last_object_was_line_names)
                 return GridTrackSizeStyleValue::make_auto();
             last_object_was_line_names = true;
-            Vector<DeprecatedString> line_names;
+            Vector<String> line_names;
             if (!token.block().is_square())
                 return GridTrackSizeStyleValue::make_auto();
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
-                line_names.append(current_block_token.token().ident());
+                auto maybe_string = String::from_utf8(current_block_token.token().ident());
+                if (maybe_string.is_error())
+                    return {};
+                line_names.append(maybe_string.value());
                 block_tokens.skip_whitespace();
             }
             line_names_list.append(line_names);
@@ -6189,14 +6199,17 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(1, true));
         if (is_valid_integer(current_token))
             return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(static_cast<int>(current_token.number_value())));
-        if (is_line_name(current_token))
-            return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(current_token.ident()));
+        if (is_line_name(current_token)) {
+            auto maybe_string = String::from_utf8(current_token.ident());
+            if (!maybe_string.is_error())
+                return GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement(maybe_string.value()));
+        }
         return {};
     }
 
     auto span_value = false;
     auto span_or_position_value = 0;
-    DeprecatedString line_name_value;
+    String line_name_value;
     while (true) {
         if (is_auto(current_token))
             return {};
@@ -6213,10 +6226,14 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
                 return {};
         }
         if (is_line_name(current_token)) {
-            if (line_name_value.is_empty())
-                line_name_value = current_token.ident();
-            else
+            if (line_name_value.is_empty()) {
+                auto maybe_string = String::from_utf8(current_token.ident());
+                if (maybe_string.is_error())
+                    return {};
+                line_name_value = maybe_string.release_value();
+            } else {
                 return {};
+            }
         }
         tokens.skip_whitespace();
         if (tokens.has_next_token())
@@ -6273,6 +6290,98 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
         return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement(), parsed_end_value.release_nonnull()->as_grid_track_placement());
 
     return {};
+}
+
+RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
+{
+    auto tokens = TokenStream { component_values };
+    Token current_token;
+
+    auto parse_placement_tokens = [&](Vector<ComponentValue>& placement_tokens, bool check_for_delimiter = true) -> void {
+        current_token = tokens.next_token().token();
+        while (true) {
+            if (check_for_delimiter && current_token.is(Token::Type::Delim) && current_token.delim() == "/"sv)
+                break;
+            placement_tokens.append(current_token);
+            tokens.skip_whitespace();
+            if (!tokens.has_next_token())
+                break;
+            current_token = tokens.next_token().token();
+        }
+    };
+
+    Vector<ComponentValue> row_start_placement_tokens;
+    parse_placement_tokens(row_start_placement_tokens);
+
+    Vector<ComponentValue> column_start_placement_tokens;
+    if (tokens.has_next_token())
+        parse_placement_tokens(column_start_placement_tokens);
+
+    Vector<ComponentValue> row_end_placement_tokens;
+    if (tokens.has_next_token())
+        parse_placement_tokens(row_end_placement_tokens);
+
+    Vector<ComponentValue> column_end_placement_tokens;
+    if (tokens.has_next_token())
+        parse_placement_tokens(column_end_placement_tokens, false);
+
+    // https://www.w3.org/TR/css-grid-2/#placement-shorthands
+    // The grid-area property is a shorthand for grid-row-start, grid-column-start, grid-row-end and
+    // grid-column-end.
+    auto row_start_style_value = parse_grid_track_placement(row_start_placement_tokens);
+    auto column_start_style_value = parse_grid_track_placement(column_start_placement_tokens);
+    auto row_end_style_value = parse_grid_track_placement(row_end_placement_tokens);
+    auto column_end_style_value = parse_grid_track_placement(column_end_placement_tokens);
+
+    // If four <grid-line> values are specified, grid-row-start is set to the first value, grid-column-start
+    // is set to the second value, grid-row-end is set to the third value, and grid-column-end is set to the
+    // fourth value.
+    auto row_start = GridTrackPlacement::make_auto();
+    auto column_start = GridTrackPlacement::make_auto();
+    auto row_end = GridTrackPlacement::make_auto();
+    auto column_end = GridTrackPlacement::make_auto();
+
+    if (row_start_style_value)
+        row_start = row_start_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+
+    // When grid-column-start is omitted, if grid-row-start is a <custom-ident>, all four longhands are set to
+    // that value. Otherwise, it is set to auto.
+    if (column_start_style_value)
+        column_start = column_start_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+    else
+        column_start = row_start;
+
+    // When grid-row-end is omitted, if grid-row-start is a <custom-ident>, grid-row-end is set to that
+    // <custom-ident>; otherwise, it is set to auto.
+    if (row_end_style_value)
+        row_end = row_end_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+    else
+        row_end = column_start;
+
+    // When grid-column-end is omitted, if grid-column-start is a <custom-ident>, grid-column-end is set to
+    // that <custom-ident>; otherwise, it is set to auto.
+    if (column_end_style_value)
+        column_end = column_end_style_value.release_nonnull()->as_grid_track_placement().grid_track_placement();
+    else
+        column_end = row_end;
+
+    return GridAreaShorthandStyleValue::create(row_start, column_start, row_end, column_end);
+}
+
+RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue> const& component_values)
+{
+    Vector<Vector<String>> grid_area_rows;
+    for (auto& component_value : component_values) {
+        Vector<String> grid_area_columns;
+        if (component_value.is(Token::Type::String)) {
+            auto const parts = String::from_utf8(component_value.token().string()).release_value_but_fixme_should_propagate_errors().split(' ').release_value_but_fixme_should_propagate_errors();
+            for (auto& part : parts) {
+                grid_area_columns.append(part);
+            }
+        }
+        grid_area_rows.append(move(grid_area_columns));
+    }
+    return GridTemplateAreaStyleValue::create(grid_area_rows);
 }
 
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
@@ -6411,6 +6520,14 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::GridColumn:
         if (auto parsed_value = parse_grid_track_placement_shorthand_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridArea:
+        if (auto parsed_value = parse_grid_area_shorthand_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::GridTemplateAreas:
+        if (auto parsed_value = parse_grid_template_areas_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridColumnEnd:

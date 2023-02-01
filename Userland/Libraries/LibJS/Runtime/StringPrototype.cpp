@@ -33,7 +33,7 @@
 
 namespace JS {
 
-static ThrowCompletionOr<DeprecatedString> ak_string_from(VM& vm)
+static ThrowCompletionOr<String> utf8_string_from(VM& vm)
 {
     auto this_value = TRY(require_object_coercible(vm, vm.this_value()));
     return TRY(this_value.to_string(vm));
@@ -110,35 +110,53 @@ static bool is_string_well_formed_unicode(Utf16View string)
 // 11.1.4 CodePointAt ( string, position ), https://tc39.es/ecma262/#sec-codepointat
 CodePoint code_point_at(Utf16View const& string, size_t position)
 {
+    // 1. Let size be the length of string.
+    // 2. Assert: position ≥ 0 and position < size.
     VERIFY(position < string.length_in_code_units());
 
+    // 3. Let first be the code unit at index position within string.
     auto first = string.code_unit_at(position);
+
+    // 4. Let cp be the code point whose numeric value is that of first.
     auto code_point = static_cast<u32>(first);
 
-    if (!Utf16View::is_high_surrogate(first) && !Utf16View::is_low_surrogate(first))
+    // 5. If first is not a leading surrogate or trailing surrogate, then
+    if (!is_unicode_surrogate(first)) {
+        // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: false }.
         return { false, code_point, 1 };
+    }
 
-    if (Utf16View::is_low_surrogate(first) || (position + 1 == string.length_in_code_units()))
+    // 6. If first is a trailing surrogate or position + 1 = size, then
+    if (Utf16View::is_low_surrogate(first) || (position + 1 == string.length_in_code_units())) {
+        // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
         return { true, code_point, 1 };
+    }
 
+    // 7. Let second be the code unit at index position + 1 within string.
     auto second = string.code_unit_at(position + 1);
 
-    if (!Utf16View::is_low_surrogate(second))
+    // 8. If second is not a trailing surrogate, then
+    if (!Utf16View::is_low_surrogate(second)) {
+        // a. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 1, [[IsUnpairedSurrogate]]: true }.
         return { true, code_point, 1 };
+    }
 
+    // 9. Set cp to UTF16SurrogatePairToCodePoint(first, second).
     code_point = Utf16View::decode_surrogate_pair(first, second);
+
+    // 10. Return the Record { [[CodePoint]]: cp, [[CodeUnitCount]]: 2, [[IsUnpairedSurrogate]]: false }.
     return { false, code_point, 2 };
 }
 
 StringPrototype::StringPrototype(Realm& realm)
-    : StringObject(*PrimitiveString::create(realm.vm(), DeprecatedString::empty()), *realm.intrinsics().object_prototype())
+    : StringObject(*PrimitiveString::create(realm.vm(), String {}), *realm.intrinsics().object_prototype())
 {
 }
 
-void StringPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> StringPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    StringObject::initialize(realm);
+    MUST_OR_THROW_OOM(StringObject::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     // 22.1.3 Properties of the String Prototype Object, https://tc39.es/ecma262/#sec-properties-of-the-string-prototype-object
@@ -195,6 +213,8 @@ void StringPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.sup, sup, 0, attr);
     define_direct_property(vm.names.trimLeft, get_without_side_effects(vm.names.trimStart), attr);
     define_direct_property(vm.names.trimRight, get_without_side_effects(vm.names.trimEnd), attr);
+
+    return {};
 }
 
 // thisStringValue ( value ), https://tc39.es/ecma262/#thisstringvalue
@@ -237,7 +257,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
         return js_undefined();
 
     // 7. Return ? Get(O, ! ToString(𝔽(k))).
-    return PrimitiveString::create(vm, string.substring_view(index.value(), 1));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(index.value(), 1))));
 }
 
 // 22.1.3.2 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
@@ -246,9 +266,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     auto string = TRY(utf16_string_from(vm));
     auto position = TRY(vm.argument(0).to_integer_or_infinity(vm));
     if (position < 0 || position >= string.length_in_code_units())
-        return PrimitiveString::create(vm, DeprecatedString::empty());
+        return PrimitiveString::create(vm, String {});
 
-    return PrimitiveString::create(vm, string.substring_view(position, 1));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(position, 1))));
 }
 
 // 22.1.3.3 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
@@ -435,7 +455,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
     auto collator = TRY(construct(vm, *realm.intrinsics().intl_collator_constructor(), vm.argument(1), vm.argument(2)));
 
     // 5. Return CompareStrings(collator, S, thatValue).
-    return Intl::compare_strings(static_cast<Intl::Collator&>(*collator), Utf8View(string), Utf8View(that_value));
+    return Intl::compare_strings(static_cast<Intl::Collator&>(*collator), string.code_points(), that_value.code_points());
 }
 
 // 22.1.3.12 String.prototype.match ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.match
@@ -483,14 +503,18 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 {
     // 1. Let O be ? RequireObjectCoercible(this value).
     // 2. Let S be ? ToString(O).
-    auto string = TRY(ak_string_from(vm));
+    auto string = TRY(utf8_string_from(vm));
+
+    String form;
 
     // 3. If form is undefined, let f be "NFC".
+    if (auto form_value = vm.argument(0); form_value.is_undefined()) {
+        form = String::from_utf8_short_string("NFC"sv);
+    }
     // 4. Else, let f be ? ToString(form).
-    DeprecatedString form = "NFC";
-    auto form_value = vm.argument(0);
-    if (!form_value.is_undefined())
+    else {
         form = TRY(form_value.to_string(vm));
+    }
 
     // 5. If f is not one of "NFC", "NFD", "NFKC", or "NFKD", throw a RangeError exception.
     if (!form.is_one_of("NFC"sv, "NFD"sv, "NFKC"sv, "NFKD"sv))
@@ -498,9 +522,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 6. Let ns be the String value that is the result of normalizing S into the normalization form named by f as specified in https://unicode.org/reports/tr15/.
     auto unicode_form = Unicode::normalization_form_from_string(form);
-    auto ns = Unicode::normalize(string, unicode_form);
+    auto ns = TRY_OR_THROW_OOM(vm, Unicode::normalize(string, unicode_form));
 
-    // 7. return ns.
+    // 7. Return ns.
     return PrimitiveString::create(vm, move(ns));
 }
 
@@ -518,7 +542,7 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
     if (max_length <= string_length)
         return PrimitiveString::create(vm, move(string));
 
-    Utf16String fill_string(Vector<u16, 1> { 0x20 });
+    auto fill_string = TRY(Utf16String::create(vm, Utf16Data { 0x20 }));
     if (!vm.argument(1).is_undefined()) {
         fill_string = TRY(vm.argument(1).to_utf16_string(vm));
         if (fill_string.is_empty())
@@ -533,11 +557,11 @@ static ThrowCompletionOr<Value> pad_string(VM& vm, Utf16String string, PadPlacem
         TRY(filler_builder.append(fill_string.view()));
 
     TRY(filler_builder.append(fill_string.substring_view(0, fill_length % fill_code_units)));
-    auto filler = filler_builder.build();
+    auto filler = TRY(filler_builder.to_string());
 
     auto formatted = placement == PadPlacement::Start
-        ? DeprecatedString::formatted("{}{}", filler, string.view())
-        : DeprecatedString::formatted("{}{}", string.view(), filler);
+        ? TRY_OR_THROW_OOM(vm, String::formatted("{}{}", filler, string.view()))
+        : TRY_OR_THROW_OOM(vm, String::formatted("{}{}", string.view(), filler));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -558,7 +582,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 // 22.1.3.17 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 {
-    auto string = TRY(ak_string_from(vm));
+    auto string = TRY(utf8_string_from(vm));
 
     auto n = TRY(vm.argument(0).to_integer_or_infinity(vm));
 
@@ -569,16 +593,16 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
         return vm.throw_completion<RangeError>(ErrorType::StringRepeatCountMustBe, "finite");
 
     if (n == 0)
-        return PrimitiveString::create(vm, DeprecatedString::empty());
+        return PrimitiveString::create(vm, String {});
 
     // NOTE: This is an optimization, it is not required by the specification but it produces equivalent behavior
     if (string.is_empty())
-        return PrimitiveString::create(vm, DeprecatedString::empty());
+        return PrimitiveString::create(vm, String {});
 
     ThrowableStringBuilder builder(vm);
     for (size_t i = 0; i < n; ++i)
         TRY(builder.append(string));
-    return PrimitiveString::create(vm, builder.to_deprecated_string());
+    return PrimitiveString::create(vm, TRY(builder.to_string()));
 }
 
 // 22.1.3.18 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
@@ -606,7 +630,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
         return PrimitiveString::create(vm, move(string));
 
     auto preserved = string.substring_view(0, position.value());
-    DeprecatedString replacement;
+    String replacement;
 
     if (replace_value.is_function()) {
         auto result = TRY(call(vm, replace_value.as_function(), js_undefined(), PrimitiveString::create(vm, search_string), Value(position.value()), PrimitiveString::create(vm, string)));
@@ -620,7 +644,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     TRY(builder.append(replacement));
     TRY(builder.append(string.substring_view(*position + search_string.length_in_code_units())));
 
-    return PrimitiveString::create(vm, builder.build());
+    return PrimitiveString::create(vm, TRY(builder.to_string()));
 }
 
 // 22.1.3.19 String.prototype.replaceAll ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replaceall
@@ -662,7 +686,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     auto position = string_index_of(string.view(), search_string.view(), 0);
 
     while (position.has_value()) {
-        match_positions.append(*position);
+        TRY_OR_THROW_OOM(vm, match_positions.try_append(*position));
         position = string_index_of(string.view(), search_string.view(), *position + advance_by);
     }
 
@@ -671,7 +695,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
 
     for (auto position : match_positions) {
         auto preserved = string.substring_view(end_of_last_match, position - end_of_last_match);
-        DeprecatedString replacement;
+        String replacement;
 
         if (replace_value.is_function()) {
             auto result = TRY(call(vm, replace_value.as_function(), js_undefined(), PrimitiveString::create(vm, search_string), Value(position), PrimitiveString::create(vm, string)));
@@ -689,7 +713,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
     if (end_of_last_match < string_length)
         TRY(result.append(string.substring_view(end_of_last_match)));
 
-    return PrimitiveString::create(vm, result.build());
+    return PrimitiveString::create(vm, TRY(result.to_string()));
 }
 
 // 22.1.3.20 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
@@ -734,9 +758,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     }
 
     if (int_start >= int_end)
-        return PrimitiveString::create(vm, DeprecatedString::empty());
+        return PrimitiveString::create(vm, String {});
 
-    return PrimitiveString::create(vm, string.substring_view(int_start, int_end - int_start));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
 // 22.1.3.22 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
@@ -793,7 +817,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         }
 
         auto segment = string.substring_view(start, position - start);
-        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, segment)));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, segment)))));
         ++array_length;
         if (array_length == limit)
             return array;
@@ -802,7 +826,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     }
 
     auto rest = string.substring_view(start);
-    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, rest)));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, rest)))));
 
     return array;
 }
@@ -867,7 +891,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     size_t to = max(final_start, final_end);
 
     // 10. Return the substring of S from from to to.
-    return PrimitiveString::create(vm, string.substring_view(from, to - from));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(from, to - from))));
 }
 
 enum class TargetCase {
@@ -876,7 +900,7 @@ enum class TargetCase {
 };
 
 // 19.1.2.1 TransformCase ( S, locales, targetCase ), https://tc39.es/ecma402/#sec-transform-case
-static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView string, Value locales, TargetCase target_case)
+static ThrowCompletionOr<String> transform_case(VM& vm, String const& string, Value locales, TargetCase target_case)
 {
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
     auto requested_locales = TRY(Intl::canonicalize_locale_list(vm, locales));
@@ -886,18 +910,18 @@ static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView str
     // 2. If requestedLocales is not an empty List, then
     if (!requested_locales.is_empty()) {
         // a. Let requestedLocale be requestedLocales[0].
-        requested_locale = Locale::parse_unicode_locale_id(requested_locales[0]);
+        requested_locale = TRY_OR_THROW_OOM(vm, Locale::parse_unicode_locale_id(requested_locales[0]));
     }
     // 3. Else,
     else {
         // a. Let requestedLocale be ! DefaultLocale().
-        requested_locale = Locale::parse_unicode_locale_id(Locale::default_locale());
+        requested_locale = TRY_OR_THROW_OOM(vm, Locale::parse_unicode_locale_id(Locale::default_locale()));
     }
     VERIFY(requested_locale.has_value());
 
     // 4. Let noExtensionsLocale be the String value that is requestedLocale with any Unicode locale extension sequences (6.2.1) removed.
     requested_locale->remove_extension_type<Locale::LocaleExtension>();
-    auto no_extensions_locale = requested_locale->to_deprecated_string();
+    auto no_extensions_locale = TRY_OR_THROW_OOM(vm, requested_locale->to_string());
 
     // 5. Let availableLocales be a List with language tags that includes the languages for which the Unicode Character Database contains language sensitive case mappings. Implementations may add additional language tags if they support case mapping for additional locales.
     // 6. Let locale be ! BestAvailableLocale(availableLocales, noExtensionsLocale).
@@ -909,19 +933,19 @@ static ThrowCompletionOr<DeprecatedString> transform_case(VM& vm, StringView str
 
     // 8. Let codePoints be StringToCodePoints(S).
 
-    DeprecatedString new_code_points;
+    String new_code_points;
 
     switch (target_case) {
     // 9. If targetCase is lower, then
     case TargetCase::Lower:
         // a. Let newCodePoints be a List whose elements are the result of a lowercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = Unicode::to_unicode_lowercase_full(string, *locale);
+        new_code_points = TRY_OR_THROW_OOM(vm, string.to_lowercase(*locale));
         break;
     // 10. Else,
     case TargetCase::Upper:
         // a. Assert: targetCase is upper.
         // b. Let newCodePoints be a List whose elements are the result of an uppercase transformation of codePoints according to an implementation-derived algorithm using locale or the Unicode Default Case Conversion algorithm.
-        new_code_points = Unicode::to_unicode_uppercase_full(string, *locale);
+        new_code_points = TRY_OR_THROW_OOM(vm, string.to_uppercase(*locale));
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -939,7 +963,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_lowercase)
 
     // 1. Let O be ? RequireObjectCoercible(this value).
     // 2. Let S be ? ToString(O).
-    auto string = TRY(ak_string_from(vm));
+    auto string = TRY(utf8_string_from(vm));
 
     // 3. Return ? TransformCase(S, locales, lower).
     return PrimitiveString::create(vm, TRY(transform_case(vm, string, locales, TargetCase::Lower)));
@@ -953,7 +977,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 
     // 1. Let O be ? RequireObjectCoercible(this value).
     // 2. Let S be ? ToString(O).
-    auto string = TRY(ak_string_from(vm));
+    auto string = TRY(utf8_string_from(vm));
 
     // 3. Return ? TransformCase(S, locales, upper).
     return PrimitiveString::create(vm, TRY(transform_case(vm, string, locales, TargetCase::Upper)));
@@ -962,8 +986,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_locale_uppercase)
 // 22.1.3.27 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
-    auto string = TRY(ak_string_from(vm));
-    auto lowercase = Unicode::to_unicode_lowercase_full(string);
+    auto string = TRY(utf8_string_from(vm));
+    auto lowercase = TRY_OR_THROW_OOM(vm, string.to_lowercase());
     return PrimitiveString::create(vm, move(lowercase));
 }
 
@@ -976,8 +1000,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 // 22.1.3.29 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
-    auto string = TRY(ak_string_from(vm));
-    auto uppercase = Unicode::to_unicode_uppercase_full(string);
+    auto string = TRY(utf8_string_from(vm));
+    auto uppercase = TRY_OR_THROW_OOM(vm, string.to_uppercase());
     return PrimitiveString::create(vm, move(uppercase));
 }
 
@@ -1018,10 +1042,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_well_formed)
     }
 
     // 7. Return result.
-    return PrimitiveString::create(vm, result.build());
+    return PrimitiveString::create(vm, TRY(result.to_string()));
 }
 
-ThrowCompletionOr<DeprecatedString> trim_string(VM& vm, Value input_value, TrimMode where)
+ThrowCompletionOr<String> trim_string(VM& vm, Value input_value, TrimMode where)
 {
     // 1. Let str be ? RequireObjectCoercible(string).
     auto input_string = TRY(require_object_coercible(vm, input_value));
@@ -1037,7 +1061,7 @@ ThrowCompletionOr<DeprecatedString> trim_string(VM& vm, Value input_value, TrimM
     auto trimmed_string = Utf8View(string).trim(whitespace_characters, where).as_string();
 
     // 6. Return T.
-    return trimmed_string;
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(trimmed_string));
 }
 
 // 22.1.3.30 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
@@ -1108,14 +1132,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
     auto int_end = min((i32)(int_start + int_length), size);
 
     if (int_start >= int_end)
-        return PrimitiveString::create(vm, DeprecatedString::empty());
+        return PrimitiveString::create(vm, String {});
 
     // 11. Return the substring of S from intStart to intEnd.
-    return PrimitiveString::create(vm, string.substring_view(int_start, int_end - int_start));
+    return PrimitiveString::create(vm, TRY(Utf16String::create(vm, string.substring_view(int_start, int_end - int_start))));
 }
 
 // B.2.2.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
-static ThrowCompletionOr<Value> create_html(VM& vm, Value string, DeprecatedString const& tag, DeprecatedString const& attribute, Value value)
+static ThrowCompletionOr<Value> create_html(VM& vm, Value string, StringView tag, StringView attribute, Value value)
 {
     TRY(require_object_coercible(vm, string));
     auto str = TRY(string.to_string(vm));
@@ -1127,7 +1151,7 @@ static ThrowCompletionOr<Value> create_html(VM& vm, Value string, DeprecatedStri
         TRY(builder.append(' '));
         TRY(builder.append(attribute));
         TRY(builder.append("=\""sv));
-        TRY(builder.append(value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All)));
+        TRY(builder.append(TRY_OR_THROW_OOM(vm, value_string.replace("\""sv, "&quot;"sv, ReplaceMode::All))));
         TRY(builder.append('"'));
     }
     TRY(builder.append('>'));
@@ -1135,85 +1159,85 @@ static ThrowCompletionOr<Value> create_html(VM& vm, Value string, DeprecatedStri
     TRY(builder.append("</"sv));
     TRY(builder.append(tag));
     TRY(builder.append('>'));
-    return PrimitiveString::create(vm, builder.build());
+    return PrimitiveString::create(vm, TRY(builder.to_string()));
 }
 
 // B.2.2.2 String.prototype.anchor ( name ), https://tc39.es/ecma262/#sec-string.prototype.anchor
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::anchor)
 {
-    return create_html(vm, vm.this_value(), "a", "name", vm.argument(0));
+    return create_html(vm, vm.this_value(), "a"sv, "name"sv, vm.argument(0));
 }
 
 // B.2.2.3 String.prototype.big ( ), https://tc39.es/ecma262/#sec-string.prototype.big
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::big)
 {
-    return create_html(vm, vm.this_value(), "big", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "big"sv, {}, Value());
 }
 
 // B.2.2.4 String.prototype.blink ( ), https://tc39.es/ecma262/#sec-string.prototype.blink
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::blink)
 {
-    return create_html(vm, vm.this_value(), "blink", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "blink"sv, {}, Value());
 }
 
 // B.2.2.5 String.prototype.bold ( ), https://tc39.es/ecma262/#sec-string.prototype.bold
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::bold)
 {
-    return create_html(vm, vm.this_value(), "b", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "b"sv, {}, Value());
 }
 
 // B.2.2.6 String.prototype.fixed ( ), https://tc39.es/ecma262/#sec-string.prototype.fixed
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fixed)
 {
-    return create_html(vm, vm.this_value(), "tt", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "tt"sv, {}, Value());
 }
 
 // B.2.2.7 String.prototype.fontcolor ( color ), https://tc39.es/ecma262/#sec-string.prototype.fontcolor
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontcolor)
 {
-    return create_html(vm, vm.this_value(), "font", "color", vm.argument(0));
+    return create_html(vm, vm.this_value(), "font"sv, "color"sv, vm.argument(0));
 }
 
 // B.2.2.8 String.prototype.fontsize ( size ), https://tc39.es/ecma262/#sec-string.prototype.fontsize
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontsize)
 {
-    return create_html(vm, vm.this_value(), "font", "size", vm.argument(0));
+    return create_html(vm, vm.this_value(), "font"sv, "size"sv, vm.argument(0));
 }
 
 // B.2.2.9 String.prototype.italics ( ), https://tc39.es/ecma262/#sec-string.prototype.italics
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::italics)
 {
-    return create_html(vm, vm.this_value(), "i", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "i"sv, {}, Value());
 }
 
 // B.2.2.10 String.prototype.link ( url ), https://tc39.es/ecma262/#sec-string.prototype.link
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::link)
 {
-    return create_html(vm, vm.this_value(), "a", "href", vm.argument(0));
+    return create_html(vm, vm.this_value(), "a"sv, "href"sv, vm.argument(0));
 }
 
 // B.2.2.11 String.prototype.small ( ), https://tc39.es/ecma262/#sec-string.prototype.small
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::small)
 {
-    return create_html(vm, vm.this_value(), "small", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "small"sv, {}, Value());
 }
 
 // B.2.2.12 String.prototype.strike ( ), https://tc39.es/ecma262/#sec-string.prototype.strike
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::strike)
 {
-    return create_html(vm, vm.this_value(), "strike", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "strike"sv, {}, Value());
 }
 
 // B.2.2.13 String.prototype.sub ( ), https://tc39.es/ecma262/#sec-string.prototype.sub
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sub)
 {
-    return create_html(vm, vm.this_value(), "sub", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "sub"sv, {}, Value());
 }
 
 // B.2.2.14 String.prototype.sup ( ), https://tc39.es/ecma262/#sec-string.prototype.sup
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 {
-    return create_html(vm, vm.this_value(), "sup", DeprecatedString::empty(), Value());
+    return create_html(vm, vm.this_value(), "sup"sv, {}, Value());
 }
 
 }

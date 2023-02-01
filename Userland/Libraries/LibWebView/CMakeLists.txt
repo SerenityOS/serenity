@@ -1,8 +1,10 @@
 set(SOURCES
+    AccessibilityTreeModel.cpp
     DOMTreeModel.cpp
     OutOfProcessWebView.cpp
     RequestServerAdapter.cpp
     StylePropertiesModel.cpp
+    ViewImplementation.cpp
     WebContentClient.cpp
     WebSocketClientAdapter.cpp
 )

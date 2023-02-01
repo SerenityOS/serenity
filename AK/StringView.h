@@ -49,16 +49,21 @@ public:
     StringView(ByteBuffer const&);
 #ifndef KERNEL
     StringView(String const&);
-    StringView(DeprecatedString const&);
     StringView(FlyString const&);
+    StringView(DeprecatedString const&);
+    StringView(DeprecatedFlyString const&);
 #endif
 
     explicit StringView(ByteBuffer&&) = delete;
 #ifndef KERNEL
     explicit StringView(String&&) = delete;
-    explicit StringView(DeprecatedString&&) = delete;
     explicit StringView(FlyString&&) = delete;
+    explicit StringView(DeprecatedString&&) = delete;
+    explicit StringView(DeprecatedFlyString&&) = delete;
 #endif
+
+    template<OneOf<String, FlyString, DeprecatedString, DeprecatedFlyString, ByteBuffer> StringType>
+    StringView& operator=(StringType&&) = delete;
 
     [[nodiscard]] constexpr bool is_null() const
     {
@@ -348,6 +353,7 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
             return 0;
         return case_insensitive_string_hash(s.characters_without_null_termination(), s.length());
     }
+    static bool equals(StringView const& a, StringView const& b) { return a.equals_ignoring_case(b); }
 };
 
 }

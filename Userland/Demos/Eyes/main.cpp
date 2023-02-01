@@ -40,7 +40,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -97,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Eyes Demo", app_icon, window)));
 
-    auto eyes_widget = TRY(window->try_set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
+    auto eyes_widget = TRY(window->set_main_widget<EyesWidget>(num_eyes, full_rows, extra_columns));
     eyes_widget->on_context_menu_request = [&](auto& event) {
         file_menu->popup(event.screen_position());
     };

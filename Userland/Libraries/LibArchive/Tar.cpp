@@ -24,10 +24,12 @@ unsigned TarFileHeader::expected_checksum() const
     return checksum;
 }
 
-void TarFileHeader::calculate_checksum()
+ErrorOr<void> TarFileHeader::calculate_checksum()
 {
     memset(m_checksum, ' ', sizeof(m_checksum));
-    VERIFY(DeprecatedString::formatted("{:06o}", expected_checksum()).copy_characters_to_buffer(m_checksum, sizeof(m_checksum)));
+    bool copy_successful = TRY(String::formatted("{:06o}", expected_checksum())).bytes_as_string_view().copy_characters_to_buffer(m_checksum, sizeof(m_checksum));
+    VERIFY(copy_successful);
+    return {};
 }
 
 bool TarFileHeader::is_zero_block() const

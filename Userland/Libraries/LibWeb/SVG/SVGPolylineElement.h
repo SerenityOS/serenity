@@ -16,12 +16,14 @@ class SVGPolylineElement final : public SVGGeometryElement {
 public:
     virtual ~SVGPolylineElement() override = default;
 
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
 
     virtual Gfx::Path& get_path() override;
 
 private:
     SVGPolylineElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     Optional<Gfx::Path> m_path;
 

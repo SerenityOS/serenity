@@ -13,9 +13,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
+JS::NonnullGCPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
 {
-    return adopt_ref(*new ImagePaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<ImagePaintable>(layout_box);
 }
 
 ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box)

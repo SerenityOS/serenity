@@ -21,7 +21,7 @@ struct FlacTest : Test::TestCase {
 
     void run() const
     {
-        auto result = Audio::FlacLoaderPlugin::try_create(m_path.string());
+        auto result = Audio::FlacLoaderPlugin::create(m_path.string());
         if (result.is_error()) {
             FAIL(DeprecatedString::formatted("{} (at {})", result.error().description, result.error().index));
             return;

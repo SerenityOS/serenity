@@ -31,12 +31,14 @@
 
 namespace Web::WebDriver {
 
-#define TRY_OR_JS_ERROR(expression)                          \
-    ({                                                       \
-        auto _temporary_result = (expression);               \
-        if (_temporary_result.is_error()) [[unlikely]]       \
-            return ExecuteScriptResultType::JavaScriptError; \
-        _temporary_result.release_value();                   \
+#define TRY_OR_JS_ERROR(expression)                                                                  \
+    ({                                                                                               \
+        auto _temporary_result = (expression);                                                       \
+        if (_temporary_result.is_error()) [[unlikely]]                                               \
+            return ExecuteScriptResultType::JavaScriptError;                                         \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        _temporary_result.release_value();                                                           \
     })
 
 static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm(JS::Realm&, JS::Value, HashTable<JS::Object*>& seen);
@@ -95,7 +97,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm
     if (value.is_number())
         return JsonValue { value.as_double() };
     if (value.is_string())
-        return JsonValue { value.as_string().deprecated_string() };
+        return JsonValue { TRY_OR_JS_ERROR(value.as_string().deprecated_string()) };
 
     // NOTE: BigInt and Symbol not mentioned anywhere in the WebDriver spec, as it references ES5.
     //       It assumes that all primitives are handled above, and the value is an object for the remaining steps.
@@ -114,7 +116,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm
         auto to_json_result = TRY_OR_JS_ERROR(to_json.as_function().internal_call(value, JS::MarkedVector<JS::Value> { vm.heap() }));
         if (!to_json_result.is_string())
             return ExecuteScriptResultType::JavaScriptError;
-        return to_json_result.as_string().deprecated_string();
+        return TRY_OR_JS_ERROR(to_json_result.as_string().deprecated_string());
     }
 
     // -> Otherwise

@@ -87,7 +87,7 @@ public:
         m_sql_client->on_next_result = [](auto, auto, auto row) {
             StringBuilder builder;
             builder.join(", "sv, row);
-            outln("{}", builder.build());
+            outln("{}", builder.to_deprecated_string());
         };
 
         m_sql_client->on_results_exhausted = [this](auto, auto, auto total_rows) {
@@ -299,7 +299,7 @@ private:
         for (auto i = 0; i < level; ++i)
             prompt_builder.append("    "sv);
 
-        return prompt_builder.build();
+        return prompt_builder.to_deprecated_string();
     }
 
     bool handle_command(StringView command)

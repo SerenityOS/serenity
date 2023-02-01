@@ -49,8 +49,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Minesweeper");
     window->resize(139, 177);
 
-    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    widget->load_from_gml(minesweeper_window_gml);
+    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(widget->load_from_gml(minesweeper_window_gml));
 
     auto& separator = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("separator");
     auto& container = *widget->find_descendant_of_type_named<GUI::Widget>("container");
@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
     })));
 

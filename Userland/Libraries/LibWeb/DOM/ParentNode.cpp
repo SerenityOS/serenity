@@ -103,7 +103,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::children()
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagname
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString const& qualified_name)
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(DeprecatedFlyString const& qualified_name)
 {
     // 1. If qualifiedName is "*" (U+002A), return a HTMLCollection rooted at root, whose filter matches only descendant elements.
     if (qualified_name == "*") {
@@ -132,7 +132,7 @@ JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name(FlyString 
 
 // https://dom.spec.whatwg.org/#concept-getelementsbytagnamens
 // NOTE: This method is only exposed on Document and Element, but is in ParentNode to prevent code duplication.
-JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(FlyString const& nullable_namespace, FlyString const& local_name)
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_tag_name_ns(DeprecatedFlyString const& nullable_namespace, DeprecatedFlyString const& local_name)
 {
     // 1. If namespace is the empty string, set it to null.
     DeprecatedString namespace_ = nullable_namespace;

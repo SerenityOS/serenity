@@ -11,7 +11,7 @@ namespace Web::DOM {
 
 JS::NonnullGCPtr<NodeList> StaticNodeList::create(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)
 {
-    return realm.heap().allocate<StaticNodeList>(realm, realm, move(static_nodes));
+    return realm.heap().allocate<StaticNodeList>(realm, realm, move(static_nodes)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 StaticNodeList::StaticNodeList(JS::Realm& realm, Vector<JS::Handle<Node>> static_nodes)

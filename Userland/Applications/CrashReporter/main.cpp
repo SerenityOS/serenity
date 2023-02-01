@@ -11,8 +11,6 @@
 #include <AK/Types.h>
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
-#include <LibC/serenity.h>
-#include <LibC/spawn.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -39,6 +37,8 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <LibThreading/BackgroundAction.h>
+#include <serenity.h>
+#include <spawn.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -100,7 +100,7 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
 
     return {
         DeprecatedString::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
-        builder.build()
+        builder.to_deprecated_string()
     };
 }
 
@@ -125,7 +125,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 
     return {
         DeprecatedString::formatted("Thread #{} (TID {})", thread_index, thread_info.tid),
-        builder.build()
+        builder.to_deprecated_string()
     };
 }
 
@@ -181,8 +181,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             unlink_coredump(coredump_path);
     };
 
-    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    widget->load_from_gml(crash_reporter_window_gml);
+    auto widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(widget->load_from_gml(crash_reporter_window_gml));
 
     auto& icon_image_widget = *widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     icon_image_widget.set_bitmap(GUI::FileIconProvider::icon_for_executable(executable_path).bitmap_for_size(32));
@@ -265,13 +265,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     close_button.set_focus(true);
 
     auto& debug_button = *widget->find_descendant_of_type_named<GUI::Button>("debug_button");
-    debug_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
+    debug_button.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)));
     debug_button.on_click = [&](int) {
         GUI::Process::spawn_or_show_error(window, "/bin/HackStudio"sv, Array { "-c", coredump_path.characters() });
     };
 
     auto& save_backtrace_button = *widget->find_descendant_of_type_named<GUI::Button>("save_backtrace_button");
-    save_backtrace_button.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
+    save_backtrace_button.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
     save_backtrace_button.on_click = [&](auto) {
         LexicalPath lexical_path(DeprecatedString::formatted("{}_{}_backtrace.txt", pid, app_name));
         auto file_or_error = FileSystemAccessClient::Client::the().save_file(window, lexical_path.title(), lexical_path.extension());
@@ -280,7 +280,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto file = file_or_error.release_value();
+        auto file = file_or_error.release_value().release_stream();
         if (auto result = file->write(full_backtrace.to_byte_buffer()); result.is_error())
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", result.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };

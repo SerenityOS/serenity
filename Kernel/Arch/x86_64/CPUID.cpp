@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-StringView cpu_feature_to_string_view(CPUFeature::Type const& feature)
+StringView cpu_feature_to_name(CPUFeature::Type const& feature)
 {
     if (feature == CPUFeature::SSE3)
         return "sse3"sv;

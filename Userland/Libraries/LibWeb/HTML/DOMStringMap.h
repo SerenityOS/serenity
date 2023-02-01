@@ -31,10 +31,11 @@ public:
 private:
     explicit DOMStringMap(DOM::Element&);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^LegacyPlatformObject
-    virtual JS::Value named_item_value(FlyString const&) const override;
+    virtual JS::Value named_item_value(DeprecatedFlyString const&) const override;
     virtual Vector<DeprecatedString> supported_property_names() const override;
 
     struct NameValuePair {

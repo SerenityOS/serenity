@@ -53,6 +53,8 @@ protected:
     Blob(JS::Realm&, ByteBuffer, DeprecatedString type);
     Blob(JS::Realm&, ByteBuffer);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
 private:
     explicit Blob(JS::Realm&);
 

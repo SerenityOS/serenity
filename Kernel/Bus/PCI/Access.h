@@ -9,6 +9,7 @@
 #include <AK/Bitmap.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
@@ -33,34 +34,34 @@ public:
     static bool is_disabled();
     static bool is_hardware_disabled();
 
-    void write8_field(Address address, u32 field, u8 value);
-    void write16_field(Address address, u32 field, u16 value);
-    void write32_field(Address address, u32 field, u32 value);
-    u8 read8_field(Address address, u32 field);
-    u16 read16_field(Address address, u32 field);
-    u32 read32_field(Address address, u32 field);
-    DeviceIdentifier get_device_identifier(Address address) const;
+    void write8_field(DeviceIdentifier const&, u32 field, u8 value);
+    void write16_field(DeviceIdentifier const&, u32 field, u16 value);
+    void write32_field(DeviceIdentifier const&, u32 field, u32 value);
+    u8 read8_field(DeviceIdentifier const&, u32 field);
+    u16 read16_field(DeviceIdentifier const&, u32 field);
+    u32 read32_field(DeviceIdentifier const&, u32 field);
+
+    // FIXME: Remove this once we can use PCI::Capability with inline buffer
+    // so we don't need this method
+    DeviceIdentifier const& get_device_identifier(Address address) const;
 
     Spinlock<LockRank::None> const& scan_lock() const { return m_scan_lock; }
     RecursiveSpinlock<LockRank::None> const& access_lock() const { return m_access_lock; }
 
-    ErrorOr<void> add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController>, Function<void(DeviceIdentifier const&)> callback);
+    ErrorOr<void> add_host_controller_and_scan_for_devices(NonnullOwnPtr<HostController>);
 
 private:
-    u8 read8_field(Address address, RegisterOffset field);
-    u16 read16_field(Address address, RegisterOffset field);
+    u8 read8_field(DeviceIdentifier const&, RegisterOffset field);
+    u16 read16_field(DeviceIdentifier const&, RegisterOffset field);
 
     void add_host_controller(NonnullOwnPtr<HostController>);
     bool find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg);
     Access();
 
-    Vector<Capability> get_capabilities(Address);
-    Optional<u8> get_capabilities_pointer(Address address);
-
     mutable RecursiveSpinlock<LockRank::None> m_access_lock {};
     mutable Spinlock<LockRank::None> m_scan_lock {};
 
     HashMap<u32, NonnullOwnPtr<PCI::HostController>> m_host_controllers;
-    Vector<DeviceIdentifier> m_device_identifiers;
+    NonnullRefPtrVector<DeviceIdentifier> m_device_identifiers;
 };
 }

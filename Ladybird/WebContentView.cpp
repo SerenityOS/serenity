@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,7 +25,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/IODevice.h>
-#include <LibCore/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -44,11 +44,11 @@
 #include <QInputDialog>
 #include <QLineEdit>
 #include <QMessageBox>
+#include <QMimeData>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QScrollBar>
-#include <QSocketNotifier>
 #include <QTextEdit>
 #include <QTimer>
 #include <QToolTip>
@@ -57,10 +57,12 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
     : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     setMouseTracking(true);
+    setAcceptDrops(true);
 
     setFocusPolicy(Qt::FocusPolicy::StrongFocus);
 
-    m_inverse_pixel_scaling_ratio = 1.0 / devicePixelRatio();
+    m_device_pixel_ratio = devicePixelRatio();
+    m_inverse_pixel_scaling_ratio = 1.0 / m_device_pixel_ratio;
 
     verticalScrollBar()->setSingleStep(24);
     horizontalScrollBar()->setSingleStep(24);
@@ -78,18 +80,6 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
 WebContentView::~WebContentView()
 {
     close_sub_widgets();
-}
-
-void WebContentView::load(AK::URL const& url)
-{
-    m_url = url;
-    client().async_load_url(url);
-}
-
-void WebContentView::load_html(StringView html, AK::URL const& url)
-{
-    m_url = url;
-    client().async_load_html(html, url);
 }
 
 unsigned get_button_from_qt_event(QMouseEvent const& event)
@@ -322,6 +312,19 @@ void WebContentView::mouseReleaseEvent(QMouseEvent* event)
     client().async_mouse_up(to_content(position), button, buttons, modifiers);
 }
 
+void WebContentView::dragEnterEvent(QDragEnterEvent* event)
+{
+    if (event->mimeData()->hasUrls())
+        event->acceptProposedAction();
+}
+
+void WebContentView::dropEvent(QDropEvent* event)
+{
+    VERIFY(event->mimeData()->hasUrls());
+    emit urls_dropped(event->mimeData()->urls());
+    event->acceptProposedAction();
+}
+
 void WebContentView::keyPressEvent(QKeyEvent* event)
 {
     switch (event->key()) {
@@ -429,13 +432,13 @@ void WebContentView::handle_resize()
     if (available_size.is_empty())
         return;
 
-    if (auto new_bitmap_or_error = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size); !new_bitmap_or_error.is_error()) {
+    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size); !new_bitmap_or_error.is_error()) {
         m_client_state.front_bitmap.bitmap = new_bitmap_or_error.release_value();
         m_client_state.front_bitmap.id = m_client_state.next_bitmap_id++;
         client().async_add_backing_store(m_client_state.front_bitmap.id, m_client_state.front_bitmap.bitmap->to_shareable_bitmap());
     }
 
-    if (auto new_bitmap_or_error = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size); !new_bitmap_or_error.is_error()) {
+    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size); !new_bitmap_or_error.is_error()) {
         m_client_state.back_bitmap.bitmap = new_bitmap_or_error.release_value();
         m_client_state.back_bitmap.id = m_client_state.next_bitmap_id++;
         client().async_add_backing_store(m_client_state.back_bitmap.id, m_client_state.back_bitmap.bitmap->to_shareable_bitmap());
@@ -454,16 +457,6 @@ void WebContentView::update_viewport_rect()
     client().async_set_viewport_rect(rect);
 
     request_repaint();
-}
-
-void WebContentView::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
-{
-    client().async_debug_request(request, argument);
-}
-
-void WebContentView::run_javascript(DeprecatedString const& js_source)
-{
-    client().async_run_javascript(js_source);
 }
 
 void WebContentView::did_output_js_console_message(i32 message_index)
@@ -530,28 +523,6 @@ bool WebContentView::is_inspector_open() const
     return m_inspector_widget && m_inspector_widget->isVisible();
 }
 
-void WebContentView::inspect_dom_tree()
-{
-    client().async_inspect_dom_tree();
-}
-
-ErrorOr<Ladybird::DOMNodeProperties> WebContentView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
-{
-    auto response = client().inspect_dom_node(node_id, pseudo_element);
-    if (!response.has_style())
-        return Error::from_string_view("Inspected node returned no style"sv);
-    return Ladybird::DOMNodeProperties {
-        .computed_style_json = TRY(String::from_deprecated_string(response.take_computed_style())),
-        .resolved_style_json = TRY(String::from_deprecated_string(response.take_resolved_style())),
-        .custom_properties_json = TRY(String::from_deprecated_string(response.take_custom_properties())),
-    };
-}
-
-void WebContentView::clear_inspected_dom_node()
-{
-    (void)inspect_dom_node(0, {});
-}
-
 void WebContentView::show_inspector()
 {
     ensure_inspector_widget();
@@ -559,19 +530,11 @@ void WebContentView::show_inspector()
     inspect_dom_tree();
 }
 
-void WebContentView::set_color_scheme(ColorScheme color_scheme)
+void WebContentView::update_zoom()
 {
-    switch (color_scheme) {
-    case ColorScheme::Auto:
-        client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
-        break;
-    case ColorScheme::Light:
-        client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
-        break;
-    case ColorScheme::Dark:
-        client().async_set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
-        break;
-    }
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    update_viewport_rect();
+    request_repaint();
 }
 
 void WebContentView::showEvent(QShowEvent* event)
@@ -584,12 +547,6 @@ void WebContentView::hideEvent(QHideEvent* event)
 {
     QAbstractScrollArea::hideEvent(event);
     client().async_set_system_visibility_state(false);
-}
-
-WebContentClient& WebContentView::client()
-{
-    VERIFY(m_client_state.client);
-    return *m_client_state.client;
 }
 
 void WebContentView::create_client()
@@ -649,8 +606,10 @@ void WebContentView::create_client()
     auto new_client = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(std::move(socket), *this)));
     new_client->set_fd_passing_socket(MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
-    auto* notifier = new QSocketNotifier(new_client->socket().fd().value(), QSocketNotifier::Type::Read);
-    QObject::connect(notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
+    m_web_content_notifier.setSocket(new_client->socket().fd().value());
+    m_web_content_notifier.setEnabled(true);
+
+    QObject::connect(&m_web_content_notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
         if (auto notifier = new_client->socket().notifier())
             notifier->on_ready_to_read();
     });
@@ -672,6 +631,7 @@ void WebContentView::create_client()
         });
     };
 
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
     client().async_update_system_theme(MUST(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root))));
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
@@ -840,6 +800,8 @@ void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, A
     m_url = url;
     if (is_inspector_open())
         inspect_dom_tree();
+    if (on_load_finish)
+        on_load_finish(url);
 }
 
 void WebContentView::notify_server_did_request_navigate_back(Badge<WebContentClient>)
@@ -929,11 +891,6 @@ void WebContentView::notify_server_did_request_dismiss_dialog(Badge<WebContentCl
 {
     if (m_dialog)
         m_dialog->reject();
-}
-
-void WebContentView::get_source()
-{
-    client().async_get_source();
 }
 
 void WebContentView::notify_server_did_get_source(AK::URL const& url, DeprecatedString const& source)
@@ -1049,11 +1006,11 @@ Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
 
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = Core::File::open(path, Core::OpenMode::ReadOnly);
+    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else
-        client().async_handle_file_return(0, IPC::File(file.value()->leak_fd()), request_id);
+        client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
 }
 
 void WebContentView::request_repaint()
@@ -1092,4 +1049,14 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
     // FIXME: Currently Ladybird handles the keyboard shortcuts before passing the event to web content, so
     //        we don't need to do anything here. But we'll need to once we start asking web content first.
     (void)event_was_accepted;
+}
+
+void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const&)
+{
+    dbgln("TODO: support accessibility tree in Ladybird");
+}
+
+ErrorOr<String> WebContentView::dump_layout_tree()
+{
+    return String::from_deprecated_string(client().dump_layout_tree());
 }

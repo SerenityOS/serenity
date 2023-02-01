@@ -24,6 +24,7 @@ public:
 
     // This is used both by Type 1 and TrueType fonts.
     struct CommonData {
+        DeprecatedFlyString base_font_name;
         RefPtr<Gfx::Font> font;
         RefPtr<StreamObject> to_unicode;
         RefPtr<Encoding> encoding;
@@ -45,6 +46,7 @@ public:
 
     virtual bool is_standard_font() const { return m_is_standard_font; }
     virtual Type type() const = 0;
+    virtual DeprecatedFlyString base_font_name() const = 0;
 
 protected:
     static Tuple<DeprecatedString, DeprecatedString> replacement_for_standard_latin_font(StringView);

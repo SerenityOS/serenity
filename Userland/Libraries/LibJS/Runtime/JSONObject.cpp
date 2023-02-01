@@ -31,16 +31,18 @@ JSONObject::JSONObject(Realm& realm)
 {
 }
 
-void JSONObject::initialize(Realm& realm)
+ThrowCompletionOr<void> JSONObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.stringify, stringify, 3, attr);
     define_native_function(realm, vm.names.parse, parse, 2, attr);
 
     // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "JSON"), Attribute::Configurable);
+
+    return {};
 }
 
 // 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
@@ -63,13 +65,13 @@ ThrowCompletionOr<DeprecatedString> JSONObject::stringify_impl(VM& vm, Value val
                     auto replacer_value = TRY(replacer_object.get(i));
                     DeprecatedString item;
                     if (replacer_value.is_string()) {
-                        item = replacer_value.as_string().deprecated_string();
+                        item = TRY(replacer_value.as_string().deprecated_string());
                     } else if (replacer_value.is_number()) {
-                        item = MUST(replacer_value.to_string(vm));
+                        item = MUST(replacer_value.to_deprecated_string(vm));
                     } else if (replacer_value.is_object()) {
                         auto& value_object = replacer_value.as_object();
                         if (is<StringObject>(value_object) || is<NumberObject>(value_object))
-                            item = TRY(replacer_value.to_string(vm));
+                            item = TRY(replacer_value.to_deprecated_string(vm));
                     }
                     if (!item.is_null() && !list.contains_slow(item)) {
                         list.append(item);
@@ -93,7 +95,7 @@ ThrowCompletionOr<DeprecatedString> JSONObject::stringify_impl(VM& vm, Value val
         space_mv = min(10, space_mv);
         state.gap = space_mv < 1 ? DeprecatedString::empty() : DeprecatedString::repeated(' ', space_mv);
     } else if (space.is_string()) {
-        auto string = space.as_string().deprecated_string();
+        auto string = TRY(space.as_string().deprecated_string());
         if (string.length() <= 10)
             state.gap = string;
         else
@@ -185,13 +187,13 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_property(VM& vm, 
 
     // 8. If Type(value) is String, return QuoteJSONString(value).
     if (value.is_string())
-        return quote_json_string(value.as_string().deprecated_string());
+        return quote_json_string(TRY(value.as_string().deprecated_string()));
 
     // 9. If Type(value) is Number, then
     if (value.is_number()) {
         // a. If value is finite, return ! ToString(value).
         if (value.is_finite_number())
-            return MUST(value.to_string(vm));
+            return MUST(value.to_deprecated_string(vm));
 
         // b. Return "null".
         return "null"sv;
@@ -250,7 +252,7 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_object(VM& vm, St
     } else {
         auto property_list = TRY(object.enumerable_own_property_names(PropertyKind::Key));
         for (auto& property : property_list)
-            TRY(process_property(property.as_string().deprecated_string()));
+            TRY(process_property(TRY(property.as_string().deprecated_string())));
     }
     StringBuilder builder;
     if (property_strings.is_empty()) {
@@ -350,10 +352,15 @@ ThrowCompletionOr<DeprecatedString> JSONObject::serialize_json_array(VM& vm, Str
 // 25.5.2.2 QuoteJSONString ( value ), https://tc39.es/ecma262/#sec-quotejsonstring
 DeprecatedString JSONObject::quote_json_string(DeprecatedString string)
 {
+    // 1. Let product be the String value consisting solely of the code unit 0x0022 (QUOTATION MARK).
     StringBuilder builder;
     builder.append('"');
+
+    // 2. For each code point C of StringToCodePoints(value), do
     auto utf_view = Utf8View(string);
     for (auto code_point : utf_view) {
+        // a. If C is listed in the “Code Point” column of Table 70, then
+        // i. Set product to the string-concatenation of product and the escape sequence for C as specified in the “Escape Sequence” column of the corresponding row.
         switch (code_point) {
         case '\b':
             builder.append("\\b"sv);
@@ -377,14 +384,23 @@ DeprecatedString JSONObject::quote_json_string(DeprecatedString string)
             builder.append("\\\\"sv);
             break;
         default:
-            if (code_point < 0x20 || Utf16View::is_high_surrogate(code_point) || Utf16View::is_low_surrogate(code_point)) {
+            // b. Else if C has a numeric value less than 0x0020 (SPACE), or if C has the same numeric value as a leading surrogate or trailing surrogate, then
+            if (code_point < 0x20 || is_unicode_surrogate(code_point)) {
+                // i. Let unit be the code unit whose numeric value is that of C.
+                // ii. Set product to the string-concatenation of product and UnicodeEscape(unit).
                 builder.appendff("\\u{:04x}", code_point);
-            } else {
+            }
+            // c. Else,
+            else {
+                // i. Set product to the string-concatenation of product and UTF16EncodeCodePoint(C).
                 builder.append_code_point(code_point);
             }
         }
     }
+    // 3. Set product to the string-concatenation of product and the code unit 0x0022 (QUOTATION MARK).
     builder.append('"');
+
+    // 4. Return product.
     return builder.to_deprecated_string();
 }
 
@@ -393,7 +409,7 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
     auto& realm = *vm.current_realm();
 
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto reviver = vm.argument(1);
 
     auto json = JsonValue::from_string(string);
@@ -473,7 +489,7 @@ ThrowCompletionOr<Value> JSONObject::internalize_json_property(VM& vm, Object* h
         } else {
             auto property_list = TRY(value_object.enumerable_own_property_names(Object::PropertyKind::Key));
             for (auto& property_key : property_list)
-                TRY(process_property(property_key.as_string().deprecated_string()));
+                TRY(process_property(TRY(property_key.as_string().deprecated_string())));
         }
     }
 

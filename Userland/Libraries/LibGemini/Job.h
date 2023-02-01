@@ -17,7 +17,7 @@ class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
 public:
-    explicit Job(GeminiRequest const&, Core::Stream::Stream&);
+    explicit Job(GeminiRequest const&, AK::Stream&);
     virtual ~Job() override = default;
 
     virtual void start(Core::Stream::Socket&) override;
@@ -29,21 +29,24 @@ public:
     const URL& url() const { return m_request.url(); }
     Core::Stream::Socket const* socket() const { return m_socket; }
 
+    ErrorOr<size_t> response_length() const;
+
 protected:
     void finish_up();
     void on_socket_connected();
     void flush_received_buffers();
     void register_on_ready_to_read(Function<void()>);
     bool can_read_line() const;
-    DeprecatedString read_line(size_t);
+    ErrorOr<String> read_line(size_t);
     bool can_read() const;
-    ByteBuffer receive(size_t);
+    ErrorOr<ByteBuffer> receive(size_t);
     bool write(ReadonlyBytes);
 
     enum class State {
         InStatus,
         InBody,
         Finished,
+        Failed,
     };
 
     GeminiRequest m_request;

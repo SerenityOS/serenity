@@ -112,13 +112,13 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
     return to_px(viewport_rect, layout_node.font().pixel_metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
 }
 
-DeprecatedString Length::to_deprecated_string() const
+ErrorOr<String> Length::to_string() const
 {
     if (is_calculated())
-        return m_calculated_style->to_deprecated_string();
+        return m_calculated_style->to_string();
     if (is_auto())
-        return "auto";
-    return DeprecatedString::formatted("{}{}", m_value, unit_name());
+        return String::from_utf8("auto"sv);
+    return String::formatted("{}{}", m_value, unit_name());
 }
 
 char const* Length::unit_name() const

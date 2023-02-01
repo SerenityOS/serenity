@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/FileStream.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
@@ -20,7 +19,7 @@ class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
 public:
-    explicit Job(HttpRequest&&, Core::Stream::Stream&);
+    explicit Job(HttpRequest&&, AK::Stream&);
     virtual ~Job() override = default;
 
     virtual void start(Core::Stream::Socket&) override;

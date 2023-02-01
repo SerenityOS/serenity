@@ -28,7 +28,7 @@ Game::Game()
     m_delay_timer = Core::Timer::create_single_shot(0, [this] {
         dbgln_if(HEARTS_DEBUG, "Continuing game after delay...");
         advance_game();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 
     constexpr int card_overlap = 20;
     constexpr int outer_border_size = 15;
@@ -122,16 +122,16 @@ void Game::show_score_card(bool game_over)
     score_dialog->set_resizable(false);
     score_dialog->set_icon(window()->icon());
 
-    auto& score_widget = score_dialog->set_main_widget<GUI::Widget>();
-    score_widget.set_fill_with_background_color(true);
-    auto& layout = score_widget.set_layout<GUI::HorizontalBoxLayout>();
+    auto score_widget = score_dialog->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    score_widget->set_fill_with_background_color(true);
+    auto& layout = score_widget->set_layout<GUI::HorizontalBoxLayout>();
     layout.set_margins(10);
     layout.set_spacing(15);
 
-    auto& card_container = score_widget.add<GUI::Widget>();
+    auto& card_container = score_widget->add<GUI::Widget>();
     auto& score_card = card_container.add<ScoreCard>(m_players, game_over);
 
-    auto& button_container = score_widget.add<GUI::Widget>();
+    auto& button_container = score_widget->add<GUI::Widget>();
     button_container.set_shrink_to_fit(true);
     button_container.set_layout<GUI::VerticalBoxLayout>();
 
@@ -155,7 +155,7 @@ void Game::show_score_card(bool game_over)
     if (!m_players[0].is_human) {
         close_timer = Core::Timer::create_single_shot(2000, [&] {
             score_dialog->close();
-        });
+        }).release_value_but_fixme_should_propagate_errors();
         close_timer->start();
     }
 
@@ -199,7 +199,7 @@ void Game::setup(DeprecatedString player_name, int hand_number)
         m_passing_button->set_focus(false);
     }
 
-    NonnullRefPtrVector<Card> deck = Cards::create_standard_deck(Cards::Shuffle::Yes);
+    NonnullRefPtrVector<Card> deck = Cards::create_standard_deck(Cards::Shuffle::Yes).release_value_but_fixme_should_propagate_errors();
 
     for (auto& player : m_players) {
         player.hand.ensure_capacity(Card::card_count);
@@ -236,7 +236,7 @@ void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, F
     m_animation_delay_timer = Core::Timer::create_single_shot(initial_delay_ms, [&] {
         m_animation_playing = true;
         start_timer(10);
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_animation_delay_timer->start();
 }
 

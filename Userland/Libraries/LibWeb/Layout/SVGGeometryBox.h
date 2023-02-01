@@ -24,7 +24,7 @@ public:
     float viewbox_scaling() const;
     CSSPixelPoint viewbox_origin() const;
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_svg_geometry_box() const final { return true; }

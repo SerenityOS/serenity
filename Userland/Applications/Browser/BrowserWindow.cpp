@@ -73,12 +73,12 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Browser");
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.load_from_gml(browser_window_gml);
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
 
-    auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
+    auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
-    m_tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    m_tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
         top_line.set_visible(tab_count > 1);
     };
@@ -179,6 +179,25 @@ void BrowserWindow::build_menus()
     auto& view_menu = add_menu("&View");
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_action(WindowActions::the().vertical_tabs_action());
+    view_menu.add_separator();
+    view_menu.add_action(GUI::CommonActions::make_zoom_in_action(
+        [this](auto&) {
+            auto& tab = active_tab();
+            tab.view().zoom_in();
+        },
+        this));
+    view_menu.add_action(GUI::CommonActions::make_zoom_out_action(
+        [this](auto&) {
+            auto& tab = active_tab();
+            tab.view().zoom_out();
+        },
+        this));
+    view_menu.add_action(GUI::CommonActions::make_reset_zoom_action(
+        [this](auto&) {
+            auto& tab = active_tab();
+            tab.view().reset_zoom();
+        },
+        this));
     view_menu.add_separator();
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action(
         [this](auto&) {
@@ -336,7 +355,7 @@ void BrowserWindow::build_menus()
     }
 
     settings_menu.add_separator();
-    auto open_settings_action = GUI::Action::create("Browser &Settings", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
+    auto open_settings_action = GUI::Action::create("Browser &Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv).release_value_but_fixme_should_propagate_errors(),
         [this](auto&) {
             GUI::Process::spawn_or_show_error(this, "/bin/BrowserSettings"sv);
         });
@@ -487,8 +506,8 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
                 if (!json_item.is_object())
                     continue;
                 auto search_engine = json_item.as_object();
-                auto name = search_engine.get("title"sv).to_deprecated_string();
-                auto url_format = search_engine.get("url_format"sv).to_deprecated_string();
+                auto name = search_engine.get_deprecated_string("title"sv).value();
+                auto url_format = search_engine.get_deprecated_string("url_format"sv).value();
 
                 auto action = GUI::Action::create_checkable(
                     name, [&, url_format](auto&) {

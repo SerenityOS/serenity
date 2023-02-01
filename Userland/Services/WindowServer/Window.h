@@ -242,6 +242,9 @@ public:
         m_backing_store_serial = serial;
     }
 
+    Gfx::IntSize backing_store_visible_size() const { return m_backing_store_visible_size; }
+    void set_backing_store_visible_size(Gfx::IntSize visible_size) { m_backing_store_visible_size = visible_size; }
+
     void swap_backing_stores()
     {
         swap(m_backing_store, m_last_backing_store);
@@ -251,7 +254,6 @@ public:
     Gfx::Bitmap* last_backing_store() { return m_last_backing_store.ptr(); }
     i32 last_backing_store_serial() const { return m_last_backing_store_serial; }
 
-    void set_global_cursor_tracking_enabled(bool);
     void set_automatic_cursor_tracking_enabled(bool enabled) { m_automatic_cursor_tracking_enabled = enabled; }
     bool is_automatic_cursor_tracking() const { return m_automatic_cursor_tracking_enabled; }
 
@@ -384,7 +386,6 @@ private:
     void add_child_window(Window&);
     void ensure_window_menu();
     void update_window_menu_items();
-    void modal_unparented();
     ErrorOr<Optional<DeprecatedString>> compute_title_username(ConnectionFromClient* client);
 
     ConnectionFromClient* m_client { nullptr };
@@ -434,6 +435,7 @@ private:
     bool m_occluded { false };
     RefPtr<Gfx::Bitmap> m_backing_store;
     RefPtr<Gfx::Bitmap> m_last_backing_store;
+    Gfx::IntSize m_backing_store_visible_size {};
     i32 m_backing_store_serial { -1 };
     i32 m_last_backing_store_serial { -1 };
     int m_window_id { -1 };

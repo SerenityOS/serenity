@@ -17,10 +17,17 @@ URLSearchParams::URLSearchParams(JS::Realm& realm, Vector<QueryParam> list)
     : PlatformObject(realm)
     , m_list(move(list))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "URLSearchParams"));
 }
 
 URLSearchParams::~URLSearchParams() = default;
+
+JS::ThrowCompletionOr<void> URLSearchParams::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsPrototype>(realm, "URLSearchParams"));
+
+    return {};
+}
 
 void URLSearchParams::visit_edges(Cell::Visitor& visitor)
 {
@@ -84,7 +91,7 @@ Vector<QueryParam> url_decode(StringView input)
 
 JS::NonnullGCPtr<URLSearchParams> URLSearchParams::create(JS::Realm& realm, Vector<QueryParam> list)
 {
-    return realm.heap().allocate<URLSearchParams>(realm, realm, move(list));
+    return realm.heap().allocate<URLSearchParams>(realm, realm, move(list)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams

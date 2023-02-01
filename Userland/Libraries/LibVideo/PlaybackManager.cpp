@@ -33,16 +33,9 @@ PlaybackManager::PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demu
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
     , m_frame_queue(make<VideoFrameQueue>())
-    , m_present_timer(Core::Timer::construct())
-    , m_decode_timer(Core::Timer::construct())
 {
-    m_present_timer->set_single_shot(true);
-    m_present_timer->set_interval(0);
-    m_present_timer->on_timeout = [&] { update_presented_frame(); };
-
-    m_decode_timer->set_single_shot(true);
-    m_decode_timer->set_interval(0);
-    m_decode_timer->on_timeout = [&] { on_decode_timer(); };
+    m_present_timer = Core::Timer::create_single_shot(0, [&] { update_presented_frame(); }).release_value_but_fixme_should_propagate_errors();
+    m_decode_timer = Core::Timer::create_single_shot(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
 }
 
 void PlaybackManager::set_playback_status(PlaybackStatus status)
@@ -280,6 +273,8 @@ bool PlaybackManager::decode_and_queue_one_sample()
             m_present_timer->start(0);                                                                                  \
             return false;                                                                                               \
         }                                                                                                               \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                    \
+            "Do not return a reference from a fallible expression");                                                    \
         _temporary_result.release_value();                                                                              \
     })
 

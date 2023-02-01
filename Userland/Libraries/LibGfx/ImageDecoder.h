@@ -34,12 +34,13 @@ public:
     virtual void set_volatile() = 0;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) = 0;
 
-    virtual bool sniff() = 0;
+    virtual bool initialize() = 0;
 
     virtual bool is_animated() = 0;
     virtual size_t loop_count() = 0;
     virtual size_t frame_count() = 0;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) = 0;
+    virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() = 0;
 
 protected:
     ImageDecoderPlugin() = default;
@@ -47,7 +48,7 @@ protected:
 
 class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
-    static RefPtr<ImageDecoder> try_create(ReadonlyBytes);
+    static RefPtr<ImageDecoder> try_create_for_raw_bytes(ReadonlyBytes, Optional<DeprecatedString> mime_type = {});
     ~ImageDecoder() = default;
 
     IntSize size() const { return m_plugin->size(); }
@@ -55,11 +56,11 @@ public:
     int height() const { return size().height(); }
     void set_volatile() { m_plugin->set_volatile(); }
     [[nodiscard]] bool set_nonvolatile(bool& was_purged) { return m_plugin->set_nonvolatile(was_purged); }
-    bool sniff() const { return m_plugin->sniff(); }
     bool is_animated() const { return m_plugin->is_animated(); }
     size_t loop_count() const { return m_plugin->loop_count(); }
     size_t frame_count() const { return m_plugin->frame_count(); }
     ErrorOr<ImageFrameDescriptor> frame(size_t index) const { return m_plugin->frame(index); }
+    ErrorOr<Optional<ReadonlyBytes>> icc_data() const { return m_plugin->icc_data(); }
 
 private:
     explicit ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin>);

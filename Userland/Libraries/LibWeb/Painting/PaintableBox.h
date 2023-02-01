@@ -14,8 +14,10 @@
 namespace Web::Painting {
 
 class PaintableBox : public Paintable {
+    JS_CELL(PaintableBox, Paintable);
+
 public:
-    static NonnullRefPtr<PaintableBox> create(Layout::Box const&);
+    static JS::NonnullGCPtr<PaintableBox> create(Layout::Box const&);
     virtual ~PaintableBox();
 
     virtual void paint(PaintContext&, PaintPhase) const override;
@@ -112,8 +114,8 @@ public:
     DOM::Document const& document() const { return layout_box().document(); }
     DOM::Document& document() { return layout_box().document(); }
 
-    virtual void before_children_paint(PaintContext&, PaintPhase) const override;
-    virtual void after_children_paint(PaintContext&, PaintPhase) const override;
+    virtual void apply_clip_overflow_rect(PaintContext&, PaintPhase) const override;
+    virtual void clear_clip_overflow_rect(PaintContext&, PaintPhase) const override;
 
     virtual Optional<HitTestResult> hit_test(CSSPixelPoint, HitTestType) const override;
 
@@ -155,18 +157,17 @@ private:
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;
 
-    Optional<Gfx::IntRect> mutable m_clip_rect;
+    Gfx::IntRect mutable m_clip_rect;
 
     mutable bool m_clipping_overflow { false };
     Optional<BorderRadiusCornerClipper> mutable m_overflow_corner_radius_clipper;
 };
 
-class PaintableWithLines : public PaintableBox {
+class PaintableWithLines final : public PaintableBox {
+    JS_CELL(PaintableWithLines, PaintableBox);
+
 public:
-    static NonnullRefPtr<PaintableWithLines> create(Layout::BlockContainer const& block_container)
-    {
-        return adopt_ref(*new PaintableWithLines(block_container));
-    }
+    static JS::NonnullGCPtr<PaintableWithLines> create(Layout::BlockContainer const&);
     virtual ~PaintableWithLines() override;
 
     Layout::BlockContainer const& layout_box() const;

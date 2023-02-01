@@ -180,10 +180,10 @@ DateConstructor::DateConstructor(Realm& realm)
 {
 }
 
-void DateConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> DateConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().date_prototype(), 0);
@@ -194,6 +194,8 @@ void DateConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.UTC, utc, 7, attr);
 
     define_direct_property(vm.names.length, Value(7), Attribute::Configurable);
+
+    return {};
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
@@ -241,7 +243,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DateConstructor::construct(FunctionObjec
             if (primitive.is_string()) {
                 // 1. Assert: The next step never returns an abrupt completion because Type(v) is String.
                 // 2. Let tv be the result of parsing v as a date, in exactly the same manner as for the parse method (21.4.3.2).
-                time_value = parse_date_string(primitive.as_string().deprecated_string());
+                time_value = parse_date_string(TRY(primitive.as_string().deprecated_string()));
             }
             // iii. Else,
             else {
@@ -316,7 +318,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     if (!vm.argument_count())
         return js_nan();
 
-    auto date_string = TRY(vm.argument(0).to_string(vm));
+    auto date_string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     return Value(parse_date_string(date_string));
 }

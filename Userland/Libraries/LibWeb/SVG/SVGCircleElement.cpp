@@ -14,10 +14,17 @@ namespace Web::SVG {
 SVGCircleElement::SVGCircleElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : SVGGeometryElement(document, qualified_name)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "SVGCircleElement"));
 }
 
-void SVGCircleElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+JS::ThrowCompletionOr<void> SVGCircleElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGCircleElementPrototype>(realm, "SVGCircleElement"));
+
+    return {};
+}
+
+void SVGCircleElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     SVGGeometryElement::parse_attribute(name, value);
 

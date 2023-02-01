@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
@@ -31,22 +32,22 @@ private:
 };
 
 // https://tc39.es/ecma262/#eqn-HoursPerDay
-constexpr double hours_per_day = 24;
+constexpr inline double hours_per_day = 24;
 // https://tc39.es/ecma262/#eqn-MinutesPerHour
-constexpr double minutes_per_hour = 60;
+constexpr inline double minutes_per_hour = 60;
 // https://tc39.es/ecma262/#eqn-SecondsPerMinute
-constexpr double seconds_per_minute = 60;
+constexpr inline double seconds_per_minute = 60;
 // https://tc39.es/ecma262/#eqn-msPerSecond
-constexpr double ms_per_second = 1'000;
+constexpr inline double ms_per_second = 1'000;
 // https://tc39.es/ecma262/#eqn-msPerMinute
-constexpr double ms_per_minute = 60'000;
+constexpr inline double ms_per_minute = 60'000;
 // https://tc39.es/ecma262/#eqn-msPerHour
-constexpr double ms_per_hour = 3'600'000;
+constexpr inline double ms_per_hour = 3'600'000;
 // https://tc39.es/ecma262/#eqn-msPerDay
-constexpr double ms_per_day = 86'400'000;
+constexpr inline double ms_per_day = 86'400'000;
 // https://tc39.es/proposal-temporal/#eqn-nsPerDay
-constexpr double ns_per_day = 86'400'000'000'000;
-static auto const ns_per_day_bigint = "86400000000000"_sbigint;
+constexpr inline double ns_per_day = 86'400'000'000'000;
+extern Crypto::SignedBigInteger const ns_per_day_bigint;
 
 u16 day_within_year(double);
 u8 date_from_time(double);

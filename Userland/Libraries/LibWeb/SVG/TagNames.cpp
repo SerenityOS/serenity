@@ -8,7 +8,7 @@
 
 namespace Web::SVG::TagNames {
 
-#define __ENUMERATE_SVG_TAG(name) FlyString name;
+#define __ENUMERATE_SVG_TAG(name) DeprecatedFlyString name;
 ENUMERATE_SVG_TAGS
 #undef __ENUMERATE_SVG_TAG
 

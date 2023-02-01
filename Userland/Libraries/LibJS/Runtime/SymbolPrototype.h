@@ -14,7 +14,7 @@ class SymbolPrototype final : public Object {
     JS_OBJECT(SymbolPrototype, Object);
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~SymbolPrototype() override = default;
 
 private:

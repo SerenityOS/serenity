@@ -194,13 +194,13 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~TestRunnerGlobalObject() override = default;
 };
 
-inline void TestRunnerGlobalObject::initialize(JS::Realm& realm)
+inline JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     for (auto& entry : s_exposed_global_functions) {
@@ -211,6 +211,8 @@ inline void TestRunnerGlobalObject::initialize(JS::Realm& realm)
             },
             entry.value.length, JS::default_attributes);
     }
+
+    return {};
 }
 
 inline ByteBuffer load_entire_file(StringView path)
@@ -422,9 +424,9 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
             VERIFY(test_value.is_object());
             VERIFY(test_value.as_object().has("result"sv));
 
-            auto result = test_value.as_object().get("result"sv);
-            VERIFY(result.is_string());
-            auto result_string = result.as_string();
+            auto result = test_value.as_object().get_deprecated_string("result"sv);
+            VERIFY(result.has_value());
+            auto result_string = result.value();
             if (result_string == "pass") {
                 test.result = Test::Result::Pass;
                 m_counts.tests_passed++;
@@ -433,9 +435,9 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 m_counts.tests_failed++;
                 suite.most_severe_test_result = Test::Result::Fail;
                 VERIFY(test_value.as_object().has("details"sv));
-                auto details = test_value.as_object().get("details"sv);
-                VERIFY(result.is_string());
-                test.details = details.as_string();
+                auto details = test_value.as_object().get_deprecated_string("details"sv);
+                VERIFY(result.has_value());
+                test.details = details.value();
             } else {
                 test.result = Test::Result::Skip;
                 if (suite.most_severe_test_result == Test::Result::Pass)
@@ -443,7 +445,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
                 m_counts.tests_skipped++;
             }
 
-            test.duration_us = test_value.as_object().get("duration"sv).to_u64(0);
+            test.duration_us = test_value.as_object().get_u64("duration"sv).value_or(0);
 
             suite.tests.append(test);
         });

@@ -12,7 +12,6 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio proc rpath"));
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

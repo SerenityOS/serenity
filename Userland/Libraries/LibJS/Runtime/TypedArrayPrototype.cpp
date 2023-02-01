@@ -21,10 +21,10 @@ TypedArrayPrototype::TypedArrayPrototype(Realm& realm)
 {
 }
 
-void TypedArrayPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> TypedArrayPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_accessor(realm, vm.names.buffer, buffer_getter, nullptr, Attribute::Configurable);
@@ -70,6 +70,8 @@ void TypedArrayPrototype::initialize(Realm& realm)
 
     // 23.2.3.34 %TypedArray%.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
+
+    return {};
 }
 
 static ThrowCompletionOr<TypedArrayBase*> typed_array_from_this(VM& vm)
@@ -753,7 +755,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     // 5. Else, let sep be ? ToString(separator).
     DeprecatedString separator = ",";
     if (!vm.argument(0).is_undefined())
-        separator = TRY(vm.argument(0).to_string(vm));
+        separator = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 6. Let R be the empty String.
     StringBuilder builder;
@@ -771,7 +773,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
         // c. If element is undefined, let next be the empty String; otherwise, let next be ! ToString(element).
         if (element.is_undefined())
             continue;
-        auto next = MUST(element.to_string(vm));
+        auto next = MUST(element.to_deprecated_string(vm));
 
         // d. Set R to the string-concatenation of R and next.
         builder.append(next);
@@ -1556,7 +1558,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_locale_string)
         if (!next_element.is_nullish()) {
             // i. Let S be ? ToString(? Invoke(nextElement, "toLocaleString", « locales, options »)).
             auto locale_string_value = TRY(next_element.invoke(vm, vm.names.toLocaleString, locales, options));
-            auto locale_string = TRY(locale_string_value.to_string(vm));
+            auto locale_string = TRY(locale_string_value.to_deprecated_string(vm));
 
             // ii. Set R to the string-concatenation of R and S.
             builder.append(locale_string);

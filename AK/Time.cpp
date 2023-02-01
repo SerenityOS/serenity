@@ -256,26 +256,6 @@ Time& Time::operator-=(Time const& other)
     return *this;
 }
 
-bool Time::operator<(Time const& other) const
-{
-    return m_seconds < other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds < other.m_nanoseconds);
-}
-
-bool Time::operator<=(Time const& other) const
-{
-    return m_seconds < other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds <= other.m_nanoseconds);
-}
-
-bool Time::operator>(Time const& other) const
-{
-    return m_seconds > other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds > other.m_nanoseconds);
-}
-
-bool Time::operator>=(Time const& other) const
-{
-    return m_seconds > other.m_seconds || (m_seconds == other.m_seconds && m_nanoseconds >= other.m_nanoseconds);
-}
-
 Time Time::from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds)
 {
     VERIFY(nanoseconds < 1'000'000'000);

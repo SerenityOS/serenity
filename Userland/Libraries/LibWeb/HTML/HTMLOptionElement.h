@@ -30,14 +30,18 @@ public:
 
     bool disabled() const;
 
+    virtual Optional<ARIA::Role> default_role() const override;
+
 private:
     friend class Bindings::OptionConstructor;
     friend class HTMLSelectElement;
 
     HTMLOptionElement(DOM::Document&, DOM::QualifiedName);
 
-    void parse_attribute(FlyString const& name, DeprecatedString const& value) override;
-    void did_remove_attribute(FlyString const& name) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
+    void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    void did_remove_attribute(DeprecatedFlyString const& name) override;
 
     void ask_for_a_reset();
 

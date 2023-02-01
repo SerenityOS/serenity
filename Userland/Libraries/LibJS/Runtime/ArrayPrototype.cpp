@@ -33,10 +33,10 @@ ArrayPrototype::ArrayPrototype(Realm& realm)
 {
 }
 
-void ArrayPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ArrayPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Array::initialize(realm);
+    MUST_OR_THROW_OOM(Array::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(realm, vm.names.at, at, 1, attr);
@@ -110,6 +110,8 @@ void ArrayPrototype::initialize(Realm& realm)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
     define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
+
+    return {};
 }
 
 // 10.4.2.3 ArraySpeciesCreate ( originalArray, length ), https://tc39.es/ecma262/#sec-arrayspeciescreate
@@ -1000,7 +1002,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     auto length = TRY(length_of_array_like(vm, *this_object));
     DeprecatedString separator = ",";
     if (!vm.argument(0).is_undefined())
-        separator = TRY(vm.argument(0).to_string(vm));
+        separator = TRY(vm.argument(0).to_deprecated_string(vm));
     StringBuilder builder;
     for (size_t i = 0; i < length; ++i) {
         if (i > 0)
@@ -1008,7 +1010,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
         auto value = TRY(this_object->get(i));
         if (value.is_nullish())
             continue;
-        auto string = TRY(value.to_string(vm));
+        auto string = TRY(value.to_deprecated_string(vm));
         builder.append(string);
     }
 
@@ -1735,7 +1737,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
             auto locale_string_result = TRY(value.invoke(vm, vm.names.toLocaleString, locales, options));
 
             // ii. Set R to the string-concatenation of R and S.
-            auto string = TRY(locale_string_result.to_string(vm));
+            auto string = TRY(locale_string_result.to_deprecated_string(vm));
             builder.append(string);
         }
 

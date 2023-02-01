@@ -13,16 +13,6 @@
 
 namespace Web::Bindings {
 
-JS::Object& Intrinsics::cached_web_prototype(DeprecatedString const& class_name)
-{
-    auto it = m_prototypes.find(class_name);
-    if (it == m_prototypes.end()) {
-        dbgln("Missing prototype: {}", class_name);
-    }
-    VERIFY(it != m_prototypes.end());
-    return *it->value;
-}
-
 void Intrinsics::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);

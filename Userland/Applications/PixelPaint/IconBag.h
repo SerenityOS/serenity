@@ -11,7 +11,7 @@
 
 namespace PixelPaint {
 struct IconBag final {
-    static ErrorOr<IconBag> try_create();
+    static ErrorOr<IconBag> create();
 
     RefPtr<Gfx::Bitmap> filetype_pixelpaint { nullptr };
     RefPtr<Gfx::Bitmap> new_clipboard { nullptr };

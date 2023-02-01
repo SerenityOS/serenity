@@ -21,14 +21,12 @@
 #include <Kernel/Memory/RegionTree.h>
 #include <Kernel/Memory/VMObject.h>
 
-namespace Kernel {
-class PageDirectoryEntry;
-class PageTableEntry;
-}
-
 struct KmallocGlobalData;
 
 namespace Kernel::Memory {
+
+class PageDirectoryEntry;
+class PageTableEntry;
 
 ErrorOr<FlatPtr> page_round_up(FlatPtr x);
 

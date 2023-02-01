@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Intl/NumberFormatConstructor.h>
 #include <LibJS/Runtime/Intl/PluralRules.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -148,7 +149,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
             VERIFY(patterns.size() == 1);
 
             // i. Let result be patterns.[[<valueString>]].
-            auto result = patterns[0].pattern.to_deprecated_string();
+            auto result = TRY_OR_THROW_OOM(vm, String::from_utf8(patterns[0].pattern));
 
             // ii. Return a List containing the Record { [[Type]]: "literal", [[Value]]: result }.
             return Vector<PatternPartitionWithUnit> { { "literal"sv, move(result) } };
@@ -174,25 +175,25 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
     auto patterns = find_patterns_for_tense_or_number(tense);
 
     // 20. Let fv be ! PartitionNumberPattern(relativeTimeFormat.[[NumberFormat]], value).
-    auto value_partitions = partition_number_pattern(vm, relative_time_format.number_format(), Value(value));
+    auto value_partitions = MUST_OR_THROW_OOM(partition_number_pattern(vm, relative_time_format.number_format(), Value(value)));
 
     // 21. Let pr be ! ResolvePlural(relativeTimeFormat.[[PluralRules]], value).
-    auto plurality = resolve_plural(relative_time_format.plural_rules(), Value(value));
+    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, relative_time_format.plural_rules(), Value(value)));
 
     // 22. Let pattern be po.[[<pr>]].
-    auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality; });
+    auto pattern = patterns.find_if([&](auto& p) { return p.plurality == plurality.plural_category; });
     if (pattern == patterns.end())
         return Vector<PatternPartitionWithUnit> {};
 
     // 23. Return ! MakePartsList(pattern, unit, fv).
-    return make_parts_list(pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions));
+    return MUST_OR_THROW_OOM(make_parts_list(vm, pattern->pattern, ::Locale::time_unit_to_string(time_unit), move(value_partitions)));
 }
 
 // 17.5.3 MakePartsList ( pattern, unit, parts ), https://tc39.es/ecma402/#sec-makepartslist
-Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView unit, Vector<PatternPartition> parts)
+ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, StringView pattern, StringView unit, Vector<PatternPartition> parts)
 {
     // 1. Let patternParts be PartitionPattern(pattern).
-    auto pattern_parts = partition_pattern(pattern);
+    auto pattern_parts = MUST_OR_THROW_OOM(partition_pattern(vm, pattern));
 
     // 2. Let result be a new empty List.
     Vector<PatternPartitionWithUnit> result;
@@ -222,22 +223,22 @@ Vector<PatternPartitionWithUnit> make_parts_list(StringView pattern, StringView 
 }
 
 // 17.5.4 FormatRelativeTime ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTime
-ThrowCompletionOr<DeprecatedString> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
+ThrowCompletionOr<String> format_relative_time(VM& vm, RelativeTimeFormat& relative_time_format, double value, StringView unit)
 {
     // 1. Let parts be ? PartitionRelativeTimePattern(relativeTimeFormat, value, unit).
     auto parts = TRY(partition_relative_time_pattern(vm, relative_time_format, value, unit));
 
     // 2. Let result be an empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 3. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
     for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(move(part.value));
+        MUST_OR_THROW_OOM(result.append(part.value));
     }
 
     // 4. Return result.
-    return result.build();
+    return result.to_string();
 }
 
 // 17.5.5 FormatRelativeTimeToParts ( relativeTimeFormat, value, unit ), https://tc39.es/ecma402/#sec-FormatRelativeTimeToParts

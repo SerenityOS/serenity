@@ -40,10 +40,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
     json.as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
-        auto uid = entry.get("uid"sv).to_u32();
-        [[maybe_unused]] auto pid = entry.get("pid"sv).to_i32();
+        auto uid = entry.get_deprecated("uid"sv).to_u32();
+        [[maybe_unused]] auto pid = entry.get_deprecated("pid"sv).to_i32();
 
-        auto login_time = Core::DateTime::from_timestamp(entry.get("login_at"sv).to_number<time_t>());
+        auto login_time = Core::DateTime::from_timestamp(entry.get_deprecated("login_at"sv).to_number<time_t>());
         auto login_at = login_time.to_deprecated_string("%b%d %H:%M:%S"sv);
 
         auto* pw = getpwuid(uid);

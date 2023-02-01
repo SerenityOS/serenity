@@ -18,9 +18,9 @@ ListFormatPrototype::ListFormatPrototype(Realm& realm)
 {
 }
 
-void ListFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> ListFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -31,6 +31,8 @@ void ListFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.format, format, 1, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 1, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 13.3.3 Intl.ListFormat.prototype.format ( list ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.format
@@ -46,7 +48,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format)
     auto string_list = TRY(string_list_from_iterable(vm, list));
 
     // 4. Return ! FormatList(lf, stringList).
-    auto formatted = format_list(*list_format, string_list);
+    auto formatted = MUST_OR_THROW_OOM(format_list(vm, *list_format, string_list));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -63,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(ListFormatPrototype::format_to_parts)
     auto string_list = TRY(string_list_from_iterable(vm, list));
 
     // 4. Return ! FormatListToParts(lf, stringList).
-    return format_list_to_parts(vm, *list_format, string_list);
+    return MUST_OR_THROW_OOM(format_list_to_parts(vm, *list_format, string_list));
 }
 
 // 13.3.5 Intl.ListFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.resolvedoptions

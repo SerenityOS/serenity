@@ -15,14 +15,14 @@ class TypedArrayConstructor : public NativeFunction {
 
 public:
     explicit TypedArrayConstructor(Realm&);
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~TypedArrayConstructor() override = default;
 
     virtual ThrowCompletionOr<Value> call() override;
     virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target) override;
 
 protected:
-    TypedArrayConstructor(FlyString const& name, Object& prototype);
+    TypedArrayConstructor(DeprecatedFlyString const& name, Object& prototype);
 
 private:
     virtual bool has_constructor() const override { return true; }

@@ -26,34 +26,35 @@ static bool is_supported_model(u16 device_id)
     return false;
 }
 
-LockRefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<bool> IntelNativeGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    VERIFY(pci_device_identifier.hardware_id().vendor_id == 0x8086);
-    if (!is_supported_model(pci_device_identifier.hardware_id().device_id))
-        return {};
-    auto adapter = adopt_lock_ref(*new IntelNativeGraphicsAdapter(pci_device_identifier.address()));
-    MUST(adapter->initialize_adapter());
+    return is_supported_model(pci_device_identifier.hardware_id().device_id);
+}
+
+ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> IntelNativeGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+{
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelNativeGraphicsAdapter(pci_device_identifier)));
+    TRY(adapter->initialize_adapter());
     return adapter;
 }
 
 ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 {
-    auto address = pci_address();
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", address);
-    auto bar0_space_size = PCI::get_BAR_space_size(address, PCI::HeaderType0BaseRegister::BAR0);
+    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", device_identifier().address());
+    auto bar0_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR0);
     VERIFY(bar0_space_size == 0x80000);
-    auto bar2_space_size = PCI::get_BAR_space_size(address, PCI::HeaderType0BaseRegister::BAR2);
-    dmesgln_pci(*this, "MMIO @ {}, space size is {:x} bytes", PhysicalAddress(PCI::get_BAR0(address)), bar0_space_size);
-    dmesgln_pci(*this, "framebuffer @ {}", PhysicalAddress(PCI::get_BAR2(address)));
-    PCI::enable_bus_mastering(address);
+    auto bar2_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR2);
+    dmesgln_pci(*this, "MMIO @ {}, space size is {:x} bytes", PhysicalAddress(PCI::get_BAR0(device_identifier())), bar0_space_size);
+    dmesgln_pci(*this, "framebuffer @ {}", PhysicalAddress(PCI::get_BAR2(device_identifier())));
+    PCI::enable_bus_mastering(device_identifier());
 
-    m_display_connector = IntelNativeDisplayConnector::must_create(PhysicalAddress(PCI::get_BAR2(address) & 0xfffffff0), bar2_space_size, PhysicalAddress(PCI::get_BAR0(address) & 0xfffffff0), bar0_space_size);
+    m_display_connector = TRY(IntelNativeDisplayConnector::try_create(PhysicalAddress(PCI::get_BAR2(device_identifier()) & 0xfffffff0), bar2_space_size, PhysicalAddress(PCI::get_BAR0(device_identifier()) & 0xfffffff0), bar0_space_size));
     return {};
 }
 
-IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
+IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
     : GenericGraphicsAdapter()
-    , PCI::Device(address)
+    , PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
 {
 }
 

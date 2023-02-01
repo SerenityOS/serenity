@@ -12,9 +12,16 @@ namespace Web::DOM {
 CDATASection::CDATASection(Document& document, DeprecatedString const& data)
     : Text(document, NodeType::CDATA_SECTION_NODE, data)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "CDATASection"));
 }
 
 CDATASection::~CDATASection() = default;
+
+JS::ThrowCompletionOr<void> CDATASection::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CDATASectionPrototype>(realm, "CDATASection"));
+
+    return {};
+}
 
 }

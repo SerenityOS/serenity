@@ -63,19 +63,67 @@ Note: Our `TRY(...)` macro functions similarly to the `?` [operator in rust](htt
 The `MUST(...)` macro is similar to `TRY(...)` except the macro enforces that
 the code run inside the macro must succeed, otherwise we assert.
 
+Note that `MUST(...)` should not be used as a replacement for `TRY(...)` in cases where error propagation is not (currently) possible.
+Instead, the `release_value_but_fixme_should_propagate_errors()` method of `ErrorOr<>` should be used to retrieve the value
+and to mark the location for future improvement. `MUST(...)` is reserved for cases where we determine through other circumstances that it
+should not be possible for the code inside the macro to fail or if a failure is serious enough that the program _needs_ to crash.
+
 ### Example:
 
 ```cpp
-#include <AK/Try.h>
-#include <AK/String.h>
+#include <AK/Vector.h>
 
 ... snip ...
 
-void log_that_can_not_fail(StringView fmtstr, TypeErasedFormatParams& params)
+ErrorOr<void> insert_one_to_onehundred(Vector<int>& vector)
 {
-    StringBuilder builder;
-    MUST(vformat(builder, fmtstr, params));
-    return builder.to_deprecated_string();
+    TRY(vector.try_ensure_capacity(vector.size() + 100));
+
+    for (int i = 1; i <= 100; i++) {
+        // We previously made sure that we allocated enough space, so the append operation shouldn't ever fail.
+        MUST(vector.try_append(i));
+    }
+
+    return {};
+}
+```
+
+## Fallible Constructors
+
+The usual C++ constructors are incompatible with SerenityOS' method of handling errors,
+as potential errors are passed using the `ErrorOr` return type. As a replacement, classes
+that require fallible operations during their construction define a static function that
+is fallible instead.
+
+This fallible function (which should usually be named `create`) will handle any errors while
+preparing arguments for the internal constructor and run any required fallible operations after
+the object has been initialized. The resulting object is then returned as `ErrorOr<T>` or
+`ErrorOr<NonnullOwnPtr<T>>`.
+
+### Example:
+
+```cpp
+class Decompressor {
+public:
+    static ErrorOr<NonnullOwnPtr<Decompressor>> create(NonnullOwnPtr<Core::Stream::Stream> stream)
+    {
+        auto buffer = TRY(CircularBuffer::create_empty(32 * KiB));
+        auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Decompressor(move(stream), move(buffer))));
+        TRY(decompressor->initialize_settings_from_header());
+        return decompressor;
+    }
+
+... snip ...
+
+private:
+    Decompressor(NonnullOwnPtr<Core::Stream::Stream> stream, CircularBuffer buffer)
+        : m_stream(move(stream))
+        , m_buffer(move(buffer))
+    {
+    }
+
+    CircularBuffer m_buffer;
+    NonnullOwnPtr<Core::Stream::Stream> m_stream;
 }
 ```
 

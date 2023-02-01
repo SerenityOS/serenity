@@ -13,7 +13,6 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
-#include <LibELF/AuxiliaryVector.h>
 #include <alloca.h>
 #include <assert.h>
 #include <bits/pthread_cancel.h>
@@ -26,9 +25,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/auxv.h>
 #include <sys/internals.h>
 #include <sys/ioctl.h>
-#include <sys/ioctl_numbers.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
@@ -642,7 +641,7 @@ int ptsname_r(int fd, char* buffer, size_t size)
         return -1;
     }
     memset(buffer, 0, devpts_path_builder.length() + 1);
-    auto full_devpts_path_string = devpts_path_builder.build();
+    auto full_devpts_path_string = devpts_path_builder.to_deprecated_string();
     if (!full_devpts_path_string.copy_characters_to_buffer(buffer, size)) {
         errno = ERANGE;
         return -1;

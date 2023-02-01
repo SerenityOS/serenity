@@ -34,7 +34,7 @@ Bitmap const* Emoji::emoji_for_code_points(Span<u32 const> const& code_points)
     if (it != s_emojis.end())
         return (*it).value.ptr();
 
-    auto bitmap_or_error = Bitmap::try_load_from_file(DeprecatedString::formatted("/res/emoji/{}.png", basename));
+    auto bitmap_or_error = Bitmap::load_from_file(DeprecatedString::formatted("/res/emoji/{}.png", basename));
     if (bitmap_or_error.is_error()) {
         s_emojis.set(basename, nullptr);
         return nullptr;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,11 +23,11 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 2. Set options to ? CoerceOptionsToObject(options).
     auto* options = TRY(coerce_options_to_object(vm, options_value));
 
-    // 3. Let usage be ? GetOption(options, "usage", "string", « "sort", "search" », "sort").
+    // 3. Let usage be ? GetOption(options, "usage", string, « "sort", "search" », "sort").
     auto usage = TRY(get_option(vm, *options, vm.names.usage, OptionType::String, { "sort"sv, "search"sv }, "sort"sv));
 
     // 4. Set collator.[[Usage]] to usage.
-    collator.set_usage(usage.as_string().deprecated_string());
+    collator.set_usage(TRY(usage.as_string().utf8_string_view()));
 
     // 5. If usage is "sort", then
     //     a. Let localeData be %Collator%.[[SortLocaleData]].
@@ -37,45 +37,45 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 7. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 8. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 8. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 9. Set opt.[[localeMatcher]] to matcher.
     opt.locale_matcher = matcher;
 
-    // 10. Let collation be ? GetOption(options, "collation", "string", undefined, undefined).
+    // 10. Let collation be ? GetOption(options, "collation", string, empty, undefined).
     auto collation = TRY(get_option(vm, *options, vm.names.collation, OptionType::String, {}, Empty {}));
 
     // 11. If collation is not undefined, then
     if (!collation.is_undefined()) {
         // a. If collation does not match the Unicode Locale Identifier type nonterminal, throw a RangeError exception.
-        if (!::Locale::is_type_identifier(collation.as_string().deprecated_string()))
+        if (!::Locale::is_type_identifier(TRY(collation.as_string().utf8_string_view())))
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, collation, "collation"sv);
 
         // 12. Set opt.[[co]] to collation.
-        opt.co = collation.as_string().deprecated_string();
+        opt.co = TRY(collation.as_string().utf8_string());
     }
 
-    // 13. Let numeric be ? GetOption(options, "numeric", "boolean", undefined, undefined).
+    // 13. Let numeric be ? GetOption(options, "numeric", boolean, empty, undefined).
     auto numeric = TRY(get_option(vm, *options, vm.names.numeric, OptionType::Boolean, {}, Empty {}));
 
     // 14. If numeric is not undefined, then
     //     a. Let numeric be ! ToString(numeric).
     // 15. Set opt.[[kn]] to numeric.
     if (!numeric.is_undefined())
-        opt.kn = MUST(numeric.to_string(vm));
+        opt.kn = MUST_OR_THROW_OOM(numeric.to_string(vm));
 
-    // 16. Let caseFirst be ? GetOption(options, "caseFirst", "string", « "upper", "lower", "false" », undefined).
+    // 16. Let caseFirst be ? GetOption(options, "caseFirst", string, « "upper", "lower", "false" », undefined).
     // 17. Set opt.[[kf]] to caseFirst.
     auto case_first = TRY(get_option(vm, *options, vm.names.caseFirst, OptionType::String, { "upper"sv, "lower"sv, "false"sv }, Empty {}));
     if (!case_first.is_undefined())
-        opt.kf = case_first.as_string().deprecated_string();
+        opt.kf = TRY(case_first.as_string().utf8_string());
 
     // 18. Let relevantExtensionKeys be %Collator%.[[RelevantExtensionKeys]].
     auto relevant_extension_keys = Collator::relevant_extension_keys();
 
     // 19. Let r be ResolveLocale(%Collator%.[[AvailableLocales]], requestedLocales, opt, relevantExtensionKeys, localeData).
-    auto result = resolve_locale(requested_locales, opt, relevant_extension_keys);
+    auto result = MUST_OR_THROW_OOM(resolve_locale(vm, requested_locales, opt, relevant_extension_keys));
 
     // 20. Set collator.[[Locale]] to r.[[locale]].
     collator.set_locale(move(result.locale));
@@ -83,7 +83,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     // 21. Let collation be r.[[co]].
     // 22. If collation is null, let collation be "default".
     // 23. Set collator.[[Collation]] to collation.
-    collator.set_collation(result.co.has_value() ? result.co.release_value() : "default");
+    collator.set_collation(result.co.has_value() ? result.co.release_value() : TRY_OR_THROW_OOM(vm, String::from_utf8("default"sv)));
 
     // 24. If relevantExtensionKeys contains "kn", then
     if (relevant_extension_keys.span().contains_slow("kn"sv) && result.kn.has_value()) {
@@ -97,7 +97,7 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
         collator.set_case_first(result.kf.release_value());
     }
 
-    // 26. Let sensitivity be ? GetOption(options, "sensitivity", "string", « "base", "accent", "case", "variant" », undefined).
+    // 26. Let sensitivity be ? GetOption(options, "sensitivity", string, « "base", "accent", "case", "variant" », undefined).
     auto sensitivity = TRY(get_option(vm, *options, vm.names.sensitivity, OptionType::String, { "base"sv, "accent"sv, "case"sv, "variant"sv }, Empty {}));
 
     // 27. If sensitivity is undefined, then
@@ -117,9 +117,9 @@ static ThrowCompletionOr<Collator*> initialize_collator(VM& vm, Collator& collat
     }
 
     // 28. Set collator.[[Sensitivity]] to sensitivity.
-    collator.set_sensitivity(sensitivity.as_string().deprecated_string());
+    collator.set_sensitivity(TRY(sensitivity.as_string().utf8_string_view()));
 
-    // 29. Let ignorePunctuation be ? GetOption(options, "ignorePunctuation", "boolean", undefined, false).
+    // 29. Let ignorePunctuation be ? GetOption(options, "ignorePunctuation", boolean, empty, false).
     auto ignore_punctuation = TRY(get_option(vm, *options, vm.names.ignorePunctuation, OptionType::Boolean, {}, false));
 
     // 30. Set collator.[[IgnorePunctuation]] to ignorePunctuation.
@@ -135,9 +135,9 @@ CollatorConstructor::CollatorConstructor(Realm& realm)
 {
 }
 
-void CollatorConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> CollatorConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -147,6 +147,8 @@ void CollatorConstructor::initialize(Realm& realm)
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
+
+    return {};
 }
 
 // 10.1.1 Intl.Collator ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-intl.collator

@@ -23,6 +23,7 @@ public:
 
 private:
     explicit SubtleCrypto(JS::Realm&);
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

@@ -25,38 +25,34 @@ public:
     {
     }
 
-    JS::Object& cached_web_prototype(DeprecatedString const& class_name);
-
-    template<typename T>
+    template<typename PrototypeType>
     JS::Object& ensure_web_prototype(DeprecatedString const& class_name)
     {
-        auto it = m_prototypes.find(class_name);
-        if (it != m_prototypes.end())
+        if (auto it = m_prototypes.find(class_name); it != m_prototypes.end())
             return *it->value;
-        auto& realm = *m_realm;
-        auto prototype = heap().allocate<T>(realm, realm);
-        m_prototypes.set(class_name, prototype);
-        return prototype;
+
+        create_web_prototype_and_constructor<PrototypeType>(*m_realm);
+        return *m_prototypes.find(class_name)->value;
     }
 
-    template<typename T>
+    template<typename PrototypeType>
     JS::NativeFunction& ensure_web_constructor(DeprecatedString const& class_name)
     {
-        auto it = m_constructors.find(class_name);
-        if (it != m_constructors.end())
+        if (auto it = m_constructors.find(class_name); it != m_constructors.end())
             return *it->value;
-        auto& realm = *m_realm;
-        auto constructor = heap().allocate<T>(realm, realm);
-        m_constructors.set(class_name, constructor);
-        return constructor;
+
+        create_web_prototype_and_constructor<PrototypeType>(*m_realm);
+        return *m_constructors.find(class_name)->value;
     }
 
 private:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    HashMap<DeprecatedString, JS::Object*> m_prototypes;
-    HashMap<DeprecatedString, JS::NativeFunction*> m_constructors;
+    template<typename PrototypeType>
+    void create_web_prototype_and_constructor(JS::Realm& realm);
 
+    HashMap<DeprecatedString, JS::NonnullGCPtr<JS::Object>> m_prototypes;
+    HashMap<DeprecatedString, JS::GCPtr<JS::NativeFunction>> m_constructors;
     JS::NonnullGCPtr<JS::Realm> m_realm;
 };
 
@@ -75,11 +71,6 @@ template<typename T>
 [[nodiscard]] JS::NativeFunction& ensure_web_constructor(JS::Realm& realm, DeprecatedString const& class_name)
 {
     return host_defined_intrinsics(realm).ensure_web_constructor<T>(class_name);
-}
-
-[[nodiscard]] inline JS::Object& cached_web_prototype(JS::Realm& realm, DeprecatedString const& class_name)
-{
-    return host_defined_intrinsics(realm).cached_web_prototype(class_name);
 }
 
 }

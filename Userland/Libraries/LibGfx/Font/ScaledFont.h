@@ -23,17 +23,9 @@ struct GlyphIndexWithSubpixelOffset {
     bool operator==(GlyphIndexWithSubpixelOffset const&) const = default;
 };
 
-class ScaledFont : public Gfx::Font {
+class ScaledFont final : public Gfx::Font {
 public:
-    ScaledFont(NonnullRefPtr<VectorFont> font, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI)
-        : m_font(move(font))
-        , m_point_width(point_width)
-        , m_point_height(point_height)
-    {
-        float units_per_em = m_font->units_per_em();
-        m_x_scale = (point_width * dpi_x) / (POINTS_PER_INCH * units_per_em);
-        m_y_scale = (point_height * dpi_y) / (POINTS_PER_INCH * units_per_em);
-    }
+    ScaledFont(NonnullRefPtr<VectorFont>, float point_width, float point_height, unsigned dpi_x = DEFAULT_DPI, unsigned dpi_y = DEFAULT_DPI);
     u32 glyph_id_for_code_point(u32 code_point) const { return m_font->glyph_id_for_code_point(code_point); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
@@ -81,6 +73,7 @@ private:
     float m_point_width { 0.0f };
     float m_point_height { 0.0f };
     mutable HashMap<GlyphIndexWithSubpixelOffset, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
+    Gfx::FontPixelMetrics m_pixel_metrics;
 
     template<typename T>
     float unicode_view_width(T const& view) const;

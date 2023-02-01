@@ -105,7 +105,7 @@ Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, Incl
 
     Vector<Debug::DebugInfo::SourcePosition> positions;
     if (include_source_positions == IncludeSourcePosition::Yes) {
-        auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address);
+        auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address).release_value_but_fixme_should_propagate_errors();
 
         for (auto& position : source_position_with_inlines.inline_chain) {
             if (!positions.contains_slow(position))
@@ -181,9 +181,9 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
         for (auto& region_value : json.value().as_array().values()) {
             auto& region = region_value.as_object();
-            auto name = region.get("name"sv).to_deprecated_string();
-            auto address = region.get("address"sv).to_addr();
-            auto size = region.get("size"sv).to_addr();
+            auto name = region.get_deprecated_string("name"sv).value_or({});
+            auto address = region.get_addr("address"sv).value_or(0);
+            auto size = region.get_addr("size"sv).value_or(0);
 
             DeprecatedString path;
             if (name == "/usr/lib/Loader.so") {

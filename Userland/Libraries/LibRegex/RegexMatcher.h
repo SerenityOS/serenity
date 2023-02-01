@@ -97,7 +97,6 @@ public:
     Regex& operator=(Regex&&);
 
     typename ParserTraits<Parser>::OptionsType options() const;
-    void print_bytecode(FILE* f = stdout) const;
     DeprecatedString error_string(Optional<DeprecatedString> message = {}) const;
 
     RegexResult match(RegexStringView view, Optional<typename ParserTraits<Parser>::OptionsType> regex_options = {}) const

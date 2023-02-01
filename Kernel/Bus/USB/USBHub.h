@@ -90,8 +90,6 @@ public:
     ErrorOr<void> clear_port_feature(u8, HubFeatureSelector);
     ErrorOr<void> set_port_feature(u8, HubFeatureSelector);
 
-    ErrorOr<void> reset_port(u8);
-
     void check_for_port_updates();
 
 private:

@@ -30,13 +30,13 @@ TEST_SETUP
         auto testcase = tests[i].as_object();
 
         auto name = DeprecatedString::formatted("{}_ex{}_{}..{}",
-            testcase.get("section"sv),
-            testcase.get("example"sv),
-            testcase.get("start_line"sv),
-            testcase.get("end_line"sv));
+            testcase.get("section"sv).value(),
+            testcase.get("example"sv).value(),
+            testcase.get("start_line"sv).value(),
+            testcase.get("end_line"sv).value());
 
-        DeprecatedString markdown = testcase.get("markdown"sv).as_string();
-        DeprecatedString html = testcase.get("html"sv).as_string();
+        DeprecatedString markdown = testcase.get_deprecated_string("markdown"sv).value();
+        DeprecatedString html = testcase.get_deprecated_string("html"sv).value();
 
         Test::TestSuite::the().add_case(adopt_ref(*new Test::TestCase(
             name, [markdown, html]() {

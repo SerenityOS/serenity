@@ -8,7 +8,7 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <LibC/regex.h>
+#include <regex.h>
 #include <stdio.h>
 
 TEST_CASE(catch_all)
@@ -325,7 +325,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         // First in ere
         b.clear();
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -334,7 +334,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append("a|"sv);
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -343,7 +343,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('^');
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -352,7 +352,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.clear();
         b.append('$');
         b.append(ch);
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);
@@ -362,7 +362,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         b.append('(');
         b.append(ch);
         b.append(')');
-        pattern = b.build();
+        pattern = b.to_deprecated_string();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
         regfree(&regex);

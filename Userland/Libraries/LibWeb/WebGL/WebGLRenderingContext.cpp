@@ -13,7 +13,7 @@
 namespace Web::WebGL {
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#fire-a-webgl-context-event
-static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, FlyString const& type)
+static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, DeprecatedFlyString const& type)
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
@@ -46,15 +46,22 @@ JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::c
         fire_webgl_context_creation_error(canvas_element);
         return JS::GCPtr<WebGLRenderingContext> { nullptr };
     }
-    return realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context_or_error.release_value(), context_attributes, context_attributes);
+    return MUST_OR_THROW_OOM(realm.heap().allocate<WebGLRenderingContext>(realm, realm, canvas_element, context_or_error.release_value(), context_attributes, context_attributes));
 }
 
 WebGLRenderingContext::WebGLRenderingContext(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, NonnullOwnPtr<GL::GLContext> context, WebGLContextAttributes context_creation_parameters, WebGLContextAttributes actual_context_parameters)
     : WebGLRenderingContextBase(realm, canvas_element, move(context), move(context_creation_parameters), move(actual_context_parameters))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "WebGLRenderingContext"));
 }
 
 WebGLRenderingContext::~WebGLRenderingContext() = default;
+
+JS::ThrowCompletionOr<void> WebGLRenderingContext::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::WebGLRenderingContextPrototype>(realm, "WebGLRenderingContext"));
+
+    return {};
+}
 
 }

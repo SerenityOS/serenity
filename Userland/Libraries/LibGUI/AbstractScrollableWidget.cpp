@@ -156,11 +156,11 @@ void AbstractScrollableWidget::set_should_hide_unnecessary_scrollbars(bool shoul
         return;
 
     m_should_hide_unnecessary_scrollbars = should_hide_unnecessary_scrollbars;
-    if (should_hide_unnecessary_scrollbars)
+    if (should_hide_unnecessary_scrollbars) {
         update_scrollbar_ranges();
-    else {
-        m_horizontal_scrollbar->set_visible(true);
-        m_vertical_scrollbar->set_visible(true);
+    } else {
+        m_horizontal_scrollbar->set_visible(m_scrollbars_enabled);
+        m_vertical_scrollbar->set_visible(m_scrollbars_enabled);
     }
 }
 
@@ -176,6 +176,11 @@ void AbstractScrollableWidget::update_scrollbar_ranges()
 
 void AbstractScrollableWidget::update_scrollbar_visibility()
 {
+    if (!m_scrollbars_enabled) {
+        m_horizontal_scrollbar->set_visible(false);
+        m_vertical_scrollbar->set_visible(false);
+        return;
+    }
     if (should_hide_unnecessary_scrollbars()) {
         // If there has not been a min_size set, the content_size can be used as a substitute
         auto effective_min_content_size = m_min_content_size;

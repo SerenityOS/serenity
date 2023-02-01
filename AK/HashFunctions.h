@@ -19,7 +19,7 @@ constexpr unsigned int_hash(u32 key)
     return key;
 }
 
-constexpr unsigned double_hash(u32 key)
+constexpr unsigned rehash_for_collision(u32 key)
 {
     unsigned const magic = 0xBA5EDB01;
     if (key == magic)

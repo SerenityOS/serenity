@@ -18,10 +18,17 @@ namespace Web::HTML {
 HTMLTableRowElement::HTMLTableRowElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableRowElement"));
 }
 
 HTMLTableRowElement::~HTMLTableRowElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLTableRowElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableRowElementPrototype>(realm, "HTMLTableRowElement"));
+
+    return {};
+}
 
 void HTMLTableRowElement::visit_edges(Cell::Visitor& visitor)
 {

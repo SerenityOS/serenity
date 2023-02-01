@@ -17,7 +17,7 @@ namespace JS {
 
 NonnullGCPtr<ProxyObject> ProxyObject::create(Realm& realm, Object& target, Object& handler)
 {
-    return realm.heap().allocate<ProxyObject>(realm, target, handler, *realm.intrinsics().object_prototype());
+    return realm.heap().allocate<ProxyObject>(realm, target, handler, *realm.intrinsics().object_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
@@ -832,7 +832,7 @@ void ProxyObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_handler);
 }
 
-FlyString const& ProxyObject::name() const
+DeprecatedFlyString const& ProxyObject::name() const
 {
     VERIFY(is_function());
     return static_cast<FunctionObject&>(m_target).name();

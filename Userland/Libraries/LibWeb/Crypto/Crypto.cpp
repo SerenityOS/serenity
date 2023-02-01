@@ -16,21 +16,23 @@ namespace Web::Crypto {
 
 JS::NonnullGCPtr<Crypto> Crypto::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Crypto>(realm, realm);
+    return realm.heap().allocate<Crypto>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Crypto::Crypto(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "Crypto"));
 }
 
 Crypto::~Crypto() = default;
 
-void Crypto::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> Crypto::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CryptoPrototype>(realm, "Crypto"));
     m_subtle = SubtleCrypto::create(realm);
+
+    return {};
 }
 
 JS::NonnullGCPtr<SubtleCrypto> Crypto::subtle() const

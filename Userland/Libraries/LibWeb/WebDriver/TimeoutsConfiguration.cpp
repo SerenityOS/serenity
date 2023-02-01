@@ -48,42 +48,42 @@ ErrorOr<TimeoutsConfiguration, Error> json_deserialize_as_a_timeouts_configurati
     // 3. If value has a property with the key "script":
     if (value.as_object().has("script"sv)) {
         // 1. Let script duration be the value of property "script".
-        auto const& script_duration = value.as_object().get("script"sv);
+        auto script_duration = value.as_object().get("script"sv);
 
         // 2. If script duration is a number and less than 0 or greater than maximum safe integer, or it is not null, return error with error code invalid argument.
-        if (script_duration.is_number() && (script_duration.to_i64() < 0 || script_duration.to_i64() > max_safe_integer))
+        if (script_duration.has_value() && script_duration->is_number() && (script_duration->to_i64() < 0 || script_duration->to_i64() > max_safe_integer))
             return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
-        if (!script_duration.is_number() && !script_duration.is_null())
+        if (script_duration.has_value() && !script_duration->is_number() && !script_duration->is_null())
             return Error::from_code(ErrorCode::InvalidArgument, "Invalid script duration");
 
         // 3. Set timeouts’s script timeout to script duration.
-        timeouts.script_timeout = script_duration.is_null() ? Optional<u64> {} : script_duration.to_u64();
+        timeouts.script_timeout = (!script_duration.has_value() || script_duration->is_null()) ? Optional<u64> {} : script_duration->to_u64();
     }
 
     // 4. If value has a property with the key "pageLoad":
     if (value.as_object().has("pageLoad"sv)) {
         // 1. Let page load duration be the value of property "pageLoad".
-        auto const& page_load_duration = value.as_object().get("pageLoad"sv);
+        auto page_load_duration = value.as_object().get_i64("pageLoad"sv);
 
         // 2. If page load duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
-        if (!page_load_duration.is_number() || page_load_duration.to_i64() < 0 || page_load_duration.to_i64() > max_safe_integer)
+        if (!page_load_duration.has_value() || *page_load_duration < 0 || *page_load_duration > max_safe_integer)
             return Error::from_code(ErrorCode::InvalidArgument, "Invalid page load duration");
 
         // 3. Set timeouts’s page load timeout to page load duration.
-        timeouts.page_load_timeout = page_load_duration.to_u64();
+        timeouts.page_load_timeout = static_cast<u64>(*page_load_duration);
     }
 
     // 5. If value has a property with the key "implicit":
     if (value.as_object().has("implicit"sv)) {
         // 1. Let implicit duration be the value of property "implicit".
-        auto const& implicit_duration = value.as_object().get("implicit"sv);
+        auto implicit_duration = value.as_object().get_i64("implicit"sv);
 
         // 2. If implicit duration is less than 0 or greater than maximum safe integer, return error with error code invalid argument.
-        if (!implicit_duration.is_number() || implicit_duration.to_i64() < 0 || implicit_duration.to_i64() > max_safe_integer)
+        if (!implicit_duration.has_value() || *implicit_duration < 0 || *implicit_duration > max_safe_integer)
             return Error::from_code(ErrorCode::InvalidArgument, "Invalid implicit duration");
 
         // 3. Set timeouts’s implicit wait timeout to implicit duration.
-        timeouts.implicit_wait_timeout = implicit_duration.to_u64();
+        timeouts.implicit_wait_timeout = static_cast<u64>(*implicit_duration);
     }
 
     // 6. Return success with data timeouts.

@@ -51,9 +51,8 @@ private:
     KeymapSelectionDialog(Window* parent_window, Vector<DeprecatedString> const& selected_keymaps)
         : Dialog(parent_window)
     {
-        auto& widget = set_main_widget<GUI::Widget>();
-        if (!widget.load_from_gml(keymap_dialog_gml))
-            VERIFY_NOT_REACHED();
+        auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+        widget->load_from_gml(keymap_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
         set_resizable(false);
         resize(190, 54);
@@ -77,7 +76,7 @@ private:
 
         m_selected_keymap = m_character_map_files.first();
 
-        m_keymaps_combobox = *widget.find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
+        m_keymaps_combobox = *widget->find_descendant_of_type_named<GUI::ComboBox>("keymaps_combobox");
         m_keymaps_combobox->set_only_allow_values_from_model(true);
         m_keymaps_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_character_map_files));
         m_keymaps_combobox->set_selected_index(0);
@@ -86,12 +85,12 @@ private:
             m_selected_keymap = keymap;
         };
 
-        auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+        auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
             done(ExecResult::OK);
         };
 
-        auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+        auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
             done(ExecResult::Cancel);
         };
@@ -152,7 +151,7 @@ private:
 
 KeyboardSettingsWidget::KeyboardSettingsWidget()
 {
-    load_from_gml(keyboard_widget_gml);
+    load_from_gml(keyboard_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     auto proc_keymap = Core::File::construct("/sys/kernel/keymap");
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))
@@ -161,7 +160,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"sv));
-    m_initial_active_keymap = keymap_object.get("keymap"sv).to_deprecated_string();
+    m_initial_active_keymap = keymap_object.get_deprecated_string("keymap"sv).value();
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());

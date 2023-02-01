@@ -180,7 +180,7 @@ ErrorOr<Kern> Kern::from_slice(ReadonlyBytes slice)
         return Error::from_string_literal("Kern table does not contain any subtables");
 
     // Read all subtable offsets
-    auto subtable_offsets = TRY(FixedArray<size_t>::try_create(number_of_subtables));
+    auto subtable_offsets = TRY(FixedArray<size_t>::create(number_of_subtables));
     size_t offset = sizeof(Header);
     for (size_t i = 0; i < number_of_subtables; ++i) {
         if (slice.size() < offset + sizeof(SubtableHeader))
@@ -396,6 +396,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<ReadonlyBytes> opt_glyf_slice = {};
     Optional<ReadonlyBytes> opt_os2_slice = {};
     Optional<ReadonlyBytes> opt_kern_slice = {};
+    Optional<ReadonlyBytes> opt_fpgm_slice = {};
+    Optional<ReadonlyBytes> opt_prep_slice = {};
 
     Optional<Head> opt_head = {};
     Optional<Name> opt_name = {};
@@ -406,6 +408,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<Loca> opt_loca = {};
     Optional<OS2> opt_os2 = {};
     Optional<Kern> opt_kern = {};
+    Optional<Fpgm> opt_fpgm = {};
+    Optional<Prep> opt_prep = {};
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
@@ -446,6 +450,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
             opt_os2_slice = buffer_here;
         } else if (tag == tag_from_str("kern")) {
             opt_kern_slice = buffer_here;
+        } else if (tag == tag_from_str("fpgm")) {
+            opt_fpgm_slice = buffer_here;
+        } else if (tag == tag_from_str("prep")) {
+            opt_prep_slice = buffer_here;
         }
     }
 
@@ -489,6 +497,14 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     if (opt_kern_slice.has_value())
         kern = TRY(Kern::from_slice(opt_kern_slice.value()));
 
+    Optional<Fpgm> fpgm;
+    if (opt_fpgm_slice.has_value())
+        fpgm = Fpgm(opt_fpgm_slice.value());
+
+    Optional<Prep> prep;
+    if (opt_prep_slice.has_value())
+        prep = Prep(opt_prep_slice.value());
+
     // Select cmap table. FIXME: Do this better. Right now, just looks for platform "Windows"
     // and corresponding encoding "Unicode full repertoire", or failing that, "Unicode BMP"
     for (u32 i = 0; i < cmap.num_subtables(); i++) {
@@ -501,6 +517,9 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         if (!platform.has_value())
             return Error::from_string_literal("Invalid Platform ID");
 
+        /* NOTE: The encoding records are sorted first by platform ID, then by encoding ID.
+           This means that the Windows platform will take precedence over Macintosh, which is
+           usually what we want here. */
         if (platform.value() == Cmap::Subtable::Platform::Windows) {
             if (subtable.encoding_id() == (u16)Cmap::Subtable::WindowsEncoding::UnicodeFullRepertoire) {
                 cmap.set_active_index(i);
@@ -510,10 +529,12 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
                 cmap.set_active_index(i);
                 break;
             }
+        } else if (platform.value() == Cmap::Subtable::Platform::Macintosh) {
+            cmap.set_active_index(i);
         }
     }
 
-    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2), move(kern)));
+    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2), move(kern), move(fpgm), move(prep)));
 }
 
 Gfx::ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_scale) const
@@ -682,6 +703,61 @@ i16 OS2::typographic_line_gap() const
 bool OS2::use_typographic_metrics() const
 {
     return header().fs_selection & 0x80;
+}
+
+Optional<ReadonlyBytes> Font::font_program() const
+{
+    if (m_fpgm.has_value())
+        return m_fpgm->program_data();
+    return {};
+}
+
+Optional<ReadonlyBytes> Font::control_value_program() const
+{
+    if (m_prep.has_value())
+        return m_prep->program_data();
+    return {};
+}
+
+Optional<ReadonlyBytes> Font::glyph_program(u32 glyph_id) const
+{
+    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
+    auto glyph = m_glyf.glyph(glyph_offset);
+    return glyph.program();
+}
+
+u32 Font::glyph_id_for_code_point(u32 code_point) const
+{
+    return glyph_page(code_point / GlyphPage::glyphs_per_page).glyph_ids[code_point % GlyphPage::glyphs_per_page];
+}
+
+Font::GlyphPage const& Font::glyph_page(size_t page_index) const
+{
+    if (page_index == 0) {
+        if (!m_glyph_page_zero) {
+            m_glyph_page_zero = make<GlyphPage>();
+            populate_glyph_page(*m_glyph_page_zero, 0);
+        }
+        return *m_glyph_page_zero;
+    }
+    if (auto it = m_glyph_pages.find(page_index); it != m_glyph_pages.end()) {
+        return *it->value;
+    }
+
+    auto glyph_page = make<GlyphPage>();
+    populate_glyph_page(*glyph_page, page_index);
+    auto const* glyph_page_ptr = glyph_page.ptr();
+    m_glyph_pages.set(page_index, move(glyph_page));
+    return *glyph_page_ptr;
+}
+
+void Font::populate_glyph_page(GlyphPage& glyph_page, size_t page_index) const
+{
+    u32 first_code_point = page_index * GlyphPage::glyphs_per_page;
+    for (size_t i = 0; i < GlyphPage::glyphs_per_page; ++i) {
+        u32 code_point = first_code_point + i;
+        glyph_page.glyph_ids[i] = m_cmap.glyph_id_for_code_point(code_point);
+    }
 }
 
 }

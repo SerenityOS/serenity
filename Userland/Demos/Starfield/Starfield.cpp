@@ -63,7 +63,7 @@ Starfield::Starfield(int interval)
 
 ErrorOr<void> Starfield::create_stars(int width, int height, int stars)
 {
-    m_bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }));
+    m_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }));
 
     m_stars.grow_capacity(stars);
     for (int i = 0; i < stars; i++) {
@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(Desktop::Screensaver::create_window("Starfield"sv, "app-starfield"sv));
 
-    auto starfield_window = TRY(window->try_set_main_widget<Starfield>(refresh_rate));
+    auto starfield_window = TRY(window->set_main_widget<Starfield>(refresh_rate));
     starfield_window->set_fill_with_background_color(false);
     starfield_window->set_override_cursor(Gfx::StandardCursor::Hidden);
     starfield_window->update();

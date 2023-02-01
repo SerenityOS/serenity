@@ -32,7 +32,7 @@ CSVImportDialogPage::CSVImportDialogPage(StringView csv)
         "CSV Import Options",
         "Please select the options for the csv file you wish to import");
 
-    m_page->body_widget().load_from_gml(csv_import_gml);
+    m_page->body_widget().load_from_gml(csv_import_gml).release_value_but_fixme_should_propagate_errors();
     m_page->set_is_final_page(true);
 
     m_delimiter_comma_radio = m_page->body_widget().find_descendant_of_type_named<GUI::RadioButton>("delimiter_comma_radio");
@@ -175,15 +175,17 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, Core::File& file, Workbook& workbook)
+ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::Stream::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(&parent);
     wizard->set_title("File Import Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
-    auto import_xsv = [&]() -> Result<NonnullRefPtrVector<Sheet>, DeprecatedString> {
-        auto contents = file.read_all();
-        CSVImportDialogPage page { contents };
+    auto import_xsv = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
+        auto contents_or_error = file.read_until_eof();
+        if (contents_or_error.is_error())
+            return DeprecatedString::formatted("{}", contents_or_error.release_error());
+        CSVImportDialogPage page { contents_or_error.release_value() };
         wizard->replace_page(page.page());
         auto result = wizard->exec();
 
@@ -203,29 +205,22 @@ Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_
             }
 
             return sheets;
-        } else {
-            return DeprecatedString { "CSV Import was cancelled" };
         }
+
+        return DeprecatedString { "CSV Import was cancelled" };
     };
 
-    auto import_worksheet = [&]() -> Result<NonnullRefPtrVector<Sheet>, DeprecatedString> {
-        auto json_value_option = JsonParser(file.read_all()).parse();
-        if (json_value_option.is_error()) {
-            StringBuilder sb;
-            sb.append("Failed to parse "sv);
-            sb.append(file.filename());
-
-            return sb.to_deprecated_string();
-        }
+    auto import_worksheet = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
+        auto contents_or_error = file.read_until_eof();
+        if (contents_or_error.is_error())
+            return DeprecatedString::formatted("{}", contents_or_error.release_error());
+        auto json_value_option = JsonParser(contents_or_error.release_value()).parse();
+        if (json_value_option.is_error())
+            return DeprecatedString::formatted("Failed to parse {}", filename);
 
         auto& json_value = json_value_option.value();
-        if (!json_value.is_array()) {
-            StringBuilder sb;
-            sb.append("Did not find a spreadsheet in "sv);
-            sb.append(file.filename());
-
-            return sb.to_deprecated_string();
-        }
+        if (!json_value.is_array())
+            return DeprecatedString::formatted("Did not find a spreadsheet in {}", filename);
 
         NonnullRefPtrVector<Sheet> sheets;
 
@@ -250,11 +245,11 @@ Result<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_
     } else {
         auto page = GUI::WizardPage::construct(
             "Import File Format",
-            DeprecatedString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(file.filename())));
+            DeprecatedString::formatted("Select the format you wish to import '{}' as", LexicalPath::basename(filename.to_deprecated_string())));
 
         page->on_next_page = [] { return nullptr; };
 
-        page->body_widget().load_from_gml(select_format_page_gml);
+        page->body_widget().load_from_gml(select_format_page_gml).release_value_but_fixme_should_propagate_errors();
         auto format_combo_box = page->body_widget().find_descendant_of_type_named<GUI::ComboBox>("select_format_page_format_combo_box");
 
         Vector<DeprecatedString> supported_formats {

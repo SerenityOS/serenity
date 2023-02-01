@@ -13,8 +13,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <Kernel/API/InodeWatcherEvent.h>
-#include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>
 
 namespace Core {
@@ -28,11 +26,19 @@ struct FileWatcherEvent {
         ChildCreated = 1 << 3,
         ChildDeleted = 1 << 4,
     };
-    Type type;
+    Type type { Type::Invalid };
     DeprecatedString event_path;
 };
 
 AK_ENUM_BITWISE_OPERATORS(FileWatcherEvent::Type);
+
+enum class FileWatcherFlags : u32 {
+    None = 0,
+    Nonblock = 1 << 0,
+    CloseOnExec = 1 << 1,
+};
+
+AK_ENUM_BITWISE_OPERATORS(FileWatcherFlags);
 
 class FileWatcherBase {
 public:
@@ -57,23 +63,23 @@ class BlockingFileWatcher final : public FileWatcherBase {
     AK_MAKE_NONCOPYABLE(BlockingFileWatcher);
 
 public:
-    explicit BlockingFileWatcher(InodeWatcherFlags = InodeWatcherFlags::None);
+    explicit BlockingFileWatcher(FileWatcherFlags = FileWatcherFlags::None);
     ~BlockingFileWatcher();
 
     Optional<FileWatcherEvent> wait_for_event();
 };
 
-class FileWatcher final : public FileWatcherBase
+class FileWatcher : public FileWatcherBase
     , public RefCounted<FileWatcher> {
     AK_MAKE_NONCOPYABLE(FileWatcher);
 
 public:
-    static ErrorOr<NonnullRefPtr<FileWatcher>> create(InodeWatcherFlags = InodeWatcherFlags::None);
+    static ErrorOr<NonnullRefPtr<FileWatcher>> create(FileWatcherFlags = FileWatcherFlags::None);
     ~FileWatcher();
 
     Function<void(FileWatcherEvent const&)> on_change;
 
-private:
+protected:
     FileWatcher(int watcher_fd, NonnullRefPtr<Notifier>);
 
     NonnullRefPtr<Notifier> m_notifier;
@@ -95,28 +101,30 @@ template<>
 struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent::Type const& value)
     {
-        StringView type;
-        switch (value) {
-        case Core::FileWatcherEvent::Type::ChildCreated:
-            type = "ChildCreated"sv;
-            break;
-        case Core::FileWatcherEvent::Type::ChildDeleted:
-            type = "ChildDeleted"sv;
-            break;
-        case Core::FileWatcherEvent::Type::Deleted:
-            type = "Deleted"sv;
-            break;
-        case Core::FileWatcherEvent::Type::ContentModified:
-            type = "ContentModified"sv;
-            break;
-        case Core::FileWatcherEvent::Type::MetadataModified:
-            type = "MetadataModified"sv;
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
+        bool had_any_flag = false;
 
-        return builder.put_string(type);
+        auto put_string_if_has_flag = [&](auto mask, auto name) -> ErrorOr<void> {
+            if (!has_flag(value, mask))
+                return {};
+
+            if (had_any_flag)
+                TRY(builder.put_string(", "sv));
+            TRY(builder.put_string(name));
+
+            had_any_flag = true;
+            return {};
+        };
+
+        TRY(builder.put_string("["sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ChildCreated, "ChildCreated"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ChildDeleted, "ChildDeleted"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::Deleted, "Deleted"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ContentModified, "ContentModified"sv));
+        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::MetadataModified, "MetadataModified"sv));
+        TRY(builder.put_string("]"sv));
+
+        VERIFY(had_any_flag);
+        return {};
     }
 };
 

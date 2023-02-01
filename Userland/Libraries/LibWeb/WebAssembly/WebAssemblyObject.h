@@ -25,7 +25,7 @@ class WebAssemblyObject final : public JS::Object {
 
 public:
     explicit WebAssemblyObject(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~WebAssemblyObject() override = default;
 
     virtual void visit_edges(Cell::Visitor&) override;

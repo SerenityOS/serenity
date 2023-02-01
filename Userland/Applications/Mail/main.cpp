@@ -24,7 +24,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("Mail");
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
@@ -41,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = GUI::Icon::default_icon("app-mail"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto mail_widget = TRY(window->try_set_main_widget<MailWidget>());
+    auto mail_widget = TRY(window->set_main_widget<MailWidget>());
 
     window->set_title("Mail");
     window->resize(640, 400);

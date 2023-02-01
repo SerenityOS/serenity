@@ -66,15 +66,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("2048");
     window->resize(315, 336);
 
-    auto& main_widget = window->set_main_widget<GUI::Widget>();
-    if (!main_widget.load_from_gml(game_window_gml))
-        VERIFY_NOT_REACHED();
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(main_widget->load_from_gml(game_window_gml));
 
     Game game { board_size, target_tile, evil_ai };
 
-    auto board_view = TRY(main_widget.find_descendant_of_type_named<GUI::Widget>("board_view_container")->try_add<BoardView>(&game.board()));
+    auto board_view = TRY(main_widget->find_descendant_of_type_named<GUI::Widget>("board_view_container")->try_add<BoardView>(&game.board()));
     board_view->set_focus(true);
-    auto statusbar = main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    auto statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
@@ -172,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
 
-    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         start_a_new_game();
     })));
 
@@ -193,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
 
     TRY(game_menu->try_add_separator());
-    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
+    TRY(game_menu->try_add_action(GUI::Action::create("&Settings", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"sv)), [&](auto&) {
         change_settings();
     })));
 

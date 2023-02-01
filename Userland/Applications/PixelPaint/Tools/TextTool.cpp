@@ -36,11 +36,9 @@ TextTool::TextTool()
     m_text_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     m_selected_font = Gfx::FontDatabase::default_font();
     m_text_editor->set_font(m_selected_font);
-    m_cursor_blink_timer = Core::Timer::construct();
-    m_cursor_blink_timer->on_timeout = [&]() {
+    m_cursor_blink_timer = Core::Timer::create_repeating(500, [&]() {
         m_cursor_blink_state = !m_cursor_blink_state;
-    };
-    m_cursor_blink_timer->set_interval(500);
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 void TextTool::on_tool_deactivation()
@@ -136,7 +134,7 @@ void TextTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     // Since ImageEditor can be zoomed in/out, we need to be able to render the preview properly scaled
     // GUI::Painter doesn't have a way to draw a font scaled directly, so we draw the text to a bitmap
     // and then scale the bitmap and blit the result to the ImageEditor.
-    auto text_bitmap_result = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { text_width, text_height });
+    auto text_bitmap_result = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { text_width, text_height });
     if (text_bitmap_result.is_error())
         return;
     auto text_bitmap = text_bitmap_result.release_value();

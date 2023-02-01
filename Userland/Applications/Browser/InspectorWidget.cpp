@@ -15,6 +15,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWebView/AccessibilityTreeModel.h>
 #include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/StylePropertiesModel.h>
@@ -51,10 +52,10 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
 
     Selection selection {};
     if (json->has_u32("pseudo-element"sv)) {
-        selection.dom_node_id = json->get("parent-id"sv).to_i32();
-        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get("pseudo-element"sv).to_u32());
+        selection.dom_node_id = json->get_i32("parent-id"sv).value_or(0);
+        selection.pseudo_element = static_cast<Web::CSS::Selector::PseudoElement>(json->get_u32("pseudo-element"sv).value_or(0));
     } else {
-        selection.dom_node_id = json->get("id"sv).to_i32();
+        selection.dom_node_id = json->get_i32("id"sv).value_or(0);
     }
 
     if (selection == m_selection)
@@ -62,9 +63,9 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
     m_selection = move(selection);
 
     auto maybe_inspected_node_properties = m_web_view->inspect_dom_node(m_selection.dom_node_id, m_selection.pseudo_element);
-    if (maybe_inspected_node_properties.has_value()) {
-        auto inspected_node_properties = maybe_inspected_node_properties.value();
-        load_style_json(inspected_node_properties.computed_values_json, inspected_node_properties.resolved_values_json, inspected_node_properties.custom_properties_json);
+    if (!maybe_inspected_node_properties.is_error()) {
+        auto inspected_node_properties = maybe_inspected_node_properties.release_value();
+        load_style_json(inspected_node_properties.computed_style_json, inspected_node_properties.resolved_style_json, inspected_node_properties.custom_properties_json);
         update_node_box_model(inspected_node_properties.node_box_sizing_json);
     } else {
         clear_style_json();
@@ -90,6 +91,11 @@ InspectorWidget::InspectorWidget()
         const auto& index = m_dom_tree_view->selection().first();
         set_selection(index);
     };
+
+    auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility");
+    accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>();
+    accessibility_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
+    m_accessibility_tree_view = accessibility_tree_container.add<GUI::TreeView>();
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
@@ -175,21 +181,21 @@ void InspectorWidget::update_node_box_model(StringView node_box_sizing_json)
     auto json_value = json_or_error.release_value();
     auto const& json_object = json_value.as_object();
 
-    m_node_box_sizing.margin.top = json_object.get("margin_top"sv).to_float();
-    m_node_box_sizing.margin.right = json_object.get("margin_right"sv).to_float();
-    m_node_box_sizing.margin.bottom = json_object.get("margin_bottom"sv).to_float();
-    m_node_box_sizing.margin.left = json_object.get("margin_left"sv).to_float();
-    m_node_box_sizing.padding.top = json_object.get("padding_top"sv).to_float();
-    m_node_box_sizing.padding.right = json_object.get("padding_right"sv).to_float();
-    m_node_box_sizing.padding.bottom = json_object.get("padding_bottom"sv).to_float();
-    m_node_box_sizing.padding.left = json_object.get("padding_left"sv).to_float();
-    m_node_box_sizing.border.top = json_object.get("border_top"sv).to_float();
-    m_node_box_sizing.border.right = json_object.get("border_right"sv).to_float();
-    m_node_box_sizing.border.bottom = json_object.get("border_bottom"sv).to_float();
-    m_node_box_sizing.border.left = json_object.get("border_left"sv).to_float();
+    m_node_box_sizing.margin.top = json_object.get_float("margin_top"sv).value_or(0);
+    m_node_box_sizing.margin.right = json_object.get_float("margin_right"sv).value_or(0);
+    m_node_box_sizing.margin.bottom = json_object.get_float("margin_bottom"sv).value_or(0);
+    m_node_box_sizing.margin.left = json_object.get_float("margin_left"sv).value_or(0);
+    m_node_box_sizing.padding.top = json_object.get_float("padding_top"sv).value_or(0);
+    m_node_box_sizing.padding.right = json_object.get_float("padding_right"sv).value_or(0);
+    m_node_box_sizing.padding.bottom = json_object.get_float("padding_bottom"sv).value_or(0);
+    m_node_box_sizing.padding.left = json_object.get_float("padding_left"sv).value_or(0);
+    m_node_box_sizing.border.top = json_object.get_float("border_top"sv).value_or(0);
+    m_node_box_sizing.border.right = json_object.get_float("border_right"sv).value_or(0);
+    m_node_box_sizing.border.bottom = json_object.get_float("border_bottom"sv).value_or(0);
+    m_node_box_sizing.border.left = json_object.get_float("border_left"sv).value_or(0);
 
-    m_element_size_view->set_node_content_width(json_object.get("content_width"sv).to_float());
-    m_element_size_view->set_node_content_height(json_object.get("content_height"sv).to_float());
+    m_element_size_view->set_node_content_width(json_object.get_float("content_width"sv).value_or(0));
+    m_element_size_view->set_node_content_height(json_object.get_float("content_height"sv).value_or(0));
     m_element_size_view->set_box_model(m_node_box_sizing);
 }
 
@@ -210,6 +216,13 @@ void InspectorWidget::clear_style_json()
     m_element_size_view->set_box_model({});
     m_element_size_view->set_node_content_width(0);
     m_element_size_view->set_node_content_height(0);
+}
+
+void InspectorWidget::set_accessibility_json(StringView json)
+{
+    m_accessibility_tree_view->set_model(WebView::AccessibilityTreeModel::create(json, *m_accessibility_tree_view));
+
+    // TODO: Support selections from accessibility tab
 }
 
 }

@@ -39,7 +39,7 @@ public:
 
     void resize(Gfx::IntSize size)
     {
-        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size).release_value_but_fixme_should_propagate_errors();
+        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size).release_value_but_fixme_should_propagate_errors();
         correct_aspect();
         calculate();
     }
@@ -413,7 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_obey_widget_min_size(false);
     window->set_minimum_size(320, 240);
     window->resize(window->minimum_size() * 2);
-    auto mandelbrot = TRY(window->try_set_main_widget<Mandelbrot>());
+    auto mandelbrot = TRY(window->set_main_widget<Mandelbrot>());
 
     auto file_menu = TRY(window->try_add_menu("&File"));
 
@@ -444,7 +444,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         })));
 
-    export_submenu.set_icon(TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/save.png"sv)));
+    export_submenu.set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
 
     TRY(file_menu->try_add_separator());
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); })));

@@ -26,6 +26,8 @@ public:
 
 protected:
     explicit NodeList(JS::Realm&);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

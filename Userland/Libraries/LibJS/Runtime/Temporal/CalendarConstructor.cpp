@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,9 +16,9 @@ CalendarConstructor::CalendarConstructor(Realm& realm)
 {
 }
 
-void CalendarConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> CalendarConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void CalendarConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 12.2.1 Temporal.Calendar ( id ), https://tc39.es/proposal-temporal/#sec-temporal.calendar

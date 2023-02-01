@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
+#include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/SlavePTY.h>
-#include <LibC/signal_numbers.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -22,8 +22,8 @@ ErrorOr<NonnullLockRefPtr<MasterPTY>> MasterPTY::try_create(unsigned int index)
     auto master_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) MasterPTY(index, move(buffer))));
     auto slave_pty = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) SlavePTY(*master_pty, index)));
     master_pty->m_slave = slave_pty;
-    master_pty->after_inserting();
-    slave_pty->after_inserting();
+    TRY(master_pty->after_inserting());
+    TRY(slave_pty->after_inserting());
     return master_pty;
 }
 

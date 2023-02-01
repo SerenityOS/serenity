@@ -33,33 +33,8 @@ class OutOfProcessWebView final
 public:
     virtual ~OutOfProcessWebView() override;
 
-    AK::URL url() const { return m_url; }
-    void load(const AK::URL&);
-
-    void load_html(StringView, const AK::URL&);
-    void load_empty_document();
-
-    void debug_request(DeprecatedString const& request, DeprecatedString const& argument = {});
-    void get_source();
-
-    void inspect_dom_tree();
-    struct DOMNodeProperties {
-        DeprecatedString computed_values_json;
-        DeprecatedString resolved_values_json;
-        DeprecatedString custom_properties_json;
-        DeprecatedString node_box_sizing_json;
-    };
-    Optional<DOMNodeProperties> inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement>);
-    void clear_inspected_dom_node();
-    i32 get_hovered_node_id();
-
     void js_console_input(DeprecatedString const& js_source);
     void js_console_request_messages(i32 start_index);
-
-    void run_javascript(StringView);
-
-    DeprecatedString selected_text();
-    void select_all();
 
     DeprecatedString dump_layout_tree();
 
@@ -68,7 +43,6 @@ public:
 
     void set_content_filters(Vector<DeprecatedString>);
     void set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings);
-    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
     void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
 
     void set_window_position(Gfx::IntPoint);
@@ -78,6 +52,10 @@ public:
 
     Gfx::ShareableBitmap take_screenshot() const;
     Gfx::ShareableBitmap take_document_screenshot();
+
+    // This is a hint that tells OOPWV that the content will scale to the viewport size.
+    // In practice, this means that OOPWV may render scaled stale versions of the content while resizing.
+    void set_content_scales_to_viewport(bool);
 
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
@@ -97,6 +75,7 @@ public:
     Function<void(const AK::URL&, DeprecatedString const&)> on_get_source;
     Function<void(DeprecatedString const&)> on_get_dom_tree;
     Function<void(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing)> on_get_dom_node_properties;
+    Function<void(DeprecatedString const&)> on_get_accessibility_tree;
     Function<void(i32 message_id)> on_js_console_new_message;
     Function<void(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages)> on_get_js_console_messages;
     Function<Vector<Web::Cookie::Cookie>(AK::URL const& url)> on_get_all_cookies;
@@ -138,6 +117,8 @@ private:
     virtual void did_scroll() override;
 
     // ^WebView::ViewImplementation
+    virtual void create_client() override;
+    virtual void update_zoom() override;
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
     virtual void notify_server_did_invalidate_content_rect(Badge<WebContentClient>, Gfx::IntRect const&) override;
@@ -170,6 +151,7 @@ private:
     virtual void notify_server_did_get_source(const AK::URL& url, DeprecatedString const& source) override;
     virtual void notify_server_did_get_dom_tree(DeprecatedString const& dom_tree) override;
     virtual void notify_server_did_get_dom_node_properties(i32 node_id, DeprecatedString const& computed_style, DeprecatedString const& resolved_style, DeprecatedString const& custom_properties, DeprecatedString const& node_box_sizing) override;
+    virtual void notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree) override;
     virtual void notify_server_did_output_js_console_message(i32 message_index) override;
     virtual void notify_server_did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages) override;
     virtual void notify_server_did_change_favicon(Gfx::Bitmap const& favicon) override;
@@ -191,37 +173,19 @@ private:
     void request_repaint();
     void handle_resize();
 
-    void create_client();
-    WebContentClient& client();
-
     void handle_web_content_process_crash();
 
     using InputEvent = Variant<GUI::KeyEvent, GUI::MouseEvent>;
     void enqueue_input_event(InputEvent const&);
     void process_next_input_event();
 
-    AK::URL m_url;
-
-    struct SharedBitmap {
-        i32 id { -1 };
-        i32 pending_paints { 0 };
-        RefPtr<Gfx::Bitmap> bitmap;
-    };
-
-    struct ClientState {
-        RefPtr<WebContentClient> client;
-        SharedBitmap front_bitmap;
-        SharedBitmap back_bitmap;
-        i32 next_bitmap_id { 0 };
-        bool has_usable_bitmap { false };
-        bool got_repaint_requests_while_painting { false };
-    } m_client_state;
-
     RefPtr<Gfx::Bitmap> m_backup_bitmap;
     RefPtr<GUI::Dialog> m_dialog;
 
     bool m_is_awaiting_response_for_input_event { false };
     Queue<InputEvent> m_pending_input_events;
+
+    bool m_content_scales_to_viewport { false };
 };
 
 }

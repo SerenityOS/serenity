@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,9 +17,9 @@ TimeZoneConstructor::TimeZoneConstructor(Realm& realm)
 {
 }
 
-void TimeZoneConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> TimeZoneConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -30,6 +30,8 @@ void TimeZoneConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.from, from, 1, attr);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 // 11.2.1 Temporal.TimeZone ( identifier ), https://tc39.es/proposal-temporal/#sec-temporal.timezone
@@ -59,7 +61,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> TimeZoneConstructor::construct(FunctionO
         }
 
         // b. Set identifier to ! CanonicalizeTimeZoneName(identifier).
-        identifier = canonicalize_time_zone_name(identifier);
+        identifier = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, identifier));
     }
 
     // 4. Return ? CreateTemporalTimeZone(identifier, NewTarget).

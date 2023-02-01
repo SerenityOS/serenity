@@ -121,13 +121,9 @@ private:
 
     void clear();
 
-    void inject_string(StringView);
-
     Cell& cell_at(size_t column, size_t row);
 
     using ParamVector = Vector<unsigned, 4>;
-
-    void on_code_point(u32);
 
     void scroll_down(u16 region_top, u16 region_bottom, size_t count);
     void scroll_up(u16 region_top, u16 region_bottom, size_t count);

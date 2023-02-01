@@ -330,9 +330,9 @@ static ErrorOr<void> parse_plural_rules(DeprecatedString core_supplemental_path,
     plurals_path = plurals_path.append(file_name);
 
     auto plurals = TRY(read_json_file(plurals_path.string()));
-    auto const& supplemental_object = plurals.as_object().get("supplemental"sv);
+    auto const& supplemental_object = plurals.as_object().get_object("supplemental"sv).value();
 
-    supplemental_object.as_object().for_each_member([&](auto const& key, auto const& plurals_object) {
+    supplemental_object.for_each_member([&](auto const& key, auto const& plurals_object) {
         if (!key.starts_with(form_prefix))
             return;
 
@@ -365,10 +365,10 @@ static ErrorOr<void> parse_plural_ranges(DeprecatedString core_supplemental_path
     plural_ranges_path = plural_ranges_path.append("pluralRanges.json"sv);
 
     auto plural_ranges = TRY(read_json_file(plural_ranges_path.string()));
-    auto const& supplemental_object = plural_ranges.as_object().get("supplemental"sv);
-    auto const& plurals_object = supplemental_object.as_object().get("plurals"sv);
+    auto const& supplemental_object = plural_ranges.as_object().get_object("supplemental"sv).value();
+    auto const& plurals_object = supplemental_object.get_object("plurals"sv).value();
 
-    plurals_object.as_object().for_each_member([&](auto const& loc, auto const& ranges_object) {
+    plurals_object.for_each_member([&](auto const& loc, auto const& ranges_object) {
         auto locale = cldr.locales.get(loc);
         if (!locale.has_value())
             return;
@@ -410,7 +410,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         if (auto region = cldr.unique_strings.get(parsed_locale.region); !region.is_empty())
             builder.appendff("-{}", region);
 
-        return builder.build();
+        return builder.to_deprecated_string();
     };
 
     while (identity_iterator.has_next()) {

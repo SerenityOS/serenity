@@ -44,14 +44,14 @@ ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
 {
     auto timezonesettings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TimeZoneSettingsWidget));
 
-    auto time_zone_map_bitmap = TRY(Gfx::Bitmap::try_load_from_file("/res/graphics/map.png"sv));
+    auto time_zone_map_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/map.png"sv));
     auto time_zone_rect = time_zone_map_bitmap->rect().shrunken(TIME_ZONE_MAP_NORTHERN_TRIM, 0, TIME_ZONE_MAP_SOUTHERN_TRIM, 0);
     time_zone_map_bitmap = TRY(time_zone_map_bitmap->cropped(time_zone_rect));
 
     timezonesettings_widget->m_time_zone_map = *timezonesettings_widget->find_descendant_of_type_named<GUI::ImageWidget>("time_zone_map");
     timezonesettings_widget->m_time_zone_map->set_bitmap(time_zone_map_bitmap);
 
-    auto time_zone_marker = TRY(Gfx::Bitmap::try_load_from_file("/res/icons/32x32/ladyball.png"sv));
+    auto time_zone_marker = TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/ladyball.png"sv));
     timezonesettings_widget->m_time_zone_marker = TRY(time_zone_marker->scaled(0.75f, 0.75f));
 
     timezonesettings_widget->set_time_zone_location();
@@ -61,7 +61,7 @@ ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> TimeZoneSettingsWidget::create()
 
 TimeZoneSettingsWidget::TimeZoneSettingsWidget()
 {
-    load_from_gml(time_zone_settings_widget_gml);
+    load_from_gml(time_zone_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
 
     static auto time_zones = TimeZone::all_time_zones();
     m_time_zone = TimeZone::system_time_zone();
@@ -135,8 +135,8 @@ void TimeZoneSettingsWidget::set_time_zone_location()
     auto locale = Locale::default_locale();
     auto now = AK::Time::now_realtime();
 
-    auto name = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::Long, now);
-    auto offset = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::LongOffset, now);
+    auto name = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::Long, now).release_value_but_fixme_should_propagate_errors();
+    auto offset = Locale::format_time_zone(locale, m_time_zone, Locale::CalendarPatternStyle::LongOffset, now).release_value_but_fixme_should_propagate_errors();
 
     m_time_zone_text = DeprecatedString::formatted("{}\n({})", name, offset);
 }

@@ -18,12 +18,14 @@ public:
         Length,
         Percentage,
         FlexibleLength,
-        // TODO: Max-Content
+        MaxContent,
+        MinContent,
     };
 
     GridSize(Length);
     GridSize(Percentage);
     GridSize(float);
+    GridSize(Type);
     GridSize();
     ~GridSize();
 
@@ -34,17 +36,19 @@ public:
     bool is_length() const { return m_type == Type::Length; }
     bool is_percentage() const { return m_type == Type::Percentage; }
     bool is_flexible_length() const { return m_type == Type::FlexibleLength; }
+    bool is_max_content() const { return m_type == Type::MaxContent; }
+    bool is_min_content() const { return m_type == Type::MinContent; }
 
     Length length() const;
     Percentage percentage() const { return m_percentage; }
     float flexible_length() const { return m_flexible_length; }
 
-    // https://drafts.csswg.org/css-grid/#layout-algorithm
-    // Intrinsic sizing function - min-content, max-content, auto, fit-content()
+    // https://www.w3.org/TR/css-grid-2/#layout-algorithm
+    // An intrinsic sizing function (min-content, max-content, auto, fit-content()).
     // FIXME: Add missing properties once implemented.
     bool is_intrinsic_track_sizing() const
     {
-        return (m_type == Type::Length && m_length.is_auto());
+        return (m_type == Type::Length && m_length.is_auto()) || m_type == Type::MaxContent || m_type == Type::MinContent;
     }
 
     bool is_definite() const
@@ -52,7 +56,7 @@ public:
         return (m_type == Type::Length && !m_length.is_auto()) || is_percentage();
     }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridSize const& other) const
     {
         return m_type == other.type()
@@ -78,7 +82,7 @@ public:
     GridSize min_grid_size() const& { return m_min_grid_size; }
     GridSize max_grid_size() const& { return m_max_grid_size; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridMinMax const& other) const
     {
         return m_min_grid_size == other.min_grid_size()
@@ -92,15 +96,15 @@ private:
 
 class GridTrackSizeList {
 public:
-    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<DeprecatedString>> line_names);
+    GridTrackSizeList(Vector<CSS::ExplicitGridTrack> track_list, Vector<Vector<String>> line_names);
     GridTrackSizeList();
 
     static GridTrackSizeList make_auto();
 
     Vector<CSS::ExplicitGridTrack> track_list() const { return m_track_list; }
-    Vector<Vector<DeprecatedString>> line_names() const { return m_line_names; }
+    Vector<Vector<String>> line_names() const { return m_line_names; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridTrackSizeList const& other) const
     {
         return m_line_names == other.line_names() && m_track_list == other.track_list();
@@ -108,7 +112,7 @@ public:
 
 private:
     Vector<CSS::ExplicitGridTrack> m_track_list;
-    Vector<Vector<DeprecatedString>> m_line_names;
+    Vector<Vector<String>> m_line_names;
 };
 
 class GridRepeat {
@@ -133,7 +137,7 @@ public:
     GridTrackSizeList grid_track_size_list() const& { return m_grid_track_size_list; }
     Type type() const& { return m_type; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridRepeat const& other) const
     {
         if (m_type != other.type())
@@ -183,7 +187,7 @@ public:
 
     Type type() const { return m_type; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(ExplicitGridTrack const& other) const
     {
         if (is_repeat() && other.is_repeat())

@@ -33,8 +33,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_window->set_rect(670, 65, 325, 500);
     main_window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto table_view = TRY(main_window->try_set_main_widget<GUI::TableView>());
+    auto table_view = TRY(main_window->set_main_widget<GUI::TableView>());
     auto model = ClipboardHistoryModel::create();
+
+    auto data_and_type = GUI::Clipboard::the().fetch_data_and_type();
+    if (!(data_and_type.data.is_empty() && data_and_type.mime_type.is_empty() && data_and_type.metadata.is_empty()))
+        model->add_item(data_and_type);
+
     table_view->set_model(model);
 
     table_view->on_activation = [&](GUI::ModelIndex const& index) {
@@ -43,7 +48,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
-        model->remove_item(table_view->selection().first().row());
+        if (table_view->selection().is_empty())
+            return;
+
+        auto index = table_view->selection().first();
+        model->remove_item(index.row());
+        if (model->is_empty()) {
+            GUI::Clipboard::the().clear();
+        } else if (index.row() == 0) {
+            auto const& data_and_type = model->item_at(index.row()).data_and_type;
+            GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
+        }
     });
 
     auto debug_dump_action = GUI::Action::create("Dump to debug console", [&](const GUI::Action&) {
@@ -52,12 +67,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         });
     });
 
+    auto clear_action = GUI::Action::create("Clear history", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/trash-can.png"sv)), [&](const GUI::Action&) {
+        model->clear();
+        GUI::Clipboard::the().clear();
+    });
+
     auto entry_context_menu = TRY(GUI::Menu::try_create());
     TRY(entry_context_menu->try_add_action(delete_action));
     TRY(entry_context_menu->try_add_action(debug_dump_action));
+    entry_context_menu->add_separator();
+    TRY(entry_context_menu->try_add_action(clear_action));
     table_view->on_context_menu_request = [&](GUI::ModelIndex const&, GUI::ContextMenuEvent const& event) {
         delete_action->set_enabled(!table_view->selection().is_empty());
         debug_dump_action->set_enabled(!table_view->selection().is_empty());
+        clear_action->set_enabled(!model->is_empty());
         entry_context_menu->popup(event.screen_position());
     };
 
@@ -65,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     applet_window->set_title("ClipboardHistory");
     applet_window->set_window_type(GUI::WindowType::Applet);
     applet_window->set_has_alpha_channel(true);
-    auto icon_widget = TRY(applet_window->try_set_main_widget<GUI::ImageWidget>());
+    auto icon_widget = TRY(applet_window->set_main_widget<GUI::ImageWidget>());
     icon_widget->set_tooltip("Clipboard History");
     icon_widget->load_from_file("/res/icons/16x16/edit-copy.png"sv);
     icon_widget->on_click = [&main_window = *main_window] {

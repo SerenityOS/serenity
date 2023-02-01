@@ -124,7 +124,7 @@ void vsyslog_r(int priority, struct syslog_data* data, char const* message, va_l
         combined.appendff("{}: ", get_syslog_ident(data));
 
     combined.appendvf(message, args);
-    DeprecatedString combined_string = combined.build();
+    auto combined_string = combined.to_deprecated_string();
 
     if (data->logopt & LOG_CONS)
         dbgputstr(combined_string.characters(), combined_string.length());

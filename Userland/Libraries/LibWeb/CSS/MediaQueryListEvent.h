@@ -19,7 +19,7 @@ class MediaQueryListEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(MediaQueryListEvent, DOM::Event);
 
 public:
-    static MediaQueryListEvent* construct_impl(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& event_init = {});
+    static MediaQueryListEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init = {});
 
     virtual ~MediaQueryListEvent() override;
 
@@ -27,7 +27,9 @@ public:
     bool matches() const { return m_matches; }
 
 private:
-    MediaQueryListEvent(JS::Realm&, FlyString const& event_name, MediaQueryListEventInit const& event_init);
+    MediaQueryListEvent(JS::Realm&, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     DeprecatedString m_media;
     bool m_matches;

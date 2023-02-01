@@ -19,22 +19,8 @@ public:
     static ErrorOr<CircularBuffer> create_empty(size_t size);
     static ErrorOr<CircularBuffer> create_initialized(ByteBuffer);
 
-    CircularBuffer(CircularBuffer&& other)
-    {
-        operator=(move(other));
-    }
-
-    CircularBuffer& operator=(CircularBuffer&& other)
-    {
-        if (&other == this)
-            return *this;
-
-        swap(m_buffer, other.m_buffer);
-        swap(m_reading_head, other.m_reading_head);
-        swap(m_used_space, other.m_used_space);
-
-        return *this;
-    }
+    CircularBuffer(CircularBuffer&& other) = default;
+    CircularBuffer& operator=(CircularBuffer&& other) = default;
 
     ~CircularBuffer() = default;
 
@@ -42,11 +28,15 @@ public:
     Bytes read(Bytes bytes);
     ErrorOr<void> discard(size_t discarded_bytes);
 
+    /// Compared to `read()`, this starts reading from an offset that is `distance` bytes
+    /// before the current write pointer and allows for reading already-read data.
+    ErrorOr<Bytes> read_with_seekback(Bytes bytes, size_t distance);
+
     [[nodiscard]] size_t empty_space() const;
     [[nodiscard]] size_t used_space() const;
     [[nodiscard]] size_t capacity() const;
 
-    Optional<size_t> offset_of(StringView needle, Optional<size_t> until = {}) const;
+    Optional<size_t> offset_of(StringView needle, Optional<size_t> from = {}, Optional<size_t> until = {}) const;
 
     void clear();
 
@@ -57,11 +47,13 @@ private:
 
     [[nodiscard]] Bytes next_write_span();
     [[nodiscard]] ReadonlyBytes next_read_span() const;
+    [[nodiscard]] ReadonlyBytes next_read_span_with_seekback(size_t distance) const;
 
     ByteBuffer m_buffer {};
 
     size_t m_reading_head {};
     size_t m_used_space {};
+    size_t m_seekback_limit {};
 };
 
 }

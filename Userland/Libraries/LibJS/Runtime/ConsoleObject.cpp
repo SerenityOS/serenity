@@ -18,10 +18,10 @@ ConsoleObject::ConsoleObject(Realm& realm)
 {
 }
 
-void ConsoleObject::initialize(Realm& realm)
+ThrowCompletionOr<void> ConsoleObject::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Enumerable | Attribute::Configurable;
     define_native_function(realm, vm.names.log, log, 0, attr);
     define_native_function(realm, vm.names.debug, debug, 0, attr);
@@ -39,6 +39,8 @@ void ConsoleObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.time, time, 0, attr);
     define_native_function(realm, vm.names.timeLog, time_log, 0, attr);
     define_native_function(realm, vm.names.timeEnd, time_end, 0, attr);
+
+    return {};
 }
 
 // 1.1.6. log(...data), https://console.spec.whatwg.org/#log

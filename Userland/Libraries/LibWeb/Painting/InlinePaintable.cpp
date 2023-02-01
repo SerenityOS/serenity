@@ -14,9 +14,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
+JS::NonnullGCPtr<InlinePaintable> InlinePaintable::create(Layout::InlineNode const& layout_node)
 {
-    return adopt_ref(*new InlinePaintable(layout_node));
+    return layout_node.heap().allocate_without_realm<InlinePaintable>(layout_node);
 }
 
 InlinePaintable::InlinePaintable(Layout::InlineNode const& layout_node)
@@ -132,7 +132,7 @@ void InlinePaintable::for_each_fragment(Callback callback) const
 {
     // FIXME: This will be slow if the containing block has a lot of fragments!
     Vector<Layout::LineBoxFragment const&> fragments;
-    containing_block()->paint_box()->for_each_fragment([&](auto& fragment) {
+    verify_cast<PaintableWithLines>(*containing_block()->paint_box()).for_each_fragment([&](auto& fragment) {
         if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
             fragments.append(fragment);
         return IterationDecision::Continue;

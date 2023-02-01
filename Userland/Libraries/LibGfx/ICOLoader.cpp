@@ -6,7 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/MemoryStream.h>
+#include <AK/DeprecatedMemoryStream.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <LibGfx/BMPLoader.h>
@@ -59,7 +59,7 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
+static Optional<size_t> decode_ico_header(DeprecatedInputMemoryStream& stream)
 {
     ICONDIR header;
     stream >> Bytes { &header, sizeof(header) };
@@ -71,7 +71,7 @@ static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
     return { header.image_count };
 }
 
-static Optional<ICOImageDescriptor> decode_ico_direntry(InputMemoryStream& stream)
+static Optional<ICOImageDescriptor> decode_ico_direntry(DeprecatedInputMemoryStream& stream)
 {
     ICONDIRENTRY entry;
     stream >> Bytes { &entry, sizeof(entry) };
@@ -108,7 +108,7 @@ static size_t find_largest_image(ICOLoadingContext const& context)
 
 static bool load_ico_directory(ICOLoadingContext& context)
 {
-    InputMemoryStream stream { { context.data, context.data_size } };
+    DeprecatedInputMemoryStream stream { { context.data, context.data_size } };
 
     auto image_count = decode_ico_header(stream);
     if (!image_count.has_value() || image_count.value() == 0) {
@@ -136,7 +136,7 @@ static bool load_ico_directory(ICOLoadingContext& context)
     return true;
 }
 
-static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
+bool ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
 {
     if (context.state < ICOLoadingContext::State::DirectoryDecoded) {
         if (!load_ico_directory(context)) {
@@ -153,20 +153,25 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
     }
 
     ICOImageDescriptor& desc = context.images[real_index];
-
-    PNGImageDecoderPlugin png_decoder(context.data + desc.offset, desc.size);
-    if (png_decoder.sniff()) {
-        auto decoded_png_frame = png_decoder.frame(0);
-        if (decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
-            dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
-            return false;
+    if (PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size }).release_value_but_fixme_should_propagate_errors()) {
+        auto png_decoder = PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }).release_value_but_fixme_should_propagate_errors();
+        if (png_decoder->initialize()) {
+            auto decoded_png_frame = png_decoder->frame(0);
+            if (decoded_png_frame.is_error() || !decoded_png_frame.value().image) {
+                dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load PNG encoded image index: {}", real_index);
+                return false;
+            }
+            desc.bitmap = decoded_png_frame.value().image;
+            return true;
         }
-        desc.bitmap = decoded_png_frame.value().image;
-        return true;
+        return false;
     } else {
-        BMPImageDecoderPlugin bmp_decoder(context.data + desc.offset, desc.size, true);
-        if (bmp_decoder.sniff_dib()) {
-            auto decoded_bmp_frame = bmp_decoder.frame(0);
+        auto bmp_decoder = BMPImageDecoderPlugin::create_as_included_in_ico({}, { context.data + desc.offset, desc.size }).release_value_but_fixme_should_propagate_errors();
+        // NOTE: We don't initialize a BMP decoder in the usual way, but rather
+        // we just create an object and try to sniff for a frame when it's included
+        // inside an ICO image.
+        if (bmp_decoder->sniff_dib()) {
+            auto decoded_bmp_frame = bmp_decoder->frame(0);
             if (decoded_bmp_frame.is_error() || !decoded_bmp_frame.value().image) {
                 dbgln_if(ICO_DEBUG, "load_ico_bitmap: failed to load BMP encoded image index: {}", real_index);
                 return false;
@@ -178,6 +183,17 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
         }
         return true;
     }
+}
+
+ErrorOr<bool> ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    DeprecatedInputMemoryStream stream { { data.data(), data.size() } };
+    return decode_ico_header(stream).has_value();
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) ICOImageDecoderPlugin(data.data(), data.size()));
 }
 
 ICOImageDecoderPlugin::ICOImageDecoderPlugin(u8 const* data, size_t size)
@@ -219,9 +235,9 @@ bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->images[0].bitmap->set_nonvolatile(was_purged);
 }
 
-bool ICOImageDecoderPlugin::sniff()
+bool ICOImageDecoderPlugin::initialize()
 {
-    InputMemoryStream stream { { m_context->data, m_context->data_size } };
+    DeprecatedInputMemoryStream stream { { m_context->data, m_context->data_size } };
     return decode_ico_header(stream).has_value();
 }
 
@@ -260,6 +276,11 @@ ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index)
 
     VERIFY(m_context->images[m_context->largest_index].bitmap);
     return ImageFrameDescriptor { m_context->images[m_context->largest_index].bitmap, 0 };
+}
+
+ErrorOr<Optional<ReadonlyBytes>> ICOImageDecoderPlugin::icc_data()
+{
+    return OptionalNone {};
 }
 
 }

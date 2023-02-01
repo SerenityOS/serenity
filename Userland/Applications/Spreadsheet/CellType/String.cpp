@@ -18,7 +18,7 @@ StringCell::StringCell()
 JS::ThrowCompletionOr<DeprecatedString> StringCell::display(Cell& cell, CellTypeMetadata const& metadata) const
 {
     auto& vm = cell.sheet().global_object().vm();
-    auto string = TRY(cell.js_data().to_string(vm));
+    auto string = TRY(cell.js_data().to_deprecated_string(vm));
     if (metadata.length >= 0)
         return string.substring(0, metadata.length);
 

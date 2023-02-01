@@ -1,3 +1,4 @@
+#import <ARIA/ARIAMixin.idl>
 #import <CSS/CSSStyleDeclaration.idl>
 #import <DOM/Attr.idl>
 #import <DOM/ChildNode.idl>
@@ -83,3 +84,5 @@ interface Element : Node {
 Element includes ParentNode;
 Element includes ChildNode;
 Element includes InnerHTML;
+// https://www.w3.org/TR/wai-aria-1.2/#idl_element
+Element includes ARIAMixin;

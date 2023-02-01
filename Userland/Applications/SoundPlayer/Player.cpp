@@ -18,7 +18,6 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
         auto sample_rate = m_playback_manager.loader()->sample_rate();
         float source_to_dest_ratio = static_cast<float>(sample_rate) / m_playback_manager.device_sample_rate();
         samples_played *= source_to_dest_ratio;
-        samples_played += m_playback_manager.last_seek();
 
         auto played_seconds = samples_played / sample_rate;
         time_elapsed(played_seconds);
@@ -64,7 +63,8 @@ void Player::play_file_path(DeprecatedString const& path)
 
     m_loaded_filename = path;
 
-    total_samples_changed(loader->total_samples());
+    // TODO: The combination of sample count, sample rate, and sample data should be properly abstracted for the source and the playback device.
+    total_samples_changed(loader->total_samples() * (static_cast<float>(loader->sample_rate()) / m_playback_manager.device_sample_rate()));
     m_playback_manager.set_loader(move(loader));
     file_name_changed(path);
 
@@ -155,6 +155,7 @@ void Player::toggle_mute()
 
 void Player::seek(int sample)
 {
+    sample *= (m_playback_manager.device_sample_rate() / static_cast<float>(m_playback_manager.loader()->sample_rate()));
     m_playback_manager.seek(sample);
 }
 

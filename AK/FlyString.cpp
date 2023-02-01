@@ -1,145 +1,169 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
-#include <AK/HashTable.h>
-#include <AK/Optional.h>
+#include <AK/HashMap.h>
 #include <AK/Singleton.h>
-#include <AK/StringUtils.h>
 #include <AK/StringView.h>
+#include <AK/Utf8View.h>
 
 namespace AK {
 
-struct FlyStringImplTraits : public Traits<StringImpl*> {
-    static unsigned hash(StringImpl const* s) { return s ? s->hash() : 0; }
-    static bool equals(StringImpl const* a, StringImpl const* b)
-    {
-        VERIFY(a);
-        VERIFY(b);
-        return *a == *b;
-    }
-};
-
-static Singleton<HashTable<StringImpl*, FlyStringImplTraits>> s_table;
-
-static HashTable<StringImpl*, FlyStringImplTraits>& fly_impls()
+static auto& all_fly_strings()
 {
-    return *s_table;
+    static Singleton<HashMap<StringView, uintptr_t>> table;
+    return *table;
 }
 
-void FlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
+FlyString::FlyString()
+    : m_data(String {}.to_fly_string_data({}))
 {
-    fly_impls().remove(&impl);
 }
 
-FlyString::FlyString(DeprecatedString const& string)
+FlyString::~FlyString()
 {
-    if (string.is_null())
-        return;
-    if (string.impl()->is_fly()) {
-        m_impl = string.impl();
+    String::unref_fly_string_data({}, m_data);
+}
+
+ErrorOr<FlyString> FlyString::from_utf8(StringView string)
+{
+    return FlyString { TRY(String::from_utf8(string)) };
+}
+
+FlyString::FlyString(String const& string)
+{
+    if (string.is_short_string()) {
+        m_data = string.to_fly_string_data({});
         return;
     }
-    auto it = fly_impls().find(const_cast<StringImpl*>(string.impl()));
-    if (it == fly_impls().end()) {
-        fly_impls().set(const_cast<StringImpl*>(string.impl()));
-        string.impl()->set_fly({}, true);
-        m_impl = string.impl();
+
+    auto it = all_fly_strings().find(string.bytes_as_string_view());
+    if (it == all_fly_strings().end()) {
+        m_data = string.to_fly_string_data({});
+
+        all_fly_strings().set(string.bytes_as_string_view(), m_data);
+        string.did_create_fly_string({});
     } else {
-        VERIFY((*it)->is_fly());
-        m_impl = *it;
+        m_data = it->value;
     }
+
+    String::ref_fly_string_data({}, m_data);
 }
 
-FlyString::FlyString(StringView string)
+FlyString::FlyString(FlyString const& other)
+    : m_data(other.m_data)
 {
-    if (string.is_null())
-        return;
-    auto it = fly_impls().find(string.hash(), [&](auto& candidate) {
-        return string == candidate;
-    });
-    if (it == fly_impls().end()) {
-        auto new_string = string.to_deprecated_string();
-        fly_impls().set(new_string.impl());
-        new_string.impl()->set_fly({}, true);
-        m_impl = new_string.impl();
-    } else {
-        VERIFY((*it)->is_fly());
-        m_impl = *it;
+    String::ref_fly_string_data({}, m_data);
+}
+
+FlyString& FlyString::operator=(FlyString const& other)
+{
+    if (this != &other) {
+        m_data = other.m_data;
+        String::ref_fly_string_data({}, m_data);
     }
+
+    return *this;
 }
 
-template<typename T>
-Optional<T> FlyString::to_int(TrimWhitespace trim_whitespace) const
+FlyString::FlyString(FlyString&& other)
+    : m_data(other.m_data)
 {
-    return StringUtils::convert_to_int<T>(view(), trim_whitespace);
+    other.m_data = String {}.to_fly_string_data({});
 }
 
-template Optional<i8> FlyString::to_int(TrimWhitespace) const;
-template Optional<i16> FlyString::to_int(TrimWhitespace) const;
-template Optional<i32> FlyString::to_int(TrimWhitespace) const;
-template Optional<i64> FlyString::to_int(TrimWhitespace) const;
-
-template<typename T>
-Optional<T> FlyString::to_uint(TrimWhitespace trim_whitespace) const
+FlyString& FlyString::operator=(FlyString&& other)
 {
-    return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
+    m_data = other.m_data;
+    other.m_data = String {}.to_fly_string_data({});
+
+    return *this;
 }
 
-template Optional<u8> FlyString::to_uint(TrimWhitespace) const;
-template Optional<u16> FlyString::to_uint(TrimWhitespace) const;
-template Optional<u32> FlyString::to_uint(TrimWhitespace) const;
-template Optional<u64> FlyString::to_uint(TrimWhitespace) const;
-
-#ifndef KERNEL
-Optional<double> FlyString::to_double(TrimWhitespace trim_whitespace) const
+bool FlyString::is_empty() const
 {
-    return StringUtils::convert_to_floating_point<double>(view(), trim_whitespace);
+    return bytes_as_string_view().is_empty();
 }
 
-Optional<float> FlyString::to_float(TrimWhitespace trim_whitespace) const
+unsigned FlyString::hash() const
 {
-    return StringUtils::convert_to_floating_point<float>(view(), trim_whitespace);
-}
-#endif
-
-bool FlyString::equals_ignoring_case(StringView other) const
-{
-    return StringUtils::equals_ignoring_case(view(), other);
+    return bytes_as_string_view().hash();
 }
 
-bool FlyString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
+FlyString::operator String() const
 {
-    return StringUtils::starts_with(view(), str, case_sensitivity);
+    return to_string();
 }
 
-bool FlyString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
+String FlyString::to_string() const
 {
-    return StringUtils::ends_with(view(), str, case_sensitivity);
+    return String::fly_string_data_to_string({}, m_data);
 }
 
-FlyString FlyString::to_lowercase() const
+Utf8View FlyString::code_points() const
 {
-    return DeprecatedString(*m_impl).to_lowercase();
+    return Utf8View { bytes_as_string_view() };
 }
 
-bool FlyString::operator==(DeprecatedString const& other) const
+ReadonlyBytes FlyString::bytes() const
 {
-    return m_impl == other.impl() || view() == other.view();
+    return bytes_as_string_view().bytes();
+}
+
+StringView FlyString::bytes_as_string_view() const
+{
+    return String::fly_string_data_to_string_view({}, m_data);
+}
+
+bool FlyString::operator==(FlyString const& other) const
+{
+    return m_data == other.m_data;
+}
+
+bool FlyString::operator==(String const& other) const
+{
+    if (m_data == other.to_fly_string_data({}))
+        return true;
+
+    return bytes_as_string_view() == other.bytes_as_string_view();
 }
 
 bool FlyString::operator==(StringView string) const
 {
-    return view() == string;
+    return bytes_as_string_view() == string;
 }
 
 bool FlyString::operator==(char const* string) const
 {
-    return view() == string;
+    return bytes_as_string_view() == string;
+}
+
+void FlyString::did_destroy_fly_string_data(Badge<Detail::StringData>, StringView string_data)
+{
+    all_fly_strings().remove(string_data);
+}
+
+uintptr_t FlyString::data(Badge<String>) const
+{
+    return m_data;
+}
+
+size_t FlyString::number_of_fly_strings()
+{
+    return all_fly_strings().size();
+}
+
+unsigned Traits<FlyString>::hash(FlyString const& fly_string)
+{
+    return fly_string.bytes_as_string_view().hash();
+}
+
+ErrorOr<void> Formatter<FlyString>::format(FormatBuilder& builder, FlyString const& fly_string)
+{
+    return Formatter<StringView>::format(builder, fly_string.bytes_as_string_view());
 }
 
 }

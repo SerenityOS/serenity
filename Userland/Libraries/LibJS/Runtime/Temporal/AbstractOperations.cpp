@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/DateTimeLexer.h>
+#include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Variant.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -146,8 +146,8 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
     if (!values.is_empty()) {
         // NOTE: Every location in the spec that invokes GetOption with type=boolean also has values=undefined.
         VERIFY(value.is_string());
-        if (!values.contains_slow(value.as_string().deprecated_string()))
-            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value.as_string().deprecated_string(), property.as_string());
+        if (auto value_string = TRY(value.as_string().utf8_string()); !values.contains_slow(value_string))
+            return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, value_string, property.as_string());
     }
 
     // 9. Return value.
@@ -155,35 +155,35 @@ ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey c
 }
 
 // 13.4 ToTemporalOverflow ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloverflow
-ThrowCompletionOr<DeprecatedString> to_temporal_overflow(VM& vm, Object const* options)
+ThrowCompletionOr<String> to_temporal_overflow(VM& vm, Object const* options)
 {
     // 1. If options is undefined, return "constrain".
     if (options == nullptr)
-        return "constrain"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8("constrain"sv));
 
     // 2. Return ? GetOption(options, "overflow", "string", « "constrain", "reject" », "constrain").
     auto option = TRY(get_option(vm, *options, vm.names.overflow, OptionType::String, { "constrain"sv, "reject"sv }, "constrain"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.5 ToTemporalDisambiguation ( options ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaldisambiguation
-ThrowCompletionOr<DeprecatedString> to_temporal_disambiguation(VM& vm, Object const* options)
+ThrowCompletionOr<String> to_temporal_disambiguation(VM& vm, Object const* options)
 {
     // 1. If options is undefined, return "compatible".
     if (options == nullptr)
-        return "compatible"sv;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8("compatible"sv));
 
     // 2. Return ? GetOption(options, "disambiguation", "string", « "compatible", "earlier", "later", "reject" », "compatible").
     auto option = TRY(get_option(vm, *options, vm.names.disambiguation, OptionType::String, { "compatible"sv, "earlier"sv, "later"sv, "reject"sv }, "compatible"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.6 ToTemporalRoundingMode ( normalizedOptions, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingmode
-ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM& vm, Object const& normalized_options, DeprecatedString const& fallback)
+ThrowCompletionOr<String> to_temporal_rounding_mode(VM& vm, Object const& normalized_options, StringView fallback)
 {
     // 1. Return ? GetOption(normalizedOptions, "roundingMode", "string", « "ceil", "floor", "expand", "trunc", "halfCeil", "halfFloor", "halfExpand", "halfTrunc", "halfEven" », fallback).
     auto option = TRY(get_option(
@@ -199,14 +199,14 @@ ThrowCompletionOr<DeprecatedString> to_temporal_rounding_mode(VM& vm, Object con
             "halfTrunc"sv,
             "halfEven"sv,
         },
-        fallback.view()));
+        fallback));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.7 NegateTemporalRoundingMode ( roundingMode ), https://tc39.es/proposal-temporal/#sec-temporal-negatetemporalroundingmode
-StringView negate_temporal_rounding_mode(DeprecatedString const& rounding_mode)
+StringView negate_temporal_rounding_mode(StringView rounding_mode)
 {
     // 1. If roundingMode is "ceil", return "floor".
     if (rounding_mode == "ceil"sv)
@@ -229,47 +229,47 @@ StringView negate_temporal_rounding_mode(DeprecatedString const& rounding_mode)
 }
 
 // 13.8 ToTemporalOffset ( options, fallback ), https://tc39.es/proposal-temporal/#sec-temporal-totemporaloffset
-ThrowCompletionOr<DeprecatedString> to_temporal_offset(VM& vm, Object const* options, DeprecatedString const& fallback)
+ThrowCompletionOr<String> to_temporal_offset(VM& vm, Object const* options, StringView fallback)
 {
     // 1. If options is undefined, return fallback.
     if (options == nullptr)
-        return fallback;
+        return TRY_OR_THROW_OOM(vm, String::from_utf8(fallback));
 
     // 2. Return ? GetOption(options, "offset", "string", « "prefer", "use", "ignore", "reject" », fallback).
-    auto option = TRY(get_option(vm, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, fallback.view()));
+    auto option = TRY(get_option(vm, *options, vm.names.offset, OptionType::String, { "prefer"sv, "use"sv, "ignore"sv, "reject"sv }, fallback));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.9 ToCalendarNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-tocalendarnameoption
-ThrowCompletionOr<DeprecatedString> to_calendar_name_option(VM& vm, Object const& normalized_options)
+ThrowCompletionOr<String> to_calendar_name_option(VM& vm, Object const& normalized_options)
 {
     // 1. Return ? GetOption(normalizedOptions, "calendarName", "string", « "auto", "always", "never", "critical" », "auto").
     auto option = TRY(get_option(vm, normalized_options, vm.names.calendarName, OptionType::String, { "auto"sv, "always"sv, "never"sv, "critical"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.10 ToTimeZoneNameOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-totimezonenameoption
-ThrowCompletionOr<DeprecatedString> to_time_zone_name_option(VM& vm, Object const& normalized_options)
+ThrowCompletionOr<String> to_time_zone_name_option(VM& vm, Object const& normalized_options)
 {
     // 1. Return ? GetOption(normalizedOptions, "timeZoneName", "string", « "auto", "never", "critical" », "auto").
     auto option = TRY(get_option(vm, normalized_options, vm.names.timeZoneName, OptionType::String, { "auto"sv, "never"sv, "critical"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.11 ToShowOffsetOption ( normalizedOptions ), https://tc39.es/proposal-temporal/#sec-temporal-toshowoffsetoption
-ThrowCompletionOr<DeprecatedString> to_show_offset_option(VM& vm, Object const& normalized_options)
+ThrowCompletionOr<String> to_show_offset_option(VM& vm, Object const& normalized_options)
 {
     // 1. Return ? GetOption(normalizedOptions, "offset", "string", « "auto", "never" », "auto").
     auto option = TRY(get_option(vm, normalized_options, vm.names.offset, OptionType::String, { "auto"sv, "never"sv }, "auto"sv));
 
     VERIFY(option.is_string());
-    return option.as_string().deprecated_string();
+    return option.as_string().utf8_string();
 }
 
 // 13.12 ToTemporalRoundingIncrement ( normalizedOptions, dividend, inclusive ), https://tc39.es/proposal-temporal/#sec-temporal-totemporalroundingincrement
@@ -457,7 +457,7 @@ static Vector<TemporalUnit> temporal_units = {
 };
 
 // 13.15 GetTemporalUnit ( normalizedOptions, key, unitGroup, default [ , extraValues ] ), https://tc39.es/proposal-temporal/#sec-temporal-gettemporalunit
-ThrowCompletionOr<Optional<DeprecatedString>> get_temporal_unit(VM& vm, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values)
+ThrowCompletionOr<Optional<String>> get_temporal_unit(VM& vm, Object const& normalized_options, PropertyKey const& key, UnitGroup unit_group, TemporalUnitDefault const& default_, Vector<StringView> const& extra_values)
 {
     // 1. Let singularNames be a new empty List.
     Vector<StringView> singular_names;
@@ -528,15 +528,15 @@ ThrowCompletionOr<Optional<DeprecatedString>> get_temporal_unit(VM& vm, Object c
     if (option_value.is_undefined() && default_.has<TemporalUnitRequired>())
         return vm.throw_completion<RangeError>(ErrorType::IsUndefined, DeprecatedString::formatted("{} option value", key.as_string()));
 
-    Optional<DeprecatedString> value = option_value.is_undefined()
-        ? Optional<DeprecatedString> {}
-        : option_value.as_string().deprecated_string();
+    auto value = option_value.is_undefined()
+        ? Optional<String> {}
+        : TRY(option_value.as_string().utf8_string());
 
     // 11. If value is listed in the Plural column of Table 13, then
     for (auto const& row : temporal_units) {
         if (row.plural == value) {
             // a. Set value to the value in the Singular column of the corresponding row.
-            value = row.singular;
+            value = TRY_OR_THROW_OOM(vm, String::from_utf8(row.singular));
         }
     }
 
@@ -656,11 +656,11 @@ ThrowCompletionOr<Value> to_relative_temporal_object(VM& vm, Object const& optio
                     return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
                 // 2. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
-                time_zone_name = canonicalize_time_zone_name(*time_zone_name);
+                time_zone_name = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, *time_zone_name));
             }
 
             // ii. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
-            time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
+            time_zone = MUST_OR_THROW_OOM(create_temporal_time_zone(vm, *time_zone_name));
 
             // iii. If result.[[TimeZone]].[[Z]] is true, then
             if (result.time_zone.z) {
@@ -734,7 +734,7 @@ StringView larger_of_two_temporal_units(StringView unit1, StringView unit2)
 }
 
 // 13.18 MergeLargestUnitOption ( options, largestUnit ), https://tc39.es/proposal-temporal/#sec-temporal-mergelargestunitoption
-ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& options, DeprecatedString largest_unit)
+ThrowCompletionOr<Object*> merge_largest_unit_option(VM& vm, Object const& options, String largest_unit)
 {
     auto& realm = *vm.current_realm();
 
@@ -823,7 +823,7 @@ ThrowCompletionOr<void> reject_object_with_calendar_or_time_zone(VM& vm, Object&
 }
 
 // 13.21 FormatSecondsStringPart ( second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-formatsecondsstringpart
-DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<String> format_seconds_string_part(VM& vm, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: second, millisecond, microsecond, and nanosecond are integers.
 
@@ -833,15 +833,15 @@ DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 micr
 
     // 2. If precision is "minute", return "".
     if (precision.has<StringView>() && precision.get<StringView>() == "minute"sv)
-        return DeprecatedString::empty();
+        return String {};
 
     // 3. Let secondsString be the string-concatenation of the code unit 0x003A (COLON) and ToZeroPaddedDecimalString(second, 2).
-    auto seconds_string = DeprecatedString::formatted(":{:02}", second);
+    auto seconds_string = TRY_OR_THROW_OOM(vm, String::formatted(":{:02}", second));
 
     // 4. Let fraction be millisecond × 10^6 + microsecond × 10^3 + nanosecond.
     u32 fraction = millisecond * 1'000'000 + microsecond * 1'000 + nanosecond;
 
-    DeprecatedString fraction_string;
+    String fraction_string;
 
     // 5. If precision is "auto", then
     if (precision.has<StringView>() && precision.get<StringView>() == "auto"sv) {
@@ -850,10 +850,10 @@ DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 micr
             return seconds_string;
 
         // b. Set fraction to ToZeroPaddedDecimalString(fraction, 9).
-        fraction_string = DeprecatedString::formatted("{:09}", fraction);
+        fraction_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", fraction));
 
         // c. Set fraction to the longest possible substring of fraction starting at position 0 and not ending with the code unit 0x0030 (DIGIT ZERO).
-        fraction_string = fraction_string.trim("0"sv, TrimMode::Right);
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.trim("0"sv, TrimMode::Right));
     }
     // 6. Else,
     else {
@@ -862,14 +862,14 @@ DeprecatedString format_seconds_string_part(u8 second, u16 millisecond, u16 micr
             return seconds_string;
 
         // b. Set fraction to ToZeroPaddedDecimalString(fraction, 9)
-        fraction_string = DeprecatedString::formatted("{:09}", fraction);
+        fraction_string = TRY_OR_THROW_OOM(vm, String::formatted("{:09}", fraction));
 
         // c. Set fraction to the substring of fraction from 0 to precision.
-        fraction_string = fraction_string.substring(0, precision.get<u8>());
+        fraction_string = TRY_OR_THROW_OOM(vm, fraction_string.substring_from_byte_offset(0, precision.get<u8>()));
     }
 
     // 7. Return the string-concatenation of secondsString, the code unit 0x002E (FULL STOP), and fraction.
-    return DeprecatedString::formatted("{}.{}", seconds_string, fraction_string);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}.{}", seconds_string, fraction_string));
 }
 
 // 13.23 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-temporal/#sec-temporal-getunsignedroundingmode
@@ -1224,15 +1224,15 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
     auto f_seconds = parse_result.time_fraction;
 
     // 5. If the first code point of year is U+2212 (MINUS SIGN), replace the first code point with U+002D (HYPHEN-MINUS).
-    Optional<DeprecatedString> normalized_year;
+    Optional<String> normalized_year;
     if (year.has_value()) {
         normalized_year = year->starts_with("\xE2\x88\x92"sv)
-            ? DeprecatedString::formatted("-{}", year->substring_view(3))
-            : DeprecatedString { *year };
+            ? TRY_OR_THROW_OOM(vm, String::formatted("-{}", year->substring_view(3)))
+            : TRY_OR_THROW_OOM(vm, String::from_utf8(*year));
     }
 
     // 6. Let yearMV be ! ToIntegerOrInfinity(CodePointsToString(year)).
-    auto year_mv = *normalized_year.value_or("0"sv).to_int<i32>();
+    auto year_mv = *normalized_year.value_or(String::from_utf8_short_string("0"sv)).to_number<i32>();
 
     // 7. If month is empty, then
     //    a. Let monthMV be 1.
@@ -1271,25 +1271,25 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         auto f_seconds_digits = f_seconds->substring_view(1);
 
         // b. Let fSecondsDigitsExtended be the string-concatenation of fSecondsDigits and "000000000".
-        auto f_seconds_digits_extended = DeprecatedString::formatted("{}000000000", f_seconds_digits);
+        auto f_seconds_digits_extended = TRY_OR_THROW_OOM(vm, String::formatted("{}000000000", f_seconds_digits));
 
         // c. Let millisecond be the substring of fSecondsDigitsExtended from 0 to 3.
-        auto millisecond = f_seconds_digits_extended.substring(0, 3);
+        auto millisecond = TRY_OR_THROW_OOM(vm, f_seconds_digits_extended.substring_from_byte_offset_with_shared_superstring(0, 3));
 
         // d. Let microsecond be the substring of fSecondsDigitsExtended from 3 to 6.
-        auto microsecond = f_seconds_digits_extended.substring(3, 3);
+        auto microsecond = TRY_OR_THROW_OOM(vm, f_seconds_digits_extended.substring_from_byte_offset_with_shared_superstring(3, 3));
 
         // e. Let nanosecond be the substring of fSecondsDigitsExtended from 6 to 9.
-        auto nanosecond = f_seconds_digits_extended.substring(6, 3);
+        auto nanosecond = TRY_OR_THROW_OOM(vm, f_seconds_digits_extended.substring_from_byte_offset_with_shared_superstring(6, 3));
 
         // f. Let millisecondMV be ! ToIntegerOrInfinity(millisecond).
-        millisecond_mv = *millisecond.to_uint<u16>();
+        millisecond_mv = *millisecond.to_number<u16>();
 
         // g. Let microsecondMV be ! ToIntegerOrInfinity(microsecond).
-        microsecond_mv = *microsecond.to_uint<u16>();
+        microsecond_mv = *microsecond.to_number<u16>();
 
         // h. Let nanosecondMV be ! ToIntegerOrInfinity(nanosecond).
-        nanosecond_mv = *nanosecond.to_uint<u16>();
+        nanosecond_mv = *nanosecond.to_number<u16>();
     }
     // 16. Else,
     else {
@@ -1320,7 +1320,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
         auto name = parse_result.time_zone_identifier;
 
         // b. Set timeZoneResult.[[Name]] to CodePointsToString(name).
-        time_zone_result.name = *name;
+        time_zone_result.name = TRY_OR_THROW_OOM(vm, String::from_utf8(*name));
     }
 
     // 21. If parseResult contains a UTCDesignator Parse Node, then
@@ -1336,12 +1336,12 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
             auto offset = parse_result.time_zone_numeric_utc_offset;
 
             // ii. Set timeZoneResult.[[OffsetString]] to CodePointsToString(offset).
-            time_zone_result.offset_string = *offset;
+            time_zone_result.offset_string = TRY_OR_THROW_OOM(vm, String::from_utf8(*offset));
         }
     }
 
     // 23. Let calendar be undefined.
-    Optional<DeprecatedString> calendar;
+    Optional<String> calendar;
 
     // 24. For each Annotation Parse Node annotation contained within parseResult, do
     for (auto const& annotation : parse_result.annotations) {
@@ -1356,7 +1356,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
                 auto const& value = annotation.value;
 
                 // 2. Let calendar be CodePointsToString(value).
-                calendar = value;
+                calendar = TRY_OR_THROW_OOM(vm, String::from_utf8(value));
             }
         }
         // c. Else,
@@ -1372,7 +1372,7 @@ ThrowCompletionOr<ISODateTime> parse_iso_date_time(VM& vm, ParseResult const& pa
 }
 
 // 13.29 ParseTemporalInstantString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalinstantstring
-ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, StringView iso_string)
 {
     // 1. If ParseText(StringToCodePoints(isoString), TemporalInstantString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalInstantString, iso_string);
@@ -1383,12 +1383,12 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, Depreca
     auto result = TRY(parse_iso_date_time(vm, *parse_result));
 
     // 3. Let offsetString be result.[[TimeZone]].[[OffsetString]].
-    Optional<DeprecatedString> offset_string = result.time_zone.offset_string;
+    auto offset_string = result.time_zone.offset_string;
 
     // 4. If result.[[TimeZone]].[[Z]] is true, then
     if (result.time_zone.z) {
         // a. Set offsetString to "+00:00".
-        offset_string = "+00:00"sv;
+        offset_string = TRY_OR_THROW_OOM(vm, String::from_utf8("+00:00"sv));
     }
 
     // 6. Assert: offsetString is not undefined.
@@ -1399,7 +1399,7 @@ ThrowCompletionOr<TemporalInstant> parse_temporal_instant_string(VM& vm, Depreca
 }
 
 // 13.30 ParseTemporalZonedDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalzoneddatetimestring
-ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, StringView iso_string)
 {
     // 1. If ParseText(StringToCodePoints(isoString), TemporalZonedDateTimeString) is a List of errors, throw a RangeError exception.
     auto parse_result = parse_iso8601(Production::TemporalZonedDateTimeString, iso_string);
@@ -1411,7 +1411,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_zoned_date_time_string(VM& vm, Dep
 }
 
 // 13.31 ParseTemporalCalendarString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalcalendarstring
-ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<String> parse_temporal_calendar_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be Completion(ParseISODateTime(isoString)).
     auto parse_result_completion = parse_iso_date_time(vm, iso_string);
@@ -1423,7 +1423,7 @@ ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, Depre
 
         // b. If calendar is undefined, return "iso8601".
         if (!calendar.has_value())
-            return "iso8601"sv;
+            return TRY_OR_THROW_OOM(vm, String::from_utf8("iso8601"sv));
         // c. Else, return calendar.
         else
             return calendar.release_value();
@@ -1438,12 +1438,12 @@ ThrowCompletionOr<DeprecatedString> parse_temporal_calendar_string(VM& vm, Depre
             return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarString, iso_string);
         // c. Else, return isoString.
         else
-            return iso_string;
+            return TRY_OR_THROW_OOM(vm, String::from_utf8(iso_string));
     }
 }
 
 // 13.32 ParseTemporalDateString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatestring
-ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM& vm, StringView iso_string)
 {
     // 1. Let parts be ? ParseTemporalDateTimeString(isoString).
     auto parts = TRY(parse_temporal_date_time_string(vm, iso_string));
@@ -1453,7 +1453,7 @@ ThrowCompletionOr<TemporalDate> parse_temporal_date_string(VM& vm, DeprecatedStr
 }
 
 // 13.33 ParseTemporalDateTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldatetimestring
-ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalDateTimeString).
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
@@ -1471,7 +1471,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_date_time_string(VM& vm, Deprecate
 }
 
 // 13.34 ParseTemporalDurationString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaldurationstring
-ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, StringView iso_string)
 {
     // 1. Let duration be ParseText(StringToCodePoints(isoString), TemporalDurationString).
     auto parse_result = parse_iso8601(Production::TemporalDurationString, iso_string);
@@ -1607,7 +1607,7 @@ ThrowCompletionOr<DurationRecord> parse_temporal_duration_string(VM& vm, Depreca
 }
 
 // 13.35 ParseTemporalMonthDayString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalmonthdaystring
-ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalMonthDayString).
     auto parse_result = parse_iso8601(Production::TemporalMonthDayString, iso_string);
@@ -1637,7 +1637,7 @@ ThrowCompletionOr<TemporalMonthDay> parse_temporal_month_day_string(VM& vm, Depr
 }
 
 // 13.36 ParseTemporalRelativeToString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalrelativetostring
-ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalDateTimeString).
     auto parse_result = parse_iso8601(Production::TemporalDateTimeString, iso_string);
@@ -1655,7 +1655,7 @@ ThrowCompletionOr<ISODateTime> parse_temporal_relative_to_string(VM& vm, Depreca
 }
 
 // 13.37 ParseTemporalTimeString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimestring
-ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalTimeString).
     auto parse_result = parse_iso8601(Production::TemporalTimeString, iso_string);
@@ -1676,7 +1676,7 @@ ThrowCompletionOr<TemporalTime> parse_temporal_time_string(VM& vm, DeprecatedStr
 }
 
 // 13.38 ParseTemporalTimeZoneString ( timeZoneString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporaltimezonestring
-ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, DeprecatedString const& time_zone_string)
+ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, StringView time_zone_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(timeZoneString), TimeZoneIdentifier).
     auto parse_result = parse_iso8601(Production::TimeZoneIdentifier, time_zone_string);
@@ -1684,7 +1684,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, Depr
     // 2. If parseResult is a Parse Node, then
     if (parse_result.has_value()) {
         // a. Return the Record { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: timeZoneString }.
-        return TemporalTimeZone { .z = false, .offset_string = {}, .name = time_zone_string };
+        return TemporalTimeZone { .z = false, .offset_string = {}, .name = TRY_OR_THROW_OOM(vm, String::from_utf8(time_zone_string)) };
     }
 
     // 3. Let result be ? ParseISODateTime(timeZoneString).
@@ -1702,7 +1702,7 @@ ThrowCompletionOr<TemporalTimeZone> parse_temporal_time_zone_string(VM& vm, Depr
 }
 
 // 13.39 ParseTemporalYearMonthString ( isoString ), https://tc39.es/proposal-temporal/#sec-temporal-parsetemporalyearmonthstring
-ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM& vm, DeprecatedString const& iso_string)
+ThrowCompletionOr<TemporalYearMonth> parse_temporal_year_month_string(VM& vm, StringView iso_string)
 {
     // 1. Let parseResult be ParseText(StringToCodePoints(isoString), TemporalYearMonthString).
     auto parse_result = parse_iso8601(Production::TemporalYearMonthString, iso_string);
@@ -1738,7 +1738,7 @@ ThrowCompletionOr<double> to_positive_integer_with_truncation(VM& vm, Value argu
 }
 
 // 13.43 PrepareTemporalFields ( fields, fieldNames, requiredFields ), https://tc39.es/proposal-temporal/#sec-temporal-preparetemporalfields
-ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields, Vector<DeprecatedString> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
+ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields, Vector<String> const& field_names, Variant<PrepareTemporalFieldsPartial, Vector<StringView>> const& required_fields)
 {
     auto& realm = *vm.current_realm();
 
@@ -1752,7 +1752,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
     // 3. For each value property of fieldNames, do
     for (auto& property : field_names) {
         // a. Let value be ? Get(fields, property).
-        auto value = TRY(fields.get(property));
+        auto value = TRY(fields.get(property.to_deprecated_string()));
 
         // b. If value is not undefined, then
         if (!value.is_undefined()) {
@@ -1781,7 +1781,7 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
-            MUST(result->create_data_property_or_throw(property, value));
+            MUST(result->create_data_property_or_throw(property.to_deprecated_string(), value));
         }
         // c. Else if requiredFields is a List, then
         else if (required_fields.has<Vector<StringView>>()) {
@@ -1798,14 +1798,14 @@ ThrowCompletionOr<Object*> prepare_temporal_fields(VM& vm, Object const& fields,
             }
 
             // iii. Perform ! CreateDataPropertyOrThrow(result, property, value).
-            MUST(result->create_data_property_or_throw(property, value));
+            MUST(result->create_data_property_or_throw(property.to_deprecated_string(), value));
         }
     }
 
     // 4. If requiredFields is partial and any is false, then
     if (required_fields.has<PrepareTemporalFieldsPartial>() && !any) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, DeprecatedString::join(", "sv, field_names));
+        return vm.throw_completion<TypeError>(ErrorType::TemporalObjectMustHaveOneOf, TRY_OR_THROW_OOM(vm, String::join(", "sv, field_names)));
     }
 
     // 5. Return result.
@@ -1837,7 +1837,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
 
     // 7. If largestUnit is "auto", set largestUnit to defaultLargestUnit.
     if (largest_unit == "auto"sv)
-        largest_unit = default_largest_unit;
+        largest_unit = TRY_OR_THROW_OOM(vm, String::from_utf8(default_largest_unit));
 
     // 8. If LargerOfTwoTemporalUnits(largestUnit, smallestUnit) is not largestUnit, throw a RangeError exception.
     if (larger_of_two_temporal_units(*largest_unit, *smallest_unit) != largest_unit)
@@ -1849,7 +1849,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM& vm, Difference
     // 10. If operation is since, then
     if (operation == DifferenceOperation::Since) {
         // a. Set roundingMode to ! NegateTemporalRoundingMode(roundingMode).
-        rounding_mode = negate_temporal_rounding_mode(rounding_mode);
+        rounding_mode = TRY_OR_THROW_OOM(vm, String::from_utf8(negate_temporal_rounding_mode(rounding_mode)));
     }
 
     // 11. Let maximum be ! MaximumTemporalDurationRoundingIncrement(smallestUnit).

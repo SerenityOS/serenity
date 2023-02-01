@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -343,7 +343,14 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
     // 1. If completeness is not present, set completeness to complete.
 
     // 2. Let partial be ? PrepareTemporalFields(temporalTimeLike, « "hour", "microsecond", "millisecond", "minute", "nanosecond", "second" », partial).
-    auto* partial = TRY(prepare_temporal_fields(vm, temporal_time_like, { "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "nanosecond"sv, "second"sv }, PrepareTemporalFieldsPartial {}));
+    auto* partial = TRY(prepare_temporal_fields(vm, temporal_time_like,
+        { TRY_OR_THROW_OOM(vm, String::from_utf8("hour"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("microsecond"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("millisecond"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("minute"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("nanosecond"sv)),
+            TRY_OR_THROW_OOM(vm, String::from_utf8("second"sv)) },
+        PrepareTemporalFieldsPartial {}));
 
     TemporalTimeLikeRecord result;
     // 3. If completeness is complete, then
@@ -434,7 +441,7 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
 }
 
 // 4.5.9 TemporalTimeToString ( hour, minute, second, millisecond, microsecond, nanosecond, precision ), https://tc39.es/proposal-temporal/#sec-temporal-temporaltimetostring
-DeprecatedString temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
+ThrowCompletionOr<String> temporal_time_to_string(VM& vm, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond, Variant<StringView, u8> const& precision)
 {
     // 1. Assert: hour, minute, second, millisecond, microsecond and nanosecond are integers.
 
@@ -442,10 +449,10 @@ DeprecatedString temporal_time_to_string(u8 hour, u8 minute, u8 second, u16 mill
     // 3. Let minute be ToZeroPaddedDecimalString(minute, 2).
 
     // 4. Let seconds be ! FormatSecondsStringPart(second, millisecond, microsecond, nanosecond, precision).
-    auto seconds = format_seconds_string_part(second, millisecond, microsecond, nanosecond, precision);
+    auto seconds = MUST_OR_THROW_OOM(format_seconds_string_part(vm, second, millisecond, microsecond, nanosecond, precision));
 
     // 5. Return the string-concatenation of hour, the code unit 0x003A (COLON), minute, and seconds.
-    return DeprecatedString::formatted("{:02}:{:02}{}", hour, minute, seconds);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{:02}:{:02}{}", hour, minute, seconds));
 }
 
 // 4.5.10 CompareTemporalTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 ), https://tc39.es/proposal-temporal/#sec-temporal-comparetemporaltime

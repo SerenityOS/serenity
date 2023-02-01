@@ -29,6 +29,8 @@ public:
 
 private:
     explicit ResizeObserver(JS::Realm&);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

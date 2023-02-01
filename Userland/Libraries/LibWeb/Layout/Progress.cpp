@@ -17,7 +17,7 @@ Progress::Progress(DOM::Document& document, HTML::HTMLProgressElement& element, 
 
 Progress::~Progress() = default;
 
-RefPtr<Painting::Paintable> Progress::create_paintable() const
+JS::GCPtr<Painting::Paintable> Progress::create_paintable() const
 {
     return Painting::ProgressPaintable::create(*this);
 }

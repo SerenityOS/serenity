@@ -9,12 +9,13 @@
 #include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBRequest.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 
 ErrorOr<void> USBConfiguration::enumerate_interfaces()
 {
-    auto descriptor_hierarchy_buffer = TRY(FixedArray<u8>::try_create(m_descriptor.total_length)); // Buffer for us to store the entire hierarchy into
+    auto descriptor_hierarchy_buffer = TRY(FixedArray<u8>::create(m_descriptor.total_length)); // Buffer for us to store the entire hierarchy into
 
     // The USB spec is a little bit janky here... Interface and Endpoint descriptors aren't fetched
     // through a `GET_DESCRIPTOR` request to the device. Instead, the _entire_ hierarchy is returned

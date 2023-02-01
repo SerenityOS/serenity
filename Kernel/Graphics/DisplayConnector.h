@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Memory/SharedFramebufferVMObject.h>
-#include <LibC/sys/ioctl_numbers.h>
 #include <LibEDID/EDID.h>
 
 namespace Kernel {
@@ -146,7 +146,9 @@ private:
     DisplayConnector(DisplayConnector&&) = delete;
 
     virtual void will_be_destroyed() override;
-    virtual void after_inserting() override;
+    virtual ErrorOr<void> after_inserting() override;
+
+    ErrorOr<void> allocate_framebuffer_resources(size_t rounded_size);
 
     ErrorOr<bool> ioctl_requires_ownership(unsigned request) const;
 
@@ -159,7 +161,7 @@ private:
 
 protected:
     Optional<PhysicalAddress> const m_framebuffer_address;
-    size_t const m_framebuffer_resource_size;
+    size_t m_framebuffer_resource_size;
 
 private:
     LockRefPtr<Memory::SharedFramebufferVMObject> m_shared_framebuffer_vmobject;

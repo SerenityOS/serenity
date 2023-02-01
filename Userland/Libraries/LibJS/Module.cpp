@@ -77,7 +77,7 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
         auto exported_names = TRY(get_exported_names(vm));
 
         // b. Let unambiguousNames be a new empty List.
-        Vector<FlyString> unambiguous_names;
+        Vector<DeprecatedFlyString> unambiguous_names;
 
         // c. For each element name of exportedNames, do
         for (auto& name : exported_names) {
@@ -100,7 +100,7 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
 }
 
 // 10.4.6.12 ModuleNamespaceCreate ( module, exports ), https://tc39.es/ecma262/#sec-modulenamespacecreate
-Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_names)
+Object* Module::module_namespace_create(VM& vm, Vector<DeprecatedFlyString> unambiguous_names)
 {
     auto& realm = this->realm();
 
@@ -114,7 +114,7 @@ Object* Module::module_namespace_create(VM& vm, Vector<FlyString> unambiguous_na
     // 6. Let sortedExports be a List whose elements are the elements of exports ordered as if an Array of the same values had been sorted using %Array.prototype.sort% using undefined as comparefn.
     // 7. Set M.[[Exports]] to sortedExports.
     // 8. Create own properties of M corresponding to the definitions in 28.3.
-    auto module_namespace = vm.heap().allocate<ModuleNamespaceObject>(realm, realm, this, move(unambiguous_names));
+    auto module_namespace = vm.heap().allocate<ModuleNamespaceObject>(realm, realm, this, move(unambiguous_names)).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 9. Set module.[[Namespace]] to M.
     m_namespace = make_handle(module_namespace);

@@ -18,6 +18,8 @@ public:
 
 private:
     HTMLMapElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

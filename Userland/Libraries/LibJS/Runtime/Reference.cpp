@@ -114,7 +114,7 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
         // OPTIMIZATION: For various primitives we can avoid actually creating a new object for them.
         Object* base_obj = nullptr;
         if (m_base_value.is_string()) {
-            auto string_value = m_base_value.as_string().get(vm, m_name);
+            auto string_value = TRY(m_base_value.as_string().get(vm, m_name));
             if (string_value.has_value())
                 return *string_value;
             base_obj = realm.intrinsics().string_prototype();
@@ -231,15 +231,16 @@ DeprecatedString Reference::to_deprecated_string() const
 }
 
 // 6.2.4.8 InitializeReferencedBinding ( V, W ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
-ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value value) const
+// 1.2.1.1 InitializeReferencedBinding ( V, W, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-initializereferencedbinding
+ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value value, Environment::InitializeBindingHint hint) const
 {
     VERIFY(!is_unresolvable());
     VERIFY(m_base_type == BaseType::Environment);
-    return m_base_environment->initialize_binding(vm, m_name.as_string(), value);
+    return m_base_environment->initialize_binding(vm, m_name.as_string(), value, hint);
 }
 
 // 6.2.4.9 MakePrivateReference ( baseValue, privateIdentifier ), https://tc39.es/ecma262/#sec-makeprivatereference
-Reference make_private_reference(VM& vm, Value base_value, FlyString const& private_identifier)
+Reference make_private_reference(VM& vm, Value base_value, DeprecatedFlyString const& private_identifier)
 {
     // 1. Let privEnv be the running execution context's PrivateEnvironment.
     auto* private_environment = vm.running_execution_context().private_environment;

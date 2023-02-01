@@ -16,10 +16,10 @@ SymbolConstructor::SymbolConstructor(Realm& realm)
 {
 }
 
-void SymbolConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> SymbolConstructor::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     // 20.4.2.9 Symbol.prototype, https://tc39.es/ecma262/#sec-symbol.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().symbol_prototype(), 0);
@@ -34,6 +34,8 @@ void SymbolConstructor::initialize(Realm& realm)
 #undef __JS_ENUMERATE
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    return {};
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
@@ -42,7 +44,7 @@ ThrowCompletionOr<Value> SymbolConstructor::call()
     auto& vm = this->vm();
     if (vm.argument(0).is_undefined())
         return Symbol::create(vm, {}, false);
-    return Symbol::create(vm, TRY(vm.argument(0).to_string(vm)), false);
+    return Symbol::create(vm, TRY(vm.argument(0).to_deprecated_string(vm)), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
@@ -55,7 +57,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SymbolConstructor::construct(FunctionObj
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     // 1. Let stringKey be ? ToString(key).
-    auto string_key = TRY(vm.argument(0).to_string(vm));
+    auto string_key = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 2. For each element e of the GlobalSymbolRegistry List, do
     auto result = vm.global_symbol_registry().get(string_key);

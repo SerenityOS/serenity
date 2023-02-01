@@ -12,8 +12,10 @@
 namespace Web::Painting {
 
 class MarkerPaintable final : public PaintableBox {
+    JS_CELL(MarkerPaintable, PaintableBox);
+
 public:
-    static NonnullRefPtr<MarkerPaintable> create(Layout::ListItemMarkerBox const&);
+    static JS::NonnullGCPtr<MarkerPaintable> create(Layout::ListItemMarkerBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

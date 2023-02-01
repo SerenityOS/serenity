@@ -260,7 +260,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
 }
 
 // 16.2.1.6.2 GetExportedNames ( [ exportStarSet ] ), https://tc39.es/ecma262/#sec-getexportednames
-ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm, Vector<Module*> export_star_set)
+ThrowCompletionOr<Vector<DeprecatedFlyString>> SourceTextModule::get_exported_names(VM& vm, Vector<Module*> export_star_set)
 {
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] get_export_names of {}", filename());
     // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
@@ -272,14 +272,14 @@ ThrowCompletionOr<Vector<FlyString>> SourceTextModule::get_exported_names(VM& vm
         // FIXME: How do we check that?
 
         // b. Return a new empty List.
-        return Vector<FlyString> {};
+        return Vector<DeprecatedFlyString> {};
     }
 
     // 3. Append module to exportStarSet.
     export_star_set.append(this);
 
     // 4. Let exportedNames be a new empty List.
-    Vector<FlyString> exported_names;
+    Vector<DeprecatedFlyString> exported_names;
 
     // 5. For each ExportEntry Record e of module.[[LocalExportEntries]], do
     for (auto& entry : m_local_export_entries) {
@@ -367,8 +367,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
             MUST(environment->create_immutable_binding(vm, import_entry.local_name, true));
 
-            // iii. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
-            MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_));
+            // iii. Perform ! env.InitializeBinding(in.[[LocalName]], namespace, normal).
+            MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_, Environment::InitializeBindingHint::Normal));
         }
         // d. Else,
         else {
@@ -387,8 +387,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
                 MUST(environment->create_immutable_binding(vm, import_entry.local_name, true));
 
-                // 3. Perform ! env.InitializeBinding(in.[[LocalName]], namespace).
-                MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_));
+                // 3. Perform ! env.InitializeBinding(in.[[LocalName]], namespace, normal).
+                MUST(environment->initialize_binding(vm, import_entry.local_name, namespace_, Environment::InitializeBindingHint::Normal));
             }
             // iv. Else,
             else {
@@ -432,7 +432,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // Note: We just loop through them in step 21.
 
     // 20. Let declaredVarNames be a new empty List.
-    Vector<FlyString> declared_var_names;
+    Vector<DeprecatedFlyString> declared_var_names;
 
     // 21. For each element d of varDeclarations, do
     // a. For each element dn of the BoundNames of d, do
@@ -442,8 +442,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             // 1. Perform ! env.CreateMutableBinding(dn, false).
             MUST(environment->create_mutable_binding(vm, name, false));
 
-            // 2. Perform ! env.InitializeBinding(dn, undefined).
-            MUST(environment->initialize_binding(vm, name, js_undefined()));
+            // 2. Perform ! env.InitializeBinding(dn, undefined, normal).
+            MUST(environment->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
 
             // 3. Append dn to declaredVarNames.
             declared_var_names.empend(name);
@@ -459,7 +459,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     // 24. For each element d of lexDeclarations, do
     m_ecmascript_code->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // a. For each element dn of the BoundNames of d, do
-        declaration.for_each_bound_name([&](FlyString const& name) {
+        declaration.for_each_bound_name([&](DeprecatedFlyString const& name) {
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ! env.CreateImmutableBinding(dn, true).
@@ -479,13 +479,13 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 // 1. Let fo be InstantiateFunctionObject of d with arguments env and privateEnv.
                 // NOTE: Special case if the function is a default export of an anonymous function
                 //       it has name "*default*" but internally should have name "default".
-                FlyString function_name = function_declaration.name();
+                DeprecatedFlyString function_name = function_declaration.name();
                 if (function_name == ExportStatement::local_name_for_default)
                     function_name = "default"sv;
                 auto function = ECMAScriptFunctionObject::create(realm(), function_name, function_declaration.source_text(), function_declaration.body(), function_declaration.parameters(), function_declaration.function_length(), environment, private_environment, function_declaration.kind(), function_declaration.is_strict_mode(), function_declaration.might_need_arguments_object(), function_declaration.contains_direct_call_to_eval());
 
-                // 2. Perform ! env.InitializeBinding(dn, fo).
-                MUST(environment->initialize_binding(vm, name, function));
+                // 2. Perform ! env.InitializeBinding(dn, fo, normal).
+                MUST(environment->initialize_binding(vm, name, function, Environment::InitializeBindingHint::Normal));
             }
         });
     });
@@ -518,7 +518,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
 }
 
 // 16.2.1.6.3 ResolveExport ( exportName [ , resolveSet ] ), https://tc39.es/ecma262/#sec-resolveexport
-ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, FlyString const& export_name, Vector<ResolvedBinding> resolve_set)
+ThrowCompletionOr<ResolvedBinding> SourceTextModule::resolve_export(VM& vm, DeprecatedFlyString const& export_name, Vector<ResolvedBinding> resolve_set)
 {
     // 1. If resolveSet is not present, set resolveSet to a new empty List.
     // Note: This is done by the default argument.
@@ -687,13 +687,20 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         // c. Let result be the result of evaluating module.[[ECMAScriptCode]].
         auto result = m_ecmascript_code->execute(vm.interpreter());
 
-        // d. Suspend moduleContext and remove it from the execution context stack.
+        // d. Let env be moduleContext's LexicalEnvironment.
+        auto* env = module_context.lexical_environment;
+        VERIFY(is<DeclarativeEnvironment>(*env));
+
+        // e. Set result to DisposeResources(env, result).
+        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
+
+        // f. Suspend moduleContext and remove it from the execution context stack.
         vm.pop_execution_context();
 
-        // e. Resume the context that is now on the top of the execution context stack as the running execution context.
+        // g. Resume the context that is now on the top of the execution context stack as the running execution context.
         // FIXME: We don't have resume yet.
 
-        // f. If result is an abrupt completion, then
+        // h. If result is an abrupt completion, then
         if (result.is_error()) {
             // i. Return ? result.
             return result;

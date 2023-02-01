@@ -22,11 +22,9 @@ namespace PixelPaint {
 
 SprayTool::SprayTool()
 {
-    m_timer = Core::Timer::construct();
-    m_timer->on_timeout = [&]() {
+    m_timer = Core::Timer::create_repeating(200, [&]() {
         paint_it();
-    };
-    m_timer->set_interval(200);
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 static double nrand()

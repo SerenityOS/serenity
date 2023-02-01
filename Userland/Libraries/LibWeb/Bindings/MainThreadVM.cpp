@@ -2,7 +2,7 @@
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,10 +16,10 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -67,7 +67,7 @@ JS::VM& main_thread_vm()
         // 8.1.5.1 HostEnsureCanAddPrivateElement(O), https://html.spec.whatwg.org/multipage/webappapis.html#the-hostensurecanaddprivateelement-implementation
         vm->host_ensure_can_add_private_element = [](JS::Object const& object) -> JS::ThrowCompletionOr<void> {
             // 1. If O is a WindowProxy object, or implements Location, then return Completion { [[Type]]: throw, [[Value]]: a new TypeError }.
-            if (is<HTML::WindowProxy>(object) || is<LocationObject>(object))
+            if (is<HTML::WindowProxy>(object) || is<HTML::Location>(object))
                 return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object");
 
             // 2. Return NormalCompletion(unused).
@@ -375,7 +375,7 @@ JS::VM& main_thread_vm()
         custom_data.root_execution_context = MUST(JS::Realm::initialize_host_defined_realm(*vm, nullptr, nullptr));
 
         auto* root_realm = custom_data.root_execution_context->realm;
-        auto intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm);
+        auto intrinsics = root_realm->heap().allocate<Intrinsics>(*root_realm, *root_realm).release_allocated_value_but_fixme_should_propagate_errors();
         auto host_defined = make<HostDefined>(nullptr, intrinsics);
         root_realm->set_host_defined(move(host_defined));
         custom_data.internal_realm = root_realm;
@@ -387,7 +387,7 @@ JS::VM& main_thread_vm()
         JS::DeferGC defer_gc(root_realm->heap());
         auto object = JS::Object::create(*root_realm, nullptr);
         root_realm->set_global_object(object, object);
-        add_window_exposed_interfaces(*object, *root_realm);
+        add_window_exposed_interfaces(*object);
 
         vm->push_execution_context(*custom_data.root_execution_context);
     }

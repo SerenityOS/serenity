@@ -56,8 +56,6 @@ protected:
     explicit AbstractSlider(Orientation = Orientation::Vertical);
 
 private:
-    void set_knob_hovered(bool);
-
     int m_value { 0 };
     int m_min { 0 };
     int m_max { 0 };

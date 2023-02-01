@@ -26,10 +26,10 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         layout()->set_margins(4);
         set_fill_with_background_color(true);
 
-        m_network_connected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-connected.png"sv).release_value_but_fixme_should_propagate_errors();
-        m_network_disconnected_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network-disconnected.png"sv).release_value_but_fixme_should_propagate_errors();
+        m_network_connected_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/network-connected.png"sv).release_value_but_fixme_should_propagate_errors();
+        m_network_disconnected_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/network-disconnected.png"sv).release_value_but_fixme_should_propagate_errors();
 
-        m_network_link_down_bitmap = Gfx::Bitmap::try_create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size()).release_value_but_fixme_should_propagate_errors();
+        m_network_link_down_bitmap = Gfx::Bitmap::create(m_network_connected_bitmap->format(), m_network_connected_bitmap->size()).release_value_but_fixme_should_propagate_errors();
         {
             Gfx::Painter painter(*m_network_link_down_bitmap);
             painter.blit_filtered(Gfx::IntPoint {}, *m_network_connected_bitmap, m_network_connected_bitmap->rect(), [](Color color) {
@@ -47,25 +47,25 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         Vector<GUI::JsonArrayModel::FieldSpec> net_adapters_fields;
         net_adapters_fields.empend("", Gfx::TextAlignment::CenterLeft,
             [this](JsonObject const& object) -> GUI::Variant {
-                if (!object.get("link_up"sv).as_bool())
+                if (!object.get_bool("link_up"sv).value_or(false))
                     return *m_network_link_down_bitmap;
                 else
-                    return object.get("ipv4_address"sv).as_string_or(""sv).is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
+                    return object.get_deprecated_string("ipv4_address"sv).value_or("").is_empty() ? *m_network_disconnected_bitmap : *m_network_connected_bitmap;
             });
         net_adapters_fields.empend("name", "Name", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("class_name", "Class", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("mac_address", "MAC", Gfx::TextAlignment::CenterLeft);
         net_adapters_fields.empend("Link status", Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> DeprecatedString {
-                if (!object.get("link_up"sv).as_bool())
+                if (!object.get_bool("link_up"sv).value_or(false))
                     return "Down";
 
-                return DeprecatedString::formatted("{} Mb/s {}-duplex", object.get("link_speed"sv).to_i32(),
-                    object.get("link_full_duplex"sv).as_bool() ? "full"sv : "half"sv);
+                return DeprecatedString::formatted("{} Mb/s {}-duplex", object.get_i32("link_speed"sv).value_or(0),
+                    object.get_bool("link_full_duplex"sv).value_or(false) ? "full"sv : "half"sv);
             });
         net_adapters_fields.empend("IPv4", Gfx::TextAlignment::CenterLeft,
             [](JsonObject const& object) -> DeprecatedString {
-                return object.get("ipv4_address"sv).as_string_or(""sv);
+                return object.get_deprecated_string("ipv4_address"sv).value_or(""sv);
             });
         net_adapters_fields.empend("packets_in", "Pkt In", Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("packets_out", "Pkt Out", Gfx::TextAlignment::CenterRight);
@@ -75,7 +75,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_adapter_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_adapter_model)));
         m_adapter_context_menu = MUST(GUI::Menu::try_create());
         m_adapter_context_menu->add_action(GUI::Action::create(
-            "Open in Network Settings...", MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/network.png"sv)), [this](GUI::Action&) {
+            "Open in Network Settings...", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/network.png"sv)), [this](GUI::Action&) {
                 m_adapter_table_view->selection().for_each_index([this](GUI::ModelIndex const& index) {
                     auto adapter_name = index.sibling_at_column(1).data().as_string();
                     GUI::Process::spawn_or_show_error(window(), "/bin/Escalator"sv, Array { "/bin/NetworkSettings", adapter_name.characters() });
@@ -132,6 +132,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
             1000, [this] {
                 update_models();
             });
+        m_update_timer->start();
 
         update_models();
     };

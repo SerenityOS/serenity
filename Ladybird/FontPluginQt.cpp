@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,8 @@
 
 #include "FontPluginQt.h"
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <QFont>
 #include <QFontInfo>
@@ -21,8 +24,9 @@ FontPluginQt::FontPluginQt()
     // Load the default SerenityOS fonts...
     Gfx::FontDatabase::set_default_fonts_lookup_path(DeprecatedString::formatted("{}/res/fonts", s_serenity_resource_root));
 
-    // ...and also anything we can find in /usr/share/fonts
-    Gfx::FontDatabase::the().load_all_fonts_from_path("/usr/share/fonts");
+    // ...and also anything we can find in the system's font directories
+    for (auto const& path : Core::StandardPaths::font_directories().release_value_but_fixme_should_propagate_errors())
+        Gfx::FontDatabase::the().load_all_fonts_from_path(path.to_deprecated_string());
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");

@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/Forward.h>
+
 namespace Web {
 class XMLDocumentBuilder;
 }
@@ -60,9 +62,11 @@ class FontStyleValue;
 class Frequency;
 class FrequencyPercentage;
 class FrequencyStyleValue;
+class GridAreaShorthandStyleValue;
 class GridMinMax;
 class GridRepeat;
 class GridSize;
+class GridTemplateAreaStyleValue;
 class GridTrackPlacement;
 class GridTrackPlacementShorthandStyleValue;
 class GridTrackPlacementStyleValue;
@@ -136,6 +140,7 @@ namespace Web::DOM {
 class AbstractRange;
 class AbortController;
 class AbortSignal;
+class AccessibilityTreeNode;
 class Attr;
 class CDATASection;
 class CharacterData;
@@ -316,6 +321,7 @@ class HTMLUListElement;
 class HTMLUnknownElement;
 class HTMLVideoElement;
 class ImageData;
+class Location;
 class MessageChannel;
 class MessageEvent;
 class MessagePort;
@@ -451,6 +457,7 @@ class NodeWithStyle;
 class NodeWithStyleAndBoxModelMetrics;
 class RadioButton;
 class ReplacedBox;
+class TableWrapper;
 class TextNode;
 }
 
@@ -492,7 +499,6 @@ class URLSearchParamsIterator;
 
 namespace Web::Bindings {
 class Intrinsics;
-class LocationObject;
 class OptionConstructor;
 enum class CanPlayTypeResult;
 enum class CanvasFillRule;

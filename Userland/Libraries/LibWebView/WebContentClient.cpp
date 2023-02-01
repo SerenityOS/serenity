@@ -285,4 +285,9 @@ void WebContentClient::did_finish_handling_input_event(bool event_was_accepted)
     m_view.notify_server_did_finish_handling_input_event(event_was_accepted);
 }
 
+void WebContentClient::did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
+{
+    m_view.notify_server_did_get_accessibility_tree(accessibility_tree);
+}
+
 }

@@ -49,7 +49,7 @@ ErrorOr<NonnullRefPtr<CatDog>> CatDog::create()
 
     auto catdog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CatDog));
     for (auto const& image_source : image_sources)
-        TRY(catdog->m_images.try_append({ image_source.state, *TRY(Gfx::Bitmap::try_load_from_file(image_source.path)) }));
+        TRY(catdog->m_images.try_append({ image_source.state, *TRY(Gfx::Bitmap::load_from_file(image_source.path)) }));
 
     return catdog;
 }
@@ -100,6 +100,8 @@ bool CatDog::is_inspector() const
 
 void CatDog::timer_event(Core::TimerEvent&)
 {
+    using namespace AK::TimeLiterals;
+
     if (has_flag(m_state, State::Alert))
         return;
 
@@ -127,7 +129,7 @@ void CatDog::timer_event(Core::TimerEvent&)
     if (has_any_flag(m_state, State::Directions)) {
         m_idle_sleep_timer.start();
     } else {
-        if (m_idle_sleep_timer.elapsed() > 5'000)
+        if (m_idle_sleep_timer.elapsed_time() > 5_sec)
             m_state |= State::Sleeping;
         else
             m_state |= State::Idle;

@@ -261,6 +261,42 @@ public:
         return default_value;
     }
 
+    template<Integral T>
+    bool is_integer() const
+    {
+        switch (m_type) {
+        case Type::Int32:
+            return is_within_range<T>(m_value.as_i32);
+        case Type::UnsignedInt32:
+            return is_within_range<T>(m_value.as_u32);
+        case Type::Int64:
+            return is_within_range<T>(m_value.as_i64);
+        case Type::UnsignedInt64:
+            return is_within_range<T>(m_value.as_u64);
+        default:
+            return false;
+        }
+    }
+
+    template<Integral T>
+    T as_integer() const
+    {
+        VERIFY(is_integer<T>());
+
+        switch (m_type) {
+        case Type::Int32:
+            return static_cast<T>(m_value.as_i32);
+        case Type::UnsignedInt32:
+            return static_cast<T>(m_value.as_u32);
+        case Type::Int64:
+            return static_cast<T>(m_value.as_i64);
+        case Type::UnsignedInt64:
+            return static_cast<T>(m_value.as_u64);
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     bool equals(JsonValue const& other) const;
 
 private:

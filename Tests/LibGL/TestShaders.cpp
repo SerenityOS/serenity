@@ -6,7 +6,6 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
-#include <LibCore/FileStream.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
 #include <LibGfx/Bitmap.h>
@@ -15,7 +14,7 @@
 
 static NonnullOwnPtr<GL::GLContext> create_testing_context(int width, int height)
 {
-    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { width, height }));
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }));
     auto context = MUST(GL::create_context(*bitmap));
     GL::make_context_current(context);
 

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/MemoryStream.h>
 #include <LibCore/Stream.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
@@ -15,7 +16,7 @@ TEST_ROOT("Userland/Libraries/LibWasm/Tests");
 TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
     auto& realm = *vm.current_realm();
-    auto filename = TRY(vm.argument(0).to_string(vm));
+    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(strerror(file.error().code()));
@@ -50,7 +51,7 @@ public:
     static JS::ThrowCompletionOr<WebAssemblyModule*> create(JS::Realm& realm, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
     {
         auto& vm = realm.vm();
-        auto instance = realm.heap().allocate<WebAssemblyModule>(realm, *realm.intrinsics().object_prototype());
+        auto instance = MUST_OR_THROW_OOM(realm.heap().allocate<WebAssemblyModule>(realm, *realm.intrinsics().object_prototype()));
         instance->m_module = move(module);
         Wasm::Linker linker(*instance->m_module);
         linker.link(imports);
@@ -64,7 +65,7 @@ public:
         instance->m_module_instance = result.release_value();
         return instance.ptr();
     }
-    void initialize(JS::Realm&) override;
+    JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     ~WebAssemblyModule() override = default;
 
@@ -105,18 +106,10 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
     if (!is<JS::Uint8Array>(object))
         return vm.throw_completion<JS::TypeError>("Expected a Uint8Array argument to parse_webassembly_module");
     auto& array = static_cast<JS::Uint8Array&>(*object);
-    InputMemoryStream stream { array.data() };
-    ScopeGuard handle_stream_error {
-        [&] {
-            stream.handle_any_error();
-        }
-    };
-    auto result = Wasm::Module::parse(stream);
+    auto stream = FixedMemoryStream::construct(array.data()).release_value_but_fixme_should_propagate_errors();
+    auto result = Wasm::Module::parse(*stream);
     if (result.is_error())
         return vm.throw_completion<JS::SyntaxError>(Wasm::parse_error_to_deprecated_string(result.error()));
-
-    if (stream.handle_any_error())
-        return vm.throw_completion<JS::SyntaxError>("Binary stream contained errors");
 
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> imports;
     auto import_value = vm.argument(1);
@@ -150,16 +143,18 @@ TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
     return JS::Value(lhs_array.viewed_array_buffer()->buffer() == rhs_array.viewed_array_buffer()->buffer());
 }
 
-void WebAssemblyModule::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyModule::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_native_function(realm, "getExport", get_export, 1, JS::default_attributes);
     define_native_function(realm, "invoke", wasm_invoke, 1, JS::default_attributes);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
-    auto name = TRY(vm.argument(0).to_string(vm));
+    auto name = TRY(vm.argument(0).to_deprecated_string(vm));
     auto this_value = vm.this_value();
     auto* object = TRY(this_value.to_object(vm));
     if (!is<WebAssemblyModule>(object))

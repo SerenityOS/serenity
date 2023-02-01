@@ -20,7 +20,7 @@ void Client::die()
         on_death();
 }
 
-Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data)
+Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional<DeprecatedString> mime_type)
 {
     if (encoded_data.is_empty())
         return {};
@@ -33,7 +33,7 @@ Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data)
     auto encoded_buffer = encoded_buffer_or_error.release_value();
 
     memcpy(encoded_buffer.data<void>(), encoded_data.data(), encoded_data.size());
-    auto response_or_error = try_decode_image(move(encoded_buffer));
+    auto response_or_error = try_decode_image(move(encoded_buffer), mime_type);
 
     if (response_or_error.is_error()) {
         dbgln("ImageDecoder died heroically");

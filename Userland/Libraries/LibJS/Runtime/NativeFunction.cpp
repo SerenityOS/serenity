@@ -36,7 +36,7 @@ NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& allocating_realm, Saf
     // 7. Set func.[[Extensible]] to true.
     // 8. Set func.[[Realm]] to realm.
     // 9. Set func.[[InitialName]] to null.
-    auto function = allocating_realm.heap().allocate<NativeFunction>(allocating_realm, move(behaviour), prototype.value(), *realm.value());
+    auto function = allocating_realm.heap().allocate<NativeFunction>(allocating_realm, move(behaviour), prototype.value(), *realm.value()).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 10. Perform SetFunctionLength(func, length).
     function->set_function_length(length);
@@ -51,9 +51,9 @@ NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& allocating_realm, Saf
     return function;
 }
 
-NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& realm, FlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)> function)
+NonnullGCPtr<NativeFunction> NativeFunction::create(Realm& realm, DeprecatedFlyString const& name, SafeFunction<ThrowCompletionOr<Value>(VM&)> function)
 {
-    return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.intrinsics().function_prototype());
+    return realm.heap().allocate<NativeFunction>(realm, name, move(function), *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NativeFunction::NativeFunction(SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, Object* prototype, Realm& realm)
@@ -73,7 +73,7 @@ NativeFunction::NativeFunction(Object& prototype)
 {
 }
 
-NativeFunction::NativeFunction(FlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, Object& prototype)
+NativeFunction::NativeFunction(DeprecatedFlyString name, SafeFunction<ThrowCompletionOr<Value>(VM&)> native_function, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_native_function(move(native_function))
@@ -81,7 +81,7 @@ NativeFunction::NativeFunction(FlyString name, SafeFunction<ThrowCompletionOr<Va
 {
 }
 
-NativeFunction::NativeFunction(FlyString name, Object& prototype)
+NativeFunction::NativeFunction(DeprecatedFlyString name, Object& prototype)
     : FunctionObject(prototype)
     , m_name(move(name))
     , m_realm(&prototype.shape().realm())

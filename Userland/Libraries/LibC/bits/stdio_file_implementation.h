@@ -9,9 +9,9 @@
 #include <AK/Array.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
-#include <LibC/bits/FILE.h>
-#include <LibC/bits/pthread_integration.h>
-#include <LibC/bits/wchar.h>
+#include <bits/FILE.h>
+#include <bits/pthread_integration.h>
+#include <bits/wchar.h>
 #include <pthread.h>
 #include <sys/types.h>
 

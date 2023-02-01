@@ -52,20 +52,28 @@ inline void replace_in_ordered_set(Vector<DeprecatedString>& set, StringView ite
 
 namespace Web::DOM {
 
-DOMTokenList* DOMTokenList::create(Element const& associated_element, FlyString associated_attribute)
+DOMTokenList* DOMTokenList::create(Element const& associated_element, DeprecatedFlyString associated_attribute)
 {
     auto& realm = associated_element.realm();
-    return realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute));
+    return realm.heap().allocate<DOMTokenList>(realm, associated_element, move(associated_attribute)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#ref-for-domtokenlist%E2%91%A0%E2%91%A2
-DOMTokenList::DOMTokenList(Element const& associated_element, FlyString associated_attribute)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(associated_element.realm(), "DOMTokenList"))
+DOMTokenList::DOMTokenList(Element const& associated_element, DeprecatedFlyString associated_attribute)
+    : Bindings::LegacyPlatformObject(associated_element.realm())
     , m_associated_element(associated_element)
     , m_associated_attribute(move(associated_attribute))
 {
     auto value = associated_element.get_attribute(m_associated_attribute);
     associated_attribute_changed(value);
+}
+
+JS::ThrowCompletionOr<void> DOMTokenList::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMTokenListPrototype>(realm, "DOMTokenList"));
+
+    return {};
 }
 
 void DOMTokenList::visit_edges(Cell::Visitor& visitor)
@@ -223,7 +231,7 @@ DeprecatedString DOMTokenList::value() const
 {
     StringBuilder builder;
     builder.join(' ', m_token_set);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-set-value%E2%91%A2

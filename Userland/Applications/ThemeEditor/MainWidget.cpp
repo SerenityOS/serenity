@@ -212,7 +212,7 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 
     auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model))));
 
-    TRY(main_widget->try_load_from_gml(theme_editor_gml));
+    TRY(main_widget->load_from_gml(theme_editor_gml));
     main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
     main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
 
@@ -238,36 +238,36 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window, "Select theme file", "/res/themes"sv);
+        auto response = FileSystemAccessClient::Client::the().open_file(&window, "Select theme file", "/res/themes"sv);
         if (response.is_error())
             return;
-        auto load_from_file_result = load_from_file(*response.value());
+        auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
         if (load_from_file_result.is_error()) {
-            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value()->filename(), load_from_file_result.error()));
+            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
             return;
         }
     })));
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.has_value()) {
-            auto result = FileSystemAccessClient::Client::the().try_request_file(&window, *m_path, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().request_file(&window, *m_path, Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
             if (result.is_error())
                 return;
-            save_to_file(result.value());
+            save_to_file(result.value().filename(), result.value().release_stream());
         } else {
-            auto result = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
             if (result.is_error())
                 return;
-            save_to_file(result.value());
+            save_to_file(result.value().filename(), result.value().release_stream());
         }
     });
     TRY(file_menu->try_add_action(*m_save_action));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().try_save_file_deprecated(&window, "Theme", "ini", Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+        auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
         if (result.is_error())
             return;
-        save_to_file(result.value());
+        save_to_file(result.value().filename(), result.value().release_stream());
     })));
 
     TRY(file_menu->try_add_separator());
@@ -315,9 +315,9 @@ void MainWidget::set_path(DeprecatedString path)
     update_title();
 }
 
-void MainWidget::save_to_file(Core::File& file)
+void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
 {
-    auto theme = Core::ConfigFile::open(file.filename(), file.leak_fd()).release_value_but_fixme_should_propagate_errors();
+    auto theme = Core::ConfigFile::open(filename.to_deprecated_string(), move(file)).release_value_but_fixme_should_propagate_errors();
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role) theme->write_entry("Alignments", to_string(Gfx::AlignmentRole::role), to_string(m_current_palette.alignment(Gfx::AlignmentRole::role)));
     ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
@@ -344,7 +344,7 @@ void MainWidget::save_to_file(Core::File& file)
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", sync_result.error()));
     } else {
         m_last_modified_time = Time::now_monotonic();
-        set_path(file.filename());
+        set_path(filename.to_deprecated_string());
         window()->set_modified(false);
     }
 }
@@ -451,7 +451,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
             row_widget->set_fixed_height(22);
             TRY(property.role.visit(
                 [&](Gfx::AlignmentRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(alignment_property_gml));
+                    TRY(row_widget->load_from_gml(alignment_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -468,7 +468,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::ColorRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(color_property_gml));
+                    TRY(row_widget->load_from_gml(color_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -484,7 +484,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::FlagRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(flag_property_gml));
+                    TRY(row_widget->load_from_gml(flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
                     checkbox.set_text(to_string(role));
@@ -498,7 +498,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::MetricRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(metric_property_gml));
+                    TRY(row_widget->load_from_gml(metric_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -514,7 +514,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::PathRole role) -> ErrorOr<void> {
-                    TRY(row_widget->try_load_from_gml(path_property_gml));
+                    TRY(row_widget->load_from_gml(path_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(to_string(role));
@@ -601,15 +601,15 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     path_input.set_text(*result);
 }
 
-ErrorOr<void> MainWidget::load_from_file(Core::File& file)
+ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
 {
-    auto config_file = TRY(Core::ConfigFile::open(file.filename(), file.leak_fd()));
+    auto config_file = TRY(Core::ConfigFile::open(filename.to_deprecated_string(), move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
     VERIFY(theme.is_valid());
 
     auto new_palette = Gfx::Palette(Gfx::PaletteImpl::create_with_anonymous_buffer(theme));
     set_palette(move(new_palette));
-    set_path(file.filename());
+    set_path(filename.to_deprecated_string());
 
 #define __ENUMERATE_ALIGNMENT_ROLE(role)                                                    \
     if (auto alignment_input = m_alignment_inputs[to_underlying(Gfx::AlignmentRole::role)]) \
@@ -644,6 +644,39 @@ ErrorOr<void> MainWidget::load_from_file(Core::File& file)
     m_last_modified_time = Time::now_monotonic();
     window()->set_modified(false);
     return {};
+}
+
+void MainWidget::drag_enter_event(GUI::DragEvent& event)
+{
+    auto const& mime_types = event.mime_types();
+    if (mime_types.contains_slow("text/uri-list"))
+        event.accept();
+}
+
+void MainWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        if (urls.size() > 1) {
+            GUI::MessageBox::show(window(), "ThemeEditor can only open one file at a time!"sv, "One at a time please!"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+        if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
+            return;
+
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
+        if (response.is_error())
+            return;
+
+        auto load_from_file_result = load_from_file(response.value().filename(), response.value().release_stream());
+        if (load_from_file_result.is_error())
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Can't open file named {}: {}", response.value().filename(), load_from_file_result.error()));
+    }
 }
 
 }

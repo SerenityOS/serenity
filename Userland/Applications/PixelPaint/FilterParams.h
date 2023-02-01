@@ -48,11 +48,11 @@ private:
         set_title(builder.string_view());
 
         resize(200, 250);
-        auto& main_widget = set_main_widget<GUI::Frame>();
-        main_widget.set_frame_shape(Gfx::FrameShape::Container);
-        main_widget.set_frame_shadow(Gfx::FrameShadow::Raised);
-        main_widget.set_fill_with_background_color(true);
-        auto& layout = main_widget.template set_layout<GUI::VerticalBoxLayout>();
+        auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
+        main_widget->set_frame_shape(Gfx::FrameShape::Container);
+        main_widget->set_frame_shadow(Gfx::FrameShadow::Raised);
+        main_widget->set_fill_with_background_color(true);
+        auto& layout = main_widget->template set_layout<GUI::VerticalBoxLayout>();
         layout.set_margins(4);
 
         size_t index = 0;
@@ -60,7 +60,7 @@ private:
         size_t rows = N;
 
         for (size_t row = 0; row < rows; ++row) {
-            auto& horizontal_container = main_widget.template add<GUI::Widget>();
+            auto& horizontal_container = main_widget->template add<GUI::Widget>();
             horizontal_container.template set_layout<GUI::HorizontalBoxLayout>();
             for (size_t column = 0; column < columns; ++column) {
                 if (index < columns * rows) {
@@ -81,13 +81,13 @@ private:
             }
         }
 
-        auto& norm_checkbox = main_widget.template add<GUI::CheckBox>("Normalize");
+        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize");
         norm_checkbox.set_checked(false);
 
-        auto& wrap_checkbox = main_widget.template add<GUI::CheckBox>("Wrap");
+        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap");
         wrap_checkbox.set_checked(m_should_wrap);
 
-        auto& button = main_widget.template add<GUI::Button>("Done");
+        auto& button = main_widget->template add<GUI::Button>("Done");
         button.on_click = [&](auto) {
             m_should_wrap = wrap_checkbox.is_checked();
             if (norm_checkbox.is_checked())

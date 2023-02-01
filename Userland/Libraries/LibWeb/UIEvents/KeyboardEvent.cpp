@@ -66,7 +66,7 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     return platform_key;
 }
 
-KeyboardEvent* KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+KeyboardEvent* KeyboardEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
     // FIXME: Figure out what these should actually contain.
     DeprecatedString event_key = key_code_to_string(platform_key);
@@ -104,17 +104,17 @@ bool KeyboardEvent::get_modifier_state(DeprecatedString const& key_arg)
     return false;
 }
 
-KeyboardEvent* KeyboardEvent::create(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent* KeyboardEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
 {
-    return realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
-KeyboardEvent* KeyboardEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent* KeyboardEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
+KeyboardEvent::KeyboardEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
     : UIEvent(realm, event_name, event_init)
     , m_key(event_init.key)
     , m_code(event_init.code)
@@ -128,9 +128,16 @@ KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, Keyb
     , m_key_code(event_init.key_code)
     , m_char_code(event_init.char_code)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "KeyboardEvent"));
 }
 
 KeyboardEvent::~KeyboardEvent() = default;
+
+JS::ThrowCompletionOr<void> KeyboardEvent::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::KeyboardEventPrototype>(realm, "KeyboardEvent"));
+
+    return {};
+}
 
 }

@@ -11,7 +11,7 @@ ws .
 
 Then we just open `localhost:8000` on our host machine :^)
 
-![](WebServer_localhost.png)
+![](WebServer_localhost.jpg)
 
 **NOTE:** Due to the fact that some browsers download unrecognized files as plain text, you may want to use something like `wget` to download the file **as is** instead. Otherwise the file may appear corrupted when the system tries to load it.
 

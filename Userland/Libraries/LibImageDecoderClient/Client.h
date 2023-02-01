@@ -30,7 +30,7 @@ class Client final
     IPC_CLIENT_CONNECTION(Client, "/tmp/session/%sid/portal/image"sv);
 
 public:
-    Optional<DecodedImage> decode_image(ReadonlyBytes);
+    Optional<DecodedImage> decode_image(ReadonlyBytes, Optional<DeprecatedString> mime_type = {});
 
     Function<void()> on_death;
 

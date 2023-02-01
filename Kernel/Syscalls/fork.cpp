@@ -125,6 +125,9 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
         child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
+#elif ARCH(AARCH64)
+    (void)regs;
+    TODO_AARCH64();
 #else
 #    error Unknown architecture
 #endif

@@ -221,7 +221,7 @@ DeprecatedString Value::to_deprecated_string() const
             builder.join(',', value.values);
             builder.append(')');
 
-            return builder.build();
+            return builder.to_deprecated_string();
         });
 }
 

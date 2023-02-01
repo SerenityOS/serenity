@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -116,10 +116,10 @@ public:
     void set_track_uid(u64 track_uid) { m_track_uid = track_uid; }
     TrackType track_type() const { return m_track_type; }
     void set_track_type(TrackType track_type) { m_track_type = track_type; }
-    FlyString language() const { return m_language; }
-    void set_language(FlyString const& language) { m_language = language; }
-    FlyString codec_id() const { return m_codec_id; }
-    void set_codec_id(FlyString const& codec_id) { m_codec_id = codec_id; }
+    DeprecatedFlyString language() const { return m_language; }
+    void set_language(DeprecatedFlyString const& language) { m_language = language; }
+    DeprecatedFlyString codec_id() const { return m_codec_id; }
+    void set_codec_id(DeprecatedFlyString const& codec_id) { m_codec_id = codec_id; }
     double timestamp_scale() const { return m_timestamp_scale; }
     void set_timestamp_scale(double timestamp_scale) { m_timestamp_scale = timestamp_scale; }
     u64 codec_delay() const { return m_codec_delay; }
@@ -145,8 +145,8 @@ private:
     u64 m_track_number { 0 };
     u64 m_track_uid { 0 };
     TrackType m_track_type { Invalid };
-    FlyString m_language = "eng";
-    FlyString m_codec_id;
+    DeprecatedFlyString m_language = "eng";
+    DeprecatedFlyString m_codec_id;
     double m_timestamp_scale { 1 };
     u64 m_codec_delay { 0 };
     u64 m_timestamp_offset { 0 };

@@ -64,7 +64,7 @@ void MouseCursorModel::invalidate()
         cursor.name = LexicalPath::basename(cursor.path);
 
         // FIXME: Animated cursor bitmaps
-        auto cursor_bitmap = Gfx::Bitmap::try_load_from_file(cursor.path).release_value_but_fixme_should_propagate_errors();
+        auto cursor_bitmap = Gfx::Bitmap::load_from_file(cursor.path).release_value_but_fixme_should_propagate_errors();
         auto cursor_bitmap_rect = cursor_bitmap->rect();
         cursor.params = Gfx::CursorParams::parse_from_filename(cursor.name, cursor_bitmap_rect.center()).constrained(*cursor_bitmap);
         cursor.bitmap = cursor_bitmap->cropped(Gfx::IntRect(Gfx::FloatRect(cursor_bitmap_rect).scaled(1.0 / cursor.params.frames(), 1.0))).release_value_but_fixme_should_propagate_errors();
@@ -98,7 +98,7 @@ void ThemeModel::invalidate()
 
 ThemeWidget::ThemeWidget()
 {
-    load_from_gml(theme_widget_gml);
+    load_from_gml(theme_widget_gml).release_value_but_fixme_should_propagate_errors();
     m_cursors_tableview = find_descendant_of_type_named<GUI::TableView>("cursors_tableview");
     m_cursors_tableview->set_highlight_selected_rows(true);
     m_cursors_tableview->set_alternating_row_colors(false);

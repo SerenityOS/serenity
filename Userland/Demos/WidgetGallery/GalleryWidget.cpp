@@ -32,12 +32,12 @@
 
 GalleryWidget::GalleryWidget()
 {
-    load_from_gml(window_gml);
+    load_from_gml(window_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto basics_tab = tab_widget.try_add_tab<GUI::Widget>("Basics").release_value_but_fixme_should_propagate_errors();
-    basics_tab->load_from_gml(basics_tab_gml);
+    basics_tab->load_from_gml(basics_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_enabled_label = basics_tab->find_descendant_of_type_named<GUI::Label>("enabled_label");
     m_label_frame = basics_tab->find_descendant_of_type_named<GUI::Frame>("label_frame");
@@ -73,9 +73,9 @@ GalleryWidget::GalleryWidget()
         m_label_frame->set_frame_thickness(value);
     };
 
-    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
-    m_button_icons.append(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/ladybug.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_icon_button = basics_tab->find_descendant_of_type_named<GUI::Button>("icon_button");
     m_icon_button->set_icon(*m_button_icons[2]);
@@ -95,7 +95,7 @@ GalleryWidget::GalleryWidget()
     m_text_editor = basics_tab->find_descendant_of_type_named<GUI::TextEditor>("text_editor");
 
     m_font_button = basics_tab->find_descendant_of_type_named<GUI::Button>("font_button");
-    m_font_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_font_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_font_button->on_click = [&](auto) {
         auto picker = GUI::FontPicker::try_create(window(), &m_text_editor->font(), false).release_value_but_fixme_should_propagate_errors();
@@ -105,17 +105,17 @@ GalleryWidget::GalleryWidget()
     };
 
     m_file_button = basics_tab->find_descendant_of_type_named<GUI::Button>("file_button");
-    m_file_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_file_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_file_button->on_click = [&](auto) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;
-        m_text_editor->set_text(response.release_value()->filename());
+        m_text_editor->set_text(response.release_value().filename());
     };
 
     m_input_button = basics_tab->find_descendant_of_type_named<GUI::Button>("input_button");
-    m_input_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_input_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_input_button->on_click = [&](auto) {
         DeprecatedString value;
@@ -133,7 +133,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_msgbox_button = basics_tab->find_descendant_of_type_named<GUI::Button>("msgbox_button");
-    m_msgbox_button->set_icon(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-browser.png"sv).release_value_but_fixme_should_propagate_errors());
+    m_msgbox_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-browser.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_msgbox_type = GUI::MessageBox::Type::None;
     m_msgbox_input_type = GUI::MessageBox::InputType::OK;
@@ -170,7 +170,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto sliders_tab = tab_widget.try_add_tab<GUI::Widget>("Sliders").release_value_but_fixme_should_propagate_errors();
-    sliders_tab->load_from_gml(sliders_tab_gml);
+    sliders_tab->load_from_gml(sliders_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_vertical_progressbar_left = sliders_tab->find_descendant_of_type_named<GUI::VerticalProgressbar>("vertical_progressbar_left");
     m_vertical_progressbar_left->set_value(0);
@@ -231,7 +231,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto wizards_tab = tab_widget.try_add_tab<GUI::Widget>("Wizards").release_value_but_fixme_should_propagate_errors();
-    wizards_tab->load_from_gml(wizards_tab_gml);
+    wizards_tab->load_from_gml(wizards_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_wizard_button = wizards_tab->find_descendant_of_type_named<GUI::Button>("wizard_button");
     m_wizard_output = wizards_tab->find_descendant_of_type_named<GUI::TextEditor>("wizard_output");
@@ -287,7 +287,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto cursors_tab = tab_widget.try_add_tab<GUI::Widget>("Cursors").release_value_but_fixme_should_propagate_errors();
-    cursors_tab->load_from_gml(cursors_tab_gml);
+    cursors_tab->load_from_gml(cursors_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_cursors_tableview = cursors_tab->find_descendant_of_type_named<GUI::TableView>("cursors_tableview");
     m_cursors_tableview->set_highlight_selected_rows(true);
@@ -310,7 +310,7 @@ GalleryWidget::GalleryWidget()
     };
 
     auto icons_tab = tab_widget.try_add_tab<GUI::Widget>("Icons").release_value_but_fixme_should_propagate_errors();
-    icons_tab->load_from_gml(icons_tab_gml);
+    icons_tab->load_from_gml(icons_tab_gml).release_value_but_fixme_should_propagate_errors();
 
     m_icons_tableview = icons_tab->find_descendant_of_type_named<GUI::TableView>("icons_tableview");
     m_icons_tableview->set_highlight_selected_rows(true);

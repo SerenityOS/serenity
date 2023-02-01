@@ -13,10 +13,17 @@ namespace Web::HTML {
 HTMLFieldSetElement::HTMLFieldSetElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLFieldSetElement"));
 }
 
 HTMLFieldSetElement::~HTMLFieldSetElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLFieldSetElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLFieldSetElementPrototype>(realm, "HTMLFieldSetElement"));
+
+    return {};
+}
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-fieldset-disabled
 bool HTMLFieldSetElement::is_disabled() const

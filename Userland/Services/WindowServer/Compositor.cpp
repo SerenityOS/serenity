@@ -48,21 +48,24 @@ Compositor::Compositor()
         1000 / 60, [this] {
             notify_display_links();
         });
-    m_display_link_notify_timer->stop();
 
     m_compose_timer = Core::Timer::create_single_shot(
         1000 / 60,
         [this] {
             compose();
         },
-        this);
+        this)
+                          .release_value_but_fixme_should_propagate_errors();
+    m_compose_timer->start();
 
     m_immediate_compose_timer = Core::Timer::create_single_shot(
         0,
         [this] {
             compose();
         },
-        this);
+        this)
+                                    .release_value_but_fixme_should_propagate_errors();
+    m_compose_timer->start();
 
     init_bitmaps();
 }
@@ -105,20 +108,20 @@ void CompositorScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
 
     auto size = screen.size();
     m_front_bitmap = nullptr;
-    m_front_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0, 0)).release_value_but_fixme_should_propagate_errors();
+    m_front_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(0, 0)).release_value_but_fixme_should_propagate_errors();
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
     m_front_painter->translate(-screen.rect().location());
 
     m_back_bitmap = nullptr;
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::try_create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0)).release_value_but_fixme_should_propagate_errors();
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(1, 0)).release_value_but_fixme_should_propagate_errors();
     else
-        m_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+        m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
     m_back_painter->translate(-screen.rect().location());
 
     m_temp_bitmap = nullptr;
-    m_temp_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+    m_temp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
     m_temp_painter = make<Gfx::Painter>(*m_temp_bitmap);
     m_temp_painter->translate(-screen.rect().location());
 
@@ -383,6 +386,10 @@ void Compositor::compose()
                 });
             }
 
+            auto update_window_rect = window_rect.intersected(rect);
+            if (update_window_rect.is_empty())
+                return;
+
             auto clear_window_rect = [&](const Gfx::IntRect& clear_rect) {
                 auto fill_color = wm.palette().window();
                 if (!window.is_opaque())
@@ -391,7 +398,7 @@ void Compositor::compose()
             };
 
             if (!backing_store) {
-                clear_window_rect(window_rect.intersected(rect));
+                clear_window_rect(update_window_rect);
                 return;
             }
 
@@ -404,7 +411,7 @@ void Compositor::compose()
             // it was previously, and fill the rest of the window with its
             // background color.
             Gfx::IntRect backing_rect;
-            backing_rect.set_size(backing_store->size());
+            backing_rect.set_size(window.backing_store_visible_size());
             switch (WindowManager::the().resize_direction_of_window(window)) {
             case ResizeDirection::None:
             case ResizeDirection::Right:
@@ -431,8 +438,7 @@ void Compositor::compose()
                 break;
             }
 
-            Gfx::IntRect dirty_rect_in_backing_coordinates = rect.intersected(window_rect)
-                                                                 .intersected(backing_rect)
+            Gfx::IntRect dirty_rect_in_backing_coordinates = update_window_rect.intersected(backing_rect)
                                                                  .translated(-backing_rect.location());
 
             if (!dirty_rect_in_backing_coordinates.is_empty()) {
@@ -456,7 +462,7 @@ void Compositor::compose()
                 }
             }
 
-            for (auto background_rect : window_rect.shatter(backing_rect))
+            for (auto background_rect : update_window_rect.shatter(backing_rect))
                 clear_window_rect(background_rect);
         };
 
@@ -846,7 +852,7 @@ void Compositor::update_wallpaper_bitmap()
 
 void CompositorScreenData::init_wallpaper_bitmap(Screen& screen)
 {
-    m_wallpaper_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+    m_wallpaper_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
     m_wallpaper_painter = make<Gfx::Painter>(*m_wallpaper_bitmap);
     m_wallpaper_painter->translate(-screen.rect().location());
 }
@@ -991,7 +997,7 @@ void CompositorScreenData::draw_cursor(Screen& screen, Gfx::IntRect const& curso
     auto& wm = WindowManager::the();
 
     if (!m_cursor_back_bitmap || m_cursor_back_bitmap->size() != cursor_rect.size() || m_cursor_back_bitmap->scale() != screen.scale_factor()) {
-        m_cursor_back_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, cursor_rect.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+        m_cursor_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, cursor_rect.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
         m_cursor_back_painter = make<Gfx::Painter>(*m_cursor_back_bitmap);
     }
 
@@ -1589,7 +1595,8 @@ void Compositor::start_window_stack_switch_overlay_timer()
         [this] {
             remove_window_stack_switch_overlays();
         },
-        this);
+        this)
+                                       .release_value_but_fixme_should_propagate_errors();
     m_stack_switch_overlay_timer->start();
 }
 

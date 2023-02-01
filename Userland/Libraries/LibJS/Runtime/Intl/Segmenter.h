@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS::Intl {
@@ -23,8 +23,8 @@ public:
 
     virtual ~Segmenter() override = default;
 
-    DeprecatedString const& locale() const { return m_locale; }
-    void set_locale(DeprecatedString locale) { m_locale = move(locale); }
+    String const& locale() const { return m_locale; }
+    void set_locale(String locale) { m_locale = move(locale); }
 
     SegmenterGranularity segmenter_granularity() const { return m_segmenter_granularity; }
     void set_segmenter_granularity(StringView);
@@ -33,11 +33,11 @@ public:
 private:
     explicit Segmenter(Object& prototype);
 
-    DeprecatedString m_locale;                                                       // [[Locale]]
+    String m_locale;                                                                 // [[Locale]]
     SegmenterGranularity m_segmenter_granularity { SegmenterGranularity::Grapheme }; // [[SegmenterGranularity]]
 };
 
-Object* create_segment_data_object(VM&, Segmenter const&, Utf16View const&, double start_index, double end_index);
+ThrowCompletionOr<NonnullGCPtr<Object>> create_segment_data_object(VM&, Segmenter const&, Utf16View const&, double start_index, double end_index);
 enum class Direction {
     Before,
     After,

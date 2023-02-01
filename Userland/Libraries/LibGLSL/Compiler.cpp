@@ -11,7 +11,7 @@ namespace GLSL {
 ErrorOr<NonnullOwnPtr<ObjectFile>> Compiler::compile(Vector<String> const&)
 {
     // FIXME: implement this function
-    m_messages = TRY(String::from_utf8(""sv));
+    m_messages = {};
     return adopt_own(*new ObjectFile());
 }
 

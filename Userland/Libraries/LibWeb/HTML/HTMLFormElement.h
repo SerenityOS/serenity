@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
 
@@ -36,9 +37,13 @@ public:
     JS::NonnullGCPtr<DOM::HTMLCollection> elements() const;
     unsigned length() const;
 
+    // https://www.w3.org/TR/html-aria/#el-form
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::form; }
+
 private:
     HTMLFormElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     bool m_firing_submission_events { false };

@@ -16,13 +16,21 @@ namespace Web::DOM {
 JS::NonnullGCPtr<NamedNodeMap> NamedNodeMap::create(Element& element)
 {
     auto& realm = element.realm();
-    return realm.heap().allocate<NamedNodeMap>(realm, element);
+    return realm.heap().allocate<NamedNodeMap>(realm, element).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NamedNodeMap::NamedNodeMap(Element& element)
-    : Bindings::LegacyPlatformObject(Bindings::cached_web_prototype(element.realm(), "NamedNodeMap"))
+    : Bindings::LegacyPlatformObject(element.realm())
     , m_element(element)
 {
+}
+
+JS::ThrowCompletionOr<void> NamedNodeMap::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::NamedNodeMapPrototype>(realm, "NamedNodeMap"));
+
+    return {};
 }
 
 void NamedNodeMap::visit_edges(Cell::Visitor& visitor)
@@ -301,7 +309,7 @@ JS::Value NamedNodeMap::item_value(size_t index) const
     return node;
 }
 
-JS::Value NamedNodeMap::named_item_value(FlyString const& name) const
+JS::Value NamedNodeMap::named_item_value(DeprecatedFlyString const& name) const
 {
     auto const* node = get_named_item(name);
     if (!node)

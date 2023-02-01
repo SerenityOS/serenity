@@ -51,7 +51,7 @@ DeprecatedString CodeBlock::render_to_html(bool) const
 
     builder.append("</pre>\n"sv);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Vector<DeprecatedString> CodeBlock::render_lines_for_terminal(size_t) const
@@ -174,7 +174,7 @@ OwnPtr<CodeBlock> CodeBlock::parse_backticks(LineIterator& lines, Heading* curre
         builder.append('\n');
     }
 
-    return make<CodeBlock>(language, style, builder.build(), current_section);
+    return make<CodeBlock>(language, style, builder.to_deprecated_string(), current_section);
 }
 
 OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
@@ -197,6 +197,6 @@ OwnPtr<CodeBlock> CodeBlock::parse_indent(LineIterator& lines)
         builder.append('\n');
     }
 
-    return make<CodeBlock>("", "", builder.build(), nullptr);
+    return make<CodeBlock>("", "", builder.to_deprecated_string(), nullptr);
 }
 }

@@ -18,9 +18,16 @@ CSSGroupingRule::CSSGroupingRule(JS::Realm& realm, CSSRuleList& rules)
     : CSSRule(realm)
     , m_rules(rules)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSGroupingRulePrototype>(realm, "CSSGroupingRule"));
     for (auto& rule : m_rules)
         rule.set_parent_rule(this);
+}
+
+JS::ThrowCompletionOr<void> CSSGroupingRule::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::CSSGroupingRulePrototype>(realm, "CSSGroupingRule"));
+
+    return {};
 }
 
 void CSSGroupingRule::visit_edges(Cell::Visitor& visitor)

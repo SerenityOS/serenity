@@ -120,7 +120,7 @@ static FlattenedAddEventListenerOptions flatten_add_event_listener_options(Varia
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-addeventlistener
-void EventTarget::add_event_listener(FlyString const& type, IDLEventListener* callback, Variant<AddEventListenerOptions, bool> const& options)
+void EventTarget::add_event_listener(DeprecatedFlyString const& type, IDLEventListener* callback, Variant<AddEventListenerOptions, bool> const& options)
 {
     // 1. Let capture, passive, once, and signal be the result of flattening more options.
     auto flattened_options = flatten_add_event_listener_options(options);
@@ -138,7 +138,7 @@ void EventTarget::add_event_listener(FlyString const& type, IDLEventListener* ca
     add_an_event_listener(*event_listener);
 }
 
-void EventTarget::add_event_listener_without_options(FlyString const& type, IDLEventListener& callback)
+void EventTarget::add_event_listener_without_options(DeprecatedFlyString const& type, IDLEventListener& callback)
 {
     add_event_listener(type, &callback, AddEventListenerOptions {});
 }
@@ -179,7 +179,7 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
 }
 
 // https://dom.spec.whatwg.org/#dom-eventtarget-removeeventlistener
-void EventTarget::remove_event_listener(FlyString const& type, IDLEventListener* callback, Variant<EventListenerOptions, bool> const& options)
+void EventTarget::remove_event_listener(DeprecatedFlyString const& type, IDLEventListener* callback, Variant<EventListenerOptions, bool> const& options)
 {
     // 1. Let capture be the result of flattening options.
     bool capture = flatten_event_listener_options(options);
@@ -202,7 +202,7 @@ void EventTarget::remove_event_listener(FlyString const& type, IDLEventListener*
         remove_an_event_listener(**it);
 }
 
-void EventTarget::remove_event_listener_without_options(FlyString const& type, IDLEventListener& callback)
+void EventTarget::remove_event_listener_without_options(DeprecatedFlyString const& type, IDLEventListener& callback)
 {
     remove_event_listener(type, &callback, EventListenerOptions {});
 }
@@ -241,7 +241,7 @@ WebIDL::ExceptionOr<bool> EventTarget::dispatch_event_binding(Event& event)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#window-reflecting-body-element-event-handler-set
-bool is_window_reflecting_body_element_event_handler(FlyString const& name)
+bool is_window_reflecting_body_element_event_handler(DeprecatedFlyString const& name)
 {
     return name.is_one_of(
         HTML::EventNames::blur,
@@ -253,7 +253,7 @@ bool is_window_reflecting_body_element_event_handler(FlyString const& name)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoweventhandlers
-static bool is_window_event_handler(FlyString const& name)
+static bool is_window_event_handler(DeprecatedFlyString const& name)
 {
     return name.is_one_of(
         HTML::EventNames::afterprint,
@@ -275,7 +275,7 @@ static bool is_window_event_handler(FlyString const& name)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#determining-the-target-of-an-event-handler
-static EventTarget* determine_target_of_event_handler(EventTarget& event_target, FlyString const& name)
+static EventTarget* determine_target_of_event_handler(EventTarget& event_target, DeprecatedFlyString const& name)
 {
     // To determine the target of an event handler, given an EventTarget object eventTarget on which the event handler is exposed,
     // and an event handler name name, the following steps are taken:
@@ -300,7 +300,7 @@ static EventTarget* determine_target_of_event_handler(EventTarget& event_target,
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-2
-WebIDL::CallbackType* EventTarget::event_handler_attribute(FlyString const& name)
+WebIDL::CallbackType* EventTarget::event_handler_attribute(DeprecatedFlyString const& name)
 {
     // 1. Let eventTarget be the result of determining the target of an event handler given this object and name.
     auto target = determine_target_of_event_handler(*this, name);
@@ -314,7 +314,7 @@ WebIDL::CallbackType* EventTarget::event_handler_attribute(FlyString const& name
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#getting-the-current-value-of-the-event-handler
-WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString const& name)
+WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(DeprecatedFlyString const& name)
 {
     // 1. Let handlerMap be eventTarget's event handler map. (NOTE: Not necessary)
 
@@ -473,7 +473,7 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(FlyString 
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-3
-void EventTarget::set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType* value)
+void EventTarget::set_event_handler_attribute(DeprecatedFlyString const& name, WebIDL::CallbackType* value)
 {
     // 1. Let eventTarget be the result of determining the target of an event handler given this object and name.
     auto event_target = determine_target_of_event_handler(*this, name);
@@ -520,7 +520,7 @@ void EventTarget::set_event_handler_attribute(FlyString const& name, WebIDL::Cal
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#activate-an-event-handler
-void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler)
+void EventTarget::activate_event_handler(DeprecatedFlyString const& name, HTML::EventHandler& event_handler)
 {
     // 1. Let handlerMap be eventTarget's event handler map.
     // 2. Let eventHandler be handlerMap[name].
@@ -570,7 +570,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
     event_handler.listener = listener;
 }
 
-void EventTarget::deactivate_event_handler(FlyString const& name)
+void EventTarget::deactivate_event_handler(DeprecatedFlyString const& name)
 {
     // 1. Let handlerMap be eventTarget's event handler map. (NOTE: Not necessary)
 
@@ -600,7 +600,7 @@ void EventTarget::deactivate_event_handler(FlyString const& name)
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#the-event-handler-processing-algorithm
-JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyString const& name, Event& event)
+JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(DeprecatedFlyString const& name, Event& event)
 {
     // 1. Let callback be the result of getting the current value of the event handler given eventTarget and name.
     auto* callback = get_current_value_of_event_handler(name);
@@ -679,7 +679,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(FlyStri
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:concept-element-attributes-change-ext
-void EventTarget::element_event_handler_attribute_changed(FlyString const& local_name, DeprecatedString const& value)
+void EventTarget::element_event_handler_attribute_changed(DeprecatedFlyString const& local_name, DeprecatedString const& value)
 {
     // NOTE: Step 1 of this algorithm was handled in HTMLElement::parse_attribute.
 
@@ -735,7 +735,7 @@ bool EventTarget::dispatch_event(Event& event)
     return EventDispatcher::dispatch(*this, event);
 }
 
-bool EventTarget::has_event_listener(FlyString const& type) const
+bool EventTarget::has_event_listener(DeprecatedFlyString const& type) const
 {
     for (auto& listener : m_event_listener_list) {
         if (listener->type == type)

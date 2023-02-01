@@ -27,7 +27,7 @@ public:
 
     size_t length();
     DOM::Element* item(size_t index);
-    DOM::Element* named_item(FlyString const& name);
+    DOM::Element* named_item(DeprecatedFlyString const& name);
     WebIDL::ExceptionOr<void> add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before = {});
 
     int selected_index() const;
@@ -60,9 +60,12 @@ public:
 
     DeprecatedString const& type() const;
 
+    virtual Optional<ARIA::Role> default_role() const override;
+
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^DOM::Element

@@ -20,7 +20,7 @@ public:
 
     DeprecatedString const& text() const { return m_text; }
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
     CSS::ListStyleType list_style_type() const { return m_list_style_type; }
 

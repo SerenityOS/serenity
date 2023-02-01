@@ -15,7 +15,7 @@ namespace Web::CSS::Parser {
 
 class Declaration {
 public:
-    Declaration(FlyString name, Vector<ComponentValue> values, Important);
+    Declaration(DeprecatedFlyString name, Vector<ComponentValue> values, Important);
     ~Declaration();
 
     StringView name() const { return m_name; }
@@ -25,7 +25,7 @@ public:
     DeprecatedString to_deprecated_string() const;
 
 private:
-    FlyString m_name;
+    DeprecatedFlyString m_name;
     Vector<ComponentValue> m_values;
     Important m_important { Important::No };
 };

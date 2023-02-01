@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,9 +20,9 @@ ListFormatConstructor::ListFormatConstructor(Realm& realm)
 {
 }
 
-void ListFormatConstructor::initialize(Realm& realm)
+ThrowCompletionOr<void> ListFormatConstructor::initialize(Realm& realm)
 {
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -33,6 +33,8 @@ void ListFormatConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.supportedLocalesOf, supported_locales_of, 1, attr);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    return {};
 }
 
 // 13.1.1 Intl.ListFormat ( [ locales [ , options ] ] ), https://tc39.es/ecma402/#sec-Intl.ListFormat
@@ -62,7 +64,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ListFormatConstructor::construct(Functio
     // 5. Let opt be a new Record.
     LocaleOptions opt {};
 
-    // 6. Let matcher be ? GetOption(options, "localeMatcher", "string", « "lookup", "best fit" », "best fit").
+    // 6. Let matcher be ? GetOption(options, "localeMatcher", string, « "lookup", "best fit" », "best fit").
     auto matcher = TRY(get_option(vm, *options, vm.names.localeMatcher, OptionType::String, { "lookup"sv, "best fit"sv }, "best fit"sv));
 
     // 7. Set opt.[[localeMatcher]] to matcher.
@@ -71,22 +73,22 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ListFormatConstructor::construct(Functio
     // 8. Let localeData be %ListFormat%.[[LocaleData]].
 
     // 9. Let r be ResolveLocale(%ListFormat%.[[AvailableLocales]], requestedLocales, opt, %ListFormat%.[[RelevantExtensionKeys]], localeData).
-    auto result = resolve_locale(requested_locales, opt, {});
+    auto result = TRY(resolve_locale(vm, requested_locales, opt, {}));
 
     // 10. Set listFormat.[[Locale]] to r.[[locale]].
     list_format->set_locale(move(result.locale));
 
-    // 11. Let type be ? GetOption(options, "type", "string", « "conjunction", "disjunction", "unit" », "conjunction").
+    // 11. Let type be ? GetOption(options, "type", string, « "conjunction", "disjunction", "unit" », "conjunction").
     auto type = TRY(get_option(vm, *options, vm.names.type, OptionType::String, { "conjunction"sv, "disjunction"sv, "unit"sv }, "conjunction"sv));
 
     // 12. Set listFormat.[[Type]] to type.
-    list_format->set_type(type.as_string().deprecated_string());
+    list_format->set_type(TRY(type.as_string().utf8_string_view()));
 
-    // 13. Let style be ? GetOption(options, "style", "string", « "long", "short", "narrow" », "long").
+    // 13. Let style be ? GetOption(options, "style", string, « "long", "short", "narrow" », "long").
     auto style = TRY(get_option(vm, *options, vm.names.style, OptionType::String, { "long"sv, "short"sv, "narrow"sv }, "long"sv));
 
     // 14. Set listFormat.[[Style]] to style.
-    list_format->set_style(style.as_string().deprecated_string());
+    list_format->set_style(TRY(style.as_string().utf8_string_view()));
 
     // Note: The remaining steps are skipped in favor of deferring to LibUnicode.
 

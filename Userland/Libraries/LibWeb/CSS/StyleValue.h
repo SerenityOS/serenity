@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <AK/Variant.h>
@@ -131,7 +133,7 @@ struct PositionValue {
     VerticalEdge y_relative_to { VerticalEdge::Top };
 
     CSSPixelPoint resolved(Layout::Node const& node, CSSPixelRect const& rect) const;
-    void serialize(StringBuilder&) const;
+    ErrorOr<void> serialize(StringBuilder&) const;
     bool operator==(PositionValue const&) const;
 };
 
@@ -226,6 +228,8 @@ public:
         FlexFlow,
         Font,
         Frequency,
+        GridAreaShorthand,
+        GridTemplateArea,
         GridTrackPlacement,
         GridTrackPlacementShorthand,
         GridTrackSizeList,
@@ -273,6 +277,8 @@ public:
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
     bool is_font() const { return type() == Type::Font; }
     bool is_frequency() const { return type() == Type::Frequency; }
+    bool is_grid_area_shorthand() const { return type() == Type::GridAreaShorthand; }
+    bool is_grid_template_area() const { return type() == Type::GridTemplateArea; }
     bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
     bool is_grid_track_placement_shorthand() const { return type() == Type::GridTrackPlacementShorthand; }
     bool is_grid_track_size_list() const { return type() == Type::GridTrackSizeList; }
@@ -318,6 +324,8 @@ public:
     FlexStyleValue const& as_flex() const;
     FontStyleValue const& as_font() const;
     FrequencyStyleValue const& as_frequency() const;
+    GridAreaShorthandStyleValue const& as_grid_area_shorthand() const;
+    GridTemplateAreaStyleValue const& as_grid_template_area() const;
     GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
     GridTrackSizeStyleValue const& as_grid_track_size_list() const;
@@ -361,6 +369,8 @@ public:
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
     FontStyleValue& as_font() { return const_cast<FontStyleValue&>(const_cast<StyleValue const&>(*this).as_font()); }
     FrequencyStyleValue& as_frequency() { return const_cast<FrequencyStyleValue&>(const_cast<StyleValue const&>(*this).as_frequency()); }
+    GridAreaShorthandStyleValue& as_grid_area_shorthand() { return const_cast<GridAreaShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_area_shorthand()); }
+    GridTemplateAreaStyleValue& as_grid_template_area() { return const_cast<GridTemplateAreaStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_template_area()); }
     GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
     GridTrackSizeStyleValue& as_grid_track_size_list() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list()); }
@@ -403,7 +413,7 @@ public:
     virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual float to_number() const { return 0; }
     virtual float to_integer() const { return 0; }
-    virtual DeprecatedString to_deprecated_string() const = 0;
+    virtual ErrorOr<String> to_string() const = 0;
 
     bool operator==(StyleValue const& other) const { return equals(other); }
 
@@ -426,7 +436,7 @@ public:
 
     Angle const& angle() const { return m_angle; }
 
-    virtual DeprecatedString to_deprecated_string() const override { return m_angle.to_deprecated_string(); }
+    virtual ErrorOr<String> to_string() const override { return m_angle.to_string(); }
 
     virtual bool equals(StyleValue const& other) const override
     {
@@ -472,7 +482,7 @@ public:
     NonnullRefPtr<StyleValue> repeat() const { return m_repeat; }
     NonnullRefPtr<StyleValue> size() const { return m_size; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -509,7 +519,7 @@ public:
     Repeat repeat_x() const { return m_repeat_x; }
     Repeat repeat_y() const { return m_repeat_y; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -536,7 +546,7 @@ public:
     LengthPercentage size_x() const { return m_size_x; }
     LengthPercentage size_y() const { return m_size_y; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -566,7 +576,7 @@ public:
     NonnullRefPtr<StyleValue> border_style() const { return m_border_style; }
     NonnullRefPtr<StyleValue> border_color() const { return m_border_color; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -598,7 +608,7 @@ public:
     LengthPercentage const& vertical_radius() const { return m_vertical_radius; }
     bool is_elliptical() const { return m_is_elliptical; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -630,7 +640,7 @@ public:
     NonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_bottom_right; }
     NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_bottom_left; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -702,14 +712,14 @@ public:
 
     struct CalcNumberValue {
         Variant<Number, NonnullOwnPtr<CalcNumberSum>> value;
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcValue {
         Variant<Number, Angle, Frequency, Length, Percentage, Time, NonnullOwnPtr<CalcSum>> value;
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
         bool contains_percentage() const;
@@ -724,7 +734,7 @@ public:
         NonnullOwnPtr<CalcProduct> first_calc_product;
         NonnullOwnPtrVector<CalcSumPartWithOperator> zero_or_more_additional_calc_products;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
 
@@ -739,7 +749,7 @@ public:
         NonnullOwnPtr<CalcNumberProduct> first_calc_number_product;
         NonnullOwnPtrVector<CalcNumberSumPartWithOperator> zero_or_more_additional_calc_number_products;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
@@ -748,7 +758,7 @@ public:
         CalcValue first_calc_value;
         NonnullOwnPtrVector<CalcProductPartWithOperator> zero_or_more_additional_calc_values;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
         bool contains_percentage() const;
@@ -762,7 +772,7 @@ public:
         SumOperation op;
         NonnullOwnPtr<CalcProduct> value;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
         bool contains_percentage() const;
@@ -772,7 +782,7 @@ public:
         ProductOperation op;
         Variant<CalcValue, CalcNumberValue> value;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
 
@@ -783,7 +793,7 @@ public:
         CalcNumberValue first_calc_number_value;
         NonnullOwnPtrVector<CalcNumberProductPartWithOperator> zero_or_more_additional_calc_number_values;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
@@ -792,7 +802,7 @@ public:
         ProductOperation op;
         CalcNumberValue value;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
@@ -805,7 +815,7 @@ public:
         SumOperation op;
         NonnullOwnPtr<CalcNumberProduct> value;
 
-        DeprecatedString to_deprecated_string() const;
+        ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
@@ -815,7 +825,7 @@ public:
         return adopt_ref(*new CalculatedStyleValue(move(calc_sum), resolved_type));
     }
 
-    DeprecatedString to_deprecated_string() const override;
+    ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
@@ -864,7 +874,7 @@ public:
     virtual ~ColorStyleValue() override = default;
 
     Color color() const { return m_color; }
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool has_color() const override { return true; }
     virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
@@ -891,7 +901,7 @@ public:
     bool has_alt_text() const { return !m_alt_text.is_null(); }
     StyleValueList const* alt_text() const { return m_alt_text; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -917,7 +927,7 @@ public:
 
     Vector<FilterFunction> const& filter_value_list() const { return m_filter_value_list; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
     virtual ~FilterValueListStyleValue() override = default;
@@ -948,7 +958,7 @@ public:
     NonnullRefPtr<StyleValue> shrink() const { return m_shrink; }
     NonnullRefPtr<StyleValue> basis() const { return m_basis; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -979,7 +989,7 @@ public:
     NonnullRefPtr<StyleValue> flex_direction() const { return m_flex_direction; }
     NonnullRefPtr<StyleValue> flex_wrap() const { return m_flex_wrap; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1005,7 +1015,7 @@ public:
     NonnullRefPtr<StyleValue> line_height() const { return m_line_height; }
     NonnullRefPtr<StyleValue> font_families() const { return m_font_families; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1037,7 +1047,7 @@ public:
 
     Frequency const& frequency() const { return m_frequency; }
 
-    virtual DeprecatedString to_deprecated_string() const override { return m_frequency.to_deprecated_string(); }
+    virtual ErrorOr<String> to_string() const override { return m_frequency.to_string(); }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1050,13 +1060,32 @@ private:
     Frequency m_frequency;
 };
 
+class GridTemplateAreaStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridTemplateAreaStyleValue> create(Vector<Vector<String>> grid_template_area);
+    virtual ~GridTemplateAreaStyleValue() override = default;
+
+    Vector<Vector<String>> const& grid_template_area() const { return m_grid_template_area; }
+    virtual ErrorOr<String> to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    explicit GridTemplateAreaStyleValue(Vector<Vector<String>> grid_template_area)
+        : StyleValue(Type::GridTemplateArea)
+        , m_grid_template_area(grid_template_area)
+    {
+    }
+
+    Vector<Vector<String>> m_grid_template_area;
+};
+
 class GridTrackPlacementStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<GridTrackPlacementStyleValue> create(CSS::GridTrackPlacement grid_track_placement);
     virtual ~GridTrackPlacementStyleValue() override = default;
 
     CSS::GridTrackPlacement const& grid_track_placement() const { return m_grid_track_placement; }
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1084,7 +1113,7 @@ public:
     NonnullRefPtr<GridTrackPlacementStyleValue> start() const { return m_start; }
     NonnullRefPtr<GridTrackPlacementStyleValue> end() const { return m_end; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1099,6 +1128,42 @@ private:
     NonnullRefPtr<GridTrackPlacementStyleValue> m_end;
 };
 
+class GridAreaShorthandStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<GridAreaShorthandStyleValue> create(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
+    {
+        return adopt_ref(*new GridAreaShorthandStyleValue(row_start, column_start, row_end, column_end));
+    }
+    static NonnullRefPtr<GridAreaShorthandStyleValue> create(GridTrackPlacement row_start, GridTrackPlacement column_start, GridTrackPlacement row_end, GridTrackPlacement column_end)
+    {
+        return adopt_ref(*new GridAreaShorthandStyleValue(GridTrackPlacementStyleValue::create(row_start), GridTrackPlacementStyleValue::create(column_start), GridTrackPlacementStyleValue::create(row_end), GridTrackPlacementStyleValue::create(column_end)));
+    }
+    virtual ~GridAreaShorthandStyleValue() override = default;
+
+    NonnullRefPtr<GridTrackPlacementStyleValue> row_start() const { return m_row_start; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> column_start() const { return m_column_start; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> row_end() const { return m_row_end; }
+    NonnullRefPtr<GridTrackPlacementStyleValue> column_end() const { return m_column_end; }
+
+    virtual ErrorOr<String> to_string() const override;
+    virtual bool equals(StyleValue const& other) const override;
+
+private:
+    GridAreaShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
+        : StyleValue(Type::GridAreaShorthand)
+        , m_row_start(row_start)
+        , m_column_start(column_start)
+        , m_row_end(row_end)
+        , m_column_end(column_end)
+    {
+    }
+
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_row_start;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_column_start;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_row_end;
+    NonnullRefPtr<GridTrackPlacementStyleValue> m_column_end;
+};
+
 class GridTrackSizeStyleValue final : public StyleValue {
 public:
     static NonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
@@ -1108,7 +1173,7 @@ public:
 
     CSS::GridTrackSizeList grid_track_size_list() const { return m_grid_track_size_list; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1136,7 +1201,7 @@ public:
     virtual CSS::ValueID to_identifier() const override { return m_id; }
     virtual bool has_color() const override;
     virtual Color to_color(Layout::NodeWithStyle const& node) const override;
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1170,7 +1235,7 @@ public:
     static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
     virtual ~ImageStyleValue() override = default;
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
     virtual void load_any_resources(DOM::Document&) override;
@@ -1238,7 +1303,7 @@ public:
         return adopt_ref(*new RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list), repeating));
     }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     void paint(PaintContext&, DevicePixelRect const& dest_rect, CSS::ImageRendering) const override;
 
@@ -1293,7 +1358,7 @@ public:
         return adopt_ref(*new ConicGradientStyleValue(from_angle, position, move(color_stop_list), repeating));
     }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     void paint(PaintContext&, DevicePixelRect const& dest_rect, CSS::ImageRendering) const override;
 
@@ -1311,8 +1376,6 @@ public:
     void resolve_for_size(Layout::Node const&, CSSPixelSize) const override;
 
     virtual ~ConicGradientStyleValue() override = default;
-
-    CSSPixelPoint resolve_position(Layout::Node const&, CSSPixelRect const&) const;
 
     bool is_repeating() const { return m_repeating == GradientRepeating::Yes; }
 
@@ -1355,7 +1418,7 @@ public:
         return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
     }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual ~LinearGradientStyleValue() override = default;
     virtual bool equals(StyleValue const& other) const override;
 
@@ -1405,7 +1468,7 @@ public:
     }
     virtual ~InheritStyleValue() override = default;
 
-    DeprecatedString to_deprecated_string() const override { return "inherit"; }
+    ErrorOr<String> to_string() const override { return String::from_utf8("inherit"sv); }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1424,7 +1487,7 @@ public:
     }
     virtual ~InitialStyleValue() override = default;
 
-    DeprecatedString to_deprecated_string() const override { return "initial"; }
+    ErrorOr<String> to_string() const override { return String::from_utf8("initial"sv); }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1444,7 +1507,7 @@ public:
     virtual bool has_auto() const override { return m_length.is_auto(); }
     virtual bool has_length() const override { return true; }
     virtual bool has_identifier() const override { return has_auto(); }
-    virtual DeprecatedString to_deprecated_string() const override { return m_length.to_deprecated_string(); }
+    virtual ErrorOr<String> to_string() const override { return m_length.to_string(); }
     virtual Length to_length() const override { return m_length; }
     virtual ValueID to_identifier() const override { return has_auto() ? ValueID::Auto : ValueID::Invalid; }
     virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
@@ -1475,7 +1538,7 @@ public:
     NonnullRefPtr<StyleValue> image() const { return m_image; }
     NonnullRefPtr<StyleValue> style_type() const { return m_style_type; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1521,7 +1584,7 @@ public:
     virtual bool has_integer() const override { return m_value.has<i64>(); }
     virtual float to_integer() const override { return m_value.get<i64>(); }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1545,7 +1608,7 @@ public:
     NonnullRefPtr<StyleValue> overflow_x() const { return m_overflow_x; }
     NonnullRefPtr<StyleValue> overflow_y() const { return m_overflow_y; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1571,7 +1634,7 @@ public:
     Percentage const& percentage() const { return m_percentage; }
     Percentage& percentage() { return m_percentage; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1597,7 +1660,7 @@ public:
     PositionEdge edge_y() const { return m_edge_y; }
     LengthPercentage const& offset_y() const { return m_offset_y; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1626,7 +1689,7 @@ public:
 
     Resolution const& resolution() const { return m_resolution; }
 
-    virtual DeprecatedString to_deprecated_string() const override { return m_resolution.to_deprecated_string(); }
+    virtual ErrorOr<String> to_string() const override { return m_resolution.to_string(); }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1655,7 +1718,7 @@ public:
     Length const& spread_distance() const { return m_spread_distance; }
     ShadowPlacement placement() const { return m_placement; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1682,23 +1745,23 @@ private:
 
 class StringStyleValue : public StyleValue {
 public:
-    static NonnullRefPtr<StringStyleValue> create(DeprecatedString const& string)
+    static NonnullRefPtr<StringStyleValue> create(String const& string)
     {
         return adopt_ref(*new StringStyleValue(string));
     }
     virtual ~StringStyleValue() override = default;
 
-    DeprecatedString to_deprecated_string() const override { return m_string; }
+    ErrorOr<String> to_string() const override { return m_string; }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
-    explicit StringStyleValue(DeprecatedString const& string)
+    explicit StringStyleValue(String const& string)
         : StyleValue(Type::String)
         , m_string(string)
     {
     }
 
-    DeprecatedString m_string;
+    String m_string;
 };
 
 class TextDecorationStyleValue final : public StyleValue {
@@ -1718,7 +1781,7 @@ public:
     NonnullRefPtr<StyleValue> style() const { return m_style; }
     NonnullRefPtr<StyleValue> color() const { return m_color; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1751,7 +1814,7 @@ public:
 
     Time const& time() const { return m_time; }
 
-    virtual DeprecatedString to_deprecated_string() const override { return m_time.to_deprecated_string(); }
+    virtual ErrorOr<String> to_string() const override { return m_time.to_string(); }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1775,7 +1838,7 @@ public:
     CSS::TransformFunction transform_function() const { return m_transform_function; }
     NonnullRefPtrVector<StyleValue> values() const { return m_values; }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1798,7 +1861,7 @@ public:
     }
     virtual ~UnresolvedStyleValue() override = default;
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
     Vector<Parser::ComponentValue> const& values() const { return m_values; }
@@ -1825,7 +1888,7 @@ public:
     }
     virtual ~UnsetStyleValue() override = default;
 
-    DeprecatedString to_deprecated_string() const override { return "unset"; }
+    ErrorOr<String> to_string() const override { return String::from_utf8("unset"sv); }
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1852,7 +1915,7 @@ public:
         return m_values[i];
     }
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool equals(StyleValue const& other) const override;
 
 private:
@@ -1873,7 +1936,7 @@ public:
     virtual ~RectStyleValue() override = default;
 
     EdgeRect rect() const { return m_rect; }
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
     virtual bool has_rect() const override { return true; }
     virtual EdgeRect to_rect() const override { return m_rect; }
     virtual bool equals(StyleValue const& other) const override;
@@ -1894,6 +1957,6 @@ template<>
 struct AK::Formatter<Web::CSS::StyleValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::StyleValue const& style_value)
     {
-        return Formatter<StringView>::format(builder, style_value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, TRY(style_value.to_string()));
     }
 };

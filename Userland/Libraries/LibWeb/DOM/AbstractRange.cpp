@@ -11,7 +11,7 @@
 namespace Web::DOM {
 
 AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
-    : Bindings::PlatformObject(Bindings::cached_web_prototype(start_container.realm(), "AbstractRange"))
+    : Bindings::PlatformObject(start_container.realm())
     , m_start_container(start_container)
     , m_start_offset(start_offset)
     , m_end_container(end_container)
@@ -20,6 +20,14 @@ AbstractRange::AbstractRange(Node& start_container, u32 start_offset, Node& end_
 }
 
 AbstractRange::~AbstractRange() = default;
+
+JS::ThrowCompletionOr<void> AbstractRange::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::AbstractRangePrototype>(realm, "AbstractRange"));
+
+    return {};
+}
 
 void AbstractRange::visit_edges(Cell::Visitor& visitor)
 {

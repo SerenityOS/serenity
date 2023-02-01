@@ -249,14 +249,14 @@ TEST_CASE(binary_operator)
         StringBuilder builder;
         builder.append("1 "sv);
         builder.append(op.key);
-        EXPECT(parse(builder.build()).is_error());
+        EXPECT(parse(builder.to_deprecated_string()).is_error());
 
         builder.clear();
 
         if (op.key != "+" && op.key != "-") { // "+1" and "-1" are fine (unary operator).
             builder.append(op.key);
             builder.append(" 1"sv);
-            EXPECT(parse(builder.build()).is_error());
+            EXPECT(parse(builder.to_deprecated_string()).is_error());
         }
     }
 
@@ -278,7 +278,7 @@ TEST_CASE(binary_operator)
         builder.append("1 "sv);
         builder.append(op.key);
         builder.append(" 1"sv);
-        validate(builder.build(), op.value);
+        validate(builder.to_deprecated_string(), op.value);
     }
 }
 
@@ -485,12 +485,12 @@ TEST_CASE(match_expression)
         StringBuilder builder;
         builder.append("1 "sv);
         builder.append(op.key);
-        EXPECT(parse(builder.build()).is_error());
+        EXPECT(parse(builder.to_deprecated_string()).is_error());
 
         builder.clear();
         builder.append(op.key);
         builder.append(" 1"sv);
-        EXPECT(parse(builder.build()).is_error());
+        EXPECT(parse(builder.to_deprecated_string()).is_error());
     }
 
     auto validate = [](StringView sql, SQL::AST::MatchOperator expected_operator, bool expected_invert_expression, bool expect_escape) {
@@ -513,19 +513,19 @@ TEST_CASE(match_expression)
         builder.append("1 "sv);
         builder.append(op.key);
         builder.append(" 1"sv);
-        validate(builder.build(), op.value, false, false);
+        validate(builder.to_deprecated_string(), op.value, false, false);
 
         builder.clear();
         builder.append("1 NOT "sv);
         builder.append(op.key);
         builder.append(" 1"sv);
-        validate(builder.build(), op.value, true, false);
+        validate(builder.to_deprecated_string(), op.value, true, false);
 
         builder.clear();
         builder.append("1 NOT "sv);
         builder.append(op.key);
         builder.append(" 1 ESCAPE '+'"sv);
-        validate(builder.build(), op.value, true, true);
+        validate(builder.to_deprecated_string(), op.value, true, true);
     }
 }
 

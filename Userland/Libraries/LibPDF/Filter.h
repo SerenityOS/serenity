@@ -7,15 +7,15 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
-#include <AK/FlyString.h>
 #include <LibPDF/ObjectDerivatives.h>
 
 namespace PDF {
 
 class Filter {
 public:
-    static ErrorOr<ByteBuffer> decode(ReadonlyBytes bytes, FlyString const& encoding_type, RefPtr<DictObject> decode_parms);
+    static ErrorOr<ByteBuffer> decode(ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms);
 
 private:
     static ErrorOr<ByteBuffer> decode_ascii_hex(ReadonlyBytes bytes);

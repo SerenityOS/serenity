@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -26,9 +26,9 @@ PlainDateTimePrototype::PlainDateTimePrototype(Realm& realm)
 {
 }
 
-void PlainDateTimePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> PlainDateTimePrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -79,6 +79,8 @@ void PlainDateTimePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toPlainMonthDay, to_plain_month_day, 0, attr);
     define_native_function(realm, vm.names.toPlainTime, to_plain_time, 0, attr);
     define_native_function(realm, vm.names.getISOFields, get_iso_fields, 0, attr);
+
+    return {};
 }
 
 // 5.3.3 get Temporal.PlainDateTime.prototype.calendar, https://tc39.es/proposal-temporal/#sec-get-temporal.plaindatetime.prototype.calendar
@@ -566,7 +568,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::round)
     auto smallest_unit = TRY(get_temporal_unit(vm, *round_to, vm.names.smallestUnit, UnitGroup::Time, TemporalUnitRequired {}, { "day"sv }));
 
     // 7. Let roundingMode be ? ToTemporalRoundingMode(roundTo, "halfExpand").
-    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"));
+    auto rounding_mode = TRY(to_temporal_rounding_mode(vm, *round_to, "halfExpand"sv));
 
     // 8. Let roundingIncrement be ? ToTemporalDateTimeRoundingIncrement(roundTo, smallestUnit).
     auto rounding_increment = TRY(to_temporal_date_time_rounding_increment(vm, *round_to, *smallest_unit));

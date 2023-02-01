@@ -29,8 +29,6 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_value(DeprecatedString::empty())
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLInputElement"));
-
     activation_behavior = [this](auto&) {
         // The activation behavior for input elements are these steps:
 
@@ -42,6 +40,14 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
 }
 
 HTMLInputElement::~HTMLInputElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLInputElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLInputElementPrototype>(realm, "HTMLInputElement"));
+
+    return {};
+}
 
 void HTMLInputElement::visit_edges(Cell::Visitor& visitor)
 {
@@ -376,13 +382,13 @@ void HTMLInputElement::create_shadow_tree_if_needed()
         break;
     }
 
-    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this);
+    auto shadow_root = heap().allocate<DOM::ShadowRoot>(realm(), document(), *this).release_allocated_value_but_fixme_should_propagate_errors();
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
     MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px"));
-    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value);
+    m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
 
@@ -404,7 +410,7 @@ void HTMLInputElement::did_receive_focus()
     browsing_context->set_cursor_position(DOM::Position { *m_text_node, 0 });
 }
 
-void HTMLInputElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLInputElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
     if (name == HTML::AttributeNames::checked) {
@@ -434,7 +440,7 @@ HTMLInputElement::TypeAttributeState HTMLInputElement::parse_type_attribute(Stri
     return HTMLInputElement::TypeAttributeState::Text;
 }
 
-void HTMLInputElement::did_remove_attribute(FlyString const& name)
+void HTMLInputElement::did_remove_attribute(DeprecatedFlyString const& name)
 {
     HTMLElement::did_remove_attribute(name);
     if (name == HTML::AttributeNames::checked) {
@@ -724,7 +730,7 @@ DeprecatedString HTMLInputElement::value_sanitization_algorithm(DeprecatedString
         // https://html.spec.whatwg.org/multipage/input.html#range-state-(type=range):value-sanitization-algorithm
         auto maybe_double = value.to_double(TrimWhitespace::Yes);
         if (!maybe_double.has_value() || !isfinite(maybe_double.value()))
-            return JS::number_to_string(maybe_double.value_or(0));
+            return JS::number_to_deprecated_string(maybe_double.value_or(0));
     } else if (type_state() == HTMLInputElement::TypeAttributeState::Color) {
         // https://html.spec.whatwg.org/multipage/input.html#color-state-(type=color):value-sanitization-algorithm
         // If the value of the element is a valid simple color, then set it to the value of the element converted to ASCII lowercase;
@@ -863,6 +869,68 @@ i32 HTMLInputElement::default_tab_index_value() const
 WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 end, DeprecatedString const& direction)
 {
     dbgln("(STUBBED) HTMLInputElement::set_selection_range(start={}, end={}, direction='{}'). Called on: {}", start, end, direction, debug_description());
+    return {};
+}
+
+Optional<ARIA::Role> HTMLInputElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-input-button
+    if (type_state() == TypeAttributeState::Button)
+        return ARIA::Role::button;
+    // https://www.w3.org/TR/html-aria/#el-input-checkbox
+    if (type_state() == TypeAttributeState::Checkbox)
+        return ARIA::Role::checkbox;
+    // https://www.w3.org/TR/html-aria/#el-input-email
+    if (type_state() == TypeAttributeState::Email && attribute("list").is_null())
+        return ARIA::Role::textbox;
+    // https://www.w3.org/TR/html-aria/#el-input-image
+    if (type_state() == TypeAttributeState::ImageButton)
+        return ARIA::Role::button;
+    // https://www.w3.org/TR/html-aria/#el-input-number
+    if (type_state() == TypeAttributeState::Number)
+        return ARIA::Role::spinbutton;
+    // https://www.w3.org/TR/html-aria/#el-input-radio
+    if (type_state() == TypeAttributeState::RadioButton)
+        return ARIA::Role::radio;
+    // https://www.w3.org/TR/html-aria/#el-input-range
+    if (type_state() == TypeAttributeState::Range)
+        return ARIA::Role::slider;
+    // https://www.w3.org/TR/html-aria/#el-input-reset
+    if (type_state() == TypeAttributeState::ResetButton)
+        return ARIA::Role::button;
+    // https://www.w3.org/TR/html-aria/#el-input-text-list
+    if ((type_state() == TypeAttributeState::Text
+            || type_state() == TypeAttributeState::Search
+            || type_state() == TypeAttributeState::Telephone
+            || type_state() == TypeAttributeState::URL
+            || type_state() == TypeAttributeState::Email)
+        && !attribute("list").is_null())
+        return ARIA::Role::combobox;
+    // https://www.w3.org/TR/html-aria/#el-input-search
+    if (type_state() == TypeAttributeState::Search && attribute("list").is_null())
+        return ARIA::Role::textbox;
+    // https://www.w3.org/TR/html-aria/#el-input-submit
+    if (type_state() == TypeAttributeState::SubmitButton)
+        return ARIA::Role::button;
+    // https://www.w3.org/TR/html-aria/#el-input-tel
+    if (type_state() == TypeAttributeState::Telephone)
+        return ARIA::Role::textbox;
+    // https://www.w3.org/TR/html-aria/#el-input-text
+    if (type_state() == TypeAttributeState::Text && attribute("list").is_null())
+        return ARIA::Role::textbox;
+    // https://www.w3.org/TR/html-aria/#el-input-url
+    if (type_state() == TypeAttributeState::URL && attribute("list").is_null())
+        return ARIA::Role::textbox;
+
+    // https://www.w3.org/TR/html-aria/#el-input-color
+    // https://www.w3.org/TR/html-aria/#el-input-date
+    // https://www.w3.org/TR/html-aria/#el-input-datetime-local
+    // https://www.w3.org/TR/html-aria/#el-input-file
+    // https://www.w3.org/TR/html-aria/#el-input-hidden
+    // https://www.w3.org/TR/html-aria/#el-input-month
+    // https://www.w3.org/TR/html-aria/#el-input-password
+    // https://www.w3.org/TR/html-aria/#el-input-time
+    // https://www.w3.org/TR/html-aria/#el-input-week
     return {};
 }
 

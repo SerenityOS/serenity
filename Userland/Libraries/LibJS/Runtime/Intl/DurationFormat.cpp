@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -268,15 +268,15 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 }
 
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, DeprecatedString const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
 {
-    // 1. Let style be ? GetOption(options, unit, "string", stylesList, undefined).
-    auto style_value = TRY(get_option(vm, options, unit, OptionType::String, styles_list, Empty {}));
+    // 1. Let style be ? GetOption(options, unit, string, stylesList, undefined).
+    auto style_value = TRY(get_option(vm, options, unit.to_deprecated_string(), OptionType::String, styles_list, Empty {}));
 
     // 2. Let displayDefault be "always".
     auto display_default = "always"sv;
 
-    DeprecatedString style;
+    StringView style;
 
     // 3. If style is undefined, then
     if (style_value.is_undefined()) {
@@ -308,14 +308,14 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
             }
         }
     } else {
-        style = style_value.as_string().deprecated_string();
+        style = TRY(style_value.as_string().utf8_string_view());
     }
 
     // 4. Let displayField be the string-concatenation of unit and "Display".
-    auto display_field = DeprecatedString::formatted("{}Display", unit);
+    auto display_field = TRY_OR_THROW_OOM(vm, String::formatted("{}Display", unit));
 
-    // 5. Let display be ? GetOption(options, displayField, "string", « "auto", "always" », displayDefault).
-    auto display = TRY(get_option(vm, options, display_field, OptionType::String, { "auto"sv, "always"sv }, display_default));
+    // 5. Let display be ? GetOption(options, displayField, string, « "auto", "always" », displayDefault).
+    auto display = TRY(get_option(vm, options, display_field.to_deprecated_string(), OptionType::String, { "auto"sv, "always"sv }, display_default));
 
     // 6. If prevStyle is "numeric" or "2-digit", then
     if (previous_style == "numeric"sv || previous_style == "2-digit"sv) {
@@ -332,11 +332,11 @@ ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, Depreca
     }
 
     // 7. Return the Record { [[Style]]: style, [[Display]]: display }.
-    return DurationUnitOptions { .style = move(style), .display = display.as_string().deprecated_string() };
+    return DurationUnitOptions { .style = TRY_OR_THROW_OOM(vm, String::from_utf8(style)), .display = TRY(display.as_string().utf8_string()) };
 }
 
 // 1.1.7 PartitionDurationFormatPattern ( durationFormat, duration ), https://tc39.es/proposal-intl-duration-format/#sec-partitiondurationformatpattern
-Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
+ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM& vm, DurationFormat const& duration_format, Temporal::DurationRecord const& duration)
 {
     auto& realm = *vm.current_realm();
 
@@ -445,10 +445,10 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                 // 3. Let dataLocaleData be %DurationFormat%.[[LocaleData]].[[<dataLocale>]].
 
                 // 4. Let num be ! FormatNumeric(nf, 𝔽(value)).
-                auto number = format_numeric(vm, *number_format, MathematicalValue(value));
+                auto number = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, MathematicalValue(value)));
 
                 // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
-                result.append({ unit, number });
+                result.append({ unit, move(number) });
 
                 // 6. If unit is "hours" or "minutes", then
                 if (unit.is_one_of("hours"sv, "minutes"sv)) {
@@ -481,10 +481,10 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                     // c. If nextValue is not 0 or nextDisplay is not "auto", then
                     if (next_value != 0.0 || next_display != DurationFormat::Display::Auto) {
                         // i. Let separator be dataLocaleData.[[formats]].[[digital]].[[separator]].
-                        auto separator = ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator).value_or(":"sv);
+                        auto separator = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator)).value_or(":"sv);
 
                         // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
-                        result.append({ "literal"sv, separator });
+                        result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) });
                     }
                 }
             }
@@ -504,7 +504,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                 auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
 
                 // 5. Let parts be ! PartitionNumberPattern(nf, 𝔽(value)).
-                auto parts = partition_number_pattern(vm, *number_format, MathematicalValue(value));
+                auto parts = MUST_OR_THROW_OOM(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
 
                 // 6. Let concat be an empty String.
                 StringBuilder concat;
@@ -516,7 +516,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
                 }
 
                 // 8. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
-                result.append({ unit, concat.build() });
+                result.append({ unit, TRY_OR_THROW_OOM(vm, concat.to_string()) });
             }
         }
     }
@@ -546,17 +546,17 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right
-    Vector<DeprecatedString> string_result;
+    Vector<String> string_result;
     bool merge = false;
     for (size_t i = 0; i < result.size(); ++i) {
         auto const& part = result[i];
         if (part.type == "literal") {
-            string_result.last() = DeprecatedString::formatted("{}{}", string_result.last(), part.value);
+            string_result.last() = TRY_OR_THROW_OOM(vm, String::formatted("{}{}", string_result.last(), part.value));
             merge = true;
             continue;
         }
         if (merge) {
-            string_result.last() = DeprecatedString::formatted("{}{}", string_result.last(), part.value);
+            string_result.last() = TRY_OR_THROW_OOM(vm, String::formatted("{}{}", string_result.last(), part.value));
             merge = false;
             continue;
         }
@@ -564,7 +564,7 @@ Vector<PatternPartition> partition_duration_format_pattern(VM& vm, DurationForma
     }
 
     // 10. Set result to ! CreatePartsFromList(lf, result).
-    auto final_result = create_parts_from_list(*list_format, string_result);
+    auto final_result = MUST_OR_THROW_OOM(create_parts_from_list(vm, *list_format, string_result));
 
     // 11. Return result.
     return final_result;

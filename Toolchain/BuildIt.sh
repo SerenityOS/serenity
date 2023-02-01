@@ -49,6 +49,9 @@ elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     NPROC="sysctl -n hw.ncpu"
     export with_gmp=/usr/local
     export with_mpfr=/usr/local
+elif [ "$SYSTEM_NAME" = "Darwin" ]; then
+    MD5SUM="md5 -q"
+    NPROC="sysctl -n hw.ncpu"
 fi
 
 # On at least OpenBSD, the path must exist to call realpath(3) on it
@@ -397,7 +400,8 @@ pushd "$DIR/Build/$ARCH"
                 -e "s@$SRC_ROOT/AK/@AK/@" \
                 -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" \
                 -e "s@$SRC_ROOT/Kernel/@Kernel/@")
-            buildstep "system_headers" $INSTALL -D "$header" "Root/usr/include/$target"
+            buildstep "system_headers" mkdir -p "$(dirname "Root/usr/include/$target")"
+            buildstep "system_headers" $INSTALL "$header" "Root/usr/include/$target"
         done
         unset SRC_ROOT
     popd

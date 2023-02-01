@@ -14,9 +14,12 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
-#ifndef KERNEL
+#ifdef KERNEL
+#    include <Kernel/StdLib.h>
+#else
 #    include <AK/DeprecatedString.h>
 #    include <AK/FloatingPointStringConversions.h>
+#    include <string.h>
 #endif
 
 namespace AK {
@@ -543,7 +546,7 @@ DeprecatedString replace(StringView str, StringView needle, StringView replaceme
         last_position = position + needle.length();
     }
     replaced_string.append(str.substring_view(last_position, str.length() - last_position));
-    return replaced_string.build();
+    return replaced_string.to_deprecated_string();
 }
 
 ErrorOr<String> replace(String const& haystack, StringView needle, StringView replacement, ReplaceMode replace_mode)

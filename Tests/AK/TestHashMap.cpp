@@ -108,6 +108,14 @@ TEST_CASE(case_insensitive)
     EXPECT_EQ(casemap.size(), 1u);
 }
 
+TEST_CASE(case_insensitive_stringview)
+{
+    HashMap<StringView, int, CaseInsensitiveStringViewTraits> casemap;
+    EXPECT_EQ(casemap.set("nickserv"sv, 3), AK::HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(casemap.set("NickServ"sv, 3), AK::HashSetResult::ReplacedExistingEntry);
+    EXPECT_EQ(casemap.size(), 1u);
+}
+
 TEST_CASE(hashmap_of_nonnullownptr_get)
 {
     struct Object {

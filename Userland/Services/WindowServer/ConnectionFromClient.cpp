@@ -240,7 +240,7 @@ void ConnectionFromClient::flash_menubar_menu(i32 window_id, i32 menu_id)
                 return;
             weak_window->menubar().flash_menu(nullptr);
             weak_window->frame().invalidate_menubar();
-        });
+        }).release_value_but_fixme_should_propagate_errors();
         m_flashed_menu_timer->start();
     } else if (m_flashed_menu_timer) {
         m_flashed_menu_timer->restart();
@@ -733,7 +733,7 @@ void ConnectionFromClient::did_finish_painting(i32 window_id, Vector<Gfx::IntRec
 
 void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unused]] i32 bpp,
     [[maybe_unused]] i32 pitch, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
-    Gfx::IntSize size, bool flush_immediately)
+    Gfx::IntSize size, Gfx::IntSize visible_size, bool flush_immediately)
 {
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
@@ -750,7 +750,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
             did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
             return;
         }
-        auto backing_store_or_error = Gfx::Bitmap::try_create_with_anonymous_buffer(
+        auto backing_store_or_error = Gfx::Bitmap::create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
             buffer_or_error.release_value(),
             size,
@@ -761,6 +761,7 @@ void ConnectionFromClient::set_window_backing_store(i32 window_id, [[maybe_unuse
         }
         window.set_backing_store(backing_store_or_error.release_value(), serial);
     }
+    window.set_backing_store_visible_size(visible_size);
 
     if (flush_immediately)
         window.invalidate(false);
@@ -1134,7 +1135,7 @@ void ConnectionFromClient::may_have_become_unresponsive()
     async_ping();
     m_ping_timer = Core::Timer::create_single_shot(1000, [this] {
         set_unresponsive(true);
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_ping_timer->start();
 }
 
@@ -1164,7 +1165,7 @@ Messages::WindowServer::GetScreenBitmapResponse ConnectionFromClient::get_screen
     }
     // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
     auto bitmap_size = rect.value_or(Screen::bounding_rect()).size();
-    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
+    if (auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, bitmap_size, 1); !bitmap_or_error.is_error()) {
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(*bitmap);
         Screen::for_each([&](auto& screen) {
@@ -1216,7 +1217,7 @@ Messages::WindowServer::GetScreenBitmapAroundLocationResponse ConnectionFromClie
         return bitmap_or_error.release_value()->to_shareable_bitmap();
     }
 
-    if (auto bitmap_or_error = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
+    if (auto bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1); !bitmap_or_error.is_error()) {
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         auto bounding_screen_src_rect = Screen::bounding_rect().intersected(rect);
         Gfx::Painter painter(*bitmap);

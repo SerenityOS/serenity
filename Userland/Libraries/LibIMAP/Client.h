@@ -64,7 +64,6 @@ private:
     void setup_callbacks();
 
     ErrorOr<void> on_ready_to_receive();
-    ErrorOr<void> on_tls_ready_to_receive();
 
     ErrorOr<void> handle_parsed_response(ParseStatus&& parse_status);
     ErrorOr<void> send_next_command();

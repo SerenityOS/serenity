@@ -34,10 +34,10 @@ DatePrototype::DatePrototype(Realm& realm)
 {
 }
 
-void DatePrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> DatePrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.getDate, get_date, 0, attr);
     define_native_function(realm, vm.names.getDay, get_day, 0, attr);
@@ -95,6 +95,8 @@ void DatePrototype::initialize(Realm& realm)
     // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
     // The initial value of the "toGMTString" property is %Date.prototype.toUTCString%, defined in 21.4.4.43.
     define_direct_property(vm.names.toGMTString, get_without_side_effects(vm.names.toUTCString), attr);
+
+    return {};
 }
 
 // thisTimeValue ( value ), https://tc39.es/ecma262/#thistimevalue
@@ -1257,7 +1259,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
     auto hint_value = vm.argument(0);
     if (!hint_value.is_string())
         return vm.throw_completion<TypeError>(ErrorType::InvalidHint, hint_value.to_string_without_side_effects());
-    auto& hint = hint_value.as_string().deprecated_string();
+    auto hint = TRY(hint_value.as_string().deprecated_string());
     Value::PreferredType try_first;
     if (hint == "string" || hint == "default")
         try_first = Value::PreferredType::String;

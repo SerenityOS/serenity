@@ -5,6 +5,7 @@
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
@@ -120,7 +121,7 @@ class TestRunnerGlobalObject final : public JS::GlobalObject {
 
 public:
     TestRunnerGlobalObject(JS::Realm&);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~TestRunnerGlobalObject() override;
 
 private:
@@ -160,18 +161,20 @@ JS_DEFINE_NATIVE_FUNCTION(TestRunnerGlobalObject::fuzzilli)
         }
 
         auto string = TRY(vm.argument(1).to_string(vm));
-        fprintf(fzliout, "%s\n", string.characters());
+        outln(fzliout, "{}", string);
         fflush(fzliout);
     }
 
     return JS::js_undefined();
 }
 
-void TestRunnerGlobalObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_direct_property("global", this, JS::Attribute::Enumerable);
     define_native_function(realm, "fuzzilli", fuzzilli, 2, JS::default_attributes);
+
+    return {};
 }
 
 int main(int, char**)

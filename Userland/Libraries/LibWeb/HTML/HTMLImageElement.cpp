@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -22,8 +23,6 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
     : HTMLElement(document, move(qualified_name))
     , m_image_loader(*this)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLImageElement"));
-
     m_image_loader.on_load = [this] {
         set_needs_style_update(true);
         this->document().set_needs_layout();
@@ -49,6 +48,14 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
 
 HTMLImageElement::~HTMLImageElement() = default;
 
+JS::ThrowCompletionOr<void> HTMLImageElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLImageElementPrototype>(realm, "HTMLImageElement"));
+
+    return {};
+}
+
 void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     for_each_attribute([&](auto& name, auto& value) {
@@ -72,7 +79,7 @@ void HTMLImageElement::apply_presentational_hints(CSS::StyleProperties& style) c
     });
 }
 
-void HTMLImageElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLImageElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -195,6 +202,16 @@ bool HTMLImageElement::complete() const
         return true;
 
     return false;
+}
+
+Optional<ARIA::Role> HTMLImageElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-img
+    // https://www.w3.org/TR/html-aria/#el-img-no-alt
+    if (alt().is_null() || !alt().is_empty())
+        return ARIA::Role::img;
+    // https://www.w3.org/TR/html-aria/#el-img-empty-alt
+    return ARIA::Role::presentation;
 }
 
 }

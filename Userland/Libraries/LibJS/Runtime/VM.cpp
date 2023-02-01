@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
@@ -37,14 +38,22 @@ NonnullRefPtr<VM> VM::create(OwnPtr<CustomData> custom_data)
     return adopt_ref(*new VM(move(custom_data)));
 }
 
+template<u32... code_points>
+static constexpr auto make_single_ascii_character_strings(IndexSequence<code_points...>)
+{
+    return AK::Array { (String::from_code_point(code_points))... };
+}
+
+static constexpr auto single_ascii_character_strings = make_single_ascii_character_strings(MakeIndexSequence<128>());
+
 VM::VM(OwnPtr<CustomData> custom_data)
     : m_heap(*this)
     , m_custom_data(move(custom_data))
 {
-    m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::empty());
-    for (size_t i = 0; i < 128; ++i) {
-        m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(DeprecatedString::formatted("{:c}", i));
-    }
+    m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String {});
+
+    for (size_t i = 0; i < single_ascii_character_strings.size(); ++i)
+        m_single_ascii_character_strings[i] = m_heap.allocate_without_realm<PrimitiveString>(single_ascii_character_strings[i]);
 
     // Default hook implementations. These can be overridden by the host, for example, LibWeb overrides the default hooks to place promise jobs on the microtask queue.
     host_promise_rejection_tracker = [this](Promise& promise, Promise::RejectionOperation operation) {
@@ -231,7 +240,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
         roots.set(finalization_registry);
 }
 
-ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, FlyString const& name)
+ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name)
 {
     // 8.3.3 Static Semantics: IsAnonymousFunctionDefinition ( expr ), https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition
     // And 8.3.5 Runtime Semantics: NamedEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-namedevaluation
@@ -260,7 +269,7 @@ ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<Bi
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(FlyString const& target, Value value, Environment* environment)
+ThrowCompletionOr<void> VM::binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment)
 {
     // 1. Let name be StringValue of Identifier.
     // 2. Return ? InitializeBoundName(name, value, environment).
@@ -541,7 +550,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
-ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, FlyString name, bool strict, size_t hops)
+ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, DeprecatedFlyString name, bool strict, size_t hops)
 {
     // 1. If env is the value null, then
     if (!environment) {
@@ -575,7 +584,7 @@ ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environme
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
-ThrowCompletionOr<Reference> VM::resolve_binding(FlyString const& name, Environment* environment)
+ThrowCompletionOr<Reference> VM::resolve_binding(DeprecatedFlyString const& name, Environment* environment)
 {
     // 1. If env is not present or if env is undefined, then
     if (!environment) {

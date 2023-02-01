@@ -28,7 +28,7 @@ public:
     AbbreviationEntry const* get(u32 code) const;
 
 private:
-    void populate_map();
+    ErrorOr<void> populate_map();
 
     DwarfInfo const& m_dwarf_info;
     u32 m_offset { 0 };

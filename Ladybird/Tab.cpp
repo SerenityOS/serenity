@@ -30,7 +30,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
 
     m_view = new WebContentView(webdriver_content_ipc_path);
     m_toolbar = new QToolBar(this);
-    m_location_edit = new QLineEdit(this);
+    m_location_edit = new LocationEdit(this);
 
     m_hover_label = new QLabel(this);
     m_hover_label->hide();
@@ -56,7 +56,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
     m_home_action = make<QAction>(QIcon(home_icon_path), "Home");
     m_reload_action = make<QAction>(QIcon(reload_icon_path), "Reload");
-    m_reload_action->setShortcut(QKeySequence("Ctrl+R"));
+    m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
 
     m_toolbar->addAction(m_back_action);
     m_toolbar->addAction(m_forward_action);
@@ -144,17 +144,6 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
         m_window->showFullScreen();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
     });
-
-    // FIXME: This is a hack to make the JS console usable in new windows.
-    //        Something else should ensure that there's an initial about:blank document loaded in the view.
-    //        We set m_is_history_navigation = true so that the initial about:blank doesn't get added to the history.
-    //
-    //        Note we *don't* do this if we are connected to a WebDriver, as the Set URL command may come in very
-    //        quickly, and become replaced by this load.
-    if (!webdriver_content_ipc_path.is_empty()) {
-        m_is_history_navigation = true;
-        m_view->load("about:blank"sv);
-    }
 }
 
 void Tab::focus_location_editor()
@@ -163,10 +152,11 @@ void Tab::focus_location_editor()
     m_location_edit->selectAll();
 }
 
-void Tab::navigate(QString url)
+void Tab::navigate(QString url, LoadType load_type)
 {
-    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive))
+    if (!url.startsWith("http://", Qt::CaseInsensitive) && !url.startsWith("https://", Qt::CaseInsensitive) && !url.startsWith("file://", Qt::CaseInsensitive) && !url.startsWith("about:", Qt::CaseInsensitive))
         url = "http://" + url;
+    m_is_history_navigation = (load_type == LoadType::HistoryNavigation);
     view().load(ak_deprecated_string_from_qstring(url));
 }
 

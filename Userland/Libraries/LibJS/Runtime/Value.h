@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -15,11 +15,10 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/Result.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
-#include <LibJS/Runtime/BigInt.h>
-#include <LibJS/Runtime/Utf16String.h>
 #include <math.h>
 
 // 2 ** 53 - 1
@@ -367,7 +366,8 @@ public:
 
     u64 encoded() const { return m_value.encoded; }
 
-    ThrowCompletionOr<DeprecatedString> to_string(VM&) const;
+    ThrowCompletionOr<String> to_string(VM&) const;
+    ThrowCompletionOr<DeprecatedString> to_deprecated_string(VM&) const;
     ThrowCompletionOr<Utf16String> to_utf16_string(VM&) const;
     ThrowCompletionOr<PrimitiveString*> to_primitive_string(VM&);
     ThrowCompletionOr<Value> to_primitive(VM&, PreferredType preferred_type = PreferredType::Default) const;
@@ -403,7 +403,7 @@ public:
         return *this;
     }
 
-    DeprecatedString typeof() const;
+    StringView typeof() const;
 
     bool operator==(Value const&) const;
 
@@ -525,12 +525,6 @@ inline Value js_negative_infinity()
     return Value(-INFINITY);
 }
 
-inline void Cell::Visitor::visit(Value value)
-{
-    if (value.is_cell())
-        visit_impl(value.as_cell());
-}
-
 ThrowCompletionOr<Value> greater_than(VM&, Value lhs, Value rhs);
 ThrowCompletionOr<Value> greater_than_equals(VM&, Value lhs, Value rhs);
 ThrowCompletionOr<Value> less_than(VM&, Value lhs, Value rhs);
@@ -567,7 +561,8 @@ enum class NumberToStringMode {
     WithExponent,
     WithoutExponent,
 };
-DeprecatedString number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
+ThrowCompletionOr<String> number_to_string(VM& vm, double, NumberToStringMode = NumberToStringMode::WithExponent);
+DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 Optional<Value> string_to_number(StringView);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }

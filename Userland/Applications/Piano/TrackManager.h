@@ -41,7 +41,6 @@ public:
 
     void fill_buffer(FixedArray<DSP::Sample>&);
     void reset();
-    void set_keyboard_note(int note, DSP::Keyboard::Switch note_switch);
     void set_should_loop(bool b) { m_should_loop = b; }
     void add_track();
     int next_track_index() const;

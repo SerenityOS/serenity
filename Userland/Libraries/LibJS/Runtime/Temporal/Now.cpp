@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,9 +26,9 @@ Now::Now(Realm& realm)
 {
 }
 
-void Now::initialize(Realm& realm)
+ThrowCompletionOr<void> Now::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -45,6 +45,8 @@ void Now::initialize(Realm& realm)
     define_native_function(realm, vm.names.plainDate, plain_date, 1, attr);
     define_native_function(realm, vm.names.plainDateISO, plain_date_iso, 0, attr);
     define_native_function(realm, vm.names.plainTimeISO, plain_time_iso, 0, attr);
+
+    return {};
 }
 
 // 2.2.1 Temporal.Now.timeZone ( ), https://tc39.es/proposal-temporal/#sec-temporal.now.timezone
@@ -155,6 +157,7 @@ TimeZone* system_time_zone(VM& vm)
     auto identifier = default_time_zone();
 
     // 2. Return ! CreateTemporalTimeZone(identifier).
+    // FIXME: Propagate possible OOM error
     return MUST(create_temporal_time_zone(vm, identifier));
 }
 

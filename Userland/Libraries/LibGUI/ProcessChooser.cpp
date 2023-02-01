@@ -31,11 +31,11 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
     resize(300, 340);
     center_on_screen();
 
-    auto& widget = set_main_widget<GUI::Widget>();
-    widget.set_fill_with_background_color(true);
-    widget.set_layout<GUI::VerticalBoxLayout>();
+    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+    widget->set_fill_with_background_color(true);
+    widget->set_layout<GUI::VerticalBoxLayout>();
 
-    m_table_view = widget.add<GUI::TableView>();
+    m_table_view = widget->add<GUI::TableView>();
     auto process_model = RunningProcessesModel::create();
     auto sorting_model = MUST(GUI::SortingProxyModel::create(process_model));
     sorting_model->set_sort_role(GUI::ModelRole::Display);
@@ -46,7 +46,7 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
 
     m_table_view->on_activation = [this](ModelIndex const& index) { set_pid_from_index_and_close(index); };
 
-    auto& button_container = widget.add<GUI::Widget>();
+    auto& button_container = widget->add<GUI::Widget>();
     button_container.set_fixed_height(30);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->set_margins({ 0, 4, 0 });

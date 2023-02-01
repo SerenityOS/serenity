@@ -118,11 +118,6 @@ DeprecatedString StringBuilder::to_deprecated_string() const
     return DeprecatedString((char const*)data(), length());
 }
 
-DeprecatedString StringBuilder::build() const
-{
-    return to_deprecated_string();
-}
-
 ErrorOr<String> StringBuilder::to_string() const
 {
     return String::from_utf8(string_view());
@@ -141,7 +136,7 @@ void StringBuilder::clear()
 
 ErrorOr<void> StringBuilder::try_append_code_point(u32 code_point)
 {
-    auto nwritten = AK::UnicodeUtils::code_point_to_utf8(code_point, [this](char c) { append(c); });
+    auto nwritten = TRY(AK::UnicodeUtils::try_code_point_to_utf8(code_point, [this](char c) { return try_append(c); }));
     if (nwritten < 0) {
         TRY(try_append(0xef));
         TRY(try_append(0xbf));

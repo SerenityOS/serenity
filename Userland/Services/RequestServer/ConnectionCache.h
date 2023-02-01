@@ -203,7 +203,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
         sockets_for_url.append(make<ConnectionType>(
             socket_result.release_value(),
             typename ConnectionType::QueueType {},
-            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr)));
+            Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr).release_value_but_fixme_should_propagate_errors()));
         sockets_for_url.last().proxy = move(proxy);
         did_add_new_connection = true;
     }

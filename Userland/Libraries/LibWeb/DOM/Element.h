@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
+#include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
@@ -40,7 +41,8 @@ struct ScrollIntoViewOptions : public ScrollOptions {
 class Element
     : public ParentNode
     , public ChildNode<Element>
-    , public NonDocumentTypeChildNode<Element> {
+    , public NonDocumentTypeChildNode<Element>
+    , public ARIA::ARIAMixin {
     WEB_PLATFORM_OBJECT(Element, ParentNode);
 
 public:
@@ -48,31 +50,31 @@ public:
 
     DeprecatedString const& qualified_name() const { return m_qualified_name.as_string(); }
     DeprecatedString const& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
-    virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
-    FlyString const& local_name() const { return m_qualified_name.local_name(); }
+    virtual DeprecatedFlyString node_name() const final { return html_uppercased_qualified_name(); }
+    DeprecatedFlyString const& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
     DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
 
-    FlyString const& prefix() const { return m_qualified_name.prefix(); }
-    FlyString const& namespace_() const { return m_qualified_name.namespace_(); }
+    DeprecatedFlyString const& prefix() const { return m_qualified_name.prefix(); }
+    DeprecatedFlyString const& namespace_() const { return m_qualified_name.namespace_(); }
 
     // NOTE: This is for the JS bindings
-    FlyString const& namespace_uri() const { return namespace_(); }
+    DeprecatedFlyString const& namespace_uri() const { return namespace_(); }
 
-    bool has_attribute(FlyString const& name) const;
+    bool has_attribute(DeprecatedFlyString const& name) const;
     bool has_attributes() const { return !m_attributes->is_empty(); }
-    DeprecatedString attribute(FlyString const& name) const { return get_attribute(name); }
-    DeprecatedString get_attribute(FlyString const& name) const;
-    WebIDL::ExceptionOr<void> set_attribute(FlyString const& name, DeprecatedString const& value);
-    WebIDL::ExceptionOr<void> set_attribute_ns(FlyString const& namespace_, FlyString const& qualified_name, DeprecatedString const& value);
-    void remove_attribute(FlyString const& name);
-    WebIDL::ExceptionOr<bool> toggle_attribute(FlyString const& name, Optional<bool> force);
+    DeprecatedString attribute(DeprecatedFlyString const& name) const { return get_attribute(name); }
+    DeprecatedString get_attribute(DeprecatedFlyString const& name) const;
+    WebIDL::ExceptionOr<void> set_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> set_attribute_ns(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& qualified_name, DeprecatedString const& value);
+    void remove_attribute(DeprecatedFlyString const& name);
+    WebIDL::ExceptionOr<bool> toggle_attribute(DeprecatedFlyString const& name, Optional<bool> force);
     size_t attribute_list_size() const { return m_attributes->length(); }
     NamedNodeMap const* attributes() const { return m_attributes.ptr(); }
     Vector<DeprecatedString> get_attribute_names() const;
 
-    JS::GCPtr<Attr> get_attribute_node(FlyString const& name) const;
+    JS::GCPtr<Attr> get_attribute_node(DeprecatedFlyString const& name) const;
 
     DOMTokenList* class_list();
 
@@ -93,12 +95,12 @@ public:
         }
     }
 
-    bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    Vector<FlyString> const& class_names() const { return m_classes; }
+    bool has_class(DeprecatedFlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    Vector<DeprecatedFlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
-    virtual void parse_attribute(FlyString const& name, DeprecatedString const& value);
-    virtual void did_remove_attribute(FlyString const&);
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
+    virtual void did_remove_attribute(DeprecatedFlyString const&);
 
     enum class NeedsRelayout {
         No = 0,
@@ -127,14 +129,14 @@ public:
     bool is_focused() const;
     bool is_active() const;
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
+    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root.ptr(); }
     ShadowRoot const* shadow_root() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
-    void set_custom_properties(HashMap<FlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
-    HashMap<FlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
+    void set_custom_properties(HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }
+    HashMap<DeprecatedFlyString, CSS::StyleProperty> const& custom_properties() const { return m_custom_properties; }
 
     void queue_an_element_task(HTML::Task::Source, JS::SafeFunction<void()>);
 
@@ -177,9 +179,79 @@ public:
     // https://w3c.github.io/csswg-drafts/cssom-view-1/#dom-element-scrollintoview
     ErrorOr<void> scroll_into_view(Optional<Variant<bool, ScrollIntoViewOptions>> = {});
 
+    // https://www.w3.org/TR/wai-aria-1.2/#ARIAMixin
+#define ARIA_IMPL(name, attribute)                                               \
+    DeprecatedString name() const override                                       \
+    {                                                                            \
+        return get_attribute(attribute);                                         \
+    }                                                                            \
+                                                                                 \
+    WebIDL::ExceptionOr<void> set_##name(DeprecatedString const& value) override \
+    {                                                                            \
+        TRY(set_attribute(attribute, value));                                    \
+        return {};                                                               \
+    }
+
+    // https://www.w3.org/TR/wai-aria-1.2/#accessibilityroleandproperties-correspondence
+    ARIA_IMPL(role, "role");
+    ARIA_IMPL(aria_active_descendant, "aria-activedescendant");
+    ARIA_IMPL(aria_atomic, "aria-atomic");
+    ARIA_IMPL(aria_auto_complete, "aria-autocomplete");
+    ARIA_IMPL(aria_busy, "aria-busy");
+    ARIA_IMPL(aria_checked, "aria-checked");
+    ARIA_IMPL(aria_col_count, "aria-colcount");
+    ARIA_IMPL(aria_col_index, "aria-colindex");
+    ARIA_IMPL(aria_col_span, "aria-colspan");
+    ARIA_IMPL(aria_controls, "aria-controls");
+    ARIA_IMPL(aria_current, "aria-current");
+    ARIA_IMPL(aria_described_by, "aria-describedby");
+    ARIA_IMPL(aria_details, "aria-details");
+    ARIA_IMPL(aria_drop_effect, "aria-dropeffect");
+    ARIA_IMPL(aria_error_message, "aria-errormessage");
+    ARIA_IMPL(aria_disabled, "aria-disabled");
+    ARIA_IMPL(aria_expanded, "aria-expanded");
+    ARIA_IMPL(aria_flow_to, "aria-flowto");
+    ARIA_IMPL(aria_grabbed, "aria-grabbed");
+    ARIA_IMPL(aria_has_popup, "aria-haspopup");
+    ARIA_IMPL(aria_hidden, "aria-hidden");
+    ARIA_IMPL(aria_invalid, "aria-invalid");
+    ARIA_IMPL(aria_key_shortcuts, "aria-keyshortcuts");
+    ARIA_IMPL(aria_label, "aria-label");
+    ARIA_IMPL(aria_labelled_by, "aria-labelledby");
+    ARIA_IMPL(aria_level, "aria-level");
+    ARIA_IMPL(aria_live, "aria-live");
+    ARIA_IMPL(aria_modal, "aria-modal");
+    ARIA_IMPL(aria_multi_line, "aria-multiline");
+    ARIA_IMPL(aria_multi_selectable, "aria-multiselectable");
+    ARIA_IMPL(aria_orientation, "aria-orientation");
+    ARIA_IMPL(aria_owns, "aria-owns");
+    ARIA_IMPL(aria_placeholder, "aria-placeholder");
+    ARIA_IMPL(aria_pos_in_set, "aria-posinset");
+    ARIA_IMPL(aria_pressed, "aria-pressed");
+    ARIA_IMPL(aria_read_only, "aria-readonly");
+    ARIA_IMPL(aria_relevant, "aria-relevant");
+    ARIA_IMPL(aria_required, "aria-required");
+    ARIA_IMPL(aria_role_description, "aria-roledescription");
+    ARIA_IMPL(aria_row_count, "aria-rowcount");
+    ARIA_IMPL(aria_row_index, "aria-rowindex");
+    ARIA_IMPL(aria_row_span, "aria-rowspan");
+    ARIA_IMPL(aria_selected, "aria-selected");
+    ARIA_IMPL(aria_set_size, "aria-setsize");
+    ARIA_IMPL(aria_sort, "aria-sort");
+    ARIA_IMPL(aria_value_max, "aria-valuemax");
+    ARIA_IMPL(aria_value_min, "aria-valuemin");
+    ARIA_IMPL(aria_value_now, "aria-valuenow");
+    ARIA_IMPL(aria_value_text, "aria-valuetext");
+
+#undef ARIA_IMPL
+
+    virtual bool exclude_from_accessibility_tree() const override;
+
+    virtual bool include_in_accessibility_tree() const override;
+
 protected:
     Element(Document&, DOM::QualifiedName);
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     virtual void children_changed() override;
     virtual i32 default_tab_index_value() const;
@@ -189,7 +261,7 @@ protected:
 private:
     void make_html_uppercased_qualified_name();
 
-    void invalidate_style_after_attribute_change(FlyString const& attribute_name);
+    void invalidate_style_after_attribute_change(DeprecatedFlyString const& attribute_name);
 
     WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node);
 
@@ -202,9 +274,9 @@ private:
     JS::GCPtr<ShadowRoot> m_shadow_root;
 
     RefPtr<CSS::StyleProperties> m_computed_css_values;
-    HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
+    HashMap<DeprecatedFlyString, CSS::StyleProperty> m_custom_properties;
 
-    Vector<FlyString> m_classes;
+    Vector<DeprecatedFlyString> m_classes;
 
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 };
@@ -212,6 +284,6 @@ private:
 template<>
 inline bool Node::fast_is<Element>() const { return is_element(); }
 
-WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, FlyString namespace_, FlyString qualified_name);
+WebIDL::ExceptionOr<QualifiedName> validate_and_extract(JS::Realm&, DeprecatedFlyString namespace_, DeprecatedFlyString qualified_name);
 
 }

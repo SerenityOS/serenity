@@ -40,10 +40,6 @@ private:
 
         switch (event.key()) {
         case KeyCode::Key_Tab:
-        case KeyCode::Key_Left:
-        case KeyCode::Key_Right:
-        case KeyCode::Key_Up:
-        case KeyCode::Key_Down:
         case KeyCode::Key_Return:
             return true;
         default:
@@ -68,8 +64,8 @@ public:
 
 private:
     InfinitelyScrollableTableView()
-        : m_horizontal_scroll_end_timer(Core::Timer::construct())
-        , m_vertical_scroll_end_timer(Core::Timer::construct())
+        : m_horizontal_scroll_end_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
+        , m_vertical_scroll_end_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
     {
     }
     virtual void did_scroll() override;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,9 +18,9 @@ PluralRulesPrototype::PluralRulesPrototype(Realm& realm)
 {
 }
 
-void PluralRulesPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> PluralRulesPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -31,9 +31,12 @@ void PluralRulesPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.select, select, 1, attr);
     define_native_function(realm, vm.names.selectRange, select_range, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 16.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select
+// 1.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.select
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 {
     // 1. Let pr be the this value.
@@ -43,12 +46,12 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     // 3. Let n be ? ToNumber(value).
     auto number = TRY(vm.argument(0).to_number(vm));
 
-    // 4. Return ! ResolvePlural(pr, n).
-    auto plurality = resolve_plural(*plural_rules, number);
-    return PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality));
+    // 4. Return ! ResolvePlural(pr, n).[[PluralCategory]].
+    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, *plural_rules, number));
+    return PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality.plural_category));
 }
 
-// 1.4.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
+// 1.3.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 {
     auto start = vm.argument(0);
@@ -76,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 }
 
 // 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
-// 1.4.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
+// 1.3.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 {
     auto& realm = *vm.current_realm();
@@ -104,6 +107,9 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
         MUST(options->create_data_property_or_throw(vm.names.minimumSignificantDigits, Value(plural_rules->min_significant_digits())));
     if (plural_rules->has_max_significant_digits())
         MUST(options->create_data_property_or_throw(vm.names.maximumSignificantDigits, Value(plural_rules->max_significant_digits())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingMode, PrimitiveString::create(vm, plural_rules->rounding_mode_string())));
+    MUST(options->create_data_property_or_throw(vm.names.roundingIncrement, Value(plural_rules->rounding_increment())));
+    MUST(options->create_data_property_or_throw(vm.names.trailingZeroDisplay, PrimitiveString::create(vm, plural_rules->trailing_zero_display_string())));
 
     // 5. Let pluralCategories be a List of Strings containing all possible results of PluralRuleSelect for the selected locale pr.[[Locale]].
     auto available_categories = ::Locale::available_plural_categories(plural_rules->locale(), plural_rules->type());

@@ -1,6 +1,9 @@
 include(libweb_generators)
 
 set(SOURCES
+    ARIA/ARIAMixin.cpp
+    ARIA/ARIAMixin.idl
+    ARIA/Roles.cpp
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
     Bindings/FetchMethod.cpp
@@ -9,11 +12,11 @@ set(SOURCES
     Bindings/Intrinsics.cpp
     Bindings/LegacyPlatformObject.cpp
     Bindings/LocationConstructor.cpp
-    Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
     Bindings/WindowConstructor.cpp
+    Bindings/WindowPrototype.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp
@@ -72,6 +75,7 @@ set(SOURCES
     DOM/AbortController.cpp
     DOM/AbortSignal.cpp
     DOM/AbstractRange.cpp
+    DOM/AccessibilityTreeNode.cpp
     DOM/Attr.cpp
     DOM/Attr.idl
     DOM/CDATASection.cpp
@@ -257,6 +261,7 @@ set(SOURCES
     HTML/HTMLUnknownElement.cpp
     HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
+    HTML/Location.cpp
     HTML/MessageChannel.cpp
     HTML/MessageEvent.cpp
     HTML/MessagePort.cpp
@@ -297,6 +302,7 @@ set(SOURCES
     HTML/WorkerNavigator.cpp
     HighResolutionTime/Performance.cpp
     HighResolutionTime/TimeOrigin.cpp
+    Infra/Base64.cpp
     Infra/ByteSequences.cpp
     Infra/JSON.cpp
     Infra/Strings.cpp
@@ -321,7 +327,6 @@ set(SOURCES
     Layout/InlineNode.cpp
     Layout/Label.cpp
     Layout/LabelableNode.cpp
-    Layout/LayoutPosition.cpp
     Layout/LayoutState.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
@@ -342,6 +347,7 @@ set(SOURCES
     Layout/TableFormattingContext.cpp
     Layout/TableRowBox.cpp
     Layout/TableRowGroupBox.cpp
+    Layout/TableWrapper.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
     Loader/ContentFilter.cpp

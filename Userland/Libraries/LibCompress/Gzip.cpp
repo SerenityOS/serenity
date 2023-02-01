@@ -10,7 +10,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/MemoryStream.h>
 
 namespace Compress {
 
@@ -39,7 +38,19 @@ bool BlockHeader::supported_by_implementation() const
     return true;
 }
 
-GzipDecompressor::GzipDecompressor(NonnullOwnPtr<Core::Stream::Stream> stream)
+ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, AK::Stream& stream)
+{
+    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<AK::Stream>(stream)));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) Member(header, move(deflate_stream))));
+}
+
+GzipDecompressor::Member::Member(BlockHeader header, NonnullOwnPtr<DeflateDecompressor> stream)
+    : m_header(header)
+    , m_stream(move(stream))
+{
+}
+
+GzipDecompressor::GzipDecompressor(NonnullOwnPtr<AK::Stream> stream)
     : m_input_stream(move(stream))
 {
 }
@@ -58,8 +69,8 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
 
         auto slice = bytes.slice(total_read);
 
-        if (m_current_member.has_value()) {
-            auto current_slice = TRY(current_member().m_stream.read(slice));
+        if (m_current_member) {
+            auto current_slice = TRY(current_member().m_stream->read(slice));
             current_member().m_checksum.update(current_slice);
             current_member().m_nread += current_slice.size();
 
@@ -131,7 +142,7 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
                 // FIXME: we should probably verify this instead of just assuming it matches
             }
 
-            m_current_member.emplace(header, *m_input_stream);
+            m_current_member = TRY(Member::construct(header, *m_input_stream));
             continue;
         }
     }
@@ -153,32 +164,39 @@ Optional<DeprecatedString> GzipDecompressor::describe_header(ReadonlyBytes bytes
 
 ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(Core::Stream::FixedMemoryStream::construct(bytes));
+    auto memory_stream = TRY(FixedMemoryStream::construct(bytes));
     auto gzip_stream = make<GzipDecompressor>(move(memory_stream));
-    DuplexMemoryStream output_stream;
+    AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!gzip_stream->is_eof()) {
         auto const data = TRY(gzip_stream->read(buffer));
-        output_stream.write_or_error(data);
+        TRY(output_stream.write_entire_buffer(data));
     }
 
-    return output_stream.copy_into_contiguous_buffer();
+    auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
+    TRY(output_stream.read_entire_buffer(output_buffer));
+    return output_buffer;
 }
 
 bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
 
 ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
-GzipCompressor::GzipCompressor(OutputStream& stream)
-    : m_output_stream(stream)
+GzipCompressor::GzipCompressor(MaybeOwned<AK::Stream> stream)
+    : m_output_stream(move(stream))
 {
 }
 
-size_t GzipCompressor::write(ReadonlyBytes bytes)
+ErrorOr<Bytes> GzipCompressor::read(Bytes)
+{
+    return Error::from_errno(EBADF);
+}
+
+ErrorOr<size_t> GzipCompressor::write(ReadonlyBytes bytes)
 {
     BlockHeader header;
     header.identification_1 = 0x1f;
@@ -188,39 +206,43 @@ size_t GzipCompressor::write(ReadonlyBytes bytes)
     header.modification_time = 0;
     header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
     header.operating_system = 3; // unix
-    m_output_stream << Bytes { &header, sizeof(header) };
-    DeflateCompressor compressed_stream { m_output_stream };
-    VERIFY(compressed_stream.write_or_error(bytes));
-    compressed_stream.final_flush();
+    TRY(m_output_stream->write_entire_buffer({ &header, sizeof(header) }));
+    auto compressed_stream = TRY(DeflateCompressor::construct(MaybeOwned(*m_output_stream)));
+    TRY(compressed_stream->write_entire_buffer(bytes));
+    TRY(compressed_stream->final_flush());
     Crypto::Checksum::CRC32 crc32;
     crc32.update(bytes);
     LittleEndian<u32> digest = crc32.digest();
     LittleEndian<u32> size = bytes.size();
-    m_output_stream << digest << size;
+    TRY(m_output_stream->write_entire_buffer(digest.bytes()));
+    TRY(m_output_stream->write_entire_buffer(size.bytes()));
     return bytes.size();
 }
 
-bool GzipCompressor::write_or_error(ReadonlyBytes bytes)
+bool GzipCompressor::is_eof() const
 {
-    if (write(bytes) < bytes.size()) {
-        set_fatal_error();
-        return false;
-    }
-
     return true;
 }
 
-Optional<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
+bool GzipCompressor::is_open() const
 {
-    DuplexMemoryStream output_stream;
-    GzipCompressor gzip_stream { output_stream };
+    return m_output_stream->is_open();
+}
 
-    gzip_stream.write_or_error(bytes);
+void GzipCompressor::close()
+{
+}
 
-    if (gzip_stream.handle_any_error())
-        return {};
+ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
+{
+    auto output_stream = TRY(try_make<AllocatingMemoryStream>());
+    GzipCompressor gzip_stream { MaybeOwned<AK::Stream>(*output_stream) };
 
-    return output_stream.copy_into_contiguous_buffer();
+    TRY(gzip_stream.write_entire_buffer(bytes));
+
+    auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
+    TRY(output_stream->read_entire_buffer(buffer.bytes()));
+    return buffer;
 }
 
 }

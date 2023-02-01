@@ -19,9 +19,14 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
+JS::NonnullGCPtr<PaintableWithLines> PaintableWithLines::create(Layout::BlockContainer const& block_container)
 {
-    return adopt_ref(*new PaintableBox(layout_box));
+    return block_container.heap().allocate_without_realm<PaintableWithLines>(block_container);
+}
+
+JS::NonnullGCPtr<PaintableBox> PaintableBox::create(Layout::Box const& layout_box)
+{
+    return layout_box.heap().allocate_without_realm<PaintableBox>(layout_box);
 }
 
 PaintableBox::PaintableBox(Layout::Box const& layout_box)
@@ -70,14 +75,9 @@ void PaintableBox::set_content_size(CSSPixelSize size)
 CSSPixelPoint PaintableBox::effective_offset() const
 {
     CSSPixelPoint offset;
-    if (m_containing_line_box_fragment.has_value()) {
-
-        // FIXME: This is a hack to deal with situations where the layout tree has been garbage collected.
-        //        We could avoid this by making the paintable tree garbage collected as well.
-        if (!containing_block() || !containing_block()->paint_box())
-            return offset;
-
-        auto const& fragment = containing_block()->paint_box()->line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
+    if (containing_block() && m_containing_line_box_fragment.has_value()) {
+        auto& paintable_with_lines = *verify_cast<PaintableWithLines>(containing_block()->paint_box());
+        auto const& fragment = paintable_with_lines.line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
         offset = fragment.offset();
     } else {
         offset = m_offset;
@@ -315,51 +315,44 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
 
 Optional<Gfx::IntRect> PaintableBox::clip_rect() const
 {
-    if (!m_clip_rect.has_value()) {
-        if (containing_block() && containing_block()->paint_box())
-            m_clip_rect = containing_block()->paint_box()->clip_rect();
-
-        auto overflow_x = computed_values().overflow_x();
-        auto overflow_y = computed_values().overflow_y();
-
-        if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
-            if (m_clip_rect.has_value()) {
-                m_clip_rect->intersect(absolute_padding_box_rect().to_type<float>().to_rounded<int>());
-            } else {
-                m_clip_rect = absolute_padding_box_rect().to_type<float>().to_rounded<int>();
-            }
-        }
-    }
-
     return m_clip_rect;
 }
 
-void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
 {
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
 
-    // FIXME: Support more overflow variations.
-    auto clip_rect = this->clip_rect();
+    auto clip_rect = context.painter().clip_rect();
+    if (containing_block() && containing_block()->paint_box()) {
+        if (containing_block()->paint_box()->clip_rect().has_value()) {
+            clip_rect = *containing_block()->paint_box()->clip_rect();
+        }
+    }
+    context.painter().set_clip_rect(clip_rect);
+
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
     auto clip_overflow = [&] {
         if (!m_clipping_overflow) {
             context.painter().save();
-            context.painter().add_clip_rect(*clip_rect);
+            context.painter().add_clip_rect(context.rounded_device_rect(absolute_padding_box_rect()).to_type<int>());
             m_clipping_overflow = true;
         }
     };
 
-    if (clip_rect.has_value()) {
+    // FIXME: Support more overflow variations.
+    if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
         clip_overflow();
     }
+
+    m_clip_rect = context.painter().clip_rect();
 
     if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(context, clip_rect->to_type<DevicePixels>(), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(absolute_padding_box_rect()), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
@@ -371,7 +364,7 @@ void PaintableBox::before_children_paint(PaintContext& context, PaintPhase phase
     }
 }
 
-void PaintableBox::after_children_paint(PaintContext& context, PaintPhase phase) const
+void PaintableBox::clear_clip_overflow_rect(PaintContext& context, PaintPhase phase) const
 {
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
@@ -679,7 +672,7 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
             continue;
         return result;
     }
-    return HitTestResult { *this };
+    return HitTestResult { const_cast<PaintableBox&>(*this) };
 }
 
 Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, HitTestType type) const
@@ -700,7 +693,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
             if (fragment_absolute_rect.contains(position)) {
                 if (is<Layout::BlockContainer>(fragment.layout_node()) && fragment.layout_node().paintable())
                     return fragment.layout_node().paintable()->hit_test(position, type);
-                return HitTestResult { *fragment.layout_node().paintable(), fragment.text_index_at(position.x()) };
+                return HitTestResult { const_cast<Paintable&>(const_cast<Paintable&>(*fragment.layout_node().paintable())), fragment.text_index_at(position.x()) };
             }
 
             // If we reached this point, the position is not within the fragment. However, the fragment start or end might be the place to place the cursor.
@@ -709,14 +702,14 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
             // We arbitrarily choose to consider the end of the line above and ignore the beginning of the line below.
             // If we knew the direction of selection, we could make a better choice.
             if (fragment_absolute_rect.bottom() <= position.y()) { // fully below the fragment
-                last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() + fragment.length() };
+                last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
             } else if (fragment_absolute_rect.top() <= position.y()) { // vertically within the fragment
                 if (position.x() < fragment_absolute_rect.left()) {    // left of the fragment
                     if (!last_good_candidate.has_value()) {            // first fragment of the line
-                        last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() };
+                        last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() };
                     }
                 } else { // right of the fragment
-                    last_good_candidate = HitTestResult { *fragment.layout_node().paintable(), fragment.start() + fragment.length() };
+                    last_good_candidate = HitTestResult { const_cast<Paintable&>(*fragment.layout_node().paintable()), fragment.start() + fragment.length() };
                 }
             }
         }
@@ -725,7 +718,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     if (type == HitTestType::TextCursor && last_good_candidate.has_value())
         return last_good_candidate;
     if (is_visible() && absolute_border_box_rect().contains(position.x(), position.y()))
-        return HitTestResult { *this };
+        return HitTestResult { const_cast<PaintableWithLines&>(*this) };
     return {};
 }
 

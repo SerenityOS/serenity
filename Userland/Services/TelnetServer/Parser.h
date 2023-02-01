@@ -31,8 +31,6 @@ protected:
         Error,
     };
 
-    void write(DeprecatedString const& str);
-
 private:
     State m_state { State::Free };
     u8 m_command { 0 };

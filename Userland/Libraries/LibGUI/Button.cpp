@@ -57,7 +57,7 @@ void Button::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    bool paint_pressed = is_being_pressed() || is_mimic_pressed() || (m_menu && m_menu->is_visible());
+    bool paint_pressed = is_being_pressed() || m_mimic_pressed || (m_menu && m_menu->is_visible());
 
     Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused(), is_default() && !another_button_has_focus());
 
@@ -136,6 +136,9 @@ void Button::click(unsigned modifiers)
             return;
         set_checked(!is_checked());
     }
+
+    mimic_pressed();
+
     if (on_click)
         on_click(modifiers);
     if (m_action)
@@ -182,7 +185,7 @@ void Button::set_icon(RefPtr<Gfx::Bitmap> icon)
 
 void Button::set_icon_from_path(DeprecatedString const& path)
 {
-    auto maybe_bitmap = Gfx::Bitmap::try_load_from_file(path);
+    auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
     if (maybe_bitmap.is_error()) {
         dbgln("Unable to load bitmap `{}` for button icon", path);
         return;
@@ -246,10 +249,10 @@ void Button::set_default(bool default_button)
     });
 }
 
-void Button::set_mimic_pressed(bool mimic_pressed)
+void Button::mimic_pressed()
 {
-    if (!is_being_pressed()) {
-        m_mimic_pressed = mimic_pressed;
+    if (!is_being_pressed() && !was_being_pressed()) {
+        m_mimic_pressed = true;
 
         stop_timer();
         start_timer(80, Core::TimerShouldFireWhenNotVisible::Yes);
@@ -260,7 +263,7 @@ void Button::set_mimic_pressed(bool mimic_pressed)
 
 void Button::timer_event(Core::TimerEvent&)
 {
-    if (is_mimic_pressed()) {
+    if (m_mimic_pressed) {
         m_mimic_pressed = false;
 
         update();

@@ -94,7 +94,7 @@ ErrorOr<void> Editor::initialize_tooltip_window()
         s_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     }
     if (s_tooltip_page_view.is_null()) {
-        s_tooltip_page_view = TRY(s_tooltip_window->try_set_main_widget<WebView::OutOfProcessWebView>());
+        s_tooltip_page_view = TRY(s_tooltip_window->set_main_widget<WebView::OutOfProcessWebView>());
     }
     return {};
 }
@@ -470,13 +470,13 @@ void Editor::clear_execution_position()
 
 Gfx::Bitmap const& Editor::breakpoint_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/breakpoint.png"sv).release_value_but_fixme_should_propagate_errors();
+    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/breakpoint.png"sv).release_value_but_fixme_should_propagate_errors();
     return *bitmap;
 }
 
 Gfx::Bitmap const& Editor::current_position_icon_bitmap()
 {
-    static auto bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors();
+    static auto bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors();
     return *bitmap;
 }
 
@@ -737,7 +737,7 @@ void Editor::handle_function_parameters_hint_request()
         }
         html.append("<style>body { background-color: #dac7b5; }</style>"sv);
 
-        s_tooltip_page_view->load_html(html.build(), {});
+        s_tooltip_page_view->load_html(html.to_deprecated_string(), {});
 
         auto cursor_rect = current_editor().cursor_content_rect().location().translated(screen_relative_rect().location());
 
@@ -786,7 +786,7 @@ void Editor::create_tokens_info_timer()
     m_tokens_info_timer = Core::Timer::create_repeating((int)token_info_timer_interval_ms, [this] {
         on_token_info_timer_tick();
         m_tokens_info_timer->stop();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
     m_tokens_info_timer->start();
 }
 

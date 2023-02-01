@@ -11,9 +11,11 @@
 
 namespace Web::Painting {
 
-class SVGGeometryPaintable : public SVGGraphicsPaintable {
+class SVGGeometryPaintable final : public SVGGraphicsPaintable {
+    JS_CELL(SVGGeometryPaintable, SVGGraphicsPaintable);
+
 public:
-    static NonnullRefPtr<SVGGeometryPaintable> create(Layout::SVGGeometryBox const&);
+    static JS::NonnullGCPtr<SVGGeometryPaintable> create(Layout::SVGGeometryBox const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

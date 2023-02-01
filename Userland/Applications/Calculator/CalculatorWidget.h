@@ -33,7 +33,6 @@ private:
     void add_operation_button(GUI::Button&, Calculator::Operation);
     void add_digit_button(GUI::Button&, int digit);
 
-    void mimic_pressed_button(RefPtr<GUI::Button>);
     void perform_operation(Calculator::Operation operation);
     void update_display();
 

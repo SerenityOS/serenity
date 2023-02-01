@@ -8,10 +8,10 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/VirtualConsole.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 

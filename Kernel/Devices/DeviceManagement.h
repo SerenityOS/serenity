@@ -57,7 +57,7 @@ public:
     requires(requires(Args... args) { DeviceType::try_create(args...); })
     {
         auto device = TRY(DeviceType::try_create(forward<Args>(args)...));
-        device->after_inserting();
+        TRY(device->after_inserting());
         return device;
     }
 
@@ -65,7 +65,7 @@ public:
     static inline ErrorOr<NonnullLockRefPtr<DeviceType>> try_create_device(Args&&... args)
     {
         auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DeviceType(forward<Args>(args)...)));
-        device->after_inserting();
+        TRY(device->after_inserting());
         return device;
     }
 
@@ -73,7 +73,6 @@ private:
     LockRefPtr<NullDevice> m_null_device;
     LockRefPtr<ConsoleDevice> m_console_device;
     LockRefPtr<DeviceControlDevice> m_device_control_device;
-    // FIXME: Once we have a singleton for managing many sound cards, remove this from here
     SpinlockProtected<HashMap<u64, Device*>, LockRank::None> m_devices {};
 
     mutable Spinlock<LockRank::None> m_event_queue_lock {};

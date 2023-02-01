@@ -30,13 +30,13 @@ public:
         if (!entry.has("quote"sv) || !entry.has("author"sv) || !entry.has("utc_time"sv) || !entry.has("url"sv))
             return {};
         // From here on, trust that it's probably fine.
-        q.m_quote = entry.get("quote"sv).as_string();
-        q.m_author = entry.get("author"sv).as_string();
+        q.m_quote = entry.get_deprecated("quote"sv).as_string();
+        q.m_author = entry.get_deprecated("author"sv).as_string();
         // It is sometimes parsed as u32, sometimes as u64, depending on how large the number is.
-        q.m_utc_time = entry.get("utc_time"sv).to_number<u64>();
-        q.m_url = entry.get("url"sv).as_string();
+        q.m_utc_time = entry.get_deprecated("utc_time"sv).to_number<u64>();
+        q.m_url = entry.get_deprecated("url"sv).as_string();
         if (entry.has("context"sv))
-            q.m_context = entry.get("context"sv).as_string();
+            q.m_context = entry.get_deprecated("context"sv).as_string();
 
         return q;
     }

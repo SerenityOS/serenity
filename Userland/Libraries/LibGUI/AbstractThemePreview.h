@@ -24,12 +24,11 @@ public:
 
     Gfx::Palette const& preview_palette() const { return m_preview_palette; }
     void set_preview_palette(Gfx::Palette const&);
-    ErrorOr<void> set_theme_from_file(Core::File&);
+    ErrorOr<void> set_theme_from_file(StringView path, NonnullOwnPtr<Core::Stream::File>);
     void set_theme(Core::AnonymousBuffer const&);
 
     void paint_window(StringView title, Gfx::IntRect const& rect, Gfx::WindowTheme::WindowState, Gfx::Bitmap const& icon, int button_count = 3);
 
-    Function<void(DeprecatedString const&)> on_theme_load_from_file;
     Function<void()> on_palette_change;
 
     struct Window {

@@ -27,15 +27,15 @@ public:
     {
         auto* realm = execution_context->realm;
         VERIFY(realm);
-        auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context));
+        auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context)).release_allocated_value_but_fixme_should_propagate_errors();
         settings_object->target_browsing_context = nullptr;
 
-        auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm);
+        auto intrinsics = realm->heap().allocate<Bindings::Intrinsics>(*realm, *realm).release_allocated_value_but_fixme_should_propagate_errors();
         auto host_defined = make<Bindings::HostDefined>(settings_object, intrinsics);
         realm->set_host_defined(move(host_defined));
 
         // FIXME: Shared workers should use the shared worker method
-        Bindings::add_dedicated_worker_exposed_interfaces(realm->global_object(), *realm);
+        Bindings::add_dedicated_worker_exposed_interfaces(realm->global_object());
 
         return settings_object;
     }

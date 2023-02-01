@@ -10,11 +10,22 @@
 #include <LibWeb/Bindings/URLSearchParamsIteratorPrototype.h>
 #include <LibWeb/URL/URLSearchParamsIterator.h>
 
+namespace Web::Bindings {
+
+template<>
+void Intrinsics::create_web_prototype_and_constructor<URLSearchParamsIteratorPrototype>(JS::Realm& realm)
+{
+    auto prototype = heap().allocate<URLSearchParamsIteratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_prototypes.set("URLSearchParamsIterator"sv, prototype);
+}
+
+}
+
 namespace Web::URL {
 
 JS::NonnullGCPtr<URLSearchParamsIterator> URLSearchParamsIterator::create(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)
 {
-    return url_search_params.heap().allocate<URLSearchParamsIterator>(url_search_params.realm(), url_search_params, iteration_kind);
+    return url_search_params.heap().allocate<URLSearchParamsIterator>(url_search_params.realm(), url_search_params, iteration_kind).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 URLSearchParamsIterator::URLSearchParamsIterator(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)
@@ -22,10 +33,17 @@ URLSearchParamsIterator::URLSearchParamsIterator(URLSearchParams const& url_sear
     , m_url_search_params(url_search_params)
     , m_iteration_kind(iteration_kind)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(url_search_params.realm(), "URLSearchParamsIterator"));
 }
 
 URLSearchParamsIterator::~URLSearchParamsIterator() = default;
+
+JS::ThrowCompletionOr<void> URLSearchParamsIterator::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::URLSearchParamsIteratorPrototype>(realm, "URLSearchParamsIterator"));
+
+    return {};
+}
 
 void URLSearchParamsIterator::visit_edges(JS::Cell::Visitor& visitor)
 {

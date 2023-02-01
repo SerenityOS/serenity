@@ -49,6 +49,7 @@ private:
         Namespace,
         Constructor,
         Destructor,
+        UsingNamespace,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
@@ -80,6 +81,7 @@ private:
     bool match_access_specifier();
     bool match_constructor(StringView class_name);
     bool match_destructor(StringView class_name);
+    bool match_using_namespace_declaration();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -93,7 +95,6 @@ private:
     NonnullRefPtr<Expression> parse_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_primary_expression(ASTNode& parent);
     NonnullRefPtr<Expression> parse_secondary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs);
-    NonnullRefPtr<FunctionCall> parse_function_call(ASTNode& parent);
     NonnullRefPtr<StringLiteral> parse_string_literal(ASTNode& parent);
     NonnullRefPtr<ReturnStatement> parse_return_statement(ASTNode& parent);
     NonnullRefPtr<EnumDeclaration> parse_enum_declaration(ASTNode& parent);
@@ -102,7 +103,6 @@ private:
     NonnullRefPtr<UnaryExpression> parse_unary_expression(ASTNode& parent);
     NonnullRefPtr<BooleanLiteral> parse_boolean_literal(ASTNode& parent);
     NonnullRefPtr<Type> parse_type(ASTNode& parent);
-    NonnullRefPtr<NamedType> parse_named_type(ASTNode& parent);
     NonnullRefPtr<BinaryExpression> parse_binary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs, BinaryOp);
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs, AssignmentOp);
     NonnullRefPtr<ForStatement> parse_for_statement(ASTNode& parent);
@@ -121,6 +121,7 @@ private:
     NonnullRefPtrVector<Declaration> parse_class_members(StructOrClassDeclaration& parent);
     NonnullRefPtr<Constructor> parse_constructor(ASTNode& parent);
     NonnullRefPtr<Destructor> parse_destructor(ASTNode& parent);
+    NonnullRefPtr<UsingNamespaceDeclaration> parse_using_namespace_declaration(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);

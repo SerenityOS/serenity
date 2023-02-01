@@ -9,6 +9,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Span.h>
+#include <AK/String.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 
 namespace Crypto {
@@ -63,7 +64,8 @@ public:
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
     [[nodiscard]] static SignedBigInteger from_base(u16 N, StringView str);
-    [[nodiscard]] DeprecatedString to_base(u16 N) const;
+    [[nodiscard]] ErrorOr<String> to_base(u16 N) const;
+    [[nodiscard]] DeprecatedString to_base_deprecated(u16 N) const;
 
     [[nodiscard]] u64 to_u64() const;
     [[nodiscard]] double to_double(UnsignedBigInteger::RoundingMode rounding_mode = UnsignedBigInteger::RoundingMode::IEEERoundAndTiesToEvenMantissa) const;

@@ -13,9 +13,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<NestedBrowsingContextPaintable> NestedBrowsingContextPaintable::create(Layout::FrameBox const& layout_box)
+JS::NonnullGCPtr<NestedBrowsingContextPaintable> NestedBrowsingContextPaintable::create(Layout::FrameBox const& layout_box)
 {
-    return adopt_ref(*new NestedBrowsingContextPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<NestedBrowsingContextPaintable>(layout_box);
 }
 
 NestedBrowsingContextPaintable::NestedBrowsingContextPaintable(Layout::FrameBox const& layout_box)

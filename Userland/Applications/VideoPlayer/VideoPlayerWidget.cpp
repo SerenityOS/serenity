@@ -15,29 +15,28 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
+#include <Userland/Applications/VideoPlayer/VideoPlayerWindowGML.h>
 
 #include "VideoPlayerWidget.h"
 
 namespace VideoPlayer {
 
-VideoPlayerWidget::VideoPlayerWidget(GUI::Window& window)
-    : m_window(window)
+ErrorOr<NonnullRefPtr<VideoPlayerWidget>> VideoPlayerWidget::try_create()
 {
-    set_fill_with_background_color(true);
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) VideoPlayerWidget()));
+    TRY(main_widget->load_from_gml(videoplayer_window_gml));
 
-    set_layout<GUI::VerticalBoxLayout>();
+    TRY(main_widget->setup_interface());
 
-    m_video_display = add<VideoFrameWidget>();
-    m_video_display->set_auto_resize(false);
+    return main_widget;
+}
+
+ErrorOr<void> VideoPlayerWidget::setup_interface()
+{
+    m_video_display = find_descendant_of_type_named<VideoPlayer::VideoFrameWidget>("video_frame");
     m_video_display->on_click = [&]() { toggle_pause(); };
 
-    auto& player_controls_widget = add<GUI::Widget>();
-    player_controls_widget.set_layout<GUI::VerticalBoxLayout>();
-    player_controls_widget.set_max_height(50);
-
-    m_seek_slider = player_controls_widget.add<GUI::HorizontalSlider>();
-    m_seek_slider->set_fixed_height(20);
-    m_seek_slider->set_enabled(false);
+    m_seek_slider = find_descendant_of_type_named<GUI::HorizontalSlider>("seek_slider");
     m_seek_slider->on_change = [&](int value) {
         if (!m_playback_manager)
             return;
@@ -48,13 +47,9 @@ VideoPlayerWidget::VideoPlayerWidget(GUI::Window& window)
         set_current_timestamp(timestamp);
         m_playback_manager->seek_to_timestamp(timestamp);
     };
-    m_seek_slider->set_jump_to_cursor(true);
 
-    auto& toolbar_container = player_controls_widget.add<GUI::ToolbarContainer>();
-    m_toolbar = toolbar_container.add<GUI::Toolbar>();
-
-    m_play_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_pause_icon = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/pause.png"sv).release_value_but_fixme_should_propagate_errors();
+    m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
+    m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
 
     m_play_pause_action = GUI::Action::create("Play", { Key_Space }, m_play_icon, [&](auto&) {
         toggle_pause();
@@ -64,20 +59,12 @@ VideoPlayerWidget::VideoPlayerWidget(GUI::Window& window)
         cycle_sizing_modes();
     });
 
-    m_toolbar->add_action(*m_play_pause_action);
-    m_toolbar->add<GUI::VerticalSeparator>();
-    m_timestamp_label = m_toolbar->add<GUI::Label>();
-    m_timestamp_label->set_autosize(true);
+    m_timestamp_label = find_descendant_of_type_named<GUI::Label>("timestamp");
+    m_volume_slider = find_descendant_of_type_named<GUI::HorizontalSlider>("volume_slider");
+    find_descendant_of_type_named<GUI::Button>("playback")->set_action(*m_play_pause_action);
+    find_descendant_of_type_named<GUI::Button>("sizing")->set_action(*m_cycle_sizing_modes_action);
 
-    m_toolbar->add<GUI::Widget>(); // Filler widget
-
-    m_toolbar->add_action(*m_cycle_sizing_modes_action);
-
-    m_toolbar->add<GUI::VerticalSeparator>();
-    m_volume_slider = m_toolbar->add<GUI::HorizontalSlider>();
-    m_volume_slider->set_min(0);
-    m_volume_slider->set_max(100);
-    m_volume_slider->set_fixed_width(100);
+    return {};
 }
 
 void VideoPlayerWidget::close_file()
@@ -176,7 +163,7 @@ void VideoPlayerWidget::on_decoding_error(Video::DecoderError const& error)
         break;
     }
 
-    GUI::MessageBox::show(&m_window, DeprecatedString::formatted(text_format, error.string_literal()), "Video Player encountered an error"sv);
+    GUI::MessageBox::show(window(), DeprecatedString::formatted(text_format, error.string_literal()), "Video Player encountered an error"sv);
 }
 
 void VideoPlayerWidget::update_seek_slider_max()
@@ -283,36 +270,36 @@ void VideoPlayerWidget::update_seek_mode()
     m_playback_manager->set_seek_mode(seek_mode());
 }
 
-void VideoPlayerWidget::initialize_menubar(GUI::Window& window)
+ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
-    // FIXME: This should return ErrorOr and use try_... functions.
-
     // File menu
-    auto& file_menu = window.add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    auto file_menu = TRY(window.try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
         if (path.has_value())
             open_file(path.value());
-    }));
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    })));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         window.close();
-    }));
+    })));
 
     // Playback menu
-    auto& playback_menu = window.add_menu("&Playback");
+    auto playback_menu = TRY(window.try_add_menu("&Playback"));
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
     m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {
         update_seek_mode();
     });
-    playback_menu.add_action(*m_use_fast_seeking);
+    TRY(playback_menu->try_add_action(*m_use_fast_seeking));
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 
     // Help menu
-    auto& help_menu = window.add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("Video Player", GUI::Icon::default_icon("app-video-player"sv), &window));
+    auto help_menu = TRY(window.try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Video Player", TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window)));
+
+    return {};
 }
 
 }

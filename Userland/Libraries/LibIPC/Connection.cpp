@@ -27,7 +27,7 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream
     , m_local_endpoint_magic(local_endpoint_magic)
     , m_deferred_invoker(make<CoreEventLoopDeferredInvoker>())
 {
-    m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
+    m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); }).release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferred_invoker)

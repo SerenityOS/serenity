@@ -36,8 +36,8 @@ class Worker : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Worker, DOM::EventTarget);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(FlyString const& script_url, WorkerOptions const options, DOM::Document& document);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, FlyString const& script_url, WorkerOptions const options)
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, DeprecatedFlyString const& script_url, WorkerOptions const options)
     {
         auto& window = verify_cast<HTML::Window>(realm.global_object());
         return Worker::create(script_url, options, window.associated_document());
@@ -60,7 +60,7 @@ public:
 #undef __ENUMERATE
 
 protected:
-    Worker(FlyString const&, const WorkerOptions, DOM::Document&);
+    Worker(DeprecatedFlyString const&, const WorkerOptions, DOM::Document&);
 
 private:
     static HTML::EventLoop& get_vm_event_loop(JS::VM& target_vm)
@@ -68,9 +68,10 @@ private:
         return static_cast<Bindings::WebEngineCustomData*>(target_vm.custom_data())->event_loop;
     }
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    FlyString m_script_url;
+    DeprecatedFlyString m_script_url;
     WorkerOptions m_options;
 
     JS::GCPtr<DOM::Document> m_document;

@@ -62,21 +62,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     advice_window->set_has_alpha_channel(true);
     advice_window->set_alpha_hit_threshold(1.0f);
 
-    auto advice_widget = TRY(advice_window->try_set_main_widget<SpeechBubble>(catdog_widget));
+    auto advice_widget = TRY(advice_window->set_main_widget<SpeechBubble>(catdog_widget));
     (void)TRY(advice_widget->try_set_layout<GUI::VerticalBoxLayout>());
     advice_widget->layout()->set_spacing(0);
 
-    auto advice_timer = TRY(Core::Timer::try_create());
-    advice_timer->set_interval(15'000);
-    advice_timer->set_single_shot(true);
-    advice_timer->on_timeout = [&] {
+    auto advice_timer = TRY(Core::Timer::create_single_shot(15'000, [&] {
         window->move_to_front();
         advice_window->move_to_front();
         catdog_widget->set_roaming(false);
         advice_window->move_to(window->x() - advice_window->width() / 2, window->y() - advice_window->height());
         advice_window->show();
         advice_window->set_always_on_top();
-    };
+    }));
     advice_timer->start();
 
     advice_widget->on_dismiss = [&] {

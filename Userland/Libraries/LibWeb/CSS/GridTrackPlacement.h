@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 
 namespace Web::CSS {
 
@@ -18,9 +18,9 @@ public:
         Auto
     };
 
-    GridTrackPlacement(DeprecatedString line_name, int span_count_or_position, bool has_span = false);
+    GridTrackPlacement(String line_name, int span_count_or_position, bool has_span = false);
     GridTrackPlacement(int span_count_or_position, bool has_span = false);
-    GridTrackPlacement(DeprecatedString line_name, bool has_span = false);
+    GridTrackPlacement(String line_name, bool has_span = false);
     GridTrackPlacement();
 
     static GridTrackPlacement make_auto() { return GridTrackPlacement(); };
@@ -34,9 +34,9 @@ public:
 
     int raw_value() const { return m_span_count_or_position; }
     Type type() const { return m_type; }
-    DeprecatedString line_name() const { return m_line_name; }
+    String line_name() const { return m_line_name; }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     bool operator==(GridTrackPlacement const& other) const
     {
         return m_type == other.type() && m_span_count_or_position == other.raw_value();
@@ -45,7 +45,7 @@ public:
 private:
     Type m_type;
     int m_span_count_or_position { 0 };
-    DeprecatedString m_line_name;
+    String m_line_name;
 };
 
 }

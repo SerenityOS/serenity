@@ -43,13 +43,13 @@ public:
 
     bool make_top_card_visible(); // Returns true if the card was flipped.
 
-    void push(NonnullRefPtr<Card> card);
+    ErrorOr<void> push(NonnullRefPtr<Card>);
     NonnullRefPtr<Card> pop();
-    void move_to_stack(CardStack&);
+    ErrorOr<void> take_all(CardStack&);
     void rebound_cards();
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
-    void add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
+    ErrorOr<void> add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
 
     bool preview_card(Gfx::IntPoint click_location);
     void clear_card_preview();
@@ -137,6 +137,6 @@ struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
             first_card = false;
         }
 
-        return Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}"sv, type, stack.bounding_box(), cards.build());
+        return Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}"sv, type, stack.bounding_box(), cards.to_deprecated_string());
     }
 };

@@ -32,7 +32,7 @@ ThrowCompletionOr<NonnullGCPtr<Array>> Array::create(Realm& realm, u64 length, O
     // 3. Let A be MakeBasicObject(« [[Prototype]], [[Extensible]] »).
     // 4. Set A.[[Prototype]] to proto.
     // 5. Set A.[[DefineOwnProperty]] as specified in 10.4.2.1.
-    auto array = realm.heap().allocate<Array>(realm, *prototype);
+    auto array = MUST_OR_THROW_OOM(realm.heap().allocate<Array>(realm, *prototype));
 
     // 6. Perform ! OrdinaryDefineOwnProperty(A, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     MUST(array->internal_define_own_property(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = false }));
@@ -186,10 +186,10 @@ ThrowCompletionOr<double> compare_array_elements(VM& vm, Value x, Value y, Funct
     }
 
     // 5. Let xString be ? ToString(x).
-    auto x_string = PrimitiveString::create(vm, TRY(x.to_string(vm)));
+    auto x_string = PrimitiveString::create(vm, TRY(x.to_deprecated_string(vm)));
 
     // 6. Let yString be ? ToString(y).
-    auto y_string = PrimitiveString::create(vm, TRY(y.to_string(vm)));
+    auto y_string = PrimitiveString::create(vm, TRY(y.to_deprecated_string(vm)));
 
     // 7. Let xSmaller be ! IsLessThan(xString, yString, true).
     auto x_smaller = MUST(is_less_than(vm, x_string, y_string, true));

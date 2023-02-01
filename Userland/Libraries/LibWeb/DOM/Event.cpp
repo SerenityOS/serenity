@@ -14,31 +14,39 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
+JS::NonnullGCPtr<Event> Event::create(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
 {
-    return realm.heap().allocate<Event>(realm, realm, event_name, event_init);
+    return realm.heap().allocate<Event>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
-JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
+JS::NonnullGCPtr<Event> Event::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-Event::Event(JS::Realm& realm, FlyString const& type)
-    : PlatformObject(Bindings::cached_web_prototype(realm, "Event"))
+Event::Event(JS::Realm& realm, DeprecatedFlyString const& type)
+    : PlatformObject(realm)
     , m_type(type)
     , m_initialized(true)
 {
 }
 
-Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_init)
-    : PlatformObject(Bindings::cached_web_prototype(realm, "Event"))
+Event::Event(JS::Realm& realm, DeprecatedFlyString const& type, EventInit const& event_init)
+    : PlatformObject(realm)
     , m_type(type)
     , m_bubbles(event_init.bubbles)
     , m_cancelable(event_init.cancelable)
     , m_composed(event_init.composed)
     , m_initialized(true)
 {
+}
+
+JS::ThrowCompletionOr<void> Event::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::EventPrototype>(realm, "Event"));
+
+    return {};
 }
 
 void Event::visit_edges(Visitor& visitor)

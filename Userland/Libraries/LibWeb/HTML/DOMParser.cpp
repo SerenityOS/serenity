@@ -15,16 +15,23 @@ namespace Web::HTML {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMParser>> DOMParser::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<DOMParser>(realm, realm);
+    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMParser>(realm, realm));
 }
 
 DOMParser::DOMParser(JS::Realm& realm)
     : PlatformObject(realm)
 {
-    set_prototype(&Bindings::cached_web_prototype(realm, "DOMParser"));
 }
 
 DOMParser::~DOMParser() = default;
+
+JS::ThrowCompletionOr<void> DOMParser::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::DOMParserPrototype>(realm, "DOMParser"));
+
+    return {};
+}
 
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-domparser-parsefromstring
 JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString const& string, Bindings::DOMParserSupportedType type)

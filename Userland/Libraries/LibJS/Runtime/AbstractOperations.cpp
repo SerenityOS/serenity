@@ -31,6 +31,7 @@
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Reference.h>
+#include <LibJS/Runtime/SuppressedError.h>
 
 namespace JS {
 
@@ -201,12 +202,13 @@ ThrowCompletionOr<Realm*> get_function_realm(VM& vm, FunctionObject const& funct
 }
 
 // 8.5.2.1 InitializeBoundName ( name, value, environment ), https://tc39.es/ecma262/#sec-initializeboundname
-ThrowCompletionOr<void> initialize_bound_name(VM& vm, FlyString const& name, Value value, Environment* environment)
+ThrowCompletionOr<void> initialize_bound_name(VM& vm, DeprecatedFlyString const& name, Value value, Environment* environment)
 {
     // 1. If environment is not undefined, then
     if (environment) {
-        // a. Perform ! environment.InitializeBinding(name, value).
-        MUST(environment->initialize_binding(vm, name, value));
+        // FIXME: The normal is not included in the explicit resource management spec yet, so there is no spec link for it.
+        // a. Perform ! environment.InitializeBinding(name, value, normal).
+        MUST(environment->initialize_binding(vm, name, value, Environment::InitializeBindingHint::Normal));
 
         // b. Return unused.
         return {};
@@ -594,7 +596,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
         .in_class_field_initializer = in_class_field_initializer,
     };
 
-    Parser parser { Lexer { code_string.deprecated_string() }, Program::Type::Script, move(initial_state) };
+    Parser parser { Lexer { TRY(code_string.deprecated_string()) }, Program::Type::Script, move(initial_state) };
     auto program = parser.parse_program(strict_caller == CallerMode::Strict);
 
     //     b. If script is a List of errors, throw a SyntaxError exception.
@@ -729,6 +731,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
 }
 
 // 19.2.1.3 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/ecma262/#sec-evaldeclarationinstantiation
+// 9.1.1.1 EvalDeclarationInstantiation ( body, varEnv, lexEnv, privateEnv, strict ), https://tc39.es/proposal-explicit-resource-management/#sec-evaldeclarationinstantiation
 ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& program, Environment* variable_environment, Environment* lexical_environment, PrivateEnvironment* private_environment, bool strict)
 {
     auto& realm = *vm.current_realm();
@@ -794,7 +797,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     // 9. Let declaredFunctionNames be a new empty List.
-    HashTable<FlyString> declared_function_names;
+    HashTable<DeprecatedFlyString> declared_function_names;
 
     // 10. For each element d of varDeclarations, in reverse List order, do
     TRY(program.for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) -> ThrowCompletionOr<void> {
@@ -835,7 +838,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     if (!strict) {
         // a. Let declaredFunctionOrVarNames be the list-concatenation of declaredFunctionNames and declaredVarNames.
         // The spec here uses 'declaredVarNames' but that has not been declared yet.
-        HashTable<FlyString> hoisted_functions;
+        HashTable<DeprecatedFlyString> hoisted_functions;
 
         // b. For each FunctionDeclaration f that is directly contained in the StatementList of a Block, CaseClause, or DefaultClause Contained within body, do
         TRY(program.for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) -> ThrowCompletionOr<void> {
@@ -903,9 +906,9 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
                     // ii. If bindingExists is false, then
                     if (!MUST(variable_environment->has_binding(function_name))) {
                         // i. Perform ! varEnv.CreateMutableBinding(F, true).
-                        // ii. Perform ! varEnv.InitializeBinding(F, undefined).
                         MUST(variable_environment->create_mutable_binding(vm, function_name, true));
-                        MUST(variable_environment->initialize_binding(vm, function_name, js_undefined()));
+                        // ii. Perform ! varEnv.InitializeBinding(F, undefined, normal).
+                        MUST(variable_environment->initialize_binding(vm, function_name, js_undefined(), Environment::InitializeBindingHint::Normal));
                     }
                 }
             }
@@ -926,7 +929,7 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
     }
 
     // 12. Let declaredVarNames be a new empty List.
-    HashTable<FlyString> declared_var_names;
+    HashTable<DeprecatedFlyString> declared_var_names;
 
     // 13. For each element d of varDeclarations, do
     TRY(program.for_each_var_scoped_variable_declaration([&](VariableDeclaration const& declaration) {
@@ -1003,8 +1006,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
                 // 2. Perform ! varEnv.CreateMutableBinding(fn, true).
                 MUST(variable_environment->create_mutable_binding(vm, declaration.name(), true));
 
-                // 3. Perform ! varEnv.InitializeBinding(fn, fo).
-                MUST(variable_environment->initialize_binding(vm, declaration.name(), function));
+                // 3. Perform ! varEnv.InitializeBinding(fn, fo, normal).
+                MUST(variable_environment->initialize_binding(vm, declaration.name(), function, Environment::InitializeBindingHint::Normal));
             }
             // iii. Else,
             else {
@@ -1033,8 +1036,8 @@ ThrowCompletionOr<void> eval_declaration_instantiation(VM& vm, Program const& pr
                 // 2. Perform ! varEnv.CreateMutableBinding(vn, true).
                 MUST(variable_environment->create_mutable_binding(vm, var_name, true));
 
-                // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
-                MUST(variable_environment->initialize_binding(vm, var_name, js_undefined()));
+                // 3. Perform ! varEnv.InitializeBinding(vn, undefined, normal).
+                MUST(variable_environment->initialize_binding(vm, var_name, js_undefined(), Environment::InitializeBindingHint::Normal));
             }
         }
     }
@@ -1101,7 +1104,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     // 7. Set obj.[[Set]] as specified in 10.4.4.4.
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
-    auto object = vm.heap().allocate<ArgumentsObject>(realm, realm, environment);
+    auto object = vm.heap().allocate<ArgumentsObject>(realm, realm, environment).release_allocated_value_but_fixme_should_propagate_errors();
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,
@@ -1119,14 +1122,14 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
     MUST(object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true }));
 
     // 17. Let mappedNames be a new empty List.
-    HashTable<FlyString> mapped_names;
+    HashTable<DeprecatedFlyString> mapped_names;
 
     // 18. Set index to numberOfParameters - 1.
     // 19. Repeat, while index ≥ 0,
     VERIFY(formals.size() <= NumericLimits<i32>::max());
     for (i32 index = static_cast<i32>(formals.size()) - 1; index >= 0; --index) {
         // a. Let name be parameterNames[index].
-        auto const& name = formals[index].binding.get<FlyString>();
+        auto const& name = formals[index].binding.get<DeprecatedFlyString>();
 
         // b. If name is not an element of mappedNames, then
         if (mapped_names.contains(name))
@@ -1228,57 +1231,57 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
 }
 
 // 22.1.3.18.1 GetSubstitution ( matched, str, position, captures, namedCaptures, replacementTemplate ), https://tc39.es/ecma262/#sec-getsubstitution
-ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement_template)
+ThrowCompletionOr<String> get_substitution(VM& vm, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement_template)
 {
     auto replace_string = TRY(replacement_template.to_utf16_string(vm));
     auto replace_view = replace_string.view();
 
-    Vector<u16, 1> result;
+    Utf16Data result;
 
     for (size_t i = 0; i < replace_view.length_in_code_units(); ++i) {
         u16 curr = replace_view.code_unit_at(i);
 
         if ((curr != '$') || (i + 1 >= replace_view.length_in_code_units())) {
-            result.append(curr);
+            TRY_OR_THROW_OOM(vm, result.try_append(curr));
             continue;
         }
 
         u16 next = replace_view.code_unit_at(i + 1);
 
         if (next == '$') {
-            result.append('$');
+            TRY_OR_THROW_OOM(vm, result.try_append('$'));
             ++i;
         } else if (next == '&') {
-            result.append(matched.data(), matched.length_in_code_units());
+            TRY_OR_THROW_OOM(vm, result.try_append(matched.data(), matched.length_in_code_units()));
             ++i;
         } else if (next == '`') {
             auto substring = str.substring_view(0, position);
-            result.append(substring.data(), substring.length_in_code_units());
+            TRY_OR_THROW_OOM(vm, result.try_append(substring.data(), substring.length_in_code_units()));
             ++i;
         } else if (next == '\'') {
             auto tail_pos = position + matched.length_in_code_units();
             if (tail_pos < str.length_in_code_units()) {
                 auto substring = str.substring_view(tail_pos);
-                result.append(substring.data(), substring.length_in_code_units());
+                TRY_OR_THROW_OOM(vm, result.try_append(substring.data(), substring.length_in_code_units()));
             }
             ++i;
         } else if (is_ascii_digit(next)) {
             bool is_two_digits = (i + 2 < replace_view.length_in_code_units()) && is_ascii_digit(replace_view.code_unit_at(i + 2));
 
-            auto capture_position_string = replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8();
-            auto capture_position = capture_position_string.to_uint();
+            auto capture_position_string = TRY_OR_THROW_OOM(vm, replace_view.substring_view(i + 1, is_two_digits ? 2 : 1).to_utf8());
+            auto capture_position = capture_position_string.to_number<u32>();
 
             if (capture_position.has_value() && (*capture_position > 0) && (*capture_position <= captures.size())) {
                 auto& value = captures[*capture_position - 1];
 
                 if (!value.is_undefined()) {
                     auto value_string = TRY(value.to_utf16_string(vm));
-                    result.append(value_string.view().data(), value_string.length_in_code_units());
+                    TRY_OR_THROW_OOM(vm, result.try_append(value_string.view().data(), value_string.length_in_code_units()));
                 }
 
                 i += is_two_digits ? 2 : 1;
             } else {
-                result.append(curr);
+                TRY_OR_THROW_OOM(vm, result.try_append(curr));
             }
         } else if (next == '<') {
             auto start_position = i + 2;
@@ -1292,26 +1295,182 @@ ThrowCompletionOr<DeprecatedString> get_substitution(VM& vm, Utf16View const& ma
             }
 
             if (named_captures.is_undefined() || !end_position.has_value()) {
-                result.append(curr);
+                TRY_OR_THROW_OOM(vm, result.try_append(curr));
             } else {
                 auto group_name_view = replace_view.substring_view(start_position, *end_position - start_position);
-                auto group_name = group_name_view.to_utf8(Utf16View::AllowInvalidCodeUnits::Yes);
+                auto group_name = TRY_OR_THROW_OOM(vm, group_name_view.to_deprecated_string(Utf16View::AllowInvalidCodeUnits::Yes));
 
                 auto capture = TRY(named_captures.as_object().get(group_name));
 
                 if (!capture.is_undefined()) {
                     auto capture_string = TRY(capture.to_utf16_string(vm));
-                    result.append(capture_string.view().data(), capture_string.length_in_code_units());
+                    TRY_OR_THROW_OOM(vm, result.try_append(capture_string.view().data(), capture_string.length_in_code_units()));
                 }
 
                 i = *end_position;
             }
         } else {
-            result.append(curr);
+            TRY_OR_THROW_OOM(vm, result.try_append(curr));
         }
     }
 
-    return Utf16String(move(result)).to_utf8();
+    return TRY_OR_THROW_OOM(vm, Utf16View { result }.to_utf8());
+}
+
+// 2.1.2 AddDisposableResource ( disposable, V, hint [ , method ] ), https://tc39.es/proposal-explicit-resource-management/#sec-adddisposableresource-disposable-v-hint-disposemethod
+ThrowCompletionOr<void> add_disposable_resource(VM& vm, Vector<DisposableResource>& disposable, Value value, Environment::InitializeBindingHint hint, FunctionObject* method)
+{
+    // NOTE: For now only sync is a valid hint
+    VERIFY(hint == Environment::InitializeBindingHint::SyncDispose);
+
+    Optional<DisposableResource> resource;
+
+    // 1. If method is not present then,
+    if (!method) {
+        // a. If V is null or undefined, return NormalCompletion(empty).
+        if (value.is_nullish())
+            return {};
+
+        // b. If Type(V) is not Object, throw a TypeError exception.
+        if (!value.is_object())
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
+
+        // c. Let resource be ? CreateDisposableResource(V, hint).
+        resource = TRY(create_disposable_resource(vm, value, hint));
+    }
+    // 2. Else,
+    else {
+        // a. If V is null or undefined, then
+        if (value.is_nullish()) {
+            // i. Let resource be ? CreateDisposableResource(undefined, hint, method).
+            resource = TRY(create_disposable_resource(vm, js_undefined(), hint, method));
+        }
+        // b. Else,
+        else {
+            // i. If Type(V) is not Object, throw a TypeError exception.
+            if (!value.is_object())
+                return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
+
+            // ii. Let resource be ? CreateDisposableResource(V, hint, method).
+            resource = TRY(create_disposable_resource(vm, value, hint, method));
+        }
+    }
+
+    // 3. Append resource to disposable.[[DisposableResourceStack]].
+    VERIFY(resource.has_value());
+    disposable.append(resource.release_value());
+
+    // 4. Return NormalCompletion(empty).
+    return {};
+}
+
+// 2.1.3 CreateDisposableResource ( V, hint [ , method ] ), https://tc39.es/proposal-explicit-resource-management/#sec-createdisposableresource
+ThrowCompletionOr<DisposableResource> create_disposable_resource(VM& vm, Value value, Environment::InitializeBindingHint hint, FunctionObject* method)
+{
+    // 1. If method is not present, then
+    if (!method) {
+        // a. If V is undefined, throw a TypeError exception.
+        if (value.is_undefined())
+            return vm.throw_completion<TypeError>(ErrorType::IsUndefined, "value");
+
+        // b. Set method to ? GetDisposeMethod(V, hint).
+        method = TRY(get_dispose_method(vm, value, hint));
+
+        // c. If method is undefined, throw a TypeError exception.
+        if (!method)
+            return vm.throw_completion<TypeError>(ErrorType::NoDisposeMethod, value.to_string_without_side_effects());
+    }
+    // 2. Else,
+    // a. If IsCallable(method) is false, throw a TypeError exception.
+    // NOTE: This is guaranteed to never occur from the type.
+    VERIFY(method);
+
+    // 3. Return the DisposableResource Record { [[ResourceValue]]: V, [[Hint]]: hint, [[DisposeMethod]]: method }.
+    // NOTE: Since we only support sync dispose we don't store the hint for now.
+    VERIFY(hint == Environment::InitializeBindingHint::SyncDispose);
+    return DisposableResource {
+        value,
+        *method
+    };
+}
+
+// 2.1.4 GetDisposeMethod ( V, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-getdisposemethod
+ThrowCompletionOr<GCPtr<FunctionObject>> get_dispose_method(VM& vm, Value value, Environment::InitializeBindingHint hint)
+{
+    // NOTE: We only have sync dispose for now which means we ignore step 1.
+    VERIFY(hint == Environment::InitializeBindingHint::SyncDispose);
+
+    // 2. Else,
+    // a. Let method be ? GetMethod(V, @@dispose).
+    return GCPtr<FunctionObject> { TRY(value.get_method(vm, *vm.well_known_symbol_dispose())) };
+}
+
+// 2.1.5 Dispose ( V, hint, method ), https://tc39.es/proposal-explicit-resource-management/#sec-dispose
+Completion dispose(VM& vm, Value value, NonnullGCPtr<FunctionObject> method)
+{
+    // 1. Let result be ? Call(method, V).
+    [[maybe_unused]] auto result = TRY(call(vm, *method, value));
+
+    // NOTE: Hint can only be sync-dispose so we ignore step 2.
+    // 2. If hint is async-dispose and result is not undefined, then
+    //    a. Perform ? Await(result).
+
+    // 3. Return undefined.
+    return js_undefined();
+}
+
+// 2.1.6 DisposeResources ( disposable, completion ), https://tc39.es/proposal-explicit-resource-management/#sec-disposeresources-disposable-completion-errors
+Completion dispose_resources(VM& vm, Vector<DisposableResource> const& disposable, Completion completion)
+{
+    // 1. If disposable is not undefined, then
+    // NOTE: At this point disposable is always defined.
+
+    // a. For each resource of disposable.[[DisposableResourceStack]], in reverse list order, do
+    for (auto const& resource : disposable.in_reverse()) {
+        // i. Let result be Dispose(resource.[[ResourceValue]], resource.[[Hint]], resource.[[DisposeMethod]]).
+        auto result = dispose(vm, resource.resource_value, resource.dispose_method);
+
+        // ii. If result.[[Type]] is throw, then
+        if (result.is_error()) {
+            // 1. If completion.[[Type]] is throw, then
+            if (completion.is_error()) {
+                // a. Set result to result.[[Value]].
+
+                // b. Let suppressed be completion.[[Value]].
+                auto suppressed = completion.value().value();
+
+                // c. Let error be a newly created SuppressedError object.
+                auto error = SuppressedError::create(*vm.current_realm());
+
+                // d. Perform ! DefinePropertyOrThrow(error, "error", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: result }).
+                MUST(error->define_property_or_throw(vm.names.error, { .value = result.value(), .writable = true, .enumerable = true, .configurable = true }));
+
+                // e. Perform ! DefinePropertyOrThrow(error, "suppressed", PropertyDescriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: suppressed }).
+                MUST(error->define_property_or_throw(vm.names.suppressed, { .value = suppressed, .writable = true, .enumerable = false, .configurable = true }));
+
+                // f. Set completion to ThrowCompletion(error).
+                completion = throw_completion(error);
+            }
+            // 2. Else,
+            else {
+                // a. Set completion to result.
+                completion = result;
+            }
+        }
+    }
+
+    // 2. Return completion.
+    return completion;
+}
+
+Completion dispose_resources(VM& vm, GCPtr<DeclarativeEnvironment> disposable, Completion completion)
+{
+    // 1. If disposable is not undefined, then
+    if (disposable)
+        return dispose_resources(vm, disposable->disposable_resource_stack(), completion);
+
+    // 2. Return completion.
+    return completion;
 }
 
 }

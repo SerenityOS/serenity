@@ -10,6 +10,8 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Time/HPET.h>
 #    include <Kernel/Arch/x86_64/Time/RTC.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #endif
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
@@ -29,27 +31,17 @@ KernelRng& KernelRng::the()
 UNMAP_AFTER_INIT KernelRng::KernelRng()
 {
 #if ARCH(X86_64)
-    bool supports_rdseed = Processor::current().has_feature(CPUFeature::RDSEED);
-    bool supports_rdrand = Processor::current().has_feature(CPUFeature::RDRAND);
-    if (supports_rdseed || supports_rdrand) {
-        dmesgln("KernelRng: Using RDSEED or RDRAND as entropy source");
-        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
-            u32 value = 0;
-            if (supports_rdseed) {
-                asm volatile(
-                    "1:\n"
-                    "rdseed %0\n"
-                    "jnc 1b\n"
-                    : "=r"(value));
-            } else {
-                asm volatile(
-                    "1:\n"
-                    "rdrand %0\n"
-                    "jnc 1b\n"
-                    : "=r"(value));
-            }
+    if (Processor::current().has_feature(CPUFeature::RDSEED)) {
+        dmesgln("KernelRng: Using RDSEED as entropy source");
 
-            add_random_event(value, i % 32);
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            add_random_event(Kernel::read_rdseed(), i % 32);
+        }
+    } else if (Processor::current().has_feature(CPUFeature::RDRAND)) {
+        dmesgln("KernelRng: Using RDRAND as entropy source");
+
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            add_random_event(Kernel::read_rdrand(), i % 32);
         }
     } else if (TimeManagement::the().can_query_precise_time()) {
         // Add HPET as entropy source if we don't have anything better.
@@ -68,6 +60,15 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             current_time *= 0x574au;
             current_time += 0x40b2u;
         }
+    }
+#elif ARCH(AARCH64)
+    if (Processor::current().has_feature(CPUFeature::RNG)) {
+        dmesgln("KernelRng: Using RNDRRS as entropy source");
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            add_random_event(Aarch64::Asm::read_rndrrs(), i % 32);
+        }
+    } else {
+        dmesgln("KernelRng: No entropy source available!");
     }
 #else
     dmesgln("KernelRng: No entropy source available!");

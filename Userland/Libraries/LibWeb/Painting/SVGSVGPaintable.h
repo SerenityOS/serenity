@@ -11,9 +11,11 @@
 
 namespace Web::Painting {
 
-class SVGSVGPaintable : public PaintableBox {
+class SVGSVGPaintable final : public PaintableBox {
+    JS_CELL(SVGSVGPaintable, PaintableBox);
+
 public:
-    static NonnullRefPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);
+    static JS::NonnullGCPtr<SVGSVGPaintable> create(Layout::SVGSVGBox const&);
 
     virtual void before_children_paint(PaintContext&, PaintPhase) const override;
     virtual void after_children_paint(PaintContext&, PaintPhase) const override;

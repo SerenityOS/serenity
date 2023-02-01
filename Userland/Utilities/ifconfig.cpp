@@ -38,16 +38,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         json.as_array().for_each([](auto& value) {
             auto& if_object = value.as_object();
 
-            auto name = if_object.get("name"sv).to_deprecated_string();
-            auto class_name = if_object.get("class_name"sv).to_deprecated_string();
-            auto mac_address = if_object.get("mac_address"sv).to_deprecated_string();
-            auto ipv4_address = if_object.get("ipv4_address"sv).to_deprecated_string();
-            auto netmask = if_object.get("ipv4_netmask"sv).to_deprecated_string();
-            auto packets_in = if_object.get("packets_in"sv).to_u32();
-            auto bytes_in = if_object.get("bytes_in"sv).to_u32();
-            auto packets_out = if_object.get("packets_out"sv).to_u32();
-            auto bytes_out = if_object.get("bytes_out"sv).to_u32();
-            auto mtu = if_object.get("mtu"sv).to_u32();
+            auto name = if_object.get_deprecated("name"sv).to_deprecated_string();
+            auto class_name = if_object.get_deprecated("class_name"sv).to_deprecated_string();
+            auto mac_address = if_object.get_deprecated("mac_address"sv).to_deprecated_string();
+            auto ipv4_address = if_object.get_deprecated("ipv4_address"sv).to_deprecated_string();
+            auto netmask = if_object.get_deprecated("ipv4_netmask"sv).to_deprecated_string();
+            auto packets_in = if_object.get_deprecated("packets_in"sv).to_u32();
+            auto bytes_in = if_object.get_deprecated("bytes_in"sv).to_u32();
+            auto packets_out = if_object.get_deprecated("packets_out"sv).to_u32();
+            auto bytes_out = if_object.get_deprecated("bytes_out"sv).to_u32();
+            auto mtu = if_object.get_deprecated("mtu"sv).to_u32();
 
             outln("{}:", name);
             outln("\tmac: {}", mac_address);

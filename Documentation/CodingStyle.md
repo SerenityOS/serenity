@@ -666,7 +666,7 @@ T* ret = reinterpret_cast<T*>(buffer);
 ```
 
 ```cpp
-// Core::Stream::SeekableStream::tell()
+// SeekableStream::tell()
 
 // Seek with 0 and SEEK_CUR does not modify anything despite the const_cast,
 // so it's safe to do this.

@@ -39,7 +39,7 @@ private:
 
 Canvas::Canvas()
 {
-    m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }).release_value_but_fixme_should_propagate_errors();
+    m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { WIDTH, HEIGHT }).release_value_but_fixme_should_propagate_errors();
     draw();
 }
 
@@ -100,14 +100,14 @@ void Canvas::draw()
     painter.draw_line({ 590, 140 }, { 590, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Dashed);
     painter.draw_line({ 605, 140 }, { 605, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Dashed);
 
-    painter.draw_line({ 640, 190 }, { 740, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 640, 190 }, { 740, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dashed);
     painter.draw_line({ 640, 140 }, { 740, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
     painter.draw_line({ 690, 140 }, { 740, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 740, 190 }, { 640, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 740, 190 }, { 640, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dotted);
     painter.draw_line({ 740, 140 }, { 640, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
     painter.draw_line({ 690, 140 }, { 640, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
 
-    auto bg = Gfx::Bitmap::try_load_from_file("/res/html/misc/90s-bg.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto bg = Gfx::Bitmap::load_from_file("/res/html/misc/90s-bg.png"sv).release_value_but_fixme_should_propagate_errors();
     painter.draw_tiled_bitmap({ 20, 260, 480, 320 }, *bg);
 
     painter.draw_line({ 40, 480 }, { 20, 260 }, Color::Red);
@@ -128,7 +128,7 @@ void Canvas::draw()
     path.close();
     painter.fill_path(path, Color::Yellow, Gfx::Painter::WindingRule::EvenOdd);
 
-    auto buggie = Gfx::Bitmap::try_load_from_file("/res/graphics/buggie.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png"sv).release_value_but_fixme_should_propagate_errors();
     painter.blit({ 280, 280 }, *buggie, buggie->rect(), 0.5);
     painter.draw_scaled_bitmap({ 360, 280, buggie->rect().width() * 2, buggie->rect().height() * 2 }, *buggie, buggie->rect());
 
@@ -139,9 +139,11 @@ void Canvas::draw()
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "Center"sv, Gfx::TextAlignment::Center, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "CenterRight"sv, Gfx::TextAlignment::CenterRight, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "TopLeft"sv, Gfx::TextAlignment::TopLeft, Color::White);
+    painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "TopCenter"sv, Gfx::TextAlignment::TopCenter, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "TopRight"sv, Gfx::TextAlignment::TopRight, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "BottomLeft"sv, Gfx::TextAlignment::BottomLeft, Color::White);
     painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "BottomRight"sv, Gfx::TextAlignment::BottomRight, Color::White);
+    painter.draw_text(Gfx::IntRect { 520, 260, 240, 80 }, "BottomCenter"sv, Gfx::TextAlignment::BottomCenter, Color::White);
 
     painter.draw_rect({ 520, 360, 240, 30 }, Color::DarkGray);
     painter.draw_text(Gfx::IntRect { 520, 360, 240, 30 }, "Emojis! 🙂😂🐞🦄"sv, Gfx::TextAlignment::Center, Color::White);
@@ -200,7 +202,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-libgfx-demo"sv));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->try_set_main_widget<Canvas>());
+    (void)TRY(window->set_main_widget<Canvas>());
     window->show();
 
     return app->exec();

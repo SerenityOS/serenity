@@ -70,8 +70,8 @@ static void initialize_if_needed()
 
     auto config = Core::ConfigFile::open("/etc/FileIconProvider.ini").release_value_but_fixme_should_propagate_errors();
 
-    s_symlink_emblem = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem.png"sv).release_value_but_fixme_should_propagate_errors();
-    s_symlink_emblem_small = Gfx::Bitmap::try_load_from_file("/res/icons/symlink-emblem-small.png"sv).release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem = Gfx::Bitmap::load_from_file("/res/icons/symlink-emblem.png"sv).release_value_but_fixme_should_propagate_errors();
+    s_symlink_emblem_small = Gfx::Bitmap::load_from_file("/res/icons/symlink-emblem-small.png"sv).release_value_but_fixme_should_propagate_errors();
 
     s_hard_disk_icon = Icon::default_icon("hard-disk"sv);
     s_directory_icon = Icon::default_icon("filetype-folder"sv);
@@ -210,9 +210,14 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
             // FIXME: Use the ImageDecoder service.
-            auto frame_or_error = Gfx::PNGImageDecoderPlugin(reinterpret_cast<u8 const*>(section->raw_data()), section->size()).frame(0);
-            if (!frame_or_error.is_error()) {
-                bitmap = frame_or_error.value().image;
+            if (Gfx::PNGImageDecoderPlugin::sniff({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors()) {
+                auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors();
+                if (png_decoder->initialize()) {
+                    auto frame_or_error = png_decoder->frame(0);
+                    if (!frame_or_error.is_error()) {
+                        bitmap = frame_or_error.value().image;
+                    }
+                }
             }
         }
 

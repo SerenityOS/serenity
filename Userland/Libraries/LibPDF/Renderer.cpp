@@ -773,7 +773,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
     auto width = image_dict->get_value(CommonNames::Width).get<int>();
     auto height = image_dict->get_value(CommonNames::Height).get<int>();
 
-    auto is_filter = [&](FlyString const& name) {
+    auto is_filter = [&](DeprecatedFlyString const& name) {
         if (filter_object->is<NameObject>())
             return filter_object->cast<NameObject>()->name() == name;
         auto filters = filter_object->cast<ArrayObject>();
@@ -812,10 +812,10 @@ PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::load_image(NonnullRefPtr<Stream
 
     if (is_filter(CommonNames::DCTDecode)) {
         // TODO: stream objects could store Variant<bytes/Bitmap> to avoid seialisation/deserialisation here
-        return TRY(Gfx::Bitmap::try_create_from_serialized_bytes(image->bytes()));
+        return TRY(Gfx::Bitmap::create_from_serialized_bytes(image->bytes()));
     }
 
-    auto bitmap = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, { width, height }));
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }));
     int x = 0;
     int y = 0;
     int const n_components = color_space->number_of_components();

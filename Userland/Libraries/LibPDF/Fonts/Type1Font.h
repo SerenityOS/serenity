@@ -8,14 +8,14 @@
 
 #include <LibGfx/Font/ScaledFont.h>
 #include <LibPDF/Fonts/PDFFont.h>
-#include <LibPDF/Fonts/PS1FontProgram.h>
+#include <LibPDF/Fonts/Type1FontProgram.h>
 
 namespace PDF {
 
 class Type1Font : public PDFFont {
 public:
     struct Data : PDFFont::CommonData {
-        RefPtr<PS1FontProgram> font_program;
+        RefPtr<Type1FontProgram> font_program;
     };
 
     static PDFErrorOr<Data> parse_data(Document*, NonnullRefPtr<DictObject> font_dict, float font_size);
@@ -31,6 +31,7 @@ public:
     void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) override;
 
     Type type() const override { return PDFFont::Type::Type1; }
+    DeprecatedFlyString base_font_name() const override { return m_data.base_font_name; };
 
 private:
     Data m_data;

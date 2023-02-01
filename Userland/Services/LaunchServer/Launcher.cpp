@@ -64,7 +64,7 @@ DeprecatedString Handler::to_details_str() const
         break;
     }
     MUST(obj.finish());
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Launcher::Launcher()

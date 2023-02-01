@@ -32,7 +32,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     if (Core::File::exists(webdriver_socket_path))
         TRY(Core::System::unveil(webdriver_socket_path, "rw"sv));
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil("/usr/lib", "r"));

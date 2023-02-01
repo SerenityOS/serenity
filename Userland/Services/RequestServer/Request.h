@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/FileStream.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>

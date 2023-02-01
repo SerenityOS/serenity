@@ -77,28 +77,19 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
 
     using SubclassID = PCI::MassStorage::SubclassID;
     if (!kernel_command_line().disable_physical_storage()) {
+        // NOTE: Search for VMD devices before actually searching for storage controllers
+        // because the VMD device is only a bridge to such (NVMe) controllers.
+        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
+            constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
+            if (device_identifier.hardware_id() == vmd_device) {
+                auto controller = PCI::VolumeManagementDevice::must_create(device_identifier);
+                MUST(PCI::Access::the().add_host_controller_and_scan_for_devices(move(controller)));
+            }
+        }));
 
         MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
             if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::MassStorage)) {
                 return;
-            }
-
-            {
-                constexpr PCI::HardwareID vmd_device = { 0x8086, 0x9a0b };
-                if (device_identifier.hardware_id() == vmd_device) {
-                    auto controller = PCI::VolumeManagementDevice::must_create(device_identifier);
-                    MUST(PCI::Access::the().add_host_controller_and_enumerate_attached_devices(move(controller), [this, nvme_poll](PCI::DeviceIdentifier const& device_identifier) -> void {
-                        auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
-                        if (subclass_code == SubclassID::NVMeController) {
-                            auto controller = NVMeController::try_initialize(device_identifier, nvme_poll);
-                            if (controller.is_error()) {
-                                dmesgln("Unable to initialize NVMe controller: {}", controller.error());
-                            } else {
-                                m_controllers.append(controller.release_value());
-                            }
-                        }
-                    }));
-                }
             }
 
             auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());

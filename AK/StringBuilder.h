@@ -33,7 +33,7 @@ public:
     template<typename... Parameters>
     ErrorOr<void> try_appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        VariadicFormatParams variadic_format_params { parameters... };
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         return vformat(*this, fmtstr.view(), variadic_format_params);
     }
     ErrorOr<void> try_append(char const*, size_t);
@@ -57,15 +57,15 @@ public:
     template<typename... Parameters>
     void appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
-        VariadicFormatParams variadic_format_params { parameters... };
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
         MUST(vformat(*this, fmtstr.view(), variadic_format_params));
     }
 
 #ifndef KERNEL
-    [[nodiscard]] DeprecatedString build() const;
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
-    ErrorOr<String> to_string() const;
 #endif
+
+    ErrorOr<String> to_string() const;
 
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
 
@@ -79,14 +79,20 @@ public:
     template<class SeparatorType, class CollectionType>
     void join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
     {
+        MUST(try_join(separator, collection, fmtstr));
+    }
+
+    template<class SeparatorType, class CollectionType>
+    ErrorOr<void> try_join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
+    {
         bool first = true;
         for (auto& item : collection) {
-            if (first)
-                first = false;
-            else
-                append(separator);
-            appendff(fmtstr, item);
+            if (!first)
+                TRY(try_append(separator));
+            TRY(try_appendff(fmtstr, item));
+            first = false;
         }
+        return {};
     }
 
 private:

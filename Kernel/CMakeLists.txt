@@ -17,12 +17,14 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
+    Arch/PageFault.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
     Bus/PCI/Access.cpp
     Bus/PCI/API.cpp
     Bus/PCI/Device.cpp
+    Bus/PCI/DeviceIdentifier.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
     Bus/USB/USBConfiguration.cpp
@@ -130,15 +132,8 @@ set(KERNEL_SOURCES
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp
     FileSystem/ProcFS/ComponentRegistry.cpp
-    FileSystem/ProcFS/DirectoryInode.cpp
     FileSystem/ProcFS/FileSystem.cpp
-    FileSystem/ProcFS/GlobalInode.cpp
     FileSystem/ProcFS/Inode.cpp
-    FileSystem/ProcFS/LinkInode.cpp
-    FileSystem/ProcFS/ProcessAssociatedInode.cpp
-    FileSystem/ProcFS/ProcessDirectoryInode.cpp
-    FileSystem/ProcFS/ProcessPropertyInode.cpp
-    FileSystem/ProcFS/ProcessSubDirectoryInode.cpp
     FileSystem/SysFS/Component.cpp
     FileSystem/SysFS/DirectoryInode.cpp
     FileSystem/SysFS/FileSystem.cpp
@@ -149,6 +144,7 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.cpp
+    FileSystem/SysFS/Subsystems/Bus/PCI/DeviceExpansionROM.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.cpp
     FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.cpp
     FileSystem/SysFS/Subsystems/Bus/Directory.cpp
@@ -219,7 +215,6 @@ set(KERNEL_SOURCES
     Memory/AnonymousVMObject.cpp
     Memory/InodeVMObject.cpp
     Memory/MemoryManager.cpp
-    Memory/PageDirectory.cpp
     Memory/PhysicalPage.cpp
     Memory/PhysicalRegion.cpp
     Memory/PhysicalZone.cpp
@@ -238,8 +233,6 @@ set(KERNEL_SOURCES
     Locking/Mutex.cpp
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
-    Net/NE2000/NetworkAdapter.cpp
-    Net/Realtek/RTL8139NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
@@ -261,6 +254,7 @@ set(KERNEL_SOURCES
     Scheduler.cpp
     ScopedCritical.cpp
     StdLib.cpp
+    Syscall.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
@@ -272,10 +266,12 @@ set(KERNEL_SOURCES
     Syscalls/disown.cpp
     Syscalls/dup2.cpp
     Syscalls/emuctl.cpp
+    Syscalls/execve.cpp
     Syscalls/exit.cpp
     Syscalls/faccessat.cpp
     Syscalls/fallocate.cpp
     Syscalls/fcntl.cpp
+    Syscalls/fork.cpp
     Syscalls/fsync.cpp
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
@@ -292,6 +288,7 @@ set(KERNEL_SOURCES
     Syscalls/lseek.cpp
     Syscalls/mkdir.cpp
     Syscalls/mknod.cpp
+    Syscalls/mmap.cpp
     Syscalls/mount.cpp
     Syscalls/open.cpp
     Syscalls/perf_event.cpp
@@ -301,6 +298,7 @@ set(KERNEL_SOURCES
     Syscalls/prctl.cpp
     Syscalls/process.cpp
     Syscalls/profiling.cpp
+    Syscalls/ptrace.cpp
     Syscalls/purge.cpp
     Syscalls/read.cpp
     Syscalls/readlink.cpp
@@ -312,6 +310,7 @@ set(KERNEL_SOURCES
     Syscalls/sendfd.cpp
     Syscalls/setpgid.cpp
     Syscalls/setuid.cpp
+    Syscalls/sigaction.cpp
     Syscalls/socket.cpp
     Syscalls/stat.cpp
     Syscalls/statvfs.cpp
@@ -397,12 +396,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Interrupts/SpuriousInterruptHandler.cpp
         kprintf.cpp
         Panic.cpp
-        Syscall.cpp
-        Syscalls/execve.cpp
-        Syscalls/fork.cpp
-        Syscalls/mmap.cpp
-        Syscalls/ptrace.cpp
-        Syscalls/sigaction.cpp
     )
 
     set(KERNEL_SOURCES
@@ -444,23 +437,28 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
     )
+    set(SOURCES_RUNNING_WITHOUT_MMU
+        Arch/aarch64/Exceptions.cpp
+        Arch/aarch64/MMU.cpp
+        Arch/aarch64/pre_init.cpp
+        )
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         ${RPI_SOURCES}
+        ${SOURCES_RUNNING_WITHOUT_MMU}
         Arch/Processor.cpp
 
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
+        Arch/aarch64/CPUID.cpp
         Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
-        Arch/aarch64/Exceptions.cpp
         Arch/aarch64/init.cpp
         Arch/aarch64/InterruptManagement.cpp
         Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
-        Arch/aarch64/MMU.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
@@ -474,6 +472,10 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
     # FIXME: Remove this once compiling MemoryManager.cpp doesn't give the nonnull error anymore.
     add_compile_options(-Wno-nonnull)
+
+    # NOTE: These files cannot use a stack protector and sanitizers, as these will cause accesses to global variables to be inserted
+    #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
+    set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all")
 endif()
 
 set(AK_SOURCES

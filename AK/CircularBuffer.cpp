@@ -52,25 +52,36 @@ bool CircularBuffer::is_wrapping_around() const
     return capacity() <= m_reading_head + m_used_space;
 }
 
-Optional<size_t> CircularBuffer::offset_of(StringView needle, Optional<size_t> until) const
+Optional<size_t> CircularBuffer::offset_of(StringView needle, Optional<size_t> from, Optional<size_t> until) const
 {
+    auto const read_from = from.value_or(0);
     auto const read_until = until.value_or(m_used_space);
+    VERIFY(read_from <= read_until);
 
     Array<ReadonlyBytes, 2> spans {};
     spans[0] = next_read_span();
+    auto const original_span_0_size = spans[0].size();
 
-    if (spans[0].size() > read_until)
-        spans[0] = spans[0].trim(read_until);
+    if (read_from > 0)
+        spans[0] = spans[0].slice(min(spans[0].size(), read_from));
+
+    if (spans[0].size() + read_from > read_until)
+        spans[0] = spans[0].trim(read_until - read_from);
     else if (is_wrapping_around())
-        spans[1] = m_buffer.span().slice(0, read_until - spans[0].size());
+        spans[1] = m_buffer.span().slice(max(original_span_0_size, read_from) - original_span_0_size, min(read_until, m_used_space) - original_span_0_size);
 
-    return AK::memmem(spans.begin(), spans.end(), needle.bytes());
+    auto maybe_found = AK::memmem(spans.begin(), spans.end(), needle.bytes());
+    if (maybe_found.has_value())
+        *maybe_found += read_from;
+
+    return maybe_found;
 }
 
 void CircularBuffer::clear()
 {
     m_reading_head = 0;
     m_used_space = 0;
+    m_seekback_limit = 0;
 }
 
 Bytes CircularBuffer::next_write_span()
@@ -85,6 +96,17 @@ ReadonlyBytes CircularBuffer::next_read_span() const
     return m_buffer.span().slice(m_reading_head, min(capacity() - m_reading_head, m_used_space));
 }
 
+ReadonlyBytes CircularBuffer::next_read_span_with_seekback(size_t distance) const
+{
+    VERIFY(m_seekback_limit <= capacity());
+    VERIFY(distance <= m_seekback_limit);
+
+    // Note: We are adding the capacity once here to ensure that we can wrap around the negative space by using modulo.
+    auto read_offset = (capacity() + m_reading_head + m_used_space - distance) % capacity();
+
+    return m_buffer.span().slice(read_offset, min(capacity() - read_offset, m_seekback_limit));
+}
+
 size_t CircularBuffer::write(ReadonlyBytes bytes)
 {
     auto remaining = bytes.size();
@@ -97,6 +119,10 @@ size_t CircularBuffer::write(ReadonlyBytes bytes)
         auto const written_bytes = bytes.slice(bytes.size() - remaining).copy_trimmed_to(next_span);
 
         m_used_space += written_bytes;
+
+        m_seekback_limit += written_bytes;
+        if (m_seekback_limit > capacity())
+            m_seekback_limit = capacity();
 
         remaining -= written_bytes;
     }
@@ -121,6 +147,27 @@ Bytes CircularBuffer::read(Bytes bytes)
         if (m_reading_head >= capacity())
             m_reading_head -= capacity();
 
+        remaining -= written_bytes;
+    }
+
+    return bytes.trim(bytes.size() - remaining);
+}
+
+ErrorOr<Bytes> CircularBuffer::read_with_seekback(Bytes bytes, size_t distance)
+{
+    if (distance > m_seekback_limit)
+        return Error::from_string_literal("Tried a seekback read beyond the seekback limit");
+
+    auto remaining = bytes.size();
+
+    while (remaining > 0) {
+        auto const next_span = next_read_span_with_seekback(distance);
+        if (next_span.size() == 0)
+            break;
+
+        auto written_bytes = next_span.copy_trimmed_to(bytes.slice(bytes.size() - remaining));
+
+        distance -= written_bytes;
         remaining -= written_bytes;
     }
 

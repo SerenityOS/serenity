@@ -109,7 +109,7 @@ inline typename Builder::OutputType JsonArray::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

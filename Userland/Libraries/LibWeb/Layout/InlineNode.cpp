@@ -21,7 +21,7 @@ InlineNode::InlineNode(DOM::Document& document, DOM::Element* element, NonnullRe
 
 InlineNode::~InlineNode() = default;
 
-RefPtr<Painting::Paintable> InlineNode::create_paintable() const
+JS::GCPtr<Painting::Paintable> InlineNode::create_paintable() const
 {
     return Painting::InlinePaintable::create(*this);
 }

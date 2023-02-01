@@ -71,6 +71,8 @@ static Threading::MutexProtected<RefPtr<InspectorServerConnection>> s_inspector_
 static thread_local Vector<EventLoop&>* s_event_loop_stack;
 static thread_local HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static thread_local HashTable<Notifier*>* s_notifiers;
+// The wake pipe is both responsible for notifying us when someone calls wake(), as well as POSIX signals.
+// While wake() pushes zero into the pipe, signal numbers (by defintion nonzero, see signal_numbers.h) are pushed into the pipe verbatim.
 thread_local int EventLoop::s_wake_pipe_fds[2];
 thread_local bool EventLoop::s_wake_pipe_initialized { false };
 
@@ -225,16 +227,16 @@ public:
 
     void handle_request(JsonObject const& request)
     {
-        auto type = request.get("type"sv).as_string_or({});
+        auto type = request.get_deprecated_string("type"sv);
 
-        if (type.is_null()) {
+        if (!type.has_value()) {
             dbgln("RPC client sent request without type field");
             return;
         }
 
         if (type == "Identify") {
             JsonObject response;
-            response.set("type", type);
+            response.set("type", type.value());
             response.set("pid", getpid());
 #ifdef AK_OS_SERENITY
             char buffer[1024];
@@ -250,7 +252,7 @@ public:
 
         if (type == "GetAllObjects") {
             JsonObject response;
-            response.set("type", type);
+            response.set("type", type.value());
             JsonArray objects;
             for (auto& object : Object::all_objects()) {
                 JsonObject json_object;
@@ -263,7 +265,7 @@ public:
         }
 
         if (type == "SetInspectedObject") {
-            auto address = request.get("address"sv).to_number<FlatPtr>();
+            auto address = request.get_addr("address"sv);
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
                     if (auto inspected_object = m_inspected_object.strong_ref())
@@ -277,10 +279,10 @@ public:
         }
 
         if (type == "SetProperty") {
-            auto address = request.get("address"sv).to_number<FlatPtr>();
+            auto address = request.get_addr("address"sv);
             for (auto& object : Object::all_objects()) {
                 if ((FlatPtr)&object == address) {
-                    bool success = object.set_property(request.get("name"sv).to_deprecated_string(), request.get("value"sv));
+                    bool success = object.set_property(request.get_deprecated_string("name"sv).value(), request.get("value"sv).value());
                     JsonObject response;
                     response.set("type", "SetProperty");
                     response.set("success", success);
@@ -681,6 +683,9 @@ void EventLoop::wait_for_event(WaitMode mode)
     fd_set rfds;
     fd_set wfds;
 retry:
+
+    // Set up the file descriptors for select().
+    // Basically, we translate high-level event information into low-level selectable file descriptors.
     FD_ZERO(&rfds);
     FD_ZERO(&wfds);
 
@@ -692,6 +697,7 @@ retry:
     };
 
     int max_fd_added = -1;
+    // The wake pipe informs us of POSIX signals as well as manual calls to wake()
     add_fd_to_set(s_wake_pipe_fds[0], rfds);
     max_fd = max(max_fd, max_fd_added);
 
@@ -710,6 +716,8 @@ retry:
         queued_events_is_empty = m_queued_events.is_empty();
     }
 
+    // Figure out how long to wait at maximum.
+    // This mainly depends on the WaitMode and whether we have pending events, but also the next expiring timer.
     Time now;
     struct timeval timeout = { 0, 0 };
     bool should_wait_forever = false;
@@ -727,7 +735,9 @@ retry:
     }
 
 try_select_again:
+    // select() and wait for file system events, calls to wake(), POSIX signals, or timer expirations.
     int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
+    // Because POSIX, we might spuriously return from select() with EINTR; just select again.
     if (marked_fd_count < 0) {
         int saved_errno = errno;
         if (saved_errno == EINTR) {
@@ -738,6 +748,9 @@ try_select_again:
         dbgln("Core::EventLoop::wait_for_event: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
         VERIFY_NOT_REACHED();
     }
+
+    // We woke up due to a call to wake() or a POSIX signal.
+    // Handle signals and see whether we need to handle events as well.
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
         int wake_events[8];
         ssize_t nread;
@@ -771,6 +784,7 @@ try_select_again:
         now = Time::now_monotonic_coarse();
     }
 
+    // Handle expired timers.
     for (auto& it : *s_timers) {
         auto& timer = *it.value;
         if (!timer.has_expired(now))
@@ -796,6 +810,7 @@ try_select_again:
     if (!marked_fd_count)
         return;
 
+    // Handle file system notifiers by making them normal events.
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->event_mask() & Notifier::Event::Read)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -201,7 +201,7 @@ ThrowCompletionOr<PlainYearMonth*> create_temporal_year_month(VM& vm, i32 iso_ye
 }
 
 // 9.5.6 TemporalYearMonthToString ( yearMonth, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-temporalyearmonthtostring
-ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
+ThrowCompletionOr<String> temporal_year_month_to_string(VM& vm, PlainYearMonth& year_month, StringView show_calendar)
 {
     // 1. Assert: Type(yearMonth) is Object.
     // 2. Assert: yearMonth has an [[InitializedTemporalYearMonth]] internal slot.
@@ -209,7 +209,7 @@ ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainY
     // 3. Let year be ! PadISOYear(yearMonth.[[ISOYear]]).
     // 4. Let month be ToZeroPaddedDecimalString(yearMonth.[[ISOMonth]], 2).
     // 5. Let result be the string-concatenation of year, the code unit 0x002D (HYPHEN-MINUS), and month.
-    auto result = DeprecatedString::formatted("{}-{:02}", pad_iso_year(year_month.iso_year()), year_month.iso_month());
+    auto result = TRY_OR_THROW_OOM(vm, String::formatted("{}-{:02}", MUST_OR_THROW_OOM(pad_iso_year(vm, year_month.iso_year())), year_month.iso_month()));
 
     // 6. Let calendarID be ? ToString(yearMonth.[[Calendar]]).
     auto calendar_id = TRY(Value(&year_month.calendar()).to_string(vm));
@@ -218,15 +218,15 @@ ThrowCompletionOr<DeprecatedString> temporal_year_month_to_string(VM& vm, PlainY
     if (show_calendar.is_one_of("always"sv, "critical"sv) || calendar_id != "iso8601") {
         // a. Let day be ToZeroPaddedDecimalString(yearMonth.[[ISODay]], 2).
         // b. Set result to the string-concatenation of result, the code unit 0x002D (HYPHEN-MINUS), and day.
-        result = DeprecatedString::formatted("{}-{:02}", result, year_month.iso_day());
+        result = TRY_OR_THROW_OOM(vm, String::formatted("{}-{:02}", result, year_month.iso_day()));
     }
 
     // 8. Let calendarString be ! FormatCalendarAnnotation(calendarID, showCalendar).
-    auto calendar_string = format_calendar_annotation(calendar_id, show_calendar);
+    auto calendar_string = MUST_OR_THROW_OOM(format_calendar_annotation(vm, calendar_id, show_calendar));
 
     // 9. Set result to the string-concatenation of result and calendarString.
     // 10. Return result.
-    return DeprecatedString::formatted("{}{}", result, calendar_string);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{}", result, calendar_string));
 }
 
 // 9.5.7 DifferenceTemporalPlainYearMonth ( operation, yearMonth, other, options ), https://tc39.es/proposal-temporal/#sec-temporal-differencetemporalplainyearmonth
@@ -270,7 +270,7 @@ ThrowCompletionOr<Duration*> difference_temporal_plain_year_month(VM& vm, Differ
     auto* this_date = TRY(calendar_date_from_fields(vm, calendar, *this_fields));
 
     // 13. Let untilOptions be ? MergeLargestUnitOption(settings.[[Options]], settings.[[LargestUnit]]).
-    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, settings.largest_unit));
+    auto* until_options = TRY(merge_largest_unit_option(vm, settings.options, move(settings.largest_unit)));
 
     // 14. Let result be ? CalendarDateUntil(calendar, thisDate, otherDate, untilOptions).
     auto* duration = TRY(calendar_date_until(vm, calendar, this_date, other_date, *until_options));

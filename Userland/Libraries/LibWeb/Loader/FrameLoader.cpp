@@ -39,7 +39,7 @@ FrameLoader::FrameLoader(HTML::BrowsingContext& browsing_context)
     : m_browsing_context(browsing_context)
 {
     if (!s_default_favicon_bitmap) {
-        s_default_favicon_bitmap = Gfx::Bitmap::try_load_from_file(s_default_favicon_path).release_value_but_fixme_should_propagate_errors();
+        s_default_favicon_bitmap = Gfx::Bitmap::load_from_file(s_default_favicon_path).release_value_but_fixme_should_propagate_errors();
         VERIFY(s_default_favicon_bitmap);
     }
 }
@@ -142,7 +142,7 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     MUST(head_element->append_child(title_element));
 
     auto basename = LexicalPath::basename(document.url().path());
-    auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, DeprecatedString::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height()));
+    auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, DeprecatedString::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())).release_allocated_value_but_fixme_should_propagate_errors();
     MUST(title_element->append_child(*title_text));
 
     auto body_element = document.create_element("body").release_value();
@@ -335,8 +335,10 @@ void FrameLoader::set_error_page_url(DeprecatedString error_page_url)
 
 void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString const& error)
 {
+    LoadRequest request = LoadRequest::create_for_url_on_page(s_error_page_url, browsing_context().page());
+
     ResourceLoader::the().load(
-        s_error_page_url,
+        request,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
             StringBuilder builder;
@@ -344,7 +346,7 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString co
             generator.set("failed_url", escape_html_entities(failed_url.to_deprecated_string()));
             generator.set("error", escape_html_entities(error));
             generator.append(data);
-            load_html(generator.as_string_view(), failed_url);
+            load_html(generator.as_string_view(), s_error_page_url);
         },
         [](auto& error, auto) {
             dbgln("Failed to load error page: {}", error);

@@ -14,13 +14,21 @@ namespace Web::CSS {
 
 MediaList* MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return realm.heap().allocate<MediaList>(realm, realm, move(media));
+    return realm.heap().allocate<MediaList>(realm, realm, move(media)).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
-    : Bindings::LegacyPlatformObject(Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"))
+    : Bindings::LegacyPlatformObject(realm)
     , m_media(move(media))
 {
+}
+
+JS::ThrowCompletionOr<void> MediaList::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::MediaListPrototype>(realm, "MediaList"));
+
+    return {};
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
@@ -49,7 +57,7 @@ DeprecatedString MediaList::item(u32 index) const
     if (!is_supported_property_index(index))
         return {};
 
-    return m_media[index].to_deprecated_string();
+    return m_media[index].to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-appendmedium
@@ -70,7 +78,7 @@ void MediaList::delete_medium(DeprecatedString medium)
     if (!m)
         return;
     m_media.remove_all_matching([&](auto& existing) -> bool {
-        return m->to_deprecated_string() == existing->to_deprecated_string();
+        return m->to_string().release_value_but_fixme_should_propagate_errors() == existing->to_string().release_value_but_fixme_should_propagate_errors();
     });
     // FIXME: If nothing was removed, then throw a NotFoundError exception.
 }
@@ -100,7 +108,7 @@ JS::Value MediaList::item_value(size_t index) const
 {
     if (index >= m_media.size())
         return JS::js_undefined();
-    return JS::PrimitiveString::create(vm(), m_media[index].to_deprecated_string());
+    return JS::PrimitiveString::create(vm(), m_media[index].to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
 }
 
 }

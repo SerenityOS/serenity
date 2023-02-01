@@ -6,9 +6,20 @@
 
 #pragma once
 
+#include <AK/Forward.h>
+#include <AK/Types.h>
+
 namespace Kernel {
 
-void drop_to_exception_level_1();
+void initialize_exceptions();
+void panic_without_mmu(StringView);
+void dbgln_without_mmu(StringView);
+
+namespace Memory {
+
 void init_page_tables();
+void unmap_identity_map();
+
+}
 
 }

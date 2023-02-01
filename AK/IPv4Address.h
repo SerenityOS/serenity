@@ -140,7 +140,6 @@ public:
 private:
     constexpr u32 octet(const SubnetClass subnet) const
     {
-        NetworkOrdered<u32> address(m_data);
         constexpr auto bits_per_byte = 8;
         auto const bits_to_shift = bits_per_byte * int(subnet);
         return (m_data >> bits_to_shift) & 0x0000'00FF;
@@ -158,18 +157,18 @@ struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
 
 #ifdef KERNEL
 template<>
-struct Formatter<IPv4Address> : Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>> {
+struct Formatter<IPv4Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
-        return Formatter<ErrorOr<NonnullOwnPtr<Kernel::KString>>>::format(builder, value.to_string());
+        return Formatter<StringView>::format(builder, TRY(value.to_string())->view());
     }
 };
 #else
 template<>
-struct Formatter<IPv4Address> : Formatter<DeprecatedString> {
+struct Formatter<IPv4Address> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, IPv4Address value)
     {
-        return Formatter<DeprecatedString>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, value.to_deprecated_string());
     }
 };
 #endif

@@ -151,7 +151,7 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
         return make<TableFormattingContext>(state, verify_cast<TableBox>(child_box), this);
 
     if (child_display.is_grid_inside()) {
-        return make<GridFormattingContext>(state, verify_cast<BlockContainer>(child_box), this);
+        return make<GridFormattingContext>(state, child_box, this);
     }
 
     VERIFY(is_block_formatting_context());
@@ -275,7 +275,7 @@ static CSSPixelSize solve_replaced_size_constraint(LayoutState const& state, CSS
 }
 
 // https://www.w3.org/TR/CSS22/visudet.html#root-height
-CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_root(BlockContainer const& root) const
+CSSPixels FormattingContext::compute_auto_height_for_block_formatting_context_root(Box const& root) const
 {
     // 10.6.7 'Auto' heights for block formatting context roots
     Optional<CSSPixels> top;
@@ -386,12 +386,12 @@ void FormattingContext::compute_width_for_absolutely_positioned_element(Box cons
         compute_width_for_absolutely_positioned_non_replaced_element(box, available_space);
 }
 
-void FormattingContext::compute_height_for_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space)
+void FormattingContext::compute_height_for_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout before_or_after_inside_layout)
 {
     if (is<ReplacedBox>(box))
-        compute_height_for_absolutely_positioned_replaced_element(static_cast<ReplacedBox const&>(box), available_space);
+        compute_height_for_absolutely_positioned_replaced_element(static_cast<ReplacedBox const&>(box), available_space, before_or_after_inside_layout);
     else
-        compute_height_for_absolutely_positioned_non_replaced_element(box, available_space);
+        compute_height_for_absolutely_positioned_non_replaced_element(box, available_space, before_or_after_inside_layout);
 }
 
 CSSPixels FormattingContext::compute_width_for_replaced_element(LayoutState const& state, ReplacedBox const& box, AvailableSpace const& available_space)
@@ -636,12 +636,16 @@ void FormattingContext::compute_width_for_absolutely_positioned_replaced_element
 }
 
 // https://drafts.csswg.org/css-position-3/#abs-non-replaced-height
-void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_element(Box const& box, AvailableSpace const& available_space)
+void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_element(Box const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout before_or_after_inside_layout)
 {
     // 5.3. The Height Of Absolutely Positioned, Non-Replaced Elements
 
     // For absolutely positioned elements, the used values of the vertical dimensions must satisfy this constraint:
     // top + margin-top + border-top-width + padding-top + height + padding-bottom + border-bottom-width + margin-bottom + bottom = height of containing block
+
+    // NOTE: This function is called twice: both before and after inside layout.
+    //       In the before pass, if it turns out we need the automatic height of the box, we abort these steps.
+    //       This allows the box to retain an indefinite height from the perspective of inside layout.
 
     auto margin_top = box.computed_values().margin().top();
     auto margin_bottom = box.computed_values().margin().bottom();
@@ -697,6 +701,10 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
     // If all three of top, height, and bottom are auto:
     if (top.is_auto() && height.is_auto() && bottom.is_auto()) {
+        // (If we haven't done inside layout yet, we can't compute the auto height.)
+        if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+            return;
+
         // First set any auto values for margin-top and margin-bottom to 0,
         if (margin_top.is_auto())
             margin_top = CSS::Length::make_px(0);
@@ -708,7 +716,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
         top = CSS::Length::make_px(static_position.y());
 
         // and finally apply rule number three below.
-        height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+        height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
         solve_for_bottom();
     }
 
@@ -748,8 +756,12 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
         // 1. If top and height are auto and bottom is not auto,
         if (top.is_auto() && height.is_auto() && !bottom.is_auto()) {
+            // (If we haven't done inside layout yet, we can't compute the auto height.)
+            if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+                return;
+
             // then the height is based on the Auto heights for block formatting context roots,
-            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
 
             // and solve for top.
             solve_for_top();
@@ -766,8 +778,12 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
 
         // 3. If height and bottom are auto and top is not auto,
         else if (height.is_auto() && bottom.is_auto() && !top.is_auto()) {
+            // (If we haven't done inside layout yet, we can't compute the auto height.)
+            if (before_or_after_inside_layout == BeforeOrAfterInsideLayout::Before)
+                return;
+
             // then the height is based on the Auto heights for block formatting context roots,
-            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box)));
+            height = CSS::Size::make_px(compute_auto_height_for_block_formatting_context_root(box));
 
             // and solve for bottom.
             solve_for_bottom();
@@ -893,10 +909,11 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
     // NOTE: We compute height before *and* after doing inside layout.
     //       This is done so that inside layout can resolve percentage heights.
     //       In some situations, e.g with non-auto top & bottom values, the height can be determined early.
-    compute_height_for_absolutely_positioned_element(box, available_space);
+    compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::Before);
 
     auto independent_formatting_context = layout_inside(box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(available_space));
-    compute_height_for_absolutely_positioned_element(box, available_space);
+
+    compute_height_for_absolutely_positioned_element(box, available_space, BeforeOrAfterInsideLayout::After);
 
     box_state.margin_left = box.computed_values().margin().left().resolved(box, width_of_containing_block_as_length).to_px(box);
     box_state.margin_top = box.computed_values().margin().top().resolved(box, width_of_containing_block_as_length).to_px(box);
@@ -966,7 +983,7 @@ void FormattingContext::layout_absolutely_positioned_element(Box const& box, Ava
         independent_formatting_context->parent_context_did_dimension_child_root_box();
 }
 
-void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space)
+void FormattingContext::compute_height_for_absolutely_positioned_replaced_element(ReplacedBox const& box, AvailableSpace const& available_space, BeforeOrAfterInsideLayout)
 {
     // 10.6.5 Absolutely positioned, replaced elements
     // The used value of 'height' is determined as for inline replaced elements.
@@ -1129,8 +1146,13 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     return *cache.max_content_width;
 }
 
+// https://www.w3.org/TR/css-sizing-3/#min-content-block-size
 CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
+    // For block containers, tables, and inline boxes, this is equivalent to the max-content block size.
+    if (box.is_block_container() || box.is_table())
+        return calculate_max_content_height(box, available_width);
+
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
 

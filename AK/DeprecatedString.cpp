@@ -5,17 +5,19 @@
  */
 
 #include <AK/ByteBuffer.h>
+#include <AK/DeprecatedFlyString.h>
+#include <AK/DeprecatedStream.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringView.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 
 namespace AK {
 
-bool DeprecatedString::operator==(FlyString const& fly_string) const
+bool DeprecatedString::operator==(DeprecatedFlyString const& fly_string) const
 {
     return m_impl == fly_string.impl() || view() == fly_string.view();
 }
@@ -375,7 +377,7 @@ DeprecatedString escape_html_entities(StringView html)
     return builder.to_deprecated_string();
 }
 
-DeprecatedString::DeprecatedString(FlyString const& string)
+DeprecatedString::DeprecatedString(DeprecatedFlyString const& string)
     : m_impl(string.impl())
 {
 }
@@ -414,7 +416,7 @@ bool DeprecatedString::operator==(char const* cstring) const
     return view() == cstring;
 }
 
-InputStream& operator>>(InputStream& stream, DeprecatedString& string)
+DeprecatedInputStream& operator>>(DeprecatedInputStream& stream, DeprecatedString& string)
 {
     StringBuilder builder;
 
@@ -447,6 +449,18 @@ DeprecatedString DeprecatedString::vformatted(StringView fmtstr, TypeErasedForma
 Vector<size_t> DeprecatedString::find_all(StringView needle) const
 {
     return StringUtils::find_all(*this, needle);
+}
+
+DeprecatedStringCodePointIterator DeprecatedString::code_points() const
+{
+    return DeprecatedStringCodePointIterator(*this);
+}
+
+ErrorOr<DeprecatedString> DeprecatedString::from_utf8(ReadonlyBytes bytes)
+{
+    if (!Utf8View(bytes).validate())
+        return Error::from_string_literal("DeprecatedString::from_utf8: Input was not valid UTF-8");
+    return DeprecatedString { StringImpl::create(bytes) };
 }
 
 }

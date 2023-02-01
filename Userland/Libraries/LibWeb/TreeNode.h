@@ -8,6 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/TypeCasts.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 

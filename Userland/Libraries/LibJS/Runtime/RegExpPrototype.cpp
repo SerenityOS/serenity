@@ -27,10 +27,10 @@ RegExpPrototype::RegExpPrototype(Realm& realm)
 {
 }
 
-void RegExpPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> RegExpPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
     define_native_function(realm, vm.names.test, test, 1, attr);
@@ -50,6 +50,8 @@ void RegExpPrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.flagName, flag_name, {}, Attribute::Configurable);
     JS_ENUMERATE_REGEXP_FLAGS
 #undef __JS_ENUMERATE
+
+    return {};
 }
 
 // Non-standard abstraction around steps used by multiple prototypes.
@@ -95,7 +97,7 @@ static Value get_match_index_par(VM& vm, Utf16View const& string, Match const& m
 }
 
 // 22.2.5.2.8 MakeMatchIndicesIndexPairArray ( S, indices, groupNames, hasGroups ), https://tc39.es/ecma262/#sec-makematchindicesindexpairarray
-static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<FlyString, Match> const& group_names, bool has_groups)
+static Value make_match_indices_index_pair_array(VM& vm, Utf16View const& string, Vector<Optional<Match>> const& indices, HashMap<DeprecatedFlyString, Match> const& group_names, bool has_groups)
 {
     // Note: This implementation differs from the spec, but has the same behavior.
     //
@@ -268,14 +270,14 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
     Vector<Utf16String> captured_values;
 
     // 25. Let groupNames be a new empty List.
-    HashMap<FlyString, Match> group_names;
+    HashMap<DeprecatedFlyString, Match> group_names;
 
     // 26. Add match as the last element of indices.
     indices.append(move(match_indices));
 
     // 27. Let matchedValue be ! GetMatchString(S, match).
     // 28. Perform ! CreateDataPropertyOrThrow(A, "0", matchedValue).
-    MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, match.view.u16_view())));
+    MUST(array->create_data_property_or_throw(0, PrimitiveString::create(vm, TRY(Utf16String::create(vm, match.view.u16_view())))));
 
     // 29. If R contains any GroupName, then
     //     a. Let groups be OrdinaryObjectCreate(null).
@@ -300,7 +302,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             // ii. Append undefined to indices.
             indices.append({});
             // iii. Append capture to indices.
-            captured_values.append(Utf16String(""sv));
+            captured_values.append(TRY(Utf16String::create(vm)));
         }
         // c. Else,
         else {
@@ -311,7 +313,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
             //     2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
             // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]: captureEnd }.
             // v. Let capturedValue be ! GetMatchString(S, capture).
-            auto capture_as_utf16_string = Utf16String(capture.view.u16_view());
+            auto capture_as_utf16_string = TRY(Utf16String::create(vm, capture.view.u16_view()));
             captured_value = PrimitiveString::create(vm, capture_as_utf16_string);
             // vi. Append capture to indices.
             indices.append(Match::create(capture));
@@ -351,7 +353,7 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
         if (regexp_object.legacy_features_enabled()) {
             // a. Perform UpdateLegacyRegExpStaticProperties(%RegExp%, S, lastIndex, e, capturedValues).
             auto* regexp_constructor = realm.intrinsics().regexp_constructor();
-            update_legacy_regexp_static_properties(*regexp_constructor, string, match_indices.start_index, match_indices.end_index, captured_values);
+            TRY(update_legacy_regexp_static_properties(vm, *regexp_constructor, string, match_indices.start_index, match_indices.end_index, captured_values));
         }
         // ii. Else,
         else {
@@ -528,7 +530,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
     // 4. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_value.to_string(vm));
+    auto flags = TRY(flags_value.to_deprecated_string(vm));
 
     // 5. If flags does not contain "g", then
     if (!flags.contains('g')) {
@@ -573,7 +575,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
         auto match_value = TRY(result.get(0));
-        auto match_str = TRY(match_value.to_string(vm));
+        auto match_str = TRY(match_value.to_deprecated_string(vm));
 
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
         MUST(array->create_data_property_or_throw(n, PrimitiveString::create(vm, match_str)));
@@ -607,7 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_value.to_string(vm));
+    auto flags = TRY(flags_value.to_deprecated_string(vm));
 
     // Steps 9-12 are performed early so that flags can be moved.
 
@@ -653,13 +655,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     // 6. If functionalReplace is false, then
     if (!replace_value.is_function()) {
         // a. Set replaceValue to ? ToString(replaceValue).
-        auto replace_string = TRY(replace_value.to_string(vm));
+        auto replace_string = TRY(replace_value.to_deprecated_string(vm));
         replace_value = PrimitiveString::create(vm, move(replace_string));
     }
 
     // 7. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_value.to_string(vm));
+    auto flags = TRY(flags_value.to_deprecated_string(vm));
 
     // 8. If flags contains "g", let global be true. Otherwise, let global be false.
     bool global = flags.contains('g');
@@ -702,7 +704,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
         auto match_value = TRY(result.get(vm, 0));
-        auto match_str = TRY(match_value.to_string(vm));
+        auto match_str = TRY(match_value.to_deprecated_string(vm));
 
         // 2. If matchStr is the empty String, then
         if (match_str.is_empty()) {
@@ -752,7 +754,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
             // ii. If capN is not undefined, then
             if (!capture.is_undefined()) {
                 // 1. Set capN to ? ToString(capN).
-                capture = PrimitiveString::create(vm, TRY(capture.to_string(vm)));
+                capture = PrimitiveString::create(vm, TRY(capture.to_deprecated_string(vm)));
             }
 
             // iii. Append capN as the last element of captures.
@@ -765,7 +767,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // j. Let namedCaptures be ? Get(result, "groups").
         auto named_captures = TRY(result->get(vm.names.groups));
 
-        DeprecatedString replacement;
+        String replacement;
 
         // k. If functionalReplace is true, then
         if (replace_value.is_function()) {
@@ -820,13 +822,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 15. If nextSourcePosition ≥ lengthS, return accumulatedResult.
     if (next_source_position >= string.length_in_code_units())
-        return PrimitiveString::create(vm, accumulated_result.build());
+        return PrimitiveString::create(vm, accumulated_result.to_deprecated_string());
 
     // 16. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
     auto substring = string.substring_view(next_source_position);
     accumulated_result.append(substring);
 
-    return PrimitiveString::create(vm, accumulated_result.build());
+    return PrimitiveString::create(vm, accumulated_result.to_deprecated_string());
 }
 
 // 22.2.5.12 RegExp.prototype [ @@search ] ( string ), https://tc39.es/ecma262/#sec-regexp.prototype-@@search
@@ -912,7 +914,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_value.to_string(vm));
+    auto flags = TRY(flags_value.to_deprecated_string(vm));
 
     // 6. If flags contains "u" or flags contains "v", let unicodeMatching be true.
     // 7. Else, let unicodeMatching be false.
@@ -998,7 +1000,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
         auto substring = string.substring_view(last_match_end, next_search_from - last_match_end);
 
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
-        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, substring)));
+        MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, substring)))));
 
         // 3. Set lengthA to lengthA + 1.
         ++array_length;
@@ -1045,7 +1047,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto substring = string.substring_view(last_match_end);
 
     // 21. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(lengthA)), T).
-    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, substring)));
+    MUST(array->create_data_property_or_throw(array_length, PrimitiveString::create(vm, TRY(Utf16String::create(vm, substring)))));
 
     // 22. Return A.
     return array;
@@ -1077,11 +1079,11 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 
     // 3. Let pattern be ? ToString(? Get(R, "source")).
     auto source_attr = TRY(regexp_object->get(vm.names.source));
-    auto pattern = TRY(source_attr.to_string(vm));
+    auto pattern = TRY(source_attr.to_deprecated_string(vm));
 
     // 4. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_attr = TRY(regexp_object->get(vm.names.flags));
-    auto flags = TRY(flags_attr.to_string(vm));
+    auto flags = TRY(flags_attr.to_deprecated_string(vm));
 
     // 5. Let result be the string-concatenation of "/", pattern, "/", and flags.
     // 6. Return result.

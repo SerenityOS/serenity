@@ -12,10 +12,17 @@ namespace Web::HTML {
 HTMLOutputElement::HTMLOutputElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLOutputElement"));
 }
 
 HTMLOutputElement::~HTMLOutputElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLOutputElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOutputElementPrototype>(realm, "HTMLOutputElement"));
+
+    return {};
+}
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#the-output-element:concept-form-reset-control
 void HTMLOutputElement::reset_algorithm()

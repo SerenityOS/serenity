@@ -23,7 +23,7 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     : m_operation(operation)
     , m_helper_pipe(move(helper_pipe))
 {
-    load_from_gml(file_operation_progress_gml);
+    load_from_gml(file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 
@@ -141,13 +141,13 @@ void FileOperationProgressWidget::did_error(StringView message)
 
 DeprecatedString FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_byte_count)
 {
-    int elapsed = m_elapsed_timer.elapsed() / 1000;
+    i64 const elapsed_seconds = m_elapsed_timer.elapsed_time().to_seconds();
 
-    if (bytes_done == 0 || elapsed < 3)
+    if (bytes_done == 0 || elapsed_seconds < 3)
         return "Estimating...";
 
     off_t bytes_left = total_byte_count - bytes_done;
-    int seconds_remaining = (bytes_left * elapsed) / bytes_done;
+    int seconds_remaining = (bytes_left * elapsed_seconds) / bytes_done;
 
     if (seconds_remaining < 30)
         return DeprecatedString::formatted("{} seconds", 5 + seconds_remaining - seconds_remaining % 5);

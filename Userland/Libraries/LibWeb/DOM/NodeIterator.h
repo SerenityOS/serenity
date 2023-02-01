@@ -37,6 +37,7 @@ public:
 private:
     explicit NodeIterator(Node& root);
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
     virtual void finalize() override;
 

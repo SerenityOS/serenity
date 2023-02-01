@@ -12,10 +12,17 @@ namespace Web::HTML {
 HTMLMarqueeElement::HTMLMarqueeElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLMarqueeElement"));
 }
 
 HTMLMarqueeElement::~HTMLMarqueeElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLMarqueeElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLMarqueeElementPrototype>(realm, "HTMLMarqueeElement"));
+
+    return {};
+}
 
 void HTMLMarqueeElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {

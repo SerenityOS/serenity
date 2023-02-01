@@ -24,9 +24,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 480);
     window->set_resizable(true);
 
-    auto main_widget = TRY(window->try_set_main_widget<VideoPlayer::VideoPlayerWidget>(window));
+    auto main_widget = TRY(window->set_main_widget<VideoPlayer::VideoPlayerWidget>());
     main_widget->update_title();
-    main_widget->initialize_menubar(window);
+    TRY(main_widget->initialize_menubar(window));
 
     if (!filename.is_empty())
         main_widget->open_file(filename);

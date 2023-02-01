@@ -93,7 +93,7 @@ void TextEditor::create_actions()
     m_paste_action->set_enabled(is_editable() && Clipboard::the().fetch_mime_type().starts_with("text/"sv));
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
-            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+            "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
                 DeprecatedString value;
                 if (InputBox::show(window(), value, "Line:"sv, "Go to line"sv) == InputBox::ExecResult::OK) {
                     auto line_target = value.to_uint();
@@ -252,6 +252,8 @@ void TextEditor::doubleclick_event(MouseEvent& event)
 
 void TextEditor::mousedown_event(MouseEvent& event)
 {
+    using namespace AK::TimeLiterals;
+
     if (event.button() != MouseButton::Primary) {
         return;
     }
@@ -262,7 +264,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
     if (is_displayonly())
         return;
 
-    if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
+    if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed_time() < 250_ms) {
         m_triple_click_timer = Core::ElapsedTimer();
         select_current_line();
         return;
@@ -1510,6 +1512,33 @@ bool TextEditor::write_to_file(Core::File& file)
     return true;
 }
 
+ErrorOr<void> TextEditor::write_to_file(Core::Stream::File& file)
+{
+    off_t file_size = 0;
+    if (line_count() == 1 && line(0).is_empty()) {
+        // Truncate to zero.
+    } else {
+        // Compute the final file size and ftruncate() to make writing fast.
+        // FIXME: Remove this once the kernel is smart enough to do this instead.
+        for (size_t i = 0; i < line_count(); ++i)
+            file_size += line(i).length();
+        file_size += line_count();
+    }
+
+    TRY(file.truncate(file_size));
+
+    if (file_size == 0) {
+        // A size 0 file doesn't need a data copy.
+    } else {
+        for (size_t i = 0; i < line_count(); ++i) {
+            TRY(file.write(line(i).to_utf8().bytes()));
+            TRY(file.write("\n"sv.bytes()));
+        }
+    }
+    document().set_unmodified();
+    return {};
+}
+
 DeprecatedString TextEditor::text() const
 {
     return document().text();
@@ -2236,7 +2265,7 @@ void TextEditor::set_should_autocomplete_automatically(bool value)
         m_autocomplete_timer = Core::Timer::create_single_shot(m_automatic_autocomplete_delay_ms, [this] {
             if (m_autocomplete_box && !m_autocomplete_box->is_visible())
                 try_show_autocomplete(UserRequestedAutocomplete::No);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
         return;
     }
 

@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
 #include <LibGfx/Bitmap.h>
@@ -31,12 +33,16 @@ public:
     virtual RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset) const override;
     virtual u32 glyph_count() const override;
     virtual u16 units_per_em() const override;
-    virtual u32 glyph_id_for_code_point(u32 code_point) const override { return m_cmap.glyph_id_for_code_point(code_point); }
+    virtual u32 glyph_id_for_code_point(u32 code_point) const override;
     virtual DeprecatedString family() const override;
     virtual DeprecatedString variant() const override;
     virtual u16 weight() const override;
     virtual u8 slope() const override;
     virtual bool is_fixed_width() const override;
+
+    Optional<ReadonlyBytes> font_program() const;
+    Optional<ReadonlyBytes> control_value_program() const;
+    Optional<ReadonlyBytes> glyph_program(u32 glyph_id) const;
 
 private:
     enum class Offsets {
@@ -52,7 +58,7 @@ private:
 
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
-    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, Optional<OS2> os2, Optional<Kern>&& kern)
+    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Loca&& loca, Glyf&& glyf, Optional<OS2> os2, Optional<Kern>&& kern, Optional<Fpgm> fpgm, Optional<Prep> prep)
         : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
@@ -64,6 +70,8 @@ private:
         , m_cmap(move(cmap))
         , m_os2(move(os2))
         , m_kern(move(kern))
+        , m_fpgm(move(fpgm))
+        , m_prep(move(prep))
     {
     }
 
@@ -82,6 +90,24 @@ private:
     Cmap m_cmap;
     Optional<OS2> m_os2;
     Optional<Kern> m_kern;
+    Optional<Fpgm> m_fpgm;
+    Optional<Prep> m_prep;
+
+    // This cache stores information per code point.
+    // It's segmented into pages with data about 256 code points each.
+    struct GlyphPage {
+        static constexpr size_t glyphs_per_page = 256;
+
+        u32 glyph_ids[glyphs_per_page];
+    };
+
+    // Fast cache for GlyphPage #0 (code points 0-255) to avoid hash lookups for all of ASCII and Latin-1.
+    mutable OwnPtr<GlyphPage> m_glyph_page_zero;
+
+    mutable HashMap<size_t, NonnullOwnPtr<GlyphPage>> m_glyph_pages;
+
+    GlyphPage const& glyph_page(size_t page_index) const;
+    void populate_glyph_page(GlyphPage&, size_t page_index) const;
 };
 
 }

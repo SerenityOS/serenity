@@ -29,10 +29,12 @@ PromiseResolvingElementFunction::PromiseResolvingElementFunction(size_t index, P
 {
 }
 
-void PromiseResolvingElementFunction::initialize(Realm& realm)
+ThrowCompletionOr<void> PromiseResolvingElementFunction::initialize(Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_direct_property(vm().names.length, Value(1), Attribute::Configurable);
+
+    return {};
 }
 
 ThrowCompletionOr<Value> PromiseResolvingElementFunction::call()
@@ -55,7 +57,7 @@ void PromiseResolvingElementFunction::visit_edges(Cell::Visitor& visitor)
 
 NonnullGCPtr<PromiseAllResolveElementFunction> PromiseAllResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
+    return realm.heap().allocate<PromiseAllResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 PromiseAllResolveElementFunction::PromiseAllResolveElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
@@ -87,7 +89,7 @@ ThrowCompletionOr<Value> PromiseAllResolveElementFunction::resolve_element()
 
 NonnullGCPtr<PromiseAllSettledResolveElementFunction> PromiseAllSettledResolveElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
+    return realm.heap().allocate<PromiseAllSettledResolveElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 PromiseAllSettledResolveElementFunction::PromiseAllSettledResolveElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
@@ -128,7 +130,7 @@ ThrowCompletionOr<Value> PromiseAllSettledResolveElementFunction::resolve_elemen
 
 NonnullGCPtr<PromiseAllSettledRejectElementFunction> PromiseAllSettledRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype());
+    return realm.heap().allocate<PromiseAllSettledRejectElementFunction>(realm, index, values, capability, remaining_elements, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 PromiseAllSettledRejectElementFunction::PromiseAllSettledRejectElementFunction(size_t index, PromiseValueList& values, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)
@@ -169,7 +171,7 @@ ThrowCompletionOr<Value> PromiseAllSettledRejectElementFunction::resolve_element
 
 NonnullGCPtr<PromiseAnyRejectElementFunction> PromiseAnyRejectElementFunction::create(Realm& realm, size_t index, PromiseValueList& errors, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements)
 {
-    return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm, index, errors, capability, remaining_elements, *realm.intrinsics().function_prototype());
+    return realm.heap().allocate<PromiseAnyRejectElementFunction>(realm, index, errors, capability, remaining_elements, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 PromiseAnyRejectElementFunction::PromiseAnyRejectElementFunction(size_t index, PromiseValueList& errors, NonnullGCPtr<PromiseCapability> capability, RemainingElements& remaining_elements, Object& prototype)

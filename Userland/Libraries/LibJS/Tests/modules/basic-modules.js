@@ -206,6 +206,10 @@ describe("in- and exports", () => {
     test("exporting anonymous function", () => {
         expectModulePassed("./anon-func-decl-default-export.mjs");
     });
+
+    test("can have top level using declarations which trigger at the end of running a module", () => {
+        expectModulePassed("./top-level-dispose.mjs");
+    });
 });
 
 describe("loops", () => {

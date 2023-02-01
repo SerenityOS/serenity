@@ -99,7 +99,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Inspector", app_icon, window));
 
-    auto widget = TRY(window->try_set_main_widget<GUI::Widget>());
+    auto widget = TRY(window->set_main_widget<GUI::Widget>());
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>();
 
@@ -130,7 +130,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto properties_tree_view_context_menu = TRY(GUI::Menu::try_create("Properties Tree View"));
 
-    auto copy_bitmap = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto copy_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors();
     auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().data().to_deprecated_string());
     });

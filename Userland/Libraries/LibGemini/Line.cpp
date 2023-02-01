@@ -14,7 +14,7 @@ DeprecatedString Text::render_to_html() const
     StringBuilder builder;
     builder.append(escape_html_entities(m_text));
     builder.append("<br>\n"sv);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Heading::render_to_html() const
@@ -31,7 +31,7 @@ DeprecatedString UnorderedList::render_to_html() const
     builder.append("<li>"sv);
     builder.append(escape_html_entities(m_text.substring_view(1, m_text.length() - 1)));
     builder.append("</li>"sv);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Control::render_to_html() const
@@ -81,7 +81,7 @@ DeprecatedString Link::render_to_html() const
     builder.append("\">"sv);
     builder.append(escape_html_entities(m_name));
     builder.append("</a><br>\n"sv);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString Preformatted::render_to_html() const
@@ -90,7 +90,7 @@ DeprecatedString Preformatted::render_to_html() const
     builder.append(escape_html_entities(m_text));
     builder.append('\n');
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

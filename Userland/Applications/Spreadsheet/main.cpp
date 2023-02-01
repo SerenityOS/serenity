@@ -14,15 +14,11 @@
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Clipboard.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -44,12 +40,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
-    // For writing temporary files when exporting.
-    TRY(Core::System::unveil("/tmp", "crw"));
     TRY(Core::System::unveil("/etc", "r"));
-    TRY(Core::System::unveil(Core::StandardPaths::home_directory(), "rwc"sv));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -58,13 +51,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& spreadsheet_widget = window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr);
+    auto spreadsheet_widget = TRY(window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr));
 
-    spreadsheet_widget.initialize_menubar(*window);
-    spreadsheet_widget.update_window_title();
+    spreadsheet_widget->initialize_menubar(*window);
+    spreadsheet_widget->update_window_title();
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (spreadsheet_widget.request_close())
+        if (spreadsheet_widget->request_close())
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
@@ -72,8 +65,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     if (filename) {
-        auto file = TRY(FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window, filename));
-        spreadsheet_widget.load_file(file);
+        auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename));
+        spreadsheet_widget->load_file(file.filename(), file.stream());
     }
 
     return app->exec();

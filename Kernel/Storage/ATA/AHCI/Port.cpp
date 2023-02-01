@@ -187,8 +187,8 @@ void AHCIPort::recover_from_fatal_error()
         return;
     }
 
-    dmesgln("{}: AHCI Port {} fatal error, shutting down!", controller->pci_address(), representative_port_index());
-    dmesgln("{}: AHCI Port {} fatal error, SError {}", controller->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
+    dmesgln("{}: AHCI Port {} fatal error, shutting down!", controller->device_identifier().address(), representative_port_index());
+    dmesgln("{}: AHCI Port {} fatal error, SError {}", controller->device_identifier().address(), representative_port_index(), (u32)m_port_registers.serr);
     stop_command_list_processing();
     stop_fis_receiving();
     m_interrupt_enable.clear();

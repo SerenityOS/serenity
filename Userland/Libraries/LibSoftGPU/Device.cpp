@@ -12,6 +12,7 @@
 #include <AK/NumericLimits.h>
 #include <AK/SIMDExtras.h>
 #include <AK/SIMDMath.h>
+#include <AK/String.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
@@ -390,39 +391,10 @@ ALWAYS_INLINE void Device::rasterize(Gfx::IntRect& render_bounds, CB1 set_covera
                     depth_test_passed = quad.depth >= depth;
                     break;
                 case GPU::DepthTestFunction::NotEqual:
-#ifdef __SSE__
                     depth_test_passed = quad.depth != depth;
-#else
-                    depth_test_passed = i32x4 {
-                        bit_cast<u32>(quad.depth[0]) != bit_cast<u32>(depth[0]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[1]) != bit_cast<u32>(depth[1]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[2]) != bit_cast<u32>(depth[2]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[3]) != bit_cast<u32>(depth[3]) ? -1 : 0,
-                    };
-#endif
                     break;
                 case GPU::DepthTestFunction::Equal:
-#ifdef __SSE__
                     depth_test_passed = quad.depth == depth;
-#else
-                    //
-                    // This is an interesting quirk that occurs due to us using the x87 FPU when Serenity is
-                    // compiled for the i686 target. When we calculate our depth value to be stored in the buffer,
-                    // it is an 80-bit x87 floating point number, however, when stored into the depth buffer, this is
-                    // truncated to 32 bits. This 38 bit loss of precision means that when x87 `FCOMP` is eventually
-                    // used here the comparison fails.
-                    // This could be solved by using a `long double` for the depth buffer, however this would take
-                    // up significantly more space and is completely overkill for a depth buffer. As such, comparing
-                    // the first 32-bits of this depth value is "good enough" that if we get a hit on it being
-                    // equal, we can pretty much guarantee that it's actually equal.
-                    //
-                    depth_test_passed = i32x4 {
-                        bit_cast<u32>(quad.depth[0]) == bit_cast<u32>(depth[0]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[1]) == bit_cast<u32>(depth[1]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[2]) == bit_cast<u32>(depth[2]) ? -1 : 0,
-                        bit_cast<u32>(quad.depth[3]) == bit_cast<u32>(depth[3]) ? -1 : 0,
-                    };
-#endif
                     break;
                 case GPU::DepthTestFunction::LessOrEqual:
                     depth_test_passed = quad.depth <= depth;
@@ -1566,11 +1538,11 @@ void Device::blit_to_depth_buffer_at_raster_position(void const* input_data, GPU
 void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 {
     static Core::ElapsedTimer timer;
-    static DeprecatedString debug_string;
+    static String debug_string;
     static int frame_counter;
 
     frame_counter++;
-    int milliseconds = 0;
+    i64 milliseconds = 0;
     if (timer.is_valid())
         milliseconds = timer.elapsed();
     else
@@ -1583,20 +1555,20 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
         int num_rendertarget_pixels = m_frame_buffer->rect().size().area();
 
         StringBuilder builder;
-        builder.append(DeprecatedString::formatted("Timings      : {:.1}ms {:.1}FPS\n",
+        builder.appendff("Timings      : {:.1}ms {:.1}FPS\n",
             static_cast<double>(milliseconds) / frame_counter,
-            (milliseconds > 0) ? 1000.0 * frame_counter / milliseconds : 9999.0));
-        builder.append(DeprecatedString::formatted("Triangles    : {}\n", g_num_rasterized_triangles));
-        builder.append(DeprecatedString::formatted("SIMD usage   : {}%\n", g_num_quads > 0 ? g_num_pixels_shaded * 25 / g_num_quads : 0));
-        builder.append(DeprecatedString::formatted("Pixels       : {}, Stencil: {}%, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
+            (milliseconds > 0) ? 1000.0 * frame_counter / milliseconds : 9999.0);
+        builder.appendff("Triangles    : {}\n", g_num_rasterized_triangles);
+        builder.appendff("SIMD usage   : {}%\n", g_num_quads > 0 ? g_num_pixels_shaded * 25 / g_num_quads : 0);
+        builder.appendff("Pixels       : {}, Stencil: {}%, Shaded: {}%, Blended: {}%, Overdraw: {}%\n",
             g_num_pixels,
             g_num_pixels > 0 ? g_num_stencil_writes * 100 / g_num_pixels : 0,
             g_num_pixels > 0 ? g_num_pixels_shaded * 100 / g_num_pixels : 0,
             g_num_pixels_shaded > 0 ? g_num_pixels_blended * 100 / g_num_pixels_shaded : 0,
-            num_rendertarget_pixels > 0 ? g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100 : 0));
-        builder.append(DeprecatedString::formatted("Sampler calls: {}\n", g_num_sampler_calls));
+            num_rendertarget_pixels > 0 ? g_num_pixels_shaded * 100 / num_rendertarget_pixels - 100 : 0);
+        builder.appendff("Sampler calls: {}\n", g_num_sampler_calls);
 
-        debug_string = builder.to_deprecated_string();
+        debug_string = builder.to_string().release_value_but_fixme_should_propagate_errors();
 
         frame_counter = 0;
         timer.start();

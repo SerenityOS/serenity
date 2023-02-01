@@ -9,9 +9,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<SVGSVGPaintable> SVGSVGPaintable::create(Layout::SVGSVGBox const& layout_box)
+JS::NonnullGCPtr<SVGSVGPaintable> SVGSVGPaintable::create(Layout::SVGSVGBox const& layout_box)
 {
-    return adopt_ref(*new SVGSVGPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<SVGSVGPaintable>(layout_box);
 }
 
 SVGSVGPaintable::SVGSVGPaintable(Layout::SVGSVGBox const& layout_box)

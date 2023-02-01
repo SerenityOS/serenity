@@ -9,7 +9,6 @@
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Try.h>
@@ -33,7 +32,7 @@ inline ErrorOr<T> decode(Decoder&)
 
 class Decoder {
 public:
-    Decoder(InputMemoryStream& stream, Core::Stream::LocalSocket& socket)
+    Decoder(AK::Stream& stream, Core::Stream::LocalSocket& socket)
         : m_stream(stream)
         , m_socket(socket)
     {
@@ -45,8 +44,13 @@ public:
     template<typename T>
     ErrorOr<void> decode_into(T& value)
     {
-        m_stream >> value;
-        TRY(m_stream.try_handle_any_error());
+        value = TRY(m_stream.read_value<T>());
+        return {};
+    }
+
+    ErrorOr<void> decode_into(Bytes bytes)
+    {
+        TRY(m_stream.read_entire_buffer(bytes));
         return {};
     }
 
@@ -55,7 +59,7 @@ public:
     Core::Stream::LocalSocket& socket() { return m_socket; }
 
 private:
-    InputMemoryStream& m_stream;
+    AK::Stream& m_stream;
     Core::Stream::LocalSocket& m_socket;
 };
 
@@ -132,7 +136,7 @@ template<Concepts::SharedSingleProducerCircularQueue T>
 ErrorOr<T> decode(Decoder& decoder)
 {
     auto anon_file = TRY(decoder.decode<IPC::File>());
-    return T::try_create(anon_file.take_fd());
+    return T::create(anon_file.take_fd());
 }
 
 template<Concepts::Optional T>

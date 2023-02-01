@@ -167,7 +167,7 @@ void Action::activate(Core::Object* activator)
 
     if (activator == nullptr) {
         for_each_toolbar_button([](auto& button) {
-            button.set_mimic_pressed(true);
+            button.mimic_pressed();
         });
     }
 

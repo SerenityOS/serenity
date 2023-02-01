@@ -51,11 +51,11 @@ ErrorOr<void> Group::sync()
 
     auto new_group_file_content = TRY(generate_group_file());
 
-    char new_group_name[] = "/etc/group.XXXXXX";
-    size_t new_group_name_length = strlen(new_group_name);
+    char new_group_file[] = "/etc/group.XXXXXX";
+    auto new_group_file_view = StringView { new_group_file, sizeof(new_group_file) };
 
     {
-        auto new_group_fd = TRY(Core::System::mkstemp({ new_group_name, new_group_name_length }));
+        auto new_group_fd = TRY(Core::System::mkstemp(new_group_file));
         ScopeGuard new_group_fd_guard([new_group_fd] { close(new_group_fd); });
         TRY(Core::System::fchmod(new_group_fd, 0664));
 
@@ -63,7 +63,7 @@ ErrorOr<void> Group::sync()
         VERIFY(static_cast<size_t>(nwritten) == new_group_file_content.length());
     }
 
-    TRY(Core::System::rename({ new_group_name, new_group_name_length }, "/etc/group"sv));
+    TRY(Core::System::rename(new_group_file_view, "/etc/group"sv));
 
     return {};
 }

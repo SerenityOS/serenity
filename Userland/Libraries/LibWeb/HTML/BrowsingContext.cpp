@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
+#include <LibWeb/DOM/Range.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
@@ -114,7 +115,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     auto realm_execution_context = Bindings::create_a_new_javascript_realm(
         Bindings::main_thread_vm(),
         [&](JS::Realm& realm) -> JS::Object* {
-            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm);
+            browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
             // - For the global object, create a new Window object.
             window = HTML::Window::create(realm);
@@ -468,96 +469,55 @@ void BrowsingContext::set_cursor_position(DOM::Position position)
     reset_cursor_blink_cycle();
 }
 
-DeprecatedString BrowsingContext::selected_text() const
+static DeprecatedString visible_text_in_range(DOM::Range const& range)
 {
+    // NOTE: This is an adaption of Range stringification, but we skip over DOM nodes that don't have a corresponding layout node.
     StringBuilder builder;
-    if (!active_document())
-        return {};
-    auto* layout_root = active_document()->layout_node();
-    if (!layout_root)
-        return {};
-    if (!layout_root->selection().is_valid())
-        return {};
 
-    auto selection = layout_root->selection().normalized();
-
-    if (selection.start().layout_node.ptr() == selection.end().layout_node) {
-        if (!is<Layout::TextNode>(*selection.start().layout_node))
-            return "";
-        return verify_cast<Layout::TextNode>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
+    if (range.start_container() == range.end_container() && is<DOM::Text>(*range.start_container())) {
+        if (!range.start_container()->layout_node())
+            return ""sv;
+        return static_cast<DOM::Text const&>(*range.start_container()).data().substring(range.start_offset(), range.end_offset() - range.start_offset());
     }
 
-    // Start node
-    auto layout_node = selection.start().layout_node;
-    if (is<Layout::TextNode>(*layout_node)) {
-        auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
-        builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
+    if (is<DOM::Text>(*range.start_container()) && range.start_container()->layout_node())
+        builder.append(static_cast<DOM::Text const&>(*range.start_container()).data().substring_view(range.start_offset()));
+
+    for (DOM::Node const* node = range.start_container(); node != range.end_container()->next_sibling(); node = node->next_in_pre_order()) {
+        if (is<DOM::Text>(*node) && range.contains_node(*node) && node->layout_node())
+            builder.append(static_cast<DOM::Text const&>(*node).data());
     }
 
-    // Middle nodes
-    layout_node = layout_node->next_in_pre_order();
-    while (layout_node && layout_node.ptr() != selection.end().layout_node) {
-        if (is<Layout::TextNode>(*layout_node))
-            builder.append(verify_cast<Layout::TextNode>(*layout_node).text_for_rendering());
-        else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockContainer>(*layout_node))
-            builder.append('\n');
-
-        layout_node = layout_node->next_in_pre_order();
-    }
-
-    // End node
-    VERIFY(layout_node.ptr() == selection.end().layout_node);
-    if (is<Layout::TextNode>(*layout_node)) {
-        auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
-        builder.append(text.substring(0, selection.end().index_in_node));
-    }
+    if (is<DOM::Text>(*range.end_container()) && range.end_container()->layout_node())
+        builder.append(static_cast<DOM::Text const&>(*range.end_container()).data().substring_view(0, range.end_offset()));
 
     return builder.to_deprecated_string();
 }
 
+DeprecatedString BrowsingContext::selected_text() const
+{
+    auto* document = active_document();
+    if (!document)
+        return ""sv;
+    auto selection = const_cast<DOM::Document&>(*document).get_selection();
+    auto range = selection->range();
+    if (!range)
+        return ""sv;
+    return visible_text_in_range(*range);
+}
+
 void BrowsingContext::select_all()
 {
-    if (!active_document())
+    auto* document = active_document();
+    if (!document)
         return;
-    auto* layout_root = active_document()->layout_node();
-    if (!layout_root)
+    auto* body = document->body();
+    if (!body)
         return;
-
-    Layout::Node const* first_layout_node = layout_root;
-
-    for (;;) {
-        auto* next = first_layout_node->next_in_pre_order();
-        if (!next)
-            break;
-        first_layout_node = next;
-        if (is<Layout::TextNode>(*first_layout_node))
-            break;
-    }
-
-    Layout::Node const* last_layout_node = first_layout_node;
-
-    for (Layout::Node const* layout_node = first_layout_node; layout_node; layout_node = layout_node->next_in_pre_order()) {
-        if (is<Layout::TextNode>(*layout_node))
-            last_layout_node = layout_node;
-    }
-
-    VERIFY(first_layout_node);
-    VERIFY(last_layout_node);
-
-    int last_layout_node_index_in_node = 0;
-    if (is<Layout::TextNode>(*last_layout_node)) {
-        auto const& text_for_rendering = verify_cast<Layout::TextNode>(*last_layout_node).text_for_rendering();
-        if (!text_for_rendering.is_empty())
-            last_layout_node_index_in_node = text_for_rendering.length() - 1;
-    }
-
-    auto start = Layout::LayoutPosition {
-        JS::make_handle(const_cast<Layout::Node*>(first_layout_node)), 0
-    };
-    auto end = Layout::LayoutPosition {
-        JS::make_handle(const_cast<Layout::Node*>(last_layout_node)), last_layout_node_index_in_node
-    };
-    layout_root->set_selection({ move(start), move(end) });
+    auto selection = document->get_selection();
+    if (!selection)
+        return;
+    (void)selection->select_all_children(*document->body());
 }
 
 void BrowsingContext::register_viewport_client(ViewportClient& client)

@@ -21,7 +21,7 @@ namespace Snake {
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_bitmap(StringView const& file)
 {
-    auto bitmap = Gfx::Bitmap::try_load_from_file(file);
+    auto bitmap = Gfx::Bitmap::load_from_file(file);
     if (bitmap.is_error()) {
         dbgln("\033[31;1mCould not load bitmap file\033[0m '{}': {}", file, bitmap.error());
         return bitmap.release_error();
@@ -128,7 +128,7 @@ static DeprecatedString skin_path = DeprecatedString("/res/icons/snake/skins/");
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> load_skin_bitmap(DeprecatedString const& skin, StringView const& file)
 {
     auto path = DeprecatedString::formatted("{}{}/{}", skin_path, skin, file);
-    return Gfx::Bitmap::try_load_from_file(path);
+    return Gfx::Bitmap::load_from_file(path);
 }
 
 ErrorOr<void> Game::load_snake_bitmaps()

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
+#include <AK/DeprecatedFlyString.h>
 #include <AK/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibPDF/Value.h>
@@ -28,28 +28,28 @@ namespace PDF {
 
 class ColorSpaceFamily {
 public:
-    ColorSpaceFamily(FlyString name, bool never_needs_paramaters_p)
+    ColorSpaceFamily(DeprecatedFlyString name, bool never_needs_paramaters_p)
         : m_name(move(name))
         , m_never_needs_parameters(never_needs_paramaters_p)
     {
     }
 
-    FlyString name() const { return m_name; };
+    DeprecatedFlyString name() const { return m_name; };
     bool never_needs_parameters() const { return m_never_needs_parameters; };
-    static PDFErrorOr<ColorSpaceFamily> get(FlyString const&);
+    static PDFErrorOr<ColorSpaceFamily> get(DeprecatedFlyString const&);
 
 #define ENUMERATE(name, ever_needs_parameters) static ColorSpaceFamily name;
     ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE)
 #undef ENUMERATE
 
 private:
-    FlyString m_name;
+    DeprecatedFlyString m_name;
     bool m_never_needs_parameters;
 };
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(FlyString const&);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&);
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>);
 
     virtual ~ColorSpace() = default;

@@ -123,38 +123,26 @@ UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
 }
 #endif
 
-ErrorOr<void> Access::add_host_controller_and_enumerate_attached_devices(NonnullOwnPtr<HostController> controller, Function<void(DeviceIdentifier const&)> callback)
+ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullOwnPtr<HostController> controller)
 {
-    // Note: We hold the spinlocks for a moment just to ensure we append the
-    // device identifiers safely. Afterwards, enumeration goes lockless to allow
-    // IRQs to be fired if necessary.
-    Vector<DeviceIdentifier> device_identifiers_behind_host_controller;
-    {
-        SpinlockLocker locker(m_access_lock);
-        SpinlockLocker scan_locker(m_scan_lock);
-        auto domain_number = controller->domain_number();
+    SpinlockLocker locker(m_access_lock);
+    SpinlockLocker scan_locker(m_scan_lock);
+    auto domain_number = controller->domain_number();
 
-        VERIFY(!m_host_controllers.contains(domain_number));
-        // Note: We need to register the new controller as soon as possible, and
-        // definitely before enumerating devices behind that.
-        m_host_controllers.set(domain_number, move(controller));
-        ErrorOr<void> expansion_result;
-        m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](DeviceIdentifier const& device_identifier) -> IterationDecision {
-            m_device_identifiers.append(device_identifier);
-            auto result = device_identifiers_behind_host_controller.try_append(device_identifier);
-            if (result.is_error()) {
-                expansion_result = result;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-        if (expansion_result.is_error())
-            return expansion_result;
-    }
-
-    for (auto const& device_identifier : device_identifiers_behind_host_controller) {
-        callback(device_identifier);
-    }
+    VERIFY(!m_host_controllers.contains(domain_number));
+    // Note: We need to register the new controller as soon as possible, and
+    // definitely before enumerating devices behind that.
+    m_host_controllers.set(domain_number, move(controller));
+    ErrorOr<void> error_or_void {};
+    m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](EnumerableDeviceIdentifier const& device_identifier) -> IterationDecision {
+        auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
+        if (device_identifier_or_error.is_error()) {
+            error_or_void = device_identifier_or_error.error();
+            return IterationDecision::Break;
+        }
+        m_device_identifiers.append(device_identifier_or_error.release_value());
+        return IterationDecision::Continue;
+    });
     return {};
 }
 
@@ -174,11 +162,21 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
     SpinlockLocker locker(m_access_lock);
     SpinlockLocker scan_locker(m_scan_lock);
     VERIFY(m_device_identifiers.is_empty());
+    ErrorOr<void> error_or_void {};
     for (auto it = m_host_controllers.begin(); it != m_host_controllers.end(); ++it) {
-        (*it).value->enumerate_attached_devices([this](DeviceIdentifier device_identifier) -> IterationDecision {
-            m_device_identifiers.append(device_identifier);
+        (*it).value->enumerate_attached_devices([this, &error_or_void](EnumerableDeviceIdentifier device_identifier) -> IterationDecision {
+            auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
+            if (device_identifier_or_error.is_error()) {
+                error_or_void = device_identifier_or_error.error();
+                return IterationDecision::Break;
+            }
+            m_device_identifiers.append(device_identifier_or_error.release_value());
             return IterationDecision::Continue;
         });
+    }
+    if (error_or_void.is_error()) {
+        dmesgln("Failed during PCI Access::rescan_hardware due to {}", error_or_void.error());
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -186,7 +184,7 @@ ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& ca
 {
     // Note: We hold the m_access_lock for a brief moment just to ensure we get
     // a complete Vector in case someone wants to mutate it.
-    Vector<DeviceIdentifier> device_identifiers;
+    NonnullRefPtrVector<DeviceIdentifier> device_identifiers;
     {
         SpinlockLocker locker(m_access_lock);
         VERIFY(!m_device_identifiers.is_empty());
@@ -198,9 +196,9 @@ ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& ca
     return {};
 }
 
-DeviceIdentifier Access::get_device_identifier(Address address) const
+DeviceIdentifier const& Access::get_device_identifier(Address address) const
 {
-    for (auto device_identifier : m_device_identifiers) {
+    for (auto& device_identifier : m_device_identifiers) {
         if (device_identifier.address().domain() == address.domain()
             && device_identifier.address().bus() == address.bus()
             && device_identifier.address().device() == address.device()
@@ -211,57 +209,65 @@ DeviceIdentifier Access::get_device_identifier(Address address) const
     VERIFY_NOT_REACHED();
 }
 
-void Access::write8_field(Address address, u32 field, u8 value)
+void Access::write8_field(DeviceIdentifier const& identifier, u32 field, u8 value)
 {
+    VERIFY(identifier.operation_lock().is_locked());
     SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(address.domain()));
-    auto& controller = *m_host_controllers.get(address.domain()).value();
-    controller.write8_field(address.bus(), address.device(), address.function(), field, value);
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    controller.write8_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field, value);
 }
-void Access::write16_field(Address address, u32 field, u16 value)
+void Access::write16_field(DeviceIdentifier const& identifier, u32 field, u16 value)
 {
+    VERIFY(identifier.operation_lock().is_locked());
     SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(address.domain()));
-    auto& controller = *m_host_controllers.get(address.domain()).value();
-    controller.write16_field(address.bus(), address.device(), address.function(), field, value);
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    controller.write16_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field, value);
 }
-void Access::write32_field(Address address, u32 field, u32 value)
+void Access::write32_field(DeviceIdentifier const& identifier, u32 field, u32 value)
 {
+    VERIFY(identifier.operation_lock().is_locked());
     SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(address.domain()));
-    auto& controller = *m_host_controllers.get(address.domain()).value();
-    controller.write32_field(address.bus(), address.device(), address.function(), field, value);
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    controller.write32_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field, value);
 }
 
-u8 Access::read8_field(Address address, RegisterOffset field)
+u8 Access::read8_field(DeviceIdentifier const& identifier, RegisterOffset field)
 {
-    return read8_field(address, to_underlying(field));
+    VERIFY(identifier.operation_lock().is_locked());
+    return read8_field(identifier, to_underlying(field));
 }
-u16 Access::read16_field(Address address, RegisterOffset field)
+u16 Access::read16_field(DeviceIdentifier const& identifier, RegisterOffset field)
 {
-    return read16_field(address, to_underlying(field));
+    VERIFY(identifier.operation_lock().is_locked());
+    return read16_field(identifier, to_underlying(field));
 }
 
-u8 Access::read8_field(Address address, u32 field)
+u8 Access::read8_field(DeviceIdentifier const& identifier, u32 field)
 {
+    VERIFY(identifier.operation_lock().is_locked());
     SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(address.domain()));
-    auto& controller = *m_host_controllers.get(address.domain()).value();
-    return controller.read8_field(address.bus(), address.device(), address.function(), field);
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    return controller.read8_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
 }
-u16 Access::read16_field(Address address, u32 field)
+u16 Access::read16_field(DeviceIdentifier const& identifier, u32 field)
 {
+    VERIFY(identifier.operation_lock().is_locked());
     SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(address.domain()));
-    auto& controller = *m_host_controllers.get(address.domain()).value();
-    return controller.read16_field(address.bus(), address.device(), address.function(), field);
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    return controller.read16_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
 }
-u32 Access::read32_field(Address address, u32 field)
+u32 Access::read32_field(DeviceIdentifier const& identifier, u32 field)
 {
+    VERIFY(identifier.operation_lock().is_locked());
     SpinlockLocker locker(m_access_lock);
-    VERIFY(m_host_controllers.contains(address.domain()));
-    auto& controller = *m_host_controllers.get(address.domain()).value();
-    return controller.read32_field(address.bus(), address.device(), address.function(), field);
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    return controller.read32_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
 }
 
 }

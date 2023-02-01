@@ -176,7 +176,7 @@ ErrorOr<void> ConfigFile::sync()
         return Error::from_errno(ENOENT);
 
     TRY(m_file->truncate(0));
-    TRY(m_file->seek(0, Stream::SeekMode::SetPosition));
+    TRY(m_file->seek(0, SeekMode::SetPosition));
 
     for (auto& it : m_groups) {
         TRY(m_file->write(DeprecatedString::formatted("[{}]\n", it.key).bytes()));

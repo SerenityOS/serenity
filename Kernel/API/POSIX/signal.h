@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/API/POSIX/sys/types.h>
 
 #ifdef __cplusplus

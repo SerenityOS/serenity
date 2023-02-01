@@ -6,6 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -22,7 +23,6 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/sys/ioctl_numbers.h>
 
 namespace Kernel {
 
@@ -480,9 +480,9 @@ ErrorOr<NonnullOwnPtr<KString>> IPv4Socket::pseudo_path(OpenFileDescription cons
     StringBuilder builder;
     TRY(builder.try_append("socket:"sv));
 
-    TRY(builder.try_appendff("{}:{}", m_local_address.to_string(), m_local_port));
+    TRY(builder.try_appendff("{}:{}", TRY(m_local_address.to_string()), m_local_port));
     if (m_role == Role::Accepted || m_role == Role::Connected)
-        TRY(builder.try_appendff(" / {}:{}", m_peer_address.to_string(), m_peer_port));
+        TRY(builder.try_appendff(" / {}:{}", TRY(m_peer_address.to_string()), m_peer_port));
 
     switch (m_role) {
     case Role::Listener:
@@ -740,7 +740,16 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
 
         case SIOCGIFHWADDR: {
             auto mac_address = adapter->mac_address();
-            ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER; // FIXME: Query the underlying network interface for it's type
+            switch (adapter->adapter_type()) {
+            case NetworkAdapter::Type::Loopback:
+                ifr.ifr_hwaddr.sa_family = ARPHRD_LOOPBACK;
+                break;
+            case NetworkAdapter::Type::Ethernet:
+                ifr.ifr_hwaddr.sa_family = ARPHRD_ETHER;
+                break;
+            default:
+                VERIFY_NOT_REACHED();
+            }
             mac_address.copy_to(Bytes { ifr.ifr_hwaddr.sa_data, sizeof(ifr.ifr_hwaddr.sa_data) });
             return copy_to_user(user_ifr, &ifr);
         }

@@ -4,31 +4,10 @@
         margins: [8]
     }
 
-    @GUI::Frame {
+    @GamesSettings::Preview {
         name: "cards_preview"
-        max_height: "shrink"
-        background_color: "green"
         fill_with_background_color: true
-        layout: @GUI::HorizontalBoxLayout {
-            margins: [8]
-            spacing: 8
-        }
-
-        @GUI::Layout::Spacer {}
-
-        @GUI::ImageWidget {
-            name: "cards_preview_card_back"
-        }
-
-        @GUI::ImageWidget {
-            name: "cards_preview_card_front_ace"
-        }
-
-        @GUI::ImageWidget {
-            name: "cards_preview_card_front_queen"
-        }
-
-        @GUI::Layout::Spacer {}
+        fixed_height: 160
     }
 
     @GUI::GroupBox {

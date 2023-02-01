@@ -22,8 +22,12 @@ public:
     void set_col_span(unsigned);
     void set_row_span(unsigned);
 
+    virtual Optional<ARIA::Role> default_role() const override;
+
 private:
     HTMLTableCellElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 };
 

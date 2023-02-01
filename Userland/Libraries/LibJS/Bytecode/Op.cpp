@@ -1065,7 +1065,7 @@ DeprecatedString Store::to_deprecated_string_impl(Bytecode::Executable const&) c
 
 DeprecatedString NewBigInt::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return DeprecatedString::formatted("NewBigInt \"{}\"", m_bigint.to_base(10));
+    return DeprecatedString::formatted("NewBigInt \"{}\"", m_bigint.to_base_deprecated(10));
 }
 
 DeprecatedString NewArray::to_deprecated_string_impl(Bytecode::Executable const&) const

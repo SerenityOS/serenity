@@ -114,4 +114,46 @@ describe("correct behavior", () => {
             expect(en2.resolvedOptions().roundingPriority).toBe(roundingPriority);
         });
     });
+
+    test("rounding mode", () => {
+        const en1 = new Intl.PluralRules("en");
+        expect(en1.resolvedOptions().roundingMode).toBe("halfExpand");
+
+        [
+            "ceil",
+            "floor",
+            "expand",
+            "trunc",
+            "halfCeil",
+            "halfFloor",
+            "halfExpand",
+            "halfTrunc",
+            "halfEven",
+        ].forEach(roundingMode => {
+            const en2 = new Intl.PluralRules("en", { roundingMode: roundingMode });
+            expect(en2.resolvedOptions().roundingMode).toBe(roundingMode);
+        });
+    });
+
+    test("rounding increment", () => {
+        const en1 = new Intl.PluralRules("en");
+        expect(en1.resolvedOptions().roundingIncrement).toBe(1);
+
+        [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000].forEach(
+            roundingIncrement => {
+                const en2 = new Intl.PluralRules("en", { roundingIncrement: roundingIncrement });
+                expect(en2.resolvedOptions().roundingIncrement).toBe(roundingIncrement);
+            }
+        );
+    });
+
+    test("trailing zero display", () => {
+        const en1 = new Intl.PluralRules("en");
+        expect(en1.resolvedOptions().trailingZeroDisplay).toBe("auto");
+
+        ["auto", "stripIfInteger"].forEach(trailingZeroDisplay => {
+            const en2 = new Intl.PluralRules("en", { trailingZeroDisplay: trailingZeroDisplay });
+            expect(en2.resolvedOptions().trailingZeroDisplay).toBe(trailingZeroDisplay);
+        });
+    });
 });

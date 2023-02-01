@@ -37,11 +37,11 @@ public:
     static ErrorOr<NonnullRefPtr<AudioWidget>> try_create()
     {
         Array<VolumeBitmapPair, 5> volume_level_bitmaps = {
-            { { 66, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-high.png"sv)) },
-                { 33, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-medium.png"sv)) },
-                { 1, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-low.png"sv)) },
-                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-zero.png"sv)) },
-                { 0, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/audio-volume-muted.png"sv)) } }
+            { { 66, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-high.png"sv)) },
+                { 33, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-medium.png"sv)) },
+                { 1, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-low.png"sv)) },
+                { 0, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-zero.png"sv)) },
+                { 0, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-muted.png"sv)) } }
         };
         auto audio_client = TRY(Audio::ConnectionToServer::try_create());
         NonnullRefPtr<AudioWidget> audio_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AudioWidget(move(audio_client), move(volume_level_bitmaps))));
@@ -80,7 +80,7 @@ private:
         m_slider_window = add<GUI::Window>(window());
         m_slider_window->set_window_type(GUI::WindowType::Popup);
 
-        m_root_container = TRY(m_slider_window->try_set_main_widget<GUI::Frame>());
+        m_root_container = TRY(m_slider_window->set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>();
         m_root_container->layout()->set_margins({ 4 });
@@ -237,7 +237,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domain("AudioApplet");
     TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = TRY(GUI::Window::try_create());
@@ -245,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("Audio");
     window->set_window_type(GUI::WindowType::Applet);
 
-    auto audio_widget = TRY(window->try_set_main_widget<AudioWidget>());
+    auto audio_widget = TRY(window->set_main_widget<AudioWidget>());
     window->show();
 
     // This positioning code depends on the window actually existing.

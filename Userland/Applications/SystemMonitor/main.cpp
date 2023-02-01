@@ -127,53 +127,53 @@ public:
             df_fields.empend("source", "Source", Gfx::TextAlignment::CenterLeft);
             df_fields.empend(
                 "Size", Gfx::TextAlignment::CenterRight,
-                [](const JsonObject& object) {
+                [](JsonObject const& object) {
                     StringBuilder size_builder;
                     size_builder.append(' ');
-                    size_builder.append(human_readable_size(object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64()));
+                    size_builder.append(human_readable_size(object.get_u64("total_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0)));
                     size_builder.append(' ');
                     return size_builder.to_deprecated_string();
                 },
-                [](const JsonObject& object) {
-                    return object.get("total_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
+                [](JsonObject const& object) {
+                    return object.get_u64("total_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0);
                 },
-                [](const JsonObject& object) {
-                    auto total_blocks = object.get("total_block_count"sv).to_u64();
+                [](JsonObject const& object) {
+                    auto total_blocks = object.get_u64("total_block_count"sv).value_or(0);
                     if (total_blocks == 0)
                         return 0;
-                    auto free_blocks = object.get("free_block_count"sv).to_u64();
+                    auto free_blocks = object.get_u64("free_block_count"sv).value_or(0);
                     auto used_blocks = total_blocks - free_blocks;
                     int percentage = (static_cast<double>(used_blocks) / static_cast<double>(total_blocks) * 100.0);
                     return percentage;
                 });
             df_fields.empend(
                 "Used", Gfx::TextAlignment::CenterRight,
-                [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count"sv).to_u64();
-            auto free_blocks = object.get("free_block_count"sv).to_u64();
+                [](JsonObject const& object) {
+            auto total_blocks = object.get_u64("total_block_count"sv).value_or(0);
+            auto free_blocks = object.get_u64("free_block_count"sv).value_or(0);
             auto used_blocks = total_blocks - free_blocks;
-            return human_readable_size(used_blocks * object.get("block_size"sv).to_u64()); },
-                [](const JsonObject& object) {
-                    auto total_blocks = object.get("total_block_count"sv).to_u64();
-                    auto free_blocks = object.get("free_block_count"sv).to_u64();
+            return human_readable_size(used_blocks * object.get_u64("block_size"sv).value_or(0)); },
+                [](JsonObject const& object) {
+                    auto total_blocks = object.get_u64("total_block_count"sv).value_or(0);
+                    auto free_blocks = object.get_u64("free_block_count"sv).value_or(0);
                     auto used_blocks = total_blocks - free_blocks;
-                    return used_blocks * object.get("block_size"sv).to_u64();
+                    return used_blocks * object.get_u64("block_size"sv).value_or(0);
                 });
             df_fields.empend(
                 "Available", Gfx::TextAlignment::CenterRight,
-                [](const JsonObject& object) {
-                    return human_readable_size(object.get("free_block_count"sv).to_u64() * object.get("block_size"sv).to_u64());
+                [](JsonObject const& object) {
+                    return human_readable_size(object.get_u64("free_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0));
                 },
-                [](const JsonObject& object) {
-                    return object.get("free_block_count"sv).to_u64() * object.get("block_size"sv).to_u64();
+                [](JsonObject const& object) {
+                    return object.get_u64("free_block_count"sv).value_or(0) * object.get_u64("block_size"sv).value_or(0);
                 });
-            df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-                bool readonly = object.get("readonly"sv).to_bool();
-                int mount_flags = object.get("mount_flags"sv).to_int();
+            df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
+                bool readonly = object.get_bool("readonly"sv).value_or(false);
+                int mount_flags = object.get_i32("mount_flags"sv).value_or(0);
                 return readonly || (mount_flags & MS_RDONLY) ? "Read-only" : "Read/Write";
             });
-            df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
-                int mount_flags = object.get("mount_flags"sv).to_int();
+            df_fields.empend("Mount flags", Gfx::TextAlignment::CenterLeft, [](JsonObject const& object) {
+                int mount_flags = object.get_i32("mount_flags"sv).value_or(0);
                 StringBuilder builder;
                 bool first = true;
                 auto check = [&](int flag, StringView name) {
@@ -278,8 +278,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_title("System Monitor");
     window->resize(560, 430);
 
-    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    main_widget->load_from_gml(system_monitor_gml);
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(main_widget->load_from_gml(system_monitor_gml));
     auto& tabwidget = *main_widget->find_descendant_of_type_named<GUI::TabWidget>("main_tabs");
     statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
@@ -328,6 +328,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
     update_stats();
     auto& refresh_timer = window->add<Core::Timer>(frequency * 1000, move(update_stats));
+    refresh_timer.start();
 
     auto selected_id = [&](ProcessModel::Column column) -> pid_t {
         if (process_table_view.selection().is_empty())
@@ -344,7 +345,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto kill_action = GUI::Action::create(
-        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/kill.png"sv)), [&](const GUI::Action&) {
+        "&Kill Process", { Mod_Ctrl, Key_K }, { Key_Delete }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -355,7 +356,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto stop_action = GUI::Action::create(
-        "&Stop Process", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/stop-hand.png"sv)), [&](const GUI::Action&) {
+        "&Stop Process", { Mod_Ctrl, Key_S }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -366,7 +367,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         &process_table_view);
 
     auto continue_action = GUI::Action::create(
-        "&Continue Process", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/continue.png"sv)), [&](const GUI::Action&) {
+        "&Continue Process", { Mod_Ctrl, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"sv)), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGCONT);
@@ -375,7 +376,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto profile_action = GUI::Action::create(
         "&Profile Process", { Mod_Ctrl, Key_P },
-        TRY(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-profiler.png"sv)), [&](auto&) {
+        TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv)), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid == -1)
                 return;
@@ -512,8 +513,8 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
     auto app_icon = GUI::Icon::default_icon("app-system-monitor"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto main_widget = TRY(window->try_set_main_widget<GUI::Widget>());
-    main_widget->load_from_gml(process_window_gml);
+    auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
+    TRY(main_widget->load_from_gml(process_window_gml));
 
     GUI::ModelIndex process_index;
     for (int row = 0; row < ProcessModel::the().row_count({}); ++row) {

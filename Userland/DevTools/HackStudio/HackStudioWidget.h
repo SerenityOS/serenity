@@ -104,7 +104,6 @@ private:
     ErrorOr<NonnullRefPtr<GUI::Action>> create_new_file_action(DeprecatedString const& label, DeprecatedString const& icon, DeprecatedString const& extension);
     ErrorOr<NonnullRefPtr<GUI::Action>> create_new_directory_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_open_selected_action();
-    NonnullRefPtr<GUI::Action> create_open_selected_in_new_tab_action();
     NonnullRefPtr<GUI::Action> create_delete_action();
     ErrorOr<NonnullRefPtr<GUI::Action>> create_new_project_action();
     NonnullRefPtr<GUI::Action> create_switch_to_next_editor_tab_widget_action();

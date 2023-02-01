@@ -401,6 +401,24 @@ run_gdb() {
     fi
 }
 
+build_and_run_lagom_target() {
+    local run_target="${1}"
+    local lagom_target="${CMD_ARGS[0]}"
+    local lagom_args
+
+    # All command arguments must have any existing semicolon escaped, to prevent CMake from
+    # interpreting them as list separators.
+    local cmd_args=()
+    for arg in "${CMD_ARGS[@]:1}"; do
+        cmd_args+=( "${arg//;/\\;}" )
+    done
+
+    # Then existing list separators must be replaced with a semicolon for CMake.
+    lagom_args=$(IFS=';' ; echo -e "${cmd_args[*]}")
+
+    LAGOM_TARGET="${lagom_target}" LAGOM_ARGS="${lagom_args[*]}" build_target "${run_target}"
+}
+
 if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
@@ -429,11 +447,10 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
           ;;
         run)
             if [ "$TARGET" = "lagom" ]; then
-                build_target "${CMD_ARGS[0]}"
                 if [ "${CMD_ARGS[0]}" = "ladybird" ]; then
-                    ninja -C "$BUILD_DIR" run-ladybird
+                    build_and_run_lagom_target "run-ladybird"
                 else
-                    "$BUILD_DIR/${CMD_ARGS[0]}" "${CMD_ARGS[@]:1}"
+                    build_and_run_lagom_target "run-lagom-target"
                 fi
             else
                 build_target

@@ -18,13 +18,15 @@ AudioConstructor::AudioConstructor(JS::Realm& realm)
 {
 }
 
-void AudioConstructor::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> AudioConstructor::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    NativeFunction::initialize(realm);
+    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
 
-    define_direct_property(vm.names.prototype, &cached_web_prototype(realm, "HTMLAudioElement"), 0);
+    define_direct_property(vm.names.prototype, &ensure_web_prototype<Bindings::HTMLAudioElementPrototype>(realm, "HTMLAudioElement"), 0);
     define_direct_property(vm.names.length, JS::Value(0), JS::Attribute::Configurable);
+
+    return {};
 }
 
 JS::ThrowCompletionOr<JS::Value> AudioConstructor::call()
@@ -52,7 +54,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> AudioConstructor::construct(
     // 4. If src is given, then set an attribute value for audio using "src" and src.
     //    (This will cause the user agent to invoke the object's resource selection algorithm before returning.)
     if (!src_value.is_undefined()) {
-        auto src = TRY(src_value.to_string(vm));
+        auto src = TRY(src_value.to_deprecated_string(vm));
         MUST(audio->set_attribute(HTML::AttributeNames::src, move(src)));
     }
 

@@ -107,7 +107,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
-        if ((peer_saved_registers.cs & 0x03) != 3)
+        if (peer_saved_registers.previous_mode() == ExecutionMode::User)
             return EFAULT;
 
         tracer->set_regs(regs);
@@ -229,6 +229,7 @@ ErrorOr<void> Process::poke_user_data(Userspace<FlatPtr*> address, FlatPtr data)
 
 ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
 {
+#if ARCH(X86_64)
     FlatPtr data;
     switch (register_index) {
     case 0:
@@ -253,10 +254,17 @@ ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
         return EINVAL;
     }
     return data;
+#elif ARCH(AARCH64)
+    (void)register_index;
+    TODO_AARCH64();
+#else
+#    error "Unknown architecture"
+#endif
 }
 
 ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
 {
+#if ARCH(X86_64)
     switch (register_index) {
     case 0:
         m_debug_register_state.dr0 = data;
@@ -277,6 +285,13 @@ ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
         return EINVAL;
     }
     return {};
+#elif ARCH(AARCH64)
+    (void)register_index;
+    (void)data;
+    TODO_AARCH64();
+#else
+#    error "Unknown architecture"
+#endif
 }
 
 }

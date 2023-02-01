@@ -15,7 +15,7 @@ class AsyncGeneratorPrototype final : public PrototypeObject<AsyncGeneratorProto
     JS_PROTOTYPE_OBJECT(AsyncGeneratorPrototype, AsyncGenerator, AsyncGenerator)
 
 public:
-    virtual void initialize(Realm&) override;
+    virtual ThrowCompletionOr<void> initialize(Realm&) override;
     virtual ~AsyncGeneratorPrototype() override = default;
 
 private:

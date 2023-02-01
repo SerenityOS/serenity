@@ -11,7 +11,7 @@
 
 namespace Web::Layout {
 
-class ButtonBox : public FormAssociatedLabelableNode {
+class ButtonBox final : public FormAssociatedLabelableNode {
     JS_CELL(ButtonBox, FormAssociatedLabelableNode);
 
 public:
@@ -21,7 +21,7 @@ public:
     virtual void prepare_for_replaced_layout() override;
 
 private:
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 };
 
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,20 +13,20 @@ namespace GUI {
 
 IniLexer::IniLexer(StringView input)
     : m_input(input)
+    , m_iterator(m_input.begin())
 {
 }
 
-char IniLexer::peek(size_t offset) const
+u32 IniLexer::peek(size_t offset) const
 {
-    if ((m_index + offset) >= m_input.length())
-        return 0;
-    return m_input[m_index + offset];
+    return m_iterator.peek(offset).value_or(0);
 }
 
-char IniLexer::consume()
+u32 IniLexer::consume()
 {
-    VERIFY(m_index < m_input.length());
-    char ch = m_input[m_index++];
+    VERIFY(m_iterator != m_input.end());
+    u32 ch = *m_iterator;
+    ++m_iterator;
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
@@ -38,8 +39,6 @@ char IniLexer::consume()
 Vector<IniToken> IniLexer::lex()
 {
     Vector<IniToken> tokens;
-
-    size_t token_start_index = 0;
     IniPosition token_start_position;
 
     auto emit_token = [&](auto type) {
@@ -52,7 +51,6 @@ Vector<IniToken> IniLexer::lex()
     };
 
     auto begin_token = [&] {
-        token_start_index = m_index;
         token_start_position = m_position;
     };
 
@@ -64,7 +62,7 @@ Vector<IniToken> IniLexer::lex()
         tokens.append(token);
     };
 
-    while (m_index < m_input.length()) {
+    while (m_iterator != m_input.end()) {
         auto ch = peek();
 
         if (is_ascii_space(ch)) {

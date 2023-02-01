@@ -30,7 +30,7 @@
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #include <Kernel/ScopedCritical.h>
 
-#include <Kernel/Memory/PageDirectory.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 
 namespace Kernel {
@@ -918,10 +918,10 @@ void Processor::enter_trap(TrapFrame& trap, bool raise_irq)
         auto& current_trap = current_thread->current_trap();
         trap.next_trap = current_trap;
         current_trap = &trap;
-        // The cs register of this trap tells us where we will return back to
-        auto new_previous_mode = ((trap.regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode;
+
+        auto new_previous_mode = trap.regs->previous_mode();
         if (current_thread->set_previous_mode(new_previous_mode) && trap.prev_irq_level == 0) {
-            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == Thread::PreviousMode::KernelMode, false);
+            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), new_previous_mode == ExecutionMode::Kernel, false);
         }
     } else {
         trap.next_trap = nullptr;
@@ -954,17 +954,16 @@ void Processor::exit_trap(TrapFrame& trap)
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
         current_trap = trap.next_trap;
-        Thread::PreviousMode new_previous_mode;
+        ExecutionMode new_previous_mode;
         if (current_trap) {
             VERIFY(current_trap->regs);
             // If we have another higher level trap then we probably returned
-            // from an interrupt or irq handler. The cs register of the
-            // new/higher level trap tells us what the mode prior to it was
-            new_previous_mode = ((current_trap->regs->cs & 3) != 0) ? Thread::PreviousMode::UserMode : Thread::PreviousMode::KernelMode;
+            // from an interrupt or irq handler.
+            new_previous_mode = current_trap->regs->previous_mode();
         } else {
             // If we don't have a higher level trap then we're back in user mode.
             // Which means that the previous mode prior to being back in user mode was kernel mode
-            new_previous_mode = Thread::PreviousMode::KernelMode;
+            new_previous_mode = ExecutionMode::Kernel;
         }
 
         if (current_thread->set_previous_mode(new_previous_mode))

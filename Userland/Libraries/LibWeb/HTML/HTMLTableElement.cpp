@@ -20,10 +20,17 @@ namespace Web::HTML {
 HTMLTableElement::HTMLTableElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLTableElement"));
 }
 
 HTMLTableElement::~HTMLTableElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLTableElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLTableElementPrototype>(realm, "HTMLTableElement"));
+
+    return {};
+}
 
 void HTMLTableElement::visit_edges(Cell::Visitor& visitor)
 {

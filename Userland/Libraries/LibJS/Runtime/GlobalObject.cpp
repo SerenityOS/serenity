@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +28,7 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/DataViewConstructor.h>
 #include <LibJS/Runtime/DateConstructor.h>
+#include <LibJS/Runtime/DisposableStackConstructor.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/FinalizationRegistryConstructor.h>
 #include <LibJS/Runtime/FinalizationRegistryPrototype.h>
@@ -63,6 +64,7 @@
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/SuppressedErrorConstructor.h>
 #include <LibJS/Runtime/SymbolConstructor.h>
 #include <LibJS/Runtime/Temporal/CalendarConstructor.h>
 #include <LibJS/Runtime/Temporal/DurationConstructor.h>
@@ -134,6 +136,7 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.Boolean, attr, [](auto& realm) -> Value { return realm.intrinsics().boolean_constructor(); });
     global.define_intrinsic_accessor(vm.names.DataView, attr, [](auto& realm) -> Value { return realm.intrinsics().data_view_constructor(); });
     global.define_intrinsic_accessor(vm.names.Date, attr, [](auto& realm) -> Value { return realm.intrinsics().date_constructor(); });
+    global.define_intrinsic_accessor(vm.names.DisposableStack, attr, [](auto& realm) -> Value { return realm.intrinsics().disposable_stack_constructor(); });
     global.define_intrinsic_accessor(vm.names.Error, attr, [](auto& realm) -> Value { return realm.intrinsics().error_constructor(); });
     global.define_intrinsic_accessor(vm.names.EvalError, attr, [](auto& realm) -> Value { return realm.intrinsics().eval_error_constructor(); });
     global.define_intrinsic_accessor(vm.names.FinalizationRegistry, attr, [](auto& realm) -> Value { return realm.intrinsics().finalization_registry_constructor(); });
@@ -154,6 +157,7 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.Set, attr, [](auto& realm) -> Value { return realm.intrinsics().set_constructor(); });
     global.define_intrinsic_accessor(vm.names.ShadowRealm, attr, [](auto& realm) -> Value { return realm.intrinsics().shadow_realm_constructor(); });
     global.define_intrinsic_accessor(vm.names.String, attr, [](auto& realm) -> Value { return realm.intrinsics().string_constructor(); });
+    global.define_intrinsic_accessor(vm.names.SuppressedError, attr, [](auto& realm) -> Value { return realm.intrinsics().suppressed_error_constructor(); });
     global.define_intrinsic_accessor(vm.names.Symbol, attr, [](auto& realm) -> Value { return realm.intrinsics().symbol_constructor(); });
     global.define_intrinsic_accessor(vm.names.SyntaxError, attr, [](auto& realm) -> Value { return realm.intrinsics().syntax_error_constructor(); });
     global.define_intrinsic_accessor(vm.names.TypeError, attr, [](auto& realm) -> Value { return realm.intrinsics().type_error_constructor(); });
@@ -167,12 +171,12 @@ Object& set_default_global_bindings(Realm& realm)
     global.define_intrinsic_accessor(vm.names.WeakSet, attr, [](auto& realm) -> Value { return realm.intrinsics().weak_set_constructor(); });
 
     // 19.4 Other Properties of the Global Object, https://tc39.es/ecma262/#sec-other-properties-of-the-global-object
-    global.define_direct_property(vm.names.Atomics, vm.heap().allocate<AtomicsObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Intl, vm.heap().allocate<Intl::Intl>(realm, realm), attr);
-    global.define_direct_property(vm.names.JSON, vm.heap().allocate<JSONObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Math, vm.heap().allocate<MathObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Reflect, vm.heap().allocate<ReflectObject>(realm, realm), attr);
-    global.define_direct_property(vm.names.Temporal, vm.heap().allocate<Temporal::Temporal>(realm, realm), attr);
+    global.define_intrinsic_accessor(vm.names.Atomics, attr, [](auto& realm) -> Value { return realm.intrinsics().atomics_object(); });
+    global.define_intrinsic_accessor(vm.names.Intl, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_object(); });
+    global.define_intrinsic_accessor(vm.names.JSON, attr, [](auto& realm) -> Value { return realm.intrinsics().json_object(); });
+    global.define_intrinsic_accessor(vm.names.Math, attr, [](auto& realm) -> Value { return realm.intrinsics().math_object(); });
+    global.define_intrinsic_accessor(vm.names.Reflect, attr, [](auto& realm) -> Value { return realm.intrinsics().reflect_object(); });
+    global.define_intrinsic_accessor(vm.names.Temporal, attr, [](auto& realm) -> Value { return realm.intrinsics().temporal_object(); });
 
     // B.2.1 Additional Properties of the Global Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-global-object
     global.define_direct_property(vm.names.escape, realm.intrinsics().escape_function(), attr);
@@ -186,15 +190,17 @@ Object& set_default_global_bindings(Realm& realm)
     return global;
 }
 
-void GlobalObject::initialize(Realm& realm)
+ThrowCompletionOr<void> GlobalObject::initialize(Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     auto& vm = this->vm();
 
     // Non-standard
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.gc, gc, 0, attr);
+
+    return {};
 }
 
 GlobalObject::~GlobalObject() = default;
@@ -223,26 +229,40 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 // 19.2.4 parseFloat ( string ), https://tc39.es/ecma262/#sec-parsefloat-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
+    // OPTIMIZATION: We can skip the number-to-string-to-number round trip when the value is already a number.
     if (vm.argument(0).is_number())
         return vm.argument(0);
-    auto input_string = TRY(vm.argument(0).to_string(vm));
-    auto trimmed_string = MUST(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+
+    // 1. Let inputString be ? ToString(string).
+    auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
+
+    // 2. Let trimmedString be ! TrimString(inputString, start).
+    auto trimmed_string = MUST_OR_THROW_OOM(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
     if (trimmed_string.is_empty())
         return js_nan();
 
-    auto result = parse_first_floating_point<double>(trimmed_string.characters(), trimmed_string.characters() + trimmed_string.length());
-    if (result.parsed_value())
-        return result.value;
+    // 3. If neither trimmedString nor any prefix of trimmedString satisfies the syntax of a StrDecimalLiteral (see 7.1.4.1), return NaN.
+    // 4. Let numberString be the longest prefix of trimmedString, which might be trimmedString itself, that satisfies the syntax of a StrDecimalLiteral.
+    // 5. Let parsedNumber be ParseText(StringToCodePoints(numberString), StrDecimalLiteral).
+    // 6. Assert: parsedNumber is a Parse Node.
+    // 7. Return StringNumericValue of parsedNumber.
+    auto trimmed_string_view = trimmed_string.bytes_as_string_view();
+    auto const* begin = trimmed_string_view.characters_without_null_termination();
+    auto const* end = begin + trimmed_string_view.length();
 
-    bool starts_with_sign = trimmed_string[0] == '-' || trimmed_string[0] == '+';
-    auto signless_view = starts_with_sign ? trimmed_string.substring_view(1) : trimmed_string.view();
-    if (signless_view.starts_with("Infinity"sv, AK::CaseSensitivity::CaseSensitive)) {
+    auto parsed_number = parse_first_floating_point<double>(begin, end);
+    if (parsed_number.parsed_value())
+        return parsed_number.value;
+
+    auto first_code_point = *trimmed_string.code_points().begin();
+    if (first_code_point == '-' || first_code_point == '+')
+        trimmed_string_view = trimmed_string_view.substring_view(1);
+
+    if (trimmed_string_view.starts_with("Infinity"sv, AK::CaseSensitivity::CaseSensitive)) {
         // Only an immediate - means we should return negative infinity
-        if (trimmed_string[0] == '-')
-            return js_negative_infinity();
-
-        return js_infinity();
+        return first_code_point == '-' ? js_negative_infinity() : js_infinity();
     }
+
     return js_nan();
 }
 
@@ -250,20 +270,23 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 {
     // 1. Let inputString be ? ToString(string).
-    auto input_string = TRY(vm.argument(0).to_string(vm));
+    auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
-    auto string = MUST(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+    // NOTE: We TRY this operation only to propagate OOM errors.
+    auto string = TRY(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
 
     // 3. Let sign be 1.
     auto sign = 1;
 
     // 4. If S is not empty and the first code unit of S is the code unit 0x002D (HYPHEN-MINUS), set sign to -1.
-    if (!string.is_empty() && string[0] == 0x2D)
+    auto first_code_point = string.is_empty() ? OptionalNone {} : Optional<u32> { *string.code_points().begin() };
+    if (first_code_point == 0x2Du)
         sign = -1;
+
     // 5. If S is not empty and the first code unit of S is the code unit 0x002B (PLUS SIGN) or the code unit 0x002D (HYPHEN-MINUS), remove the first code unit from S.
-    auto trimmed_view = string.view();
-    if (!string.is_empty() && (string[0] == 0x2B || string[0] == 0x2D))
+    auto trimmed_view = string.bytes_as_string_view();
+    if (first_code_point == 0x2Bu || first_code_point == 0x2Du)
         trimmed_view = trimmed_view.substring_view(1);
 
     // 6. Let R be ℝ(? ToInt32(radix)).
@@ -343,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
 static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const& string, StringView unescaped_set)
 {
-    auto utf16_string = Utf16String(string);
+    auto utf16_string = TRY(Utf16String::create(vm, string));
 
     // 1. Let strLen be the length of string.
     auto string_length = utf16_string.length_in_code_units();
@@ -392,7 +415,7 @@ static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const
             VERIFY(nwritten > 0);
         }
     }
-    return encoded_builder.build();
+    return encoded_builder.to_deprecated_string();
 }
 
 // 19.2.6.1.2 Decode ( string, reservedSet ), https://tc39.es/ecma262/#sec-decode
@@ -450,13 +473,13 @@ static ThrowCompletionOr<DeprecatedString> decode(VM& vm, DeprecatedString const
     }
     if (expected_continuation_bytes > 0)
         return vm.throw_completion<URIError>(ErrorType::URIMalformed);
-    return decoded_builder.build();
+    return decoded_builder.to_deprecated_string();
 }
 
 // 19.2.6.4 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(vm));
+    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto encoded = TRY(encode(vm, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv));
     return PrimitiveString::create(vm, move(encoded));
 }
@@ -464,7 +487,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
 // 19.2.6.2 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(vm));
+    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto decoded = TRY(decode(vm, uri_string, ";/?:@&=+$,#"sv));
     return PrimitiveString::create(vm, move(decoded));
 }
@@ -472,7 +495,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 // 19.2.6.5 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(vm));
+    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto encoded = TRY(encode(vm, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv));
     return PrimitiveString::create(vm, move(encoded));
 }
@@ -480,7 +503,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 // 19.2.6.3 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
-    auto uri_string = TRY(vm.argument(0).to_string(vm));
+    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto decoded = TRY(decode(vm, uri_string, ""sv));
     return PrimitiveString::create(vm, move(decoded));
 }
@@ -488,9 +511,9 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 // B.2.1.1 escape ( string ), https://tc39.es/ecma262/#sec-escape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
     StringBuilder escaped;
-    for (auto code_point : utf8_to_utf16(string)) {
+    for (auto code_point : TRY_OR_THROW_OOM(vm, utf8_to_utf16(string))) {
         if (code_point < 256) {
             if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(static_cast<char>(code_point)))
                 escaped.append(code_point);
@@ -500,13 +523,13 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
         }
         escaped.appendff("%u{:04X}", code_point);
     }
-    return PrimitiveString::create(vm, escaped.build());
+    return PrimitiveString::create(vm, escaped.to_deprecated_string());
 }
 
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
 {
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
     ssize_t length = string.length();
     StringBuilder unescaped(length);
     for (auto k = 0; k < length; ++k) {
@@ -522,7 +545,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
         }
         unescaped.append_code_point(code_point);
     }
-    return PrimitiveString::create(vm, unescaped.build());
+    return PrimitiveString::create(vm, unescaped.to_deprecated_string());
 }
 
 }

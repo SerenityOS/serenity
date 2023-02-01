@@ -58,7 +58,7 @@ private:
     {
         constexpr u16 RENDER_WIDTH = 640;
         constexpr u16 RENDER_HEIGHT = 480;
-        m_bitmap = Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
+        m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT }).release_value_but_fixme_should_propagate_errors();
         m_context = MUST(GL::create_context(*m_bitmap));
 
         start_timer(20);
@@ -116,7 +116,7 @@ private:
     float m_rotation_speed = 60.f;
     bool m_show_frame_rate = false;
     int m_cycles = 0;
-    int m_accumulated_time = 0;
+    Time m_accumulated_time = {};
     RefPtr<GUI::Label> m_stats;
     GLint m_wrap_s_mode = GL_REPEAT;
     GLint m_wrap_t_mode = GL_REPEAT;
@@ -147,7 +147,7 @@ void GLContextWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), url.path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), url.path(), Core::OpenMode::ReadOnly);
         if (response.is_error())
             return;
         load_file(response.value());
@@ -265,10 +265,10 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     m_context->present();
 
     if ((m_cycles % 30) == 0) {
-        auto render_time = m_accumulated_time / 30.0;
+        auto render_time = static_cast<double>(m_accumulated_time.to_milliseconds()) / 30.0;
         auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
         m_stats->set_text(DeprecatedString::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
-        m_accumulated_time = 0;
+        m_accumulated_time = {};
 
         glEnable(GL_LIGHT0);
         glEnable(GL_LIGHT1);
@@ -285,7 +285,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
     update();
 
-    m_accumulated_time += timer.elapsed();
+    m_accumulated_time += timer.elapsed_time();
     m_cycles++;
 }
 
@@ -335,14 +335,14 @@ bool GLContextWidget::load_file(Core::File& file)
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
     if (Core::File::exists(texture_path)) {
-        auto bitmap_or_error = Gfx::Bitmap::try_load_from_file(texture_path);
+        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_path);
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
     } else {
-        auto response = FileSystemAccessClient::Client::the().try_request_file(window(), builder.string_view(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), builder.string_view(), Core::OpenMode::ReadOnly);
         if (!response.is_error()) {
             auto texture_file = response.value();
-            auto bitmap_or_error = Gfx::Bitmap::try_load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
+            auto bitmap_or_error = Gfx::Bitmap::load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
             if (!bitmap_or_error.is_error())
                 texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         }
@@ -370,7 +370,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix prot_exec"));
 
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/home/anon/Documents/3D Models", "r"));
     TRY(Core::System::unveil("/res", "r"));
@@ -385,7 +384,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640 + 4, 480 + 4);
     window->set_resizable(false);
     window->set_double_buffering_enabled(true);
-    auto widget = TRY(window->try_set_main_widget<GLContextWidget>());
+    auto widget = TRY(window->set_main_widget<GLContextWidget>());
 
     auto& time = widget->add<GUI::Label>();
     time.set_visible(false);
@@ -398,7 +397,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(window);
+        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window);
         if (response.is_error())
             return;
 

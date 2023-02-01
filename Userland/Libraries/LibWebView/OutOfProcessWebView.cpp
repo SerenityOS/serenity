@@ -74,24 +74,6 @@ void OutOfProcessWebView::create_client()
     client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 }
 
-void OutOfProcessWebView::load(const AK::URL& url)
-{
-    m_url = url;
-    client().async_load_url(url);
-}
-
-void OutOfProcessWebView::load_html(StringView html, const AK::URL& url)
-{
-    m_url = url;
-    client().async_load_html(html, url);
-}
-
-void OutOfProcessWebView::load_empty_document()
-{
-    m_url = {};
-    client().async_load_html("", {});
-}
-
 void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
     Super::paint_event(event);
@@ -106,7 +88,10 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
     if (auto* bitmap = m_client_state.has_usable_bitmap ? m_client_state.front_bitmap.bitmap.ptr() : m_backup_bitmap.ptr()) {
         painter.add_clip_rect(frame_inner_rect());
         painter.translate(frame_thickness(), frame_thickness());
-        painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
+        if (m_content_scales_to_viewport)
+            painter.draw_scaled_bitmap(rect(), *bitmap, bitmap->rect());
+        else
+            painter.blit({ 0, 0 }, *bitmap, bitmap->rect());
         return;
     }
 
@@ -141,19 +126,26 @@ void OutOfProcessWebView::handle_resize()
     if (available_size().is_empty())
         return;
 
-    if (auto new_bitmap_or_error = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
+    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
         m_client_state.front_bitmap.bitmap = new_bitmap_or_error.release_value();
         m_client_state.front_bitmap.id = m_client_state.next_bitmap_id++;
         client().async_add_backing_store(m_client_state.front_bitmap.id, m_client_state.front_bitmap.bitmap->to_shareable_bitmap());
     }
 
-    if (auto new_bitmap_or_error = Gfx::Bitmap::try_create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
+    if (auto new_bitmap_or_error = Gfx::Bitmap::create_shareable(Gfx::BitmapFormat::BGRx8888, available_size()); !new_bitmap_or_error.is_error()) {
         m_client_state.back_bitmap.bitmap = new_bitmap_or_error.release_value();
         m_client_state.back_bitmap.id = m_client_state.next_bitmap_id++;
         client().async_add_backing_store(m_client_state.back_bitmap.id, m_client_state.back_bitmap.bitmap->to_shareable_bitmap());
     }
 
     request_repaint();
+}
+
+void OutOfProcessWebView::update_zoom()
+{
+    client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio * m_zoom_level);
+    // FIXME: Refactor this into separate update_viewport_rect() + request_repaint() like in Ladybird
+    handle_resize();
 }
 
 void OutOfProcessWebView::keydown_event(GUI::KeyEvent& event)
@@ -522,11 +514,11 @@ Gfx::IntRect OutOfProcessWebView::notify_server_did_request_fullscreen_window()
 
 void OutOfProcessWebView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = FileSystemAccessClient::Client::the().try_request_file_read_only_approved(window(), path);
+    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), path);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else
-        client().async_handle_file_return(0, IPC::File(file.value()->leak_fd()), request_id);
+        client().async_handle_file_return(0, IPC::File(file.value().stream()), request_id);
 }
 
 void OutOfProcessWebView::did_scroll()
@@ -550,50 +542,6 @@ void OutOfProcessWebView::request_repaint()
     client().async_paint(m_client_state.back_bitmap.bitmap->rect().translated(horizontal_scrollbar().value(), vertical_scrollbar().value()), m_client_state.back_bitmap.id);
 }
 
-WebContentClient& OutOfProcessWebView::client()
-{
-    VERIFY(m_client_state.client);
-    return *m_client_state.client;
-}
-
-void OutOfProcessWebView::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
-{
-    client().async_debug_request(request, argument);
-}
-
-void OutOfProcessWebView::get_source()
-{
-    client().async_get_source();
-}
-
-void OutOfProcessWebView::inspect_dom_tree()
-{
-    client().async_inspect_dom_tree();
-}
-
-Optional<OutOfProcessWebView::DOMNodeProperties> OutOfProcessWebView::inspect_dom_node(i32 node_id, Optional<Web::CSS::Selector::PseudoElement> pseudo_element)
-{
-    auto response = client().inspect_dom_node(node_id, pseudo_element);
-    if (!response.has_style())
-        return {};
-    return DOMNodeProperties {
-        .computed_values_json = response.computed_style(),
-        .resolved_values_json = response.resolved_style(),
-        .custom_properties_json = response.custom_properties(),
-        .node_box_sizing_json = response.node_box_sizing()
-    };
-}
-
-void OutOfProcessWebView::clear_inspected_dom_node()
-{
-    client().inspect_dom_node(0, {});
-}
-
-i32 OutOfProcessWebView::get_hovered_node_id()
-{
-    return client().get_hovered_node_id();
-}
-
 void OutOfProcessWebView::js_console_input(DeprecatedString const& js_source)
 {
     client().async_js_console_input(js_source);
@@ -602,21 +550,6 @@ void OutOfProcessWebView::js_console_input(DeprecatedString const& js_source)
 void OutOfProcessWebView::js_console_request_messages(i32 start_index)
 {
     client().async_js_console_request_messages(start_index);
-}
-
-void OutOfProcessWebView::run_javascript(StringView js_source)
-{
-    client().async_run_javascript(js_source);
-}
-
-DeprecatedString OutOfProcessWebView::selected_text()
-{
-    return client().get_selected_text();
-}
-
-void OutOfProcessWebView::select_all()
-{
-    client().async_select_all();
 }
 
 DeprecatedString OutOfProcessWebView::dump_layout_tree()
@@ -642,11 +575,6 @@ void OutOfProcessWebView::set_content_filters(Vector<DeprecatedString> filters)
 void OutOfProcessWebView::set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings)
 {
     client().async_set_proxy_mappings(move(proxies), move(mappings));
-}
-
-void OutOfProcessWebView::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
-{
-    client().async_set_preferred_color_scheme(color_scheme);
 }
 
 void OutOfProcessWebView::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
@@ -828,6 +756,17 @@ void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool eve
     }
 
     process_next_input_event();
+}
+
+void OutOfProcessWebView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_tree)
+{
+    if (on_get_accessibility_tree)
+        on_get_accessibility_tree(accessibility_tree);
+}
+
+void OutOfProcessWebView::set_content_scales_to_viewport(bool b)
+{
+    m_content_scales_to_viewport = b;
 }
 
 }

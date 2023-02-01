@@ -1205,7 +1205,7 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
     const u32 width = abs(context.dib.core.width);
     const u32 height = !context.is_included_in_ico ? context.dib.core.height : (context.dib.core.height / 2);
 
-    context.bitmap = TRY(Bitmap::try_create(format, { static_cast<int>(width), static_cast<int>(height) }));
+    context.bitmap = TRY(Bitmap::create(format, { static_cast<int>(width), static_cast<int>(height) }));
 
     ByteBuffer rle_buffer;
     ReadonlyBytes bytes { context.file_bytes + context.data_offset, context.file_size - context.data_offset };
@@ -1400,12 +1400,12 @@ static ErrorOr<void> decode_bmp_pixel_data(BMPLoadingContext& context)
     return {};
 }
 
-BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, bool is_included_in_ico)
+BMPImageDecoderPlugin::BMPImageDecoderPlugin(u8 const* data, size_t data_size, IncludedInICO is_included_in_ico)
 {
     m_context = make<BMPLoadingContext>();
     m_context->file_bytes = data;
     m_context->file_size = data_size;
-    m_context->is_included_in_ico = is_included_in_ico;
+    m_context->is_included_in_ico = (is_included_in_ico == IncludedInICO::Yes);
 }
 
 BMPImageDecoderPlugin::~BMPImageDecoderPlugin() = default;
@@ -1434,9 +1434,27 @@ bool BMPImageDecoderPlugin::set_nonvolatile(bool& was_purged)
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool BMPImageDecoderPlugin::sniff()
+bool BMPImageDecoderPlugin::initialize()
 {
     return !decode_bmp_header(*m_context).is_error();
+}
+
+ErrorOr<bool> BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    BMPLoadingContext context;
+    context.file_bytes = data.data();
+    context.file_size = data.size();
+    return !decode_bmp_header(context).is_error();
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> BMPImageDecoderPlugin::create(ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size()));
+}
+
+ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> BMPImageDecoderPlugin::create_as_included_in_ico(Badge<ICOImageDecoderPlugin>, ReadonlyBytes data)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) BMPImageDecoderPlugin(data.data(), data.size(), IncludedInICO::Yes));
 }
 
 bool BMPImageDecoderPlugin::sniff_dib()
@@ -1472,6 +1490,11 @@ ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index)
 
     VERIFY(m_context->bitmap);
     return ImageFrameDescriptor { m_context->bitmap, 0 };
+}
+
+ErrorOr<Optional<ReadonlyBytes>> BMPImageDecoderPlugin::icc_data()
+{
+    return OptionalNone {};
 }
 
 }

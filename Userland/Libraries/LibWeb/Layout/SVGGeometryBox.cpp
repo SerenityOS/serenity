@@ -46,7 +46,7 @@ CSSPixelPoint SVGGeometryBox::viewbox_origin() const
     return { svg_box->view_box().value().min_x, svg_box->view_box().value().min_y };
 }
 
-RefPtr<Painting::Paintable> SVGGeometryBox::create_paintable() const
+JS::GCPtr<Painting::Paintable> SVGGeometryBox::create_paintable() const
 {
     return Painting::SVGGeometryPaintable::create(*this);
 }

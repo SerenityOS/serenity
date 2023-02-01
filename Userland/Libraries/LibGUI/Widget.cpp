@@ -1145,31 +1145,21 @@ void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<
     }
 }
 
-ErrorOr<void> Widget::try_load_from_gml(StringView gml_string)
+ErrorOr<void> Widget::load_from_gml(StringView gml_string)
 {
-    return try_load_from_gml(gml_string, [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
+    return load_from_gml(gml_string, [](DeprecatedString const& class_name) -> ErrorOr<NonnullRefPtr<Core::Object>> {
         dbgln("Class '{}' not registered", class_name);
         return Error::from_string_literal("Class not registered");
     });
 }
 
-ErrorOr<void> Widget::try_load_from_gml(StringView gml_string, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::load_from_gml(StringView gml_string, UnregisteredChildHandler unregistered_child_handler)
 {
     auto value = TRY(GML::parse_gml(gml_string));
     return load_from_gml_ast(value, unregistered_child_handler);
 }
 
-bool Widget::load_from_gml(StringView gml_string)
-{
-    return !try_load_from_gml(gml_string).is_error();
-}
-
-bool Widget::load_from_gml(StringView gml_string, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
-{
-    return !try_load_from_gml(gml_string, unregistered_child_handler).is_error();
-}
-
-ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, ErrorOr<NonnullRefPtr<Core::Object>> (*unregistered_child_handler)(DeprecatedString const&))
+ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler unregistered_child_handler)
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
         return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);

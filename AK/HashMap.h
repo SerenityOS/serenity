@@ -228,8 +228,13 @@ public:
         auto it = find(key);
         if (it != end())
             return it->value;
-        auto result = TRY(try_set(key, initialization_callback()));
-        VERIFY(result == HashSetResult::InsertedNewEntry);
+        if constexpr (FallibleFunction<Callback>) {
+            auto result = TRY(try_set(key, TRY(initialization_callback())));
+            VERIFY(result == HashSetResult::InsertedNewEntry);
+        } else {
+            auto result = TRY(try_set(key, initialization_callback()));
+            VERIFY(result == HashSetResult::InsertedNewEntry);
+        }
         return find(key)->value;
     }
 

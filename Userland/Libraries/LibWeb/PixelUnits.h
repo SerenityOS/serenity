@@ -127,7 +127,7 @@ template<>
 struct Traits<Web::CSSPixels> : public GenericTraits<Web::CSSPixels> {
     static unsigned hash(Web::CSSPixels const& key)
     {
-        return double_hash(key.value());
+        return Traits<Web::CSSPixels::Type>::hash(key.value());
     }
 
     static bool equals(Web::CSSPixels const& a, Web::CSSPixels const& b)
@@ -140,7 +140,7 @@ template<>
 struct Traits<Web::DevicePixels> : public GenericTraits<Web::DevicePixels> {
     static unsigned hash(Web::DevicePixels const& key)
     {
-        return double_hash(key.value());
+        return Traits<Web::DevicePixels::Type>::hash(key.value());
     }
 
     static bool equals(Web::DevicePixels const& a, Web::DevicePixels const& b)
@@ -150,18 +150,18 @@ struct Traits<Web::DevicePixels> : public GenericTraits<Web::DevicePixels> {
 };
 
 template<>
-struct Formatter<Web::CSSPixels> : Formatter<float> {
+struct Formatter<Web::CSSPixels> : Formatter<Web::CSSPixels::Type> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSSPixels const& value)
     {
-        return Formatter<float>::format(builder, value.value());
+        return Formatter<Web::CSSPixels::Type>::format(builder, value.value());
     }
 };
 
 template<>
-struct Formatter<Web::DevicePixels> : Formatter<float> {
+struct Formatter<Web::DevicePixels> : Formatter<Web::DevicePixels::Type> {
     ErrorOr<void> format(FormatBuilder& builder, Web::DevicePixels const& value)
     {
-        return Formatter<float>::format(builder, value.value());
+        return Formatter<Web::DevicePixels::Type>::format(builder, value.value());
     }
 };
 

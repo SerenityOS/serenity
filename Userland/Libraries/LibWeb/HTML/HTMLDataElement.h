@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -16,8 +17,13 @@ class HTMLDataElement final : public HTMLElement {
 public:
     virtual ~HTMLDataElement() override;
 
+    // https://www.w3.org/TR/html-aria/#el-data
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::generic; }
+
 private:
     HTMLDataElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

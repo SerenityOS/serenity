@@ -74,9 +74,9 @@ Yak Emoji (limited cross-platform support)
 ZWJ Sequence Flags (limited cross-platform support)
 ------------------
 
-🏳️‍🐞 - U+1F3F3 U+FE0F U+200D U+1F41E        SerenityOS flag
-🏳️‍ - U+1F3F3 U+FE0F U+200D U+F8FF         Klingon flag
-🏳️‍🖖 - U+1F3F3 U+FE0F U+200D U+1F596        Vulcan flag
+🏳️‍🐞 - U+1F3F3 U+200D U+1F41E        SerenityOS flag
+🏳️‍ - U+1F3F3 U+200D U+F8FF         Klingon flag
+🏳️‍🖖 - U+1F3F3 U+200D U+1F596        Vulcan flag
 
 Emoji Tag Sequence Flags (limited cross-platform support)
 ------------------------
@@ -204,3 +204,16 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁵󠁡󠀷󠀴󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0034 U+E007F UA-74 Chernihivshchyna
 🏴󠁵󠁡󠀷󠀷󠁿 - U+1F3F4 U+E0075 U+E0061 U+E0037 U+E0037 U+E007F UA-77 Chernivtsi Oblast
 🏴󠁺󠁷󠁨󠁡󠁿 - U+1F3F4 U+E007A U+E0077 U+E0068 U+E0061 U+E007F ZW-HA Harare
+
+Emoji 15.1
+----------
+🔗‍💥 - U+1F517 U+200D U+1F4A5 BROKEN CHAIN
+🍄‍🟫 - U+1F344 U+200D U+1F7EB MUSHROOM (NON-POISONOUS)
+🙂‍↕ - U+1F642 U+200D U+2195 NODDING FACE
+🙂‍↔ - U+1F642 U+200D U+2194 SHAKING FACE
+🍋‍🟩 - U+1F34B U+200D U+1F7E9 LIME
+🐦‍🔥 - U+1F426 U+200D U+1F525 PHOENIX
+🧑‍🧒 - U+1F9D1 U+200D U+1F9D2 FAMILY: ADULT, CHILD
+🧑‍🧑‍🧒 - U+1F9D1 U+200D U+1F9D1 U+200D U+1F9D2 FAMILY: ADULT, ADULT, CHILD
+🧑‍🧒‍🧒 - U+1F9D1 U+200D U+1F9D2 U+200D U+1F9D2 FAMILY: ADULT, CHILD, CHILD
+🧑‍🧑‍🧒‍🧒 - U+1F9D1 U+200D U+1F9D1 U+200D U+1F9D2 U+200D U+1F9D2 FAMILY: ADULT, ADULT, CHILD, CHILD

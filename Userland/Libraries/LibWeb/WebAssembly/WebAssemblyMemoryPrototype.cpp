@@ -11,11 +11,13 @@
 
 namespace Web::Bindings {
 
-void WebAssemblyMemoryPrototype::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> WebAssemblyMemoryPrototype::initialize(JS::Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
     define_native_accessor(realm, "buffer", buffer_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_function(realm, "grow", grow, 1, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)

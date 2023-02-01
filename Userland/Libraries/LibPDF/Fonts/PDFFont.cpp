@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>
@@ -13,7 +14,7 @@
 
 namespace PDF {
 
-static bool is_standard_latin_font(FlyString const& font)
+static bool is_standard_latin_font(DeprecatedFlyString const& font)
 {
     return font.is_one_of(
         "Times-Roman", "TimesNewRoman",
@@ -32,9 +33,9 @@ static bool is_standard_latin_font(FlyString const& font)
 
 PDFErrorOr<void> PDFFont::CommonData::load_from_dict(Document* document, NonnullRefPtr<DictObject> dict, float font_size)
 {
-    auto base_font = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
-    if ((is_standard_font = is_standard_latin_font(base_font))) {
-        auto replacement = replacement_for_standard_latin_font(base_font.to_lowercase());
+    base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
+    if ((is_standard_font = is_standard_latin_font(base_font_name))) {
+        auto replacement = replacement_for_standard_latin_font(base_font_name.to_lowercase());
         font = Gfx::FontDatabase::the().get(replacement.get<0>(), replacement.get<1>(), font_size);
         VERIFY(font);
     }
@@ -83,8 +84,7 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
     if (subtype == "TrueType")
         return TRY(TrueTypeFont::create(document, dict, font_size));
 
-    dbgln("Unknown font subtype: {}", subtype);
-    TODO();
+    return Error(Error::Type::Internal, TRY(String::formatted("Unhandled font subtype: {}", subtype)).to_deprecated_string());
 }
 
 Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_latin_font(StringView name)

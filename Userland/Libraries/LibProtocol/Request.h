@@ -9,7 +9,6 @@
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FileStream.h>
 #include <AK/Function.h>
 #include <AK/MemoryStream.h>
 #include <AK/RefCounted.h>
@@ -38,8 +37,7 @@ public:
     int fd() const { return m_fd; }
     bool stop();
 
-    void stream_into(OutputStream&);
-    void stream_into(Core::Stream::Stream&);
+    void stream_into(AK::Stream&);
 
     bool should_buffer_all_input() const { return m_should_buffer_all_input; }
     /// Note: Will override `on_finish', and `on_headers_received', and expects `on_buffered_request_finish' to be set!
@@ -62,8 +60,6 @@ public:
 
 private:
     explicit Request(RequestClient&, i32 request_id);
-    template<typename T>
-    void stream_into_impl(T&);
 
     WeakPtr<RequestClient> m_client;
     int m_request_id { -1 };
@@ -72,18 +68,18 @@ private:
     bool m_should_buffer_all_input { false };
 
     struct InternalBufferedData {
-        DuplexMemoryStream payload_stream;
+        AllocatingMemoryStream payload_stream;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
         Optional<u32> response_code;
     };
 
     struct InternalStreamData {
-        InternalStreamData(NonnullOwnPtr<Core::Stream::Stream> stream)
+        InternalStreamData(NonnullOwnPtr<AK::Stream> stream)
             : read_stream(move(stream))
         {
         }
 
-        NonnullOwnPtr<Core::Stream::Stream> read_stream;
+        NonnullOwnPtr<AK::Stream> read_stream;
         RefPtr<Core::Notifier> read_notifier;
         bool success;
         u32 total_size { 0 };

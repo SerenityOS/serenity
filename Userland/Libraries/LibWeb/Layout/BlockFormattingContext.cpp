@@ -17,6 +17,8 @@
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ListItemMarkerBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
+#include <LibWeb/Layout/TableBox.h>
+#include <LibWeb/Layout/TableWrapper.h>
 
 namespace Web::Layout {
 
@@ -193,6 +195,8 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     };
 
     auto input_width = [&] {
+        if (is<TableWrapper>(box))
+            return CSS::Length::make_px(compute_width_for_table_wrapper(box, available_space));
         if (should_treat_width_as_auto(box, available_space))
             return CSS::Length::make_auto();
         return calculate_inner_width(box, available_space.width, computed_values.width());
@@ -312,6 +316,18 @@ void BlockFormattingContext::compute_width_for_block_level_replaced_element_in_n
     m_state.get_mutable(box).set_content_width(compute_width_for_replaced_element(m_state, box, available_space));
 }
 
+CSSPixels BlockFormattingContext::compute_width_for_table_wrapper(Box const& box, AvailableSpace const& available_space)
+{
+    // 17.5.2
+    // Table wrapper width should be equal to width of table box it contains
+    LayoutState throwaway_state(&m_state);
+    auto context = create_independent_formatting_context_if_needed(throwaway_state, box);
+    VERIFY(context);
+    context->run(box, LayoutMode::IntrinsicSizing, m_state.get(box).available_inner_space_or_constraints_from(available_space));
+    auto const* table_box = box.first_child_of_type<TableBox>();
+    return throwaway_state.get(*table_box).content_width();
+}
+
 void BlockFormattingContext::compute_height(Box const& box, AvailableSpace const& available_space)
 {
     auto const& computed_values = box.computed_values();
@@ -371,7 +387,7 @@ static bool margins_collapse_through(Box const& box, LayoutState& state)
 CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space)
 {
     if (creates_block_formatting_context(box)) {
-        return compute_auto_height_for_block_formatting_context_root(verify_cast<BlockContainer>(box));
+        return compute_auto_height_for_block_formatting_context_root(box);
     }
 
     auto const& box_state = m_state.get(box);
@@ -387,6 +403,9 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
         // In both inline and block formatting contexts, the grid container’s auto block size is its
         // max-content size.
         return calculate_max_content_height(box, available_space.width);
+    }
+    if (display.is_table_inside()) {
+        return calculate_max_content_height(box, available_space.height);
     }
 
     // https://www.w3.org/TR/CSS22/visudet.html#normal-block
@@ -416,10 +435,6 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
             // Ignore anonymous block containers with no lines. These don't count as in-flow block boxes.
             if (child_box->is_anonymous() && child_box->is_block_container() && child_box_state.line_boxes.is_empty())
                 continue;
-
-            if (margins_collapse_through(*child_box, m_state)) {
-                continue;
-            }
 
             auto margin_bottom = m_margin_state.current_collapsed_margin();
             if (box_state.padding_bottom == 0 && box_state.border_bottom == 0) {
@@ -474,7 +489,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         margin_top = 0;
     }
 
-    place_block_level_element_in_normal_flow_vertically(box, current_y + box_state.border_box_top() + margin_top);
+    place_block_level_element_in_normal_flow_vertically(box, current_y + margin_top);
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
     OwnPtr<FormattingContext> independent_formatting_context;
@@ -629,6 +644,8 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
     if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floats);
 
+    y += box_state.border_box_top();
+
     box_state.set_content_offset(CSSPixelPoint { box_state.offset.x(), y.value() });
 }
 
@@ -716,7 +733,7 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
         auto y = line_builder->y_for_float_to_be_inserted_here(box);
         box_state.set_content_y(y + box_state.margin_box_top());
     } else {
-        place_block_level_element_in_normal_flow_vertically(box, y + box_state.margin_box_top());
+        place_block_level_element_in_normal_flow_vertically(box, y + box_state.margin_top);
         place_block_level_element_in_normal_flow_horizontally(box, available_space);
     }
 
@@ -754,7 +771,11 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
 
             if (fits_on_line) {
                 auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
-                if (previous_rect.contains_vertically(y_in_root + side_data.y_offset)) {
+                // NOTE: If we're in inline layout, the LineBuilder has already provided the right Y offset.
+                //       In block layout, we adjust by the side's current Y offset here.
+                if (!line_builder)
+                    y_in_root += side_data.y_offset;
+                if (previous_rect.contains_vertically(y_in_root)) {
                     // This box touches another already floating box. Stack after others.
                     offset_from_edge = wanted_offset_from_edge;
                 } else {

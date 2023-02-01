@@ -39,11 +39,13 @@ describe("errors", () => {
 describe("correct behavior", () => {
     test("basic functionality", () => {
         const en = new Intl.PluralRules("en");
+        expect(en.selectRange(1, 1)).toBe("one"); // one + one = one
         expect(en.selectRange(1, 2)).toBe("other"); // one + other = other
         expect(en.selectRange(0, 1)).toBe("other"); // other + one = other
         expect(en.selectRange(2, 3)).toBe("other"); // other + other = other
 
         const pl = new Intl.PluralRules("pl");
+        expect(pl.selectRange(1, 1)).toBe("one"); // one + one = one
         expect(pl.selectRange(1, 2)).toBe("few"); // one + few = few
         expect(pl.selectRange(1, 5)).toBe("many"); // one + many = many
         expect(pl.selectRange(1, 3.14)).toBe("other"); // one + other = other

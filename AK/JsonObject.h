@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,123 +23,77 @@ class JsonObject {
     using CallbackErrorType = decltype(declval<Callback>()(declval<DeprecatedString const&>(), declval<JsonValue const&>()).release_error());
 
 public:
-    JsonObject() = default;
-    ~JsonObject() = default;
+    JsonObject();
+    ~JsonObject();
 
-    JsonObject(JsonObject const& other)
-        : m_members(other.m_members)
-    {
-    }
+    JsonObject(JsonObject const& other);
+    JsonObject(JsonObject&& other);
 
-    JsonObject(JsonObject&& other)
-        : m_members(move(other.m_members))
-    {
-    }
+    JsonObject& operator=(JsonObject const& other);
+    JsonObject& operator=(JsonObject&& other);
 
-    JsonObject& operator=(JsonObject const& other)
-    {
-        if (this != &other)
-            m_members = other.m_members;
-        return *this;
-    }
+    [[nodiscard]] size_t size() const;
+    [[nodiscard]] bool is_empty() const;
 
-    JsonObject& operator=(JsonObject&& other)
-    {
-        if (this != &other)
-            m_members = move(other.m_members);
-        return *this;
-    }
+    [[nodiscard]] JsonValue const& get_deprecated(StringView key) const;
 
-    [[nodiscard]] size_t size() const { return m_members.size(); }
-    [[nodiscard]] bool is_empty() const { return m_members.is_empty(); }
+    [[nodiscard]] JsonValue const* get_ptr(StringView key) const;
 
-    [[nodiscard]] JsonValue const& get(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        static JsonValue* s_null_value { nullptr };
-        if (!value) {
-            if (!s_null_value)
-                s_null_value = new JsonValue;
-            return *s_null_value;
-        }
-        return *value;
-    }
+    [[nodiscard]] bool has(StringView key) const;
 
-    [[nodiscard]] JsonValue const* get_ptr(StringView key) const
-    {
-        auto it = m_members.find(key);
-        if (it == m_members.end())
-            return nullptr;
-        return &(*it).value;
-    }
-
-    [[nodiscard]] [[nodiscard]] bool has(StringView key) const
-    {
-        return m_members.contains(key);
-    }
-
-    [[nodiscard]] bool has_null(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_null();
-    }
-    [[nodiscard]] bool has_bool(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_bool();
-    }
-    [[nodiscard]] bool has_string(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_string();
-    }
-    [[nodiscard]] bool has_i32(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_i32();
-    }
-    [[nodiscard]] bool has_u32(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_u32();
-    }
-    [[nodiscard]] bool has_i64(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_i64();
-    }
-    [[nodiscard]] bool has_u64(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_u64();
-    }
-    [[nodiscard]] bool has_number(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_number();
-    }
-    [[nodiscard]] bool has_array(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_array();
-    }
-    [[nodiscard]] bool has_object(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_object();
-    }
+    [[nodiscard]] bool has_null(StringView key) const;
+    [[nodiscard]] bool has_bool(StringView key) const;
+    [[nodiscard]] bool has_string(StringView key) const;
+    [[nodiscard]] bool has_i8(StringView key) const;
+    [[nodiscard]] bool has_u8(StringView key) const;
+    [[nodiscard]] bool has_i16(StringView key) const;
+    [[nodiscard]] bool has_u16(StringView key) const;
+    [[nodiscard]] bool has_i32(StringView key) const;
+    [[nodiscard]] bool has_u32(StringView key) const;
+    [[nodiscard]] bool has_i64(StringView key) const;
+    [[nodiscard]] bool has_u64(StringView key) const;
+    [[nodiscard]] bool has_number(StringView key) const;
+    [[nodiscard]] bool has_array(StringView key) const;
+    [[nodiscard]] bool has_object(StringView key) const;
 #ifndef KERNEL
-    [[nodiscard]] [[nodiscard]] bool has_double(StringView key) const
-    {
-        auto const* value = get_ptr(key);
-        return value && value->is_double();
-    }
+    [[nodiscard]] bool has_double(StringView key) const;
 #endif
 
-    void set(DeprecatedString const& key, JsonValue value)
+    Optional<JsonValue const&> get(StringView key) const;
+
+    template<Integral T>
+    Optional<T> get_integer(StringView key) const
     {
-        m_members.set(key, move(value));
+        auto maybe_value = get(key);
+        if (maybe_value.has_value() && maybe_value->is_integer<T>())
+            return maybe_value->as_integer<T>();
+        return {};
     }
+
+    Optional<i8> get_i8(StringView key) const;
+    Optional<u8> get_u8(StringView key) const;
+    Optional<i16> get_i16(StringView key) const;
+    Optional<u16> get_u16(StringView key) const;
+    Optional<i32> get_i32(StringView key) const;
+    Optional<u32> get_u32(StringView key) const;
+    Optional<i64> get_i64(StringView key) const;
+    Optional<u64> get_u64(StringView key) const;
+    Optional<FlatPtr> get_addr(StringView key) const;
+    Optional<bool> get_bool(StringView key) const;
+
+#if !defined(KERNEL)
+    Optional<DeprecatedString> get_deprecated_string(StringView key) const;
+#endif
+
+    Optional<JsonObject const&> get_object(StringView key) const;
+    Optional<JsonArray const&> get_array(StringView key) const;
+
+#if !defined(KERNEL)
+    Optional<double> get_double(StringView key) const;
+    Optional<float> get_float(StringView key) const;
+#endif
+
+    void set(DeprecatedString const& key, JsonValue value);
 
     template<typename Callback>
     void for_each_member(Callback callback) const
@@ -155,10 +110,7 @@ public:
         return {};
     }
 
-    bool remove(StringView key)
-    {
-        return m_members.remove(key);
-    }
+    bool remove(StringView key);
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;
@@ -166,7 +118,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    [[nodiscard]] DeprecatedString to_deprecated_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] DeprecatedString to_deprecated_string() const;
 
 private:
     OrderedHashMap<DeprecatedString, JsonValue> m_members;
@@ -187,7 +139,7 @@ inline typename Builder::OutputType JsonObject::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 template<typename Builder>
@@ -238,7 +190,7 @@ inline typename Builder::OutputType JsonValue::serialized() const
 {
     Builder builder;
     serialize(builder);
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 }

@@ -306,7 +306,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Seque
     flags_builder.join(' ', flags);
     flags_builder.append(')');
 
-    auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.build(), flags_builder.build() } };
+    auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.to_deprecated_string(), flags_builder.to_deprecated_string() } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<DeprecatedString> charset, Vector<SearchKey>&& keys, bool uid)
@@ -363,7 +363,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vect
     types_list.append('(');
     types_list.join(' ', args);
     types_list.append(')');
-    auto command = Command { CommandType::Status, m_current_command, { mailbox, types_list.build() } };
+    auto command = Command { CommandType::Status, m_current_command, { mailbox, types_list.to_deprecated_string() } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -375,7 +375,7 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
         flags_sb.append('(');
         flags_sb.join(' ', flags.value());
         flags_sb.append(')');
-        args.append(flags_sb.build());
+        args.append(flags_sb.to_deprecated_string());
     }
     if (date_time.has_value())
         args.append(date_time.value().to_deprecated_string("\"%d-%b-%Y %H:%M:%S +0000\""sv));

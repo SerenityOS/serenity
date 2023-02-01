@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibC/elf.h>
 #include <LibCore/File.h>
 #include <LibTest/TestCase.h>
+#include <elf.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>

@@ -9,7 +9,7 @@
 
 namespace Debug::Dwarf {
 
-FlatPtr AttributeValue::as_addr() const
+ErrorOr<FlatPtr> AttributeValue::as_addr() const
 {
     switch (m_form) {
     case AttributeDataForm::Addr:
@@ -27,7 +27,7 @@ FlatPtr AttributeValue::as_addr() const
     }
 }
 
-char const* AttributeValue::as_string() const
+ErrorOr<char const*> AttributeValue::as_string() const
 {
     switch (m_form) {
     case AttributeDataForm::String:

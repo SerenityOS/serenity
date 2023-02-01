@@ -14,7 +14,7 @@ namespace Web::Layout {
 
 class LineBoxFragment;
 
-class TextNode : public Node {
+class TextNode final : public Node {
     JS_CELL(TextNode, Node);
 
 public:
@@ -50,7 +50,7 @@ public:
 
     void compute_text_for_rendering(bool collapse);
 
-    virtual RefPtr<Painting::Paintable> create_paintable() const override;
+    virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_text_node() const final { return true; }

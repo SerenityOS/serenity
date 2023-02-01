@@ -47,28 +47,27 @@ private:
     BookmarkEditor(Window* parent_window, StringView title, StringView url)
         : Dialog(parent_window)
     {
-        auto& widget = set_main_widget<GUI::Widget>();
-        if (!widget.load_from_gml(edit_bookmark_gml))
-            VERIFY_NOT_REACHED();
+        auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
+        widget->load_from_gml(edit_bookmark_gml).release_value_but_fixme_should_propagate_errors();
 
         set_resizable(false);
         resize(260, 85);
 
-        m_title_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("title_textbox");
+        m_title_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("title_textbox");
         m_title_textbox->set_text(title);
         m_title_textbox->set_focus(true);
         m_title_textbox->select_all();
 
-        m_url_textbox = *widget.find_descendant_of_type_named<GUI::TextBox>("url_textbox");
+        m_url_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("url_textbox");
         m_url_textbox->set_text(url);
 
-        auto& ok_button = *widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+        auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
         ok_button.on_click = [this](auto) {
             done(ExecResult::OK);
         };
         ok_button.set_default(true);
 
-        auto& cancel_button = *widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
+        auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
         cancel_button.on_click = [this](auto) {
             done(ExecResult::Cancel);
         };
@@ -112,7 +111,7 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
     m_additional = GUI::Button::construct();
     m_additional->set_tooltip("Show hidden bookmarks");
     m_additional->set_menu(m_additional_menu);
-    auto bitmap_or_error = Gfx::Bitmap::try_load_from_file("/res/icons/16x16/overflow-menu.png"sv);
+    auto bitmap_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv);
     if (!bitmap_or_error.is_error())
         m_additional->set_icon(bitmap_or_error.release_value());
     m_additional->set_button_style(Gfx::ButtonStyle::Coolbar);

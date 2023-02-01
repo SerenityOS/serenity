@@ -7,8 +7,10 @@
 #pragma once
 
 #include <AK/Checked.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Intl {
@@ -78,7 +80,7 @@ public:
 
     bool modulo_is_zero(Checked<i32> mod) const;
 
-    int logarithmic_floor() const;
+    ThrowCompletionOr<int> logarithmic_floor(VM&) const;
 
     bool is_equal_to(MathematicalValue const&) const;
     bool is_less_than(MathematicalValue const&) const;
@@ -87,7 +89,7 @@ public:
     bool is_positive() const;
     bool is_zero() const;
 
-    DeprecatedString to_deprecated_string() const;
+    ThrowCompletionOr<String> to_string(VM&) const;
     Value to_value(VM&) const;
 
 private:

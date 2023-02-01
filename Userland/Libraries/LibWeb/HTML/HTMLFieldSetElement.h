@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
@@ -35,8 +36,12 @@ public:
     // https://html.spec.whatwg.org/multipage/forms.html#category-autocapitalize
     virtual bool is_auto_capitalize_inheriting() const override { return true; }
 
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::group; }
+
 private:
     HTMLFieldSetElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

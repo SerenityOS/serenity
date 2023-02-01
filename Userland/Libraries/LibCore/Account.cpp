@@ -39,7 +39,7 @@ static DeprecatedString get_salt()
     auto salt_string = MUST(encode_base64({ random_data, sizeof(random_data) }));
     builder.append(salt_string);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 static Vector<gid_t> get_extra_gids(passwd const& pwd)
@@ -196,7 +196,7 @@ void Account::set_password_enabled(bool enabled)
         StringBuilder builder;
         builder.append('!');
         builder.append(m_password_hash);
-        m_password_hash = builder.build();
+        m_password_hash = builder.to_deprecated_string();
     }
 }
 
@@ -295,22 +295,18 @@ ErrorOr<void> Account::sync()
     auto new_shadow_file_content = TRY(generate_shadow_file());
 #endif
 
-    // FIXME: mkstemp taking Span<char> makes this code entirely un-AKable.
-    //        Make this code less char-pointery.
-    char new_passwd_name[] = "/etc/passwd.XXXXXX";
-    size_t new_passwd_name_length = strlen(new_passwd_name);
+    char new_passwd_file[] = "/etc/passwd.XXXXXX";
 #ifndef AK_OS_BSD_GENERIC
-    char new_shadow_name[] = "/etc/shadow.XXXXXX";
-    size_t new_shadow_name_length = strlen(new_shadow_name);
+    char new_shadow_file[] = "/etc/shadow.XXXXXX";
 #endif
 
     {
-        auto new_passwd_fd = TRY(Core::System::mkstemp({ new_passwd_name, new_passwd_name_length }));
+        auto new_passwd_fd = TRY(Core::System::mkstemp(new_passwd_file));
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
         TRY(Core::System::fchmod(new_passwd_fd, 0644));
 
 #ifndef AK_OS_BSD_GENERIC
-        auto new_shadow_fd = TRY(Core::System::mkstemp({ new_shadow_name, new_shadow_name_length }));
+        auto new_shadow_fd = TRY(Core::System::mkstemp(new_shadow_file));
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
         TRY(Core::System::fchmod(new_shadow_fd, 0600));
 #endif
@@ -324,9 +320,11 @@ ErrorOr<void> Account::sync()
 #endif
     }
 
-    TRY(Core::System::rename({ new_passwd_name, new_passwd_name_length }, "/etc/passwd"sv));
+    auto new_passwd_file_view = StringView { new_passwd_file, sizeof(new_passwd_file) };
+    TRY(Core::System::rename(new_passwd_file_view, "/etc/passwd"sv));
 #ifndef AK_OS_BSD_GENERIC
-    TRY(Core::System::rename({ new_shadow_name, new_shadow_name_length }, "/etc/shadow"sv));
+    auto new_shadow_file_view = StringView { new_shadow_file, sizeof(new_shadow_file) };
+    TRY(Core::System::rename(new_shadow_file_view, "/etc/shadow"sv));
 #endif
 
     return {};

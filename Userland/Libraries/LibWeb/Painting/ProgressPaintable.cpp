@@ -9,9 +9,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<ProgressPaintable> ProgressPaintable::create(Layout::Progress const& layout_box)
+JS::NonnullGCPtr<ProgressPaintable> ProgressPaintable::create(Layout::Progress const& layout_box)
 {
-    return adopt_ref(*new ProgressPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<ProgressPaintable>(layout_box);
 }
 
 ProgressPaintable::ProgressPaintable(Layout::Progress const& layout_box)

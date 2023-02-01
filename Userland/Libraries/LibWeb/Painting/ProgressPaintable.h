@@ -15,8 +15,10 @@ namespace Web::Painting {
 //        LabelablePaintable should be split into FormAssociatedLabelablePaintable once this
 //        happens.
 class ProgressPaintable final : public PaintableBox {
+    JS_CELL(ProgressPaintable, PaintableBox);
+
 public:
-    static NonnullRefPtr<ProgressPaintable> create(Layout::Progress const&);
+    static JS::NonnullGCPtr<ProgressPaintable> create(Layout::Progress const&);
 
     virtual void paint(PaintContext&, PaintPhase) const override;
 

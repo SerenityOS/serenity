@@ -15,9 +15,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<RadioButtonPaintable> RadioButtonPaintable::create(Layout::RadioButton const& layout_box)
+JS::NonnullGCPtr<RadioButtonPaintable> RadioButtonPaintable::create(Layout::RadioButton const& layout_box)
 {
-    return adopt_ref(*new RadioButtonPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<RadioButtonPaintable>(layout_box);
 }
 
 RadioButtonPaintable::RadioButtonPaintable(Layout::RadioButton const& layout_box)

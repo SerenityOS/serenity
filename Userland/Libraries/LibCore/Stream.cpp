@@ -22,128 +22,6 @@
 
 namespace Core::Stream {
 
-ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
-{
-    VERIFY(buffer.size());
-
-    size_t nread = 0;
-    do {
-        if (is_eof())
-            return Error::from_string_literal("Reached end-of-file before filling the entire buffer");
-
-        auto result = read(buffer.slice(nread));
-        if (result.is_error()) {
-            if (result.error().is_errno() && result.error().code() == EINTR) {
-                continue;
-            }
-
-            return result.release_error();
-        }
-
-        nread += result.value().size();
-    } while (nread < buffer.size());
-
-    return {};
-}
-
-ErrorOr<ByteBuffer> Stream::read_until_eof(size_t block_size)
-{
-    return read_until_eof_impl(block_size);
-}
-
-ErrorOr<ByteBuffer> Stream::read_until_eof_impl(size_t block_size, size_t expected_file_size)
-{
-    ByteBuffer data;
-    data.ensure_capacity(expected_file_size);
-
-    size_t total_read = 0;
-    Bytes buffer;
-    while (!is_eof()) {
-        if (buffer.is_empty()) {
-            buffer = TRY(data.get_bytes_for_writing(block_size));
-        }
-
-        auto nread = TRY(read(buffer)).size();
-        total_read += nread;
-        buffer = buffer.slice(nread);
-    }
-
-    data.resize(total_read);
-    return data;
-}
-
-ErrorOr<void> Stream::discard(size_t discarded_bytes)
-{
-    // Note: This was chosen arbitrarily.
-    // Note: This can't be PAGE_SIZE because it is defined to sysconf() on Lagom.
-    constexpr size_t continuous_read_size = 4096;
-
-    Array<u8, continuous_read_size> buffer;
-
-    while (discarded_bytes > 0) {
-        if (is_eof())
-            return Error::from_string_literal("Reached end-of-file before reading all discarded bytes");
-
-        auto slice = TRY(read(buffer.span().slice(0, min(discarded_bytes, continuous_read_size))));
-        discarded_bytes -= slice.size();
-    }
-
-    return {};
-}
-
-ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
-{
-    VERIFY(buffer.size());
-
-    size_t nwritten = 0;
-    do {
-        auto result = write(buffer.slice(nwritten));
-        if (result.is_error()) {
-            if (result.error().is_errno() && result.error().code() == EINTR) {
-                continue;
-            }
-
-            return result.release_error();
-        }
-
-        nwritten += result.value();
-    } while (nwritten < buffer.size());
-
-    return {};
-}
-
-ErrorOr<off_t> SeekableStream::tell() const
-{
-    // Seek with 0 and SEEK_CUR does not modify anything despite the const_cast,
-    // so it's safe to do this.
-    return const_cast<SeekableStream*>(this)->seek(0, SeekMode::FromCurrentPosition);
-}
-
-ErrorOr<off_t> SeekableStream::size()
-{
-    auto original_position = TRY(tell());
-
-    auto seek_result = seek(0, SeekMode::FromEndPosition);
-    if (seek_result.is_error()) {
-        // Let's try to restore the original position, just in case.
-        auto restore_result = seek(original_position, SeekMode::SetPosition);
-        if (restore_result.is_error()) {
-            dbgln("Core::SeekableStream::size: Couldn't restore initial position, stream might have incorrect position now!");
-        }
-
-        return seek_result.release_error();
-    }
-
-    TRY(seek(original_position, SeekMode::SetPosition));
-    return seek_result.value();
-}
-
-ErrorOr<void> SeekableStream::discard(size_t discarded_bytes)
-{
-    TRY(seek(discarded_bytes, SeekMode::FromCurrentPosition));
-    return {};
-}
-
 ErrorOr<NonnullOwnPtr<File>> File::open(StringView filename, OpenMode mode, mode_t permissions)
 {
     auto file = TRY(adopt_nonnull_own_or_enomem(new (nothrow) File(mode)));
@@ -284,7 +162,7 @@ void File::close()
     m_fd = -1;
 }
 
-ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
+ErrorOr<size_t> File::seek(i64 offset, SeekMode mode)
 {
     int syscall_mode;
     switch (mode) {
@@ -301,7 +179,7 @@ ErrorOr<off_t> File::seek(i64 offset, SeekMode mode)
         VERIFY_NOT_REACHED();
     }
 
-    off_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
+    size_t seek_result = TRY(System::lseek(m_fd, offset, syscall_mode));
     m_last_read_was_eof = false;
     return seek_result;
 }
@@ -583,7 +461,7 @@ ErrorOr<int> LocalSocket::receive_fd(int flags)
 {
 #if defined(AK_OS_SERENITY)
     return Core::System::recvfd(m_helper.fd(), flags);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD) || defined(AK_OS_OPENBSD)
     union {
         struct cmsghdr cmsghdr;
         char control[CMSG_SPACE(sizeof(int))];
@@ -624,7 +502,7 @@ ErrorOr<void> LocalSocket::send_fd(int fd)
 {
 #if defined(AK_OS_SERENITY)
     return Core::System::sendfd(m_helper.fd(), fd);
-#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS)
+#elif defined(AK_OS_LINUX) || defined(AK_OS_MACOS) || defined(AK_OS_FREEBSD) || defined(AK_OS_OPENBSD)
     char c = 'F';
     struct iovec iov {
         .iov_base = &c,
@@ -708,7 +586,7 @@ ErrorOr<int> LocalSocket::release_fd()
     return fd;
 }
 
-WrappedAKInputStream::WrappedAKInputStream(NonnullOwnPtr<InputStream> stream)
+WrappedAKInputStream::WrappedAKInputStream(NonnullOwnPtr<DeprecatedInputStream> stream)
     : m_stream(move(stream))
 {
 }
@@ -733,7 +611,7 @@ ErrorOr<void> WrappedAKInputStream::discard(size_t discarded_bytes)
 
 ErrorOr<size_t> WrappedAKInputStream::write(ReadonlyBytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 bool WrappedAKInputStream::is_eof() const
@@ -750,14 +628,14 @@ void WrappedAKInputStream::close()
 {
 }
 
-WrappedAKOutputStream::WrappedAKOutputStream(NonnullOwnPtr<OutputStream> stream)
+WrappedAKOutputStream::WrappedAKOutputStream(NonnullOwnPtr<DeprecatedOutputStream> stream)
     : m_stream(move(stream))
 {
 }
 
 ErrorOr<Bytes> WrappedAKOutputStream::read(Bytes)
 {
-    VERIFY_NOT_REACHED();
+    return Error::from_errno(EBADF);
 }
 
 ErrorOr<size_t> WrappedAKOutputStream::write(ReadonlyBytes bytes)
@@ -772,7 +650,7 @@ ErrorOr<size_t> WrappedAKOutputStream::write(ReadonlyBytes bytes)
 
 bool WrappedAKOutputStream::is_eof() const
 {
-    VERIFY_NOT_REACHED();
+    return true;
 }
 
 bool WrappedAKOutputStream::is_open() const
@@ -784,7 +662,7 @@ void WrappedAKOutputStream::close()
 {
 }
 
-WrapInAKInputStream::WrapInAKInputStream(Core::Stream::Stream& stream)
+WrapInAKInputStream::WrapInAKInputStream(AK::Stream& stream)
     : m_stream(stream)
 {
 }
@@ -830,7 +708,7 @@ bool WrapInAKInputStream::discard_or_error(size_t count)
     return true;
 }
 
-WrapInAKOutputStream::WrapInAKOutputStream(Core::Stream::Stream& stream)
+WrapInAKOutputStream::WrapInAKOutputStream(AK::Stream& stream)
     : m_stream(stream)
 {
 }

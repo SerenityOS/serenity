@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -130,7 +130,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
 
     Object* calendar = nullptr;
     Object* time_zone = nullptr;
-    Optional<DeprecatedString> offset_string;
+    Optional<String> offset_string;
     ISODateTime result;
 
     // 5. If Type(item) is Object, then
@@ -150,10 +150,10 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         auto field_names = TRY(calendar_fields(vm, *calendar, { "day"sv, "hour"sv, "microsecond"sv, "millisecond"sv, "minute"sv, "month"sv, "monthCode"sv, "nanosecond"sv, "second"sv, "year"sv }));
 
         // d. Append "timeZone" to fieldNames.
-        field_names.append("timeZone");
+        field_names.append(TRY_OR_THROW_OOM(vm, String::from_utf8("timeZone"sv)));
 
         // e. Append "offset" to fieldNames.
-        field_names.append("offset");
+        field_names.append(TRY_OR_THROW_OOM(vm, String::from_utf8("offset"sv)));
 
         // f. Let fields be ? PrepareTemporalFields(item, fieldNames, « "timeZone" »).
         auto* fields = TRY(prepare_temporal_fields(vm, item_object, field_names, Vector<StringView> { "timeZone"sv }));
@@ -167,15 +167,13 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         // i. Let offsetString be ! Get(fields, "offset").
         auto offset_string_value = MUST(fields->get(vm.names.offset));
 
-        // j. If offsetString is undefined, then
+        // j. Assert: offsetString is a String or undefined.
+        VERIFY(offset_string_value.is_string() || offset_string_value.is_undefined());
+
+        // k. If offsetString is undefined, then
         if (offset_string_value.is_undefined()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
-        }
-        // k. Else,
-        else {
-            // i. Set offsetString to ? ToString(offsetString).
-            offset_string = TRY(offset_string_value.to_string(vm));
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
@@ -205,7 +203,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
                 return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidTimeZoneName, *time_zone_name);
 
             // ii. Set timeZoneName to ! CanonicalizeTimeZoneName(timeZoneName).
-            time_zone_name = canonicalize_time_zone_name(*time_zone_name);
+            time_zone_name = MUST_OR_THROW_OOM(canonicalize_time_zone_name(vm, *time_zone_name));
         }
 
         // g. Let offsetString be result.[[TimeZone]].[[OffsetString]].
@@ -223,7 +221,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         }
 
         // j. Let timeZone be ! CreateTemporalTimeZone(timeZoneName).
-        time_zone = MUST(create_temporal_time_zone(vm, *time_zone_name));
+        time_zone = MUST_OR_THROW_OOM(create_temporal_time_zone(vm, *time_zone_name));
 
         // k. Let calendar be ? ToTemporalCalendarWithISODefault(result.[[Calendar]]).
         auto temporal_calendar_like = result.calendar.has_value()
@@ -252,7 +250,7 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
     auto disambiguation = TRY(to_temporal_disambiguation(vm, options));
 
     // 10. Let offsetOption be ? ToTemporalOffset(options, "reject").
-    auto offset_option = TRY(to_temporal_offset(vm, options, "reject"));
+    auto offset_option = TRY(to_temporal_offset(vm, options, "reject"sv));
 
     // 11. Let epochNanoseconds be ? InterpretISODateTimeOffset(result.[[Year]], result.[[Month]], result.[[Day]], result.[[Hour]], result.[[Minute]], result.[[Second]], result.[[Millisecond]], result.[[Microsecond]], result.[[Nanosecond]], offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour).
     auto* epoch_nanoseconds = TRY(interpret_iso_date_time_offset(vm, result.year, result.month, result.day, result.hour, result.minute, result.second, result.millisecond, result.microsecond, result.nanosecond, offset_behavior, offset_nanoseconds, time_zone, disambiguation, offset_option, match_behavior));
@@ -284,7 +282,7 @@ ThrowCompletionOr<ZonedDateTime*> create_temporal_zoned_date_time(VM& vm, BigInt
 }
 
 // 6.5.4 TemporalZonedDateTimeToString ( zonedDateTime, precision, showCalendar, showTimeZone, showOffset [ , increment, unit, roundingMode ] ), https://tc39.es/proposal-temporal/#sec-temporal-temporalzoneddatetimetostring
-ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
+ThrowCompletionOr<String> temporal_zoned_date_time_to_string(VM& vm, ZonedDateTime& zoned_date_time, Variant<StringView, u8> const& precision, StringView show_calendar, StringView show_time_zone, StringView show_offset, Optional<u64> increment, Optional<StringView> unit, Optional<StringView> rounding_mode)
 {
     // 1. If increment is not present, set increment to 1.
     if (!increment.has_value())
@@ -313,15 +311,15 @@ ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, Z
     // 8. Let temporalDateTime be ? BuiltinTimeZoneGetPlainDateTimeFor(timeZone, instant, isoCalendar).
     auto* temporal_date_time = TRY(builtin_time_zone_get_plain_date_time_for(vm, &time_zone, *instant, *iso_calendar));
 
-    // 9. Let dateTimeString be ? TemporalDateTimeToString(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], isoCalendar, precision, "never").
-    auto date_time_string = TRY(temporal_date_time_to_string(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
+    // 9. Let dateTimeString be ! TemporalDateTimeToString(temporalDateTime.[[ISOYear]], temporalDateTime.[[ISOMonth]], temporalDateTime.[[ISODay]], temporalDateTime.[[ISOHour]], temporalDateTime.[[ISOMinute]], temporalDateTime.[[ISOSecond]], temporalDateTime.[[ISOMillisecond]], temporalDateTime.[[ISOMicrosecond]], temporalDateTime.[[ISONanosecond]], isoCalendar, precision, "never").
+    auto date_time_string = MUST_OR_THROW_OOM(temporal_date_time_to_string(vm, temporal_date_time->iso_year(), temporal_date_time->iso_month(), temporal_date_time->iso_day(), temporal_date_time->iso_hour(), temporal_date_time->iso_minute(), temporal_date_time->iso_second(), temporal_date_time->iso_millisecond(), temporal_date_time->iso_microsecond(), temporal_date_time->iso_nanosecond(), iso_calendar, precision, "never"sv));
 
-    DeprecatedString offset_string;
+    String offset_string;
 
     // 10. If showOffset is "never", then
     if (show_offset == "never"sv) {
         // a. Let offsetString be the empty String.
-        offset_string = DeprecatedString::empty();
+        offset_string = {};
     }
     // 11. Else,
     else {
@@ -329,15 +327,15 @@ ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, Z
         auto offset_ns = TRY(get_offset_nanoseconds_for(vm, &time_zone, *instant));
 
         // b. Let offsetString be ! FormatISOTimeZoneOffsetString(offsetNs).
-        offset_string = format_iso_time_zone_offset_string(offset_ns);
+        offset_string = MUST_OR_THROW_OOM(format_iso_time_zone_offset_string(vm, offset_ns));
     }
 
-    DeprecatedString time_zone_string;
+    String time_zone_string;
 
     // 12. If showTimeZone is "never", then
     if (show_time_zone == "never"sv) {
         // a. Let timeZoneString be the empty String.
-        time_zone_string = DeprecatedString::empty();
+        time_zone_string = {};
     }
     // 13. Else,
     else {
@@ -348,14 +346,14 @@ ThrowCompletionOr<DeprecatedString> temporal_zoned_date_time_to_string(VM& vm, Z
         auto flag = show_time_zone == "critical"sv ? "!"sv : ""sv;
 
         // c. Let timeZoneString be the string-concatenation of the code unit 0x005B (LEFT SQUARE BRACKET), flag, timeZoneID, and the code unit 0x005D (RIGHT SQUARE BRACKET).
-        time_zone_string = DeprecatedString::formatted("[{}{}]", flag, time_zone_id);
+        time_zone_string = TRY_OR_THROW_OOM(vm, String::formatted("[{}{}]", flag, time_zone_id));
     }
 
     // 14. Let calendarString be ? MaybeFormatCalendarAnnotation(zonedDateTime.[[Calendar]], showCalendar).
     auto calendar_string = TRY(maybe_format_calendar_annotation(vm, &zoned_date_time.calendar(), show_calendar));
 
     // 15. Return the string-concatenation of dateTimeString, offsetString, timeZoneString, and calendarString.
-    return DeprecatedString::formatted("{}{}{}{}", date_time_string, offset_string, time_zone_string, calendar_string);
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}{}{}{}", date_time_string, offset_string, time_zone_string, calendar_string));
 }
 
 // 6.5.5 AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months, weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-addzoneddatetime

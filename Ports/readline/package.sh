@@ -15,5 +15,5 @@ configopts=(
 post_install() {
     # readline specifies termcap as a dependency in its pkgconfig file, without checking if it exists.
     # Remove it manually to keep other ports from discarding readline because termcap is supposedly missing.
-    sed -i -e '/^Requires.private:/s/termcap//' "${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig/readline.pc"
+    sed_in_place '/^Requires.private:/s/termcap//' "${SERENITY_INSTALL_ROOT}/usr/local/lib/pkgconfig/readline.pc"
 }

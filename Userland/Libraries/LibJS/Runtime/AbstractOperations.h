@@ -35,19 +35,30 @@ ThrowCompletionOr<size_t> length_of_array_like(VM&, Object const&);
 ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(VM&, Value, Function<ThrowCompletionOr<void>(Value)> = {});
 ThrowCompletionOr<FunctionObject*> species_constructor(VM&, Object const&, FunctionObject& default_constructor);
 ThrowCompletionOr<Realm*> get_function_realm(VM&, FunctionObject const&);
-ThrowCompletionOr<void> initialize_bound_name(VM&, FlyString const&, Value, Environment*);
+ThrowCompletionOr<void> initialize_bound_name(VM&, DeprecatedFlyString const&, Value, Environment*);
 bool is_compatible_property_descriptor(bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 bool validate_and_apply_property_descriptor(Object*, PropertyKey const&, bool extensible, PropertyDescriptor const&, Optional<PropertyDescriptor> const& current);
 ThrowCompletionOr<Object*> get_prototype_from_constructor(VM&, FunctionObject const& constructor, Object* (Intrinsics::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(VM&, Span<Value> arguments);
 Object* create_mapped_arguments_object(VM&, FunctionObject&, Vector<FunctionParameter> const&, Span<Value> arguments, Environment&);
 
+struct DisposableResource {
+    Value resource_value;
+    NonnullGCPtr<FunctionObject> dispose_method;
+};
+ThrowCompletionOr<void> add_disposable_resource(VM&, Vector<DisposableResource>& disposable, Value, Environment::InitializeBindingHint, FunctionObject* = nullptr);
+ThrowCompletionOr<DisposableResource> create_disposable_resource(VM&, Value, Environment::InitializeBindingHint, FunctionObject* method = nullptr);
+ThrowCompletionOr<GCPtr<FunctionObject>> get_dispose_method(VM&, Value, Environment::InitializeBindingHint);
+Completion dispose(VM& vm, Value, NonnullGCPtr<FunctionObject> method);
+Completion dispose_resources(VM& vm, Vector<DisposableResource> const& disposable, Completion completion);
+Completion dispose_resources(VM& vm, GCPtr<DeclarativeEnvironment> disposable, Completion completion);
+
 enum class CanonicalIndexMode {
     DetectNumericRoundtrip,
     IgnoreNumericRoundtrip,
 };
 CanonicalIndex canonical_numeric_index_string(PropertyKey const&, CanonicalIndexMode needs_numeric);
-ThrowCompletionOr<DeprecatedString> get_substitution(VM&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
+ThrowCompletionOr<String> get_substitution(VM&, Utf16View const& matched, Utf16View const& str, size_t position, Span<Value> captures, Value named_captures, Value replacement);
 
 enum class CallerMode {
     Strict,
@@ -135,7 +146,7 @@ ThrowCompletionOr<NonnullGCPtr<T>> ordinary_create_from_constructor(VM& vm, Func
 {
     auto& realm = *vm.current_realm();
     auto* prototype = TRY(get_prototype_from_constructor(vm, constructor, intrinsic_default_prototype));
-    return realm.heap().allocate<T>(realm, forward<Args>(args)..., *prototype);
+    return MUST_OR_THROW_OOM(realm.heap().allocate<T>(realm, forward<Args>(args)..., *prototype));
 }
 
 // 14.1 MergeLists ( a, b ), https://tc39.es/proposal-temporal/#sec-temporal-mergelists

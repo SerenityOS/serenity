@@ -6,6 +6,7 @@
  */
 
 #include <AK/StringBuilder.h>
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Text.h>
@@ -20,12 +21,19 @@ namespace Web::HTML {
 HTMLOptionElement::HTMLOptionElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLOptionElement"));
 }
 
 HTMLOptionElement::~HTMLOptionElement() = default;
 
-void HTMLOptionElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+JS::ThrowCompletionOr<void> HTMLOptionElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLOptionElementPrototype>(realm, "HTMLOptionElement"));
+
+    return {};
+}
+
+void HTMLOptionElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 
@@ -38,7 +46,7 @@ void HTMLOptionElement::parse_attribute(FlyString const& name, DeprecatedString 
     }
 }
 
-void HTMLOptionElement::did_remove_attribute(FlyString const& name)
+void HTMLOptionElement::did_remove_attribute(DeprecatedFlyString const& name)
 {
     HTMLElement::did_remove_attribute(name);
 
@@ -138,6 +146,13 @@ bool HTMLOptionElement::disabled() const
     // An option element is disabled if its disabled attribute is present or if it is a child of an optgroup element whose disabled attribute is present.
     return has_attribute(AttributeNames::disabled)
         || (parent() && is<HTMLOptGroupElement>(parent()) && static_cast<HTMLOptGroupElement const&>(*parent()).has_attribute(AttributeNames::disabled));
+}
+
+Optional<ARIA::Role> HTMLOptionElement::default_role() const
+{
+    // https://www.w3.org/TR/html-aria/#el-option
+    // TODO: Only an option element that is in a list of options or that represents a suggestion in a datalist should return option
+    return ARIA::Role::option;
 }
 
 }

@@ -29,7 +29,7 @@ void Packet::add_answer(Answer const& answer)
     VERIFY(m_answers.size() <= UINT16_MAX);
 }
 
-ByteBuffer Packet::to_byte_buffer() const
+ErrorOr<ByteBuffer> Packet::to_byte_buffer() const
 {
     PacketHeader header;
     header.set_id(m_id);
@@ -48,30 +48,32 @@ ByteBuffer Packet::to_byte_buffer() const
     header.set_question_count(m_questions.size());
     header.set_answer_count(m_answers.size());
 
-    DuplexMemoryStream stream;
+    AllocatingMemoryStream stream;
 
-    stream << ReadonlyBytes { &header, sizeof(header) };
+    TRY(stream.write_value(header));
     for (auto& question : m_questions) {
-        stream << question.name();
-        stream << htons((u16)question.record_type());
-        stream << htons(question.raw_class_code());
+        TRY(stream.write_value(question.name()));
+        TRY(stream.write_value(htons((u16)question.record_type())));
+        TRY(stream.write_value(htons(question.raw_class_code())));
     }
     for (auto& answer : m_answers) {
-        stream << answer.name();
-        stream << htons((u16)answer.type());
-        stream << htons(answer.raw_class_code());
-        stream << htonl(answer.ttl());
+        TRY(stream.write_value(answer.name()));
+        TRY(stream.write_value(htons((u16)answer.type())));
+        TRY(stream.write_value(htons(answer.raw_class_code())));
+        TRY(stream.write_value(htonl(answer.ttl())));
         if (answer.type() == RecordType::PTR) {
             Name name { answer.record_data() };
-            stream << htons(name.serialized_size());
-            stream << name;
+            TRY(stream.write_value(htons(name.serialized_size())));
+            TRY(stream.write_value(name));
         } else {
-            stream << htons(answer.record_data().length());
-            stream << answer.record_data().bytes();
+            TRY(stream.write_value(htons(answer.record_data().length())));
+            TRY(stream.write_entire_buffer(answer.record_data().bytes()));
         }
     }
 
-    return stream.copy_into_contiguous_buffer();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
+    TRY(stream.read_entire_buffer(buffer));
+    return buffer;
 }
 
 class [[gnu::packed]] DNSRecordWithoutName {

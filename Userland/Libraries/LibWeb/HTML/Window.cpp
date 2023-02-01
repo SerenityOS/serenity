@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,6 @@
 #include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/FetchMethod.h>
-#include <LibWeb/Bindings/LocationObject.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
@@ -36,6 +36,7 @@
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Focus.h>
+#include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Navigator.h>
 #include <LibWeb/HTML/Origin.h>
@@ -50,6 +51,7 @@
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/Infra/Base64.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Page/Page.h>
@@ -86,7 +88,7 @@ private:
 
 JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Window>(realm, realm);
+    return realm.heap().allocate<Window>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 Window::Window(JS::Realm& realm)
@@ -101,7 +103,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_current_event.ptr());
     visitor.visit(m_performance.ptr());
     visitor.visit(m_screen.ptr());
-    visitor.visit(m_location_object);
+    visitor.visit(m_location);
     visitor.visit(m_crypto);
     visitor.visit(m_navigator);
     for (auto& it : m_timers)
@@ -113,14 +115,14 @@ Window::~Window() = default;
 HighResolutionTime::Performance& Window::performance()
 {
     if (!m_performance)
-        m_performance = heap().allocate<HighResolutionTime::Performance>(realm(), *this);
+        m_performance = heap().allocate<HighResolutionTime::Performance>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
     return *m_performance;
 }
 
 CSS::Screen& Window::screen()
 {
     if (!m_screen)
-        m_screen = heap().allocate<CSS::Screen>(realm(), *this);
+        m_screen = heap().allocate<CSS::Screen>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
     return *m_screen;
 }
 
@@ -580,7 +582,7 @@ void Window::cancel_animation_frame_impl(i32 id)
     m_animation_frame_callback_driver.remove(id);
 }
 
-void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL const& new_href)
+void Window::did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -588,7 +590,7 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL cons
     browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
 }
 
-void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
+void Window::did_call_location_reload(Badge<HTML::Location>)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -596,7 +598,7 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
-void Window::did_call_location_replace(Badge<Bindings::LocationObject>, DeprecatedString url)
+void Window::did_call_location_replace(Badge<HTML::Location>, DeprecatedString url)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -780,7 +782,7 @@ float Window::scroll_y() const
 }
 
 // https://html.spec.whatwg.org/#fire-a-page-transition-event
-void Window::fire_a_page_transition_event(FlyString const& event_name, bool persisted)
+void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted)
 {
     // To fire a page transition event named eventName at a Window window with a boolean persisted,
     // fire an event named eventName at window, using PageTransitionEvent,
@@ -1061,7 +1063,7 @@ HTML::BrowsingContext* Window::browsing_context()
 void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     auto& realm = this->realm();
-    add_window_exposed_interfaces(*this, realm);
+    add_window_exposed_interfaces(*this);
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
@@ -1131,18 +1133,19 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "outerWidth", outer_width_getter, {}, attr);
     define_native_accessor(realm, "outerHeight", outer_height_getter, {}, attr);
 
-    define_direct_property("CSS", heap().allocate<Bindings::CSSNamespace>(realm, realm), 0);
+    define_direct_property("CSS", heap().allocate<Bindings::CSSNamespace>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors(), 0);
 
     define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
     define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
     define_native_accessor(realm, "origin", origin_getter, {}, attr);
+    define_native_accessor(realm, "isSecureContext", is_secure_context_getter, {}, attr);
 
     // Legacy
     define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
 
-    m_location_object = heap().allocate<Bindings::LocationObject>(realm, realm);
+    m_location = heap().allocate<HTML::Location>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
-    m_navigator = heap().allocate<HTML::Navigator>(realm, realm);
+    m_navigator = heap().allocate<HTML::Navigator>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     define_direct_property("navigator", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property("clientInformation", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
@@ -1150,7 +1153,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);
 
     // WebAssembly "namespace"
-    define_direct_property("WebAssembly", heap().allocate<Bindings::WebAssemblyObject>(realm, realm), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("WebAssembly", heap().allocate<Bindings::WebAssemblyObject>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // HTML::GlobalEventHandlers and HTML::WindowEventHandlers
 #define __ENUMERATE(attribute, event_name) \
@@ -1202,17 +1205,17 @@ JS_DEFINE_NATIVE_FUNCTION(Window::open)
     // optional USVString url = ""
     DeprecatedString url = "";
     if (!vm.argument(0).is_undefined())
-        url = TRY(vm.argument(0).to_string(vm));
+        url = TRY(vm.argument(0).to_deprecated_string(vm));
 
     // optional DOMString target = "_blank"
     DeprecatedString target = "_blank";
     if (!vm.argument(1).is_undefined())
-        target = TRY(vm.argument(1).to_string(vm));
+        target = TRY(vm.argument(1).to_deprecated_string(vm));
 
     // optional [LegacyNullToEmptyString] DOMString features = "")
     DeprecatedString features = "";
     if (!vm.argument(2).is_nullish())
-        features = TRY(vm.argument(2).to_string(vm));
+        features = TRY(vm.argument(2).to_deprecated_string(vm));
 
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
 }
@@ -1226,7 +1229,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::alert)
     auto* impl = TRY(impl_from(vm));
     DeprecatedString message = "";
     if (vm.argument_count())
-        message = TRY(vm.argument(0).to_string(vm));
+        message = TRY(vm.argument(0).to_deprecated_string(vm));
     impl->alert_impl(message);
     return JS::js_undefined();
 }
@@ -1236,7 +1239,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::confirm)
     auto* impl = TRY(impl_from(vm));
     DeprecatedString message = "";
     if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_string(vm));
+        message = TRY(vm.argument(0).to_deprecated_string(vm));
     return JS::Value(impl->confirm_impl(message));
 }
 
@@ -1246,9 +1249,9 @@ JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
     DeprecatedString message = "";
     DeprecatedString default_ = "";
     if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_string(vm));
+        message = TRY(vm.argument(0).to_deprecated_string(vm));
     if (!vm.argument(1).is_undefined())
-        default_ = TRY(vm.argument(1).to_string(vm));
+        default_ = TRY(vm.argument(1).to_deprecated_string(vm));
     auto response = impl->prompt_impl(message, default_);
     if (response.is_null())
         return JS::js_null();
@@ -1259,7 +1262,7 @@ static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Va
 {
     if (handler.is_function())
         return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
-    return TRY(handler.to_string(vm));
+    return TRY(handler.to_deprecated_string(vm));
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
@@ -1399,7 +1402,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
-    auto deprecated_string = TRY(vm.argument(0).to_string(vm));
+    auto deprecated_string = TRY(vm.argument(0).to_deprecated_string(vm));
     auto string = String::from_utf8(deprecated_string).release_value_but_fixme_should_propagate_errors();
 
     // must throw an "InvalidCharacterError" DOMException if data contains any character whose code point is greater than U+00FF
@@ -1410,7 +1413,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 
     // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data
     // and then must apply forgiving-base64 encode to that byte sequence and return the result.
-    auto decoded = AK::decode_forgiving_base64(StringView(deprecated_string));
+    auto decoded = Infra::decode_forgiving_base64(StringView(deprecated_string));
     if (decoded.is_error())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidFormat, "Base64");
 
@@ -1427,7 +1430,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
 {
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "btoa");
-    auto string = TRY(vm.argument(0).to_string(vm));
+    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
 
     Vector<u8> byte_string;
     byte_string.ensure_capacity(string.length());
@@ -1609,13 +1612,13 @@ JS_DEFINE_NATIVE_FUNCTION(Window::event_setter)
 JS_DEFINE_NATIVE_FUNCTION(Window::location_getter)
 {
     auto* impl = TRY(impl_from(vm));
-    return impl->m_location_object;
+    return impl->m_location;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
 {
     auto* impl = TRY(impl_from(vm));
-    TRY(impl->m_location_object->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
+    TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
 }
 
@@ -1664,7 +1667,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
 JS_DEFINE_NATIVE_FUNCTION(Window::match_media)
 {
     auto* impl = TRY(impl_from(vm));
-    auto media = TRY(vm.argument(0).to_string(vm));
+    auto media = TRY(vm.argument(0).to_deprecated_string(vm));
     return impl->match_media_impl(move(media));
 }
 
@@ -1720,7 +1723,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
 
         auto behavior_string_value = TRY(options->get("behavior"));
         if (!behavior_string_value.is_undefined())
-            behavior_string = TRY(behavior_string_value.to_string(vm));
+            behavior_string = TRY(behavior_string_value.to_deprecated_string(vm));
         if (behavior_string != "smooth" && behavior_string != "auto")
             return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
 
@@ -1783,7 +1786,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     top = top + static_cast<double>(current_scroll_position.y());
 
     auto behavior_string_value = TRY(options->get("behavior"));
-    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_string(vm));
+    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_deprecated_string(vm));
     if (behavior_string != "smooth" && behavior_string != "auto")
         return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
@@ -1840,7 +1843,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::outer_height_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::post_message)
 {
     auto* impl = TRY(impl_from(vm));
-    auto target_origin = TRY(vm.argument(1).to_string(vm));
+    auto target_origin = TRY(vm.argument(1).to_deprecated_string(vm));
     TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
         return impl->post_message_impl(vm.argument(0), target_origin);
     }));
@@ -1860,6 +1863,14 @@ JS_DEFINE_NATIVE_FUNCTION(Window::origin_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return JS::PrimitiveString::create(vm, impl->associated_document().origin().serialize());
+}
+
+// https://html.spec.whatwg.org/multipage/webappapis.html#dom-issecurecontext
+JS_DEFINE_NATIVE_FUNCTION(Window::is_secure_context_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    // The isSecureContext getter steps are to return true if this's relevant settings object is a secure context, or false otherwise.
+    return JS::Value(is_secure_context(impl->associated_document().relevant_settings_object()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::local_storage_getter)
@@ -1883,7 +1894,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::name_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
 {
     auto* impl = TRY(impl_from(vm));
-    impl->set_name(TRY(vm.argument(0).to_string(vm)));
+    impl->set_name(TRY(vm.argument(0).to_deprecated_string(vm)));
     return JS::js_undefined();
 }
 

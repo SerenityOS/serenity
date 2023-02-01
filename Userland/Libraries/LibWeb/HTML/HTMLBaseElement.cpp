@@ -12,10 +12,17 @@ namespace Web::HTML {
 HTMLBaseElement::HTMLBaseElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
-    set_prototype(&Bindings::cached_web_prototype(realm(), "HTMLBaseElement"));
 }
 
 HTMLBaseElement::~HTMLBaseElement() = default;
+
+JS::ThrowCompletionOr<void> HTMLBaseElement::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLBaseElementPrototype>(realm, "HTMLBaseElement"));
+
+    return {};
+}
 
 void HTMLBaseElement::inserted()
 {
@@ -38,7 +45,7 @@ void HTMLBaseElement::removed_from(Node* parent)
     document().update_base_element({});
 }
 
-void HTMLBaseElement::parse_attribute(FlyString const& name, DeprecatedString const& value)
+void HTMLBaseElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
 {
     HTMLElement::parse_attribute(name, value);
 

@@ -29,9 +29,9 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_size(Image&, Gfx::IntSize, DeprecatedString name);
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
-    static ErrorOr<NonnullRefPtr<Layer>> try_create_snapshot(Image&, Layer const&);
+    static ErrorOr<NonnullRefPtr<Layer>> create_with_size(Image&, Gfx::IntSize, DeprecatedString name);
+    static ErrorOr<NonnullRefPtr<Layer>> create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
+    static ErrorOr<NonnullRefPtr<Layer>> create_snapshot(Image&, Layer const&);
 
     ~Layer() = default;
 
@@ -70,7 +70,7 @@ public:
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 
-    ErrorOr<void> try_set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
+    ErrorOr<void> set_bitmaps(NonnullRefPtr<Gfx::Bitmap> content, RefPtr<Gfx::Bitmap> mask);
 
     void did_modify_bitmap(Gfx::IntRect const& = {}, NotifyClients notify_clients = NotifyClients::Yes);
 
@@ -83,7 +83,7 @@ public:
     int opacity_percent() const { return m_opacity_percent; }
     void set_opacity_percent(int);
 
-    RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
+    RefPtr<Gfx::Bitmap> copy_bitmap(Selection const&) const;
 
     Image const& image() const { return m_image; }
 

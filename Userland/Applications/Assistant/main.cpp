@@ -1,16 +1,18 @@
 /*
  * Copyright (c) 2021, Spencer Dixon <spencercdixon@gmail.com>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Providers.h"
+#include <AK/Array.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/Try.h>
+#include <LibCore/Debounce.h>
 #include <LibCore/LockFile.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -56,13 +58,13 @@ class ResultRow final : public GUI::Button {
                 m_context_menu = GUI::Menu::construct();
 
                 if (LexicalPath path { text() }; path.is_absolute()) {
-                    m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
+                    m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
                         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
                     }));
                     m_context_menu->add_separator();
                 }
 
-                m_context_menu->add_action(GUI::Action::create("&Copy as Text", MUST(Gfx::Bitmap::try_load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
+                m_context_menu->add_action(GUI::Action::create("&Copy as Text", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
                     GUI::Clipboard::the().set_plain_text(text());
                 }));
             }
@@ -73,46 +75,44 @@ class ResultRow final : public GUI::Button {
     RefPtr<GUI::Menu> m_context_menu;
 };
 
+template<size_t ProviderCount>
 class Database {
 public:
-    explicit Database(AppState& state)
+    explicit Database(AppState& state, Array<NonnullRefPtr<Provider>, ProviderCount>& providers)
         : m_state(state)
+        , m_providers(providers)
     {
-        m_providers.append(make_ref_counted<AppProvider>());
-        m_providers.append(make_ref_counted<CalculatorProvider>());
-        m_providers.append(make_ref_counted<FileProvider>());
-        m_providers.append(make_ref_counted<TerminalProvider>());
-        m_providers.append(make_ref_counted<URLProvider>());
     }
 
     Function<void(NonnullRefPtrVector<Result>)> on_new_results;
 
     void search(DeprecatedString const& query)
     {
-        for (auto& provider : m_providers) {
-            provider.query(query, [=, this](auto results) {
-                did_receive_results(query, results);
-            });
+        auto should_display_precached_results = false;
+        for (size_t i = 0; i < ProviderCount; ++i) {
+            auto& result_array = m_result_cache.ensure(query);
+            if (result_array.at(i) == nullptr) {
+                m_providers[i]->query(query, [this, query, i](auto results) {
+                    {
+                        Threading::MutexLocker db_locker(m_mutex);
+                        auto& result_array = m_result_cache.ensure(query);
+                        if (result_array.at(i) != nullptr)
+                            return;
+                        result_array[i] = make<NonnullRefPtrVector<Result>>(results);
+                    }
+                    on_result_cache_updated();
+                });
+            } else {
+                should_display_precached_results = true;
+            }
         }
+        if (should_display_precached_results)
+            on_result_cache_updated();
     }
 
 private:
-    void did_receive_results(DeprecatedString const& query, NonnullRefPtrVector<Result> const& results)
+    void on_result_cache_updated()
     {
-        {
-            Threading::MutexLocker db_locker(m_mutex);
-            auto& cache_entry = m_result_cache.ensure(query);
-
-            for (auto& result : results) {
-                auto found = cache_entry.find_if([&result](auto& other) {
-                    return result.equals(other);
-                });
-
-                if (found.is_end())
-                    cache_entry.append(result);
-            }
-        }
-
         Threading::MutexLocker state_locker(m_state.lock);
         auto new_results = m_result_cache.find(m_state.last_query);
         if (new_results == m_result_cache.end())
@@ -121,21 +121,28 @@ private:
         // NonnullRefPtrVector will provide dual_pivot_quick_sort references rather than pointers,
         // and dual_pivot_quick_sort requires being able to construct the underlying type on the
         // stack. Assistant::Result is pure virtual, thus cannot be constructed on the stack.
-        auto& sortable_results = static_cast<Vector<NonnullRefPtr<Result>>&>(new_results->value);
+        Vector<NonnullRefPtr<Result>> all_results;
+        for (auto const& results_for_provider : new_results->value) {
+            if (results_for_provider == nullptr)
+                continue;
+            for (auto const& result : *results_for_provider) {
+                all_results.append(result);
+            }
+        }
 
-        dual_pivot_quick_sort(sortable_results, 0, static_cast<int>(sortable_results.size() - 1), [](auto& a, auto& b) {
+        dual_pivot_quick_sort(all_results, 0, static_cast<int>(all_results.size() - 1), [](auto& a, auto& b) {
             return a->score() > b->score();
         });
 
-        on_new_results(new_results->value);
+        on_new_results(all_results);
     }
 
     AppState& m_state;
 
-    NonnullRefPtrVector<Provider> m_providers;
+    Array<NonnullRefPtr<Provider>, ProviderCount> m_providers;
 
     Threading::Mutex m_mutex;
-    HashMap<DeprecatedString, NonnullRefPtrVector<Result>> m_result_cache;
+    HashMap<DeprecatedString, Array<OwnPtr<NonnullRefPtrVector<Result>>, ProviderCount>> m_result_cache;
 };
 
 }
@@ -163,16 +170,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_minimizable(false);
 
     Assistant::AppState app_state;
-    Assistant::Database db { app_state };
+    Array<NonnullRefPtr<Assistant::Provider>, 5> providers = {
+        make_ref_counted<Assistant::AppProvider>(),
+        make_ref_counted<Assistant::CalculatorProvider>(),
+        make_ref_counted<Assistant::TerminalProvider>(),
+        make_ref_counted<Assistant::URLProvider>(),
+        make_ref_counted<Assistant::FileProvider>()
+    };
+    Assistant::Database db { app_state, providers };
 
-    auto& container = window->set_main_widget<GUI::Frame>();
-    container.set_fill_with_background_color(true);
-    container.set_frame_shape(Gfx::FrameShape::Window);
-    auto& layout = container.set_layout<GUI::VerticalBoxLayout>();
+    auto container = TRY(window->set_main_widget<GUI::Frame>());
+    container->set_fill_with_background_color(true);
+    container->set_frame_shape(Gfx::FrameShape::Window);
+    auto& layout = container->set_layout<GUI::VerticalBoxLayout>();
     layout.set_margins({ 8 });
 
-    auto& text_box = container.add<GUI::TextBox>();
-    auto& results_container = container.add<GUI::Widget>();
+    auto& text_box = container->add<GUI::TextBox>();
+    auto& results_container = container->add<GUI::Widget>();
     auto& results_layout = results_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto mark_selected_item = [&]() {
@@ -182,7 +196,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    text_box.on_change = [&]() {
+    text_box.on_change = Core::debounce([&]() {
         {
             Threading::MutexLocker locker(app_state.lock);
             if (app_state.last_query == text_box.text())
@@ -192,7 +206,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         db.search(text_box.text());
-    };
+    },
+        5);
     text_box.on_return_pressed = [&]() {
         if (!app_state.selected_index.has_value())
             return;
@@ -233,7 +248,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::Application::the()->quit();
     };
 
-    auto update_ui_timer = Core::Timer::create_single_shot(10, [&] {
+    auto update_ui_timer = TRY(Core::Timer::create_single_shot(10, [&] {
         results_container.remove_all_children();
         results_layout.set_margins(app_state.visible_result_count ? GUI::Margins { 4, 0, 0, 0 } : GUI::Margins { 0 });
 
@@ -251,7 +266,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         mark_selected_item();
         Core::deferred_invoke([&] { window->resize(GUI::Desktop::the().rect().width() / 3, {}); });
-    });
+    }));
 
     db.on_new_results = [&](auto results) {
         if (results.is_empty())

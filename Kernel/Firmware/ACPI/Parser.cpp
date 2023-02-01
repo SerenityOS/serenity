@@ -290,7 +290,8 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
             VERIFY_NOT_REACHED();
         }
         VERIFY(structure.access_size != (u8)GenericAddressStructure::AccessSize::Undefined);
-        PCI::raw_access(pci_address, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
+        auto& pci_device_identifier = PCI::get_device_identifier(pci_address);
+        PCI::raw_access(pci_device_identifier, offset_in_pci_address, (1 << (structure.access_size - 1)), value);
         return;
     }
     default:

@@ -11,7 +11,6 @@
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <ImageDecoder/ImageDecoderServerEndpoint.h>
 #include <LibIPC/ConnectionFromClient.h>
-#include <LibWeb/Forward.h>
 
 namespace ImageDecoder {
 
@@ -27,7 +26,7 @@ public:
 private:
     explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
 
-    virtual Messages::ImageDecoderServer::DecodeImageResponse decode_image(Core::AnonymousBuffer const&) override;
+    virtual Messages::ImageDecoderServer::DecodeImageResponse decode_image(Core::AnonymousBuffer const&, Optional<DeprecatedString> const& mime_type) override;
 };
 
 }

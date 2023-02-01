@@ -16,9 +16,9 @@ RelativeTimeFormatPrototype::RelativeTimeFormatPrototype(Realm& realm)
 {
 }
 
-void RelativeTimeFormatPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> RelativeTimeFormatPrototype::initialize(Realm& realm)
 {
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Object::initialize(realm));
 
     auto& vm = this->vm();
 
@@ -29,6 +29,8 @@ void RelativeTimeFormatPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.format, format, 2, attr);
     define_native_function(realm, vm.names.formatToParts, format_to_parts, 2, attr);
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);
+
+    return {};
 }
 
 // 17.3.3 Intl.RelativeTimeFormat.prototype.format ( value, unit ), https://tc39.es/ecma402/#sec-Intl.RelativeTimeFormat.prototype.format
@@ -45,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
     auto unit = TRY(vm.argument(1).to_string(vm));
 
     // 5. Return ? FormatRelativeTime(relativeTimeFormat, value, unit).
-    auto formatted = TRY(format_relative_time(vm, *relative_time_format, value.as_double(), unit));
+    auto formatted = TRY(format_relative_time(vm, *relative_time_format, value.as_double(), unit.bytes_as_string_view()));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -63,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
     auto unit = TRY(vm.argument(1).to_string(vm));
 
     // 5. Return ? FormatRelativeTimeToParts(relativeTimeFormat, value, unit).
-    return TRY(format_relative_time_to_parts(vm, *relative_time_format, value.as_double(), unit));
+    return TRY(format_relative_time_to_parts(vm, *relative_time_format, value.as_double(), unit.bytes_as_string_view()));
 }
 
 // 17.3.5 Intl.RelativeTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions

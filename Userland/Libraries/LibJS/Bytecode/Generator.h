@@ -84,9 +84,9 @@ public:
     CodeGenerationErrorOr<void> emit_store_to_reference(JS::ASTNode const&);
     CodeGenerationErrorOr<void> emit_delete_reference(JS::ASTNode const&);
 
-    void begin_continuable_scope(Label continue_target, Vector<FlyString> const& language_label_set);
+    void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_continuable_scope();
-    void begin_breakable_scope(Label breakable_target, Vector<FlyString> const& language_label_set);
+    void begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set);
     void end_breakable_scope();
 
     [[nodiscard]] Label nearest_continuable_scope() const;
@@ -117,7 +117,7 @@ public:
         return m_string_table->insert(move(string));
     }
 
-    IdentifierTableIndex intern_identifier(FlyString string)
+    IdentifierTableIndex intern_identifier(DeprecatedFlyString string)
     {
         return m_identifier_table->insert(move(string));
     }
@@ -213,8 +213,8 @@ public:
         }
     }
 
-    Label perform_needed_unwinds_for_labelled_break_and_return_target_block(FlyString const& break_label);
-    Label perform_needed_unwinds_for_labelled_continue_and_return_target_block(FlyString const& continue_label);
+    Label perform_needed_unwinds_for_labelled_break_and_return_target_block(DeprecatedFlyString const& break_label);
+    Label perform_needed_unwinds_for_labelled_continue_and_return_target_block(DeprecatedFlyString const& continue_label);
 
     void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
     void end_boundary(BlockBoundaryType type)
@@ -232,7 +232,7 @@ private:
 
     struct LabelableScope {
         Label bytecode_target;
-        Vector<FlyString> language_label_set;
+        Vector<DeprecatedFlyString> language_label_set;
     };
 
     BasicBlock* m_current_basic_block { nullptr };

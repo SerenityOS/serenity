@@ -17,6 +17,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/Layout/InitialContainingBlock.h>
 
 namespace Web::DOM {
 
@@ -34,13 +35,13 @@ JS::NonnullGCPtr<Range> Range::create(HTML::Window& window)
 JS::NonnullGCPtr<Range> Range::create(Document& document)
 {
     auto& realm = document.realm();
-    return realm.heap().allocate<Range>(realm, document);
+    return realm.heap().allocate<Range>(realm, document).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
 {
     auto& realm = start_container.realm();
-    return realm.heap().allocate<Range>(realm, start_container, start_offset, end_container, end_offset);
+    return realm.heap().allocate<Range>(realm, start_container, start_offset, end_container, end_offset).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Range> Range::construct_impl(JS::Realm& realm)
@@ -52,19 +53,47 @@ JS::NonnullGCPtr<Range> Range::construct_impl(JS::Realm& realm)
 Range::Range(Document& document)
     : Range(document, 0, document, 0)
 {
-    set_prototype(&Bindings::cached_web_prototype(document.realm(), "Range"));
 }
 
 Range::Range(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
     : AbstractRange(start_container, start_offset, end_container, end_offset)
 {
-    set_prototype(&Bindings::cached_web_prototype(start_container.realm(), "Range"));
     live_ranges().set(this);
 }
 
 Range::~Range()
 {
     live_ranges().remove(this);
+}
+
+JS::ThrowCompletionOr<void> Range::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::RangePrototype>(realm, "Range"));
+
+    return {};
+}
+
+void Range::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_associated_selection);
+}
+
+void Range::set_associated_selection(Badge<Selection::Selection>, JS::GCPtr<Selection::Selection> selection)
+{
+    m_associated_selection = selection;
+    update_associated_selection();
+}
+
+void Range::update_associated_selection()
+{
+    if (!m_associated_selection)
+        return;
+    if (auto* layout_root = m_associated_selection->document()->layout_node()) {
+        layout_root->recompute_selection_states();
+        layout_root->set_needs_display();
+    }
 }
 
 // https://dom.spec.whatwg.org/#concept-range-root
@@ -169,6 +198,7 @@ WebIDL::ExceptionOr<void> Range::set_start_or_end(Node& node, u32 offset, StartO
         m_end_offset = offset;
     }
 
+    update_associated_selection();
     return {};
 }
 
@@ -349,6 +379,7 @@ WebIDL::ExceptionOr<void> Range::select(Node& node)
     m_end_container = *parent;
     m_end_offset = index + 1;
 
+    update_associated_selection();
     return {};
 }
 
@@ -366,11 +397,11 @@ void Range::collapse(bool to_start)
     if (to_start) {
         m_end_container = m_start_container;
         m_end_offset = m_start_offset;
-        return;
+    } else {
+        m_start_container = m_end_container;
+        m_start_offset = m_end_offset;
     }
-
-    m_start_container = m_end_container;
-    m_start_offset = m_end_offset;
+    update_associated_selection();
 }
 
 // https://dom.spec.whatwg.org/#dom-range-selectnodecontents
@@ -391,17 +422,18 @@ WebIDL::ExceptionOr<void> Range::select_node_contents(Node const& node)
     m_end_container = node;
     m_end_offset = length;
 
+    update_associated_selection();
     return {};
 }
 
 JS::NonnullGCPtr<Range> Range::clone_range() const
 {
-    return heap().allocate<Range>(shape().realm(), const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset);
+    return heap().allocate<Range>(shape().realm(), const_cast<Node&>(*m_start_container), m_start_offset, const_cast<Node&>(*m_end_container), m_end_offset).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Range> Range::inverted() const
 {
-    return heap().allocate<Range>(shape().realm(), const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset);
+    return heap().allocate<Range>(shape().realm(), const_cast<Node&>(*m_end_container), m_end_offset, const_cast<Node&>(*m_start_container), m_start_offset).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<Range> Range::normalized() const
@@ -555,7 +587,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract_contents(
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
 {
     // 1. Let fragment be a new DocumentFragment node whose node document is range’s start node’s node document.
-    auto fragment = heap().allocate<DOM::DocumentFragment>(realm(), const_cast<Document&>(start_container()->document()));
+    auto fragment = MUST_OR_THROW_OOM(heap().allocate<DOM::DocumentFragment>(realm(), const_cast<Document&>(start_container()->document())));
 
     // 2. If range is collapsed, then return fragment.
     if (collapsed())
@@ -884,7 +916,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_contents()
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_contents()
 {
     // 1. Let fragment be a new DocumentFragment node whose node document is range’s start node’s node document.
-    auto fragment = heap().allocate<DOM::DocumentFragment>(realm(), const_cast<Document&>(start_container()->document()));
+    auto fragment = MUST_OR_THROW_OOM(heap().allocate<DOM::DocumentFragment>(realm(), const_cast<Document&>(start_container()->document())));
 
     // 2. If range is collapsed, then return fragment.
     if (collapsed())

@@ -317,7 +317,7 @@ PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> PDFViewer::render_page(u32 page_inde
 {
     auto page = TRY(m_document->get_page(page_index));
     auto& page_size = m_page_dimension_cache.render_info[page_index].size;
-    auto bitmap = TRY(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, page_size.to_type<int>()));
+    auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, page_size.to_type<int>()));
 
     auto maybe_errors = PDF::Renderer::render(*m_document, page, bitmap, m_rendering_preferences);
     if (maybe_errors.is_error()) {

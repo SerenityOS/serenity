@@ -12,21 +12,6 @@
 #include <bits/stdint.h>
 #include <bits/wchar.h>
 
-#ifndef PAGE_SIZE
-#    define PAGE_SIZE 4096
-#endif
-
-#define HOST_NAME_MAX 64
-
-#define PATH_MAX 4096
-#if !defined MAXPATHLEN && defined PATH_MAX
-#    define MAXPATHLEN PATH_MAX
-#endif
-
-#define NAME_MAX 255
-
-#define TTY_NAME_MAX 32
-
 #define PIPE_BUF 4096
 
 #define INT_MAX INT32_MAX
@@ -44,18 +29,10 @@
 
 #define USHRT_MAX 65535
 
-#ifdef __x86_64__
-#    define LONG_MAX 9223372036854775807L
-#else
-#    define LONG_MAX 2147483647L
-#endif
+#define LONG_MAX 9223372036854775807L
 #define LONG_MIN (-LONG_MAX - 1L)
 
-#ifdef __x86_64__
-#    define ULONG_MAX 18446744073709551615UL
-#else
-#    define ULONG_MAX 4294967295UL
-#endif
+#define ULONG_MAX 18446744073709551615UL
 
 #define LONG_LONG_MAX 9223372036854775807LL
 #define LONG_LONG_MIN (-LONG_LONG_MAX - 1LL)
@@ -85,9 +62,7 @@
 #define LLONG_WIDTH 64
 #define ULLONG_WIDTH 64
 
-#define ARG_MAX 65536
-
-#define SSIZE_MAX 2147483647
+#define SSIZE_MAX LONG_MAX
 
 #define LINK_MAX 4096
 

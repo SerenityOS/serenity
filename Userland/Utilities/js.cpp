@@ -42,7 +42,7 @@ public:
         : GlobalObject(realm)
     {
     }
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~ReplObject() override = default;
 
 private:
@@ -63,7 +63,7 @@ public:
         : JS::GlobalObject(realm)
     {
     }
-    virtual void initialize(JS::Realm&) override;
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual ~ScriptObject() override = default;
 
 private:
@@ -84,7 +84,7 @@ static DeprecatedString s_history_path = DeprecatedString::formatted("{}/.js-his
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
-static ErrorOr<void> print(JS::Value value, Core::Stream::Stream& stream)
+static ErrorOr<void> print(JS::Value value, AK::Stream& stream)
 {
     JS::PrintContext print_context { .vm = *g_vm, .stream = stream, .strip_ansi = s_strip_ansi };
     return JS::print(value, print_context);
@@ -110,7 +110,7 @@ static DeprecatedString prompt_for_level(int level)
     for (auto i = 0; i < level; ++i)
         prompt_builder.append("    "sv);
 
-    return prompt_builder.build();
+    return prompt_builder.to_deprecated_string();
 }
 
 static DeprecatedString read_next_piece()
@@ -345,7 +345,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 {
     auto& realm = *vm.current_realm();
 
-    auto filename = TRY(vm.argument(0).to_string(vm));
+    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
@@ -365,7 +365,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
-    auto filename = TRY(vm.argument(0).to_string(vm));
+    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
@@ -381,9 +381,9 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
     return JS::JSONObject::parse_json_value(vm, json.value());
 }
 
-void ReplObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ReplObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
@@ -413,6 +413,8 @@ void ReplObject::initialize(JS::Realm& realm)
             return value;
         },
         attr);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
@@ -466,15 +468,17 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
     return JS::js_undefined();
 }
 
-void ScriptObject::initialize(JS::Realm& realm)
+JS::ThrowCompletionOr<void> ScriptObject::initialize(JS::Realm& realm)
 {
-    Base::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_direct_property("global", this, JS::Attribute::Enumerable);
     u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
     define_native_function(realm, "loadINI", load_ini, 1, attr);
     define_native_function(realm, "loadJSON", load_json, 1, attr);
     define_native_function(realm, "print", print, 1, attr);
+
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_ini)

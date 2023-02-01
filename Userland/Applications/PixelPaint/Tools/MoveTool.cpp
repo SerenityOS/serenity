@@ -11,6 +11,8 @@
 #include "../Layer.h"
 #include <AK/String.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/BoxLayout.h>
+#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -93,7 +95,10 @@ void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
             auto aspect_ratio = m_layer_being_moved->size().aspect_ratio();
             scaling_origin = opposite_corner.end_point_for_aspect_ratio(scaling_origin, aspect_ratio);
         }
-        m_new_layer_rect = Gfx::IntRect::from_two_points(scaling_origin, opposite_corner);
+
+        auto scaled_rect = Gfx::IntRect::from_two_points(scaling_origin, opposite_corner);
+        if (!scaled_rect.is_empty())
+            m_new_layer_rect = scaled_rect;
     } else {
         m_layer_being_moved->set_location(m_layer_origin.translated(delta));
     }
@@ -135,10 +140,13 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
     if (event.key() == Key_Shift)
         m_keep_aspect_ratio = true;
 
+    if (event.key() == Key_Alt)
+        toggle_selection_mode();
+
     if (m_scaling)
         return true;
 
-    if (event.modifiers() != 0)
+    if (!(event.modifiers() == Mod_None || event.modifiers() == Mod_Shift))
         return false;
 
     auto* layer = m_editor->active_layer();
@@ -146,19 +154,19 @@ bool MoveTool::on_keydown(GUI::KeyEvent& event)
         return false;
 
     auto new_location = layer->location();
-
+    auto speed = event.shift() ? 10 : 1;
     switch (event.key()) {
     case Key_Up:
-        new_location.translate_by(0, -1);
+        new_location.translate_by(0, -speed);
         break;
     case Key_Down:
-        new_location.translate_by(0, 1);
+        new_location.translate_by(0, speed);
         break;
     case Key_Left:
-        new_location.translate_by(-1, 0);
+        new_location.translate_by(-speed, 0);
         break;
     case Key_Right:
-        new_location.translate_by(1, 0);
+        new_location.translate_by(speed, 0);
         break;
     default:
         return false;
@@ -173,6 +181,9 @@ void MoveTool::on_keyup(GUI::KeyEvent& event)
 {
     if (event.key() == Key_Shift)
         m_keep_aspect_ratio = false;
+
+    if (event.key() == Key_Alt)
+        toggle_selection_mode();
 }
 
 void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
@@ -196,7 +207,7 @@ ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
     auto const& source_bitmap = layer->content_bitmap();
     auto preview_bitmap_size = editor_rect_size.contains(source_bitmap.size()) ? source_bitmap.size() : editor_rect_size;
 
-    m_cached_preview_bitmap = TRY(Gfx::Bitmap::try_create(source_bitmap.format(), preview_bitmap_size));
+    m_cached_preview_bitmap = TRY(Gfx::Bitmap::create(source_bitmap.format(), preview_bitmap_size));
     GUI::Painter preview_painter(*m_cached_preview_bitmap);
     preview_painter.draw_scaled_bitmap(m_cached_preview_bitmap->rect(), source_bitmap, source_bitmap.rect(), 0.8f, Gfx::Painter::ScalingMode::BilinearBlend);
     Gfx::ContrastFilter preview_filter(0.5f);
@@ -238,6 +249,46 @@ Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
         }
     }
     return Gfx::StandardCursor::Move;
+}
+
+GUI::Widget* MoveTool::get_properties_widget()
+{
+    if (!m_properties_widget) {
+        m_properties_widget = GUI::Widget::construct();
+        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+
+        auto& selection_mode_container = m_properties_widget->add<GUI::Widget>();
+        selection_mode_container.set_layout<GUI::HorizontalBoxLayout>();
+        selection_mode_container.set_fixed_height(46);
+        auto& selection_mode_label = selection_mode_container.add<GUI::Label>("Selection Mode:");
+        selection_mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        selection_mode_label.set_fixed_size(80, 40);
+
+        auto& mode_radio_container = selection_mode_container.add<GUI::Widget>();
+        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
+        m_selection_mode_foreground = mode_radio_container.add<GUI::RadioButton>("Foreground");
+
+        m_selection_mode_active = mode_radio_container.add<GUI::RadioButton>("Active Layer");
+
+        m_selection_mode_foreground->on_checked = [&](bool) {
+            m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;
+        };
+        m_selection_mode_active->on_checked = [&](bool) {
+            m_layer_selection_mode = LayerSelectionMode::ActiveLayer;
+        };
+
+        m_selection_mode_foreground->set_checked(true);
+    }
+
+    return m_properties_widget.ptr();
+}
+
+void MoveTool::toggle_selection_mode()
+{
+    if (m_selection_mode_foreground->is_checked())
+        m_selection_mode_active->set_checked(true);
+    else
+        m_selection_mode_foreground->set_checked(true);
 }
 
 }

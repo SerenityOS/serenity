@@ -10,11 +10,22 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Fetch/HeadersIterator.h>
 
+namespace Web::Bindings {
+
+template<>
+void Intrinsics::create_web_prototype_and_constructor<HeadersIteratorPrototype>(JS::Realm& realm)
+{
+    auto prototype = heap().allocate<HeadersIteratorPrototype>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_prototypes.set("HeadersIterator"sv, prototype);
+}
+
+}
+
 namespace Web::Fetch {
 
 JS::NonnullGCPtr<HeadersIterator> HeadersIterator::create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
 {
-    return headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind);
+    return headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKind iteration_kind)
@@ -22,10 +33,17 @@ HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKin
     , m_headers(headers)
     , m_iteration_kind(iteration_kind)
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(headers.realm(), "HeadersIterator"));
 }
 
 HeadersIterator::~HeadersIterator() = default;
+
+JS::ThrowCompletionOr<void> HeadersIterator::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::HeadersIteratorPrototype>(realm, "HeadersIterator"));
+
+    return {};
+}
 
 void HeadersIterator::visit_edges(JS::Cell::Visitor& visitor)
 {

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/Types.h>
 
 #define JS_DECLARE_NATIVE_FUNCTION(name) \
@@ -26,6 +27,7 @@
     __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)                                                         \
     __JS_ENUMERATE(DataView, data_view, DataViewPrototype, DataViewConstructor, void)                                                          \
     __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                                                                           \
+    __JS_ENUMERATE(DisposableStack, disposable_stack, DisposableStackPrototype, DisposableStackConstructor, void)                              \
     __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                                                                       \
     __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void)          \
     __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                                     \
@@ -38,6 +40,7 @@
     __JS_ENUMERATE(Set, set, SetPrototype, SetConstructor, void)                                                                               \
     __JS_ENUMERATE(ShadowRealm, shadow_realm, ShadowRealmPrototype, ShadowRealmConstructor, void)                                              \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                                                             \
+    __JS_ENUMERATE(SuppressedError, suppressed_error, SuppressedErrorPrototype, SuppressedErrorConstructor, void)                              \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)                                                             \
     __JS_ENUMERATE(WeakMap, weak_map, WeakMapPrototype, WeakMapConstructor, void)                                                              \
     __JS_ENUMERATE(WeakRef, weak_ref, WeakRefPrototype, WeakRefConstructor, void)                                                              \
@@ -131,7 +134,8 @@
     __JS_ENUMERATE(unscopables, unscopables)                 \
     __JS_ENUMERATE(species, species)                         \
     __JS_ENUMERATE(toPrimitive, to_primitive)                \
-    __JS_ENUMERATE(toStringTag, to_string_tag)
+    __JS_ENUMERATE(toStringTag, to_string_tag)               \
+    __JS_ENUMERATE(dispose, dispose)
 
 #define JS_ENUMERATE_REGEXP_FLAGS                \
     __JS_ENUMERATE(hasIndices, has_indices, d)   \
@@ -282,6 +286,7 @@ struct PartialDurationRecord;
 };
 
 template<typename T>
+requires(!IsLvalueReference<T>)
 class ThrowCompletionOr;
 
 template<class T>

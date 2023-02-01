@@ -5,10 +5,10 @@
  */
 
 #include "SpiceAgent.h"
-#include <LibC/fcntl.h>
 #include <LibCore/System.h>
 #include <LibIPC/ConnectionToServer.h>
 #include <LibMain/Main.h>
+#include <fcntl.h>
 
 static constexpr auto SPICE_DEVICE = "/dev/hvc0p1"sv;
 
@@ -18,7 +18,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::System::pledge("unix rpath wpath stdio sendfd recvfd"));
     TRY(Core::System::unveil(SPICE_DEVICE, "rw"sv));
-    TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -18,8 +19,13 @@ public:
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
+    // https://www.w3.org/TR/html-aria/#el-p
+    virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::paragraph; }
+
 private:
     HTMLParagraphElement(DOM::Document&, DOM::QualifiedName);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 }

@@ -211,9 +211,9 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file(&window);
+        auto response = FileSystemAccessClient::Client::the().open_file(&window);
         if (!response.is_error())
-            open_file(*response.value());
+            open_file(response.value().filename(), response.value().release_stream());
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
@@ -239,7 +239,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 {
     auto open_outline_action = GUI::Action::create(
-        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::try_load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+        "Toggle &Sidebar", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/sidebar.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
             m_sidebar_open = !m_sidebar_open;
             m_sidebar->set_visible(m_sidebar_open);
         },
@@ -250,13 +250,13 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_action(*open_outline_action);
     toolbar.add_separator();
 
-    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() > 0);
         m_page_text_box->set_current_number(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
-    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::try_load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
         VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
         m_page_text_box->set_current_number(m_viewer->current_page() + 2);
     });
@@ -349,9 +349,9 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }
 
-void PDFViewerWidget::open_file(Core::File& file)
+void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
 {
-    auto maybe_error = try_open_file(file);
+    auto maybe_error = try_open_file(path, move(file));
     if (maybe_error.is_error()) {
         auto error = maybe_error.release_error();
         warnln("{}", error.message());
@@ -360,11 +360,11 @@ void PDFViewerWidget::open_file(Core::File& file)
     }
 }
 
-PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(Core::File& file)
+PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
 {
-    window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", file.filename()));
+    window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", path));
 
-    m_buffer = file.read_all();
+    m_buffer = TRY(file->read_until_eof());
     auto document = TRY(PDF::Document::create(m_buffer));
 
     if (auto sh = document->security_handler(); sh && !sh->has_user_password()) {

@@ -14,9 +14,9 @@
 
 namespace Web::Painting {
 
-NonnullRefPtr<CheckBoxPaintable> CheckBoxPaintable::create(Layout::CheckBox const& layout_box)
+JS::NonnullGCPtr<CheckBoxPaintable> CheckBoxPaintable::create(Layout::CheckBox const& layout_box)
 {
-    return adopt_ref(*new CheckBoxPaintable(layout_box));
+    return layout_box.heap().allocate_without_realm<CheckBoxPaintable>(layout_box);
 }
 
 CheckBoxPaintable::CheckBoxPaintable(Layout::CheckBox const& layout_box)

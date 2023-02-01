@@ -37,10 +37,10 @@ namespace Web::HTML {
 
 static inline void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
-    dbgln("Parse error! {}", location);
+    dbgln_if(HTML_PARSER_DEBUG, "Parse error! {}", location);
 }
 
-static Vector<FlyString> s_quirks_public_ids = {
+static Vector<DeprecatedFlyString> s_quirks_public_ids = {
     "+//Silmaril//dtd html Pro v0r11 19970101//",
     "-//AS//DTD HTML 3.0 asWedit + extensions//",
     "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//",
@@ -462,13 +462,13 @@ void HTMLParser::handle_initial(HTMLToken& token)
     }
 
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
         MUST(document().append_child(*comment));
         return;
     }
 
     if (token.is_doctype()) {
-        auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document());
+        auto doctype = realm().heap().allocate<DOM::DocumentType>(realm(), document()).release_allocated_value_but_fixme_should_propagate_errors();
         doctype->set_name(token.doctype_data().name);
         doctype->set_public_id(token.doctype_data().public_identifier);
         doctype->set_system_id(token.doctype_data().system_identifier);
@@ -497,7 +497,7 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> A comment token
     if (token.is_comment()) {
         // Insert a comment as the last child of the Document object.
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
         MUST(document().append_child(*comment));
         return;
     }
@@ -616,7 +616,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
-JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, FlyString const& namespace_, DOM::Node const& intended_parent)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, DeprecatedFlyString const& namespace_, DOM::Node const& intended_parent)
 {
     // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
     // FIXME: 2. Otherwise, optionally create a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
@@ -681,7 +681,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#insert-a-foreign-element
-JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, FlyString const& namespace_)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken const& token, DeprecatedFlyString const& namespace_)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
 
@@ -759,7 +759,7 @@ AnythingElse:
 void HTMLParser::insert_comment(HTMLToken& token)
 {
     auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
-    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()), adjusted_insertion_location.insert_before_sibling);
+    adjusted_insertion_location.parent->insert_before(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors(), adjusted_insertion_location.insert_before_sibling);
 }
 
 void HTMLParser::handle_in_head(HTMLToken& token)
@@ -945,7 +945,7 @@ DOM::Text* HTMLParser::find_character_insertion_node()
         return nullptr;
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
         return verify_cast<DOM::Text>(adjusted_insertion_location.parent->last_child());
-    auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "");
+    auto new_text_node = realm().heap().allocate<DOM::Text>(realm(), document(), "").release_allocated_value_but_fixme_should_propagate_errors();
     MUST(adjusted_insertion_location.parent->append_child(*new_text_node));
     return new_text_node;
 }
@@ -1041,7 +1041,7 @@ AnythingElse:
     process_using_the_rules_for(m_insertion_mode, token);
 }
 
-void HTMLParser::generate_implied_end_tags(FlyString const& exception)
+void HTMLParser::generate_implied_end_tags(DeprecatedFlyString const& exception)
 {
     while (current_node().local_name() != exception && current_node().local_name().is_one_of(HTML::TagNames::dd, HTML::TagNames::dt, HTML::TagNames::li, HTML::TagNames::optgroup, HTML::TagNames::option, HTML::TagNames::p, HTML::TagNames::rb, HTML::TagNames::rp, HTML::TagNames::rt, HTML::TagNames::rtc))
         (void)m_stack_of_open_elements.pop();
@@ -1071,7 +1071,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 
     if (token.is_comment()) {
         auto& insertion_location = m_stack_of_open_elements.first();
-        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment())));
+        MUST(insertion_location.append_child(realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors()));
         return;
     }
 
@@ -1107,7 +1107,7 @@ void HTMLParser::handle_after_body(HTMLToken& token)
 void HTMLParser::handle_after_after_body(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment());
+        auto comment = realm().heap().allocate<DOM::Comment>(realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
         MUST(document().append_child(*comment));
         return;
     }
@@ -1365,7 +1365,7 @@ HTMLParser::AdoptionAgencyAlgorithmOutcome HTMLParser::run_the_adoption_agency_a
     }
 }
 
-bool HTMLParser::is_special_tag(FlyString const& tag_name, FlyString const& namespace_)
+bool HTMLParser::is_special_tag(DeprecatedFlyString const& tag_name, DeprecatedFlyString const& namespace_)
 {
     if (namespace_ == Namespace::HTML) {
         return tag_name.is_one_of(
@@ -3181,7 +3181,7 @@ void HTMLParser::handle_after_frameset(HTMLToken& token)
 void HTMLParser::handle_after_after_frameset(HTMLToken& token)
 {
     if (token.is_comment()) {
-        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment());
+        auto comment = document().heap().allocate<DOM::Comment>(document().realm(), document(), token.comment()).release_allocated_value_but_fixme_should_propagate_errors();
         MUST(document().append_child(comment));
         return;
     }

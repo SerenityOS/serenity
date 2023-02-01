@@ -1,7 +1,8 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Matthew Costa <ucosty@gmail.com>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,9 +14,12 @@
 #include "WebContentView.h"
 #include <AK/TypeCasts.h>
 #include <Browser/CookieJar.h>
+#include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QAction>
 #include <QActionGroup>
+#include <QClipboard>
+#include <QGuiApplication>
 #include <QInputDialog>
 #include <QPlainTextEdit>
 
@@ -36,20 +40,32 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     auto* menu = menuBar()->addMenu("&File");
 
     auto* new_tab_action = new QAction("New &Tab", this);
-    new_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_T));
+    new_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::AddTab));
     menu->addAction(new_tab_action);
 
     auto* settings_action = new QAction("&Settings", this);
-    settings_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Comma));
+    settings_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Preferences));
     menu->addAction(settings_action);
 
     auto* close_current_tab_action = new QAction("Close Current Tab", this);
-    close_current_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_W));
+    close_current_tab_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Close));
     menu->addAction(close_current_tab_action);
 
     auto* quit_action = new QAction("&Quit", this);
-    quit_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Q));
+    quit_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Quit));
     menu->addAction(quit_action);
+
+    auto* edit_menu = menuBar()->addMenu("&Edit");
+
+    auto* copy_action = new QAction("&Copy", this);
+    copy_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Copy));
+    edit_menu->addAction(copy_action);
+    QObject::connect(copy_action, &QAction::triggered, this, &BrowserWindow::copy_selected_text);
+
+    auto* select_all_action = new QAction("Select &All", this);
+    select_all_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::SelectAll));
+    edit_menu->addAction(select_all_action);
+    QObject::connect(select_all_action, &QAction::triggered, this, &BrowserWindow::select_all);
 
     auto* view_menu = menuBar()->addMenu("&View");
 
@@ -62,6 +78,27 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     open_previous_tab_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_PageUp));
     view_menu->addAction(open_previous_tab_action);
     QObject::connect(open_previous_tab_action, &QAction::triggered, this, &BrowserWindow::open_previous_tab);
+
+    view_menu->addSeparator();
+
+    auto* zoom_menu = view_menu->addMenu("&Zoom");
+
+    auto* zoom_in_action = new QAction("Zoom &In", this);
+    auto zoom_in_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn);
+    zoom_in_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Equal));
+    zoom_in_action->setShortcuts(zoom_in_shortcuts);
+    zoom_menu->addAction(zoom_in_action);
+    QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
+
+    auto* zoom_out_action = new QAction("Zoom &Out", this);
+    zoom_out_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomOut));
+    zoom_menu->addAction(zoom_out_action);
+    QObject::connect(zoom_out_action, &QAction::triggered, this, &BrowserWindow::zoom_out);
+
+    auto* reset_zoom_action = new QAction("&Reset Zoom", this);
+    reset_zoom_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
+    zoom_menu->addAction(reset_zoom_action);
+    QObject::connect(reset_zoom_action, &QAction::triggered, this, &BrowserWindow::reset_zoom);
 
     view_menu->addSeparator();
 
@@ -267,7 +304,9 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         debug_request("same-origin-policy", state ? "on" : "off");
     });
 
-    QObject::connect(new_tab_action, &QAction::triggered, this, &BrowserWindow::new_tab);
+    QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
+        new_tab("about:blank", Activate::Yes);
+    });
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
         new SettingsDialog(this);
     });
@@ -280,7 +319,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
-    new_tab();
+    // We need to load *something* to make the JS console usable.
+    new_tab("about:blank", Activate::Yes);
 
     setCentralWidget(m_tabs_container);
 }
@@ -292,7 +332,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
     m_current_tab->debug_request(request, argument);
 }
 
-void BrowserWindow::new_tab()
+void BrowserWindow::new_tab(QString const& url, Activate activate)
 {
     auto tab = make<Tab>(this, m_webdriver_content_ipc_path);
     auto tab_ptr = tab.ptr();
@@ -303,10 +343,19 @@ void BrowserWindow::new_tab()
     }
 
     m_tabs_container->addTab(tab_ptr, "New Tab");
-    m_tabs_container->setCurrentWidget(tab_ptr);
+    if (activate == Activate::Yes)
+        m_tabs_container->setCurrentWidget(tab_ptr);
 
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
     QObject::connect(tab_ptr, &Tab::favicon_changed, this, &BrowserWindow::tab_favicon_changed);
+
+    QObject::connect(&tab_ptr->view(), &WebContentView::urls_dropped, this, [this](auto& urls) {
+        VERIFY(urls.size());
+        m_current_tab->navigate(urls[0].toString());
+
+        for (qsizetype i = 1; i < urls.size(); ++i)
+            new_tab(urls[i].toString(), Activate::No);
+    });
 
     tab_ptr->view().on_get_all_cookies = [this](auto const& url) {
         return m_cookie_jar.get_all_cookies(url);
@@ -329,6 +378,13 @@ void BrowserWindow::new_tab()
     };
 
     tab_ptr->focus_location_editor();
+
+    // We *don't* load the initial page if we are connected to a WebDriver, as the Set URL command may come in very
+    // quickly, and become replaced by this load.
+    if (m_webdriver_content_ipc_path.is_empty()) {
+        // We make it HistoryNavigation so that the initial page doesn't get added to the history.
+        tab_ptr->navigate(url, Tab::LoadType::HistoryNavigation);
+    }
 }
 
 void BrowserWindow::close_tab(int index)
@@ -399,20 +455,53 @@ void BrowserWindow::open_previous_tab()
 void BrowserWindow::enable_auto_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_color_scheme(ColorScheme::Auto);
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
     }
 }
 
 void BrowserWindow::enable_light_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_color_scheme(ColorScheme::Light);
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
     }
 }
 
 void BrowserWindow::enable_dark_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_color_scheme(ColorScheme::Dark);
+        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
+    }
+}
+
+void BrowserWindow::zoom_in()
+{
+    if (m_current_tab)
+        m_current_tab->view().zoom_in();
+}
+
+void BrowserWindow::zoom_out()
+{
+    if (m_current_tab)
+        m_current_tab->view().zoom_out();
+}
+
+void BrowserWindow::reset_zoom()
+{
+    if (m_current_tab)
+        m_current_tab->view().reset_zoom();
+}
+
+void BrowserWindow::select_all()
+{
+    if (auto* tab = m_current_tab)
+        tab->view().select_all();
+}
+
+void BrowserWindow::copy_selected_text()
+{
+    if (auto* tab = m_current_tab) {
+        auto text = tab->view().selected_text();
+        auto* clipboard = QGuiApplication::clipboard();
+        clipboard->setText(qstring_from_ak_deprecated_string(text));
     }
 }

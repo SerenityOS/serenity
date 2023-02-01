@@ -96,7 +96,7 @@ DeprecatedString Regex<Parser>::error_string(Optional<DeprecatedString> message)
         eb.append(' ');
 
     eb.appendff("^---- {}", message.value_or(get_error_string(parser_result.error)));
-    return eb.build();
+    return eb.to_deprecated_string();
 }
 
 template<typename Parser>
@@ -222,6 +222,11 @@ RegexResult Matcher<Parser>::match(Vector<RegexStringView> const& views, Optiona
                     // Nothing was *actually* matched, so append an empty match.
                     append_match(input, state, view_index);
                     ++match_count;
+
+                    // This prevents a regex pattern like ".*" from matching the empty string
+                    // multiple times, once in this block and once in the following for loop.
+                    if (view_index == 0 && view_length == 0)
+                        ++view_index;
                 }
             }
         }

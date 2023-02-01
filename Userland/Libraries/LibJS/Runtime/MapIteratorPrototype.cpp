@@ -18,13 +18,15 @@ MapIteratorPrototype::MapIteratorPrototype(Realm& realm)
 {
 }
 
-void MapIteratorPrototype::initialize(Realm& realm)
+ThrowCompletionOr<void> MapIteratorPrototype::initialize(Realm& realm)
 {
     auto& vm = this->vm();
-    Object::initialize(realm);
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Map Iterator"), Attribute::Configurable);
+
+    return {};
 }
 
 // 24.1.5.2.1 %MapIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next

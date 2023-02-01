@@ -71,7 +71,7 @@ void MonitorSettingsWidget::create_resolution_list()
 
 void MonitorSettingsWidget::create_frame()
 {
-    load_from_gml(monitor_settings_window_gml);
+    load_from_gml(monitor_settings_window_gml).release_value_but_fixme_should_propagate_errors();
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
@@ -250,7 +250,7 @@ void MonitorSettingsWidget::apply_settings()
                 if (seconds_until_revert <= 0) {
                     box->close();
                 }
-            });
+            }).release_value_but_fixme_should_propagate_errors();
             revert_timer->start();
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.

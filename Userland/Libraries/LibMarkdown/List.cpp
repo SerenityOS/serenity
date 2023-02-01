@@ -35,7 +35,7 @@ DeprecatedString List::render_to_html(bool) const
 
     builder.appendff("</{}>\n", tag);
 
-    return builder.build();
+    return builder.to_deprecated_string();
 }
 
 Vector<DeprecatedString> List::render_lines_for_terminal(size_t view_width) const
@@ -57,13 +57,13 @@ Vector<DeprecatedString> List::render_lines_for_terminal(size_t view_width) cons
 
         builder.append(first_line);
 
-        lines.append(builder.build());
+        lines.append(builder.to_deprecated_string());
 
         for (auto& line : item_lines) {
             builder.clear();
             builder.append(DeprecatedString::repeated(' ', item_indentation));
             builder.append(line);
-            lines.append(builder.build());
+            lines.append(builder.to_deprecated_string());
         }
     }
 

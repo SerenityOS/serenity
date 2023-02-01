@@ -36,7 +36,7 @@ ErrorOr<void> VectorscopeWidget::rebuild_vectorscope_data()
 
     m_vectorscope_data.fill({});
     VERIFY(AK::abs(m_vectorscope_data[0][0]) < 0.01f);
-    auto full_bitmap = TRY(m_image->try_compose_bitmap(Gfx::BitmapFormat::BGRA8888));
+    auto full_bitmap = TRY(m_image->compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
     for (size_t x = 0; x < static_cast<size_t>(full_bitmap->width()); ++x) {
         for (size_t y = 0; y < static_cast<size_t>(full_bitmap->height()); ++y) {
@@ -60,7 +60,7 @@ ErrorOr<void> VectorscopeWidget::rebuild_vectorscope_data()
 
 void VectorscopeWidget::rebuild_vectorscope_image()
 {
-    m_vectorscope_image = MUST(Gfx::Bitmap::try_create(Gfx::BitmapFormat::BGRA8888, size()));
+    m_vectorscope_image = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size()));
     m_vectorscope_image->fill(Color::Transparent);
 
     Gfx::Painter base_painter(*m_vectorscope_image);

@@ -317,9 +317,9 @@ int Shell::builtin_type(int argc, char const** argv)
                 if (fn.body) {
                     auto formatter = Formatter(*fn.body);
                     builder.append(formatter.format());
-                    printf("%s\n}\n", builder.build().characters());
+                    printf("%s\n}\n", builder.to_deprecated_string().characters());
                 } else {
-                    printf("%s\n}\n", builder.build().characters());
+                    printf("%s\n}\n", builder.to_deprecated_string().characters());
                 }
             }
             continue;
@@ -1007,7 +1007,7 @@ int Shell::builtin_time(int argc, char const** argv)
             block_on_job(job);
             exit_code = job.exit_code();
         }
-        iteration_times.add(timer.elapsed());
+        iteration_times.add(static_cast<float>(timer.elapsed()));
     }
 
     if (number_of_iterations == 1) {

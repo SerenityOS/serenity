@@ -16,7 +16,6 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/FileStream.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
@@ -166,17 +165,17 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         return false;
     }
 
-    Core::InputFileStream stream { file };
+    auto stream = TRY(Core::Stream::File::open(real_path.bytes_as_string_view(), Core::Stream::OpenMode::Read));
 
     auto const info = ContentInfo {
         .type = TRY(String::from_deprecated_string(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
         .length = TRY(Core::File::size(real_path.bytes_as_string_view()))
     };
-    TRY(send_response(stream, request, move(info)));
+    TRY(send_response(*stream, request, move(info)));
     return true;
 }
 
-ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
+ErrorOr<void> Client::send_response(AK::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);
@@ -197,8 +196,8 @@ ErrorOr<void> Client::send_response(InputStream& response, HTTP::HttpRequest con
 
     char buffer[PAGE_SIZE];
     do {
-        auto size = response.read({ buffer, sizeof(buffer) });
-        if (response.unreliable_eof() && size == 0)
+        auto size = TRY(response.read({ buffer, sizeof(buffer) })).size();
+        if (response.is_eof() && size == 0)
             break;
 
         ReadonlyBytes write_buffer { buffer, size };
@@ -337,8 +336,8 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
     builder.append("</html>\n"sv);
 
     auto response = builder.to_deprecated_string();
-    InputMemoryStream stream { response.bytes() };
-    return send_response(stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
+    auto stream = TRY(FixedMemoryStream::construct(response.bytes()));
+    return send_response(*stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
 }
 
 ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)

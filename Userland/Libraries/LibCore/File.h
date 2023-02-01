@@ -53,6 +53,7 @@ public:
     static ErrorOr<size_t> size(DeprecatedString const& filename);
     static DeprecatedString current_working_directory();
     static DeprecatedString absolute_path(DeprecatedString const& path);
+    static bool can_delete_or_move(StringView path);
 
     enum class RecursionMode {
         Allowed,

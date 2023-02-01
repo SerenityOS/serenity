@@ -11,12 +11,11 @@ PlaybackManager::PlaybackManager(NonnullRefPtr<Audio::ConnectionToServer> connec
     : m_connection(connection)
 {
     // FIXME: The buffer enqueuing should happen on a wholly independent second thread.
-    m_timer = Core::Timer::construct(PlaybackManager::update_rate_ms, [&]() {
+    m_timer = Core::Timer::create_repeating(PlaybackManager::update_rate_ms, [&]() {
         if (!m_loader)
             return;
         next_buffer();
-    });
-    m_timer->stop();
+    }).release_value_but_fixme_should_propagate_errors();
     m_device_sample_rate = connection->get_sample_rate();
 }
 
@@ -39,7 +38,6 @@ void PlaybackManager::stop()
 {
     set_paused(true);
     m_connection->async_clear_buffer();
-    m_last_seek = 0;
 
     if (m_loader)
         (void)m_loader->reset();
@@ -60,7 +58,6 @@ void PlaybackManager::seek(int const position)
     if (!m_loader)
         return;
 
-    m_last_seek = position;
     bool paused_state = m_paused;
     set_paused(true);
 
@@ -115,15 +112,20 @@ void PlaybackManager::next_buffer()
             return;
         }
 
-        auto maybe_buffer = m_loader->get_more_samples(m_samples_to_load_per_buffer);
-        if (!maybe_buffer.is_error()) {
-            m_current_buffer.swap(maybe_buffer.value());
-            VERIFY(m_resampler.has_value());
-            m_resampler->reset();
-            // FIXME: Handle OOM better.
-            auto resampled = MUST(FixedArray<Audio::Sample>::try_create(m_resampler->resample(move(m_current_buffer)).span()));
-            m_current_buffer.swap(resampled);
-            MUST(m_connection->async_enqueue(m_current_buffer));
+        auto buffer_or_error = m_loader->get_more_samples(m_samples_to_load_per_buffer);
+        if (buffer_or_error.is_error()) {
+            // FIXME: These errors should be shown to the user instead of being logged and then ignored
+            dbgln("Error while loading samples: {}", buffer_or_error.error().description);
+            return;
         }
+        auto buffer = buffer_or_error.release_value();
+        m_current_buffer.swap(buffer);
+        VERIFY(m_resampler.has_value());
+
+        m_resampler->reset();
+        // FIXME: Handle OOM better.
+        auto resampled = MUST(FixedArray<Audio::Sample>::create(m_resampler->resample(move(m_current_buffer)).span()));
+        m_current_buffer.swap(resampled);
+        MUST(m_connection->async_enqueue(m_current_buffer));
     }
 }

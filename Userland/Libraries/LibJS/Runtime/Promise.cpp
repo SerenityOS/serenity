@@ -44,7 +44,7 @@ ThrowCompletionOr<Object*> promise_resolve(VM& vm, Object& constructor, Value va
 
 NonnullGCPtr<Promise> Promise::create(Realm& realm)
 {
-    return realm.heap().allocate<Promise>(realm, *realm.intrinsics().promise_prototype());
+    return realm.heap().allocate<Promise>(realm, *realm.intrinsics().promise_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 // 27.2 Promise Objects, https://tc39.es/ecma262/#sec-promise-objects
@@ -157,7 +157,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         // 16. Return undefined.
         return js_undefined();
     });
-    resolve_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, DeprecatedString::empty()), Attribute::Configurable);
+    resolve_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
 
     // 7. Let stepsReject be the algorithm steps defined in Promise Reject Functions.
     // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
@@ -189,7 +189,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         // 8. Return undefined.
         return js_undefined();
     });
-    reject_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, DeprecatedString::empty()), Attribute::Configurable);
+    reject_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), Attribute::Configurable);
 
     // 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
     return { *resolve_function, *reject_function };

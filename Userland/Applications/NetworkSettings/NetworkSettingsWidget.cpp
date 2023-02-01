@@ -30,7 +30,7 @@ static int netmask_to_cidr(IPv4Address const& address)
 
 NetworkSettingsWidget::NetworkSettingsWidget()
 {
-    load_from_gml(network_settings_gml);
+    load_from_gml(network_settings_gml).release_value_but_fixme_should_propagate_errors();
 
     m_adapters_combobox = *find_descendant_of_type_named<GUI::ComboBox>("adapters_combobox");
     m_enabled_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("enabled_checkbox");
@@ -78,7 +78,7 @@ NetworkSettingsWidget::NetworkSettingsWidget()
     size_t index = 0;
     proc_net_adapters_json.as_array().for_each([&](auto& value) {
         auto& if_object = value.as_object();
-        auto adapter_name = if_object.get("name"sv).to_deprecated_string();
+        auto adapter_name = if_object.get_deprecated_string("name"sv).value();
         if (adapter_name == "loop")
             return;
 

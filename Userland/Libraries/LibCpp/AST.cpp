@@ -658,4 +658,11 @@ StringView Declaration::full_name() const
     return *m_full_name;
 }
 
+void UsingNamespaceDeclaration::dump(FILE* output, size_t indent) const
+{
+    ASTNode::dump(output, indent);
+    print_indent(output, indent + 1);
+    outln(output, "{}", full_name());
+}
+
 }
