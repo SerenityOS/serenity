@@ -41,6 +41,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
     auto square_width = min_size / 8;
     auto square_height = min_size / 8;
+    auto square_margin = square_width / 10;
     int coord_rank_file = (side() == Chess::Color::White) ? 0 : 7;
 
     Chess::Board& active_board = (m_playback ? board_playback() : board());
@@ -84,7 +85,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         if (!(m_dragging_piece && sq == m_moving_square)) {
             auto bmp = m_pieces.get(active_board.get_piece(sq));
             if (bmp.has_value()) {
-                painter.draw_scaled_bitmap(tile_rect, *bmp.value(), bmp.value()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                painter.draw_scaled_bitmap(tile_rect.shrunken(square_margin, square_margin, square_margin, square_margin), *bmp.value(), bmp.value()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
             }
         }
 
