@@ -295,9 +295,9 @@ DecoderErrorOr<void> Decoder::adapt_non_coef_probs(FrameContext const& frame_con
             probs.single_ref_prob()[i][j] = adapt_prob(probs.single_ref_prob()[i][j], counter.m_counts_single_ref[i][j]);
     }
     ADAPT_TREE(inter_mode, inter_mode, inter_mode, INTER_MODE_CONTEXTS);
-    ADAPT_TREE(intra_mode, y_mode, intra_mode, INTER_MODE_CONTEXTS);
-    ADAPT_TREE(intra_mode, uv_mode, uv_mode, INTER_MODE_CONTEXTS);
-    ADAPT_TREE(partition, partition, partition, INTER_MODE_CONTEXTS);
+    ADAPT_TREE(intra_mode, y_mode, intra_mode, BLOCK_SIZE_GROUPS);
+    ADAPT_TREE(intra_mode, uv_mode, uv_mode, INTRA_MODES);
+    ADAPT_TREE(partition, partition, partition, PARTITION_CONTEXTS);
     ADAPT_PROB_TABLE(skip, SKIP_CONTEXTS);
     if (frame_context.interpolation_filter == Switchable) {
         ADAPT_TREE(interp_filter, interp_filter, interp_filter, INTERP_FILTER_CONTEXTS);
