@@ -29,13 +29,9 @@ static ErrorOr<Optional<String>> description_only(StringView description, String
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
 static ErrorOr<Optional<String>> image_details(StringView description, StringView path)
 {
-    auto file_or_error = Core::MappedFile::map(path);
-    if (file_or_error.is_error())
-        return OptionalNone {};
-
-    auto& mapped_file = *file_or_error.value();
+    auto mapped_file = TRY(Core::MappedFile::map(path));
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file.bytes(), mime_type);
+    auto image_decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type);
     if (!image_decoder)
         return OptionalNone {};
 
@@ -97,15 +93,11 @@ static ErrorOr<Optional<String>> audio_details(StringView description, StringVie
 
 static ErrorOr<Optional<String>> gzip_details(StringView description, StringView path)
 {
-    auto file_or_error = Core::MappedFile::map(path);
-    if (file_or_error.is_error())
+    auto mapped_file = TRY(Core::MappedFile::map(path));
+    if (!Compress::GzipDecompressor::is_likely_compressed(mapped_file->bytes()))
         return OptionalNone {};
 
-    auto& mapped_file = *file_or_error.value();
-    if (!Compress::GzipDecompressor::is_likely_compressed(mapped_file.bytes()))
-        return OptionalNone {};
-
-    auto gzip_details = Compress::GzipDecompressor::describe_header(mapped_file.bytes());
+    auto gzip_details = Compress::GzipDecompressor::describe_header(mapped_file->bytes());
     if (!gzip_details.has_value())
         return OptionalNone {};
 
@@ -114,11 +106,8 @@ static ErrorOr<Optional<String>> gzip_details(StringView description, StringView
 
 static ErrorOr<Optional<String>> elf_details(StringView description, StringView path)
 {
-    auto file_or_error = Core::MappedFile::map(path);
-    if (file_or_error.is_error())
-        return OptionalNone {};
-    auto& mapped_file = *file_or_error.value();
-    auto elf_data = mapped_file.bytes();
+    auto mapped_file = TRY(Core::MappedFile::map(path));
+    auto elf_data = mapped_file->bytes();
     ELF::Image elf_image(elf_data);
     if (!elf_image.is_valid())
         return OptionalNone {};
