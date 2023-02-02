@@ -39,8 +39,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
     painter.translate(frame_thickness() + widget_offset_x, frame_thickness() + widget_offset_y);
 
-    size_t tile_width = min_size / 8;
-    size_t tile_height = min_size / 8;
+    auto square_width = min_size / 8;
+    auto square_height = min_size / 8;
     int coord_rank_file = (side() == Chess::Color::White) ? 0 : 7;
 
     Chess::Board& active_board = (m_playback ? board_playback() : board());
@@ -50,9 +50,9 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
     Chess::Square::for_each([&](Chess::Square sq) {
         Gfx::IntRect tile_rect;
         if (side() == Chess::Color::White) {
-            tile_rect = { sq.file * tile_width, (7 - sq.rank) * tile_height, tile_width, tile_height };
+            tile_rect = { sq.file * square_width, (7 - sq.rank) * square_height, square_width, square_height };
         } else {
-            tile_rect = { (7 - sq.file) * tile_width, sq.rank * tile_height, tile_width, tile_height };
+            tile_rect = { (7 - sq.file) * square_width, sq.rank * square_height, square_width, square_height };
         }
 
         painter.fill_rect(tile_rect, (sq.is_light()) ? board_theme().light_square_color : board_theme().dark_square_color);
@@ -129,28 +129,28 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
             Gfx::FloatPoint arrow_end;
 
             if (side() == Chess::Color::White) {
-                arrow_start = { m.from.file * tile_width + tile_width / 2.0f, (7 - m.from.rank) * tile_height + tile_height / 2.0f };
-                arrow_end = { m.to.file * tile_width + tile_width / 2.0f, (7 - m.to.rank) * tile_height + tile_height / 2.0f };
+                arrow_start = { m.from.file * square_width + square_width / 2.0f, (7 - m.from.rank) * square_height + square_height / 2.0f };
+                arrow_end = { m.to.file * square_width + square_width / 2.0f, (7 - m.to.rank) * square_height + square_height / 2.0f };
             } else {
-                arrow_start = { (7 - m.from.file) * tile_width + tile_width / 2.0f, m.from.rank * tile_height + tile_height / 2.0f };
-                arrow_end = { (7 - m.to.file) * tile_width + tile_width / 2.0f, m.to.rank * tile_height + tile_height / 2.0f };
+                arrow_start = { (7 - m.from.file) * square_width + square_width / 2.0f, m.from.rank * square_height + square_height / 2.0f };
+                arrow_end = { (7 - m.to.file) * square_width + square_width / 2.0f, m.to.rank * square_height + square_height / 2.0f };
             }
 
             Gfx::Color color = m.secondary_color ? m_marking_secondary_color : (m.alternate_color ? m_marking_primary_color : m_marking_alternate_color);
-            draw_arrow(arrow_start, arrow_end, tile_width / 8.0f, tile_width / 10.0f, tile_height / 2.5f, color);
+            draw_arrow(arrow_start, arrow_end, square_width / 8.0f, square_width / 10.0f, square_height / 2.5f, color);
         }
     }
 
     if (m_dragging_piece) {
         if (m_show_available_moves) {
             Gfx::IntPoint move_point;
-            Gfx::IntPoint point_offset = { tile_width / 3, tile_height / 3 };
-            Gfx::IntSize rect_size = { tile_width / 3, tile_height / 3 };
+            Gfx::IntPoint point_offset = { square_width / 3, square_height / 3 };
+            Gfx::IntSize rect_size = { square_width / 3, square_height / 3 };
             for (auto const& square : m_available_moves) {
                 if (side() == Chess::Color::White) {
-                    move_point = { square.file * tile_width, (7 - square.rank) * tile_height };
+                    move_point = { square.file * square_width, (7 - square.rank) * square_height };
                 } else {
-                    move_point = { (7 - square.file) * tile_width, square.rank * tile_height };
+                    move_point = { (7 - square.file) * square_width, square.rank * square_height };
                 }
 
                 Gfx::AntiAliasingPainter aa_painter { painter };
@@ -160,16 +160,16 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
         Gfx::IntRect origin_square;
         if (side() == Chess::Color::White) {
-            origin_square = { m_moving_square.file * tile_width, (7 - m_moving_square.rank) * tile_height, tile_width, tile_height };
+            origin_square = { m_moving_square.file * square_width, (7 - m_moving_square.rank) * square_height, square_width, square_height };
         } else {
-            origin_square = { (7 - m_moving_square.file) * tile_width, m_moving_square.rank * tile_height, tile_width, tile_height };
+            origin_square = { (7 - m_moving_square.file) * square_width, m_moving_square.rank * square_height, square_width, square_height };
         }
         painter.fill_rect(origin_square, m_move_highlight_color);
 
         auto bmp = m_pieces.get(active_board.get_piece(m_moving_square));
         if (bmp.has_value()) {
-            auto center = m_drag_point - Gfx::IntPoint(tile_width / 2, tile_height / 2);
-            painter.draw_scaled_bitmap({ center, { tile_width, tile_height } }, *bmp.value(), bmp.value()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+            auto center = m_drag_point - Gfx::IntPoint(square_width / 2, square_height / 2);
+            painter.draw_scaled_bitmap({ center, { square_width, square_height } }, *bmp.value(), bmp.value()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
         }
     }
 }
@@ -407,13 +407,13 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
-    int tile_width = min_size / 8;
-    int tile_height = min_size / 8;
+    int square_width = min_size / 8;
+    int square_height = min_size / 8;
 
     if (side() == Chess::Color::White) {
-        return { 7 - ((event.y() - widget_offset_y) / tile_height), (event.x() - widget_offset_x) / tile_width };
+        return { 7 - ((event.y() - widget_offset_y) / square_height), (event.x() - widget_offset_x) / square_width };
     } else {
-        return { (event.y() - widget_offset_y) / tile_height, 7 - ((event.x() - widget_offset_x) / tile_width) };
+        return { (event.y() - widget_offset_y) / square_height, 7 - ((event.x() - widget_offset_x) / square_width) };
     }
 }
 
