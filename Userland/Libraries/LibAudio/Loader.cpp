@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, the SerenityOS developers.
+ * Copyright (c) 2018-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,7 @@
 #include <LibAudio/FlacLoader.h>
 #include <LibAudio/Loader.h>
 #include <LibAudio/MP3Loader.h>
+#include <LibAudio/QOALoader.h>
 #include <LibAudio/WavLoader.h>
 
 namespace Audio {
@@ -41,6 +42,12 @@ Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(StringVie
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
 
+    {
+        auto plugin = QOALoaderPlugin::create(path);
+        if (!plugin.is_error())
+            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
+    }
+
     return LoaderError { "No loader plugin available" };
 }
 
@@ -60,6 +67,12 @@ Result<NonnullOwnPtr<LoaderPlugin>, LoaderError> Loader::create_plugin(Bytes buf
 
     {
         auto plugin = MP3LoaderPlugin::create(buffer);
+        if (!plugin.is_error())
+            return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
+    }
+
+    {
+        auto plugin = QOALoaderPlugin::create(buffer);
         if (!plugin.is_error())
             return NonnullOwnPtr<LoaderPlugin>(plugin.release_value());
     }
