@@ -24,7 +24,7 @@ Tray::Tray()
 
 Gfx::IntRect Tray::Item::rect(Tray const& tray) const
 {
-    static constexpr int item_height = 22;
+    int item_height = static_cast<int>(ceilf(tray.font().pixel_size())) + 12;
     return Gfx::IntRect {
         tray.frame_thickness(),
         tray.frame_thickness() + static_cast<int>(index) * item_height,
