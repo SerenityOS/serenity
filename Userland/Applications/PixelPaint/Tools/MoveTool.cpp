@@ -195,7 +195,7 @@ void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
     auto content_rect = m_scaling ? m_new_layer_rect : m_editor->active_layer()->relative_rect();
-    auto rect_in_editor = m_editor->content_to_frame_rect(content_rect).to_rounded<int>();
+    auto rect_in_editor = m_editor->content_to_frame_rect(content_rect).to_type<int>();
     if (m_scaling && (!m_cached_preview_bitmap.is_null() || !update_cached_preview_bitmap(layer).is_error())) {
         Gfx::PainterStateSaver saver(painter);
         painter.add_clip_rect(m_editor->content_rect());
@@ -255,7 +255,7 @@ ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
 
 Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_cursor_position(Layer const* layer, MouseEvent& event)
 {
-    auto layer_rect = m_editor->content_to_frame_rect(layer->relative_rect()).to_rounded<int>();
+    auto layer_rect = m_editor->content_to_frame_rect(layer->relative_rect()).to_type<int>();
     auto size = max(resize_anchor_min_size, resize_anchor_size(layer_rect));
 
     auto cursor_within_resize_anchor_rect = [&event, size](Gfx::IntPoint layer_position_in_frame_coordinates) {
