@@ -120,6 +120,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Brandon Jordan** - [electrikmilk](https://github.com/electrikmilk)
 * **Lucas Chollet** - [LucasChollet](https://github.com/LucasChollet)
 * **Timon Kruiper** - [FireFox317](https://github.com/FireFox317)
+* **Martin Falisse** - [martinfalisse](https://github.com/martinfalisse)
 * **Gregory Bertilson** - [Zaggy1024](https://github.com/Zaggy1024)
 * **Erik Wouters** - [EWouters](https://github.com/EWouters)
 * **Rodrigo Tobar** - [rtobar](https://github.com/rtobar)
