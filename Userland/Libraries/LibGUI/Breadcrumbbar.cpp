@@ -175,7 +175,9 @@ void Breadcrumbbar::relayout()
     for (auto& segment : m_segments) {
         VERIFY(segment.button);
         auto& button = *segment.button;
-        auto button_text_width = button.font().width(segment.text);
+        // NOTE: We use our own font instead of the button's font here in case we're being notified about
+        //       a system font change, and the button hasn't been notified yet.
+        auto button_text_width = font().width(segment.text);
         auto icon_width = button.icon() ? button.icon()->width() : 0;
         auto icon_padding = button.icon() ? 4 : 0;
 
