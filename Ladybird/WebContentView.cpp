@@ -9,6 +9,7 @@
 
 #include "WebContentView.h"
 #include "ConsoleWidget.h"
+#include "HelperProcess.h"
 #include "InspectorWidget.h"
 #include "Utilities.h"
 #include <AK/Assertions.h>
@@ -586,12 +587,7 @@ void WebContentView::create_client()
             arguments.append(m_webdriver_content_ipc_path);
         }
 
-        auto result = Core::System::exec("./WebContent/WebContent"sv, arguments, Core::System::SearchInPath::Yes);
-        if (result.is_error()) {
-            auto web_content_path = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath() + "/WebContent");
-            result = Core::System::exec(web_content_path, arguments, Core::System::SearchInPath::Yes);
-        }
-
+        auto result = spawn_helper_process("WebContent"sv, arguments, Core::System::SearchInPath::Yes);
         if (result.is_error())
             warnln("Could not launch WebContent: {}", result.error());
         VERIFY_NOT_REACHED();
