@@ -30,12 +30,17 @@ public:
 
     struct FillOrStrokeStyle {
         FillOrStrokeStyle(Gfx::Color color)
-            : m_fill_or_stoke_style(color)
+            : m_fill_or_stroke_style(color)
         {
         }
 
         FillOrStrokeStyle(JS::Handle<CanvasGradient> gradient)
-            : m_fill_or_stoke_style(gradient)
+            : m_fill_or_stroke_style(gradient)
+        {
+        }
+
+        FillOrStrokeStyle(JS::Handle<CanvasPattern> pattern)
+            : m_fill_or_stroke_style(pattern)
         {
         }
 
@@ -44,15 +49,21 @@ public:
         Optional<Gfx::Color> as_color() const;
         Gfx::Color to_color_but_fixme_should_accept_any_paint_style() const;
 
-        Variant<DeprecatedString, JS::Handle<CanvasGradient>> to_js_fill_or_stoke_style() const
+        using JsFillOrStrokeStyle = Variant<DeprecatedString, JS::Handle<CanvasGradient>>;
+
+        JsFillOrStrokeStyle to_js_fill_or_stroke_style() const
         {
-            if (auto* handle = m_fill_or_stoke_style.get_pointer<JS::Handle<CanvasGradient>>())
-                return *handle;
-            return m_fill_or_stoke_style.get<Gfx::Color>().to_deprecated_string();
+            return m_fill_or_stroke_style.visit(
+                [&](Gfx::Color color) -> JsFillOrStrokeStyle {
+                    return color.to_deprecated_string();
+                },
+                [&](auto handle) -> JsFillOrStrokeStyle {
+                    return handle;
+                });
         }
 
     private:
-        FillOrStrokeVariant m_fill_or_stoke_style;
+        FillOrStrokeVariant m_fill_or_stroke_style;
         RefPtr<Gfx::PaintStyle> m_color_paint_style { nullptr };
     };
 
