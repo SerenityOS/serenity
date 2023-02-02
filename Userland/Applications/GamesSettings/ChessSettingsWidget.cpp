@@ -163,6 +163,7 @@ private:
         // With the same preview size as we use for card games, a nice fit is 2 ranks of 6.
         // There are definitely better ways of doing this, but it'll do. ;^)
         auto square_size = 61;
+        auto square_margin = square_size / 10;
 
         auto rect_for_square = [&](Chess::Square const& square) {
             return Gfx::IntRect {
@@ -196,7 +197,7 @@ private:
         auto draw_piece = [&](Chess::Piece const& piece, Chess::Square const& square) {
             auto& bitmap = *m_piece_images.get(piece).value();
             painter.draw_scaled_bitmap(
-                rect_for_square(square),
+                rect_for_square(square).shrunken(square_margin, square_margin, square_margin, square_margin),
                 bitmap,
                 bitmap.rect(),
                 1.0f,
