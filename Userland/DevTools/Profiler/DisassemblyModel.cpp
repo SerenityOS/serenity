@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -7,6 +8,7 @@
 
 #include "DisassemblyModel.h"
 #include "Gradient.h"
+#include "PercentageFormatting.h"
 #include "Profile.h"
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
@@ -185,10 +187,15 @@ GUI::Variant DisassemblyModel::data(GUI::ModelIndex const& index, GUI::ModelRole
         return colors.value().foreground;
     }
 
+    if (role == GUI::ModelRole::TextAlignment) {
+        if (index.column() == Column::SampleCount)
+            return Gfx::TextAlignment::CenterRight;
+    }
+
     if (role == GUI::ModelRole::Display) {
         if (index.column() == Column::SampleCount) {
             if (m_profile.show_percentages())
-                return ((float)insn.event_count / (float)m_node.event_count()) * 100.0f;
+                return format_percentage(insn.event_count, m_node.event_count());
             return insn.event_count;
         }
 
