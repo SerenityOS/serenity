@@ -27,10 +27,12 @@ add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
 add_link_options(-fstack-protector-strong)
-add_compile_options(-g1)
 
 # FIXME: Remove this once DWARF revision 5 is supported
 add_compile_options(-gdwarf-4)
+
+# Note: This needs to be set _after_ setting the DWARF version, otherwise we end up generating more debug information than we need.
+add_compile_options(-g1)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-literal-suffix)
