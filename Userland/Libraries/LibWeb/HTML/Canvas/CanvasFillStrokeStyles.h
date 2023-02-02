@@ -12,6 +12,7 @@
 #include <AK/DeprecatedString.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
 #include <LibWeb/HTML/CanvasGradient.h>
+#include <LibWeb/HTML/CanvasPattern.h>
 
 namespace Web::HTML {
 
@@ -20,7 +21,7 @@ template<typename IncludingClass>
 class CanvasFillStrokeStyles {
 public:
     ~CanvasFillStrokeStyles() = default;
-    using FillOrStrokeStyleVariant = Variant<DeprecatedString, JS::Handle<CanvasGradient>>;
+    using FillOrStrokeStyleVariant = Variant<DeprecatedString, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
 
     static CanvasState::FillOrStrokeStyle to_canvas_state_fill_or_stroke_style(auto const& style)
     {
@@ -71,6 +72,12 @@ public:
     {
         auto& realm = static_cast<IncludingClass&>(*this).realm();
         return CanvasGradient::create_conic(realm, start_angle, x, y);
+    }
+
+    WebIDL::ExceptionOr<JS::GCPtr<CanvasPattern>> create_pattern(CanvasImageSource const& image, StringView repetition)
+    {
+        auto& realm = static_cast<IncludingClass&>(*this).realm();
+        return CanvasPattern::create(realm, image, repetition);
     }
 
 protected:

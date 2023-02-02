@@ -13,6 +13,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibWeb/HTML/CanvasGradient.h>
+#include <LibWeb/HTML/CanvasPattern.h>
 
 namespace Web::HTML {
 
@@ -26,7 +27,7 @@ public:
     void reset();
     bool is_context_lost();
 
-    using FillOrStrokeVariant = Variant<Gfx::Color, JS::Handle<CanvasGradient>>;
+    using FillOrStrokeVariant = Variant<Gfx::Color, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
 
     struct FillOrStrokeStyle {
         FillOrStrokeStyle(Gfx::Color color)
@@ -49,7 +50,7 @@ public:
         Optional<Gfx::Color> as_color() const;
         Gfx::Color to_color_but_fixme_should_accept_any_paint_style() const;
 
-        using JsFillOrStrokeStyle = Variant<DeprecatedString, JS::Handle<CanvasGradient>>;
+        using JsFillOrStrokeStyle = Variant<DeprecatedString, JS::Handle<CanvasGradient>, JS::Handle<CanvasPattern>>;
 
         JsFillOrStrokeStyle to_js_fill_or_stroke_style() const
         {
