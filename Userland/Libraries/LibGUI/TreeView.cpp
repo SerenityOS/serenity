@@ -325,6 +325,7 @@ void TreeView::paint_event(PaintEvent& event)
                 int indent_width = indent_width_in_pixels() * indent_level;
 
                 Gfx::IntRect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
+                icon_rect.center_vertically_within(rect);
                 Gfx::IntRect background_rect = {
                     icon_rect.right() + 1 + icon_spacing(), rect.y(),
                     min(rect.width(), column_width - indent_width) - icon_size() - icon_spacing(), rect.height()
