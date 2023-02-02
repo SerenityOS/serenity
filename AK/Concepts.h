@@ -49,7 +49,7 @@ template<typename T, typename S>
 concept DerivedFrom = IsBaseOf<S, T>;
 
 template<typename T>
-concept AnyString = IsConstructible<StringView, T>;
+concept AnyString = IsConstructible<StringView, RemoveCVReference<T> const&>;
 
 template<typename T, typename U>
 concept HashCompatible = IsHashCompatible<Detail::Decay<T>, Detail::Decay<U>>;

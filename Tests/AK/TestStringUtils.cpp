@@ -6,8 +6,32 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/ByteBuffer.h>
+#include <AK/Concepts.h>
+#include <AK/FlyString.h>
+#include <AK/String.h>
 #include <AK/StringUtils.h>
 #include <AK/Vector.h>
+
+TEST_CASE(hash_compatible)
+{
+    static_assert(AK::Concepts::HashCompatible<String, StringView>);
+    static_assert(AK::Concepts::HashCompatible<String, FlyString>);
+    static_assert(AK::Concepts::HashCompatible<StringView, String>);
+    static_assert(AK::Concepts::HashCompatible<StringView, FlyString>);
+    static_assert(AK::Concepts::HashCompatible<FlyString, String>);
+    static_assert(AK::Concepts::HashCompatible<FlyString, StringView>);
+
+    static_assert(AK::Concepts::HashCompatible<DeprecatedString, StringView>);
+    static_assert(AK::Concepts::HashCompatible<DeprecatedString, DeprecatedFlyString>);
+    static_assert(AK::Concepts::HashCompatible<StringView, DeprecatedString>);
+    static_assert(AK::Concepts::HashCompatible<StringView, DeprecatedFlyString>);
+    static_assert(AK::Concepts::HashCompatible<DeprecatedFlyString, DeprecatedString>);
+    static_assert(AK::Concepts::HashCompatible<DeprecatedFlyString, StringView>);
+
+    static_assert(AK::Concepts::HashCompatible<StringView, ByteBuffer>);
+    static_assert(AK::Concepts::HashCompatible<ByteBuffer, StringView>);
+}
 
 TEST_CASE(matches_null)
 {
