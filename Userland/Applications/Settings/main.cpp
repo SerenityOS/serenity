@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::Window::try_create());
     window->set_title("Settings");
-    window->resize(360, 240);
+    window->resize(324, 265);
 
     auto file_menu = TRY(window->try_add_menu("&File"));
     file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
