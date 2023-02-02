@@ -171,6 +171,7 @@ void Breadcrumbbar::did_change_font()
 
 void Breadcrumbbar::relayout()
 {
+    auto total_width = 0;
     for (auto& segment : m_segments) {
         VERIFY(segment.button);
         auto& button = *segment.button;
@@ -185,12 +186,11 @@ void Breadcrumbbar::relayout()
 
         button.set_max_size(segment.width, 16 + 8);
         button.set_min_size(segment.shrunken_width, 16 + 8);
+
+        total_width += segment.width;
     }
 
-    auto remaining_width = 0;
-
-    for (auto& segment : m_segments)
-        remaining_width += segment.width;
+    auto remaining_width = total_width;
 
     for (auto& segment : m_segments) {
         if (remaining_width > width() && !segment.button->is_checked()) {
