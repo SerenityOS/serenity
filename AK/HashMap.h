@@ -199,6 +199,31 @@ public:
         m_table.remove(it);
     }
 
+    Optional<V> take(K const& key)
+    {
+        if (auto it = find(key); it != end()) {
+            auto value = move(it->value);
+            m_table.remove(it);
+
+            return value;
+        }
+
+        return {};
+    }
+
+    template<Concepts::HashCompatible<K> Key>
+    requires(IsSame<KeyTraits, Traits<K>>) Optional<V> take(Key const& key)
+    {
+        if (auto it = find(key); it != end()) {
+            auto value = move(it->value);
+            m_table.remove(it);
+
+            return value;
+        }
+
+        return {};
+    }
+
     V& ensure(K const& key)
     {
         auto it = find(key);
