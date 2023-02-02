@@ -5,6 +5,8 @@ set(SOURCES
     FlacLoader.cpp
     WavWriter.cpp
     MP3Loader.cpp
+    QOALoader.cpp
+    QOATypes.cpp
     UserSampleQueue.cpp
 )
 
