@@ -465,10 +465,6 @@ if (BUILD_LAGOM)
 
     add_serenity_subdirectory(Userland/Shell)
 
-    if (ENABLE_LAGOM_LADYBIRD)
-        add_serenity_subdirectory(Ladybird)
-    endif()
-
     if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID)
         # Lagom Services
         add_serenity_subdirectory(Userland/Services)
@@ -492,6 +488,10 @@ if (BUILD_LAGOM)
         if (ENABLE_LAGOM_LIBWEB)
             add_executable(headless-browser ../../Userland/Utilities/headless-browser.cpp ../../Userland/Services/WebContent/WebDriverConnection.cpp)
             target_link_libraries(headless-browser LibWeb LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
+        endif()
+
+        if (ENABLE_LAGOM_LADYBIRD)
+            add_serenity_subdirectory(Ladybird)
         endif()
 
         add_executable(icc ../../Userland/Utilities/icc.cpp)
