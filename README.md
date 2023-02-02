@@ -121,6 +121,7 @@ A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTIN
 * **Lucas Chollet** - [LucasChollet](https://github.com/LucasChollet)
 * **Timon Kruiper** - [FireFox317](https://github.com/FireFox317)
 * **Gregory Bertilson** - [Zaggy1024](https://github.com/Zaggy1024)
+* **Erik Wouters** - [EWouters](https://github.com/EWouters)
 
 And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contributors) for a full contributor list. The people listed above have landed more than 100 commits in the project. :^)
 
