@@ -28,6 +28,7 @@ static bool is_platform_object(Type const& type)
         "Attr"sv,
         "Blob"sv,
         "CanvasGradient"sv,
+        "CanvasPattern"sv,
         "CanvasRenderingContext2D"sv,
         "Document"sv,
         "DocumentType"sv,
