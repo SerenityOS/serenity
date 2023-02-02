@@ -162,27 +162,27 @@ private:
         // To show all the piece graphics, we need at least 12 squares visible.
         // With the same preview size as we use for card games, a nice fit is 2 ranks of 6.
         // There are definitely better ways of doing this, but it'll do. ;^)
-        size_t tile_size = 61;
+        auto square_size = 61;
 
         auto rect_for_square = [&](Chess::Square const& square) {
             return Gfx::IntRect {
-                frame_inner_rect().left() + square.file * tile_size,
-                frame_inner_rect().bottom() + 1 - (square.rank + 1) * tile_size,
-                tile_size,
-                tile_size
+                frame_inner_rect().left() + square.file * square_size,
+                frame_inner_rect().bottom() + 1 - (square.rank + 1) * square_size,
+                square_size,
+                square_size
             };
         };
 
         for (int rank = 0; rank < 3; ++rank) {
             for (int file = 0; file < 8; ++file) {
                 Chess::Square square { rank, file };
-                auto tile_rect = rect_for_square(square);
-                painter.fill_rect(tile_rect, square.is_light() ? m_light_square_color : m_dark_square_color);
+                auto square_rect = rect_for_square(square);
+                painter.fill_rect(square_rect, square.is_light() ? m_light_square_color : m_dark_square_color);
 
                 if (m_show_coordinates) {
                     auto coord = square.to_algebraic();
                     auto text_color = square.is_light() ? m_dark_square_color : m_light_square_color;
-                    auto shrunken_rect = tile_rect.shrunken(4, 4);
+                    auto shrunken_rect = square_rect.shrunken(4, 4);
 
                     if (square.rank == 0)
                         painter.draw_text(shrunken_rect, coord.substring_view(0, 1), coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
