@@ -22,7 +22,7 @@ class SQLClient
 
 public:
 #if !defined(AK_OS_SERENITY)
-    static ErrorOr<NonnullRefPtr<SQLClient>> launch_server_and_create_client(StringView server_path);
+    static ErrorOr<NonnullRefPtr<SQLClient>> launch_server_and_create_client(Vector<String> candidate_server_paths);
 #endif
 
     virtual ~SQLClient() = default;
