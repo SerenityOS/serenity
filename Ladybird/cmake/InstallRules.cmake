@@ -4,7 +4,9 @@ include(GNUInstallDirs)
 
 set(package ladybird)
 
-install(TARGETS ladybird
+set(ladybird_applications ladybird SQLServer WebContent WebDriver headless-browser)
+
+install(TARGETS ${ladybird_applications}
   EXPORT ladybirdTargets
   RUNTIME
     COMPONENT ladybird_Runtime
@@ -18,31 +20,11 @@ install(TARGETS ladybird
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-install(TARGETS SQLServer
-  EXPORT ladybirdTargets
-  RUNTIME
-    COMPONENT ladybird_Runtime
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-  BUNDLE
-    COMPONENT ladybird_Runtime
-    DESTINATION bundle
-)
-
-install(TARGETS WebContent
-  EXPORT ladybirdTargets
-  RUNTIME
-    COMPONENT ladybird_Runtime
-    DESTINATION ${CMAKE_INSTALL_BINDIR}
-  BUNDLE
-    COMPONENT ladybird_Runtime
-    DESTINATION bundle
-)
-
 include("${SERENITY_SOURCE_DIR}/Meta/Lagom/get_linked_lagom_libraries.cmake")
-get_linked_lagom_libraries(ladybird ladybird_lagom_libraries)
-get_linked_lagom_libraries(SQLServer sqlserver_lagom_libraries)
-get_linked_lagom_libraries(WebContent webcontent_lagom_libraries)
-list(APPEND all_required_lagom_libraries ${ladybird_lagom_libraries} ${sqlserver_lagom_libraries} ${webcontent_lagom_libraries})
+foreach (application IN LISTS ladybird_applications)
+  get_linked_lagom_libraries("${application}" "${application}_lagom_libraries")
+  list(APPEND all_required_lagom_libraries "${${application}_lagom_libraries}")
+endforeach()
 list(REMOVE_DUPLICATES all_required_lagom_libraries)
 
 install(TARGETS ${all_required_lagom_libraries}
