@@ -19,6 +19,36 @@
 
 namespace GUI {
 
+ErrorOr<NonnullRefPtr<AboutDialog>> AboutDialog::try_create(StringView name, StringView version, Gfx::Bitmap const* icon, Window* parent_window)
+{
+    auto dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AboutDialog(name, version, icon, parent_window)));
+    dialog->set_title(DeprecatedString::formatted("About {}", name));
+
+    auto widget = TRY(dialog->set_main_widget<Widget>());
+    TRY(widget->load_from_gml(about_dialog_gml));
+
+    auto icon_wrapper = widget->find_descendant_of_type_named<Widget>("icon_wrapper");
+    if (icon) {
+        icon_wrapper->set_visible(true);
+        auto icon_image = widget->find_descendant_of_type_named<ImageWidget>("icon");
+        icon_image->set_bitmap(icon);
+    } else {
+        icon_wrapper->set_visible(false);
+    }
+
+    widget->find_descendant_of_type_named<GUI::Label>("name")->set_text(name);
+    // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
+    widget->find_descendant_of_type_named<GUI::Label>("serenity_os")->set_visible(name != "SerenityOS");
+    widget->find_descendant_of_type_named<GUI::Label>("version")->set_text(version);
+
+    auto ok_button = widget->find_descendant_of_type_named<DialogButton>("ok_button");
+    ok_button->on_click = [dialog](auto) {
+        dialog->done(ExecResult::OK);
+    };
+
+    return dialog;
+}
+
 AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon, Window* parent_window)
     : Dialog(parent_window)
     , m_name(name)
@@ -26,33 +56,10 @@ AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const*
     , m_version_string(version)
 {
     resize(413, 204);
-    set_title(DeprecatedString::formatted("About {}", m_name));
     set_resizable(false);
 
     if (parent_window)
         set_icon(parent_window->icon());
-
-    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
-    widget->load_from_gml(about_dialog_gml).release_value_but_fixme_should_propagate_errors();
-
-    auto icon_wrapper = find_descendant_of_type_named<Widget>("icon_wrapper");
-    if (icon) {
-        icon_wrapper->set_visible(true);
-        auto icon_image = find_descendant_of_type_named<ImageWidget>("icon");
-        icon_image->set_bitmap(m_icon);
-    } else {
-        icon_wrapper->set_visible(false);
-    }
-
-    find_descendant_of_type_named<GUI::Label>("name")->set_text(m_name);
-    // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
-    find_descendant_of_type_named<GUI::Label>("serenity_os")->set_visible(m_name != "SerenityOS");
-    find_descendant_of_type_named<GUI::Label>("version")->set_text(m_version_string);
-
-    auto ok_button = find_descendant_of_type_named<DialogButton>("ok_button");
-    ok_button->on_click = [this](auto) {
-        done(ExecResult::OK);
-    };
 }
 
 }
