@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -223,10 +224,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     // FIXME: Make this constexpr once String is able to.
-    auto const sample_count_percent_format_string = DeprecatedString::formatted("{{:.{}f}}%", number_of_percent_digits);
-    auto const format_sample_count = [&profile, sample_count_percent_format_string](auto const sample_count) {
+    auto const format_sample_count = [&profile](auto const sample_count) {
         if (profile->show_percentages())
-            return DeprecatedString::formatted(sample_count_percent_format_string, sample_count.as_float_or(0.0));
+            return DeprecatedString::formatted("{}%", sample_count.as_string());
         return DeprecatedString::formatted("{} Samples", sample_count.to_i32());
     };
 
