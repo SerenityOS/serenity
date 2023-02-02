@@ -35,13 +35,6 @@ static void rect_path(Gfx::Path& path, float x, float y, float width, float heig
     path.close();
 }
 
-static Gfx::Path rect_path(float x, float y, float width, float height)
-{
-    Gfx::Path path;
-    rect_path(path, x, y, width, height);
-    return path;
-}
-
 template<typename T>
 static void rect_path(Gfx::Path& path, Gfx::Rect<T> rect)
 {
@@ -49,7 +42,7 @@ static void rect_path(Gfx::Path& path, Gfx::Rect<T> rect)
 }
 
 template<typename T>
-static Gfx::Path rect_path(Gfx::Rect<T> rect)
+static Gfx::Path rect_path(Gfx::Rect<T> const& rect)
 {
     Gfx::Path path;
     rect_path(path, rect);
@@ -84,7 +77,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     userspace_matrix.multiply(horizontal_reflection_matrix);
     userspace_matrix.translate(0.0f, -height);
 
-    auto initial_clipping_path = rect_path(0, 0, width, height);
+    auto initial_clipping_path = rect_path(userspace_matrix.map(Gfx::FloatRect(0, 0, width, height)));
     m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path, initial_clipping_path } });
 
     m_bitmap->fill(Gfx::Color::NamedColor::White);
@@ -285,7 +278,7 @@ RENDERER_HANDLER(path_append_rect)
 
 void Renderer::begin_path_paint()
 {
-    auto bounding_box = map(state().clipping_paths.current.bounding_box());
+    auto bounding_box = state().clipping_paths.current.bounding_box();
     m_painter.clear_clip_rect();
     if (m_rendering_preferences.show_clipping_paths) {
         m_painter.stroke_path(rect_path(bounding_box), Color::Black, 1);
