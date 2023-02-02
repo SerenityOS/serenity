@@ -145,8 +145,8 @@ ErrorOr<u8> BitStream::read_literal(u8 n)
 
 ErrorOr<i8> BitStream::read_s(size_t n)
 {
-    auto value = TRY(read_bits(n));
-    auto sign = TRY(read_bit());
+    i8 value = TRY(read_bits(n));
+    bool sign = TRY(read_bit());
     return sign ? -value : value;
 }
 
