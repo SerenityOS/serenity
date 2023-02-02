@@ -216,16 +216,19 @@ DecoderErrorOr<NonnullOwnPtr<VideoFrame>> Decoder::get_decoded_frame()
     return m_video_frame_queue.dequeue();
 }
 
-u8 Decoder::merge_prob(u8 pre_prob, u8 count_0, u8 count_1, u8 count_sat, u8 max_update_factor)
+u8 Decoder::merge_prob(u8 pre_prob, u32 count_0, u32 count_1, u8 count_sat, u8 max_update_factor)
 {
     auto total_decode_count = count_0 + count_1;
-    auto prob = (total_decode_count == 0) ? 128 : clip_3(1, 255, (count_0 * 256 + (total_decode_count >> 1)) / total_decode_count);
+    u8 prob = 128;
+    if (total_decode_count != 0) {
+        prob = static_cast<u8>(clip_3(1u, 255u, (count_0 * 256 + (total_decode_count >> 1)) / total_decode_count));
+    }
     auto count = min(total_decode_count, count_sat);
     auto factor = (max_update_factor * count) / count_sat;
     return round_2(pre_prob * (256 - factor) + (prob * factor), 8);
 }
 
-u8 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 count_sat, u8 max_update_factor)
+u32 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 count_sat, u8 max_update_factor)
 {
     auto s = tree[index];
     auto left_count = (s <= 0) ? counts[-s] : merge_probs(tree, s, probs, counts, count_sat, max_update_factor);
