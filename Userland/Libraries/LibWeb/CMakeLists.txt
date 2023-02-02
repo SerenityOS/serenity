@@ -170,6 +170,7 @@ set(SOURCES
     HTML/Canvas/CanvasPath.cpp
     HTML/Canvas/CanvasState.cpp
     HTML/CanvasGradient.cpp
+    HTML/CanvasPattern.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/CloseEvent.cpp
     HTML/CrossOrigin/AbstractOperations.cpp
