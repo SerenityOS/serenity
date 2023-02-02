@@ -717,31 +717,30 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, ModelIndex const& index
         text_color = is_focused() ? palette().selection_text() : palette().inactive_selection_text();
     else
         text_color = index.data(ModelRole::ForegroundColor).to_color(palette().color(foreground_role()));
+
     if (index == m_highlighted_search_index) {
-        Utf8View searching_text(m_highlighted_search);
-        auto searching_length = searching_text.length();
-        if (searching_length > search_highlighting_offset)
-            searching_length -= search_highlighting_offset;
-        else if (search_highlighting_offset > 0)
-            searching_length = 0;
+        Utf8View searching_text(m_highlighted_search.substring_view(min(search_highlighting_offset, m_highlighted_search.length())));
 
         // Highlight the text background first
-        auto background_searching_length = searching_length;
-        painter.draw_text([&](Gfx::FloatRect const& rect, Utf8CodePointIterator&) {
-            if (background_searching_length > 0) {
-                background_searching_length--;
-                painter.fill_rect(rect.to_type<int>().inflated(0, 2), palette().highlight_searching());
-            }
-        },
-            text_rect, item_text, font, alignment, elision);
+        auto highlight_rect = text_rect.shrunken(0, text_rect.height() - font.glyph_height() - 2);
+        highlight_rect.set_width(min(font.width(searching_text), font.width(item_text)));
+        if (alignment == Gfx::TextAlignment::Center) {
+            // If the text is center aligned, the highlight rect needs to be shifted to the right so that the two line up
+            highlight_rect.translate_by((text_rect.width() - font.width(item_text)) / 2, 0);
+        }
+        painter.fill_rect(highlight_rect, palette().highlight_searching());
 
         // Then draw the text
-        auto text_searching_length = searching_length;
+        auto searching_text_it = searching_text.begin();
+        while (searching_text_it != searching_text.end() && is_ascii_space(*searching_text_it))
+            ++searching_text_it;
         auto highlight_text_color = palette().highlight_searching_text();
-        searching_length = searching_text.length();
         painter.draw_text([&](auto const& rect, Utf8CodePointIterator& it) {
-            if (text_searching_length > 0) {
-                text_searching_length--;
+            if (searching_text_it != searching_text.end()) {
+                do {
+                    ++searching_text_it;
+                } while (searching_text_it != searching_text.end() && is_ascii_space(*searching_text_it));
+
                 painter.draw_glyph_or_emoji(rect.location(), it, font, highlight_text_color);
             } else {
                 painter.draw_glyph_or_emoji(rect.location(), it, font, text_color);
