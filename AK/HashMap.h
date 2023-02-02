@@ -154,8 +154,7 @@ public:
     }
 
     template<Concepts::HashCompatible<K> Key>
-    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename ValueTraits::PeekType> get(Key const& key)
-        const
+    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename ValueTraits::ConstPeekType> get(Key const& key) const
     requires(!IsPointer<typename ValueTraits::PeekType>)
     {
         auto it = find(key);
@@ -165,8 +164,7 @@ public:
     }
 
     template<Concepts::HashCompatible<K> Key>
-    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename ValueTraits::ConstPeekType> get(Key const& key)
-        const
+    requires(IsSame<KeyTraits, Traits<K>>) Optional<typename ValueTraits::ConstPeekType> get(Key const& key) const
     requires(IsPointer<typename ValueTraits::PeekType>)
     {
         auto it = find(key);
