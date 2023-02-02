@@ -94,7 +94,7 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
 
         if (file.is_error()) {
             dbgln("FileSystemAccessServer: Couldn't open {}, error {}", path, file.error());
-            async_handle_prompt_end(request_id, errno, Optional<IPC::File> {}, path);
+            async_handle_prompt_end(request_id, file.error().code(), Optional<IPC::File> {}, path);
         } else {
             async_handle_prompt_end(request_id, 0, IPC::File(*file.release_value(), IPC::File::CloseAfterSending), path);
         }
@@ -145,8 +145,7 @@ void ConnectionFromClient::prompt_helper(i32 request_id, Optional<DeprecatedStri
 
         if (file.is_error()) {
             dbgln("FileSystemAccessServer: Couldn't open {}, error {}", user_picked_file.value(), file.error());
-
-            async_handle_prompt_end(request_id, errno, Optional<IPC::File> {}, user_picked_file);
+            async_handle_prompt_end(request_id, file.error().code(), Optional<IPC::File> {}, user_picked_file);
         } else {
             auto maybe_permissions = m_approved_files.get(user_picked_file.value());
             auto new_permissions = requested_access & (Core::Stream::OpenMode::Read | Core::Stream::OpenMode::Write);
