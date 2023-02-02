@@ -562,13 +562,12 @@ Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClien
 
 void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
 {
-    auto file_request = m_requested_files.get(request_id);
+    auto file_request = m_requested_files.take(request_id);
 
     VERIFY(file_request.has_value());
     VERIFY(file_request.value().on_file_request_finish);
 
     file_request.value().on_file_request_finish(error != 0 ? Error::from_errno(error) : ErrorOr<i32> { file->take_fd() });
-    m_requested_files.remove(request_id);
 }
 
 void ConnectionFromClient::request_file(Web::FileRequest file_request)
