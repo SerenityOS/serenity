@@ -6,6 +6,7 @@
 
 #define AK_DONT_REPLACE_STD
 
+#include "../HelperProcess.h"
 #include "../Utilities.h"
 #include <AK/Platform.h>
 #include <LibCore/ArgsParser.h>
@@ -15,6 +16,7 @@
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibMain/Main.h>
+#include <QCoreApplication>
 #include <WebDriver/Client.h>
 
 #if defined(AK_OS_MACOS)
@@ -33,6 +35,21 @@ static char** environment()
 #endif
 }
 
+static ErrorOr<pid_t> launch_process(StringView application, char const* argv[])
+{
+    auto paths = TRY(get_paths_for_helper_process(application));
+
+    ErrorOr<pid_t> result = -1;
+    for (auto const& path : paths) {
+        auto path_view = path.bytes_as_string_view();
+        argv[0] = path_view.characters_without_null_termination();
+        result = Core::System::posix_spawn(path_view, nullptr, nullptr, const_cast<char**>(argv), environment());
+        if (!result.is_error())
+            break;
+    }
+    return result;
+}
+
 static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
 {
     char const* argv[] = {
@@ -42,7 +59,7 @@ static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
         nullptr,
     };
 
-    return Core::System::posix_spawn("./ladybird"sv, nullptr, nullptr, const_cast<char**>(argv), environment());
+    return launch_process("ladybird"sv, argv);
 }
 
 static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
@@ -65,11 +82,14 @@ static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_pat
         nullptr,
     };
 
-    return Core::System::posix_spawn("./_deps/lagom-build/headless-browser"sv, nullptr, nullptr, const_cast<char**>(argv), environment());
+    return launch_process("headless-browser"sv, argv);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    // Note: only creating this to get access to its static methods in HelperProcess
+    QCoreApplication application(arguments.argc, arguments.argv);
+
     auto listen_address = "0.0.0.0"sv;
     int port = 8000;
 

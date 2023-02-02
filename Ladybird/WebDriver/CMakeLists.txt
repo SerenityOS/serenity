@@ -5,6 +5,7 @@ set(SOURCES
     ${WEBDRIVER_SOURCE_DIR}/Session.cpp
     ${WEBDRIVER_SOURCE_DIR}/WebContentConnection.cpp
     ../Utilities.cpp
+    ../HelperProcess.cpp
     main.cpp
 )
 
