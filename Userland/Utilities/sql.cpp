@@ -7,6 +7,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -361,8 +362,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if defined(AK_OS_SERENITY)
     auto sql_client = TRY(SQL::SQLClient::try_create());
 #else
-    VERIFY(sql_server_path != nullptr);
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(sql_server_path));
+    VERIFY(!sql_server_path.is_empty());
+    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client({ TRY(String::from_utf8(sql_server_path)) }));
 #endif
 
     SQLRepl repl(loop, database_name, move(sql_client));

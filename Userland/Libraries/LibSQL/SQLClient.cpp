@@ -6,6 +6,7 @@
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibSQL/SQLClient.h>
 
 #if !defined(AK_OS_SERENITY)
@@ -50,7 +51,7 @@ static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
     return socket_fd;
 }
 
-static ErrorOr<void> launch_server(DeprecatedString const& socket_path, DeprecatedString const& pid_path, StringView server_path)
+static ErrorOr<void> launch_server(DeprecatedString const& socket_path, DeprecatedString const& pid_path, Vector<String> candidate_server_paths)
 {
     auto server_fd_or_error = create_database_socket(socket_path);
     if (server_fd_or_error.is_error()) {
@@ -77,15 +78,19 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
         auto takeover_string = DeprecatedString::formatted("SQLServer:{}", server_fd);
         TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
 
-        auto arguments = Array {
-            server_path,
-            "--pid-file"sv,
-            pid_path,
-        };
-
-        auto result = Core::System::exec(arguments[0], arguments, Core::System::SearchInPath::Yes);
+        ErrorOr<void> result;
+        for (auto const& server_path : candidate_server_paths) {
+            auto arguments = Array {
+                server_path.bytes_as_string_view(),
+                "--pid-file"sv,
+                pid_path,
+            };
+            auto result = Core::System::exec(arguments[0], arguments, Core::System::SearchInPath::Yes);
+            if (!result.is_error())
+                break;
+        }
         if (result.is_error()) {
-            warnln("Could not launch {}: {}", server_path, result.error());
+            warnln("Could not launch any of {}: {}", candidate_server_paths, result.error());
             TRY(Core::System::unlink(pid_path));
         }
 
@@ -132,14 +137,14 @@ static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
     return false;
 }
 
-ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(StringView server_path)
+ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vector<String> candidate_server_paths)
 {
     auto runtime_directory = TRY(Core::StandardPaths::runtime_directory());
     auto socket_path = DeprecatedString::formatted("{}/SQLServer.socket", runtime_directory);
     auto pid_path = DeprecatedString::formatted("{}/SQLServer.pid", runtime_directory);
 
     if (TRY(should_launch_server(pid_path)))
-        TRY(launch_server(socket_path, pid_path, server_path));
+        TRY(launch_server(socket_path, pid_path, move(candidate_server_paths)));
 
     auto socket = TRY(Core::Stream::LocalSocket::connect(move(socket_path)));
     TRY(socket->set_blocking(true));
