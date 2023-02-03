@@ -19,6 +19,7 @@ struct ExecutionSuccess {
     u64 statement_id { 0 };
     u64 execution_id { 0 };
 
+    Vector<DeprecatedString> column_names;
     bool has_results { false };
     size_t rows_created { 0 };
     size_t rows_updated { 0 };
@@ -70,7 +71,7 @@ private:
     {
     }
 
-    virtual void execution_success(u64 statement_id, u64 execution_id, bool has_results, size_t created, size_t updated, size_t deleted) override;
+    virtual void execution_success(u64 statement_id, u64 execution_id, Vector<DeprecatedString> const& column_names, bool has_results, size_t created, size_t updated, size_t deleted) override;
     virtual void execution_error(u64 statement_id, u64 execution_id, SQLErrorCode const& code, DeprecatedString const& message) override;
     virtual void next_result(u64 statement_id, u64 execution_id, Vector<SQL::Value> const&) override;
     virtual void results_exhausted(u64 statement_id, u64 execution_id, size_t total_rows) override;

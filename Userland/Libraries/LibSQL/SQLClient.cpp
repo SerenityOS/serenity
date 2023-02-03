@@ -154,7 +154,7 @@ ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vec
 
 #endif
 
-void SQLClient::execution_success(u64 statement_id, u64 execution_id, bool has_results, size_t created, size_t updated, size_t deleted)
+void SQLClient::execution_success(u64 statement_id, u64 execution_id, Vector<DeprecatedString> const& column_names, bool has_results, size_t created, size_t updated, size_t deleted)
 {
     if (!on_execution_success) {
         outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
@@ -164,6 +164,7 @@ void SQLClient::execution_success(u64 statement_id, u64 execution_id, bool has_r
     ExecutionSuccess success {
         .statement_id = statement_id,
         .execution_id = execution_id,
+        .column_names = move(const_cast<Vector<DeprecatedString>&>(column_names)),
         .has_results = has_results,
         .rows_created = created,
         .rows_updated = updated,
