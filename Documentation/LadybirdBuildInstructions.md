@@ -2,10 +2,18 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++20 capable compiler are required. On Debian/Ubuntu required packages include, but are not limited to:
+Qt6 development packages and a C++20 capable compiler are required. gcc-12 or clang-13 are required at a minimum for c++20 support.
+
+On Debian/Ubuntu required packages include, but are not limited to:
 
 ```
 sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools
+```
+
+For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
+
+```
+sudo apt install qt6-wayland
 ```
 
 On Arch Linux/Manjaro:
@@ -26,26 +34,68 @@ nix-shell ladybird.nix
 
 On macOS:
 
+Note that XCode 13.x does not have sufficient C++20 support to build ladybird. XCode 14.x or clang from homebrew may be required to successfully build ladybird.
+
 ```
 xcode-select --install
 brew install cmake qt ninja
 ```
 
-For the C++ compiler, gcc-12 or clang-13 are required at a minimum for c++20 support.
+On Windows:
 
-For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
-
-```
-sudo apt install qt6-wayland
-```
-
+WSL2/WSLg are preferred, as they provide a linux environment that matches one of the above distributions.
+MinGW/MSYS2 are not supported, but may work with sufficient elbow grease. Native Windows builds are not supported with either clang-cl or MSVC.
 
 ## Build steps
 
-Basic workflow, if you only want to build Ladybird
+### Using serenity.sh
+
+The simplest way to build and run ladybird is via the serenity.sh script:
+
+```
+# From /path/to/serenity
+./Meta/serenity.sh run lagom ladybird
+./Meta/serenity.sh debug lagom ladybird
+```
+
+Note that running ladybird from the script will change the CMake cache in your Build/lagom build
+directory to always build LibWeb and Ladybird for Lagom when rebuilding SerenityOS using the
+serenity.sh script to run a qemu instance.
+
+To restore the previous behavior that only builds code generators and tools from Lagom when
+rebuilding serenity, you must modify the CMake cache back to the default.
+
+```
+cmake -S Meta/Lagom -B Build/lagom -DENABLE_LAGOM_LADYBIRD=OFF -DENABLE_LAGOM_LIBWEB=OFF -DBUILD_LAGOM=OFF
+```
+
+### Resource files
+
+Ladybird requires resource files from the serenity/Base/res directory in order to properly load
+icons, fonts, and other theming information. The serenity.sh script calls into custom CMake targets
+that set these variables, and ensure that the $PWD is set properly to allow execution from the build
+directory. To run the built binary without using the script, one can either directly invoke the
+ninja rules, set $SERENITY_SOURCE_DIR to the root of their serenity checkout, or install ladybird
+using the provided CMake install rules. See the ``Custom CMake build directory`` section below for
+details.
+
+### Custom CMake build directory
+
+If you want to build ladybird on its own, or are interested in packaging ladybird for distribution,
+then a separate CMake build directory may be desired. Note that ladybird can be build via the Lagom
+CMakeLists.txt, or via the CMakeLists.txt found in the Ladybird directory. For distributions, using
+Ladybird as the source directory will give the desired results.
+
+The install rules in Ladybird/cmake/InstallRules.cmake define which binaries and libraries will be
+installed into the configured CMAKE_PREFIX_PATH or path passed to ``cmake --install``.
+
+Note that when using a custom build directory rather than Meta/serenity.sh, the user may need to provide
+a suitable C++ compiler (g++ >= 12, clang >= 13, Apple Clang >= 14) via the CMAKE_CXX_COMPILER and
+CMAKE_C_COMPILER cmake options.
 
 ```
 cmake -GNinja -S Ladybird -B Build/ladybird
+# optionally, add -DCMAKE_CXX_COMPILER=<suitable compiler> -DCMAKE_C_COMPILER=<matching c compiler>
 cmake --build Build/ladybird
 ninja -C Build/ladybird run
 ```
@@ -59,21 +109,6 @@ To run without ninja rule:
 ```
 export SERENITY_SOURCE_DIR=$(realpath ../)
 ./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
-```
-
-However, if you already have a serenity build, you might want to enable ladybird as part of your pre-existing build directories:
-
-```
-# From /path/to/serenity
-./Meta/serenity.sh run lagom ladybird
-./Meta/serenity.sh debug lagom ladybird
-```
-
-Doing so will re-build Lagom LibWeb and ladybird whenever you change any related serenity library source code. To disable this after
-enabling it, simply disable LibWeb and ladybird on the Lagom binary directory:
-
-```
-cmake -S Meta/Lagom -B Build/lagom -DENABLE_LAGOM_LADYBIRD=OFF -DENABLE_LAGOM_LIBWEB=OFF
 ```
 
 ## Experimental Android Build Steps
