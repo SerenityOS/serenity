@@ -5123,13 +5123,13 @@ static bool is_generic_font_family(ValueID identifier)
 
 RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& component_values)
 {
+    RefPtr<StyleValue> font_stretch;
     RefPtr<StyleValue> font_style;
     RefPtr<StyleValue> font_weight;
     RefPtr<StyleValue> font_size;
     RefPtr<StyleValue> line_height;
     RefPtr<StyleValue> font_families;
     RefPtr<StyleValue> font_variant;
-    // FIXME: Implement font-stretch.
 
     // FIXME: Handle system fonts. (caption, icon, menu, message-box, small-caption, status-bar)
 
@@ -5189,6 +5189,12 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
             font_families = maybe_font_families.release_nonnull();
             break;
         }
+        if (property_accepts_value(PropertyID::FontStretch, *value)) {
+            if (font_stretch)
+                return nullptr;
+            font_stretch = value.release_nonnull();
+            continue;
+        }
         return nullptr;
     }
 
@@ -5202,6 +5208,8 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!font_size || !font_families)
         return nullptr;
 
+    if (!font_stretch)
+        font_stretch = property_initial_value(PropertyID::FontStretch);
     if (!font_style)
         font_style = property_initial_value(PropertyID::FontStyle);
     if (!font_weight)
@@ -5209,7 +5217,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!line_height)
         line_height = property_initial_value(PropertyID::LineHeight);
 
-    return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
+    return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
 RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const& component_values, size_t start_index)

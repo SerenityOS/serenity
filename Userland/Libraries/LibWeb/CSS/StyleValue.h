@@ -1006,9 +1006,10 @@ private:
 
 class FontStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families) { return adopt_ref(*new FontStyleValue(font_style, font_weight, font_size, line_height, font_families)); }
+    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families) { return adopt_ref(*new FontStyleValue(font_stretch, font_style, font_weight, font_size, line_height, font_families)); }
     virtual ~FontStyleValue() override = default;
 
+    NonnullRefPtr<StyleValue> font_stretch() const { return m_font_stretch; }
     NonnullRefPtr<StyleValue> font_style() const { return m_font_style; }
     NonnullRefPtr<StyleValue> font_weight() const { return m_font_weight; }
     NonnullRefPtr<StyleValue> font_size() const { return m_font_size; }
@@ -1019,8 +1020,9 @@ public:
     virtual bool equals(StyleValue const& other) const override;
 
 private:
-    FontStyleValue(NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
+    FontStyleValue(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
         : StyleValue(Type::Font)
+        , m_font_stretch(font_stretch)
         , m_font_style(font_style)
         , m_font_weight(font_weight)
         , m_font_size(font_size)
@@ -1029,12 +1031,13 @@ private:
     {
     }
 
+    NonnullRefPtr<StyleValue> m_font_stretch;
     NonnullRefPtr<StyleValue> m_font_style;
     NonnullRefPtr<StyleValue> m_font_weight;
     NonnullRefPtr<StyleValue> m_font_size;
     NonnullRefPtr<StyleValue> m_line_height;
     NonnullRefPtr<StyleValue> m_font_families;
-    // FIXME: Implement font-stretch and font-variant.
+    // FIXME: Implement font-variant.
 };
 
 class FrequencyStyleValue : public StyleValue {

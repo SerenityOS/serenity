@@ -476,19 +476,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             auto const& font_shorthand = value.as_font();
             style.set_property(CSS::PropertyID::FontSize, font_shorthand.font_size());
             style.set_property(CSS::PropertyID::FontFamily, font_shorthand.font_families());
+            style.set_property(CSS::PropertyID::FontStretch, font_shorthand.font_stretch());
             style.set_property(CSS::PropertyID::FontStyle, font_shorthand.font_style());
             style.set_property(CSS::PropertyID::FontWeight, font_shorthand.font_weight());
             style.set_property(CSS::PropertyID::LineHeight, font_shorthand.line_height());
-            // FIXME: Implement font-stretch and font-variant
+            // FIXME: Implement font-variant
             return;
         }
 
+        style.set_property(CSS::PropertyID::FontStretch, value);
         style.set_property(CSS::PropertyID::FontSize, value);
         style.set_property(CSS::PropertyID::FontFamily, value);
         style.set_property(CSS::PropertyID::FontStyle, value);
         style.set_property(CSS::PropertyID::FontWeight, value);
         style.set_property(CSS::PropertyID::LineHeight, value);
-        // FIXME: Implement font-stretch and font-variant
+        // FIXME: Implement font-variant
         return;
     }
 
@@ -986,6 +988,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     // FIXME: This should be more sophisticated.
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontFamily, pseudo_element);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontSize, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::FontStretch, pseudo_element);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle, pseudo_element);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
 
