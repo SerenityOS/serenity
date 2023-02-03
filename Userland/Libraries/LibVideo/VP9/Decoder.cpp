@@ -228,7 +228,7 @@ u8 Decoder::merge_prob(u8 pre_prob, u32 count_0, u32 count_1, u8 count_sat, u8 m
     return round_2(pre_prob * (256 - factor) + (prob * factor), 8);
 }
 
-u32 Decoder::merge_probs(int const* tree, int index, u8* probs, u8* counts, u8 count_sat, u8 max_update_factor)
+u32 Decoder::merge_probs(int const* tree, int index, u8* probs, u32* counts, u8 count_sat, u8 max_update_factor)
 {
     auto s = tree[index];
     auto left_count = (s <= 0) ? counts[-s] : merge_probs(tree, s, probs, counts, count_sat, max_update_factor);
@@ -329,12 +329,12 @@ DecoderErrorOr<void> Decoder::adapt_non_coef_probs(FrameContext const& frame_con
     return {};
 }
 
-void Decoder::adapt_probs(int const* tree, u8* probs, u8* counts)
+void Decoder::adapt_probs(int const* tree, u8* probs, u32* counts)
 {
     merge_probs(tree, 0, probs, counts, COUNT_SAT, MAX_UPDATE_FACTOR);
 }
 
-u8 Decoder::adapt_prob(u8 prob, u8 counts[2])
+u8 Decoder::adapt_prob(u8 prob, u32 counts[2])
 {
     return merge_prob(prob, counts[0], counts[1], COUNT_SAT, MAX_UPDATE_FACTOR);
 }
