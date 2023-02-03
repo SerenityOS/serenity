@@ -16,14 +16,21 @@
 namespace Web::XHR {
 
 // https://xhr.spec.whatwg.org/#dom-formdata
-WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>>)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>> form)
 {
-    // FIXME: 1. If form is given, then:
-    // FIXME:    1. Let list be the result of constructing the entry list for form.
-    // FIXME:    2. If list is null, then throw an "InvalidStateError" DOMException.
-    // FIXME:    3. Set this’s entry list to list.
+    HashMap<DeprecatedString, Vector<FormDataEntryValue>> list;
+    // 1. If form is given, then:
+    if (form.has_value()) {
+        // 1. Let list be the result of constructing the entry list for form.
+        auto entry_list = TRY(construct_entry_list(realm, form.value()));
+        // 2. If list is null, then throw an "InvalidStateError" DOMException.
+        if (!entry_list.has_value())
+            return WebIDL::InvalidStateError::create(realm, "Form element does not contain any entries.");
+        // 3. Set this’s entry list to list.
+        list = entry_list.release_value();
+    }
 
-    return construct_impl(realm);
+    return construct_impl(realm, move(list));
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, HashMap<DeprecatedString, Vector<FormDataEntryValue>> entry_list)
