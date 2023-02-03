@@ -151,7 +151,9 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> partition_relative_time_patt
             auto result = TRY_OR_THROW_OOM(vm, String::from_utf8(patterns[0].pattern));
 
             // ii. Return a List containing the Record { [[Type]]: "literal", [[Value]]: result }.
-            return Vector<PatternPartitionWithUnit> { { "literal"sv, move(result) } };
+            Vector<PatternPartitionWithUnit> result_list;
+            TRY_OR_THROW_OOM(vm, result_list.try_empend("literal"sv, move(result)));
+            return result_list;
         }
     }
 
@@ -202,7 +204,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, Stri
         // a. If patternPart.[[Type]] is "literal", then
         if (pattern_part.type == "literal"sv) {
             // i. Append Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]], [[Unit]]: empty } to result.
-            result.empend("literal"sv, move(pattern_part.value));
+            TRY_OR_THROW_OOM(vm, result.try_empend("literal"sv, move(pattern_part.value)));
         }
         // b. Else,
         else {
@@ -212,7 +214,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithUnit>> make_parts_list(VM& vm, Stri
             // ii. For each Record { [[Type]], [[Value]] } part in parts, do
             for (auto& part : parts) {
                 // 1. Append Record { [[Type]]: part.[[Type]], [[Value]]: part.[[Value]], [[Unit]]: unit } to result.
-                result.empend(part.type, move(part.value), unit);
+                TRY_OR_THROW_OOM(vm, result.try_empend(part.type, move(part.value), unit));
             }
         }
     }
