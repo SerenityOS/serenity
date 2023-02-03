@@ -189,7 +189,7 @@ CalendarPatternStyle calendar_pattern_style_from_string(StringView style);
 StringView calendar_pattern_style_to_string(CalendarPatternStyle style);
 
 Optional<HourCycleRegion> hour_cycle_region_from_string(StringView hour_cycle_region);
-Vector<HourCycle> get_regional_hour_cycles(StringView region);
+ErrorOr<Vector<HourCycle>> get_regional_hour_cycles(StringView region);
 ErrorOr<Vector<HourCycle>> get_locale_hour_cycles(StringView locale);
 ErrorOr<Optional<HourCycle>> get_default_regional_hour_cycle(StringView locale);
 
