@@ -76,28 +76,26 @@ public:
             m_editor->set_prompt(prompt_for_level(open_indents));
         };
 
-        m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto created, auto updated, auto deleted) {
-            if (updated != 0 || created != 0 || deleted != 0) {
-                outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
-            }
-            if (!has_results) {
+        m_sql_client->on_execution_success = [this](auto result) {
+            if (result.rows_updated != 0 || result.rows_created != 0 || result.rows_deleted != 0)
+                outln("{} row(s) created, {} updated, {} deleted", result.rows_created, result.rows_updated, result.rows_deleted);
+            if (!result.has_results)
                 read_sql();
-            }
         };
 
-        m_sql_client->on_next_result = [](auto, auto, auto row) {
+        m_sql_client->on_next_result = [](auto result) {
             StringBuilder builder;
-            builder.join(", "sv, row);
+            builder.join(", "sv, result.values);
             outln("{}", builder.to_deprecated_string());
         };
 
-        m_sql_client->on_results_exhausted = [this](auto, auto, auto total_rows) {
-            outln("{} row(s)", total_rows);
+        m_sql_client->on_results_exhausted = [this](auto result) {
+            outln("{} row(s)", result.total_rows);
             read_sql();
         };
 
-        m_sql_client->on_execution_error = [this](auto, auto, auto, auto const& message) {
-            outln("\033[33;1mExecution error:\033[0m {}", message);
+        m_sql_client->on_execution_error = [this](auto result) {
+            outln("\033[33;1mExecution error:\033[0m {}", result.error_message);
             read_sql();
         };
 

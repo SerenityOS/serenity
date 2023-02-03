@@ -68,6 +68,12 @@ private:
     Database(NonnullRefPtr<SQL::SQLClient> sql_client, SQL::ConnectionID connection_id);
     void execute_statement(SQL::StatementID statement_id, Vector<SQL::Value> placeholder_values, PendingExecution pending_execution);
 
+    template<typename ResultData>
+    auto find_pending_execution(ResultData const& result_data)
+    {
+        return m_pending_executions.find({ result_data.statement_id, result_data.execution_id });
+    }
+
     NonnullRefPtr<SQL::SQLClient> m_sql_client;
     SQL::ConnectionID m_connection_id { 0 };
 
