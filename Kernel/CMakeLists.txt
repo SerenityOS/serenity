@@ -80,6 +80,7 @@ set(KERNEL_SOURCES
     Graphics/Intel/Plane/G33DisplayPlane.cpp
     Graphics/Intel/Transcoder/AnalogDisplayTranscoder.cpp
     Graphics/Intel/Transcoder/DisplayTranscoder.cpp
+    Graphics/Intel/Transcoder/PLL.cpp
     Graphics/Intel/DisplayConnectorGroup.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
