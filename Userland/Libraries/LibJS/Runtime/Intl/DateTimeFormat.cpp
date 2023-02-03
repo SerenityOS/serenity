@@ -612,7 +612,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
         // b. If p is "literal", then
         if (part == "literal"sv) {
             // i. Append a new Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } as the last element of the list result.
-            result.append({ "literal"sv, move(pattern_part.value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, move(pattern_part.value) }));
         }
 
         // c. Else if p is equal to "fractionalSecondDigits", then
@@ -627,7 +627,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             auto formatted_value = MUST_OR_THROW_OOM(format_numeric(vm, *number_format3, Value(value)));
 
             // iv. Append a new Record { [[Type]]: "fractionalSecond", [[Value]]: fv } as the last element of result.
-            result.append({ "fractionalSecond"sv, move(formatted_value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "fractionalSecond"sv, move(formatted_value) }));
         }
 
         // d. Else if p is equal to "dayPeriod", then
@@ -643,7 +643,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 formatted_value = TRY_OR_THROW_OOM(vm, String::from_utf8(*symbol));
 
             // iii. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ "dayPeriod"sv, move(formatted_value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "dayPeriod"sv, move(formatted_value) }));
         }
 
         // e. Else if p is equal to "timeZoneName", then
@@ -660,7 +660,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             auto formatted_value = TRY_OR_THROW_OOM(vm, ::Locale::format_time_zone(data_locale, value, style, local_time.time_since_epoch()));
 
             // iv. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ "timeZoneName"sv, move(formatted_value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "timeZoneName"sv, move(formatted_value) }));
         }
 
         // f. Else if p matches a Property column of the row in Table 6, then
@@ -757,7 +757,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             }
 
             // xi. Append a new Record { [[Type]]: p, [[Value]]: fv } as the last element of the list result.
-            result.append({ style_and_value->name, move(formatted_value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ style_and_value->name, move(formatted_value) }));
         }
 
         // g. Else if p is equal to "ampm", then
@@ -781,7 +781,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
             }
 
             // iv. Append a new Record { [[Type]]: "dayPeriod", [[Value]]: fv } as the last element of the list result.
-            result.append({ "dayPeriod"sv, move(formatted_value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "dayPeriod"sv, move(formatted_value) }));
         }
 
         // h. Else if p is equal to "relatedYear", then
@@ -806,7 +806,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
         // to adhere to the selected locale. This depends on other generated data, so it is deferred to here.
         else if (part == "decimal"sv) {
             auto decimal_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(data_locale, date_time_format.numbering_system(), ::Locale::NumericSymbol::Decimal)).value_or("."sv);
-            result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_symbol)) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_symbol)) }));
         }
 
         // j. Else,
@@ -1145,7 +1145,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
         }
 
         // h. Add all elements in partResult to result in order.
-        result.extend(move(part_result));
+        TRY_OR_THROW_OOM(vm, result.try_extend(move(part_result)));
         return {};
     }));
 
