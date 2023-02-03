@@ -304,9 +304,6 @@ void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
         if (!path.is_empty()) {
             m_path_segments.shrink(m_viewpoint);
             m_path_segments.extend(path);
-            if (on_path_change) {
-                on_path_change();
-            }
             update();
         }
     }
