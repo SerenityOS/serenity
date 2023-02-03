@@ -1801,11 +1801,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
 
     // 3. Let xResult be ? PartitionNumberPattern(numberFormat, x).
     auto raw_start_result = TRY(partition_number_pattern(vm, number_format, move(start)));
-    auto start_result = PatternPartitionWithSource::create_from_parent_list(move(raw_start_result));
+    auto start_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_start_result)));
 
     // 4. Let yResult be ? PartitionNumberPattern(numberFormat, y).
     auto raw_end_result = TRY(partition_number_pattern(vm, number_format, move(end)));
-    auto end_result = PatternPartitionWithSource::create_from_parent_list(move(raw_end_result));
+    auto end_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_end_result)));
 
     // 5. If xResult is equal to yResult, then
     if (start_result == end_result) {
