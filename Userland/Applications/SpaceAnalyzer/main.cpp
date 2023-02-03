@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2021-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "ProgressWindow.h"
 #include "Tree.h"
 #include "TreeMapWidget.h"
 #include <AK/Error.h>
@@ -54,53 +56,18 @@ static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
     return {};
 }
 
-static NonnullRefPtr<GUI::Window> create_progress_window()
-{
-    auto window = GUI::Window::construct();
-
-    window->set_title(APP_NAME);
-    window->set_resizable(false);
-    window->set_closeable(false);
-    window->resize(240, 50);
-    window->center_on_screen();
-
-    auto main_widget = window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout<GUI::VerticalBoxLayout>();
-
-    auto& label = main_widget->add<GUI::Label>("Analyzing storage space...");
-    label.set_fixed_height(22);
-
-    auto& progresslabel = main_widget->add<GUI::Label>();
-    progresslabel.set_name("progresslabel");
-    progresslabel.set_fixed_height(22);
-
-    return window;
-}
-
-static void update_progress_label(GUI::Label& progresslabel, size_t files_encountered_count)
-{
-    auto text = DeprecatedString::formatted("{} files...", files_encountered_count);
-    progresslabel.set_text(text);
-
-    Core::EventLoop::current().pump(Core::EventLoop::WaitMode::PollForEvents);
-}
-
 static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
 {
     statusbar.set_text("");
-    auto progress_window = create_progress_window();
+    auto progress_window = TRY(ProgressWindow::try_create(APP_NAME));
     progress_window->show();
-
-    auto& progresslabel = *progress_window->main_widget()->find_descendant_of_type_named<GUI::Label>("progresslabel");
-    update_progress_label(progresslabel, 0);
 
     // Build an in-memory tree mirroring the filesystem and for each node
     // calculate the sum of the file size for all its descendants.
     Vector<MountInfo> mounts;
     TRY(fill_mounts(mounts));
     auto errors = tree->root().populate_filesize_tree(mounts, [&](size_t processed_file_count) {
-        update_progress_label(progresslabel, processed_file_count);
+        progress_window->update_progress_label(processed_file_count);
     });
 
     progress_window->close();
