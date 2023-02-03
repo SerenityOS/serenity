@@ -54,8 +54,8 @@ private:
     void recalculate_path_for_new_tree();
 
     OwnPtr<Tree> m_tree;
-    Vector<DeprecatedString> m_path;
-    size_t m_viewpoint { 0 };
+    Vector<DeprecatedString> m_path_segments;
+    size_t m_viewpoint { 0 }; // Current position within m_path_segments.
     void const* m_selected_node_cache;
 };
 

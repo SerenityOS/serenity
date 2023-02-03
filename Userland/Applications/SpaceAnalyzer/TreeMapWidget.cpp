@@ -225,8 +225,8 @@ TreeNode const* TreeMapWidget::path_node(size_t n) const
         return nullptr;
     TreeNode const* iter = &m_tree->root();
     size_t path_index = 0;
-    while (iter && path_index < m_path.size() && path_index < n) {
-        auto child_name = m_path[path_index];
+    while (iter && path_index < m_path_segments.size() && path_index < n) {
+        auto child_name = m_path_segments[path_index];
         auto maybe_child = iter->child_with_name(child_name);
         if (!maybe_child.has_value())
             return nullptr;
@@ -241,7 +241,7 @@ void TreeMapWidget::paint_event(GUI::PaintEvent& event)
     GUI::Frame::paint_event(event);
     GUI::Painter painter(*this);
 
-    m_selected_node_cache = path_node(m_path.size());
+    m_selected_node_cache = path_node(m_path_segments.size());
 
     TreeNode const* node = path_node(m_viewpoint);
     if (!node) {
@@ -302,8 +302,8 @@ void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
     if (node && !node_is_leaf(*node)) {
         auto path = path_to_position(event.position());
         if (!path.is_empty()) {
-            m_path.shrink(m_viewpoint);
-            m_path.extend(path);
+            m_path_segments.shrink(m_viewpoint);
+            m_path_segments.extend(path);
             if (on_path_change) {
                 on_path_change();
             }
@@ -319,9 +319,9 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
     TreeNode const* node = path_node(m_viewpoint);
     if (node && !node_is_leaf(*node)) {
         auto path = path_to_position(event.position());
-        m_path.shrink(m_viewpoint);
-        m_path.extend(path);
-        m_viewpoint = m_path.size();
+        m_path_segments.shrink(m_viewpoint);
+        m_path_segments.extend(path);
+        m_viewpoint = m_path_segments.size();
         if (on_path_change) {
             on_path_change();
         }
@@ -332,9 +332,9 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
 void TreeMapWidget::keydown_event(GUI::KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Left)
-        set_viewpoint(m_viewpoint == 0 ? m_path.size() : m_viewpoint - 1);
+        set_viewpoint(m_viewpoint == 0 ? m_path_segments.size() : m_viewpoint - 1);
     else if (event.key() == KeyCode::Key_Right)
-        set_viewpoint(m_viewpoint == m_path.size() ? 0 : m_viewpoint + 1);
+        set_viewpoint(m_viewpoint == m_path_segments.size() ? 0 : m_viewpoint + 1);
     else
         event.ignore();
 }
@@ -363,14 +363,14 @@ void TreeMapWidget::recalculate_path_for_new_tree()
 {
     TreeNode const* current = &m_tree->root();
     size_t new_path_length = 0;
-    for (auto& segment : m_path) {
+    for (auto& segment : m_path_segments) {
         auto maybe_child = current->child_with_name(segment);
         if (!maybe_child.has_value())
             break;
         new_path_length++;
         current = &maybe_child.release_value();
     }
-    m_path.shrink(new_path_length);
+    m_path_segments.shrink(new_path_length);
     if (new_path_length < m_viewpoint)
         m_viewpoint = new_path_length - 1;
 }
@@ -454,8 +454,8 @@ void TreeMapWidget::set_viewpoint(size_t viewpoint)
 {
     if (m_viewpoint == viewpoint)
         return;
-    if (viewpoint > m_path.size())
-        viewpoint = m_path.size();
+    if (viewpoint > m_path_segments.size())
+        viewpoint = m_path_segments.size();
     m_viewpoint = viewpoint;
     if (on_path_change) {
         on_path_change();
@@ -465,7 +465,7 @@ void TreeMapWidget::set_viewpoint(size_t viewpoint)
 
 size_t TreeMapWidget::path_size() const
 {
-    return m_path.size() + 1;
+    return m_path_segments.size() + 1;
 }
 
 size_t TreeMapWidget::viewpoint() const
