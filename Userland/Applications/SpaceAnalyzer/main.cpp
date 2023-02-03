@@ -124,7 +124,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
-    auto window = GUI::Window::construct();
+    auto window = TRY(GUI::Window::try_create());
     window->set_title(APP_NAME);
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
@@ -138,23 +138,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     treemapwidget.set_focus(true);
 
-    auto& file_menu = window->add_menu("&File");
-    file_menu.add_action(GUI::Action::create("&Analyze", [&](auto&) {
+    auto file_menu = TRY(window->try_add_menu("&File"));
+    TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         // FIXME: Dispose of the old tree
         auto new_tree = adopt_ref(*new Tree(""));
         if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
-    }));
-    file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    })));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
-    }));
+    })));
 
-    auto& help_menu = window->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
-    help_menu.add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window));
+    auto help_menu = TRY(window->try_add_menu("&Help"));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window)));
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the nodes context menu.
@@ -204,11 +204,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     });
 
-    auto context_menu = GUI::Menu::construct();
-    context_menu->add_action(*open_folder_action);
-    context_menu->add_action(*open_containing_folder_action);
-    context_menu->add_action(*copy_path_action);
-    context_menu->add_action(*delete_action);
+    auto context_menu = TRY(GUI::Menu::try_create());
+    TRY(context_menu->try_add_action(open_folder_action));
+    TRY(context_menu->try_add_action(open_containing_folder_action));
+    TRY(context_menu->try_add_action(copy_path_action));
+    TRY(context_menu->try_add_action(delete_action));
 
     // Configure event handlers.
     breadcrumbbar.on_segment_click = [&](size_t index) {
