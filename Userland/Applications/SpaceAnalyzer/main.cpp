@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     treemapwidget.set_focus(true);
 
     auto file_menu = TRY(window->try_add_menu("&File"));
-    TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", [&](auto&) {
+    TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         if (auto result = treemapwidget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
