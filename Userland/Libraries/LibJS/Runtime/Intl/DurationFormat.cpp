@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -507,16 +508,16 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 auto parts = MUST_OR_THROW_OOM(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
 
                 // 6. Let concat be an empty String.
-                StringBuilder concat;
+                ThrowableStringBuilder concat(vm);
 
                 // 7. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
                 for (auto const& part : parts) {
                     // a. Set concat to the string-concatenation of concat and part.[[Value]].
-                    concat.append(part.value);
+                    TRY(concat.append(part.value));
                 }
 
                 // 8. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
-                result.append({ unit, TRY_OR_THROW_OOM(vm, concat.to_string()) });
+                result.append({ unit, MUST_OR_THROW_OOM(concat.to_string()) });
             }
         }
     }

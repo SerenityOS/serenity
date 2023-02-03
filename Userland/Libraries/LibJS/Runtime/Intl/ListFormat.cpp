@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringBuilder.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -188,16 +188,16 @@ ThrowCompletionOr<String> format_list(VM& vm, ListFormat const& list_format, Vec
     auto parts = MUST_OR_THROW_OOM(create_parts_from_list(vm, list_format, list));
 
     // 2. Let result be an empty String.
-    StringBuilder result;
+    ThrowableStringBuilder result(vm);
 
     // 3. For each Record { [[Type]], [[Value]] } part in parts, do
     for (auto& part : parts) {
         // a. Set result to the string-concatenation of result and part.[[Value]].
-        result.append(part.value);
+        TRY(result.append(part.value));
     }
 
     // 4. Return result.
-    return TRY_OR_THROW_OOM(vm, result.to_string());
+    return result.to_string();
 }
 
 // 13.5.4 FormatListToParts ( listFormat, list ), https://tc39.es/ecma402/#sec-formatlisttoparts
