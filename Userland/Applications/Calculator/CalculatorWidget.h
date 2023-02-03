@@ -21,6 +21,7 @@ public:
     virtual ~CalculatorWidget() override = default;
     DeprecatedString get_entry();
     void set_entry(Crypto::BigFraction);
+    void set_typed_entry(Crypto::BigFraction);
 
     void shrink(unsigned);
     unsigned rounding_length() const;

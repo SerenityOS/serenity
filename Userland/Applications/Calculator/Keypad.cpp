@@ -16,6 +16,7 @@ void Keypad::type_digit(int digit)
 {
     switch (m_state) {
     case State::External:
+    case State::TypedExternal:
         m_state = State::TypingInteger;
         m_int_value = digit;
         m_frac_value.set_to_0();
@@ -40,6 +41,7 @@ void Keypad::type_decimal_point()
 {
     switch (m_state) {
     case State::External:
+    case State::TypedExternal:
         m_int_value.set_to_0();
         m_frac_value.set_to_0();
         m_frac_length.set_to_0();
@@ -60,6 +62,7 @@ void Keypad::type_backspace()
 {
     switch (m_state) {
     case State::External:
+    case State::TypedExternal:
         m_int_value.set_to_0();
         m_frac_value.set_to_0();
         m_frac_length.set_to_0();
@@ -83,7 +86,7 @@ void Keypad::type_backspace()
 
 Crypto::BigFraction Keypad::value() const
 {
-    if (m_state != State::External) {
+    if (m_state != State::External && m_state != State::TypedExternal) {
         Crypto::SignedBigInteger sum { m_int_value.multiplied_by(Crypto::NumberTheory::Power("10"_bigint, m_frac_length)).plus(m_frac_value) };
         Crypto::BigFraction res { move(sum), Crypto::NumberTheory::Power("10"_bigint, m_frac_length) };
 
@@ -96,6 +99,13 @@ Crypto::BigFraction Keypad::value() const
 void Keypad::set_value(Crypto::BigFraction value)
 {
     m_state = State::External;
+
+    m_internal_value = move(value);
+}
+
+void Keypad::set_typed_value(Crypto::BigFraction value)
+{
+    m_state = State::TypedExternal;
 
     m_internal_value = move(value);
 }
@@ -113,7 +123,7 @@ void Keypad::set_to_0()
 
 DeprecatedString Keypad::to_deprecated_string() const
 {
-    if (m_state == State::External)
+    if (m_state == State::External || m_state == State::TypedExternal)
         return m_internal_value.to_deprecated_string(m_displayed_fraction_length);
 
     StringBuilder builder;
@@ -137,7 +147,7 @@ DeprecatedString Keypad::to_deprecated_string() const
 
 bool Keypad::in_typing_state() const
 {
-    return m_state == State::TypingDecimal || m_state == State::TypingInteger;
+    return m_state == State::TypedExternal || m_state == State::TypingDecimal || m_state == State::TypingInteger;
 }
 
 void Keypad::set_rounding_length(unsigned rounding_threshold)
