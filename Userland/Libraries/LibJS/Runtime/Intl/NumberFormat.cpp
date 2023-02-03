@@ -594,7 +594,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         // b. If p is "literal", then
         if (part == "literal"sv) {
             // i. Append a new Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } as the last element of result.
-            result.append({ "literal"sv, move(pattern_part.value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, move(pattern_part.value) }));
         }
 
         // c. Else if p is equal to "number", then
@@ -602,7 +602,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let notationSubParts be PartitionNotationSubPattern(numberFormat, x, n, exponent).
             auto notation_sub_parts = MUST_OR_THROW_OOM(partition_notation_sub_pattern(vm, number_format, number, formatted_string, exponent));
             // ii. Append all elements of notationSubParts to result.
-            result.extend(move(notation_sub_parts));
+            TRY_OR_THROW_OOM(vm, result.try_extend(move(notation_sub_parts)));
         }
 
         // d. Else if p is equal to "plusSign", then
@@ -610,7 +610,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let plusSignSymbol be the ILND String representing the plus sign.
             auto plus_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PlusSign)).value_or("+"sv);
             // ii. Append a new Record { [[Type]]: "plusSign", [[Value]]: plusSignSymbol } as the last element of result.
-            result.append({ "plusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(plus_sign_symbol)) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "plusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(plus_sign_symbol)) }));
         }
 
         // e. Else if p is equal to "minusSign", then
@@ -618,7 +618,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let minusSignSymbol be the ILND String representing the minus sign.
             auto minus_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign)).value_or("-"sv);
             // ii. Append a new Record { [[Type]]: "minusSign", [[Value]]: minusSignSymbol } as the last element of result.
-            result.append({ "minusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "minusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) }));
         }
 
         // f. Else if p is equal to "percentSign" and numberFormat.[[Style]] is "percent", then
@@ -626,7 +626,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             // i. Let percentSignSymbol be the ILND String representing the percent sign.
             auto percent_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::PercentSign)).value_or("%"sv);
             // ii. Append a new Record { [[Type]]: "percentSign", [[Value]]: percentSignSymbol } as the last element of result.
-            result.append({ "percentSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(percent_sign_symbol)) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "percentSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(percent_sign_symbol)) }));
         }
 
         // g. Else if p is equal to "unitPrefix" and numberFormat.[[Style]] is "unit", then
@@ -643,7 +643,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
             auto unit_identifier = found_pattern.identifiers[*identifier_index];
 
             // iv. Append a new Record { [[Type]]: "unit", [[Value]]: mu } as the last element of result.
-            result.append({ "unit"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(unit_identifier)) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "unit"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(unit_identifier)) }));
         }
 
         // i. Else if p is equal to "currencyCode" and numberFormat.[[Style]] is "currency", then
@@ -655,7 +655,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
         //       display / plurality lookups more than once.
         else if ((part == "currency"sv) && (number_format.style() == NumberFormat::Style::Currency)) {
             auto currency = number_format.resolve_currency_display();
-            result.append({ "currency"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(currency)) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ "currency"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(currency)) }));
         }
 
         // l. Else,
@@ -672,23 +672,29 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
     return result;
 }
 
-static Vector<StringView> separate_integer_into_groups(::Locale::NumberGroupings const& grouping_sizes, StringView integer, NumberFormat::UseGrouping use_grouping)
+static ThrowCompletionOr<Vector<StringView>> separate_integer_into_groups(VM& vm, ::Locale::NumberGroupings const& grouping_sizes, StringView integer, NumberFormat::UseGrouping use_grouping)
 {
+    auto default_group = [&]() -> ThrowCompletionOr<Vector<StringView>> {
+        Vector<StringView> groups;
+        TRY_OR_THROW_OOM(vm, groups.try_append(integer));
+        return groups;
+    };
+
     Utf8View utf8_integer { integer };
     if (utf8_integer.length() <= grouping_sizes.primary_grouping_size)
-        return { integer };
+        return default_group();
 
     size_t index = utf8_integer.length() - grouping_sizes.primary_grouping_size;
 
     switch (use_grouping) {
     case NumberFormat::UseGrouping::Min2:
         if (utf8_integer.length() < 5)
-            return { integer };
+            return default_group();
         break;
 
     case NumberFormat::UseGrouping::Auto:
         if (index < grouping_sizes.minimum_grouping_digits)
-            return { integer };
+            return default_group();
         break;
 
     case NumberFormat::UseGrouping::Always:
@@ -700,19 +706,20 @@ static Vector<StringView> separate_integer_into_groups(::Locale::NumberGroupings
 
     Vector<StringView> groups;
 
-    auto add_group = [&](size_t index, size_t length) {
-        groups.prepend(utf8_integer.unicode_substring_view(index, length).as_string());
+    auto add_group = [&](size_t index, size_t length) -> ThrowCompletionOr<void> {
+        TRY_OR_THROW_OOM(vm, groups.try_prepend(utf8_integer.unicode_substring_view(index, length).as_string()));
+        return {};
     };
 
-    add_group(index, grouping_sizes.primary_grouping_size);
+    MUST_OR_THROW_OOM(add_group(index, grouping_sizes.primary_grouping_size));
 
     while (index > grouping_sizes.secondary_grouping_size) {
         index -= grouping_sizes.secondary_grouping_size;
-        add_group(index, grouping_sizes.secondary_grouping_size);
+        MUST_OR_THROW_OOM(add_group(index, grouping_sizes.secondary_grouping_size));
     }
 
     if (index > 0)
-        add_group(0, index);
+        MUST_OR_THROW_OOM(add_group(0, index));
 
     return groups;
 }
@@ -731,12 +738,12 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
     // 2. If x is not-a-number, then
     if (number.is_nan()) {
         // a. Append a new Record { [[Type]]: "nan", [[Value]]: n } as the last element of result.
-        result.append({ "nan"sv, move(formatted_string) });
+        TRY_OR_THROW_OOM(vm, result.try_append({ "nan"sv, move(formatted_string) }));
     }
     // 3. Else if x is positive-infinity or negative-infinity, then
     else if (number.is_positive_infinity() || number.is_negative_infinity()) {
         // a. Append a new Record { [[Type]]: "infinity", [[Value]]: n } as the last element of result.
-        result.append({ "infinity"sv, move(formatted_string) });
+        TRY_OR_THROW_OOM(vm, result.try_append({ "infinity"sv, move(formatted_string) }));
     }
     // 4. Else,
     else {
@@ -756,7 +763,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
             // ii. If p is "literal", then
             if (part == "literal"sv) {
                 // 1. Append a new Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } as the last element of result.
-                result.append({ "literal"sv, move(pattern_part.value) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, move(pattern_part.value) }));
             }
             // iii. Else if p is equal to "number", then
             else if (part == "number"sv) {
@@ -802,7 +809,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 // 6. If the numberFormat.[[UseGrouping]] is false, then
                 if (number_format.use_grouping() == NumberFormat::UseGrouping::False) {
                     // a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
-                    result.append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer)) });
+                    TRY_OR_THROW_OOM(vm, result.try_append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer)) }));
                 }
                 // 7. Else,
                 else {
@@ -810,7 +817,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     auto group_sep_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Group)).value_or(","sv);
 
                     // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer, which may depend on the value of numberFormat.[[UseGrouping]].
-                    auto groups = separate_integer_into_groups(*grouping_sizes, integer, number_format.use_grouping());
+                    auto groups = MUST_OR_THROW_OOM(separate_integer_into_groups(vm, *grouping_sizes, integer, number_format.use_grouping()));
 
                     // c. Assert: The number of elements in groups List is greater than 0.
                     VERIFY(!groups.is_empty());
@@ -821,12 +828,12 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                         auto integer_group = groups.take_first();
 
                         // ii. Append a new Record { [[Type]]: "integer", [[Value]]: integerGroup } as the last element of result.
-                        result.append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer_group)) });
+                        TRY_OR_THROW_OOM(vm, result.try_append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer_group)) }));
 
                         // iii. If groups List is not empty, then
                         if (!groups.is_empty()) {
                             // i. Append a new Record { [[Type]]: "group", [[Value]]: groupSepSymbol } as the last element of result.
-                            result.append({ "group"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(group_sep_symbol)) });
+                            TRY_OR_THROW_OOM(vm, result.try_append({ "group"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(group_sep_symbol)) }));
                         }
                     }
                 }
@@ -836,9 +843,9 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     // a. Let decimalSepSymbol be the ILND String representing the decimal separator.
                     auto decimal_sep_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Decimal)).value_or("."sv);
                     // b. Append a new Record { [[Type]]: "decimal", [[Value]]: decimalSepSymbol } as the last element of result.
-                    result.append({ "decimal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_sep_symbol)) });
+                    TRY_OR_THROW_OOM(vm, result.try_append({ "decimal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_sep_symbol)) }));
                     // c. Append a new Record { [[Type]]: "fraction", [[Value]]: fraction } as the last element of result.
-                    result.append({ "fraction"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(*fraction)) });
+                    TRY_OR_THROW_OOM(vm, result.try_append({ "fraction"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(*fraction)) }));
                 }
             }
             // iv. Else if p is equal to "compactSymbol", then
@@ -853,14 +860,14 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 auto compact_identifier = number_format.compact_format().identifiers[*identifier_index];
 
                 // 2. Append a new Record { [[Type]]: "compact", [[Value]]: compactSymbol } as the last element of result.
-                result.append({ "compact"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(compact_identifier)) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ "compact"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(compact_identifier)) }));
             }
             // vi. Else if p is equal to "scientificSeparator", then
             else if (part == "scientificSeparator"sv) {
                 // 1. Let scientificSeparator be the ILND String representing the exponent separator.
                 auto scientific_separator = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Exponential)).value_or("E"sv);
                 // 2. Append a new Record { [[Type]]: "exponentSeparator", [[Value]]: scientificSeparator } as the last element of result.
-                result.append({ "exponentSeparator"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(scientific_separator)) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ "exponentSeparator"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(scientific_separator)) }));
             }
             // vii. Else if p is equal to "scientificExponent", then
             else if (part == "scientificExponent"sv) {
@@ -870,7 +877,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     auto minus_sign_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::MinusSign)).value_or("-"sv);
 
                     // b. Append a new Record { [[Type]]: "exponentMinusSign", [[Value]]: minusSignSymbol } as the last element of result.
-                    result.append({ "exponentMinusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) });
+                    TRY_OR_THROW_OOM(vm, result.try_append({ "exponentMinusSign"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(minus_sign_symbol)) }));
 
                     // c. Let exponent be -exponent.
                     exponent *= -1;
@@ -885,7 +892,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 exponent_result.formatted_string = TRY_OR_THROW_OOM(vm, ::Locale::replace_digits_for_number_system(number_format.numbering_system(), exponent_result.formatted_string));
 
                 // 3. Append a new Record { [[Type]]: "exponentInteger", [[Value]]: exponentResult.[[FormattedString]] } as the last element of result.
-                result.append({ "exponentInteger"sv, move(exponent_result.formatted_string) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ "exponentInteger"sv, move(exponent_result.formatted_string) }));
             }
             // viii. Else,
             else {
@@ -1842,7 +1849,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
         ? range_separator.release_value()
         : TRY_OR_THROW_OOM(vm, String::from_utf8(range_separator_symbol));
     part.source = "shared"sv;
-    result.append(move(part));
+    TRY_OR_THROW_OOM(vm, result.try_append(move(part)));
 
     // 10. For each r in yResult, do
     for (auto& part : end_result) {
@@ -1851,7 +1858,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     }
 
     // 11. Add all elements in yResult to result in order.
-    result.extend(move(end_result));
+    TRY_OR_THROW_OOM(vm, result.try_extend(move(end_result)));
 
     // 12. Return ! CollapseNumberRange(result).
     return collapse_number_range(move(result));
@@ -1870,9 +1877,9 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM& v
         partition.type = "approximatelySign"sv;
         partition.value = TRY_OR_THROW_OOM(vm, String::from_utf8(*approximately_sign));
 
-        result.insert_before_matching(move(partition), [](auto const& part) {
+        TRY_OR_THROW_OOM(vm, result.try_insert_before_matching(move(partition), [](auto const& part) {
             return part.type.is_one_of("integer"sv, "decimal"sv, "plusSign"sv, "minusSign"sv, "percentSign"sv, "currency"sv);
-        });
+        }));
     }
 
     // 4. Return result.
