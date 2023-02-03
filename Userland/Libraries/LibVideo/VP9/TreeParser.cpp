@@ -215,9 +215,9 @@ ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, Prob
     // Probabilities
     u8 const* probabilities = probability_table.inter_mode_probs()[mode_context_for_ref_frame_0];
 
-    auto value = TRY(parse_tree<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
-    counter.m_counts_inter_mode[mode_context_for_ref_frame_0][to_underlying(value) - to_underlying(PredictionMode::NearestMv)]++;
-    return value;
+    auto value = TRY(parse_tree<u8>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    counter.m_counts_inter_mode[mode_context_for_ref_frame_0][value]++;
+    return static_cast<PredictionMode>(value + to_underlying(PredictionMode::NearestMv));
 }
 
 ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
