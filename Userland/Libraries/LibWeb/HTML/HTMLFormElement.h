@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,6 +43,10 @@ public:
     // https://www.w3.org/TR/html-aria/#el-form
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::form; }
 
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-entry-list
+    bool constructing_entry_list() const { return m_constructing_entry_list; }
+    void set_constructing_entry_list(bool value) { m_constructing_entry_list = value; }
+
 private:
     HTMLFormElement(DOM::Document&, DOM::QualifiedName);
 
@@ -58,6 +63,8 @@ private:
     Vector<JS::GCPtr<HTMLElement>> m_associated_elements;
 
     JS::GCPtr<DOM::HTMLCollection> mutable m_elements;
+
+    bool m_constructing_entry_list { false };
 };
 
 }
