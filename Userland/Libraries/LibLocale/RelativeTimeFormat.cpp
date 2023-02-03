@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,6 +53,6 @@ StringView time_unit_to_string(TimeUnit time_unit)
     }
 }
 
-Vector<RelativeTimeFormat> __attribute__((weak)) get_relative_time_format_patterns(StringView, TimeUnit, StringView, Style) { return {}; }
+ErrorOr<Vector<RelativeTimeFormat>> __attribute__((weak)) get_relative_time_format_patterns(StringView, TimeUnit, StringView, Style) { return Vector<RelativeTimeFormat> {}; }
 
 }
