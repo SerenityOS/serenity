@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -798,7 +798,7 @@ namespace Locale {
 
     generator.append(R"~~~(
 struct NumberFormatImpl {
-    NumberFormat to_unicode_number_format() const {
+    ErrorOr<NumberFormat> to_unicode_number_format() const {
         NumberFormat number_format {};
 
         number_format.magnitude = magnitude;
@@ -808,9 +808,9 @@ struct NumberFormatImpl {
         number_format.positive_format = decode_string(positive_format);
         number_format.negative_format = decode_string(negative_format);
 
-        number_format.identifiers.ensure_capacity(identifiers.size());
+        TRY(number_format.identifiers.try_ensure_capacity(identifiers.size()));
         for (@string_index_type@ identifier : identifiers)
-            number_format.identifiers.append(decode_string(identifier));
+            number_format.identifiers.unchecked_append(decode_string(identifier));
 
         return number_format;
     }
@@ -1017,7 +1017,7 @@ ErrorOr<Optional<NumberFormat>> get_standard_number_system_format(StringView loc
             break;
         }
 
-        return s_number_formats[format_index].to_unicode_number_format();
+        return TRY(s_number_formats[format_index].to_unicode_number_format());
     }
 
     return OptionalNone {};
@@ -1046,10 +1046,10 @@ ErrorOr<Vector<NumberFormat>> get_compact_number_system_formats(StringView local
         }
 
         auto number_formats = s_number_format_lists.at(number_format_list_index);
-        formats.ensure_capacity(number_formats.size());
+        TRY(formats.try_ensure_capacity(number_formats.size()));
 
         for (auto number_format : number_formats)
-            formats.append(s_number_formats[number_format].to_unicode_number_format());
+            formats.unchecked_append(TRY(s_number_formats[number_format].to_unicode_number_format()));
     }
 
     return formats;
@@ -1074,7 +1074,7 @@ static Unit const* find_units(StringView locale, StringView unit)
     return nullptr;
 }
 
-Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style style)
+ErrorOr<Vector<NumberFormat>> get_unit_formats(StringView locale, StringView unit, Style style)
 {
     Vector<NumberFormat> formats;
 
@@ -1096,10 +1096,10 @@ Vector<NumberFormat> get_unit_formats(StringView locale, StringView unit, Style 
         }
 
         auto number_formats = s_number_format_lists.at(number_format_list_index);
-        formats.ensure_capacity(number_formats.size());
+        TRY(formats.try_ensure_capacity(number_formats.size()));
 
         for (auto number_format : number_formats)
-            formats.append(s_number_formats[number_format].to_unicode_number_format());
+            formats.unchecked_append(TRY(s_number_formats[number_format].to_unicode_number_format()));
     }
 
     return formats;

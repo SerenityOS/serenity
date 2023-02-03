@@ -1317,7 +1317,7 @@ ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_patte
         //     i. Let unit be "fallback".
         // e. Let patterns be patterns.[[<unit>]].
         // f. Let patterns be patterns.[[<unitDisplay>]].
-        auto formats = ::Locale::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display());
+        auto formats = TRY_OR_THROW_OOM(vm, ::Locale::get_unit_formats(number_format.data_locale(), number_format.unit(), number_format.unit_display()));
         auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, number_format, ::Locale::PluralForm::Cardinal, number.to_value(vm)));
 
         if (auto it = formats.find_if([&](auto& p) { return p.plurality == plurality.plural_category; }); it != formats.end())
