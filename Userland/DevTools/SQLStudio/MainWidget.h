@@ -64,6 +64,7 @@ private:
 
     RefPtr<SQL::SQLClient> m_sql_client;
     Optional<SQL::ConnectionID> m_connection_id;
+    Vector<DeprecatedString> m_result_column_names;
     Vector<Vector<DeprecatedString>> m_results;
 
     void read_next_sql_statement_of_editor();

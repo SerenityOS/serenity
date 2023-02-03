@@ -253,7 +253,8 @@ MainWidget::MainWidget()
     };
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
-    m_sql_client->on_execution_success = [this](auto) {
+    m_sql_client->on_execution_success = [this](auto result) {
+        m_result_column_names = move(result.column_names);
         read_next_sql_statement_of_editor();
     };
     m_sql_client->on_execution_error = [this](auto result) {
@@ -274,9 +275,11 @@ MainWidget::MainWidget()
             return;
         if (m_results[0].size() == 0)
             return;
+
         Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
-        for (size_t i = 0; i < m_results[0].size(); i++)
-            query_result_fields.empend(DeprecatedString::formatted("column_{}", i + 1), DeprecatedString::formatted("Column {}", i + 1), Gfx::TextAlignment::CenterLeft);
+        for (auto& column_name : m_result_column_names)
+            query_result_fields.empend(column_name, column_name, Gfx::TextAlignment::CenterLeft);
+
         auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
         m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));
         for (auto& result_row : m_results) {
