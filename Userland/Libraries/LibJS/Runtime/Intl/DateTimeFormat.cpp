@@ -1079,7 +1079,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 
         // c. Let result be ? FormatDateTimePattern(dateTimeFormat, patternParts, x, undefined).
         auto raw_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), start, nullptr));
-        auto result = PatternPartitionWithSource::create_from_parent_list(move(raw_result));
+        auto result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_result)));
 
         // d. For each Record { [[Type]], [[Value]] } r in result, do
         for (auto& part : result) {
@@ -1136,7 +1136,7 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_date_time_range_
 
         // f. Let partResult be ? FormatDateTimePattern(dateTimeFormat, patternParts, z, rangePattern).
         auto raw_part_result = TRY(format_date_time_pattern(vm, date_time_format, move(pattern_parts), time, &range_pattern.value()));
-        auto part_result = PatternPartitionWithSource::create_from_parent_list(move(raw_part_result));
+        auto part_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_part_result)));
 
         // g. For each Record { [[Type]], [[Value]] } r in partResult, do
         for (auto& part : part_result) {
