@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,6 +64,20 @@ bool is_code_unit_prefix(StringView potential_prefix, StringView input)
         // 6. Set i to i + 1.
         ++i;
     }
+}
+
+// https://infra.spec.whatwg.org/#scalar-value-string
+ErrorOr<String> convert_to_scalar_value_string(StringView string)
+{
+    // To convert a string into a scalar value string, replace any surrogates with U+FFFD.
+    StringBuilder scalar_value_builder;
+    auto utf8_view = Utf8View { string };
+    for (u32 code_point : utf8_view) {
+        if (is_unicode_surrogate(code_point))
+            code_point = 0xFFFD;
+        TRY(scalar_value_builder.try_append(code_point));
+    }
+    return scalar_value_builder.to_string();
 }
 
 }
