@@ -11,9 +11,11 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLocale/Forward.h>
 
@@ -54,16 +56,16 @@ struct PatternPartition {
 };
 
 struct PatternPartitionWithSource : public PatternPartition {
-    static Vector<PatternPartitionWithSource> create_from_parent_list(Vector<PatternPartition> partitions)
+    static ThrowCompletionOr<Vector<PatternPartitionWithSource>> create_from_parent_list(VM& vm, Vector<PatternPartition> partitions)
     {
         Vector<PatternPartitionWithSource> result;
-        result.ensure_capacity(partitions.size());
+        TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(partitions.size()));
 
         for (auto& partition : partitions) {
             PatternPartitionWithSource partition_with_source {};
             partition_with_source.type = partition.type;
             partition_with_source.value = move(partition.value);
-            result.append(move(partition_with_source));
+            result.unchecked_append(move(partition_with_source));
         }
 
         return result;
