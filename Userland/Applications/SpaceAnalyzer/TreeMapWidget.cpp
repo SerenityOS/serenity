@@ -1,17 +1,19 @@
 /*
  * Copyright (c) 2021-2022, the SerenityOS developers.
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "TreeMapWidget.h"
+#include "ProgressWindow.h"
 #include "Tree.h"
 #include <AK/Array.h>
 #include <AK/DeprecatedString.h>
 #include <AK/NumberFormat.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGfx/Font/Font.h>
 #include <WindowServer/WindowManager.h>
 
@@ -373,15 +375,79 @@ void TreeMapWidget::recalculate_path_for_new_tree()
         m_viewpoint = new_path_length - 1;
 }
 
-void TreeMapWidget::set_tree(RefPtr<Tree> tree)
+static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
 {
-    m_tree = tree;
+    // Output info about currently mounted filesystems.
+    auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
+
+    auto content = TRY(file->read_until_eof());
+    auto json = TRY(JsonValue::from_string(content));
+
+    TRY(json.as_array().try_for_each([&output](JsonValue const& value) -> ErrorOr<void> {
+        auto& filesystem_object = value.as_object();
+        MountInfo mount_info;
+        mount_info.mount_point = filesystem_object.get_deprecated_string("mount_point"sv).value_or({});
+        mount_info.source = filesystem_object.get_deprecated_string("source"sv).value_or("none");
+        TRY(output.try_append(mount_info));
+        return {};
+    }));
+
+    return {};
+}
+
+ErrorOr<void> TreeMapWidget::analyze(GUI::Statusbar& statusbar)
+{
+    statusbar.set_text("");
+    auto progress_window = TRY(ProgressWindow::try_create("Space Analyzer"sv));
+    progress_window->show();
+
+    // Build an in-memory tree mirroring the filesystem and for each node
+    // calculate the sum of the file size for all its descendants.
+    auto tree = TRY(Tree::create(""));
+    Vector<MountInfo> mounts;
+    TRY(fill_mounts(mounts));
+    auto errors = tree->root().populate_filesize_tree(mounts, [&](size_t processed_file_count) {
+        progress_window->update_progress_label(processed_file_count);
+    });
+
+    progress_window->close();
+
+    // Display an error summary in the statusbar.
+    if (!errors.is_empty()) {
+        StringBuilder builder;
+        bool first = true;
+        builder.append("Some directories were not analyzed: "sv);
+        for (auto& key : errors.keys()) {
+            if (!first) {
+                builder.append(", "sv);
+            }
+            auto const* error = strerror(key);
+            builder.append({ error, strlen(error) });
+            builder.append(" ("sv);
+            int value = errors.get(key).value();
+            builder.append(DeprecatedString::number(value));
+            if (value == 1) {
+                builder.append(" time"sv);
+            } else {
+                builder.append(" times"sv);
+            }
+            builder.append(')');
+            first = false;
+        }
+        statusbar.set_text(builder.to_deprecated_string());
+    } else {
+        statusbar.set_text("No errors");
+    }
+
+    m_tree = move(tree);
     recalculate_path_for_new_tree();
 
     if (on_path_change) {
         on_path_change();
     }
     update();
+
+    return {};
 }
 
 void TreeMapWidget::set_viewpoint(size_t viewpoint)

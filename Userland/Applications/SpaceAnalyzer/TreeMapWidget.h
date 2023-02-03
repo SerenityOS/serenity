@@ -24,7 +24,7 @@ public:
     TreeNode const* path_node(size_t n) const;
     size_t viewpoint() const;
     void set_viewpoint(size_t);
-    void set_tree(RefPtr<Tree> tree);
+    ErrorOr<void> analyze(GUI::Statusbar&);
 
 private:
     TreeMapWidget() = default;
@@ -53,7 +53,7 @@ private:
     Vector<DeprecatedString> path_to_position(Gfx::IntPoint);
     void recalculate_path_for_new_tree();
 
-    RefPtr<Tree> m_tree;
+    OwnPtr<Tree> m_tree;
     Vector<DeprecatedString> m_path;
     size_t m_viewpoint { 0 };
     void const* m_selected_node_cache;

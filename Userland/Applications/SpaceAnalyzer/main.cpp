@@ -5,20 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ProgressWindow.h"
 #include "Tree.h"
 #include "TreeMapWidget.h"
-#include <AK/Error.h>
 #include <AK/LexicalPath.h>
-#include <AK/Queue.h>
-#include <AK/QuickSort.h>
 #include <AK/String.h>
-#include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/File.h>
-#include <LibCore/IODevice.h>
-#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -26,7 +19,6 @@
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -35,73 +27,6 @@
 #include <LibMain/Main.h>
 
 static constexpr auto APP_NAME = "Space Analyzer"sv;
-
-static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
-{
-    // Output info about currently mounted filesystems.
-    auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
-
-    auto content = TRY(file->read_until_eof());
-    auto json = TRY(JsonValue::from_string(content));
-
-    TRY(json.as_array().try_for_each([&output](JsonValue const& value) -> ErrorOr<void> {
-        auto& filesystem_object = value.as_object();
-        MountInfo mount_info;
-        mount_info.mount_point = filesystem_object.get_deprecated_string("mount_point"sv).value_or({});
-        mount_info.source = filesystem_object.get_deprecated_string("source"sv).value_or("none");
-        TRY(output.try_append(mount_info));
-        return {};
-    }));
-
-    return {};
-}
-
-static ErrorOr<void> analyze(RefPtr<Tree> tree, SpaceAnalyzer::TreeMapWidget& treemapwidget, GUI::Statusbar& statusbar)
-{
-    statusbar.set_text("");
-    auto progress_window = TRY(ProgressWindow::try_create(APP_NAME));
-    progress_window->show();
-
-    // Build an in-memory tree mirroring the filesystem and for each node
-    // calculate the sum of the file size for all its descendants.
-    Vector<MountInfo> mounts;
-    TRY(fill_mounts(mounts));
-    auto errors = tree->root().populate_filesize_tree(mounts, [&](size_t processed_file_count) {
-        progress_window->update_progress_label(processed_file_count);
-    });
-
-    progress_window->close();
-
-    // Display an error summary in the statusbar.
-    if (!errors.is_empty()) {
-        StringBuilder builder;
-        bool first = true;
-        builder.append("Some directories were not analyzed: "sv);
-        for (auto& key : errors.keys()) {
-            if (!first) {
-                builder.append(", "sv);
-            }
-            auto const* error = strerror(key);
-            builder.append({ error, strlen(error) });
-            builder.append(" ("sv);
-            int value = errors.get(key).value();
-            builder.append(DeprecatedString::number(value));
-            if (value == 1) {
-                builder.append(" time"sv);
-            } else {
-                builder.append(" times"sv);
-            }
-            builder.append(')');
-            first = false;
-        }
-        statusbar.set_text(builder.to_deprecated_string());
-    } else {
-        statusbar.set_text("No errors");
-    }
-    treemapwidget.set_tree(tree);
-
-    return {};
-}
 
 static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMapWidget const& treemapwidget, bool include_last_node = true)
 {
@@ -119,8 +44,6 @@ static DeprecatedString get_absolute_path_to_selected_node(SpaceAnalyzer::TreeMa
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     auto app = TRY(GUI::Application::try_create(arguments));
-
-    RefPtr<Tree> tree = adopt_ref(*new Tree(""));
 
     // Configure application window.
     auto app_icon = GUI::Icon::default_icon("app-space-analyzer"sv);
@@ -141,9 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_menu = TRY(window->try_add_menu("&File"));
     TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
-        // FIXME: Dispose of the old tree
-        auto new_tree = adopt_ref(*new Tree(""));
-        if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
+        if (auto result = treemapwidget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     })));
@@ -197,9 +118,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        // FIXME: Dispose of the old tree
-        auto new_tree = adopt_ref(*new Tree(""));
-        if (auto result = analyze(new_tree, treemapwidget, statusbar); result.is_error()) {
+        if (auto result = treemapwidget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
     });
@@ -257,7 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     // At startup automatically do an analysis of root.
-    TRY(analyze(tree, treemapwidget, statusbar));
+    TRY(treemapwidget.analyze(statusbar));
 
     window->show();
     return app->exec();
