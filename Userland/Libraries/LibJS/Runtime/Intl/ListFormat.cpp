@@ -62,7 +62,7 @@ ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM& vm, StringVi
         // b. If part is "literal", then
         if (part == "literal"sv) {
             // i. Append Record { [[Type]]: "literal", [[Value]]: patternPart.[[Value]] } to result.
-            result.append({ part, move(pattern_part.value) });
+            TRY_OR_THROW_OOM(vm, result.try_append({ part, move(pattern_part.value) }));
         }
         // c. Else,
         else {
@@ -71,20 +71,22 @@ ThrowCompletionOr<Vector<PatternPartition>> deconstruct_pattern(VM& vm, StringVi
             auto subst = placeables.get(part);
             VERIFY(subst.has_value());
 
-            subst.release_value().visit(
+            MUST_OR_THROW_OOM(subst.release_value().visit(
                 // iii. If Type(subst) is List, then
-                [&](Vector<PatternPartition>& partition) {
+                [&](Vector<PatternPartition>& partition) -> ThrowCompletionOr<void> {
                     // 1. For each element s of subst, do
                     for (auto& element : partition) {
                         // a. Append s to result.
-                        result.append(move(element));
+                        TRY_OR_THROW_OOM(vm, result.try_append(move(element)));
                     }
+                    return {};
                 },
                 // iv. Else,
-                [&](PatternPartition& partition) {
+                [&](PatternPartition& partition) -> ThrowCompletionOr<void> {
                     // 1. Append subst to result.
-                    result.append(move(partition));
-                });
+                    TRY_OR_THROW_OOM(vm, result.try_append(move(partition)));
+                    return {};
+                }));
         }
     }
 
@@ -274,7 +276,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM& vm, Value iterab
             }
 
             // iii. Append nextValue to the end of the List list.
-            list.append(TRY(next_value.as_string().utf8_string()));
+            TRY_OR_THROW_OOM(vm, list.try_append(TRY(next_value.as_string().utf8_string())));
         }
     } while (next != nullptr);
 
