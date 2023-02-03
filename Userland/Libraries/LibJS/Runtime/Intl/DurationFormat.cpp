@@ -449,7 +449,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 auto number = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, MathematicalValue(value)));
 
                 // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
-                result.append({ unit, move(number) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ unit, move(number) }));
 
                 // 6. If unit is "hours" or "minutes", then
                 if (unit.is_one_of("hours"sv, "minutes"sv)) {
@@ -485,7 +485,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                         auto separator = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator)).value_or(":"sv);
 
                         // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
-                        result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) });
+                        TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) }));
                     }
                 }
             }
@@ -517,7 +517,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 }
 
                 // 8. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
-                result.append({ unit, MUST_OR_THROW_OOM(concat.to_string()) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ unit, MUST_OR_THROW_OOM(concat.to_string()) }));
             }
         }
     }
@@ -561,7 +561,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
             merge = false;
             continue;
         }
-        string_result.append(part.value);
+        TRY_OR_THROW_OOM(vm, string_result.try_append(part.value));
     }
 
     // 10. Set result to ! CreatePartsFromList(lf, result).
