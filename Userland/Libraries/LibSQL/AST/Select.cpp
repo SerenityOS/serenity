@@ -12,9 +12,35 @@
 
 namespace SQL::AST {
 
+static DeprecatedString result_column_name(ResultColumn const& column, size_t column_index)
+{
+    auto fallback_column_name = [column_index]() {
+        return DeprecatedString::formatted("Column{}", column_index);
+    };
+
+    if (auto const& alias = column.column_alias(); !alias.is_empty())
+        return alias;
+
+    if (column.select_from_expression()) {
+        if (is<ColumnNameExpression>(*column.expression())) {
+            auto const& column_name_expression = verify_cast<ColumnNameExpression>(*column.expression());
+            return column_name_expression.column_name();
+        }
+
+        // FIXME: Generate column names from other result column expressions.
+        return fallback_column_name();
+    }
+
+    VERIFY(column.select_from_table());
+
+    // FIXME: Generate column names from select-from-table result columns.
+    return fallback_column_name();
+}
+
 ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
 {
     NonnullRefPtrVector<ResultColumn> columns;
+    Vector<DeprecatedString> column_names;
 
     auto const& result_column_list = this->result_column_list();
     VERIFY(!result_column_list.is_empty());
@@ -26,27 +52,38 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         auto table_def = TRY(context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name()));
 
         if (result_column_list.size() == 1 && result_column_list[0].type() == ResultType::All) {
+            TRY(columns.try_ensure_capacity(columns.size() + table_def->columns().size()));
+            TRY(column_names.try_ensure_capacity(column_names.size() + table_def->columns().size()));
+
             for (auto& col : table_def->columns()) {
-                columns.append(
+                columns.unchecked_append(
                     create_ast_node<ResultColumn>(
                         create_ast_node<ColumnNameExpression>(table_def->parent()->name(), table_def->name(), col.name()),
                         ""));
+
+                column_names.unchecked_append(col.name());
             }
         }
     }
 
     if (result_column_list.size() != 1 || result_column_list[0].type() != ResultType::All) {
-        for (auto& col : result_column_list) {
+        TRY(columns.try_ensure_capacity(result_column_list.size()));
+        TRY(column_names.try_ensure_capacity(result_column_list.size()));
+
+        for (size_t i = 0; i < result_column_list.size(); ++i) {
+            auto const& col = result_column_list[i];
+
             if (col.type() == ResultType::All) {
                 // FIXME can have '*' for example in conjunction with computed columns
                 return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "*"sv };
             }
 
-            columns.append(col);
+            columns.unchecked_append(col);
+            column_names.unchecked_append(result_column_name(col, i));
         }
     }
 
-    ResultSet result { SQLCommand::Select };
+    ResultSet result { SQLCommand::Select, move(column_names) };
 
     auto descriptor = adopt_ref(*new TupleDescriptor);
     Tuple tuple(descriptor);
