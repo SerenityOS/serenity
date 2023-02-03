@@ -480,6 +480,7 @@ class WebGLRenderingContextBase;
 }
 
 namespace Web::XHR {
+class FormData;
 class ProgressEvent;
 class XMLHttpRequest;
 class XMLHttpRequestEventTarget;

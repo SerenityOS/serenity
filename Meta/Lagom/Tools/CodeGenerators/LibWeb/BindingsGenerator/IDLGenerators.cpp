@@ -34,6 +34,7 @@ static bool is_platform_object(Type const& type)
         "DocumentType"sv,
         "EventTarget"sv,
         "FileList"sv,
+        "FormData"sv,
         "ImageData"sv,
         "MutationRecord"sv,
         "NamedNodeMap"sv,
@@ -132,6 +133,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 
     if (type.name() == "BufferSource")
         return { .name = "JS::Handle<JS::Object>", .sequence_storage_type = SequenceStorageType::MarkedVector };
+
+    if (type.name() == "File")
+        return { .name = "JS::NonnullGCPtr<FileAPI::File>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.name() == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);

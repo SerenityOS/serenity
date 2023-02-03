@@ -185,6 +185,7 @@ set(SOURCES
     HTML/EventNames.cpp
     HTML/Focus.cpp
     HTML/FormAssociatedElement.cpp
+    HTML/FormControlInfrastructure.cpp
     HTML/GlobalEventHandlers.cpp
     HTML/History.cpp
     HTML/HTMLAnchorElement.cpp
@@ -466,6 +467,7 @@ set(SOURCES
     WebIDL/Promise.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
+    XHR/FormData.cpp
     XHR/ProgressEvent.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp
