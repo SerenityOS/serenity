@@ -246,6 +246,7 @@ struct EnvironmentSettingsObject;
 class ErrorEvent;
 class EventHandler;
 class EventLoop;
+class FormDataEvent;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;

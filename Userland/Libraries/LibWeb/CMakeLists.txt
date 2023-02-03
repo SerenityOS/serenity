@@ -186,6 +186,7 @@ set(SOURCES
     HTML/Focus.cpp
     HTML/FormAssociatedElement.cpp
     HTML/FormControlInfrastructure.cpp
+    HTML/FormDataEvent.cpp
     HTML/GlobalEventHandlers.cpp
     HTML/History.cpp
     HTML/HTMLAnchorElement.cpp
