@@ -197,19 +197,20 @@ void Painter::fill_rect_with_checkerboard(IntRect const& a_rect, IntSize cell_si
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
-    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    auto translated_rect = a_rect.translated(translation());
+    auto rect = translated_rect.intersected(clip_rect());
     if (rect.is_empty())
         return;
 
     ARGB32* dst = m_target->scanline(rect.top()) + rect.left();
     size_t const dst_skip = m_target->pitch() / sizeof(ARGB32);
 
-    int first_cell_column = rect.x() / cell_size.width();
-    int prologue_length = min(rect.width(), cell_size.width() - (rect.x() % cell_size.width()));
+    int first_cell_column = (rect.x() - translated_rect.x()) / cell_size.width();
+    int prologue_length = min(rect.width(), cell_size.width() - ((rect.x() - translated_rect.x()) % cell_size.width()));
     int number_of_aligned_strips = (rect.width() - prologue_length) / cell_size.width();
 
     for (int i = 0; i < rect.height(); ++i) {
-        int y = rect.y() + i;
+        int y = rect.y() - translated_rect.y() + i;
         int cell_row = y / cell_size.height();
         bool odd_row = cell_row & 1;
 
