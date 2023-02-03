@@ -9,7 +9,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 
 struct MountInfo {
@@ -44,16 +43,21 @@ private:
     OwnPtr<Vector<TreeNode>> m_children;
 };
 
-class Tree : public RefCounted<Tree> {
+class Tree {
 public:
-    Tree(DeprecatedString root_name)
-        : m_root(move(root_name)) {};
+    static ErrorOr<NonnullOwnPtr<Tree>> create(DeprecatedString root_name)
+    {
+        return adopt_nonnull_own_or_enomem(new (nothrow) Tree(move(root_name)));
+    }
     ~Tree() {};
+
     TreeNode& root()
     {
         return m_root;
     };
 
 private:
+    Tree(DeprecatedString root_name)
+        : m_root(move(root_name)) {};
     TreeNode m_root;
 };
