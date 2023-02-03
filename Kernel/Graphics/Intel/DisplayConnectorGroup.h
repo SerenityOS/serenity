@@ -75,8 +75,6 @@ private:
     void disable_dac_output();
     void enable_dac_output();
 
-    Optional<IntelGraphics::PLLSettings> create_pll_settings(u64 target_frequency, u64 reference_clock, IntelGraphics::PLLMaxSettings const&);
-
     Spinlock<LockRank::None> m_control_lock;
     Spinlock<LockRank::None> m_modeset_lock;
     mutable Spinlock<LockRank::None> m_registers_lock;
