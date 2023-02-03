@@ -253,23 +253,23 @@ MainWidget::MainWidget()
     };
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
-    m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto, auto) {
+    m_sql_client->on_execution_success = [this](auto) {
         read_next_sql_statement_of_editor();
     };
-    m_sql_client->on_execution_error = [this](auto, auto, auto, auto message) {
+    m_sql_client->on_execution_error = [this](auto result) {
         auto* editor = active_editor();
         VERIFY(editor);
 
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Error executing {}\n{}", editor->path(), message));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Error executing {}\n{}", editor->path(), result.error_message));
     };
-    m_sql_client->on_next_result = [this](auto, auto, auto row) {
+    m_sql_client->on_next_result = [this](auto result) {
         m_results.append({});
-        m_results.last().ensure_capacity(row.size());
+        m_results.last().ensure_capacity(result.values.size());
 
-        for (auto const& value : row)
+        for (auto const& value : result.values)
             m_results.last().unchecked_append(value.to_deprecated_string());
     };
-    m_sql_client->on_results_exhausted = [this](auto, auto, auto) {
+    m_sql_client->on_results_exhausted = [this](auto) {
         if (m_results.size() == 0)
             return;
         if (m_results[0].size() == 0)
