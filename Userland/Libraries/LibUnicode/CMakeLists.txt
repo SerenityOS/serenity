@@ -13,4 +13,11 @@ set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
 
 serenity_lib(LibUnicode unicode)
 target_link_libraries(LibUnicode PRIVATE LibCore)
+
+if (NOT BUILD_LAGOM AND NOT BUILD_LAGOM_TOOLS)
+    serenity_lib_static(LibUnicodeStatic unicode)
+    target_link_libraries(LibUnicodeStatic PRIVATE LibCoreStatic)
+    target_compile_definitions(LibUnicodeStatic PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
+endif()
+
 target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)

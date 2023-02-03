@@ -6,7 +6,7 @@ serenity_component(
 
 function (buggiebox_utility src)
     get_filename_component(utility ${src} NAME_WE)
-    target_sources(BuggieBox PRIVATE ${src})
+    target_sources(LibBuggieBox PRIVATE ${src})
     set_source_files_properties(${src} PROPERTIES COMPILE_DEFINITIONS "serenity_main=${utility}_main")
 endfunction()
 
@@ -39,13 +39,16 @@ set(utility_srcs
     ../Utilities/uniq.cpp
 )
 
+serenity_lib(LibBuggieBox buggiebox)
+target_compile_definitions(LibBuggieBox PRIVATE -DEXCLUDE_SERENITY_MAIN)
+target_link_libraries(LibBuggieBox PRIVATE LibShellStatic LibGfxStatic LibCoreStatic LibIPCStatic LibRegexStatic LibCompressStatic LibCryptoStatic LibLineStatic)
+target_sources(LibBuggieBox PRIVATE ../Shell/main.cpp)
+set_source_files_properties( ../Shell/main.cpp PROPERTIES COMPILE_DEFINITIONS "serenity_main=sh_main")
+
 serenity_bin(BuggieBox)
 target_sources(BuggieBox PRIVATE main.cpp)
-target_link_libraries(BuggieBox PRIVATE LibMain LibShell LibCompress LibCore LibCrypto LibGfx LibLine LibRegex)
-
+target_link_libraries(BuggieBox PRIVATE LibC LibMain LibBuggieBox)
 foreach(file IN LISTS utility_srcs)
    buggiebox_utility(${file})
 endforeach()
 
-target_sources(BuggieBox PRIVATE ../Shell/main.cpp)
-set_source_files_properties( ../Shell/main.cpp PROPERTIES COMPILE_DEFINITIONS "serenity_main=sh_main")

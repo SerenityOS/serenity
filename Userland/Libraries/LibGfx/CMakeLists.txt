@@ -59,3 +59,8 @@ set(SOURCES
 
 serenity_lib(LibGfx gfx)
 target_link_libraries(LibGfx PRIVATE LibCompress LibCore LibCrypto LibTextCodec LibIPC)
+
+if (NOT BUILD_LAGOM AND NOT BUILD_LAGOM_TOOLS)
+    serenity_lib_static(LibGfxStatic gfx)
+    target_link_libraries(LibGfxStatic PRIVATE LibCompressStatic LibCoreStatic LibCryptoStatic LibTextCodecStatic LibIPCStatic)
+endif()

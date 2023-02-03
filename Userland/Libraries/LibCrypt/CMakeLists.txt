@@ -12,3 +12,8 @@ set(SOURCES
 
 serenity_lib(LibCrypt crypt)
 target_link_libraries(LibCrypt PRIVATE LibCryptSHA2)
+
+if (NOT BUILD_LAGOM AND NOT BUILD_LAGOM_TOOLS)
+    serenity_lib_static(LibCryptStatic crypt)
+    target_link_libraries(LibCryptStatic PRIVATE LibCryptSHA2)
+endif()

@@ -34,3 +34,8 @@ set(SOURCES
 
 serenity_lib(LibCrypto crypto)
 target_link_libraries(LibCrypto PRIVATE LibCore)
+
+if (NOT BUILD_LAGOM AND NOT BUILD_LAGOM_TOOLS)
+    serenity_lib_static(LibCryptoStatic crypto)
+    target_link_libraries(LibCryptoStatic PRIVATE LibCoreStatic)
+endif()

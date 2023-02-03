@@ -57,6 +57,11 @@ endif()
 serenity_lib(LibCore core)
 target_link_libraries(LibCore PRIVATE LibCrypt LibSystem)
 
+if (NOT BUILD_LAGOM AND NOT BUILD_LAGOM_TOOLS)
+    serenity_lib_static(LibCoreStatic core)
+    target_link_libraries(LibCoreStatic PRIVATE LibCryptStatic LibSystemStatic)
+endif()
+
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
     target_link_libraries(LibCore PUBLIC "-framework CoreServices")
