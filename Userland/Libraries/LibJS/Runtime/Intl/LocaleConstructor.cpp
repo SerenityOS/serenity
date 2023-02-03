@@ -188,7 +188,7 @@ static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, S
             // iv. Else,
             else {
                 // 1. Append the Record { [[Key]]: key, [[Value]]: value } to keywords.
-                keywords.append({ TRY_OR_THROW_OOM(vm, String::from_utf8(key)), *value });
+                TRY_OR_THROW_OOM(vm, keywords.try_append({ TRY_OR_THROW_OOM(vm, String::from_utf8(key)), *value }));
             }
         }
 
