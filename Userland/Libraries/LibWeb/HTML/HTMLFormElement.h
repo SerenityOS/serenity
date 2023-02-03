@@ -34,6 +34,8 @@ public:
     void add_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
     void remove_associated_element(Badge<FormAssociatedElement>, HTMLElement&);
 
+    ErrorOr<Vector<JS::NonnullGCPtr<DOM::Element>>> get_submittable_elements();
+
     JS::NonnullGCPtr<DOM::HTMLCollection> elements() const;
     unsigned length() const;
 
@@ -45,6 +47,8 @@ private:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+
+    ErrorOr<void> populate_vector_with_submittable_elements_in_tree_order(JS::NonnullGCPtr<DOM::Element> element, Vector<JS::NonnullGCPtr<DOM::Element>>& elements);
 
     bool m_firing_submission_events { false };
 
