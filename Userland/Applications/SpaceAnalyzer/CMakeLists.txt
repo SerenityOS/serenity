@@ -6,8 +6,9 @@ serenity_component(
 compile_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.h space_analyzer_gml)
 
 set(SOURCES
-    TreeMapWidget.cpp
+    ProgressWindow.cpp
     Tree.cpp
+    TreeMapWidget.cpp
     main.cpp
 )
 
