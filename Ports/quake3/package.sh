@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=quake3
-description='QuakeIII'
+description='ioquake3'
 version=1.34
 website='https://github.com/ioquake/ioq3'
 commit_hash=6d74896557d8c193a9f19bc6845a47e9d0f77db2

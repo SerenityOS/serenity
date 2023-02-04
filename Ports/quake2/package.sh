@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='quake2'
-description='QuakeII'
+description='Quake2 SDL'
 version='0.1'
 website='https://github.com/shamazmazum/quake2sdl'
 useconfigure='true'
