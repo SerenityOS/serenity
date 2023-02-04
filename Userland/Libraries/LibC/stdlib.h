@@ -32,7 +32,6 @@ int serenity_putenv(char const* new_var, size_t length);
 int unsetenv(char const*);
 int clearenv(void);
 int setenv(char const* name, char const* value, int overwrite);
-int serenity_setenv(char const* name, ssize_t name_length, char const* value, ssize_t value_length, int overwrite);
 char const* getprogname(void);
 void setprogname(char const*);
 int atoi(char const*);
