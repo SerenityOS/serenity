@@ -117,7 +117,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> NetworkingManagement
             return adapter;
         }
     }
-    return Error::from_string_literal("Unsupported network adapter");
+    dmesgln("Networking: Failed to initialize device {}, unsupported network adapter", device_identifier.address());
+    return Error::from_errno(ENODEV);
 }
 
 bool NetworkingManagement::initialize()
