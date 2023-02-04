@@ -49,7 +49,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::initialize_adapter()
     for (size_t index = 0; index < m_num_scanouts; index++) {
         auto display_connector = VirtIODisplayConnector::must_create(*this, index);
         m_scanouts[index].display_connector = display_connector;
-        MUST(query_and_set_edid(index, *display_connector));
+        TRY(query_and_set_edid(index, *display_connector));
         display_connector->set_safe_mode_setting_after_initialization({});
         display_connector->initialize_console({});
     }
@@ -234,11 +234,15 @@ ErrorOr<void> VirtIOGraphicsAdapter::query_and_set_edid(u32 scanout_id, VirtIODi
 
     TRY(synchronous_virtio_gpu_command(100, start_of_scratch_space(), sizeof(request), sizeof(response)));
 
-    if (response.header.type != to_underlying(Graphics::VirtIOGPU::Protocol::CommandType::VIRTIO_GPU_RESP_OK_EDID))
-        return Error::from_string_literal("VirtIO::GraphicsAdapter: Failed to get EDID");
+    if (response.header.type != to_underlying(Graphics::VirtIOGPU::Protocol::CommandType::VIRTIO_GPU_RESP_OK_EDID)) {
+        dmesgln("VirtIO::GraphicsAdapter: Failed to get EDID");
+        return Error::from_errno(ENOTSUP);
+    }
 
-    if (response.size == 0)
-        return Error::from_string_literal("VirtIO::GraphicsAdapter: Failed to get EDID, empty buffer");
+    if (response.size == 0) {
+        dmesgln("VirtIO::GraphicsAdapter: Failed to get EDID, empty buffer");
+        return Error::from_errno(EIO);
+    }
 
     Array<u8, 128> raw_edid;
     memcpy(raw_edid.data(), response.edid, min(sizeof(raw_edid), response.size));
