@@ -85,7 +85,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
                 "--pid-file"sv,
                 pid_path,
             };
-            auto result = Core::System::exec(arguments[0], arguments, Core::System::SearchInPath::Yes);
+            result = Core::System::exec(arguments[0], arguments, Core::System::SearchInPath::Yes);
             if (!result.is_error())
                 break;
         }
