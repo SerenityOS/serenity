@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
+ * Copyright (c) 2023, Dan Klishch <danilklishch@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/BigIntBase.h>
 #include <AK/BuiltinWrappers.h>
 #include <AK/Checked.h>
 #include <AK/Concepts.h>
@@ -17,480 +19,394 @@
 
 namespace AK {
 
-template<typename T>
-requires(sizeof(T) >= sizeof(u64) && IsUnsigned<T>) class UFixedBigInt;
+namespace Detail {
+// As noted near the declaration of StaticStorage, bit_size is more like a hint for a storage size.
+// The effective bit size is `sizeof(StaticStorage<...>) * 8`. It is a programmer's responsibility
+// to ensure that the hinted bit_size is always greater than the actual integer size.
+// That said, do not use unaligned (bit_size % 64 != 0) `UFixedBigInt`s if you do not know what you
+// are doing.
+template<size_t bit_size, typename Storage = StaticStorage<false, bit_size>>
+class UFixedBigInt;
 
-// FIXME: This breaks formatting
-// template<typename T>
-// constexpr inline bool Detail::IsIntegral<UFixedBigInt<T>> = true;
-
+// ===== Concepts =====
 template<typename T>
-constexpr inline bool IsUnsigned<UFixedBigInt<T>> = true;
-template<typename T>
-constexpr inline bool IsSigned<UFixedBigInt<T>> = false;
-
-template<typename T>
-struct NumericLimits<UFixedBigInt<T>> {
-    static constexpr UFixedBigInt<T> min() { return 0; }
-    static constexpr UFixedBigInt<T> max() { return { NumericLimits<T>::max(), NumericLimits<T>::max() }; }
-    static constexpr bool is_signed() { return false; }
-};
-
-template<Unsigned T>
-struct UFixedBigIntMultiplicationResult {
-    T low;
-    T high;
-};
+constexpr inline size_t assumed_bit_size = 0;
+template<>
+constexpr inline size_t assumed_bit_size<IntegerWrapper> = bit_width<int>;
+template<size_t bit_size>
+constexpr inline size_t assumed_bit_size<UFixedBigInt<bit_size>> = bit_size;
+template<BuiltInUFixedInt T>
+constexpr inline size_t assumed_bit_size<T> = bit_width<T>;
 
 template<typename T>
-requires(sizeof(T) >= sizeof(u64) && IsUnsigned<T>) class UFixedBigInt {
+concept ConvertibleToUFixedInt = (assumed_bit_size<T> != 0);
+
+template<typename T>
+concept UFixedInt = (ConvertibleToUFixedInt<T> && !IsSame<T, IntegerWrapper>);
+
+template<typename T>
+concept NotBuiltInUFixedInt = (UFixedInt<T> && !BuiltInUFixedInt<T>);
+
+// ===== UFixedBigInt itself =====
+template<size_t bit_size>
+constexpr auto& get_storage_of(UFixedBigInt<bit_size>& value) { return value.m_data; }
+
+template<size_t bit_size>
+constexpr auto& get_storage_of(UFixedBigInt<bit_size> const& value) { return value.m_data; }
+
+template<typename Operand1, typename Operand2, typename Result>
+constexpr void mul_internal(Operand1 const& operand1, Operand2 const& operand2, Result& result)
+{
+    StorageOperations::baseline_mul(operand1, operand2, result, g_null_allocator);
+}
+
+template<size_t bit_size, typename Storage>
+class UFixedBigInt {
+    constexpr static size_t static_size = Storage::static_size;
+    constexpr static size_t part_size = static_size / 2;
+    using UFixedBigIntPart = Conditional<part_size * word_size <= 64, u64, UFixedBigInt<part_size * word_size>>;
+
 public:
-    using R = UFixedBigInt<T>;
-
     constexpr UFixedBigInt() = default;
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr UFixedBigInt(U low)
-        : m_low(low)
-        , m_high(0u)
+
+    explicit constexpr UFixedBigInt(IntegerWrapper value) { StorageOperations::copy(value.m_data, m_data); }
+    consteval UFixedBigInt(int value)
     {
+        StorageOperations::copy(IntegerWrapper(value).m_data, m_data);
     }
-    template<Unsigned U, Unsigned U2>
-    requires(sizeof(T) >= sizeof(U) && sizeof(T) >= sizeof(U2)) constexpr UFixedBigInt(U low, U2 high)
-        : m_low(low)
-        , m_high(high)
+
+    template<UFixedInt T>
+    requires(sizeof(T) > sizeof(Storage)) explicit constexpr UFixedBigInt(T const& value)
     {
+        StorageOperations::copy(get_storage_of(value), m_data);
     }
-    constexpr T& low()
+
+    template<UFixedInt T>
+    requires(sizeof(T) <= sizeof(Storage)) constexpr UFixedBigInt(T const& value)
     {
-        return m_low;
+        StorageOperations::copy(get_storage_of(value), m_data);
     }
-    constexpr T const& low() const
+
+    constexpr UFixedBigInt(UFixedBigIntPart const& low, UFixedBigIntPart const& high)
+    requires(static_size % 2 == 0)
     {
-        return m_low;
+        decltype(auto) low_storage = get_storage_of(low);
+        decltype(auto) high_storage = get_storage_of(high);
+        for (size_t i = 0; i < part_size; ++i)
+            m_data[i] = low_storage[i];
+        for (size_t i = 0; i < part_size; ++i)
+            m_data[i + part_size] = high_storage[i];
     }
-    constexpr T& high()
+
+    template<UFixedInt T, size_t n>
+    requires((assumed_bit_size<T> * n) <= bit_size) constexpr UFixedBigInt(const T (&value)[n])
     {
-        return m_high;
+        size_t offset = 0;
+
+        for (size_t i = 0; i < n; ++i) {
+            if (offset % word_size == 0) {
+                // Aligned initialization (i. e. u256 from two u128)
+                decltype(auto) storage = get_storage_of(value[i]);
+                for (size_t i = 0; i < storage.size(); ++i)
+                    m_data[i + offset / word_size] = storage[i];
+            } else if (offset % word_size == 32 && IsSame<T, u32>) {
+                // u32 vector initialization on 64-bit platforms
+                m_data[offset / word_size] |= static_cast<DoubleWord>(value[i]) << 32;
+            } else {
+                VERIFY_NOT_REACHED();
+            }
+            offset += assumed_bit_size<T>;
+        }
+
+        for (size_t i = (offset + word_size - 1) / word_size; i < m_data.size(); ++i)
+            m_data[i] = 0;
     }
-    constexpr T const& high() const
+
+    // Casts & parts extraction
+    template<NotBuiltInUFixedInt T>
+    constexpr explicit operator T() const
     {
-        return m_high;
+        T result;
+        StorageOperations::copy(m_data, result.m_data);
+        return result;
+    }
+
+    template<BuiltInUFixedInt T>
+    requires(sizeof(T) <= sizeof(NativeWord)) constexpr explicit operator T() const
+    {
+        return m_data[0];
+    }
+
+    template<BuiltInUFixedInt T>
+    requires(sizeof(T) == sizeof(DoubleWord)) constexpr explicit operator T() const
+    {
+        return (static_cast<DoubleWord>(m_data[1]) << word_size) + m_data[0];
+    }
+
+    constexpr UFixedBigIntPart low() const
+    requires(static_size % 2 == 0)
+    {
+        if constexpr (part_size == 1) {
+            return m_data[0];
+        } else if constexpr (IsSame<UFixedBigIntPart, DoubleWord>) {
+            return m_data[0] + (static_cast<DoubleWord>(m_data[1]) << word_size);
+        } else {
+            UFixedBigInt<part_size * word_size> result;
+            StorageOperations::copy(m_data, result.m_data);
+            return result;
+        }
+    }
+
+    constexpr UFixedBigIntPart high() const
+    requires(static_size % 2 == 0)
+    {
+        if constexpr (part_size == 1) {
+            return m_data[part_size];
+        } else if constexpr (IsSame<UFixedBigIntPart, DoubleWord>) {
+            return m_data[part_size] + (static_cast<DoubleWord>(m_data[part_size + 1]) << word_size);
+        } else {
+            UFixedBigInt<part_size * word_size> result;
+            StorageOperations::copy(m_data, result.m_data, part_size);
+            return result;
+        }
     }
 
     Bytes bytes()
     {
-        return Bytes { reinterpret_cast<u8*>(this), sizeof(R) };
+        return Bytes(reinterpret_cast<u8*>(this), sizeof(Storage));
     }
+
     ReadonlyBytes bytes() const
     {
-        return ReadonlyBytes { reinterpret_cast<u8 const*>(this), sizeof(R) };
+        return ReadonlyBytes(reinterpret_cast<u8 const*>(this), sizeof(Storage));
     }
 
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr explicit operator U() const
+    constexpr UnsignedStorageSpan span()
     {
-        return static_cast<U>(m_low);
+        return { m_data.data(), static_size };
     }
 
-    // Utils
-    constexpr size_t clz() const
-    requires(IsSame<T, u64>)
+    constexpr UnsignedStorageReadonlySpan span() const
     {
-        if (m_high)
-            return count_leading_zeroes(m_high);
-        else
-            return sizeof(T) * 8 + count_leading_zeroes(m_low);
+        return { m_data.data(), static_size };
     }
-    constexpr size_t clz() const
-    requires(!IsSame<T, u64>)
-    {
-        if (m_high)
-            return m_high.clz();
-        else
-            return sizeof(T) * 8 + m_low.clz();
-    }
-    constexpr size_t ctz() const
-    requires(IsSame<T, u64>)
-    {
-        if (m_low)
-            return count_trailing_zeroes(m_low);
-        else
-            return sizeof(T) * 8 + count_trailing_zeroes(m_high);
-    }
-    constexpr size_t ctz() const
-    requires(!IsSame<T, u64>)
-    {
-        if (m_low)
-            return m_low.ctz();
-        else
-            return sizeof(T) * 8 + m_high.ctz();
-    }
+
+    // Binary utils
     constexpr size_t popcnt() const
-    requires(IsSame<T, u64>)
     {
-        return __builtin_popcntll(m_low) + __builtin_popcntll(m_high);
-    }
-    constexpr size_t popcnt() const
-    requires(!IsSame<T, u64>)
-    {
-        return m_low.popcnt() + m_high.popcnt();
+        size_t result = 0;
+        for (size_t i = 0; i < m_data.size(); ++i)
+            result += popcount(m_data[i]);
+        return result;
     }
 
-    // Comparison Operations
+    constexpr size_t ctz() const
+    {
+        size_t result = 0;
+        for (size_t i = 0; i < m_data.size(); ++i) {
+            if (m_data[i]) {
+                result += count_trailing_zeroes(m_data[i]);
+                break;
+            } else {
+                result += word_size;
+            }
+        }
+        return result;
+    }
+
+    constexpr size_t clz() const
+    {
+        size_t result = 0;
+        for (size_t i = m_data.size(); i--;) {
+            if (m_data[i]) {
+                result += count_leading_zeroes(m_data[i]);
+                break;
+            } else {
+                result += word_size;
+            }
+        }
+        return result + bit_size - word_size * static_size;
+    }
+
+    // Comparisons
     constexpr bool operator!() const
     {
-        return !m_low && !m_high;
+        bool result = true;
+        for (size_t i = 0; i < m_data.size(); ++i)
+            result &= !m_data[i];
+        return result;
     }
+
     constexpr explicit operator bool() const
     {
-        return m_low || m_high;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator==(U const& other) const
-    {
-        return !m_high && m_low == other;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator!=(U const& other) const
-    {
-        return m_high || m_low != other;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>(U const& other) const
-    {
-        return m_high || m_low > other;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<(U const& other) const
-    {
-        return !m_high && m_low < other;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator>=(U const& other) const
-    {
-        return *this == other || *this > other;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr bool operator<=(U const& other) const
-    {
-        return *this == other || *this < other;
+        bool result = false;
+        for (size_t i = 0; i < m_data.size(); ++i)
+            result |= m_data[i];
+        return result;
     }
 
-    constexpr bool operator==(R const& other) const
+    constexpr bool operator==(UFixedInt auto const& other) const
     {
-        return m_low == other.low() && m_high == other.high();
-    }
-    constexpr bool operator!=(R const& other) const
-    {
-        return m_low != other.low() || m_high != other.high();
-    }
-    constexpr bool operator>(R const& other) const
-    {
-        return m_high > other.high()
-            || (m_high == other.high() && m_low > other.low());
-    }
-    constexpr bool operator<(R const& other) const
-    {
-        return m_high < other.high()
-            || (m_high == other.high() && m_low < other.low());
-    }
-    constexpr bool operator>=(R const& other) const
-    {
-        return *this == other || *this > other;
-    }
-    constexpr bool operator<=(R const& other) const
-    {
-        return *this == other || *this < other;
+        return StorageOperations::compare(m_data, get_storage_of(other), true) == 0;
     }
 
-    // Bitwise operations
-    constexpr R operator~() const
+    constexpr bool operator==(IntegerWrapper other) const
     {
-        return { ~m_low, ~m_high };
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr U operator&(U const& other) const
-    {
-        return static_cast<U const>(m_low) & other;
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R operator|(U const& other) const
-    {
-        return { m_low | other, m_high };
-    }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R operator^(U const& other) const
-    {
-        return { m_low ^ other, m_high };
-    }
-    template<Unsigned U>
-    constexpr R operator<<(U const& shift) const
-    {
-        if (shift >= sizeof(R) * 8u)
-            return 0u;
-        if (shift >= sizeof(T) * 8u)
-            return R { 0u, m_low << (shift - sizeof(T) * 8u) };
-        if (!shift)
-            return *this;
-
-        T overflow = m_low >> (sizeof(T) * 8u - shift);
-        return R { m_low << shift, (m_high << shift) | overflow };
-    }
-    template<Unsigned U>
-    constexpr R operator>>(U const& shift) const
-    {
-        if (shift >= sizeof(R) * 8u)
-            return 0u;
-        if (shift >= sizeof(T) * 8u)
-            return m_high >> (shift - sizeof(T) * 8u);
-        if (!shift)
-            return *this;
-
-        T underflow = m_high << (sizeof(T) * 8u - shift);
-        return R { (m_low >> shift) | underflow, m_high >> shift };
-    }
-    template<Unsigned U>
-    constexpr R rol(U const& shift) const
-    {
-        return (*this >> sizeof(T) * 8u - shift) | (*this << shift);
-    }
-    template<Unsigned U>
-    constexpr R ror(U const& shift) const
-    {
-        return (*this << sizeof(T) * 8u - shift) | (*this >> shift);
+        return StorageOperations::compare(m_data, get_storage_of(other), true) == 0;
     }
 
-    constexpr R operator&(R const& other) const
+    constexpr int operator<=>(UFixedInt auto const& other) const
     {
-        return { m_low & other.low(), m_high & other.high() };
-    }
-    constexpr R operator|(R const& other) const
-    {
-        return { m_low | other.low(), m_high | other.high() };
-    }
-    constexpr R operator^(R const& other) const
-    {
-        return { m_low ^ other.low(), m_high ^ other.high() };
+        return StorageOperations::compare(m_data, get_storage_of(other), false);
     }
 
-    // Bitwise assignment
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R& operator&=(U const& other)
+    constexpr int operator<=>(IntegerWrapper other) const
     {
-        m_high = 0u;
-        m_low &= other;
-        return *this;
+        return StorageOperations::compare(m_data, get_storage_of(other), false);
     }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R& operator|=(U const& other)
-    {
-        m_low |= other;
-        return *this;
+
+#define DEFINE_STANDARD_BINARY_OPERATOR(op, function)                        \
+    constexpr auto operator op(UFixedInt auto const& other) const            \
+    {                                                                        \
+        auto func = [](auto&& a, auto&& b, auto&& c) { function(a, b, c); }; \
+        return do_standard_binary_operation(other, func);                    \
+    }                                                                        \
+                                                                             \
+    constexpr auto operator op(IntegerWrapper other) const                   \
+    {                                                                        \
+        auto func = [](auto&& a, auto&& b, auto&& c) { function(a, b, c); }; \
+        return do_standard_binary_operation(other, func);                    \
     }
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R& operator^=(U const& other)
-    {
-        m_low ^= other;
-        return *this;
+
+#define DEFINE_STANDARD_COMPOUND_ASSIGNMENT(op, function)                    \
+    constexpr auto& operator op(UFixedInt auto const& other)                 \
+    {                                                                        \
+        auto func = [](auto&& a, auto&& b, auto&& c) { function(a, b, c); }; \
+        do_standard_compound_assignment(other, func);                        \
+        return *this;                                                        \
+    }                                                                        \
+                                                                             \
+    constexpr auto& operator op(IntegerWrapper other)                        \
+    {                                                                        \
+        auto func = [](auto&& a, auto&& b, auto&& c) { function(a, b, c); }; \
+        do_standard_compound_assignment(other, func);                        \
+        return *this;                                                        \
     }
-    template<Unsigned U>
-    constexpr R& operator>>=(U const& other)
+
+    // Binary operators
+    DEFINE_STANDARD_BINARY_OPERATOR(^, StorageOperations::compute_bitwise<StorageOperations::Bitwise::XOR>)
+    DEFINE_STANDARD_BINARY_OPERATOR(&, StorageOperations::compute_bitwise<StorageOperations::Bitwise::AND>)
+    DEFINE_STANDARD_BINARY_OPERATOR(|, StorageOperations::compute_bitwise<StorageOperations::Bitwise::OR>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(^=, StorageOperations::compute_inplace_bitwise<StorageOperations::Bitwise::XOR>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(&=, StorageOperations::compute_inplace_bitwise<StorageOperations::Bitwise::AND>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(|=, StorageOperations::compute_inplace_bitwise<StorageOperations::Bitwise::OR>)
+
+    constexpr auto operator~() const
     {
-        *this = *this >> other;
-        return *this;
+        UFixedBigInt<bit_size> result;
+        StorageOperations::compute_bitwise<StorageOperations::Bitwise::INVERT>(m_data, m_data, result.m_data);
+        return result;
     }
-    template<Unsigned U>
-    constexpr R& operator<<=(U const& other)
+
+    constexpr auto operator<<(size_t shift) const
     {
-        *this = *this << other;
+        UFixedBigInt<bit_size> result;
+        StorageOperations::shift_left(m_data, shift, result.m_data);
+        return result;
+    }
+
+    constexpr auto& operator<<=(size_t shift)
+    {
+        StorageOperations::shift_left(m_data, shift, m_data);
         return *this;
     }
 
-    constexpr R& operator&=(R const& other)
+    constexpr auto operator>>(size_t shift) const
     {
-        m_high &= other.high();
-        m_low &= other.low();
-        return *this;
-    }
-    constexpr R& operator|=(R const& other)
-    {
-        m_high |= other.high();
-        m_low |= other.low();
-        return *this;
-    }
-    constexpr R& operator^=(R const& other)
-    {
-        m_high ^= other.high();
-        m_low ^= other.low();
-        return *this;
+        UFixedBigInt<bit_size> result;
+        StorageOperations::shift_right(m_data, shift, result.m_data);
+        return result;
     }
 
-    static constexpr size_t my_size()
+    constexpr auto& operator>>=(size_t shift)
     {
-        return sizeof(R);
+        StorageOperations::shift_right(m_data, shift, m_data);
+        return *this;
     }
 
     // Arithmetic
-
-    // implies size of less than u64, so passing references isn't useful
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U) && IsSame<T, u64>) constexpr R addc(const U other, bool& carry) const
+    template<UFixedInt T>
+    constexpr auto addc(T const& other, bool& carry) const
     {
-        bool low_carry = Checked<T>::addition_would_overflow(m_low, other);
-        low_carry |= Checked<T>::addition_would_overflow(m_low, carry);
-        bool high_carry = Checked<T>::addition_would_overflow(m_high, low_carry);
-
-        T lower = m_low + other + carry;
-        T higher = m_high + low_carry;
-
-        carry = high_carry;
-
-        return {
-            lower,
-            higher
-        };
-    }
-    template<Unsigned U>
-    requires(my_size() > sizeof(U) && sizeof(T) > sizeof(u64)) constexpr R addc(U const& other, bool& carry) const
-    {
-        T lower = m_low.addc(other, carry);
-        T higher = m_high.addc(0u, carry);
-
-        return {
-            lower,
-            higher
-        };
-    }
-    template<Unsigned U>
-    requires(IsSame<R, U> && IsSame<T, u64>) constexpr R addc(U const& other, bool& carry) const
-    {
-        bool low_carry = Checked<T>::addition_would_overflow(m_low, other.low());
-        bool high_carry = Checked<T>::addition_would_overflow(m_high, other.high());
-
-        T lower = m_low + other.low();
-        T higher = m_high + other.high();
-        low_carry |= Checked<T>::addition_would_overflow(lower, carry);
-        high_carry |= Checked<T>::addition_would_overflow(higher, low_carry);
-
-        lower += carry;
-        higher += low_carry;
-        carry = high_carry;
-
-        return {
-            lower,
-            higher
-        };
-    }
-    template<Unsigned U>
-    requires(IsSame<R, U> && sizeof(T) > sizeof(u64)) constexpr R addc(U const& other, bool& carry) const
-    {
-        T lower = m_low.addc(other.low(), carry);
-        T higher = m_high.addc(other.high(), carry);
-
-        return {
-            lower,
-            higher
-        };
-    }
-    template<Unsigned U>
-    requires(my_size() < sizeof(U)) constexpr U addc(U const& other, bool& carry) const
-    {
-        return other.addc(*this, carry);
+        UFixedBigInt<max(bit_size, assumed_bit_size<T>)> result;
+        carry = StorageOperations::add<false>(m_data, get_storage_of(other), result.m_data, carry);
+        return result;
     }
 
-    // FIXME: subc for sizeof(T) < sizeof(U)
-    template<Unsigned U>
-    requires(sizeof(T) >= sizeof(U)) constexpr R subc(U const& other, bool& carry) const
+    template<UFixedInt T>
+    constexpr auto subc(T const& other, bool& borrow) const
     {
-        bool low_carry = (!m_low && carry) || (m_low - carry) < other;
-        bool high_carry = !m_high && low_carry;
-
-        T lower = m_low - other - carry;
-        T higher = m_high - low_carry;
-        carry = high_carry;
-
-        return { lower, higher };
-    }
-    constexpr R subc(R const& other, bool& carry) const
-    {
-        bool low_carry = (!m_low && carry) || (m_low - carry) < other.low();
-        bool high_carry = (!m_high && low_carry) || (m_high - low_carry) < other.high();
-
-        T lower = m_low - other.low() - carry;
-        T higher = m_high - other.high() - low_carry;
-        carry = high_carry;
-
-        return { lower, higher };
+        UFixedBigInt<max(bit_size, assumed_bit_size<T>)> result;
+        borrow = StorageOperations::add<true>(m_data, get_storage_of(other), result.m_data, borrow);
+        return result;
     }
 
-    constexpr R operator+(bool const& other) const
-    {
-        bool carry = false; // unused
-        return addc((u8)other, carry);
-    }
-    template<Unsigned U>
-    constexpr R operator+(U const& other) const
-    {
-        bool carry = false; // unused
-        return addc(other, carry);
-    }
+    DEFINE_STANDARD_BINARY_OPERATOR(+, StorageOperations::add<false>)
+    DEFINE_STANDARD_BINARY_OPERATOR(-, StorageOperations::add<true>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(+=, StorageOperations::add<false>)
+    DEFINE_STANDARD_COMPOUND_ASSIGNMENT(-=, StorageOperations::add<true>)
 
-    constexpr R operator-(bool const& other) const
+    constexpr auto& operator++()
     {
-        bool carry = false; // unused
-        return subc((u8)other, carry);
-    }
-
-    template<Unsigned U>
-    constexpr R operator-(U const& other) const
-    {
-        bool carry = false; // unused
-        return subc(other, carry);
-    }
-
-    template<Unsigned U>
-    constexpr R& operator+=(U const& other)
-    {
-        *this = *this + other;
-        return *this;
-    }
-    template<Unsigned U>
-    constexpr R& operator-=(U const& other)
-    {
-        *this = *this - other;
+        StorageOperations::increment<false>(m_data);
         return *this;
     }
 
-    constexpr R operator++()
+    constexpr auto& operator--()
     {
-        // x++
-        auto old = *this;
-        *this += 1;
-        return old;
-    }
-    constexpr R& operator++(int)
-    {
-        // ++x
-        *this += 1;
-        return *this;
-    }
-    constexpr R operator--()
-    {
-        // x--
-        auto old = *this;
-        *this -= 1;
-        return old;
-    }
-    constexpr R& operator--(int)
-    {
-        // --x
-        *this -= 1;
+        StorageOperations::increment<true>(m_data);
         return *this;
     }
 
+    constexpr auto operator++(int)
+    {
+        UFixedBigInt<bit_size> result = *this;
+        StorageOperations::increment<false>(m_data);
+        return result;
+    }
+
+    constexpr auto operator--(int)
+    {
+        UFixedBigInt<bit_size> result = *this;
+        StorageOperations::increment<true>(m_data);
+        return result;
+    }
+
+    DEFINE_STANDARD_BINARY_OPERATOR(*, mul_internal)
+
+    constexpr auto& operator*=(UFixedInt auto const& other) { return *this = *this * other; }
+    constexpr auto& operator*=(IntegerWrapper const& other) { return *this = *this * other; }
+
+    template<UFixedInt T>
+    constexpr auto wide_multiply(T const& other) const
+    {
+        UFixedBigInt<bit_size + assumed_bit_size<T>> result;
+        mul_internal(m_data, get_storage_of(other), result.m_data);
+        return result;
+    }
+
+    // FIXME: Refactor out this
+    using R = UFixedBigInt<bit_size>;
+
+    static constexpr size_t my_size()
+    {
+        return sizeof(Storage);
+    }
+
+    // FIXME: Do something smarter (process at least one word per iteration).
     // FIXME: no restraints on this
     template<Unsigned U>
-    requires(my_size() >= sizeof(U)) constexpr R div_mod(U const& divisor, U& remainder) const
+    requires(sizeof(Storage) >= sizeof(U)) constexpr R div_mod(U const& divisor, U& remainder) const
     {
         // FIXME: Is there a better way to raise a division by 0?
         //        Maybe as a compiletime warning?
@@ -522,7 +438,7 @@ public:
 
         for (ssize_t i = sizeof(R) * 8 - clz() - 1; i >= 0; --i) {
             remainder <<= 1u;
-            remainder |= (*this >> (size_t)i) & 1u;
+            remainder |= static_cast<unsigned>(*this >> (size_t)i) & 1u;
             if (remainder >= divisor) {
                 remainder -= divisor;
                 quotient |= R { 1u } << (size_t)i;
@@ -530,85 +446,6 @@ public:
         }
 
         return quotient;
-    }
-
-    template<Unsigned U>
-    constexpr R operator*(U other) const
-    {
-        R res = 0u;
-        R that = *this;
-        for (; other != 0u; other >>= 1u) {
-            if (other & 1u)
-                res += that;
-            that <<= 1u;
-        }
-        return res;
-    }
-
-    template<Unsigned U>
-    requires(IsSame<R, U> && IsSame<T, u64>) constexpr UFixedBigIntMultiplicationResult<R> wide_multiply(U const& other) const
-    {
-        auto mult_64_to_128 = [](u64 a, u64 b) -> UFixedBigIntMultiplicationResult<u64> {
-#ifdef __SIZEOF_INT128__
-            unsigned __int128 result = (unsigned __int128)a * b;
-            u64 low = result;
-            u64 high = result >> 64;
-            return { low, high };
-#else
-            u32 a_low = a;
-            u32 a_high = (a >> 32);
-            u32 b_low = b;
-            u32 b_high = (b >> 32);
-
-            u64 ll_result = (u64)a_low * b_low;
-            u64 lh_result = (u64)a_low * b_high;
-            u64 hl_result = (u64)a_high * b_low;
-            u64 hh_result = (u64)a_high * b_high;
-
-            UFixedBigInt<u64> ll { ll_result, 0u };
-            UFixedBigInt<u64> lh { lh_result << 32, lh_result >> 32 };
-            UFixedBigInt<u64> hl { hl_result << 32, hl_result >> 32 };
-            UFixedBigInt<u64> hh { 0u, hh_result };
-
-            UFixedBigInt<u64> result = ll + lh + hl + hh;
-            return { result.low(), result.high() };
-#endif
-        };
-
-        auto ll_result = mult_64_to_128(m_low, other.low());
-        auto lh_result = mult_64_to_128(m_low, other.high());
-        auto hl_result = mult_64_to_128(m_high, other.low());
-        auto hh_result = mult_64_to_128(m_high, other.high());
-
-        UFixedBigInt<R> ll { R { ll_result.low, ll_result.high }, R { 0u, 0u } };
-        UFixedBigInt<R> lh { R { 0u, lh_result.low }, R { lh_result.high, 0u } };
-        UFixedBigInt<R> hl { R { 0u, hl_result.low }, R { hl_result.high, 0u } };
-        UFixedBigInt<R> hh { R { 0u, 0u }, R { hh_result.low, hh_result.high } };
-
-        UFixedBigInt<R> result = ll + lh + hl + hh;
-        return { result.low(), result.high() };
-    }
-
-    template<Unsigned U>
-    requires(IsSame<R, U> && sizeof(T) > sizeof(u64)) constexpr UFixedBigIntMultiplicationResult<R> wide_multiply(U const& other) const
-    {
-        T left_low = m_low;
-        T left_high = m_high;
-        T right_low = other.low();
-        T right_high = other.high();
-
-        auto ll_result = left_low.wide_multiply(right_low);
-        auto lh_result = left_low.wide_multiply(right_high);
-        auto hl_result = left_high.wide_multiply(right_low);
-        auto hh_result = left_high.wide_multiply(right_high);
-
-        UFixedBigInt<R> ll { R { ll_result.low, ll_result.high }, R { 0u, 0u } };
-        UFixedBigInt<R> lh { R { 0u, lh_result.low }, R { lh_result.high, 0u } };
-        UFixedBigInt<R> hl { R { 0u, hl_result.low }, R { hl_result.high, 0u } };
-        UFixedBigInt<R> hh { R { 0u, 0u }, R { hh_result.low, hh_result.high } };
-
-        UFixedBigInt<R> result = ll + lh + hl + hh;
-        return { result.low(), result.high() };
     }
 
     template<Unsigned U>
@@ -625,12 +462,6 @@ public:
         return res;
     }
 
-    template<Unsigned U>
-    constexpr R& operator*=(U const& other)
-    {
-        *this = *this * other;
-        return *this;
-    }
     template<Unsigned U>
     constexpr R& operator/=(U const& other)
     {
@@ -769,73 +600,89 @@ public:
         return log2() / base.log2();
     }
 
-    constexpr u64 fold_or() const
-    requires(IsSame<T, u64>)
-    {
-        return m_low | m_high;
-    }
-    constexpr u64 fold_or() const
-    requires(!IsSame<T, u64>)
-    {
-        return m_low.fold_or() | m_high.fold_or();
-    }
+#undef DEFINE_STANDARD_BINARY_OPERATOR
+#undef DEFINE_STANDARD_COMPOUND_ASSIGNMENT
+
+    // These functions are intended to be used in LibCrypto for equality checks without branching.
     constexpr bool is_zero_constant_time() const
     {
-        return fold_or() == 0;
+        NativeWord fold = 0;
+        for (size_t i = 0; i < m_data.size(); ++i)
+            taint_for_optimizer(fold |= m_data[i]);
+        return !fold;
     }
 
-    constexpr u64 fold_xor_pair(R& other) const
-    requires(IsSame<T, u64>)
+    constexpr bool is_equal_to_constant_time(UFixedBigInt<bit_size> other) const
     {
-        return (m_low ^ other.low()) | (m_high ^ other.high());
-    }
-    constexpr u64 fold_xor_pair(R& other) const
-    requires(!IsSame<T, u64>)
-    {
-        return (m_low.fold_xor_pair(other.low())) | (m_high.fold_xor_pair(other.high()));
-    }
-    constexpr bool is_equal_to_constant_time(R& other)
-    {
-        return fold_xor_pair(other) == 0;
+        NativeWord fold = 0;
+        for (size_t i = 0; i < m_data.size(); ++i)
+            taint_for_optimizer(fold |= m_data[i] ^ other.m_data[i]);
+        return !fold;
     }
 
 private:
-    T m_low;
-    T m_high;
+    template<ConvertibleToUFixedInt T, typename Function>
+    constexpr auto do_standard_binary_operation(T const& other, Function function) const
+    {
+        UFixedBigInt<max(bit_size, assumed_bit_size<T>)> result;
+        function(m_data, get_storage_of(other), result.m_data);
+        return result;
+    }
+
+    template<ConvertibleToUFixedInt T, typename Function>
+    constexpr void do_standard_compound_assignment(T const& other, Function function)
+    {
+        static_assert(bit_size >= assumed_bit_size<T>, "Requested operation requires integer size to be expanded.");
+        function(m_data, get_storage_of(other), m_data);
+    }
+
+    template<size_t other_bit_size, typename OtherStorage>
+    friend class UFixedBigInt;
+
+    friend constexpr auto& get_storage_of<bit_size>(UFixedBigInt<bit_size>&);
+    friend constexpr auto& get_storage_of<bit_size>(UFixedBigInt<bit_size> const&);
+
+    Storage m_data;
 };
 
-// reverse operators
-template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<(const U a, UFixedBigInt<T> const& b)
-{
-    return b >= a;
-}
-template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>(const U a, UFixedBigInt<T> const& b)
-{
-    return b <= a;
-}
-template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator<=(const U a, UFixedBigInt<T> const& b)
-{
-    return b > a;
-}
-template<Unsigned U, Unsigned T>
-requires(sizeof(U) < sizeof(T) * 2) constexpr bool operator>=(const U a, UFixedBigInt<T> const& b)
-{
-    return b < a;
+// FIXME: There is a bug in LLVM (https://github.com/llvm/llvm-project/issues/59783) which doesn't
+//        allow to use the following comparisons.
+bool operator==(BuiltInUFixedInt auto const& a, NotBuiltInUFixedInt auto const& b) { return b.operator==(a); }
+int operator<=>(BuiltInUFixedInt auto const& a, NotBuiltInUFixedInt auto const& b) { return -b.operator<=>(a); }
+bool operator==(IntegerWrapper const& a, NotBuiltInUFixedInt auto const& b) { return b.operator==(a); }
+int operator<=>(IntegerWrapper const& a, NotBuiltInUFixedInt auto const& b) { return -b.operator<=>(a); }
 }
 
-template<Unsigned T>
-struct Formatter<UFixedBigInt<T>> : StandardFormatter {
+using Detail::UFixedBigInt;
+
+template<size_t bit_size>
+constexpr inline bool IsUnsigned<UFixedBigInt<bit_size>> = true;
+template<size_t bit_size>
+constexpr inline bool IsSigned<UFixedBigInt<bit_size>> = false;
+
+template<size_t bit_size>
+struct NumericLimits<UFixedBigInt<bit_size>> {
+    using T = UFixedBigInt<bit_size>;
+
+    static constexpr T min() { return T {}; }
+    static constexpr T max() { return --T {}; }
+    static constexpr bool is_signed() { return false; }
+};
+
+// ===== Formatting =====
+// FIXME: This does not work for size != 2 ** x
+template<Detail::NotBuiltInUFixedInt T>
+struct Formatter<T> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(formatter)
     {
     }
 
-    ErrorOr<void> format(FormatBuilder& builder, UFixedBigInt<T> value)
+    ErrorOr<void> format(FormatBuilder& builder, T const& value)
     {
+        using U = decltype(value.low());
+
         if (m_precision.has_value())
             VERIFY_NOT_REACHED();
 
@@ -847,7 +694,7 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
             m_mode = Mode::Hexadecimal;
 
         if (!value.high()) {
-            Formatter<T> formatter { *this };
+            Formatter<U> formatter { *this };
             return formatter.format(builder, value.low());
         }
 
@@ -868,8 +715,8 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
             VERIFY_NOT_REACHED();
         }
         ssize_t width = m_width.value_or(0);
-        ssize_t lower_length = ceil_div(sizeof(T) * 8, (ssize_t)base);
-        Formatter<T> formatter { *this };
+        ssize_t lower_length = ceil_div(Detail::assumed_bit_size<U>, (ssize_t)base);
+        Formatter<U> formatter { *this };
         formatter.m_width = max(width - lower_length, (ssize_t)0);
         TRY(formatter.format(builder, value.high()));
         TRY(builder.put_literal("'"sv));
@@ -882,15 +729,10 @@ struct Formatter<UFixedBigInt<T>> : StandardFormatter {
 };
 }
 
-// Nit: Doing these as custom classes might be faster, especially when writing
-//      then in SSE, but this would cause a lot of Code duplication and due to
-//      the nature of constexprs and the intelligence of the compiler they might
-//      be using SSE/MMX either way
-
 // these sizes should suffice for most usecases
-using u128 = AK::UFixedBigInt<u64>;
-using u256 = AK::UFixedBigInt<u128>;
-using u512 = AK::UFixedBigInt<u256>;
-using u1024 = AK::UFixedBigInt<u512>;
-using u2048 = AK::UFixedBigInt<u1024>;
-using u4096 = AK::UFixedBigInt<u2048>;
+using u128 = AK::UFixedBigInt<128>;
+using u256 = AK::UFixedBigInt<256>;
+using u512 = AK::UFixedBigInt<512>;
+using u1024 = AK::UFixedBigInt<1024>;
+using u2048 = AK::UFixedBigInt<2048>;
+using u4096 = AK::UFixedBigInt<4096>;
