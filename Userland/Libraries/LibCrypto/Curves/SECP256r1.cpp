@@ -57,8 +57,7 @@ static u256 select(u256 const& left, u256 const& right, bool condition)
 
 static u512 multiply(u256 const& left, u256 const& right)
 {
-    auto result = left.wide_multiply(right);
-    return { result.low, result.high };
+    return left.wide_multiply(right);
 }
 
 static u256 modular_reduce(u256 const& value)
