@@ -47,7 +47,9 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
 
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it
-    auto new_thread_name = TRY(KString::formatted("{} [{}]", m_name, thread->tid().value()));
+    auto new_thread_name = TRY(name().with([&](auto& process_name) {
+        return KString::formatted("{} [{}]", process_name->view(), thread->tid().value());
+    }));
     thread->set_name(move(new_thread_name));
 
     if (!is_thread_joinable)

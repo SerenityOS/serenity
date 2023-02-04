@@ -47,7 +47,7 @@ ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullLockRefPtr<Process>
 
     auto block_timer = TRY(try_make_lock_ref_counted<Timer>());
 
-    auto name = TRY(KString::try_create(process->name()));
+    auto name = TRY(process->name().with([](auto& name) { return name->try_clone(); }));
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
 }
 
@@ -72,8 +72,11 @@ Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region>
         list.append(*this);
     });
 
-    if constexpr (THREAD_DEBUG)
-        dbgln("Created new thread {}({}:{})", m_process->name(), m_process->pid().value(), m_tid.value());
+    if constexpr (THREAD_DEBUG) {
+        m_process->name().with([&](auto& process_name) {
+            dbgln("Created new thread {}({}:{})", process_name->view(), m_process->pid().value(), m_tid.value());
+        });
+    }
 
     reset_fpu_state();
 
@@ -1467,7 +1470,9 @@ void Thread::track_lock_release(LockRank rank)
 
 ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kernel::Thread const& value)
 {
-    return AK::Formatter<FormatString>::format(
-        builder,
-        "{}({}:{})"sv, value.process().name(), value.pid().value(), value.tid().value());
+    return value.process().name().with([&](auto& process_name) {
+        return AK::Formatter<FormatString>::format(
+            builder,
+            "{}({}:{})"sv, process_name->view(), value.pid().value(), value.tid().value());
+    });
 }
