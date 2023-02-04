@@ -180,7 +180,7 @@ ErrorOr<FlatPtr> Process::sys$kill_thread(pid_t tid, int signal)
 
 ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> user_name, size_t user_name_length)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto name = TRY(try_copy_kstring_from_user(user_name, user_name_length));
@@ -199,7 +199,7 @@ ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> 
 
 ErrorOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, size_t buffer_size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::thread));
     if (buffer_size == 0)
         return EINVAL;
@@ -208,19 +208,19 @@ ErrorOr<FlatPtr> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer
     if (!thread || thread->pid() != pid())
         return ESRCH;
 
-    SpinlockLocker locker(thread->get_lock());
-    auto thread_name = thread->name();
+    TRY(thread->name().with([&](auto& thread_name) -> ErrorOr<void> {
+        if (thread_name->view().is_null()) {
+            char null_terminator = '\0';
+            TRY(copy_to_user(buffer, &null_terminator, sizeof(null_terminator)));
+            return {};
+        }
 
-    if (thread_name.is_null()) {
-        char null_terminator = '\0';
-        TRY(copy_to_user(buffer, &null_terminator, sizeof(null_terminator)));
-        return 0;
-    }
+        if (thread_name->length() + 1 > buffer_size)
+            return ENAMETOOLONG;
 
-    if (thread_name.length() + 1 > buffer_size)
-        return ENAMETOOLONG;
+        return copy_to_user(buffer, thread_name->characters(), thread_name->length() + 1);
+    }));
 
-    TRY(copy_to_user(buffer, thread_name.characters_without_null_termination(), thread_name.length() + 1));
     return 0;
 }
 

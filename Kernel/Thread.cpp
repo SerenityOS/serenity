@@ -1466,6 +1466,14 @@ void Thread::track_lock_release(LockRank rank)
 
     m_lock_rank_mask ^= rank;
 }
+
+void Thread::set_name(NonnullOwnPtr<KString> name)
+{
+    m_name.with([&](auto& this_name) {
+        this_name = move(name);
+    });
+}
+
 }
 
 ErrorOr<void> AK::Formatter<Kernel::Thread>::format(FormatBuilder& builder, Kernel::Thread const& value)
