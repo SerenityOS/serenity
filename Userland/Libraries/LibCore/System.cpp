@@ -1430,15 +1430,17 @@ ErrorOr<void> mkfifo(StringView pathname, mode_t mode)
 
 ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
 {
-#ifdef AK_OS_SERENITY
-    auto const rc = ::serenity_setenv(name.characters_without_null_termination(), name.length(), value.characters_without_null_termination(), value.length(), overwrite);
-#else
-    DeprecatedString name_string = name;
-    DeprecatedString value_string = value;
-    auto const rc = ::setenv(name_string.characters(), value_string.characters(), overwrite);
-#endif
+    auto builder = TRY(StringBuilder::create());
+    TRY(builder.try_append(name));
+    TRY(builder.try_append('\0'));
+    TRY(builder.try_append(value));
+    TRY(builder.try_append('\0'));
+    // Note the explicit null terminators above.
+    auto c_name = builder.string_view().characters_without_null_termination();
+    auto c_value = c_name + name.length() + 1;
+    auto rc = ::setenv(c_name, c_value, overwrite);
     if (rc < 0)
-        return Error::from_syscall("setenv"sv, -errno);
+        return Error::from_errno(errno);
     return {};
 }
 
