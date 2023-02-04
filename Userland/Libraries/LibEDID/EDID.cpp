@@ -62,7 +62,7 @@ public:
 
                 auto* vic_details = VIC::find_details_by_vic_id(vic_id);
                 if (!vic_details)
-                    return Error::from_string_literal("CEA 861 extension block has invalid short video descriptor");
+                    return Error::from_string_view_or_print_error_and_return_errno("CEA 861 extension block has invalid short video descriptor"sv, EINVAL);
 
                 IterationDecision decision = callback(is_native, *vic_details);
                 if (decision != IterationDecision::Continue)
@@ -81,7 +81,7 @@ public:
         }
 
         if (dtd_start > offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DetailedTiming))
-            return Error::from_string_literal("CEA 861 extension block has invalid DTD list");
+            return Error::from_string_view_or_print_error_and_return_errno("CEA 861 extension block has invalid DTD list"sv, EINVAL);
 
         for (size_t offset = dtd_start; offset <= offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DetailedTiming); offset += sizeof(Definitions::DetailedTiming)) {
             auto& dtd = *(Definitions::DetailedTiming const*)((u8 const*)m_block + offset);
@@ -109,7 +109,7 @@ private:
             return IterationDecision::Continue;
 
         if (dtd_start > offsetof(Definitions::ExtensionBlock, checksum))
-            return Error::from_string_literal("CEA 861 extension block has invalid DTD start offset");
+            return Error::from_string_view_or_print_error_and_return_errno("CEA 861 extension block has invalid DTD start offset"sv, EINVAL);
 
         auto* data_block_header = &m_block->cea861extension.bytes[0];
         auto* data_block_end = (u8 const*)m_block + dtd_start;
@@ -118,7 +118,7 @@ private:
             size_t payload_size = header_byte & 0x1f;
             auto tag = (DataBlockTag)((header_byte >> 5) & 0x7);
             if (tag == DataBlockTag::Extended && payload_size == 0)
-                return Error::from_string_literal("CEA 861 extension block has invalid extended data block size");
+                return Error::from_string_view_or_print_error_and_return_errno("CEA 861 extension block has invalid extended data block size"sv, EINVAL);
 
             auto decision = TRY(callback(tag, m_edid.m_bytes.slice(data_block_header - m_edid.m_bytes.data() + 1, payload_size)));
             if (decision != IterationDecision::Continue)
@@ -136,7 +136,7 @@ private:
             return IterationDecision::Continue;
 
         if (dtd_start > offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DetailedTiming))
-            return Error::from_string_literal("CEA 861 extension block has invalid DTD list");
+            return Error::from_string_view_or_print_error_and_return_errno("CEA 861 extension block has invalid DTD list"sv, EINVAL);
 
         for (size_t offset = dtd_start; offset <= offsetof(Definitions::ExtensionBlock, checksum) - sizeof(Definitions::DisplayDescriptor); offset += sizeof(Definitions::DisplayDescriptor)) {
             auto& dd = *(Definitions::DisplayDescriptor const*)((u8 const*)m_block + offset);
@@ -299,17 +299,17 @@ Definitions::EDID const& Parser::raw_edid() const
 ErrorOr<void> Parser::parse()
 {
     if (m_bytes.size() < sizeof(Definitions::EDID))
-        return Error::from_string_literal("Incomplete Parser structure");
+        return Error::from_string_view_or_print_error_and_return_errno("Incomplete Parser structure"sv, EINVAL);
 
     auto const& edid = raw_edid();
     u64 header = read_le(&edid.header);
     if (header != 0x00ffffffffffff00ull)
-        return Error::from_string_literal("No Parser header");
+        return Error::from_string_view_or_print_error_and_return_errno("No Parser header"sv, EINVAL);
 
     u8 major_version = read_host(&edid.version.version);
     m_revision = read_host(&edid.version.revision);
     if (major_version != 1 || m_revision > 4)
-        return Error::from_string_literal("Unsupported Parser version");
+        return Error::from_string_view_or_print_error_and_return_errno("Unsupported Parser version"sv, EINVAL);
 
 #ifdef KERNEL
     m_version = TRY(Kernel::KString::formatted("1.{}", (int)m_revision));
@@ -322,11 +322,10 @@ ErrorOr<void> Parser::parse()
         checksum += m_bytes[i];
 
     if (checksum != 0) {
-        if (m_revision >= 4) {
-            return Error::from_string_literal("Parser checksum mismatch");
-        } else {
+        if (m_revision >= 4)
+            return Error::from_string_view_or_print_error_and_return_errno("Parser checksum mismatch"sv, EINVAL);
+        else
             dbgln("EDID checksum mismatch, data may be corrupted!");
-        }
     }
 
     u16 packed_id = read_be(&raw_edid().vendor.manufacturer_id);
@@ -348,7 +347,7 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
     if (raw_extension_block_count == 0)
         return IterationDecision::Continue;
     if (sizeof(Definitions::EDID) + (size_t)raw_extension_block_count * sizeof(Definitions::ExtensionBlock) > m_bytes.size())
-        return Error::from_string_literal("Truncated EDID");
+        return Error::from_string_view_or_print_error_and_return_errno("Truncated EDID"sv, EINVAL);
 
     auto validate_block_checksum = [&](Definitions::ExtensionBlock const& block) {
         u8 checksum = 0x0;
@@ -368,9 +367,10 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
             current_extension_map = &raw_extension_blocks[0];
             raw_index++;
             if (read_host(&current_extension_map->tag) != (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap)
-                return Error::from_string_literal("Did not find extension map at block 1");
+                return Error::from_string_view_or_print_error_and_return_errno("Did not find extension map at block 1"sv, EINVAL);
+
             if (!validate_block_checksum(*current_extension_map))
-                return Error::from_string_literal("Extension block map checksum mismatch");
+                return Error::from_string_view_or_print_error_and_return_errno("Extension block map checksum mismatch"sv, EINVAL);
         }
     } else if (read_host(&raw_extension_blocks[0].tag) == (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap) {
         current_extension_map = &raw_extension_blocks[0];
@@ -383,18 +383,19 @@ ErrorOr<IterationDecision> Parser::for_each_extension_block(Function<IterationDe
 
         if (current_extension_map && raw_index == 127) {
             if (tag != (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap)
-                return Error::from_string_literal("Did not find extension map at block 128");
+                return Error::from_string_view_or_print_error_and_return_errno("Did not find extension map at block 128"sv, EINVAL);
+
             current_extension_map = &raw_extension_blocks[127];
             if (!validate_block_checksum(*current_extension_map))
-                return Error::from_string_literal("Extension block map checksum mismatch");
+                return Error::from_string_view_or_print_error_and_return_errno("Extension block map checksum mismatch"sv, EINVAL);
             continue;
         }
 
         if (tag == (u8)Definitions::ExtensionBlockTag::ExtensionBlockMap)
-            return Error::from_string_literal("Unexpected extension map encountered");
+            return Error::from_string_view_or_print_error_and_return_errno("Unexpected extension map encountered"sv, EINVAL);
 
         if (!validate_block_checksum(raw_block))
-            return Error::from_string_literal("Extension block checksum mismatch");
+            return Error::from_string_view_or_print_error_and_return_errno("Extension block checksum mismatch"sv, EINVAL);
 
         size_t offset = (u8 const*)&raw_block - m_bytes.data();
         IterationDecision decision = callback(raw_index + 1, tag, raw_block.block.revision, m_bytes.slice(offset, sizeof(Definitions::ExtensionBlock)));
