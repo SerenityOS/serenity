@@ -335,10 +335,13 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
 ErrorOr<void> PerformanceEventBuffer::add_process(Process const& process, ProcessEventType event_type)
 {
     OwnPtr<KString> executable;
-    if (process.executable())
+    if (process.executable()) {
         executable = TRY(process.executable()->try_serialize_absolute_path());
-    else
-        executable = TRY(KString::formatted("<{}>", process.name()));
+    } else {
+        executable = TRY(process.name().with([&](auto& process_name) {
+            return KString::formatted("<{}>", process_name->view());
+        }));
+    }
 
     TRY(append_with_ip_and_bp(process.pid(), 0, 0, 0,
         event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,

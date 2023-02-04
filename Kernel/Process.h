@@ -220,7 +220,9 @@ public:
     static LockRefPtr<Process> from_pid_ignoring_jails(ProcessID);
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
-    StringView name() const { return m_name->view(); }
+    SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> const& name() const;
+    void set_name(NonnullOwnPtr<KString>);
+
     ProcessID pid() const
     {
         return with_protected_data([](auto& protected_data) { return protected_data.pid; });
@@ -669,7 +671,7 @@ private:
 
     IntrusiveListNode<Process> m_list_node;
 
-    NonnullOwnPtr<KString> m_name;
+    SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> m_name;
 
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
 
@@ -1027,7 +1029,9 @@ template<>
 struct AK::Formatter<Kernel::Process> : AK::Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Kernel::Process const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "{}({})"sv, value.name(), value.pid().value());
+        return value.name().with([&](auto& process_name) {
+            return AK::Formatter<FormatString>::format(builder, "{}({})"sv, process_name->view(), value.pid().value());
+        });
     }
 };
 
