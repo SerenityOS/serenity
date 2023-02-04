@@ -385,7 +385,7 @@ Font const& Font::bold_variant() const
 {
     if (m_bold_variant)
         return *m_bold_variant;
-    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, 0);
+    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, Gfx::FontWidth::Normal, 0);
     if (!m_bold_variant)
         m_bold_variant = this;
     return *m_bold_variant;

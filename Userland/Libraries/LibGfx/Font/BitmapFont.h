@@ -44,6 +44,8 @@ public:
 
     virtual float pixel_size() const override { return m_glyph_height; }
 
+    u16 width() const override { return FontWidth::Normal; }
+
     u16 weight() const override { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
 

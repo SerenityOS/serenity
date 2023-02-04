@@ -19,6 +19,16 @@ unsigned Typeface::weight() const
     return m_vector_font->weight();
 }
 
+unsigned Typeface::width() const
+{
+    VERIFY(m_vector_font || m_bitmap_fonts.size() > 0);
+
+    if (is_fixed_size())
+        return Gfx::FontWidth::Normal;
+
+    return m_vector_font->width();
+}
+
 u8 Typeface::slope() const
 {
     VERIFY(m_vector_font || m_bitmap_fonts.size() > 0);

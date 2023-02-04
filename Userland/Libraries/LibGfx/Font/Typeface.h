@@ -27,6 +27,7 @@ public:
     DeprecatedFlyString const& family() const { return m_family; }
     DeprecatedFlyString const& variant() const { return m_variant; }
     unsigned weight() const;
+    unsigned width() const;
     u8 slope() const;
 
     bool is_fixed_width() const;

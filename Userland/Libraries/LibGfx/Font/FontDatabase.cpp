@@ -206,7 +206,7 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
             auto weight = parts.take_last().to_int().value_or(0);
             auto size = parts.take_last().to_int().value_or(0);
             auto family = DeprecatedString::join(' ', parts);
-            return get(family, size, weight, slope);
+            return get(family, size, weight, Gfx::FontWidth::Normal, slope);
         }
         dbgln("Font lookup failed: '{}'", name);
         return nullptr;
@@ -214,13 +214,13 @@ RefPtr<Gfx::Font> FontDatabase::get_by_name(StringView name)
     return it->value;
 }
 
-RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
+RefPtr<Gfx::Font> FontDatabase::get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch allow_inexact_size_match)
 {
     auto it = m_private->typefaces.find(family);
     if (it == m_private->typefaces.end())
         return nullptr;
     for (auto const& typeface : it->value) {
-        if (typeface->weight() == weight && typeface->slope() == slope)
+        if (typeface->weight() == weight && typeface->width() == width && typeface->slope() == slope)
             return typeface->get_font(point_size, allow_inexact_size_match);
     }
     return nullptr;

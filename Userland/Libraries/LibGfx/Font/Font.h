@@ -127,6 +127,19 @@ struct FontPixelMetrics {
     float line_spacing() const { return ascent + descent + line_gap; }
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass
+enum FontWidth {
+    UltraCondensed = 1,
+    ExtraCondensed = 2,
+    Condensed = 3,
+    SemiCondensed = 4,
+    Normal = 5,
+    SemiExpanded = 6,
+    Expanded = 7,
+    ExtraExpanded = 8,
+    UltraExpanded = 9
+};
+
 class Font : public RefCounted<Font> {
 public:
     enum class AllowInexactSizeMatch {
@@ -143,6 +156,8 @@ public:
     virtual u8 presentation_size() const = 0;
     virtual float pixel_size() const = 0;
     virtual u8 slope() const = 0;
+
+    virtual u16 width() const = 0;
 
     virtual u16 weight() const = 0;
     virtual Glyph glyph(u32 code_point) const = 0;
