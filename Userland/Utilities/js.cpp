@@ -77,7 +77,7 @@ static bool s_print_last_result = false;
 static bool s_strip_ansi = false;
 static bool s_disable_source_location_hints = false;
 static RefPtr<Line::Editor> s_editor;
-static DeprecatedString s_history_path = DeprecatedString::formatted("{}/.js-history", Core::StandardPaths::home_directory());
+static String s_history_path = String {};
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
@@ -614,6 +614,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool syntax_highlight = !disable_syntax_highlight;
 
+    s_history_path = TRY(String::formatted("{}/.js-history", Core::StandardPaths::home_directory()));
+
     g_vm = JS::VM::create();
     g_vm->enable_default_host_import_module_dynamically_hook();
 
@@ -648,12 +650,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto& global_environment = interpreter->realm().global_environment();
 
         s_editor = Line::Editor::construct();
-        s_editor->load_history(s_history_path);
+        s_editor->load_history(s_history_path.to_deprecated_string());
 
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
                 sigint_handler();
-            s_editor->save_history(s_history_path);
+            s_editor->save_history(s_history_path.to_deprecated_string());
         });
 
         s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
@@ -848,7 +850,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
         s_editor->on_tab_complete = move(complete);
         TRY(repl(*interpreter));
-        s_editor->save_history(s_history_path);
+        s_editor->save_history(s_history_path.to_deprecated_string());
     } else {
         interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
         auto& console_object = *interpreter->realm().intrinsics().console_object();
