@@ -486,6 +486,14 @@ int serenity_setenv(char const* name, ssize_t name_length, char const* value, ss
     return putenv(var);
 }
 
+// A non-evil version of putenv that will strdup the env (and free it later)
+int serenity_putenv(char const* new_var, size_t length)
+{
+    auto* var = strndup(new_var, length);
+    s_malloced_environment_variables.set((FlatPtr)var);
+    return putenv(var);
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/putenv.html
 int putenv(char* new_var)
 {
