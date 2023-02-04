@@ -13,7 +13,6 @@
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio accept rpath wpath cpath"));
-    TRY(Core::System::unveil("/etc/passwd"sv, "r"sv));
     TRY(Core::System::unveil(Core::StandardPaths::config_directory(), "rwc"sv));
     TRY(Core::System::unveil(Core::StandardPaths::home_directory(), "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
