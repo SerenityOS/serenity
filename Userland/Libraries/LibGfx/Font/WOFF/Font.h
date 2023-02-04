@@ -33,6 +33,7 @@ public:
     virtual DeprecatedString family() const override { return m_input_font->family(); }
     virtual DeprecatedString variant() const override { return m_input_font->variant(); }
     virtual u16 weight() const override { return m_input_font->weight(); }
+    virtual u16 width() const override { return m_input_font->width(); }
     virtual u8 slope() const override { return m_input_font->slope(); }
     virtual bool is_fixed_width() const override { return m_input_font->is_fixed_width(); }
 

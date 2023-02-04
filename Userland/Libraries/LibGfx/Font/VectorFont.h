@@ -44,6 +44,7 @@ public:
     virtual DeprecatedString family() const = 0;
     virtual DeprecatedString variant() const = 0;
     virtual u16 weight() const = 0;
+    virtual u16 width() const = 0;
     virtual u8 slope() const = 0;
     virtual bool is_fixed_width() const = 0;
 };

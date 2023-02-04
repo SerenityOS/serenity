@@ -998,6 +998,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     auto font_style = style.property(CSS::PropertyID::FontStyle);
     auto font_weight = style.property(CSS::PropertyID::FontWeight);
 
+    int width = Gfx::FontWidth::Normal;
+
     int weight = Gfx::FontWeight::Regular;
     if (font_weight->is_identifier()) {
         switch (static_cast<IdentifierStyleValue const&>(*font_weight).id()) {
@@ -1133,7 +1135,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     auto find_font = [&](DeprecatedString const& family) -> RefPtr<Gfx::Font> {
         float font_size_in_pt = font_size_in_px * 0.75f;
-        font_selector = { family, font_size_in_pt, weight, slope };
+        font_selector = { family, font_size_in_pt, weight, width, slope };
 
         if (auto it = m_loaded_fonts.find(family); it != m_loaded_fonts.end()) {
             auto& loader = *it->value;
@@ -1144,7 +1146,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, font_size_in_pt, weight, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
+        if (auto found_font = Gfx::FontDatabase::the().get(family, font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};

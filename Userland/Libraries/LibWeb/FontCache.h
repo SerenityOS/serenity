@@ -16,11 +16,12 @@ struct FontSelector {
     DeprecatedFlyString family;
     float point_size { 0 };
     int weight { 0 };
+    int width { 0 };
     int slope { 0 };
 
     bool operator==(FontSelector const& other) const
     {
-        return family == other.family && point_size == other.point_size && weight == other.weight && slope == other.slope;
+        return family == other.family && point_size == other.point_size && weight == other.weight && width == other.width && slope == other.slope;
     }
 };
 

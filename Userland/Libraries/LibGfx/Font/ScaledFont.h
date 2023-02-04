@@ -38,6 +38,7 @@ public:
     virtual float pixel_size() const override { return m_point_height * 1.33333333f; }
     virtual Gfx::FontPixelMetrics pixel_metrics() const override;
     virtual u8 slope() const override { return m_font->slope(); }
+    virtual u16 width() const override { return m_font->width(); }
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
     virtual float glyph_left_bearing(u32 code_point) const override;

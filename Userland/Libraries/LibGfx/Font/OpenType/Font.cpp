@@ -650,6 +650,15 @@ u16 Font::weight() const
     return 400;
 }
 
+u16 Font::width() const
+{
+    if (m_os2.has_value()) {
+        return m_os2->width_class();
+    }
+
+    return Gfx::FontWidth::Normal;
+}
+
 u8 Font::slope() const
 {
     // https://docs.microsoft.com/en-us/typography/opentype/spec/os2
@@ -678,6 +687,11 @@ bool Font::is_fixed_width() const
 u16 OS2::weight_class() const
 {
     return header().us_weight_class;
+}
+
+u16 OS2::width_class() const
+{
+    return header().us_width_class;
 }
 
 u16 OS2::selection() const
