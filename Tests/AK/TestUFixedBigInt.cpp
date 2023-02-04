@@ -9,6 +9,7 @@
 #include <AK/NumericLimits.h>
 #include <AK/Random.h>
 #include <AK/UFixedBigInt.h>
+#include <AK/UFixedBigIntDivision.h>
 
 constexpr int test_iterations = 32;
 
@@ -75,6 +76,62 @@ TEST_CASE(div_mod)
         u256 mod;
         u256 div = a.div_mod(b, mod);
         EXPECT_EQ(a, div * b + mod);
+    }
+}
+
+TEST_CASE(div_anti_knuth)
+{
+    EXPECT_EQ((u256 { { 0ull, 0xffffffffffffffffull, 1ull, 0ull } } / u128 { 0x8000000000000001ull, 0xffffffffffffffffull }), 1u);
+    EXPECT_EQ((u128 { { 0xffffffff00000000ull, 1ull } } / u128 { 0xffffffff80000001ull }), 1u);
+
+    srand(0);
+
+    auto generate_u512 = [] {
+        using namespace AK::Detail;
+
+        u512 number;
+        auto& storage = get_storage_of(number);
+
+        static constexpr u32 interesting_words_count = 14;
+        static constexpr NativeWord interesting_words[interesting_words_count] = {
+            0,
+            0,
+            1,
+            2,
+            3,
+            max_word / 4 - 1,
+            max_word / 4,
+            max_word / 2 - 1,
+            max_word / 2,
+            max_word / 2 + 1,
+            max_word / 2 + 2,
+            max_word - 3,
+            max_word - 2,
+            max_word - 1,
+        };
+        for (size_t i = 0; i < storage.size(); ++i) {
+            u32 type = get_random_uniform(interesting_words_count + 1);
+            NativeWord& next_word = storage[i];
+            if (type == interesting_words_count)
+                next_word = get_random<NativeWord>();
+            else
+                next_word = interesting_words[type];
+        }
+
+        return number;
+    };
+
+    for (int i = 0; i < 16384; ++i) {
+        u512 a = generate_u512(), b = generate_u512();
+        if (b == 0)
+            continue;
+
+        u512 mod;
+        u512 div = a.div_mod(b, mod);
+
+        EXPECT_EQ(div * b + mod, a);
+        EXPECT_EQ(div.wide_multiply(b) + mod, a);
+        EXPECT(0 <= mod && mod < b);
     }
 }
 

@@ -60,6 +60,13 @@ constexpr void mul_internal(Operand1 const& operand1, Operand2 const& operand2, 
     StorageOperations::baseline_mul(operand1, operand2, result, g_null_allocator);
 }
 
+template<size_t dividend_size, size_t divisor_size, bool restore_remainder>
+constexpr void div_mod_internal( // Include AK/UFixedBigIntDivision.h to use UFixedBigInt division
+    StaticStorage<false, dividend_size> const& dividend,
+    StaticStorage<false, divisor_size> const& divisor,
+    StaticStorage<false, dividend_size>& quotient,
+    StaticStorage<false, divisor_size>& remainder);
+
 template<size_t bit_size, typename Storage>
 class UFixedBigInt {
     constexpr static size_t static_size = Storage::static_size;
@@ -395,84 +402,49 @@ public:
         return result;
     }
 
-    // FIXME: Refactor out this
-    using R = UFixedBigInt<bit_size>;
-
-    static constexpr size_t my_size()
+    template<NotBuiltInUFixedInt T>
+    constexpr UFixedBigInt<bit_size> div_mod(T const& divisor, T& remainder) const
     {
-        return sizeof(Storage);
-    }
-
-    // FIXME: Do something smarter (process at least one word per iteration).
-    // FIXME: no restraints on this
-    template<Unsigned U>
-    requires(sizeof(Storage) >= sizeof(U)) constexpr R div_mod(U const& divisor, U& remainder) const
-    {
-        // FIXME: Is there a better way to raise a division by 0?
-        //        Maybe as a compiletime warning?
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiv-by-zero"
-        if (!divisor) {
-            int volatile x = 1;
-            int volatile y = 0;
-            [[maybe_unused]] int volatile z = x / y;
-        }
-#pragma GCC diagnostic pop
-
-        // fastpaths
-        if (*this < divisor) {
-            remainder = static_cast<U>(*this);
-            return 0u;
-        }
-        if (*this == divisor) {
-            remainder = 0u;
-            return 1u;
-        }
-        if (divisor == 1u) {
-            remainder = 0u;
-            return *this;
-        }
-
-        remainder = 0u;
-        R quotient = 0u;
-
-        for (ssize_t i = sizeof(R) * 8 - clz() - 1; i >= 0; --i) {
-            remainder <<= 1u;
-            remainder |= static_cast<unsigned>(*this >> (size_t)i) & 1u;
-            if (remainder >= divisor) {
-                remainder -= divisor;
-                quotient |= R { 1u } << (size_t)i;
-            }
-        }
-
+        UFixedBigInt<bit_size> quotient;
+        UFixedBigInt<assumed_bit_size<T>> resulting_remainder;
+        div_mod_internal<bit_size, assumed_bit_size<T>, true>(m_data, get_storage_of(divisor), get_storage_of(quotient), get_storage_of(resulting_remainder));
+        remainder = resulting_remainder;
         return quotient;
     }
 
-    template<Unsigned U>
-    constexpr R operator/(U const& other) const
+    template<UFixedInt T>
+    constexpr auto operator/(T const& other) const
     {
-        U mod { 0u }; // unused
-        return div_mod(other, mod);
-    }
-    template<Unsigned U>
-    constexpr U operator%(U const& other) const
-    {
-        R res { 0u };
-        div_mod(other, res);
-        return res;
+        UFixedBigInt<bit_size> quotient;
+        StaticStorage<false, assumed_bit_size<T>> remainder; // unused
+        div_mod_internal<bit_size, assumed_bit_size<T>, false>(m_data, get_storage_of(other), get_storage_of(quotient), remainder);
+        return quotient;
     }
 
-    template<Unsigned U>
-    constexpr R& operator/=(U const& other)
+    template<UFixedInt T>
+    constexpr auto operator%(T const& other) const
     {
-        *this = *this / other;
-        return *this;
+        StaticStorage<false, bit_size> quotient; // unused
+        UFixedBigInt<assumed_bit_size<T>> remainder;
+        div_mod_internal<bit_size, assumed_bit_size<T>, true>(m_data, get_storage_of(other), quotient, get_storage_of(remainder));
+        return remainder;
     }
+
+    constexpr auto operator/(IntegerWrapper const& other) const { return *this / static_cast<UFixedBigInt<32>>(other); }
+    constexpr auto operator%(IntegerWrapper const& other) const { return *this % static_cast<UFixedBigInt<32>>(other); }
+
+    template<UFixedInt T>
+    constexpr auto& operator/=(T const& other) { return *this = *this / other; }
+    constexpr auto& operator/=(IntegerWrapper const& other) { return *this = *this / other; }
+
     template<Unsigned U>
-    constexpr R& operator%=(U const& other)
+    constexpr auto& operator%=(U const& other) { return *this = *this % other; }
+    constexpr auto& operator%=(IntegerWrapper const& other) { return *this = *this % other; }
+
+    // FIXME: Replace uses with more general `assumed_bit_size<T>`.
+    static constexpr size_t my_size()
     {
-        *this = *this % other;
-        return *this;
+        return sizeof(Storage);
     }
 
     // Note: If there ever be need for non side-channel proof sqrt/pow/pow_mod of UFixedBigInt, you

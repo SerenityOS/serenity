@@ -10,6 +10,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <AK/UFixedBigInt.h>
+#include <AK/UFixedBigIntDivision.h>
 
 namespace AK {
 
