@@ -25,13 +25,10 @@
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibTextCodec/Decoder.h>
-#include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
-#include <unistd.h>
 
 RefPtr<JS::VM> g_vm;
-Vector<DeprecatedString> g_repl_statements;
+Vector<String> g_repl_statements;
 JS::Handle<JS::Value> g_last_value = JS::make_handle(JS::js_undefined());
 
 class ReplObject final : public JS::GlobalObject {
@@ -185,30 +182,20 @@ static ErrorOr<String> read_next_piece()
     return piece.to_string();
 }
 
-static bool write_to_file(DeprecatedString const& path)
+static ErrorOr<void> write_to_file(String const& path)
 {
-    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write, 0666));
     for (size_t i = 0; i < g_repl_statements.size(); i++) {
-        auto line = g_repl_statements[i];
-        if (line.length() && i != g_repl_statements.size() - 1) {
-            ssize_t nwritten = write(fd, line.characters(), line.length());
-            if (nwritten < 0) {
-                close(fd);
-                return false;
-            }
+        auto line = g_repl_statements[i].bytes();
+        if (line.size() > 0 && i != g_repl_statements.size() - 1) {
+            TRY(file->write(line));
         }
         if (i != g_repl_statements.size() - 1) {
-            char ch = '\n';
-            ssize_t nwritten = write(fd, &ch, 1);
-            if (nwritten != 1) {
-                perror("write");
-                close(fd);
-                return false;
-            }
+            TRY(file->write_value('\n'));
         }
     }
-    close(fd);
-    return true;
+    file->close();
+    return {};
 }
 
 static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
@@ -421,8 +408,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
     if (!vm.argument_count())
         return JS::Value(false);
-    DeprecatedString save_path = vm.argument(0).to_string_without_side_effects();
-    if (write_to_file(save_path)) {
+    auto const save_path = TRY(vm.argument(0).to_string(vm));
+    if (!write_to_file(save_path).is_error()) {
         return JS::Value(true);
     }
     return JS::Value(false);
@@ -509,7 +496,7 @@ static ErrorOr<void> repl(JS::Interpreter& interpreter)
         if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
 
-        g_repl_statements.append(piece.to_deprecated_string());
+        g_repl_statements.append(piece);
         TRY(parse_and_run(interpreter, piece, "REPL"sv));
     }
     return {};
