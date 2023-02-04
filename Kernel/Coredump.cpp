@@ -228,11 +228,15 @@ ErrorOr<void> Coredump::write_regions()
         TRY(m_process->address_space().with([&](auto& space) -> ErrorOr<void> {
             auto* real_region = space->region_tree().regions().find(region.vaddr().get());
 
-            if (!real_region)
-                return Error::from_string_view("Failed to find matching region in the process"sv);
+            if (!real_region) {
+                dmesgln("Coredump::write_regions: Failed to find matching region in the process");
+                return Error::from_errno(EFAULT);
+            }
 
-            if (!region.is_consistent_with_region(*real_region))
-                return Error::from_string_view("Found region does not match stored metadata"sv);
+            if (!region.is_consistent_with_region(*real_region)) {
+                dmesgln("Coredump::write_regions: Found region does not match stored metadata");
+                return Error::from_errno(EINVAL);
+            }
 
             // If we crashed in the middle of mapping in Regions, they do not have a page directory yet, and will crash on a remap() call
             if (!real_region->is_mapped())
