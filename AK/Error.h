@@ -31,7 +31,12 @@ public:
     // For calling this method from userspace programs, we will simply return from
     // the Error::from_string_view method!
     [[nodiscard]] static Error from_string_view_or_print_error_and_return_errno(StringView string_literal, int code);
-    [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
+
+#ifndef KERNEL
+    [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc)
+    {
+        return Error(syscall_name, rc);
+    }
     [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
 
     [[nodiscard]] static Error copy(Error const& error)
@@ -57,17 +62,29 @@ public:
     {
         return from_string_view(string);
     }
+#endif
 
     bool operator==(Error const& other) const
     {
+#ifdef KERNEL
+        return m_code == other.m_code;
+#else
         return m_code == other.m_code && m_string_literal == other.m_string_literal && m_syscall == other.m_syscall;
+#endif
     }
 
-    bool is_errno() const { return m_code != 0; }
-    bool is_syscall() const { return m_syscall; }
-
     int code() const { return m_code; }
-    StringView string_literal() const { return m_string_literal; }
+#ifndef KERNEL
+    bool is_errno() const
+    {
+        return m_code != 0;
+    }
+    bool is_syscall() const { return m_syscall; }
+    StringView string_literal() const
+    {
+        return m_string_literal;
+    }
+#endif
 
 protected:
     Error(int code)
@@ -76,6 +93,7 @@ protected:
     }
 
 private:
+#ifndef KERNEL
     Error(StringView string_literal)
         : m_string_literal(string_literal)
     {
@@ -92,8 +110,13 @@ private:
     Error& operator=(Error const&) = default;
 
     StringView m_string_literal;
+#endif
+
     int m_code { 0 };
+
+#ifndef KERNEL
     bool m_syscall { false };
+#endif
 };
 
 template<typename T, typename E>
