@@ -178,7 +178,7 @@ enum class SearchInPath {
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 #endif
 
-ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath, Optional<Span<StringView>> environment = {});
+ErrorOr<void> exec(StringView filename, Span<StringView const> arguments, SearchInPath, Optional<Span<StringView const>> environment = {});
 
 #ifdef AK_OS_SERENITY
 ErrorOr<void> join_jail(u64 jail_index);

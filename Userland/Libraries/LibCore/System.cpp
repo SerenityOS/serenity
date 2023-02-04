@@ -1113,7 +1113,7 @@ ErrorOr<u64> create_jail(StringView jail_name)
 }
 #endif
 
-ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
+ErrorOr<void> exec(StringView filename, Span<StringView const> arguments, SearchInPath search_in_path, Optional<Span<StringView const>> environment)
 {
 #ifdef AK_OS_SERENITY
     Syscall::SC_execve_params params;
