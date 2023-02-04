@@ -283,13 +283,13 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
             return {};
-        auto& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
+        auto const& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
         if (traceback.size() > 1) {
             unsigned repetitions = 0;
             for (size_t i = 0; i < traceback.size(); ++i) {
-                auto& traceback_frame = traceback[i];
+                auto const& traceback_frame = traceback[i];
                 if (i + 1 < traceback.size()) {
-                    auto& next_traceback_frame = traceback[i + 1];
+                    auto const& next_traceback_frame = traceback[i + 1];
                     if (next_traceback_frame.function_name == traceback_frame.function_name) {
                         repetitions++;
                         continue;
