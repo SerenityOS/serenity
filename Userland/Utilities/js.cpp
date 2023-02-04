@@ -101,7 +101,7 @@ static ErrorOr<void> print(JS::Value value, PrintTarget target = PrintTarget::St
     return print(value, *stream);
 }
 
-static DeprecatedString prompt_for_level(int level)
+static ErrorOr<String> prompt_for_level(int level)
 {
     static StringBuilder prompt_builder;
     prompt_builder.clear();
@@ -110,23 +110,23 @@ static DeprecatedString prompt_for_level(int level)
     for (auto i = 0; i < level; ++i)
         prompt_builder.append("    "sv);
 
-    return prompt_builder.to_deprecated_string();
+    return prompt_builder.to_string();
 }
 
-static DeprecatedString read_next_piece()
+static ErrorOr<String> read_next_piece()
 {
     StringBuilder piece;
 
     auto line_level_delta_for_next_line { 0 };
 
     do {
-        auto line_result = s_editor->get_line(prompt_for_level(s_repl_line_level));
+        auto line_result = s_editor->get_line(TRY(prompt_for_level(s_repl_line_level)).to_deprecated_string());
 
         line_level_delta_for_next_line = 0;
 
         if (line_result.is_error()) {
             s_fail_repl = true;
-            return "";
+            return String {};
         }
 
         auto& line = line_result.value();
@@ -182,7 +182,7 @@ static DeprecatedString read_next_piece()
         }
     } while (s_repl_line_level + line_level_delta_for_next_line > 0);
 
-    return piece.to_deprecated_string();
+    return piece.to_string();
 }
 
 static bool write_to_file(DeprecatedString const& path)
@@ -505,11 +505,11 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 static ErrorOr<void> repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
-        DeprecatedString piece = read_next_piece();
+        auto const piece = TRY(read_next_piece());
         if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
 
-        g_repl_statements.append(piece);
+        g_repl_statements.append(piece.to_deprecated_string());
         TRY(parse_and_run(interpreter, piece, "REPL"sv));
     }
     return {};
@@ -729,7 +729,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            editor.set_prompt(prompt_for_level(open_indents));
+            editor.set_prompt(prompt_for_level(open_indents).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
         };
 
         auto complete = [&interpreter, &global_environment](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
