@@ -187,7 +187,7 @@ ErrorOr<FlatPtr> Process::sys$set_thread_name(pid_t tid, Userspace<char const*> 
 
     const size_t max_thread_name_size = 64;
     if (name->length() > max_thread_name_size)
-        return EINVAL;
+        return ENAMETOOLONG;
 
     auto thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
