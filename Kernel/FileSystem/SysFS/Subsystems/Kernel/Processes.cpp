@@ -118,7 +118,7 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
             TRY(thread_object.add("lock_count"sv, thread.lock_count()));
 #endif
             TRY(thread_object.add("tid"sv, thread.tid().value()));
-            TRY(thread_object.add("name"sv, thread.name()));
+            TRY(thread.name().with([&](auto& thread_name) { return thread_object.add("name"sv, thread_name->view()); }));
             TRY(thread_object.add("times_scheduled"sv, thread.times_scheduled()));
             TRY(thread_object.add("time_user"sv, thread.time_in_user()));
             TRY(thread_object.add("time_kernel"sv, thread.time_in_kernel()));
