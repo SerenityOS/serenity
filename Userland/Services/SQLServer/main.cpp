@@ -19,7 +19,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
     TRY(Core::Directory::create(database_path, Core::Directory::CreateDirectories::Yes));
 
-    TRY(Core::System::unveil("/etc/passwd"sv, "r"sv));
     TRY(Core::System::unveil(database_path, "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
