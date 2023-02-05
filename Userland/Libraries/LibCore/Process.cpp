@@ -70,7 +70,7 @@ struct ArgvList {
     }
 };
 
-ErrorOr<pid_t> Process::spawn(StringView path, Span<DeprecatedString const> arguments, DeprecatedString working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory)
 {
     ArgvList argv { path, arguments.size() };
     for (auto const& arg : arguments)
@@ -79,7 +79,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, Span<DeprecatedString const> argu
     return argv.spawn();
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, Span<StringView const> arguments, DeprecatedString working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory)
 {
     Vector<DeprecatedString> backing_strings;
     backing_strings.ensure_capacity(arguments.size());
@@ -92,7 +92,7 @@ ErrorOr<pid_t> Process::spawn(StringView path, Span<StringView const> arguments,
     return argv.spawn();
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, Span<char const* const> arguments, DeprecatedString working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, DeprecatedString working_directory)
 {
     ArgvList argv { path, arguments.size() };
     for (auto arg : arguments)

@@ -88,10 +88,10 @@ bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM&, Value locales);
 Optional<StringView> best_available_locale(StringView locale);
 ThrowCompletionOr<String> insert_unicode_extension_and_canonicalize(VM&, ::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
-ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
+ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<String> const& requested_locales, LocaleOptions const& options, ReadonlySpan<StringView> relevant_extension_keys);
 ThrowCompletionOr<Array*> supported_locales(VM&, Vector<String> const& requested_locales, Value options);
 ThrowCompletionOr<Object*> coerce_options_to_object(VM&, Value options);
-ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> string_values, StringOrBoolean fallback);
+ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, ReadonlySpan<StringView> string_values, StringOrBoolean fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(VM&, Value value, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Optional<int>> get_number_option(VM&, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM&, StringView pattern);
@@ -99,7 +99,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM&, StringView pa
 template<size_t Size>
 ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, StringView const (&string_values)[Size], StringOrBoolean fallback)
 {
-    return get_boolean_or_string_number_format_option(vm, options, property, Span<StringView const> { string_values }, move(fallback));
+    return get_boolean_or_string_number_format_option(vm, options, property, ReadonlySpan<StringView> { string_values }, move(fallback));
 }
 
 // NOTE: ECMA-402's GetOption is being removed in favor of a shared ECMA-262 GetOption in the Temporal proposal.

@@ -19,7 +19,7 @@
 
 namespace Web::Painting {
 
-void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Span<CSS::FilterFunction const> filter_list)
+void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, ReadonlySpan<CSS::FilterFunction> filter_list)
 {
     auto apply_color_filter = [&](Gfx::ColorFilter const& filter) {
         const_cast<Gfx::ColorFilter&>(filter).apply(target_bitmap, target_bitmap.rect(), target_bitmap, target_bitmap.rect());

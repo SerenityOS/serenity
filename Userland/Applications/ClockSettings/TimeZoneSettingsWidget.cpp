@@ -24,7 +24,7 @@
 #include <spawn.h>
 #include <unistd.h>
 
-using StringViewListModel = GUI::ItemListModel<StringView, Span<StringView const>>;
+using StringViewListModel = GUI::ItemListModel<StringView, ReadonlySpan<StringView>>;
 
 static constexpr auto PI_OVER_180 = M_PIf32 / 180.0f;
 static constexpr auto PI_OVER_4 = M_PIf32 / 4.0f;

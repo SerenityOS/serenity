@@ -151,7 +151,7 @@ struct AK::Formatter<TimeZone::Location> : Formatter<FormatString> {
     }
 };
 
-static Optional<DateTime> parse_date_time(Span<StringView const> segments)
+static Optional<DateTime> parse_date_time(ReadonlySpan<StringView> segments)
 {
     auto comment_index = find_index(segments.begin(), segments.end(), "#"sv);
     if (comment_index != segments.size())

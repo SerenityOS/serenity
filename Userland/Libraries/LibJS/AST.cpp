@@ -376,7 +376,7 @@ ThrowCompletionOr<CallExpression::ThisAndCallee> CallExpression::compute_this_an
 }
 
 // 13.3.8.1 Runtime Semantics: ArgumentListEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation
-static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, Span<CallExpression::Argument const> const arguments, MarkedVector<Value>& list)
+static ThrowCompletionOr<void> argument_list_evaluation(Interpreter& interpreter, ReadonlySpan<CallExpression::Argument> const arguments, MarkedVector<Value>& list)
 {
     auto& vm = interpreter.vm();
     list.ensure_capacity(arguments.size());
@@ -4967,12 +4967,12 @@ DeprecatedString SourceRange::filename() const
     return code->filename().to_deprecated_string();
 }
 
-NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments)
 {
     return ASTNodeWithTailArray::create<CallExpression>(arguments.size(), move(source_range), move(callee), arguments);
 }
 
-NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments)
 {
     return ASTNodeWithTailArray::create<NewExpression>(arguments.size(), move(source_range), move(callee), arguments);
 }

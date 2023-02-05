@@ -178,7 +178,7 @@ enum class SearchInPath {
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 #endif
 
-ErrorOr<void> exec(StringView filename, Span<StringView const> arguments, SearchInPath, Optional<Span<StringView const>> environment = {});
+ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath, Optional<ReadonlySpan<StringView>> environment = {});
 
 #ifdef AK_OS_SERENITY
 ErrorOr<void> join_jail(u64 jail_index);
@@ -203,7 +203,7 @@ ErrorOr<void> getsockname(int sockfd, struct sockaddr*, socklen_t*);
 ErrorOr<void> getpeername(int sockfd, struct sockaddr*, socklen_t*);
 ErrorOr<void> socketpair(int domain, int type, int protocol, int sv[2]);
 ErrorOr<Vector<gid_t>> getgroups();
-ErrorOr<void> setgroups(Span<gid_t const>);
+ErrorOr<void> setgroups(ReadonlySpan<gid_t>);
 ErrorOr<void> mknod(StringView pathname, mode_t mode, dev_t dev);
 ErrorOr<void> mkfifo(StringView pathname, mode_t mode);
 ErrorOr<void> setenv(StringView, StringView, bool);
@@ -222,7 +222,7 @@ public:
     AddressInfoVector(AddressInfoVector&&) = default;
     ~AddressInfoVector() = default;
 
-    Span<struct addrinfo const> addresses() const { return m_addresses; }
+    ReadonlySpan<struct addrinfo> addresses() const { return m_addresses; }
 
 private:
     friend ErrorOr<AddressInfoVector> getaddrinfo(char const* nodename, char const* servname, struct addrinfo const& hints);

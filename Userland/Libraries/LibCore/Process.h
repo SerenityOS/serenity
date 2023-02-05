@@ -15,9 +15,9 @@ namespace Core {
 
 class Process {
 public:
-    static ErrorOr<pid_t> spawn(StringView path, Span<DeprecatedString const> arguments, DeprecatedString working_directory = {});
-    static ErrorOr<pid_t> spawn(StringView path, Span<StringView const> arguments, DeprecatedString working_directory = {});
-    static ErrorOr<pid_t> spawn(StringView path, Span<char const* const> arguments = {}, DeprecatedString working_directory = {});
+    static ErrorOr<pid_t> spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory = {});
+    static ErrorOr<pid_t> spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory = {});
+    static ErrorOr<pid_t> spawn(StringView path, ReadonlySpan<char const*> arguments = {}, DeprecatedString working_directory = {});
 
     static ErrorOr<String> get_name();
     enum class SetThreadName {

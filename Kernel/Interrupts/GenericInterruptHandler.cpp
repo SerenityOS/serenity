@@ -67,7 +67,7 @@ void GenericInterruptHandler::change_interrupt_number(u8 number)
     register_generic_interrupt_handler(InterruptManagement::acquire_mapped_interrupt_number(interrupt_number()), *this);
 }
 
-Span<u32 const> GenericInterruptHandler::per_cpu_call_counts() const
+ReadonlySpan<u32> GenericInterruptHandler::per_cpu_call_counts() const
 {
     return m_per_cpu_call_counts.span().slice(0, Processor::count());
 }

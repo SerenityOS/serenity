@@ -22,7 +22,7 @@ ErrorOr<Optional<NumberFormat>> __attribute__((weak)) get_standard_number_system
 ErrorOr<Vector<NumberFormat>> __attribute__((weak)) get_compact_number_system_formats(StringView, StringView, CompactNumberFormatType) { return Vector<NumberFormat> {}; }
 ErrorOr<Vector<NumberFormat>> __attribute__((weak)) get_unit_formats(StringView, StringView, Style) { return Vector<NumberFormat> {}; }
 
-Optional<Span<u32 const>> __attribute__((weak)) get_digits_for_number_system(StringView)
+Optional<ReadonlySpan<u32>> __attribute__((weak)) get_digits_for_number_system(StringView)
 {
     // Fall back to "latn" digits when Unicode data generation is disabled.
     constexpr Array<u32, 10> digits { { 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39 } };

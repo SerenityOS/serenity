@@ -50,7 +50,7 @@ bool is_builtin_calendar(StringView identifier)
 }
 
 // 12.1.2 AvailableCalendars ( ), https://tc39.es/proposal-temporal/#sec-temporal-availablecalendars
-Span<StringView const> available_calendars()
+ReadonlySpan<StringView> available_calendars()
 {
     // 1. Let calendars be the List of String values representing calendar types supported by the implementation.
     // NOTE: This can be removed in favor of using `Unicode::get_available_calendars()` once everything is updated to handle non-iso8601 calendars.

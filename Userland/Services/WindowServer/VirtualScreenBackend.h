@@ -27,7 +27,7 @@ private:
 
     virtual void set_head_buffer(int index) override;
 
-    virtual ErrorOr<void> flush_framebuffer_rects(int, Span<FBRect const>) override { return {}; }
+    virtual ErrorOr<void> flush_framebuffer_rects(int, ReadonlySpan<FBRect>) override { return {}; }
 
     virtual ErrorOr<void> flush_framebuffer() override { return {}; }
 

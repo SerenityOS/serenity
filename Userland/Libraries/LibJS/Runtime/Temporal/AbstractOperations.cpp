@@ -97,7 +97,7 @@ ThrowCompletionOr<Object*> get_options_object(VM& vm, Value options)
 }
 
 // 13.3 GetOption ( options, property, type, values, fallback ), https://tc39.es/proposal-temporal/#sec-getoption
-ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey const& property, OptionType type, Span<StringView const> values, OptionDefault const& default_)
+ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey const& property, OptionType type, ReadonlySpan<StringView> values, OptionDefault const& default_)
 {
     VERIFY(property.is_string());
 

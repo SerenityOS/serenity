@@ -786,14 +786,14 @@ StringView style_to_string(Style style)
     }
 }
 
-Span<StringView const> __attribute__((weak)) get_available_keyword_values(StringView) { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_calendars() { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_collation_case_orderings() { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_collation_numeric_orderings() { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_collation_types() { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_currencies() { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_hour_cycles() { return {}; }
-Span<StringView const> __attribute__((weak)) get_available_number_systems() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_keyword_values(StringView) { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_calendars() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_collation_case_orderings() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_collation_numeric_orderings() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_collation_types() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_currencies() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_hour_cycles() { return {}; }
+ReadonlySpan<StringView> __attribute__((weak)) get_available_number_systems() { return {}; }
 Optional<Locale> __attribute__((weak)) locale_from_string(StringView) { return {}; }
 Optional<Language> __attribute__((weak)) language_from_string(StringView) { return {}; }
 Optional<Territory> __attribute__((weak)) territory_from_string(StringView) { return {}; }

@@ -1113,7 +1113,7 @@ ErrorOr<u64> create_jail(StringView jail_name)
 }
 #endif
 
-ErrorOr<void> exec(StringView filename, Span<StringView const> arguments, SearchInPath search_in_path, Optional<Span<StringView const>> environment)
+ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath search_in_path, Optional<ReadonlySpan<StringView>> environment)
 {
 #ifdef AK_OS_SERENITY
     Syscall::SC_execve_params params;
@@ -1399,7 +1399,7 @@ ErrorOr<Vector<gid_t>> getgroups()
     return groups;
 }
 
-ErrorOr<void> setgroups(Span<gid_t const> gids)
+ErrorOr<void> setgroups(ReadonlySpan<gid_t> gids)
 {
     if (::setgroups(gids.size(), gids.data()) < 0)
         return Error::from_syscall("setgroups"sv, -errno);
