@@ -391,11 +391,12 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
     // filled in as 0, with no data placed in the Unicode localizable profile description area.
     Optional<String> unicode_description;
     if (unicode_description_length > 0) {
-        u16 last_code_point = (u16)(unicode_description_data[2 * (unicode_description_length - 1)] << 8) | (u16)unicode_description_data[2 * (unicode_description_length - 1) + 1];
+        u32 byte_size_without_nul = 2 * (unicode_description_length - 1);
+        u16 last_code_point = (u16)(unicode_description_data[byte_size_without_nul] << 8) | (u16)unicode_description_data[byte_size_without_nul + 1];
         if (last_code_point != 0)
             return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description not \\0-terminated");
 
-        StringView utf_16be_data { unicode_description_data, 2 * (unicode_description_length - 1) };
+        StringView utf_16be_data { unicode_description_data, byte_size_without_nul };
         unicode_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("utf-16be")->to_utf8(utf_16be_data)));
     }
 
