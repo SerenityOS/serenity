@@ -189,25 +189,46 @@ static void print_help()
         "x <address> - examine dword in memory\n");
 }
 
+static NonnullOwnPtr<Debug::DebugSession> create_debug_session(StringView command, pid_t pid_to_debug)
+{
+    if (!command.is_null()) {
+        auto result = Debug::DebugSession::exec_and_attach(command);
+        if (!result) {
+            warnln("Failed to start debugging session for: \"{}\"", command);
+            exit(1);
+        }
+        return result.release_nonnull();
+    }
+
+    if (pid_to_debug == -1) {
+        warnln("Either a command or a pid must be specified");
+        exit(1);
+    }
+
+    auto result = Debug::DebugSession::attach(pid_to_debug);
+    if (!result) {
+        warnln("Failed to attach to pid: {}", pid_to_debug);
+        exit(1);
+    }
+    return result.release_nonnull();
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     editor = Line::Editor::construct();
 
     TRY(Core::System::pledge("stdio proc ptrace exec rpath tty sigaction cpath unix"));
 
-    char const* command = nullptr;
+    StringView command;
+    pid_t pid_to_debug = -1;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(command,
         "The program to be debugged, along with its arguments",
-        "program", Core::ArgsParser::Required::Yes);
+        "program", Core::ArgsParser::Required::No);
+    args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID");
     args_parser.parse(arguments);
 
-    auto result = Debug::DebugSession::exec_and_attach(command);
-    if (!result) {
-        warnln("Failed to start debugging session for: \"{}\"", command);
-        exit(1);
-    }
-    g_debug_session = result.release_nonnull();
+    g_debug_session = create_debug_session(command, pid_to_debug);
 
     struct sigaction sa {
     };
