@@ -97,6 +97,14 @@ ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes byte
     u16 number_of_output_table_entries = *bit_cast<BigEndian<u16> const*>(bytes.data() + 8 + sizeof(LUTHeader) + 2);
     ReadonlyBytes table_bytes = bytes.slice(8 + sizeof(LUTHeader) + 4);
 
+    // "Each input table consists of a minimum of two and a maximum of 4096 uInt16Number integers.
+    if (number_of_input_table_entries < 2 || number_of_input_table_entries > 4096)
+        return Error::from_string_literal("ICC::Profile: lut16Type bad number of input table entries");
+
+    // "Each output table consists of a minimum of two and a maximum of 4096 uInt16Number integers."
+    if (number_of_output_table_entries < 2 || number_of_output_table_entries > 4096)
+        return Error::from_string_literal("ICC::Profile: lut16Type bad number of output table entries");
+
     EMatrix3x3 e;
     for (int i = 0; i < 9; ++i)
         e.e[i] = S15Fixed16::create_raw(header.e_parameters[i]);
