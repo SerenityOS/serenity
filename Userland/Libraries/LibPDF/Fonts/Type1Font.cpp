@@ -86,7 +86,8 @@ void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float w
         return;
     }
 
-    auto translation = m_data.font_program->glyph_translation(char_code, width);
+    auto char_name = m_data.encoding->get_name(char_code);
+    auto translation = m_data.font_program->glyph_translation(char_name, width);
     point = point.translated(translation);
 
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
@@ -97,7 +98,7 @@ void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float w
     if (maybe_bitmap.has_value()) {
         bitmap = maybe_bitmap.value();
     } else {
-        bitmap = m_data.font_program->rasterize_glyph(char_code, width, glyph_position.subpixel_offset);
+        bitmap = m_data.font_program->rasterize_glyph(char_name, width, glyph_position.subpixel_offset);
         m_glyph_cache.set(index, bitmap);
     }
 

@@ -108,29 +108,27 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
             glyph.width += float(nominalWidthX);
     }
 
+    for (size_t i = 0; i < glyphs.size(); i++) {
+        if (i == 0) {
+            TRY(cff->add_glyph(0, move(glyphs[0])));
+            continue;
+        }
+        auto const& name = charset[i - 1];
+        TRY(cff->add_glyph(name, move(glyphs[i])));
+    }
+
     // Encoding given or read
     if (encoding) {
-        for (size_t i = 0; i < glyphs.size(); i++) {
-            if (i == 0) {
-                TRY(cff->add_glyph(0, move(glyphs[0])));
-                continue;
-            }
-            auto const& name = charset[i - 1];
-            u16 code = encoding->get_char_code(name);
-            TRY(cff->add_glyph(code, move(glyphs[i])));
-        }
         cff->set_encoding(move(encoding));
     } else {
         auto encoding = Encoding::create();
         for (size_t i = 0; i < glyphs.size(); i++) {
             if (i == 0) {
-                TRY(cff->add_glyph(0, move(glyphs[0])));
                 encoding->set(0, ".notdef");
                 continue;
             }
             auto code = encoding_codes[i - 1];
             auto char_name = charset[i - 1];
-            TRY(cff->add_glyph(code, move(glyphs[i])));
             encoding->set(code, char_name);
         }
         cff->set_encoding(move(encoding));
