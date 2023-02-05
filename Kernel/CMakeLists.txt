@@ -489,6 +489,7 @@ set(AK_SOURCES
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
     ../AK/Time.cpp
+    ../AK/Error.cpp
     ../AK/Format.cpp
     ../AK/UUID.cpp
 )
@@ -626,6 +627,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     set(KCOV_EXCLUDED_SOURCES
         # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
         # otherwise we'll end up with recursive calls to that function.
+        ../AK/Error.cpp
         ../AK/Format.cpp
         ../AK/StringBuilder.cpp
         ../Kernel/Arch/x86_64/Processor.cpp
