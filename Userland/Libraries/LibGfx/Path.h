@@ -243,6 +243,14 @@ public:
         return m_bounding_box.value();
     }
 
+    void append_path(Path const& path)
+    {
+        m_segments.ensure_capacity(m_segments.size() + path.m_segments.size());
+        for (auto const& segment : path.m_segments)
+            m_segments.unchecked_append(segment);
+        invalidate_split_lines();
+    }
+
     Path copy_transformed(AffineTransform const&) const;
 
     DeprecatedString to_deprecated_string() const;
