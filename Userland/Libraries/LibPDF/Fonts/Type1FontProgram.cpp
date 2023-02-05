@@ -397,10 +397,20 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 case DotSection:
                 case VStem3:
                 case HStem3:
-                case Seac:
                     // FIXME: Do something with these?
                     state.sp = 0;
                     break;
+
+                case Seac: {
+                    auto achar = pop();
+                    auto bchar = pop();
+                    auto ady = pop();
+                    auto adx = pop();
+                    // auto asb = pop();
+                    state.glyph.set_accented_character(AccentedCharacter { (u8)bchar, (u8)achar, adx, ady });
+                    state.sp = 0;
+                    break;
+                }
 
                 case Div: {
                     auto num2 = pop();
