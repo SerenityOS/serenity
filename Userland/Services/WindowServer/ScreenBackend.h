@@ -27,7 +27,7 @@ public:
 
     virtual void set_head_buffer(int index) = 0;
 
-    virtual ErrorOr<void> flush_framebuffer_rects(int buffer_index, Span<FBRect const> rects) = 0;
+    virtual ErrorOr<void> flush_framebuffer_rects(int buffer_index, ReadonlySpan<FBRect> rects) = 0;
 
     virtual ErrorOr<void> unmap_framebuffer() = 0;
     virtual ErrorOr<void> map_framebuffer() = 0;

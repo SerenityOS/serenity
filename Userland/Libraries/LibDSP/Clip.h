@@ -54,7 +54,7 @@ public:
     // May do nothing; that's fine.
     void remove_note(RollNote note);
 
-    Span<RollNote const> notes() const { return m_notes.span(); }
+    ReadonlySpan<RollNote> notes() const { return m_notes.span(); }
 
     RollNote operator[](size_t index) const { return m_notes[index]; }
     RollNote operator[](size_t index) { return m_notes[index]; }

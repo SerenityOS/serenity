@@ -106,7 +106,7 @@ struct HuffmanDecodeResult {
 };
 
 template<typename T>
-HuffmanDecodeResult<T> huffman_decode(BigEndianInputBitStream& bitstream, Span<HuffmanNode<T> const> tree, size_t max_bits_to_read)
+HuffmanDecodeResult<T> huffman_decode(BigEndianInputBitStream& bitstream, ReadonlySpan<HuffmanNode<T>> tree, size_t max_bits_to_read)
 {
     HuffmanNode<T> const* node = &tree[0];
     size_t bits_read = 0;
@@ -1681,7 +1681,7 @@ constexpr auto Tree30 = make_huffman_tree<Table30>();
 constexpr auto Tree31 = make_huffman_tree<Table31>();
 
 struct HuffmanTreeXY {
-    Span<HuffmanNode<HuffmanXY> const> nodes;
+    ReadonlySpan<HuffmanNode<HuffmanXY>> nodes;
     int linbits;
 };
 

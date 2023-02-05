@@ -301,7 +301,7 @@ private:
 struct ExecutionContext {
     NonnullRefPtr<Database> database;
     Statement const* statement { nullptr };
-    Span<Value const> placeholder_values {};
+    ReadonlySpan<Value> placeholder_values {};
     Tuple* current_row { nullptr };
 };
 
@@ -760,7 +760,7 @@ private:
 
 class Statement : public ASTNode {
 public:
-    ResultOr<ResultSet> execute(AK::NonnullRefPtr<Database> database, Span<Value const> placeholder_values = {}) const;
+    ResultOr<ResultSet> execute(AK::NonnullRefPtr<Database> database, ReadonlySpan<Value> placeholder_values = {}) const;
 
     virtual ResultOr<ResultSet> execute(ExecutionContext&) const
     {

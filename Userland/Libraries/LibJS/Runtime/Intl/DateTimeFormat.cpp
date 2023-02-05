@@ -510,7 +510,7 @@ static Optional<StyleAndValue> find_calendar_field(StringView name, ::Locale::Ca
     return {};
 }
 
-static ThrowCompletionOr<Optional<StringView>> resolve_day_period(VM& vm, StringView locale, StringView calendar, ::Locale::CalendarPatternStyle style, Span<PatternPartition const> pattern_parts, LocalTime local_time)
+static ThrowCompletionOr<Optional<StringView>> resolve_day_period(VM& vm, StringView locale, StringView calendar, ::Locale::CalendarPatternStyle style, ReadonlySpan<PatternPartition> pattern_parts, LocalTime local_time)
 {
     // Use the "noon" day period if the locale has it, but only if the time is either exactly 12:00.00 or would be displayed as such.
     if (local_time.hour == 12) {

@@ -21,7 +21,7 @@
 
 namespace Web::WebDriver {
 
-using Parameters = Span<StringView const>;
+using Parameters = ReadonlySpan<StringView>;
 
 class Client : public Core::Object {
     C_OBJECT_ABSTRACT(Client);

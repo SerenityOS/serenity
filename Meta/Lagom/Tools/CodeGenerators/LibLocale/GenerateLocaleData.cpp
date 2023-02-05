@@ -1127,7 +1127,7 @@ struct TextLayout {
     generate_available_values(generator, "get_available_currencies"sv, cldr.currencies);
 
     generator.append(R"~~~(
-Span<StringView const> get_available_keyword_values(StringView key)
+ReadonlySpan<StringView> get_available_keyword_values(StringView key)
 {
     auto key_value = key_from_string(key);
     if (!key_value.has_value())
@@ -1521,7 +1521,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, cldr.character_orders);
 
     generator.append(R"~~~(
-static Span<@string_index_type@ const> find_keyword_indices(StringView locale, StringView key)
+static ReadonlySpan<@string_index_type@> find_keyword_indices(StringView locale, StringView key)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())

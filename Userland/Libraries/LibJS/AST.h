@@ -111,7 +111,7 @@ public:
             value.~T();
     }
 
-    Span<T const> tail_span() const { return { tail_data(), tail_size() }; }
+    ReadonlySpan<T> tail_span() const { return { tail_data(), tail_size() }; }
 
     T const* tail_data() const { return reinterpret_cast<T const*>(reinterpret_cast<uintptr_t>(this) + sizeof(Derived)); }
     size_t tail_size() const { return m_tail_size; }
@@ -126,7 +126,7 @@ protected:
         return adopt_ref(*::new (memory) ActualDerived(move(source_range), forward<Args>(args)...));
     }
 
-    ASTNodeWithTailArray(SourceRange source_range, Span<T const> values)
+    ASTNodeWithTailArray(SourceRange source_range, ReadonlySpan<T> values)
         : Base(move(source_range))
         , m_tail_size(values.size())
     {
@@ -1493,7 +1493,7 @@ class CallExpression : public ASTNodeWithTailArray<CallExpression, Expression, C
 public:
     using Argument = CallExpressionArgument;
 
-    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression> callee, Span<Argument const> arguments);
+    static NonnullRefPtr<CallExpression> create(SourceRange, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments);
 
     virtual Completion execute(Interpreter&) const override;
     virtual void dump(int indent) const override;
@@ -1501,10 +1501,10 @@ public:
 
     Expression const& callee() const { return m_callee; }
 
-    Span<Argument const> arguments() const { return tail_span(); }
+    ReadonlySpan<Argument> arguments() const { return tail_span(); }
 
 protected:
-    CallExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+    CallExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments)
         : ASTNodeWithTailArray(move(source_range), arguments)
         , m_callee(move(callee))
     {
@@ -1530,14 +1530,14 @@ class NewExpression final : public CallExpression {
     friend class ASTNodeWithTailArray;
 
 public:
-    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression> callee, Span<Argument const> arguments);
+    static NonnullRefPtr<NewExpression> create(SourceRange, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments);
 
     virtual Completion execute(Interpreter&) const override;
 
     virtual bool is_new_expression() const override { return true; }
 
 private:
-    NewExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, Span<Argument const> arguments)
+    NewExpression(SourceRange source_range, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments)
         : CallExpression(move(source_range), move(callee), arguments)
     {
     }

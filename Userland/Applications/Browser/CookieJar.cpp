@@ -420,7 +420,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
     return cookie_list;
 }
 
-static ErrorOr<Web::Cookie::Cookie> parse_cookie(Span<SQL::Value const> row)
+static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
 {
     if (row.size() != 12)
         return Error::from_string_view("Incorrect number of columns to parse cookie"sv);

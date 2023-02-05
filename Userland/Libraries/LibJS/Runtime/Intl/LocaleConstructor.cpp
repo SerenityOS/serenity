@@ -27,7 +27,7 @@ struct LocaleAndKeys {
 };
 
 // Note: This is not an AO in the spec. This just serves to abstract very similar steps in ApplyOptionsToTag and the Intl.Locale constructor.
-static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, Span<StringView const> values = {})
+static ThrowCompletionOr<Optional<String>> get_string_option(VM& vm, Object const& options, PropertyKey const& property, Function<bool(StringView)> validator, ReadonlySpan<StringView> values = {})
 {
     auto option = TRY(get_option(vm, options, property, OptionType::String, values, Empty {}));
     if (option.is_undefined())
@@ -105,7 +105,7 @@ static ThrowCompletionOr<String> apply_options_to_tag(VM& vm, StringView tag, Ob
 }
 
 // 14.1.3 ApplyUnicodeExtensionToTag ( tag, options, relevantExtensionKeys ), https://tc39.es/ecma402/#sec-apply-unicode-extension-to-tag
-static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, StringView tag, LocaleAndKeys options, Span<StringView const> relevant_extension_keys)
+static ThrowCompletionOr<LocaleAndKeys> apply_unicode_extension_to_tag(VM& vm, StringView tag, LocaleAndKeys options, ReadonlySpan<StringView> relevant_extension_keys)
 {
     // 1. Assert: Type(tag) is String.
     // 2. Assert: tag matches the unicode_locale_id production.

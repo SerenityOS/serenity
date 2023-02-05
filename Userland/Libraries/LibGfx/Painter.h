@@ -53,9 +53,9 @@ public:
     void fill_rect_with_checkerboard(IntRect const&, IntSize, Color color_dark, Color color_light);
     void fill_rect_with_gradient(Orientation, IntRect const&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(IntRect const&, Color gradient_start, Color gradient_end);
-    void fill_rect_with_linear_gradient(IntRect const&, Span<ColorStop const>, float angle, Optional<float> repeat_length = {});
-    void fill_rect_with_conic_gradient(IntRect const&, Span<ColorStop const>, IntPoint center, float start_angle, Optional<float> repeat_length = {});
-    void fill_rect_with_radial_gradient(IntRect const&, Span<ColorStop const>, IntPoint center, IntSize size, Optional<float> repeat_length = {});
+    void fill_rect_with_linear_gradient(IntRect const&, ReadonlySpan<ColorStop>, float angle, Optional<float> repeat_length = {});
+    void fill_rect_with_conic_gradient(IntRect const&, ReadonlySpan<ColorStop>, IntPoint center, float start_angle, Optional<float> repeat_length = {});
+    void fill_rect_with_radial_gradient(IntRect const&, ReadonlySpan<ColorStop>, IntPoint center, IntSize size, Optional<float> repeat_length = {});
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
     void fill_ellipse(IntRect const&, Color);
@@ -68,7 +68,7 @@ public:
     void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, Gfx::AffineTransform const&, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_triangle(IntPoint, IntPoint, IntPoint, Color);
-    void draw_triangle(IntPoint offset, Span<IntPoint const>, Color);
+    void draw_triangle(IntPoint offset, ReadonlySpan<IntPoint>, Color);
     void draw_ellipse_intersecting(IntRect const&, Color, int thickness = 1);
     void set_pixel(IntPoint, Color, bool blend = false);
     void set_pixel(int x, int y, Color color, bool blend = false) { set_pixel({ x, y }, color, blend); }

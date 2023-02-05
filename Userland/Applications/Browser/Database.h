@@ -21,7 +21,7 @@
 namespace Browser {
 
 class Database : public RefCounted<Database> {
-    using OnResult = Function<void(Span<SQL::Value const>)>;
+    using OnResult = Function<void(ReadonlySpan<SQL::Value>)>;
     using OnComplete = Function<void()>;
     using OnError = Function<void(StringView)>;
 

@@ -60,7 +60,7 @@ Span<RefPtr<PhysicalPage>> SharedFramebufferVMObject::real_framebuffer_physical_
 {
     return m_real_framebuffer_vmobject->physical_pages();
 }
-Span<RefPtr<PhysicalPage> const> SharedFramebufferVMObject::real_framebuffer_physical_pages() const
+ReadonlySpan<RefPtr<PhysicalPage>> SharedFramebufferVMObject::real_framebuffer_physical_pages() const
 {
     return m_real_framebuffer_vmobject->physical_pages();
 }
@@ -70,7 +70,7 @@ Span<RefPtr<PhysicalPage>> SharedFramebufferVMObject::fake_sink_framebuffer_phys
     return m_physical_pages.span();
 }
 
-Span<RefPtr<PhysicalPage> const> SharedFramebufferVMObject::fake_sink_framebuffer_physical_pages() const
+ReadonlySpan<RefPtr<PhysicalPage>> SharedFramebufferVMObject::fake_sink_framebuffer_physical_pages() const
 {
     return m_physical_pages.span();
 }
@@ -92,7 +92,7 @@ void SharedFramebufferVMObject::switch_to_real_framebuffer_writes(Badge<Kernel::
     });
 }
 
-Span<RefPtr<PhysicalPage> const> SharedFramebufferVMObject::physical_pages() const
+ReadonlySpan<RefPtr<PhysicalPage>> SharedFramebufferVMObject::physical_pages() const
 {
     SpinlockLocker locker(m_writes_state_lock);
     if (m_writes_are_faked)

@@ -70,7 +70,7 @@ private:
 protected:
     DeclarativeEnvironment();
     explicit DeclarativeEnvironment(Environment* parent_environment);
-    DeclarativeEnvironment(Environment* parent_environment, Span<Binding const> bindings);
+    DeclarativeEnvironment(Environment* parent_environment, ReadonlySpan<Binding> bindings);
 
     virtual void visit_edges(Visitor&) override;
 

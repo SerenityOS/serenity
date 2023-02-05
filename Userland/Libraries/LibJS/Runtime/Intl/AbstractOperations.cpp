@@ -378,7 +378,7 @@ static auto& find_key_in_value(T& value, StringView key)
 }
 
 // 9.2.7 ResolveLocale ( availableLocales, requestedLocales, options, relevantExtensionKeys, localeData ), https://tc39.es/ecma402/#sec-resolvelocale
-ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys)
+ThrowCompletionOr<LocaleResult> resolve_locale(VM& vm, Vector<String> const& requested_locales, LocaleOptions const& options, ReadonlySpan<StringView> relevant_extension_keys)
 {
     // 1. Let matcher be options.[[localeMatcher]].
     auto const& matcher = options.locale_matcher;
@@ -609,7 +609,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
 
 // 1.2.14 GetBooleanOrStringNumberFormatOption ( options, property, stringValues, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getbooleanorstringnumberformatoption
-ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> string_values, StringOrBoolean fallback)
+ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, ReadonlySpan<StringView> string_values, StringOrBoolean fallback)
 {
     // 1. Let value be ? Get(options, property).
     auto value = TRY(options.get(property));

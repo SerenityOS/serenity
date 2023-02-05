@@ -534,7 +534,7 @@ Bytecode::CodeGenerationErrorOr<void> Identifier::generate_bytecode(Bytecode::Ge
     return {};
 }
 
-static Bytecode::CodeGenerationErrorOr<void> arguments_to_array_for_call(Bytecode::Generator& generator, Span<CallExpression::Argument const> arguments)
+static Bytecode::CodeGenerationErrorOr<void> arguments_to_array_for_call(Bytecode::Generator& generator, ReadonlySpan<CallExpression::Argument> arguments)
 {
 
     if (arguments.is_empty()) {

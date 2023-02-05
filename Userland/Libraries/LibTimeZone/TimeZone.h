@@ -51,7 +51,7 @@ struct Location {
 StringView system_time_zone();
 StringView current_time_zone();
 ErrorOr<void> change_time_zone(StringView time_zone);
-Span<StringView const> all_time_zones();
+ReadonlySpan<StringView> all_time_zones();
 
 Optional<TimeZone> time_zone_from_string(StringView time_zone);
 StringView time_zone_to_string(TimeZone time_zone);

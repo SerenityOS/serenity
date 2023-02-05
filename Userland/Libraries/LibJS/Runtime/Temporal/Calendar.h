@@ -38,7 +38,7 @@ struct YearWeekRecord {
 };
 
 bool is_builtin_calendar(StringView identifier);
-Span<StringView const> available_calendars();
+ReadonlySpan<StringView> available_calendars();
 ThrowCompletionOr<Calendar*> create_temporal_calendar(VM&, String const& identifier, FunctionObject const* new_target = nullptr);
 ThrowCompletionOr<Calendar*> get_builtin_calendar(VM&, String const& identifier);
 Calendar* get_iso8601_calendar(VM&);

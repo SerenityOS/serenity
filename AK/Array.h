@@ -31,7 +31,7 @@ struct Array {
 
     [[nodiscard]] constexpr size_t size() const { return Size; }
 
-    [[nodiscard]] constexpr Span<T const> span() const { return { __data, Size }; }
+    [[nodiscard]] constexpr ReadonlySpan<T> span() const { return { __data, Size }; }
     [[nodiscard]] constexpr Span<T> span() { return { __data, Size }; }
 
     [[nodiscard]] constexpr T const& at(size_t index) const
@@ -76,7 +76,7 @@ struct Array {
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
     [[nodiscard]] constexpr Iterator end() { return Iterator::end(*this); }
 
-    [[nodiscard]] constexpr operator Span<T const>() const { return span(); }
+    [[nodiscard]] constexpr operator ReadonlySpan<T>() const { return span(); }
     [[nodiscard]] constexpr operator Span<T>() { return span(); }
 
     constexpr size_t fill(T const& value)

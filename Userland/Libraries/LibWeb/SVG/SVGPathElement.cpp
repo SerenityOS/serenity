@@ -107,7 +107,7 @@ void SVGPathElement::parse_attribute(DeprecatedFlyString const& name, Deprecated
     }
 }
 
-Gfx::Path path_from_path_instructions(Span<PathInstruction const> instructions)
+Gfx::Path path_from_path_instructions(ReadonlySpan<PathInstruction> instructions)
 {
     Gfx::Path path;
     Optional<Gfx::FloatPoint> previous_control_point;

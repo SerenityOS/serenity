@@ -35,7 +35,7 @@ public:
 
     size_t page_count() const { return m_physical_pages.size(); }
 
-    virtual Span<RefPtr<PhysicalPage> const> physical_pages() const { return m_physical_pages.span(); }
+    virtual ReadonlySpan<RefPtr<PhysicalPage>> physical_pages() const { return m_physical_pages.span(); }
     virtual Span<RefPtr<PhysicalPage>> physical_pages() { return m_physical_pages.span(); }
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }

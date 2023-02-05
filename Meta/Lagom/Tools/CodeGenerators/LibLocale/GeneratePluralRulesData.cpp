@@ -622,7 +622,7 @@ PluralCategory determine_plural_category(StringView locale, PluralForm form, Plu
     return decider(move(operands));
 }
 
-Span<PluralCategory const> available_plural_categories(StringView locale, PluralForm form)
+ReadonlySpan<PluralCategory> available_plural_categories(StringView locale, PluralForm form)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())

@@ -228,9 +228,9 @@ struct EmojiData {
         return emoji;
     }
 
-    constexpr Span<u32 const> code_points() const
+    constexpr ReadonlySpan<u32> code_points() const
     {
-        return Span<u32 const>(s_emoji_code_points.data() + code_point_start, code_point_count);
+        return ReadonlySpan<u32>(s_emoji_code_points.data() + code_point_start, code_point_count);
     }
 
     @string_index_type@ name { 0 };
@@ -259,7 +259,7 @@ static constexpr Array<EmojiData, @emojis_size@> s_emojis { {)~~~");
     generator.append(R"~~~(
 } };
 
-Optional<Emoji> find_emoji_for_code_points(Span<u32 const> code_points)
+Optional<Emoji> find_emoji_for_code_points(ReadonlySpan<u32> code_points)
 {
     for (auto& emoji : s_emojis) {
         if (emoji.code_points() == code_points)

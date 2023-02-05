@@ -158,7 +158,7 @@ static constexpr Array<@type@, @size@> @name@@index@ { {)~~~");
 
         generator.append(R"~~~(
 
-static constexpr Array<Span<@type@ const>, @size@ + 1> @name@ { {
+static constexpr Array<ReadonlySpan<@type@>, @size@ + 1> @name@ { {
     {})~~~");
 
         constexpr size_t max_values_per_row = 10;
@@ -475,7 +475,7 @@ Optional<@return_type@> @method_name@(StringView key)
 }
 
 template<typename IdentifierFormatter>
-void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, Span<DeprecatedString const> values)
+void generate_value_to_string(SourceGenerator& generator, StringView method_name_format, StringView value_type, StringView value_name, IdentifierFormatter&& format_identifier, ReadonlySpan<DeprecatedString> values)
 {
     generator.set("method_name", DeprecatedString::formatted(method_name_format, value_name));
     generator.set("value_type", value_type);
@@ -576,7 +576,7 @@ void generate_mapping(SourceGenerator& generator, LocalesType const& locales, St
     generator.set("name", name);
     generator.set("size", DeprecatedString::number(locales.size()));
     generator.append(R"~~~(
-static constexpr Array<Span<@type@ const>, @size@> @name@ { {
+static constexpr Array<ReadonlySpan<@type@>, @size@> @name@ { {
     )~~~");
 
     constexpr size_t max_values_per_row = 10;
@@ -606,7 +606,7 @@ void generate_available_values(SourceGenerator& generator, StringView name, Vect
     generator.set("name", name);
 
     generator.append(R"~~~(
-Span<StringView const> @name@()
+ReadonlySpan<StringView> @name@()
 {
     static constexpr auto values = Array {)~~~");
 

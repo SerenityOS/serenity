@@ -28,7 +28,7 @@ public:
 
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T>
-    static NonnullGCPtr<Array> create_from(Realm& realm, Span<T const> elements, Function<Value(T const&)> map_fn)
+    static NonnullGCPtr<Array> create_from(Realm& realm, ReadonlySpan<T> elements, Function<Value(T const&)> map_fn)
     {
         auto values = MarkedVector<Value> { realm.heap() };
         values.ensure_capacity(elements.size());
@@ -40,7 +40,7 @@ public:
 
     // Non-standard but equivalent to CreateArrayFromList.
     template<typename T, FallibleFunction<T const&> Callback>
-    static ThrowCompletionOr<NonnullGCPtr<Array>> try_create_from(VM& vm, Realm& realm, Span<T const> elements, Callback map_fn)
+    static ThrowCompletionOr<NonnullGCPtr<Array>> try_create_from(VM& vm, Realm& realm, ReadonlySpan<T> elements, Callback map_fn)
     {
         auto values = MarkedVector<Value> { realm.heap() };
         TRY_OR_THROW_OOM(vm, values.try_ensure_capacity(elements.size()));

@@ -146,14 +146,14 @@ ErrorOr<Optional<String>> canonicalize_unicode_locale_id(LocaleID&);
 StringView default_locale();
 bool is_locale_available(StringView locale);
 
-Span<StringView const> get_available_keyword_values(StringView key);
-Span<StringView const> get_available_calendars();
-Span<StringView const> get_available_collation_case_orderings();
-Span<StringView const> get_available_collation_numeric_orderings();
-Span<StringView const> get_available_collation_types();
-Span<StringView const> get_available_currencies();
-Span<StringView const> get_available_hour_cycles();
-Span<StringView const> get_available_number_systems();
+ReadonlySpan<StringView> get_available_keyword_values(StringView key);
+ReadonlySpan<StringView> get_available_calendars();
+ReadonlySpan<StringView> get_available_collation_case_orderings();
+ReadonlySpan<StringView> get_available_collation_numeric_orderings();
+ReadonlySpan<StringView> get_available_collation_types();
+ReadonlySpan<StringView> get_available_currencies();
+ReadonlySpan<StringView> get_available_hour_cycles();
+ReadonlySpan<StringView> get_available_number_systems();
 
 Style style_from_string(StringView style);
 StringView style_to_string(Style style);

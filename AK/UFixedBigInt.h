@@ -77,13 +77,13 @@ public:
         return m_high;
     }
 
-    Span<u8> bytes()
+    Bytes bytes()
     {
-        return Span<u8>(reinterpret_cast<u8*>(this), sizeof(R));
+        return Bytes { reinterpret_cast<u8*>(this), sizeof(R) };
     }
-    Span<u8 const> bytes() const
+    ReadonlyBytes bytes() const
     {
-        return Span<u8 const>(reinterpret_cast<u8 const*>(this), sizeof(R));
+        return ReadonlyBytes { reinterpret_cast<u8 const*>(this), sizeof(R) };
     }
 
     template<Unsigned U>

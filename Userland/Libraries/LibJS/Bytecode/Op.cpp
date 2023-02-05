@@ -1111,7 +1111,7 @@ DeprecatedString CopyObjectExcludingProperties::to_deprecated_string_impl(Byteco
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
     if (m_excluded_names_count != 0) {
         builder.append(" excluding:["sv);
-        builder.join(", "sv, Span<Register const>(m_excluded_names, m_excluded_names_count));
+        builder.join(", "sv, ReadonlySpan<Register>(m_excluded_names, m_excluded_names_count));
         builder.append(']');
     }
     return builder.to_deprecated_string();

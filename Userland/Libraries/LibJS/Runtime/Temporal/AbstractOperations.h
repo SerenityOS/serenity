@@ -134,7 +134,7 @@ using TemporalUnitDefault = Variant<TemporalUnitRequired, Optional<StringView>>;
 
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(VM&, Value items, Vector<OptionType> const& element_types);
 ThrowCompletionOr<Object*> get_options_object(VM&, Value options);
-ThrowCompletionOr<Value> get_option(VM&, Object const& options, PropertyKey const& property, OptionType type, Span<StringView const> values, OptionDefault const&);
+ThrowCompletionOr<Value> get_option(VM&, Object const& options, PropertyKey const& property, OptionType type, ReadonlySpan<StringView> values, OptionDefault const&);
 ThrowCompletionOr<String> to_temporal_overflow(VM&, Object const* options);
 ThrowCompletionOr<String> to_temporal_disambiguation(VM&, Object const* options);
 ThrowCompletionOr<String> to_temporal_rounding_mode(VM&, Object const& normalized_options, StringView fallback);
@@ -181,7 +181,7 @@ ThrowCompletionOr<DifferenceSettings> get_difference_settings(VM&, DifferenceOpe
 template<size_t Size>
 ThrowCompletionOr<Value> get_option(VM& vm, Object const& options, PropertyKey const& property, OptionType type, StringView const (&values)[Size], OptionDefault const& default_)
 {
-    return get_option(vm, options, property, type, Span<StringView const> { values }, default_);
+    return get_option(vm, options, property, type, ReadonlySpan<StringView> { values }, default_);
 }
 
 // 13.40 ToIntegerWithTruncation ( argument ), https://tc39.es/proposal-temporal/#sec-tointegerwithtruncation

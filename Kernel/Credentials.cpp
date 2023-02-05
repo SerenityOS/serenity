@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<Credentials>> Credentials::create(UserID uid, GroupID gid, UserID euid, GroupID egid, UserID suid, GroupID sgid, Span<GroupID const> extra_gids, SessionID sid, ProcessGroupID pgid)
+ErrorOr<NonnullRefPtr<Credentials>> Credentials::create(UserID uid, GroupID gid, UserID euid, GroupID egid, UserID suid, GroupID sgid, ReadonlySpan<GroupID> extra_gids, SessionID sid, ProcessGroupID pgid)
 {
     auto extra_gids_array = TRY(FixedArray<GroupID>::create(extra_gids));
     return adopt_nonnull_ref_or_enomem(new (nothrow) Credentials(uid, gid, euid, egid, suid, sgid, move(extra_gids_array), sid, pgid));
