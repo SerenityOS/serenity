@@ -781,6 +781,7 @@ DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator,
         index = clamp(((timestamp.to_nanoseconds() * cue_points.size()) / TRY(segment_information()).duration()->to_nanoseconds()), 0, cue_points.size() - 1);
 
     CuePoint const* prev_cue_point = &cue_points[index];
+    dbgln_if(MATROSKA_DEBUG, "Finding Matroska cue points for timestamp {}ms starting from cue at {}ms", timestamp.to_milliseconds(), prev_cue_point->timestamp().to_milliseconds());
 
     if (prev_cue_point->timestamp() == timestamp) {
         TRY(iterator.seek_to_cue_point(*prev_cue_point));
@@ -788,14 +789,17 @@ DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator,
     }
 
     if (prev_cue_point->timestamp() > timestamp) {
-        while (index > 0 && prev_cue_point->timestamp() > timestamp)
+        while (index > 0 && prev_cue_point->timestamp() > timestamp) {
             prev_cue_point = &cue_points[--index];
+            dbgln_if(MATROSKA_DEBUG, "Checking previous cue point {}ms", prev_cue_point->timestamp().to_milliseconds());
+        }
         TRY(iterator.seek_to_cue_point(*prev_cue_point));
         return {};
     }
 
     while (index < cue_points.size()) {
         auto const& cue_point = cue_points[index++];
+        dbgln_if(MATROSKA_DEBUG, "Checking future cue point {}ms", cue_point.timestamp().to_milliseconds());
         if (cue_point.timestamp() > timestamp)
             break;
         prev_cue_point = &cue_point;
