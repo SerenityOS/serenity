@@ -129,6 +129,26 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(DeprecatedString const& comma
     return debug_session;
 }
 
+OwnPtr<DebugSession> DebugSession::attach(pid_t pid, DeprecatedString source_root)
+{
+    if (ptrace(PT_ATTACH, pid, 0, 0) < 0) {
+        perror("PT_ATTACH");
+        return {};
+    }
+
+    int status = 0;
+    if (waitpid(pid, &status, WSTOPPED | WEXITED) != pid || !WIFSTOPPED(status)) {
+        perror("waitpid");
+        return {};
+    }
+
+    auto debug_session = adopt_own(*new DebugSession(pid, source_root));
+    // At this point, libraries should have been loaded
+    debug_session->update_loaded_libs();
+
+    return debug_session;
+}
+
 bool DebugSession::poke(FlatPtr address, FlatPtr data)
 {
     if (ptrace(PT_POKE, m_debuggee_pid, bit_cast<void*>(address), bit_cast<void*>(data)) < 0) {

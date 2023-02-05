@@ -28,6 +28,7 @@ namespace Debug {
 class DebugSession : public ProcessInspector {
 public:
     static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {});
+    static OwnPtr<DebugSession> attach(pid_t pid, DeprecatedString source_root = {});
 
     virtual ~DebugSession() override;
 
