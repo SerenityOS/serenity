@@ -24,7 +24,7 @@ AccessibilityTreeNode::AccessibilityTreeNode(JS::GCPtr<DOM::Node> value)
     m_children = {};
 }
 
-void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const
+void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object, Document const& document) const
 {
     if (value()->is_document()) {
         VERIFY_NOT_REACHED();
@@ -36,6 +36,11 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
 
             auto role = element->role_or_default();
             bool has_role = role.has_value() && !ARIA::is_abstract_role(*role);
+
+            auto name = MUST(element->accessible_name(document));
+            MUST(object.add("name"sv, name));
+            auto description = MUST(element->accessible_description(document));
+            MUST(object.add("description"sv, description));
 
             if (has_role)
                 MUST(object.add("role"sv, ARIA::role_name(*role)));
@@ -54,11 +59,11 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
 
     if (value()->has_child_nodes()) {
         auto node_children = MUST(object.add_array("children"sv));
-        for (auto child : children()) {
+        for (auto* child : children()) {
             if (child->value()->is_uninteresting_whitespace_node())
                 continue;
             JsonObjectSerializer<StringBuilder> child_object = MUST(node_children.add_object());
-            child->serialize_tree_as_json(child_object);
+            child->serialize_tree_as_json(child_object, document);
             MUST(child_object.finish());
         }
         MUST(node_children.finish());
