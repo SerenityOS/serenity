@@ -15,7 +15,6 @@ ErrorOr<void> spawn_helper_process(StringView process_name, Span<StringView> arg
     VERIFY(!paths.is_empty());
     ErrorOr<void> result;
     for (auto const& path : paths) {
-        arguments[0] = path.bytes_as_string_view();
         result = Core::System::exec(path, arguments, search_in_path, environment);
         if (!result.is_error())
             break;
