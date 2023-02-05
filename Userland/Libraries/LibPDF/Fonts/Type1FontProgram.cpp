@@ -52,9 +52,9 @@ enum ExtendedCommand {
     Flex1,
 };
 
-RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
+RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
-    auto path = build_char(char_code, width, subpixel_offset);
+    auto path = build_char(char_name, width, subpixel_offset);
     auto bounding_box = path.bounding_box().size();
 
     u32 w = (u32)ceilf(bounding_box.width()) + 2;
@@ -65,9 +65,9 @@ RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(u32 char_code, float width
     return rasterizer.accumulate();
 }
 
-Gfx::Path Type1FontProgram::build_char(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
+Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
-    auto maybe_glyph = m_glyph_map.get(char_code);
+    auto maybe_glyph = m_glyph_map.get(char_name);
     if (!maybe_glyph.has_value())
         return {};
 
@@ -84,9 +84,9 @@ Gfx::Path Type1FontProgram::build_char(u32 char_code, float width, Gfx::GlyphSub
     return glyph.path.copy_transformed(transform);
 }
 
-Gfx::FloatPoint Type1FontProgram::glyph_translation(u32 char_code, float width) const
+Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& char_name, float width) const
 {
-    auto maybe_glyph = m_glyph_map.get(char_code);
+    auto maybe_glyph = m_glyph_map.get(char_name);
     if (!maybe_glyph.has_value())
         return {};
 
