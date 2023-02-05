@@ -54,6 +54,9 @@ public slots:
     void select_all();
     void copy_selected_text();
 
+protected:
+    bool eventFilter(QObject* obj, QEvent* event);
+
 private:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
