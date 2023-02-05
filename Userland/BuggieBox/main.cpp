@@ -5,11 +5,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "init.h"
 #include <AK/LexicalPath.h>
+#include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <Userland/BuggieBox/Globals.h>
 #include <Userland/Libraries/LibC/unistd.h>
 #include <Userland/Shell/Shell.h>
+#include <unistd.h>
 
 bool g_follow_symlinks = false;
 bool g_there_was_an_error = false;
@@ -114,6 +117,7 @@ static constexpr Runner s_runners[] = {
     { "sha512sum"sv, checksum_main },
     { "Shell"sv, sh_main },
     { "["sv, test_main },
+    { "init"sv, buggiebox_init_main },
 };
 
 static ErrorOr<int> run_program(Main::Arguments arguments, LexicalPath const& runbase, bool& found_runner)
@@ -145,6 +149,26 @@ static ErrorOr<int> buggiebox_main(Main::Arguments arguments)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    if (arguments.strings[0] == "emergency_shell"sv) {
+        int stdin_new_fd = TRY(Core::System::open("/dev/tty0"sv, O_RDWR));
+        int stdout_new_fd = TRY(Core::System::open("/dev/tty0"sv, O_RDWR));
+        int stderr_new_fd = TRY(Core::System::open("/dev/tty0"sv, O_RDWR));
+
+        close(0);
+        close(1);
+        close(2);
+        TRY(Core::System::dup2(stdin_new_fd, 0));
+        TRY(Core::System::dup2(stdout_new_fd, 1));
+        TRY(Core::System::dup2(stderr_new_fd, 2));
+        warnln("===========================================");
+        warnln("ERROR: Failed to continue booting.");
+        warnln("You have been dropped to the emergency shell.");
+        warnln("Run /bin/BuggieBox to view the available utilities.");
+        warnln("To continue booting from a specified device, run /bin/BuggieBox init [DEVICE_FILE]");
+        warnln("===========================================");
+        return sh_main(arguments);
+    }
+
     LexicalPath runbase { arguments.strings[0] };
     if (runbase.basename() == "BuggieBox"sv) {
         Main::Arguments utility_arguments = arguments;

@@ -73,7 +73,7 @@ target_sources(LibBuggieBox PRIVATE ../Shell/main.cpp)
 set_source_files_properties( ../Shell/main.cpp PROPERTIES COMPILE_DEFINITIONS "serenity_main=sh_main")
 
 serenity_bin(BuggieBox)
-target_sources(BuggieBox PRIVATE main.cpp)
+target_sources(BuggieBox PRIVATE main.cpp init.cpp)
 target_link_libraries(BuggieBox PRIVATE LibC LibMain LibBuggieBox)
 foreach(file IN LISTS utility_srcs)
    buggiebox_utility(${file})
