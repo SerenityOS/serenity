@@ -10,12 +10,12 @@
 #    include <Kernel/Assertions.h>
 #else
 #    include <assert.h>
+extern "C" __attribute__((noreturn)) void ak_verification_failed(char const*);
 #    ifndef NDEBUG
 #        define VERIFY assert
 #    else
 #        define __stringify_helper(x) #x
 #        define __stringify(x) __stringify_helper(x)
-extern "C" __attribute__((noreturn)) void ak_verification_failed(char const*);
 #        define VERIFY(expr)                                                                \
             (__builtin_expect(!(expr), 0)                                                   \
                     ? ak_verification_failed(#expr "\n" __FILE__ ":" __stringify(__LINE__)) \
