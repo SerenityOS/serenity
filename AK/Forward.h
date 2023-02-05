@@ -61,7 +61,10 @@ struct Array;
 template<typename Container, typename ValueType>
 class SimpleIterator;
 
-using ReadonlyBytes = Span<u8 const>;
+template<typename T>
+using ReadonlySpan = Span<T const>;
+
+using ReadonlyBytes = ReadonlySpan<u8>;
 using Bytes = Span<u8>;
 
 template<typename T, AK::MemoryOrder DefaultMemoryOrder>
