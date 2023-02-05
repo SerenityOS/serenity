@@ -581,7 +581,7 @@ void WebContentView::create_client()
 
         auto webcontent_fd_passing_socket_string = DeprecatedString::number(wc_fd_passing_fd);
 
-        Vector<StringView> arguments {
+        Vector<StringView, 5> arguments {
             "WebContent"sv,
             "--webcontent-fd-passing-socket"sv,
             webcontent_fd_passing_socket_string
