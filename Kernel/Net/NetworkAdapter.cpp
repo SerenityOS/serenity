@@ -63,7 +63,7 @@ void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Addres
     ipv4.set_source(source_ipv4);
     ipv4.set_destination(destination_ipv4);
     ipv4.set_protocol((u8)protocol);
-    ipv4.set_length(sizeof(IPv4Packet) + payload_size);
+    ipv4.set_length(ipv4_packet_size);
     ipv4.set_ident(1);
     ipv4.set_ttl(ttl);
     ipv4.set_checksum(ipv4.compute_checksum());
