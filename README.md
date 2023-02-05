@@ -29,7 +29,7 @@ You can watch videos of the system being developed on YouTube:
 ## Features
 
 * Modern x86 64-bit kernel with pre-emptive multi-threading
-* [Browser](Userland/Applications/Browser/) with JavaScript, WebAssembly, and more (check the spec compliance for [JS](https://libjs.dev/test262/), [CSS](https://css.tobyase.de/), and [WASM](https://libjs.dev/wasm/))
+* [Browser](Userland/Applications/Browser/) with JavaScript, WebAssembly, and more (check the spec compliance for [JS](https://libjs.dev/test262/), [CSS](https://css.tobyase.de/), and [Wasm](https://libjs.dev/wasm/))
 * Security features (hardware protections, limited userland capabilities, W^X memory, `pledge` & `unveil`, (K)ASLR, OOM-resistance, web-content isolation, state-of-the-art TLS algorithms, ...)
 * [System services](Userland/Services/) (WindowServer, LoginServer, AudioServer, WebServer, RequestServer, CrashServer, ...) and modern IPC
 * Good POSIX compatibility ([LibC](Userland/Libraries/LibC/), Shell, syscalls, signals, pseudoterminals, filesystem notifications, standard Unix [utilities](Userland/Utilities/), ...)
