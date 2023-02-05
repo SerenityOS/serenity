@@ -189,7 +189,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
 
     // "Multiple strings within this tag may share storage locations. For example, en/US and en/UK can refer to the
     //  same string data."
-    // This implementation makes redudant string copies in that case.
+    // This implementation makes redundant string copies in that case.
     // Most of the time, this costs just a few bytes, so that seems ok.
 
     if (bytes.size() < 4 * sizeof(u32))
