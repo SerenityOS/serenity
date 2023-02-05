@@ -110,6 +110,24 @@ Gfx::AffineTransform Type1FontProgram::glyph_transform_to_device_space(Glyph con
     return transform;
 }
 
+void Type1FontProgram::consolidate_glyphs()
+{
+    for (auto& [name, glyph] : m_glyph_map) {
+        if (!glyph.is_accented_character())
+            continue;
+        auto maybe_base_glyph = m_glyph_map.get(glyph.accented_character().base_character);
+        if (!maybe_base_glyph.has_value())
+            continue;
+        auto glyph_path = maybe_base_glyph.value().path();
+        auto maybe_accent_glyph = m_glyph_map.get(glyph.accented_character().accent_character);
+        if (maybe_accent_glyph.has_value()) {
+            auto path = maybe_accent_glyph.value().path();
+            glyph_path.append_path(move(path));
+        }
+        glyph.path() = glyph_path;
+    }
+}
+
 PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& subroutines, GlyphParserState& state, bool is_type2)
 {
     auto push = [&](float value) -> PDFErrorOr<void> {
