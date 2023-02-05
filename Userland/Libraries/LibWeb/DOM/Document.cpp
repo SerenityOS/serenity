@@ -2362,7 +2362,7 @@ DeprecatedString Document::dump_accessibility_tree_as_json()
         MUST(json.add("type"sv, "element"sv));
         MUST(json.add("role"sv, "document"sv));
     } else {
-        accessibility_tree->serialize_tree_as_json(json);
+        accessibility_tree->serialize_tree_as_json(json, *this);
     }
 
     MUST(json.finish());

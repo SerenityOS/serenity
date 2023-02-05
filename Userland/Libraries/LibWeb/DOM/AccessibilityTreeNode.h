@@ -25,7 +25,7 @@ public:
     Vector<AccessibilityTreeNode*> children() const { return m_children; }
     void append_child(AccessibilityTreeNode* child) { m_children.append(child); }
 
-    void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) const;
+    void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object, Document const&) const;
 
 protected:
     virtual void visit_edges(Visitor&) override;
