@@ -7,7 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 
-#if !defined(KERNEL) && defined(NDEBUG)
+#if !defined(KERNEL)
 extern "C" {
 
 void ak_verification_failed(char const* message)
