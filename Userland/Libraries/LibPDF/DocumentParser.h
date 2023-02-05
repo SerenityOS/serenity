@@ -25,6 +25,8 @@ public:
     // Parses the header and initializes the xref table and trailer
     PDFErrorOr<void> initialize();
 
+    bool can_resolve_references() { return m_xref_table; };
+
     PDFErrorOr<Value> parse_object_with_index(u32 index);
 
     // Specialized version of parse_dict which aborts early if the dict being parsed
