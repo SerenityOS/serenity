@@ -704,7 +704,7 @@ void Painter::draw_bitmap(IntPoint p, GlyphBitmap const& bitmap, Color color)
     }
 }
 
-void Painter::draw_triangle(IntPoint offset, Span<IntPoint const> control_points, Color color)
+void Painter::draw_triangle(IntPoint offset, ReadonlySpan<IntPoint> control_points, Color color)
 {
     VERIFY(control_points.size() == 3);
     draw_triangle(control_points[0] + offset, control_points[1] + offset, control_points[2] + offset, color);

@@ -155,7 +155,7 @@ bool AppFile::spawn() const
     if (!is_valid())
         return false;
 
-    auto pid = Core::Process::spawn(executable(), Span<DeprecatedString const> {}, working_directory());
+    auto pid = Core::Process::spawn(executable(), ReadonlySpan<StringView> {}, working_directory());
     if (pid.is_error())
         return false;
 

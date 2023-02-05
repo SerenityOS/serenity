@@ -555,7 +555,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
         granule.samples[count + 1] = requantize(y, exponents[count + 1]);
     }
 
-    Span<MP3::Tables::Huffman::HuffmanNode<MP3::Tables::Huffman::HuffmanVWXY> const> count1table = granule.count1table_select ? MP3::Tables::Huffman::TreeB : MP3::Tables::Huffman::TreeA;
+    ReadonlySpan<MP3::Tables::Huffman::HuffmanNode<MP3::Tables::Huffman::HuffmanVWXY>> count1table = granule.count1table_select ? MP3::Tables::Huffman::TreeB : MP3::Tables::Huffman::TreeA;
 
     // count1 is not known. We have to read huffman encoded values
     // until we've exhausted the granule's bits. We know the size of
@@ -672,7 +672,7 @@ void MP3LoaderPlugin::process_stereo(MP3::MP3Frame& frame, size_t granule_index)
     auto& granule_left = frame.channels[0].granules[granule_index];
     auto& granule_right = frame.channels[1].granules[granule_index];
 
-    auto get_last_nonempty_band = [](Span<float> samples, Span<MP3::Tables::ScaleFactorBand const> bands) -> size_t {
+    auto get_last_nonempty_band = [](Span<float> samples, ReadonlySpan<MP3::Tables::ScaleFactorBand> bands) -> size_t {
         size_t last_nonempty_band = 0;
 
         for (size_t i = 0; i < bands.size(); i++) {
@@ -781,7 +781,7 @@ void MP3LoaderPlugin::transform_samples_to_time(Array<float, 576> const& input, 
             output[i] = 0;
 
     } else {
-        s_mdct_36.transform(Span<float const>(input).slice(input_offset, 18), output);
+        s_mdct_36.transform(ReadonlySpan<float>(input).slice(input_offset, 18), output);
         for (size_t i = 0; i < 36; i++) {
             switch (block_type) {
             case MP3::BlockType::Normal:
@@ -837,7 +837,7 @@ void MP3LoaderPlugin::synthesis(Array<float, 1024>& V, Array<float, 32>& samples
     }
 }
 
-Span<MP3::Tables::ScaleFactorBand const> MP3LoaderPlugin::get_scalefactor_bands(MP3::Granule const& granule, int samplerate)
+ReadonlySpan<MP3::Tables::ScaleFactorBand> MP3LoaderPlugin::get_scalefactor_bands(MP3::Granule const& granule, int samplerate)
 {
     switch (granule.block_type) {
     case MP3::BlockType::Short:

@@ -2215,7 +2215,7 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView lo
     return result;
 }
 
-static ErrorOr<Span<@string_index_type@ const>> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
+static ErrorOr<ReadonlySpan<@string_index_type@>> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
 {
     if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
         auto const& symbols_list = s_calendar_symbol_lists[data->symbols];
@@ -2243,7 +2243,7 @@ static ErrorOr<Span<@string_index_type@ const>> find_calendar_symbols(StringView
         return s_symbol_lists.at(symbol_list_index);
     }
 
-    return Span<@string_index_type@ const> {};
+    return ReadonlySpan<@string_index_type@> {};
 }
 
 ErrorOr<Optional<StringView>> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value)

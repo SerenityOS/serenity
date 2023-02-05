@@ -32,7 +32,7 @@ DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_environment)
 {
 }
 
-DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_environment, Span<Binding const> bindings)
+DeclarativeEnvironment::DeclarativeEnvironment(Environment* parent_environment, ReadonlySpan<Binding> bindings)
     : Environment(parent_environment)
     , m_bindings(bindings)
 {

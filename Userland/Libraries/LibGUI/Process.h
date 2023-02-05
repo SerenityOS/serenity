@@ -12,9 +12,9 @@
 namespace GUI {
 
 struct Process {
-    static void spawn_or_show_error(Window* parent_window, StringView path, Span<DeprecatedString const> arguments);
-    static void spawn_or_show_error(Window* parent_window, StringView path, Span<StringView const> arguments);
-    static void spawn_or_show_error(Window* parent_window, StringView path, Span<char const* const> arguments = {});
+    static void spawn_or_show_error(Window* parent_window, StringView path, ReadonlySpan<DeprecatedString> arguments);
+    static void spawn_or_show_error(Window* parent_window, StringView path, ReadonlySpan<StringView> arguments);
+    static void spawn_or_show_error(Window* parent_window, StringView path, ReadonlySpan<char const*> arguments = {});
 };
 
 }

@@ -116,7 +116,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
     // 1. Let key be ? ToString(key).
     auto key = TRY(vm.argument(0).to_string(vm));
 
-    Span<StringView const> list;
+    ReadonlySpan<StringView> list;
 
     // 2. If key is "calendar", then
     if (key == "calendar"sv) {

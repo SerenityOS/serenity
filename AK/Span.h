@@ -192,7 +192,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] bool constexpr starts_with(Span<T const> other) const
+    [[nodiscard]] bool constexpr starts_with(ReadonlySpan<T> other) const
     {
         if (size() < other.size())
             return false;
@@ -250,7 +250,7 @@ public:
         return TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
-    ALWAYS_INLINE constexpr operator Span<T const>() const
+    ALWAYS_INLINE constexpr operator ReadonlySpan<T>() const
     {
         return { data(), size() };
     }

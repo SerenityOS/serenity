@@ -365,7 +365,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
     auto stream = TRY(parse_stream(dict));
     auto table = adopt_ref(*new XRefTable());
 
-    auto field_to_long = [](Span<u8 const> field) -> long {
+    auto field_to_long = [](ReadonlyBytes field) -> long {
         long value = 0;
         const u8 max = (field.size() - 1) * 8;
         for (size_t i = 0; i < field.size(); ++i) {

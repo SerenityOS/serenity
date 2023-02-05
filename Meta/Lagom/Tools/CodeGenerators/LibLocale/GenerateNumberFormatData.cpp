@@ -915,7 +915,7 @@ static Optional<NumberSystem> keyword_to_number_system(KeywordNumbers keyword)
     }
 }
 
-Optional<Span<u32 const>> get_digits_for_number_system(StringView system)
+Optional<ReadonlySpan<u32>> get_digits_for_number_system(StringView system)
 {
     auto number_system_keyword = keyword_nu_from_string(system);
     if (!number_system_keyword.has_value())
