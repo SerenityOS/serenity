@@ -116,6 +116,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         auto const& name = charset[i - 1];
         TRY(cff->add_glyph(name, move(glyphs[i])));
     }
+    cff->consolidate_glyphs();
 
     // Encoding given or read
     if (encoding) {

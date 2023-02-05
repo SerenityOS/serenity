@@ -98,6 +98,7 @@ PDFErrorOr<void> PS1FontProgram::parse_encrypted_portion(ByteBuffer const& buffe
         }
     }
 
+    consolidate_glyphs();
     return {};
 }
 

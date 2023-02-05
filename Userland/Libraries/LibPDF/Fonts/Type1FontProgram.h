@@ -25,6 +25,19 @@ public:
     RefPtr<Encoding> encoding() const { return m_encoding; }
 
 protected:
+    struct AccentedCharacter {
+        AccentedCharacter(u8 base_char_code, u8 accent_char_code, float adx, float ady)
+            : base_character(Encoding::standard_encoding()->get_name(base_char_code))
+            , accent_character(Encoding::standard_encoding()->get_name(accent_char_code))
+            , accent_origin(adx, ady)
+        {
+        }
+
+        DeprecatedFlyString base_character;
+        DeprecatedFlyString accent_character;
+        Gfx::FloatPoint accent_origin;
+    };
+
     class Glyph {
 
     public:
@@ -38,9 +51,17 @@ protected:
         Gfx::Path& path() { return m_path; }
         Gfx::Path const& path() const { return m_path; }
 
+        bool is_accented_character() const { return m_accented_character.has_value(); }
+        AccentedCharacter const& accented_character() const { return m_accented_character.value(); }
+        void set_accented_character(AccentedCharacter&& accented_character)
+        {
+            m_accented_character = move(accented_character);
+        }
+
     private:
         Gfx::Path m_path;
         Optional<float> m_width;
+        Optional<AccentedCharacter> m_accented_character;
     };
 
     struct GlyphParserState {
@@ -85,6 +106,8 @@ protected:
         TRY(m_glyph_map.try_set(move(name), move(glyph)));
         return {};
     }
+
+    void consolidate_glyphs();
 
 private:
     HashMap<DeprecatedFlyString, Glyph> m_glyph_map;
