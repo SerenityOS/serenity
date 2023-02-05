@@ -140,7 +140,7 @@ PDFErrorOr<Vector<ByteBuffer>> PS1FontProgram::parse_subroutines(Reader& reader)
             } else {
                 array[index] = TRY(ByteBuffer::copy(entry.bytes()));
             }
-        } else if (word == "index") {
+        } else if (word == "index" || word == "def" || word == "ND") {
             break;
         }
     }
