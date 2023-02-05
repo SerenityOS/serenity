@@ -178,4 +178,29 @@ bool is_non_abstract_role(Role role)
         || is_windows_role(role);
 }
 
+// https://www.w3.org/TR/wai-aria-1.2/#namefromcontent
+bool allows_name_from_content(Role role)
+{
+    return first_is_one_of(role,
+        Role::button,
+        Role::cell,
+        Role::checkbox,
+        Role::columnheader,
+        Role::gridcell,
+        Role::heading,
+        Role::link,
+        Role::menuitem,
+        Role::menuitemcheckbox,
+        Role::menuitemradio,
+        Role::option,
+        Role::radio,
+        Role::row,
+        Role::rowheader,
+        Role::sectionhead,
+        Role::switch_,
+        Role::tab,
+        Role::tooltip,
+        Role::treeitem);
+}
+
 }
