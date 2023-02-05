@@ -33,6 +33,9 @@ void PolygonalSelectTool::flood_polygon_selection(Gfx::Bitmap& polygon_bitmap, G
     polygon_bitmap.flood_visit_from_point({ polygon_bitmap.width() - 1, polygon_bitmap.height() - 1 }, 0, move(pixel_reached));
 
     selection_mask.shrink_to_fit();
+    if (selection_mask.bounding_rect().width() == 1 && selection_mask.bounding_rect().height() == 1)
+        selection_mask = {};
+
     m_editor->image().selection().merge(selection_mask, m_merge_mode);
 }
 

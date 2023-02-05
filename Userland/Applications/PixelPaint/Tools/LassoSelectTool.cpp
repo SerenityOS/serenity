@@ -131,7 +131,12 @@ void LassoSelectTool::flood_lasso_selection(Gfx::Bitmap& lasso_bitmap, Gfx::IntP
     lasso_bitmap.flood_visit_from_point({ 0, 0 }, 0, move(pixel_reached));
 
     selection_mask.shrink_to_fit();
-    selection_mask.bounding_rect().translate_by(m_editor->active_layer()->location());
+
+    if (selection_mask.bounding_rect().width() == 1 && selection_mask.bounding_rect().height() == 1)
+        selection_mask = {};
+    else
+        selection_mask.bounding_rect().translate_by(m_editor->active_layer()->location());
+
     m_editor->image().selection().merge(selection_mask, m_merge_mode);
 }
 
