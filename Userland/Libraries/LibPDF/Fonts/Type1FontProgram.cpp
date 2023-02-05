@@ -46,6 +46,10 @@ enum ExtendedCommand {
     CallOtherSubr = 16,
     Pop,
     SetCurrentPoint = 33,
+    Hflex,
+    Flex,
+    Hflex1,
+    Flex1,
 };
 
 RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
@@ -411,6 +415,14 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     state.sp = 0;
                     break;
                 }
+
+                case Hflex:
+                case Flex:
+                case Hflex1:
+                case Flex1:
+                    // TODO: implement these
+                    state.sp = 0;
+                    break;
 
                 default:
                     return error(DeprecatedString::formatted("Unhandled command: 12 {}", data[i]));
