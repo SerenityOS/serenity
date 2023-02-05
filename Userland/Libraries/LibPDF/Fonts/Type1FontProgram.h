@@ -25,10 +25,22 @@ public:
     RefPtr<Encoding> encoding() const { return m_encoding; }
 
 protected:
-    struct Glyph {
-        Gfx::Path path;
-        float width { 0 };
-        bool width_specified { false };
+    class Glyph {
+
+    public:
+        bool has_width() const { return m_width.has_value(); }
+        float width() const { return m_width.value(); }
+        void set_width(float width)
+        {
+            m_width = width;
+        }
+
+        Gfx::Path& path() { return m_path; }
+        Gfx::Path const& path() const { return m_path; }
+
+    private:
+        Gfx::Path m_path;
+        Optional<float> m_width;
     };
 
     struct GlyphParserState {

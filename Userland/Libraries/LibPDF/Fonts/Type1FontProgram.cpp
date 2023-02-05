@@ -71,17 +71,16 @@ Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, flo
     if (!maybe_glyph.has_value())
         return {};
 
-    auto& glyph = maybe_glyph.value();
+    auto const& glyph = maybe_glyph.value();
     auto transform = Gfx::AffineTransform()
                          .translate(subpixel_offset.to_float_point())
                          .multiply(glyph_transform_to_device_space(glyph, width));
 
     // Translate such that the top-left point is at [0, 0].
-    auto bounding_box = glyph.path.bounding_box();
+    auto bounding_box = glyph.path().bounding_box();
     Gfx::FloatPoint translation(-bounding_box.x(), -(bounding_box.y() + bounding_box.height()));
     transform.translate(translation);
-
-    return glyph.path.copy_transformed(transform);
+    return glyph.path().copy_transformed(transform);
 }
 
 Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& char_name, float width) const
@@ -94,7 +93,7 @@ Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& c
     auto transform = glyph_transform_to_device_space(glyph, width);
 
     // Undo the translation we applied earlier.
-    auto bounding_box = glyph.path.bounding_box();
+    auto bounding_box = glyph.path().bounding_box();
     Gfx::FloatPoint translation(bounding_box.x(), bounding_box.y() + bounding_box.height());
 
     return transform.map(translation);
@@ -102,7 +101,7 @@ Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& c
 
 Gfx::AffineTransform Type1FontProgram::glyph_transform_to_device_space(Glyph const& glyph, float width) const
 {
-    auto scale = width / (m_font_matrix.a() * glyph.width + m_font_matrix.e());
+    auto scale = width / (m_font_matrix.a() * glyph.width() + m_font_matrix.e());
     auto transform = m_font_matrix;
 
     // Convert character space to device space.
@@ -132,7 +131,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
         return value;
     };
 
-    auto& path = state.glyph.path;
+    auto& path = state.glyph.path();
     auto& point = state.point;
 
     // Core operations: move to, line to, curve to
@@ -214,8 +213,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
     auto maybe_read_width = [&](EvenOrOdd required_argument_count) {
         if (!is_type2 || !is_first_command || state.sp % 2 != required_argument_count)
             return;
-        state.glyph.width = pop_front();
-        state.glyph.width_specified = true;
+        state.glyph.set_width(pop_front());
     };
 
     // Parse the stream of parameters and commands that make up a glyph outline.
@@ -434,8 +432,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 auto wx = pop();
                 auto sbx = pop();
 
-                state.glyph.width = wx;
-                state.glyph.width_specified = true;
+                state.glyph.set_width(wx);
                 state.point = { sbx, 0.0f };
                 state.sp = 0;
                 break;

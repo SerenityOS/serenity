@@ -102,10 +102,10 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
 
     // Adjust glyphs' widths as they are deltas from nominalWidthX
     for (auto& glyph : glyphs) {
-        if (!glyph.width_specified)
-            glyph.width = float(defaultWidthX);
+        if (!glyph.has_width())
+            glyph.set_width(float(defaultWidthX));
         else
-            glyph.width += float(nominalWidthX);
+            glyph.set_width(glyph.width() + float(nominalWidthX));
     }
 
     for (size_t i = 0; i < glyphs.size(); i++) {
