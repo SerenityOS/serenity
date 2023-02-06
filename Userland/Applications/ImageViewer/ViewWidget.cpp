@@ -16,6 +16,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Orientation.h>
@@ -196,6 +197,7 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
     }
 
     m_path = Core::DeprecatedFile::real_path_for(path);
+    GUI::Application::the()->set_most_recently_open_file(String::from_utf8(path).release_value_but_fixme_should_propagate_errors());
     reset_view();
 }
 

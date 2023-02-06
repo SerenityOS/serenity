@@ -8,6 +8,7 @@
 #include "MainWidget.h"
 #include "ViewWidget.h"
 #include <AK/URL.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -39,6 +40,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath wpath cpath unix thread"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
+
+    Config::pledge_domain("ImageViewer");
+
+    app->set_config_domain(TRY(String::from_utf8("ImageViewer"sv)));
 
     TRY(Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer"));
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/ImageViewer.md") }));
@@ -286,6 +291,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(delete_action));
     TRY(file_menu->try_add_separator());
+
+    TRY(file_menu->add_recent_files_list([&](auto& action) {
+        auto path = action.text();
+        widget->set_path(path);
+        widget->load_from_file(path);
+    }));
+
     TRY(file_menu->try_add_action(quit_action));
 
     auto image_menu = TRY(window->try_add_menu("&Image"));
