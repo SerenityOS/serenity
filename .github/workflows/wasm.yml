@@ -17,6 +17,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
+      - name: "Select best APT mirror"
+        run: |
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
       - name: "Install Ubuntu dependencies"
         run: |
           sudo apt-get update
