@@ -8,8 +8,11 @@
 #include "FileUtils.h"
 #include "FileOperationProgressWidget.h"
 #include <AK/LexicalPath.h>
+#include <LibCore/File.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
+#include <LibGUI/Event.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
 
@@ -106,6 +109,41 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
     window->show();
 
     return {};
+}
+
+ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window)
+{
+    bool has_accepted_drop = false;
+
+    if (!event.mime_data().has_urls())
+        return has_accepted_drop;
+    auto const urls = event.mime_data().urls();
+    if (urls.is_empty()) {
+        dbgln("No files to drop");
+        return has_accepted_drop;
+    }
+
+    auto const target = LexicalPath::canonicalized_path(destination);
+
+    if (!Core::File::is_directory(target))
+        return has_accepted_drop;
+
+    Vector<DeprecatedString> paths_to_copy;
+    for (auto& url_to_copy : urls) {
+        if (!url_to_copy.is_valid() || url_to_copy.path() == target)
+            continue;
+        auto new_path = DeprecatedString::formatted("{}/{}", target, LexicalPath::basename(url_to_copy.path()));
+        if (url_to_copy.path() == new_path)
+            continue;
+
+        paths_to_copy.append(url_to_copy.path());
+        has_accepted_drop = true;
+    }
+
+    if (!paths_to_copy.is_empty())
+        TRY(run_file_operation(FileOperation::Copy, paths_to_copy, target, window));
+
+    return has_accepted_drop;
 }
 
 }
