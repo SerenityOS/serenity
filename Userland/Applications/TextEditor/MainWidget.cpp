@@ -295,6 +295,7 @@ MainWidget::MainWidget()
         }
 
         set_path(file.filename());
+        GUI::Application::the()->set_most_recently_open_file(file.filename());
         dbgln("Wrote document to {}", file.filename());
     });
 
@@ -374,6 +375,24 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     file_menu.add_separator();
     file_menu.add_action(*m_open_folder_action);
     file_menu.add_separator();
+
+    // FIXME: Propagate errors.
+    (void)file_menu.add_recent_files_list([&](auto& action) {
+        if (editor().document().is_modified()) {
+            auto save_document_first_result = GUI::MessageBox::ask_about_unsaved_changes(&window, m_path, editor().document().undo_stack().last_unmodified_timestamp());
+            if (save_document_first_result == GUI::Dialog::ExecResult::Yes)
+                m_save_action->activate();
+            if (save_document_first_result != GUI::Dialog::ExecResult::No && editor().document().is_modified())
+                return;
+        }
+
+        auto response = FileSystemAccessClient::Client::the().request_file(&window, action.text(), Core::File::OpenMode::Read);
+        if (response.is_error())
+            return;
+
+        if (auto result = read_file(response.value().filename(), response.value().stream()); result.is_error())
+            GUI::MessageBox::show(&window, "Unable to open file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+    });
     file_menu.add_action(GUI::CommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
@@ -750,6 +769,7 @@ ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)
 {
     m_editor->set_text(TRY(file.read_until_eof()));
     set_path(filename);
+    GUI::Application::the()->set_most_recently_open_file(filename);
     m_editor->set_focus(true);
     return {};
 }
