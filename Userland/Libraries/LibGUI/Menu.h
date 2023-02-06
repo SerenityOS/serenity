@@ -48,6 +48,8 @@ public:
     Menu& add_submenu(DeprecatedString name);
     void remove_all_actions();
 
+    ErrorOr<void> add_recent_files_list(Function<void(Action&)>);
+
     void popup(Gfx::IntPoint screen_position, RefPtr<Action> const& default_action = nullptr, Gfx::IntRect const& button_rect = {});
     void dismiss();
 
@@ -78,6 +80,8 @@ private:
     NonnullOwnPtrVector<MenuItem> m_items;
     WeakPtr<Action> m_current_default_action;
     bool m_visible { false };
+
+    Function<void(Action&)> m_recent_files_callback;
 };
 
 }

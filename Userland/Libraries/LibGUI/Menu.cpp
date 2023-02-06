@@ -9,6 +9,7 @@
 #include <AK/IDAllocator.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
@@ -215,6 +216,30 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+ErrorOr<void> Menu::add_recent_files_list(Function<void(Action&)> callback)
+{
+    m_recent_files_callback = move(callback);
+
+    Vector<NonnullRefPtr<GUI::Action>> recent_file_actions;
+
+    for (size_t i = 0; i < GUI::Application::max_recently_open_files(); ++i) {
+        recent_file_actions.append(GUI::Action::create("", [&](auto& action) { m_recent_files_callback(action); }));
+    }
+
+    recent_file_actions.append(GUI::Action::create("(No recently open files)", nullptr));
+    recent_file_actions.last()->set_enabled(false);
+
+    auto* app = GUI::Application::the();
+    app->register_recent_file_actions({}, recent_file_actions);
+
+    for (auto& action : recent_file_actions) {
+        TRY(try_add_action(action));
+    }
+
+    TRY(try_add_separator());
+    return {};
 }
 
 }
