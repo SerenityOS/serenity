@@ -109,9 +109,9 @@ void PlaybackManager::timer_callback()
     TRY_OR_FATAL_ERROR(m_playback_handler->on_timer_callback());
 }
 
-void PlaybackManager::seek_to_timestamp(Time target_timestamp)
+void PlaybackManager::seek_to_timestamp(Time target_timestamp, SeekMode seek_mode)
 {
-    TRY_OR_FATAL_ERROR(m_playback_handler->seek(target_timestamp, m_seek_mode));
+    TRY_OR_FATAL_ERROR(m_playback_handler->seek(target_timestamp, seek_mode));
 }
 
 Optional<Time> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample)
