@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/RefCounted.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
@@ -50,6 +51,7 @@ public:
     {
     }
 
+    Optional<RollNote> note_at(u32 time, u8 pitch) const;
     void set_note(RollNote note);
     // May do nothing; that's fine.
     void remove_note(RollNote note);
