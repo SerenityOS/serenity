@@ -1301,34 +1301,10 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         }
     };
 
-    auto copy_urls_to_directory = [&](Vector<URL> const& urls, DeprecatedString const& directory) {
-        if (urls.is_empty()) {
-            dbgln("No files to copy");
-            return;
-        }
-        bool had_accepted_copy = false;
-        for (auto& url_to_copy : urls) {
-            if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
-                continue;
-            auto new_path = DeprecatedString::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
-            if (url_to_copy.path() == new_path)
-                continue;
-
-            if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
-                auto error_message = DeprecatedString::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_deprecated_string(), new_path, static_cast<Error const&>(result.error()));
-                GUI::MessageBox::show(window, error_message, "File Manager"sv, GUI::MessageBox::Type::Error);
-            } else {
-                had_accepted_copy = true;
-            }
-        }
-        if (had_accepted_copy)
-            refresh_tree_view();
-    };
-
     breadcrumbbar.on_segment_drop = [&](size_t segment_index, GUI::DropEvent const& event) {
-        if (!event.mime_data().has_urls())
-            return;
-        copy_urls_to_directory(event.mime_data().urls(), breadcrumbbar.segment_data(segment_index));
+        bool const has_accepted_drop = handle_drop(event, breadcrumbbar.segment_data(segment_index), window).release_value_but_fixme_should_propagate_errors();
+        if (has_accepted_drop)
+            refresh_tree_view();
     };
 
     breadcrumbbar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
@@ -1341,13 +1317,12 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     };
 
     tree_view.on_drop = [&](GUI::ModelIndex const& index, GUI::DropEvent const& event) {
-        if (!event.mime_data().has_urls())
-            return;
-        auto& target_node = directories_model->node(index);
-        if (!target_node.is_directory())
-            return;
-        copy_urls_to_directory(event.mime_data().urls(), target_node.full_path());
-        const_cast<GUI::DropEvent&>(event).accept();
+        auto const& target_node = directories_model->node(index);
+        bool const has_accepted_drop = handle_drop(event, target_node.full_path(), window).release_value_but_fixme_should_propagate_errors();
+        if (has_accepted_drop) {
+            refresh_tree_view();
+            const_cast<GUI::DropEvent&>(event).accept();
+        }
     };
 
     directory_view->open(initial_location);

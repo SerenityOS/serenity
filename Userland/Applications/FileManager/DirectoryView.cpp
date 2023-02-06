@@ -659,35 +659,11 @@ void DirectoryView::setup_actions()
 
 void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent const& event)
 {
-    if (!event.mime_data().has_urls())
-        return;
-    auto urls = event.mime_data().urls();
-    if (urls.is_empty()) {
-        dbgln("No files to drop");
-        return;
-    }
+    auto const& target_node = node(index);
 
-    auto& target_node = node(index);
-    if (!target_node.is_directory())
-        return;
+    bool const has_accepted_drop = ::FileManager::handle_drop(event, target_node.full_path(), window()).release_value_but_fixme_should_propagate_errors();
 
-    bool had_accepted_drop = false;
-    Vector<DeprecatedString> paths_to_copy;
-    for (auto& url_to_copy : urls) {
-        if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
-            continue;
-        auto new_path = DeprecatedString::formatted("{}/{}", target_node.full_path(), LexicalPath::basename(url_to_copy.path()));
-        if (url_to_copy.path() == new_path)
-            continue;
-
-        paths_to_copy.append(url_to_copy.path());
-        had_accepted_drop = true;
-    }
-
-    if (!paths_to_copy.is_empty())
-        MUST(run_file_operation(FileOperation::Copy, paths_to_copy, target_node.full_path(), window()));
-
-    if (had_accepted_drop && on_accepted_drop)
+    if (has_accepted_drop && on_accepted_drop)
         on_accepted_drop();
 }
 
