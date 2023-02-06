@@ -126,7 +126,7 @@ private:
 
     void start_timer(int milliseconds);
     void timer_callback();
-    Time seek_demuxer_to_most_recent_keyframe(Time timestamp);
+    Optional<Time> seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample = OptionalNone());
 
     bool decode_and_queue_one_sample();
     void on_decode_timer();

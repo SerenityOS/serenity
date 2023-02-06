@@ -38,7 +38,7 @@ public:
     DecoderErrorOr<size_t> track_count();
 
     DecoderErrorOr<SampleIterator> create_sample_iterator(u64 track_number);
-    DecoderErrorOr<void> seek_to_random_access_point(SampleIterator&, Time);
+    DecoderErrorOr<SampleIterator> seek_to_random_access_point(SampleIterator, Time);
     DecoderErrorOr<Optional<Vector<CuePoint> const&>> cue_points_for_track(u64 track_number);
     DecoderErrorOr<bool> has_cues_for_track(u64 track_number);
 
@@ -83,7 +83,7 @@ class SampleIterator {
 public:
     DecoderErrorOr<Block> next_block();
     Cluster const& current_cluster() { return *m_current_cluster; }
-    Time const& last_timestamp() { return m_last_timestamp; }
+    Optional<Time> const& last_timestamp() { return m_last_timestamp; }
 
 private:
     friend class Reader;
@@ -107,7 +107,7 @@ private:
     // Must always point to an element ID or the end of the stream.
     size_t m_position { 0 };
 
-    Time m_last_timestamp { Time::min() };
+    Optional<Time> m_last_timestamp;
 
     Optional<Cluster> m_current_cluster;
 };

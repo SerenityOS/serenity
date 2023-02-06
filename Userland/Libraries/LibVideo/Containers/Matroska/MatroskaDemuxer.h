@@ -27,7 +27,7 @@ public:
 
     DecoderErrorOr<Vector<Track>> get_tracks_for_type(TrackType type) override;
 
-    DecoderErrorOr<Time> seek_to_most_recent_keyframe(Track track, Time timestamp) override;
+    DecoderErrorOr<Optional<Time>> seek_to_most_recent_keyframe(Track track, Time timestamp, Optional<Time> earliest_available_sample = OptionalNone()) override;
 
     DecoderErrorOr<Time> duration() override;
 
