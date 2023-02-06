@@ -314,7 +314,7 @@ MainWidget::MainWidget()
     });
 
     auto file_manager_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_open_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
+    m_open_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
         auto lexical_path = LexicalPath(m_path);
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });
