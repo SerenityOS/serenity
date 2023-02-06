@@ -82,6 +82,8 @@ void Slider::start_drag(Gfx::IntPoint start_position)
     m_dragging = true;
     m_drag_origin = start_position;
     m_drag_origin_value = value();
+    if (on_drag_start)
+        on_drag_start();
 }
 
 void Slider::mousedown_event(MouseEvent& event)
@@ -98,8 +100,11 @@ void Slider::mousedown_event(MouseEvent& event)
             }
 
             int new_value = static_cast<int>(min() + ((max() - min()) * normalized_mouse_offset));
-            set_value(new_value);
+            set_value(new_value, AllowCallback::No);
             start_drag(event.position());
+            // Delay the callback to make it aware that a drag has started.
+            if (on_change)
+                on_change(new_value);
             return;
         }
 
@@ -136,6 +141,8 @@ void Slider::end_drag()
 {
     if (m_dragging) {
         m_dragging = false;
+        if (on_drag_end)
+            on_drag_end();
     }
 }
 
