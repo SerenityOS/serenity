@@ -16,9 +16,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty exec id"));
 
-    if (!TRY(Core::System::isatty(STDIN_FILENO)))
-        return Error::from_string_literal("Standard input is not a terminal");
-
     StringView first_positional;
     StringView second_positional;
     DeprecatedString command;
@@ -46,6 +43,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath tty exec id"));
 
     if (getuid() != 0 && account.has_password()) {
+        if (!TRY(Core::System::isatty(STDIN_FILENO)))
+            return Error::from_string_literal("Standard input is not a terminal");
+
         auto password = TRY(Core::get_password());
         if (!account.authenticate(password))
             return Error::from_string_literal("Incorrect or disabled password.");
