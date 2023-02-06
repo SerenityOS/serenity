@@ -480,6 +480,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 endif()
 
 set(AK_SOURCES
+    ../AK/DOSPackedTime.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
     ../AK/MemoryStream.cpp

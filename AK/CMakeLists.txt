@@ -4,6 +4,7 @@ set(AK_SOURCES
     CircularBuffer.cpp
     DeprecatedFlyString.cpp
     DeprecatedString.cpp
+    DOSPackedTime.cpp
     Error.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp

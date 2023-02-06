@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/DOSPackedTime.h>
 #include <AK/EnumBits.h>
 #include <AK/Types.h>
 
@@ -54,38 +55,18 @@ enum class FATAttributes : u8 {
 
 AK_ENUM_BITWISE_OPERATORS(FATAttributes);
 
-union FATPackedTime {
-    u16 value;
-    struct {
-        u16 second : 5;
-        u16 minute : 6;
-        u16 hour : 5;
-    };
-};
-static_assert(sizeof(FATPackedTime) == 2);
-
-union FATPackedDate {
-    u16 value;
-    struct {
-        u16 day : 5;
-        u16 month : 4;
-        u16 year : 7;
-    };
-};
-static_assert(sizeof(FATPackedDate) == 2);
-
 struct [[gnu::packed]] FATEntry {
     char filename[8];
     char extension[3];
     FATAttributes attributes;
     u8 unused1;
     u8 creation_time_seconds;
-    FATPackedTime creation_time;
-    FATPackedDate creation_date;
-    FATPackedDate last_accessed_date;
+    DOSPackedTime creation_time;
+    DOSPackedDate creation_date;
+    DOSPackedDate last_accessed_date;
     u16 first_cluster_high;
-    FATPackedTime modification_time;
-    FATPackedDate modification_date;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
     u16 first_cluster_low;
     u32 file_size;
 };
