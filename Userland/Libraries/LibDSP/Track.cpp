@@ -146,6 +146,16 @@ void AudioTrack::compute_current_clips_signal()
     TODO();
 }
 
+Optional<RollNote> NoteTrack::note_at(u32 time, u8 pitch) const
+{
+    for (auto& clip : m_clips) {
+        if (time >= clip.start() && time <= clip.end())
+            return clip.note_at(time, pitch);
+    }
+
+    return {};
+}
+
 void NoteTrack::set_note(RollNote note)
 {
     for (auto& clip : m_clips) {

@@ -14,6 +14,15 @@ Sample AudioClip::sample_at(u32 time)
     return m_samples[time];
 }
 
+Optional<RollNote> NoteClip::note_at(u32 time, u8 pitch) const
+{
+    for (auto& note : m_notes) {
+        if (time >= note.on_sample && time <= note.off_sample && pitch == note.pitch)
+            return note;
+    }
+    return {};
+}
+
 void NoteClip::set_note(RollNote note)
 {
     m_notes.remove_all_matching([&](auto const& other) {

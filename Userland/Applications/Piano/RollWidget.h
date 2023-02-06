@@ -43,12 +43,13 @@ private:
     double m_note_width { 0.0 };
     int m_zoom_level { 1 };
 
-    Optional<Gfx::IntPoint> m_note_drag_start;
-    Optional<RollNote> m_note_drag_location;
-    int m_drag_note;
+    Optional<GUI::MouseEvent> m_mousedown_event;
 
     RefPtr<Gfx::Bitmap> m_background;
     int m_prev_zoom_level { m_zoom_level };
     int m_prev_scroll_x { horizontal_scrollbar().value() };
     int m_prev_scroll_y { vertical_scrollbar().value() };
+
+    u8 get_pitch_for_y(int y) const;
+    int get_note_for_x(int x) const;
 };
