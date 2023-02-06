@@ -114,11 +114,11 @@ void PlaybackManager::seek_to_timestamp(Time target_timestamp)
     TRY_OR_FATAL_ERROR(m_playback_handler->seek(target_timestamp, m_seek_mode));
 }
 
-Time PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timestamp)
+Optional<Time> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample)
 {
     // FIXME: When the demuxer is getting samples off the main thread in the future, this needs to
     //        mutex so that seeking can't happen while that thread is getting a sample.
-    auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp);
+    auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp, move(earliest_available_sample));
     if (result.is_error())
         on_decoder_error(result.release_error());
     return result.release_value();
@@ -459,18 +459,30 @@ private:
 
     ErrorOr<void> on_enter() override
     {
-        auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp);
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "{} seeking to timestamp target {}ms, selected keyframe at {}ms", m_seek_mode == SeekMode::Accurate ? "Accurate"sv : "Fast"sv, m_target_timestamp.to_milliseconds(), keyframe_timestamp.to_milliseconds());
+        auto earliest_available_sample = manager().m_last_present_in_media_time;
+        if (manager().m_next_frame.has_value() && manager().m_next_frame->is_frame()) {
+            earliest_available_sample = min(earliest_available_sample, manager().m_next_frame->timestamp());
+        }
+        auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp, earliest_available_sample);
+
+#if PLAYBACK_MANAGER_DEBUG
+        auto seek_mode_name = m_seek_mode == SeekMode::Accurate ? "Accurate"sv : "Fast"sv;
+        if (keyframe_timestamp.has_value()) {
+            dbgln("{} seeking to timestamp target {}ms, selected keyframe at {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), keyframe_timestamp->to_milliseconds());
+        } else {
+            dbgln("{} seeking to timestamp target {}ms, demuxer kept its iterator position", seek_mode_name, m_target_timestamp.to_milliseconds());
+        }
+#endif
 
         if (m_seek_mode == SeekMode::Fast) {
-            m_target_timestamp = keyframe_timestamp;
+            m_target_timestamp = keyframe_timestamp.value_or(earliest_available_sample);
         }
 
-        if (m_target_timestamp < manager().m_last_present_in_media_time) {
+        if (keyframe_timestamp.has_value()) {
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Timestamp is earlier than current media time, clearing queue");
             manager().m_frame_queue->clear();
             manager().m_next_frame.clear();
-        } else if (manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
+        } else if (m_target_timestamp >= manager().m_last_present_in_media_time && manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
             manager().m_last_present_in_media_time = m_target_timestamp;
             return exit_seek();
         }
@@ -571,7 +583,11 @@ private:
 
     ErrorOr<void> play() override
     {
-        manager().m_last_present_in_media_time = manager().seek_demuxer_to_most_recent_keyframe(Time::zero());
+        manager().m_next_frame.clear();
+        manager().m_frame_queue->clear();
+        auto start_timestamp = manager().seek_demuxer_to_most_recent_keyframe(Time::zero());
+        VERIFY(start_timestamp.has_value());
+        manager().m_last_present_in_media_time = start_timestamp.release_value();
         return replace_handler_and_delete_this<PlayingStateHandler>();
     }
     bool is_playing() override { return false; };
