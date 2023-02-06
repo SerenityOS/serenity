@@ -95,7 +95,9 @@ FontPicker::FontPicker(Window* parent_window, Gfx::Font const* current_font, boo
                     m_size_spin_box->set_visible(true);
 
                     m_sizes.append(8);
+                    m_sizes.append(9);
                     m_sizes.append(10);
+                    m_sizes.append(11);
                     m_sizes.append(12);
                     m_sizes.append(14);
                     m_sizes.append(16);
