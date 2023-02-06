@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Torsten Engelmann <engelTorsten@gmx.de>
+ * Copyright (c) 2022-2023, Torsten Engelmann <engelTorsten@gmx.de>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,15 +94,23 @@ void LevelsDialog::generate_new_image()
     Color current_pixel_color;
     Color new_pixel_color;
     Gfx::StorageFormat storage_format = Gfx::determine_storage_format(m_editor->active_layer()->content_bitmap().format());
+    auto apply_only_on_mask = m_editor->active_layer()->mask_type() == Layer::MaskType::EditingMask;
 
     for (int x = 0; x < m_reference_bitmap->width(); x++) {
         for (int y = 0; y < m_reference_bitmap->height(); y++) {
             current_pixel_color = m_reference_bitmap->get_pixel(x, y);
 
-            new_pixel_color.set_alpha(current_pixel_color.alpha());
-            new_pixel_color.set_red(m_precomputed_color_correction[current_pixel_color.red()]);
-            new_pixel_color.set_green(m_precomputed_color_correction[current_pixel_color.green()]);
-            new_pixel_color.set_blue(m_precomputed_color_correction[current_pixel_color.blue()]);
+            // Check if we can avoid setting pixels as nothing will change when we don't have a mask at x,y.
+            if (apply_only_on_mask && !m_editor->active_layer()->mask_bitmap()->get_pixel(x, y).alpha())
+                continue;
+
+            auto target_color = Color(
+                m_precomputed_color_correction[current_pixel_color.red()],
+                m_precomputed_color_correction[current_pixel_color.green()],
+                m_precomputed_color_correction[current_pixel_color.blue()],
+                current_pixel_color.alpha());
+
+            new_pixel_color = m_editor->active_layer()->modify_pixel_with_editing_mask(x, y, target_color, current_pixel_color);
 
             switch (storage_format) {
             case Gfx::StorageFormat::BGRx8888:
