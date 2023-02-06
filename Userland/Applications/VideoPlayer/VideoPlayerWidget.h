@@ -46,7 +46,6 @@ private:
     void set_current_timestamp(Time);
     void set_time_label(Time);
     void on_decoding_error(Video::DecoderError const&);
-    void update_seek_mode();
 
     void cycle_sizing_modes();
 

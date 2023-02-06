@@ -98,14 +98,11 @@ public:
     void resume_playback();
     void pause_playback();
     void restart_playback();
-    void seek_to_timestamp(Time);
+    void seek_to_timestamp(Time, SeekMode = DEFAULT_SEEK_MODE);
     bool is_playing() const
     {
         return m_playback_handler->is_playing();
     }
-
-    SeekMode seek_mode() { return m_seek_mode; }
-    void set_seek_mode(SeekMode mode) { m_seek_mode = mode; }
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
@@ -139,8 +136,6 @@ private:
     Core::EventLoop& m_main_loop;
 
     Time m_last_present_in_media_time = Time::zero();
-
-    SeekMode m_seek_mode = DEFAULT_SEEK_MODE;
 
     NonnullOwnPtr<Demuxer> m_demuxer;
     Track m_selected_video_track;
