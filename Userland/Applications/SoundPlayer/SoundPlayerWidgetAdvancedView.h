@@ -7,13 +7,13 @@
 
 #pragma once
 
-#include "Common.h"
 #include "PlaybackManager.h"
 #include "Player.h"
 #include "VisualizationWidget.h"
 #include <AK/FixedArray.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibAudio/ConnectionToServer.h>
+#include <LibGUI/Slider.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
 
@@ -77,7 +77,7 @@ private:
     RefPtr<GUI::Action> m_back_action;
     RefPtr<GUI::Action> m_next_action;
 
-    RefPtr<AutoSlider> m_playback_progress_slider;
+    RefPtr<GUI::HorizontalSlider> m_playback_progress_slider;
     RefPtr<GUI::Label> m_volume_label;
     RefPtr<GUI::HorizontalSlider> m_volume_slider;
     RefPtr<GUI::Label> m_timestamp_label;
