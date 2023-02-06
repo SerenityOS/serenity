@@ -19,11 +19,6 @@ namespace Music {
 // - 44,100 samples/sec
 // - 1,411.2 kbps
 
-struct Sample {
-    i16 left;
-    i16 right;
-};
-
 constexpr int sample_count = Audio::AUDIO_BUFFER_SIZE * 10;
 
 constexpr double sample_rate = 44100;
