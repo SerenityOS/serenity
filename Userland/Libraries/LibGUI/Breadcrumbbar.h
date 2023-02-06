@@ -29,6 +29,9 @@ public:
     void set_selected_segment(Optional<size_t> index);
     Optional<size_t> selected_segment() const { return m_selected_segment; }
 
+    bool has_parent_segment() const { return m_selected_segment.has_value() && m_selected_segment.value() > 0; }
+    bool has_child_segment() const { return m_selected_segment.has_value() && m_selected_segment.value() < m_segments.size() - 1; }
+
     Function<void(Optional<size_t> index)> on_segment_change;
     Function<void(size_t index)> on_segment_click;
     Function<void(size_t index, DropEvent&)> on_segment_drop;
