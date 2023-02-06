@@ -40,6 +40,9 @@ public:
         return rect().shrunken(0, track_margin() * 2);
     }
 
+    Function<void()> on_drag_start;
+    Function<void()> on_drag_end;
+
 protected:
     explicit Slider(Orientation = Orientation::Vertical);
 
