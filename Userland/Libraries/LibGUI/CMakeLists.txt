@@ -82,6 +82,7 @@ set(SOURCES
     OpacitySlider.cpp
     Painter.cpp
     PasswordInputDialog.cpp
+    PathBreadcrumbbar.cpp
     PersistentModelIndex.cpp
     Process.cpp
     ProcessChooser.cpp

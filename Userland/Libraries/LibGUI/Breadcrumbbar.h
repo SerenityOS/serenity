@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,10 +41,9 @@ public:
 
 protected:
     virtual void did_change_font() override;
-
-private:
     Breadcrumbbar();
 
+private:
     virtual void resize_event(ResizeEvent&) override;
 
     struct Segment {
