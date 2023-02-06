@@ -38,6 +38,19 @@ struct Sample {
     {
     }
 
+    // Returns the absolute maximum range (separate per channel) of the given sample buffer.
+    // For example { 0.8, 0 } means that samples on the left channel occupy the range { -0.8, 0.8 },
+    // while all samples on the right channel are 0.
+    static Sample max_range(ReadonlySpan<Sample> span)
+    {
+        Sample result { NumericLimits<float>::min_normal(), NumericLimits<float>::min_normal() };
+        for (Sample sample : span) {
+            result.left = max(result.left, AK::fabs(sample.left));
+            result.right = max(result.right, AK::fabs(sample.right));
+        }
+        return result;
+    }
+
     void clip()
     {
         if (left > 1)

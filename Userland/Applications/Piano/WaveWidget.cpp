@@ -9,6 +9,7 @@
 #include "WaveWidget.h"
 #include "TrackManager.h"
 #include <AK/NumericLimits.h>
+#include <AK/StdLibExtras.h>
 #include <LibGUI/Painter.h>
 
 WaveWidget::WaveWidget(TrackManager& track_manager)
@@ -16,12 +17,12 @@ WaveWidget::WaveWidget(TrackManager& track_manager)
 {
 }
 
-int WaveWidget::sample_to_y(int sample) const
+int WaveWidget::sample_to_y(float sample, float sample_max) const
 {
-    // Sample scaling that looks good, experimentally determined.
-    constexpr double nice_scale_factor = 1.0;
-    constexpr double sample_max = NumericLimits<i16>::max();
-    double percentage = sample / sample_max * nice_scale_factor;
+    if (sample_max < 1.0f)
+        sample_max = 1.0f;
+    sample_max *= rescale_factor;
+    double percentage = static_cast<double>(sample) / static_cast<double>(sample_max);
     double portion_of_half_height = percentage * ((frame_inner_rect().height() - 1) / 2.0);
     double y = (frame_inner_rect().height() / 2.0) + portion_of_half_height;
     return y;
@@ -36,18 +37,19 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
     Color left_wave_color = left_wave_colors[m_track_manager.current_track()->synth()->wave()];
     Color right_wave_color = right_wave_colors[m_track_manager.current_track()->synth()->wave()];
     // FIXME: We can't get the last buffer from the track manager anymore
-    auto buffer = FixedArray<Music::Sample>::must_create_but_fixme_should_propagate_errors(sample_count);
+    auto buffer = FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(sample_count);
     double width_scale = static_cast<double>(frame_inner_rect().width()) / buffer.size();
 
+    auto const maximum = Audio::Sample::max_range(buffer.span());
     int prev_x = 0;
-    int prev_y_left = sample_to_y(buffer[0].left);
-    int prev_y_right = sample_to_y(buffer[0].right);
+    int prev_y_left = sample_to_y(buffer[0].left, maximum.left);
+    int prev_y_right = sample_to_y(buffer[0].right, maximum.right);
     painter.set_pixel({ prev_x, prev_y_left }, left_wave_color);
     painter.set_pixel({ prev_x, prev_y_right }, right_wave_color);
 
     for (size_t x = 1; x < buffer.size(); ++x) {
-        int y_left = sample_to_y(buffer[x].left);
-        int y_right = sample_to_y(buffer[x].right);
+        int y_left = sample_to_y(buffer[x].left, maximum.left);
+        int y_right = sample_to_y(buffer[x].right, maximum.right);
 
         Gfx::IntPoint point1_left(prev_x * width_scale, prev_y_left);
         Gfx::IntPoint point2_left(x * width_scale, y_left);
