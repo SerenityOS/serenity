@@ -9,6 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
@@ -87,6 +88,14 @@ public:
 
     auto const& global_shortcut_actions(Badge<GUI::CommandPalette>) const { return m_global_shortcut_actions; }
 
+    static constexpr size_t max_recently_open_files() { return 4; }
+
+    void set_config_domain(String);
+    void update_recent_file_actions();
+    void set_most_recently_open_file(String path);
+
+    void register_recent_file_actions(Badge<GUI::Menu>, Vector<NonnullRefPtr<GUI::Action>>);
+
 private:
     Application(int argc, char** argv, Core::EventLoop::MakeInspectable = Core::EventLoop::MakeInspectable::No);
     Application(Main::Arguments const& arguments, Core::EventLoop::MakeInspectable inspectable = Core::EventLoop::MakeInspectable::No)
@@ -120,6 +129,9 @@ private:
     Vector<DeprecatedString> m_args;
     WeakPtr<Widget> m_drag_hovered_widget;
     WeakPtr<Widget> m_pending_drop_widget;
+
+    String m_config_domain;
+    Vector<NonnullRefPtr<GUI::Action>> m_recent_file_actions;
 };
 
 }
