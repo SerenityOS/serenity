@@ -76,16 +76,17 @@ Gfx::IntRect Slider::knob_rect() const
     return rect;
 }
 
+void Slider::start_drag(Gfx::IntPoint start_position)
+{
+    VERIFY(!m_dragging);
+    m_dragging = true;
+    m_drag_origin = start_position;
+    m_drag_origin_value = value();
+}
+
 void Slider::mousedown_event(MouseEvent& event)
 {
     if (event.button() == MouseButton::Primary) {
-        if (knob_rect().contains(event.position())) {
-            m_dragging = true;
-            m_drag_origin = event.position();
-            m_drag_origin_value = value();
-            return;
-        }
-
         auto const mouse_offset = event.position().primary_offset_for_orientation(orientation());
 
         if (jump_to_cursor()) {
@@ -98,14 +99,21 @@ void Slider::mousedown_event(MouseEvent& event)
 
             int new_value = static_cast<int>(min() + ((max() - min()) * normalized_mouse_offset));
             set_value(new_value);
-        } else {
-            auto knob_first_edge = knob_rect().first_edge_for_orientation(orientation());
-            auto knob_last_edge = knob_rect().last_edge_for_orientation(orientation());
-            if (mouse_offset > knob_last_edge)
-                increase_slider_by_page_steps(1);
-            else if (mouse_offset < knob_first_edge)
-                decrease_slider_by_page_steps(1);
+            start_drag(event.position());
+            return;
         }
+
+        if (knob_rect().contains(event.position())) {
+            start_drag(event.position());
+            return;
+        }
+
+        auto knob_first_edge = knob_rect().first_edge_for_orientation(orientation());
+        auto knob_last_edge = knob_rect().last_edge_for_orientation(orientation());
+        if (mouse_offset > knob_last_edge)
+            increase_slider_by_page_steps(1);
+        else if (mouse_offset < knob_first_edge)
+            decrease_slider_by_page_steps(1);
     }
     return Widget::mousedown_event(event);
 }
@@ -124,10 +132,17 @@ void Slider::mousemove_event(MouseEvent& event)
     return Widget::mousemove_event(event);
 }
 
+void Slider::end_drag()
+{
+    if (m_dragging) {
+        m_dragging = false;
+    }
+}
+
 void Slider::mouseup_event(MouseEvent& event)
 {
     if (event.button() == MouseButton::Primary) {
-        m_dragging = false;
+        end_drag();
         return;
     }
 
