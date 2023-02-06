@@ -19,6 +19,11 @@ jobs:
           wget -q -O - https://files.pvs-studio.com/beta/etc/pubkey.txt | sudo apt-key add -
           sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/beta/etc/viva64.list
 
+      - name: "Select best APT mirror"
+        run: |
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+
       - name: "Install Ubuntu dependencies"
         # These packages are already part of the ubuntu-22.04 image:
         # cmake libgmp-dev npm shellcheck
