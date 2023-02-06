@@ -24,16 +24,6 @@
 
 namespace Video {
 
-enum class PlaybackStatus {
-    Playing,
-    Paused,
-    Buffering,
-    SeekingPlaying,
-    SeekingPaused,
-    Stopped,
-    Corrupted,
-};
-
 struct FrameQueueItem {
     enum class Type {
         Frame,
@@ -109,10 +99,10 @@ public:
     void pause_playback();
     void restart_playback();
     void seek_to_timestamp(Time);
-    bool is_playing() const { return m_status == PlaybackStatus::Playing || m_status == PlaybackStatus::SeekingPlaying || m_status == PlaybackStatus::Buffering; }
-    bool is_seeking() const { return m_status == PlaybackStatus::SeekingPlaying || m_status == PlaybackStatus::SeekingPaused; }
-    bool is_buffering() const { return m_status == PlaybackStatus::Buffering; }
-    bool is_stopped() const { return m_status == PlaybackStatus::Stopped || m_status == PlaybackStatus::Corrupted; }
+    bool is_playing() const
+    {
+        return m_playback_handler->is_playing();
+    }
 
     SeekMode seek_mode() { return m_seek_mode; }
     void set_seek_mode(SeekMode mode) { m_seek_mode = mode; }
@@ -127,24 +117,29 @@ public:
     Function<void(NonnullRefPtr<Gfx::Bitmap>, Time)> on_frame_present;
 
 private:
-    void set_playback_status(PlaybackStatus status);
+    class PlaybackStateHandler;
+    class PlayingStateHandler;
+    class PausedStateHandler;
+    class BufferingStateHandler;
+    class SeekingStateHandler;
+    class StoppedStateHandler;
 
-    void end_seek();
-    void update_presented_frame();
+    void start_timer(int milliseconds);
+    void timer_callback();
+    Time seek_demuxer_to_most_recent_keyframe(Time timestamp);
 
-    // May run off the main thread
-    void post_decoder_error(DecoderError error);
     bool decode_and_queue_one_sample();
     void on_decode_timer();
+
+    void dispatch_decoder_error(DecoderError error);
+    void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
+    void dispatch_fatal_error(Error);
 
     Core::Object& m_event_handler;
     Core::EventLoop& m_main_loop;
 
-    PlaybackStatus m_status { PlaybackStatus::Stopped };
     Time m_last_present_in_media_time = Time::zero();
-    Time m_last_present_in_real_time = Time::zero();
 
-    Time m_seek_to_media_time = Time::min();
     SeekMode m_seek_mode = DEFAULT_SEEK_MODE;
 
     NonnullOwnPtr<Demuxer> m_demuxer;
@@ -152,20 +147,65 @@ private:
     NonnullOwnPtr<VideoDecoder> m_decoder;
 
     NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
-    Optional<FrameQueueItem> m_next_frame;
 
     RefPtr<Core::Timer> m_present_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
     RefPtr<Core::Timer> m_decode_timer;
 
+    NonnullOwnPtr<PlaybackStateHandler> m_playback_handler;
+    Optional<FrameQueueItem> m_next_frame;
+
     u64 m_skipped_frames;
+
+    // This is a nested class to allow private access.
+    class PlaybackStateHandler {
+    public:
+        PlaybackStateHandler(PlaybackManager& manager)
+            : m_manager(manager)
+        {
+        }
+        virtual ~PlaybackStateHandler() = default;
+        virtual StringView name() = 0;
+
+        virtual ErrorOr<void> on_enter() { return {}; }
+
+        virtual ErrorOr<void> play() { return {}; };
+        virtual bool is_playing() = 0;
+        virtual ErrorOr<void> pause() { return {}; };
+        virtual ErrorOr<void> buffer() { return {}; };
+        virtual ErrorOr<void> seek(Time target_timestamp, SeekMode);
+        virtual ErrorOr<void> stop();
+
+        virtual Time current_time() const;
+
+        virtual ErrorOr<void> on_timer_callback() { return {}; };
+        virtual ErrorOr<void> on_buffer_filled() { return {}; };
+
+    protected:
+        template<class T, class... Args>
+        ErrorOr<void> replace_handler_and_delete_this(Args... args);
+
+        PlaybackManager& manager() const;
+
+        PlaybackManager& manager()
+        {
+            return const_cast<PlaybackManager&>(const_cast<PlaybackStateHandler const*>(this)->manager());
+        }
+
+    private:
+        PlaybackManager& m_manager;
+#if PLAYBACK_MANAGER_DEBUG
+        bool m_has_exited { false };
+#endif
+    };
 };
 
 enum EventType : unsigned {
     DecoderErrorOccurred = (('v' << 2) | ('i' << 1) | 'd') << 4,
     VideoFramePresent,
     PlaybackStateChange,
+    FatalPlaybackError,
 };
 
 class DecoderErrorEvent : public Core::Event {
@@ -208,25 +248,18 @@ public:
     virtual ~PlaybackStateChangeEvent() = default;
 };
 
-inline StringView playback_status_to_string(PlaybackStatus status)
-{
-    switch (status) {
-    case PlaybackStatus::Playing:
-        return "Playing"sv;
-    case PlaybackStatus::Paused:
-        return "Paused"sv;
-    case PlaybackStatus::Buffering:
-        return "Buffering"sv;
-    case PlaybackStatus::SeekingPlaying:
-        return "SeekingPlaying"sv;
-    case PlaybackStatus::SeekingPaused:
-        return "SeekingPaused"sv;
-    case PlaybackStatus::Stopped:
-        return "Stopped"sv;
-    case PlaybackStatus::Corrupted:
-        return "Corrupted"sv;
+class FatalPlaybackErrorEvent : public Core::Event {
+public:
+    explicit FatalPlaybackErrorEvent(Error error)
+        : Core::Event(FatalPlaybackError)
+        , m_error(error)
+    {
     }
-    return "Unknown"sv;
+    virtual ~FatalPlaybackErrorEvent() = default;
+    Error error() { return m_error; }
+
+private:
+    Error m_error;
 };
 
 }
