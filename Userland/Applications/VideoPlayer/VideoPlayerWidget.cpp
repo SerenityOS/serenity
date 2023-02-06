@@ -56,8 +56,8 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
         auto progress = value / static_cast<double>(m_seek_slider->max());
         auto duration = m_playback_manager->duration().to_milliseconds();
         Time timestamp = Time::from_milliseconds(static_cast<i64>(round(progress * static_cast<double>(duration))));
-        set_current_timestamp(timestamp);
         m_playback_manager->seek_to_timestamp(timestamp);
+        set_current_timestamp(m_playback_manager->current_playback_time());
     };
 
     m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
@@ -237,6 +237,8 @@ void VideoPlayerWidget::event(Core::Event& event)
     } else if (event.type() == Video::EventType::PlaybackStateChange) {
         update_play_pause_icon();
         event.accept();
+    } else if (event.type() == Video::EventType::FatalPlaybackError) {
+        close_file();
     }
 
     Widget::event(event);

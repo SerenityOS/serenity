@@ -13,6 +13,18 @@
 
 namespace Video {
 
+#define TRY_OR_FATAL_ERROR(expression)                                                               \
+    ({                                                                                               \
+        auto _fatal_expression = (expression);                                                       \
+        if (_fatal_expression.is_error()) {                                                          \
+            dispatch_fatal_error(_fatal_expression.release_error());                                 \
+            return;                                                                                  \
+        }                                                                                            \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_fatal_expression.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        _fatal_expression.release_value();                                                           \
+    })
+
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(Core::Object& event_handler, StringView filename)
 {
     NonnullOwnPtr<Demuxer> demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
@@ -33,60 +45,30 @@ PlaybackManager::PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demu
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
     , m_frame_queue(make<VideoFrameQueue>())
+    , m_playback_handler(make<StoppedStateHandler>(*this))
 {
-    m_present_timer = Core::Timer::create_single_shot(0, [&] { update_presented_frame(); }).release_value_but_fixme_should_propagate_errors();
+    m_present_timer = Core::Timer::create_single_shot(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
     m_decode_timer = Core::Timer::create_single_shot(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
-}
-
-void PlaybackManager::set_playback_status(PlaybackStatus status)
-{
-    if (status != m_status) {
-        bool was_stopped = is_stopped();
-        auto old_status = m_status;
-        m_status = status;
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Set playback status from {} to {}", playback_status_to_string(old_status), playback_status_to_string(m_status));
-
-        if (m_status == PlaybackStatus::Playing) {
-            if (was_stopped)
-                restart_playback();
-            m_last_present_in_real_time = Time::now_monotonic();
-            m_present_timer->start(0);
-        } else if (!is_seeking()) {
-            m_last_present_in_media_time = current_playback_time();
-            m_last_present_in_real_time = Time::zero();
-            m_present_timer->stop();
-        }
-
-        m_main_loop.post_event(m_event_handler, make<PlaybackStateChangeEvent>());
-    }
+    TRY_OR_FATAL_ERROR(m_playback_handler->on_enter());
 }
 
 void PlaybackManager::resume_playback()
 {
-    if (is_seeking()) {
-        set_playback_status(PlaybackStatus::SeekingPlaying);
-        return;
-    }
-    set_playback_status(PlaybackStatus::Playing);
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Resuming playback.");
+    TRY_OR_FATAL_ERROR(m_playback_handler->play());
 }
 
 void PlaybackManager::pause_playback()
 {
-    if (is_seeking()) {
-        set_playback_status(PlaybackStatus::SeekingPaused);
-        return;
-    }
-    set_playback_status(PlaybackStatus::Paused);
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Pausing playback.");
+    if (!m_playback_handler->is_playing())
+        warnln("Cannot pause.");
+    TRY_OR_FATAL_ERROR(m_playback_handler->pause());
 }
 
 Time PlaybackManager::current_playback_time()
 {
-    if (is_seeking())
-        return m_seek_to_media_time;
-    VERIFY(!m_last_present_in_media_time.is_negative());
-    if (m_status == PlaybackStatus::Playing)
-        return m_last_present_in_media_time + (Time::now_monotonic() - m_last_present_in_real_time);
-    return m_last_present_in_media_time;
+    return m_playback_handler->current_time();
 }
 
 Time PlaybackManager::duration()
@@ -97,151 +79,49 @@ Time PlaybackManager::duration()
     return duration_result.release_value();
 }
 
+void PlaybackManager::dispatch_fatal_error(Error error)
+{
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Encountered fatal error: {}", error.string_literal());
+    // FIXME: For threading, this will have to use a pre-allocated event to send to the main loop
+    //        to be able to gracefully handle OOM.
+    VERIFY(&m_main_loop == &Core::EventLoop::current());
+    FatalPlaybackErrorEvent event { error };
+    m_event_handler.dispatch_event(event);
+}
+
 void PlaybackManager::on_decoder_error(DecoderError error)
 {
-    // If we don't switch to playing/paused before stopping/becoming corrupted, the player will crash
-    // due to the invalid playback time.
-    if (is_seeking())
-        end_seek();
-
     switch (error.category()) {
     case DecoderErrorCategory::EndOfStream:
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "{}", error.string_literal());
-        set_playback_status(PlaybackStatus::Stopped);
+        TRY_OR_FATAL_ERROR(m_playback_handler->stop());
         break;
     default:
         dbgln("Playback error encountered: {}", error.string_literal());
-        set_playback_status(PlaybackStatus::Corrupted);
+        TRY_OR_FATAL_ERROR(m_playback_handler->stop());
         m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(move(error)));
         break;
     }
 }
 
-void PlaybackManager::end_seek()
+void PlaybackManager::timer_callback()
 {
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "We've finished seeking, set media time to seek time at {}ms and change status", m_seek_to_media_time.to_milliseconds());
-    VERIFY(!m_seek_to_media_time.is_negative());
-    m_last_present_in_media_time = m_seek_to_media_time;
-    m_seek_to_media_time = Time::min();
-    if (m_status == PlaybackStatus::SeekingPlaying) {
-        set_playback_status(PlaybackStatus::Playing);
-        return;
-    }
-
-    VERIFY(m_status == PlaybackStatus::SeekingPaused);
-    set_playback_status(PlaybackStatus::Paused);
+    TRY_OR_FATAL_ERROR(m_playback_handler->on_timer_callback());
 }
 
-void PlaybackManager::update_presented_frame()
+void PlaybackManager::seek_to_timestamp(Time target_timestamp)
 {
-    Optional<FrameQueueItem> future_frame_item;
-    bool should_present_frame = false;
-
-    // Skip frames until we find a frame past the current playback time, and keep the one that precedes it to display.
-    while ((m_status == PlaybackStatus::Playing || is_seeking()) && !m_frame_queue->is_empty()) {
-        future_frame_item.emplace(m_frame_queue->dequeue());
-        m_decode_timer->start(0);
-
-        if (future_frame_item->is_error() || future_frame_item->timestamp() >= current_playback_time()) {
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Should present frame, future {} is after {}ms", future_frame_item->debug_string(), current_playback_time().to_milliseconds());
-            should_present_frame = true;
-            break;
-        }
-
-        if (m_next_frame.has_value() && !is_seeking()) {
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "At {}ms: Dropped {} in favor of {}", current_playback_time().to_milliseconds(), m_next_frame->debug_string(), future_frame_item->debug_string());
-            m_skipped_frames++;
-        }
-        m_next_frame.emplace(future_frame_item.release_value());
-    }
-
-    // If we don't have both of these items, we can't present, since we need to set a timer for
-    // the next frame. Check if we need to buffer based on the current state.
-    if (!m_next_frame.has_value() || !future_frame_item.has_value()) {
-#if PLAYBACK_MANAGER_DEBUG
-        StringBuilder debug_string_builder;
-        debug_string_builder.append("We don't have "sv);
-        if (!m_next_frame.has_value()) {
-            debug_string_builder.append("a frame to present"sv);
-            if (!future_frame_item.has_value())
-                debug_string_builder.append(" or a future frame"sv);
-        } else {
-            debug_string_builder.append("a future frame"sv);
-        }
-        debug_string_builder.append(", checking for error and buffering"sv);
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, debug_string_builder.to_deprecated_string());
-#endif
-        if (future_frame_item.has_value()) {
-            if (future_frame_item->is_error()) {
-                on_decoder_error(future_frame_item.release_value().release_error());
-                return;
-            }
-            m_next_frame.emplace(future_frame_item.release_value());
-        }
-        if (m_status == PlaybackStatus::Playing)
-            set_playback_status(PlaybackStatus::Buffering);
-        m_decode_timer->start(0);
-        return;
-    }
-
-    // If we have a frame, send it for presentation.
-    if (should_present_frame) {
-        if (is_seeking())
-            end_seek();
-        else
-            m_last_present_in_media_time = current_playback_time();
-        m_last_present_in_real_time = Time::now_monotonic();
-        m_main_loop.post_event(m_event_handler, make<VideoFramePresentEvent>(m_next_frame.value().bitmap()));
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation");
-    }
-
-    // Now that we've presented the current frame, we can throw whatever error is next in queue.
-    // This way, we always display a frame before the stream ends, and should also show any frames
-    // we already had when a real error occurs.
-    if (future_frame_item->is_error()) {
-        on_decoder_error(future_frame_item.release_value().release_error());
-        return;
-    }
-
-    // The future frame item becomes the next one to present.
-    m_next_frame.emplace(future_frame_item.release_value());
-
-    if (m_status != PlaybackStatus::Playing) {
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "We're not playing! Starting the decode timer");
-        m_decode_timer->start(0);
-        return;
-    }
-
-    auto frame_time_ms = (m_next_frame->timestamp() - current_playback_time()).to_milliseconds();
-    VERIFY(frame_time_ms <= NumericLimits<int>::max());
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
-    m_present_timer->start(max(static_cast<int>(frame_time_ms), 0));
+    TRY_OR_FATAL_ERROR(m_playback_handler->seek(target_timestamp, m_seek_mode));
 }
 
-void PlaybackManager::seek_to_timestamp(Time timestamp)
+Time PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timestamp)
 {
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Seeking to {}ms", timestamp.to_milliseconds());
     // FIXME: When the demuxer is getting samples off the main thread in the future, this needs to
     //        mutex so that seeking can't happen while that thread is getting a sample.
     auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp);
     if (result.is_error())
         on_decoder_error(result.release_error());
-
-    if (is_playing())
-        set_playback_status(PlaybackStatus::SeekingPlaying);
-    else
-        set_playback_status(PlaybackStatus::SeekingPaused);
-    m_frame_queue->clear();
-    m_next_frame.clear();
-    m_skipped_frames = 0;
-    if (m_seek_mode == SeekMode::Accurate)
-        m_seek_to_media_time = timestamp;
-    else
-        m_seek_to_media_time = result.release_value();
-    m_last_present_in_media_time = Time::min();
-    m_last_present_in_real_time = Time::zero();
-    m_present_timer->stop();
-    m_decode_timer->start(0);
+    return result.release_value();
 }
 
 void PlaybackManager::restart_playback()
@@ -249,9 +129,19 @@ void PlaybackManager::restart_playback()
     seek_to_timestamp(Time::zero());
 }
 
-void PlaybackManager::post_decoder_error(DecoderError error)
+void PlaybackManager::dispatch_decoder_error(DecoderError error)
 {
     m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(error));
+}
+
+void PlaybackManager::dispatch_new_frame(RefPtr<Gfx::Bitmap> frame)
+{
+    m_main_loop.post_event(m_event_handler, make<VideoFramePresentEvent>(frame));
+}
+
+void PlaybackManager::start_timer(int milliseconds)
+{
+    m_present_timer->start(milliseconds);
 }
 
 bool PlaybackManager::decode_and_queue_one_sample()
@@ -270,7 +160,6 @@ bool PlaybackManager::decode_and_queue_one_sample()
         if (_temporary_result.is_error()) {                                                                             \
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Enqueued decoder error: {}", _temporary_result.error().string_literal()); \
             m_frame_queue->enqueue(FrameQueueItem::error_marker(_temporary_result.release_error()));                    \
-            m_present_timer->start(0);                                                                                  \
             return false;                                                                                               \
         }                                                                                                               \
         static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                    \
@@ -290,7 +179,7 @@ bool PlaybackManager::decode_and_queue_one_sample()
                 if (frame_result.error().category() == DecoderErrorCategory::NeedsMoreInput)
                     break;
 
-                post_decoder_error(frame_result.release_error());
+                dispatch_decoder_error(frame_result.release_error());
                 return false;
             }
 
@@ -320,11 +209,10 @@ bool PlaybackManager::decode_and_queue_one_sample()
 
     auto bitmap = TRY_OR_ENQUEUE_ERROR(decoded_frame->to_bitmap());
     m_frame_queue->enqueue(FrameQueueItem::frame(bitmap, frame_sample->timestamp()));
-    m_present_timer->start(0);
 
 #if PLAYBACK_MANAGER_DEBUG
     auto end_time = Time::now_monotonic();
-    dbgln("Decoding took {}ms, queue is {} items", (end_time - start_time).to_milliseconds(), m_frame_queue->size());
+    dbgln("Decoding sample at {}ms took {}ms, queue contains {} items", frame_sample->timestamp().to_milliseconds(), (end_time - start_time).to_milliseconds(), m_frame_queue->size());
 #endif
 
     return true;
@@ -332,14 +220,361 @@ bool PlaybackManager::decode_and_queue_one_sample()
 
 void PlaybackManager::on_decode_timer()
 {
-    if (!decode_and_queue_one_sample() && is_buffering()) {
-        set_playback_status(PlaybackStatus::Playing);
+    if (!decode_and_queue_one_sample()) {
+        // Note: When threading is implemented, this must be dispatched via an event loop.
+        TRY_OR_FATAL_ERROR(m_playback_handler->on_buffer_filled());
         return;
     }
 
     // Continually decode until buffering is complete
-    if (is_buffering() || is_seeking())
-        m_decode_timer->start(0);
+    m_decode_timer->start(0);
 }
+
+Time PlaybackManager::PlaybackStateHandler::current_time() const
+{
+    return m_manager.m_last_present_in_media_time;
+}
+
+ErrorOr<void> PlaybackManager::PlaybackStateHandler::seek(Time target_timestamp, SeekMode seek_mode)
+{
+    return replace_handler_and_delete_this<SeekingStateHandler>(is_playing(), target_timestamp, seek_mode);
+}
+
+ErrorOr<void> PlaybackManager::PlaybackStateHandler::stop()
+{
+    return replace_handler_and_delete_this<StoppedStateHandler>();
+}
+
+template<class T, class... Args>
+ErrorOr<void> PlaybackManager::PlaybackStateHandler::replace_handler_and_delete_this(Args... args)
+{
+    auto temp_handler = TRY(adopt_nonnull_own_or_enomem<PlaybackStateHandler>(new (nothrow) T(m_manager, args...)));
+    m_manager.m_playback_handler.swap(temp_handler);
+#if PLAYBACK_MANAGER_DEBUG
+    m_has_exited = true;
+    dbgln("Changing state from {} to {}", temp_handler->name(), m_manager.m_playback_handler->name());
+#endif
+    TRY(m_manager.m_playback_handler->on_enter());
+    return {};
+}
+
+PlaybackManager& PlaybackManager::PlaybackStateHandler::manager() const
+{
+#if PLAYBACK_MANAGER_DEBUG
+    VERIFY(!m_has_exited);
+#endif
+    return m_manager;
+}
+
+class PlaybackManager::PlayingStateHandler : public PlaybackManager::PlaybackStateHandler {
+public:
+    PlayingStateHandler(PlaybackManager& manager)
+        : PlaybackStateHandler(manager)
+    {
+    }
+    ~PlayingStateHandler() override = default;
+
+private:
+    ErrorOr<void> on_enter() override
+    {
+        m_last_present_in_real_time = Time::now_monotonic();
+        return on_timer_callback();
+    }
+
+    StringView name() override { return "Playing"sv; }
+
+    bool is_playing() override { return true; };
+    ErrorOr<void> pause() override
+    {
+        manager().m_last_present_in_media_time = current_time();
+        return replace_handler_and_delete_this<PausedStateHandler>();
+    }
+    ErrorOr<void> buffer() override
+    {
+        manager().m_last_present_in_media_time = current_time();
+        return replace_handler_and_delete_this<BufferingStateHandler>(true);
+    }
+
+    Time current_time() const override
+    {
+        return manager().m_last_present_in_media_time + (Time::now_monotonic() - m_last_present_in_real_time);
+    }
+
+    ErrorOr<void> on_timer_callback() override
+    {
+        Optional<FrameQueueItem> future_frame_item;
+        bool should_present_frame = false;
+
+        // Skip frames until we find a frame past the current playback time, and keep the one that precedes it to display.
+        while (!manager().m_frame_queue->is_empty()) {
+            future_frame_item.emplace(manager().m_frame_queue->dequeue());
+            manager().m_decode_timer->start(0);
+
+            if (future_frame_item->is_error() || future_frame_item->timestamp() >= current_time()) {
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Should present frame, future {} is error or after {}ms", future_frame_item->debug_string(), current_time().to_milliseconds());
+                should_present_frame = true;
+                break;
+            }
+
+            if (manager().m_next_frame.has_value()) {
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "At {}ms: Dropped {} in favor of {}", current_time().to_milliseconds(), manager().m_next_frame->debug_string(), future_frame_item->debug_string());
+                manager().m_skipped_frames++;
+            }
+            manager().m_next_frame.emplace(future_frame_item.release_value());
+        }
+
+        // If we don't have both of these items, we can't present, since we need to set a timer for
+        // the next frame. Check if we need to buffer based on the current state.
+        if (!manager().m_next_frame.has_value() || !future_frame_item.has_value()) {
+#if PLAYBACK_MANAGER_DEBUG
+            StringBuilder debug_string_builder;
+            debug_string_builder.append("We don't have "sv);
+            if (!manager().m_next_frame.has_value()) {
+                debug_string_builder.append("a frame to present"sv);
+                if (!future_frame_item.has_value())
+                    debug_string_builder.append(" or a future frame"sv);
+            } else {
+                debug_string_builder.append("a future frame"sv);
+            }
+            debug_string_builder.append(", checking for error and buffering"sv);
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, debug_string_builder.to_deprecated_string());
+#endif
+            if (future_frame_item.has_value()) {
+                if (future_frame_item->is_error()) {
+                    manager().on_decoder_error(future_frame_item.release_value().release_error());
+                    return {};
+                }
+                manager().m_next_frame.emplace(future_frame_item.release_value());
+            }
+            TRY(buffer());
+            return {};
+        }
+
+        // If we have a frame, send it for presentation.
+        if (should_present_frame) {
+            auto now = Time::now_monotonic();
+            manager().m_last_present_in_media_time += now - m_last_present_in_real_time;
+            m_last_present_in_real_time = now;
+            manager().dispatch_new_frame(manager().m_next_frame.value().bitmap());
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation");
+        }
+
+        // Now that we've presented the current frame, we can throw whatever error is next in queue.
+        // This way, we always display a frame before the stream ends, and should also show any frames
+        // we already had when a real error occurs.
+        if (future_frame_item->is_error()) {
+            manager().on_decoder_error(future_frame_item.release_value().release_error());
+            return {};
+        }
+
+        // The future frame item becomes the next one to present.
+        manager().m_next_frame.emplace(future_frame_item.release_value());
+
+        auto frame_time_ms = (manager().m_next_frame->timestamp() - current_time()).to_milliseconds();
+        VERIFY(frame_time_ms <= NumericLimits<int>::max());
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
+        manager().start_timer(max(static_cast<int>(frame_time_ms), 0));
+        return {};
+    }
+
+    Time m_last_present_in_real_time = Time::zero();
+};
+
+class PlaybackManager::PausedStateHandler : public PlaybackManager::PlaybackStateHandler {
+public:
+    PausedStateHandler(PlaybackManager& manager)
+        : PlaybackStateHandler(manager)
+    {
+    }
+    ~PausedStateHandler() override = default;
+
+private:
+    StringView name() override { return "Paused"sv; }
+
+    ErrorOr<void> play() override
+    {
+        return replace_handler_and_delete_this<PlayingStateHandler>();
+    }
+    bool is_playing() override { return false; };
+};
+
+class PlaybackManager::BufferingStateHandler : public PlaybackManager::PlaybackStateHandler {
+public:
+    BufferingStateHandler(PlaybackManager& manager, bool playing)
+        : PlaybackStateHandler(manager)
+        , m_playing(playing)
+    {
+    }
+    ~BufferingStateHandler() override = default;
+
+private:
+    ErrorOr<void> on_enter() override
+    {
+        manager().m_decode_timer->start(0);
+        return {};
+    }
+
+    StringView name() override { return "Buffering"sv; }
+
+    ErrorOr<void> play() override
+    {
+        m_playing = true;
+        return {};
+    }
+    bool is_playing() override { return m_playing; };
+    ErrorOr<void> pause() override
+    {
+        m_playing = false;
+        return {};
+    }
+
+    ErrorOr<void> on_buffer_filled() override
+    {
+        if (m_playing)
+            return replace_handler_and_delete_this<PlayingStateHandler>();
+        return replace_handler_and_delete_this<PausedStateHandler>();
+    }
+
+    bool m_playing { false };
+};
+
+class PlaybackManager::SeekingStateHandler : public PlaybackManager::PlaybackStateHandler {
+public:
+    SeekingStateHandler(PlaybackManager& manager, bool playing, Time target_timestamp, SeekMode seek_mode)
+        : PlaybackStateHandler(manager)
+        , m_playing(playing)
+        , m_target_timestamp(target_timestamp)
+        , m_seek_mode(seek_mode)
+    {
+    }
+    ~SeekingStateHandler() override = default;
+
+private:
+    ErrorOr<void> exit_seek()
+    {
+        if (m_playing)
+            return replace_handler_and_delete_this<PlayingStateHandler>();
+        return replace_handler_and_delete_this<PausedStateHandler>();
+    }
+
+    ErrorOr<void> on_enter() override
+    {
+        auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp);
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "{} seeking to timestamp target {}ms, selected keyframe at {}ms", m_seek_mode == SeekMode::Accurate ? "Accurate"sv : "Fast"sv, m_target_timestamp.to_milliseconds(), keyframe_timestamp.to_milliseconds());
+
+        if (m_seek_mode == SeekMode::Fast) {
+            m_target_timestamp = keyframe_timestamp;
+        }
+
+        if (m_target_timestamp < manager().m_last_present_in_media_time) {
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Timestamp is earlier than current media time, clearing queue");
+            manager().m_frame_queue->clear();
+            manager().m_next_frame.clear();
+        } else if (manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
+            manager().m_last_present_in_media_time = m_target_timestamp;
+            return exit_seek();
+        }
+
+        return skip_samples_until_timestamp();
+    }
+
+    ErrorOr<void> skip_samples_until_timestamp()
+    {
+        while (!manager().m_frame_queue->is_empty()) {
+            auto item = manager().m_frame_queue->dequeue();
+            manager().m_decode_timer->start(0);
+
+            if (item.is_error()) {
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Encountered error while seeking: {}", item.error().description());
+                manager().on_decoder_error(item.release_error());
+                return {};
+            }
+
+            if (item.is_frame()) {
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Dequeuing frame at {}ms and comparing to seek target {}ms", item.timestamp().to_milliseconds(), m_target_timestamp.to_milliseconds());
+                if (item.timestamp() > m_target_timestamp) {
+                    // Fast seeking will result in an equal timestamp, so we can exit as soon as we see the next frame.
+                    if (manager().m_next_frame.has_value()) {
+                        manager().dispatch_new_frame(manager().m_next_frame.release_value().bitmap());
+                        manager().m_last_present_in_media_time = m_target_timestamp;
+                    }
+
+                    manager().m_next_frame.emplace(item);
+
+                    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Exiting seek to {} state at {}ms", m_playing ? "Playing" : "Paused", manager().m_last_present_in_media_time.to_milliseconds());
+                    return exit_seek();
+                }
+                manager().m_next_frame.emplace(item);
+                continue;
+            }
+
+            VERIFY_NOT_REACHED();
+        }
+
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Frame queue is empty while seeking, waiting for buffer fill.");
+        manager().m_decode_timer->start(0);
+        return {};
+    }
+
+    StringView name() override { return "Seeking"sv; }
+
+    ErrorOr<void> play() override
+    {
+        m_playing = true;
+        return {};
+    }
+    bool is_playing() override { return m_playing; };
+    ErrorOr<void> pause() override
+    {
+        m_playing = false;
+        return {};
+    }
+    ErrorOr<void> seek(Time target_timestamp, SeekMode seek_mode) override
+    {
+        m_target_timestamp = target_timestamp;
+        m_seek_mode = seek_mode;
+        return on_enter();
+    }
+
+    Time current_time() const override
+    {
+        return m_target_timestamp;
+    }
+
+    // We won't need this override when threaded, the queue can pause us in on_enter().
+    ErrorOr<void> on_buffer_filled() override
+    {
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Buffer filled while seeking, dequeuing until timestamp.");
+        return skip_samples_until_timestamp();
+    }
+
+    bool m_playing { false };
+    Time m_target_timestamp { Time::zero() };
+    SeekMode m_seek_mode { SeekMode::Accurate };
+};
+
+class PlaybackManager::StoppedStateHandler : public PlaybackManager::PlaybackStateHandler {
+public:
+    StoppedStateHandler(PlaybackManager& manager)
+        : PlaybackStateHandler(manager)
+    {
+    }
+    ~StoppedStateHandler() override = default;
+
+private:
+    ErrorOr<void> on_enter() override
+    {
+        return {};
+    }
+
+    StringView name() override { return "Stopped"sv; }
+
+    ErrorOr<void> play() override
+    {
+        manager().m_last_present_in_media_time = manager().seek_demuxer_to_most_recent_keyframe(Time::zero());
+        return replace_handler_and_delete_this<PlayingStateHandler>();
+    }
+    bool is_playing() override { return false; };
+};
 
 }
