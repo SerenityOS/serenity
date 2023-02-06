@@ -37,6 +37,18 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     m_video_display->on_click = [&]() { toggle_pause(); };
 
     m_seek_slider = find_descendant_of_type_named<GUI::HorizontalSlider>("seek_slider");
+    m_seek_slider->on_drag_start = [&]() {
+        if (!m_playback_manager)
+            return;
+        m_was_playing_before_seek = m_playback_manager->is_playing();
+        m_playback_manager->pause_playback();
+    };
+    m_seek_slider->on_drag_end = [&]() {
+        if (!m_playback_manager || !m_was_playing_before_seek)
+            return;
+        m_was_playing_before_seek = false;
+        m_playback_manager->resume_playback();
+    };
     m_seek_slider->on_change = [&](int value) {
         if (!m_playback_manager)
             return;
@@ -103,7 +115,7 @@ void VideoPlayerWidget::update_play_pause_icon()
 
     m_play_pause_action->set_enabled(true);
 
-    if (m_playback_manager->is_playing()) {
+    if (m_playback_manager->is_playing() || m_was_playing_before_seek) {
         m_play_pause_action->set_icon(m_pause_icon);
         m_play_pause_action->set_text("Pause"sv);
     } else {
@@ -114,7 +126,7 @@ void VideoPlayerWidget::update_play_pause_icon()
 
 void VideoPlayerWidget::resume_playback()
 {
-    if (!m_playback_manager)
+    if (!m_playback_manager || m_seek_slider->knob_dragging())
         return;
     m_playback_manager->resume_playback();
     update_play_pause_icon();
@@ -122,7 +134,7 @@ void VideoPlayerWidget::resume_playback()
 
 void VideoPlayerWidget::pause_playback()
 {
-    if (!m_playback_manager)
+    if (!m_playback_manager || m_seek_slider->knob_dragging())
         return;
     m_playback_manager->pause_playback();
     update_play_pause_icon();
