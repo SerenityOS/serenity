@@ -229,6 +229,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 i++;
             }
             outln(" ]");
+        } else if (tag_data->type() == Gfx::ICC::SignatureTagData::Type) {
+            auto& signature = static_cast<Gfx::ICC::SignatureTagData&>(*tag_data);
+
+            // FIXME: For colorimetricIntentImageStateTag, interpret signature according to ICC v4 Table 26
+            // FIXME: For perceptualRenderingIntentGamutTag, interpret signature according to ICC v4 Table 27
+            // FIXME: For saturationRenderingIntentGamutTag, interpret signature according to ICC v4 Table 28
+            // FIXME: For technologyTag, interpret signature according to ICC v4 Table 29
+            outln("    signature: '{:c}{:c}{:c}{:c}' / 0x{:08x}",
+                signature.signature() >> 24, (signature.signature() >> 16) & 0xff, (signature.signature() >> 8) & 0xff, signature.signature() & 0xff,
+                signature.signature());
         } else if (tag_data->type() == Gfx::ICC::TextDescriptionTagData::Type) {
             auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData&>(*tag_data);
             outln("    ascii: \"{}\"", text_description.ascii_description());

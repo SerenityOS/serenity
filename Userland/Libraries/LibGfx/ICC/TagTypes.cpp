@@ -530,6 +530,20 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
     return adopt_ref(*new TextDescriptionTagData(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description)));
 }
 
+ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.23 signatureType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 3 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: signatureType has not enough data");
+
+    u32 signature = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
+
+    return adopt_ref(*new SignatureTagData(offset, size, signature));
+}
+
 ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.24 textType

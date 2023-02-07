@@ -586,6 +586,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
         return ParametricCurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
         return S15Fixed16ArrayTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case SignatureTagData::Type:
+        return SignatureTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextDescriptionTagData::Type:
         return TextDescriptionTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextTagData::Type:
@@ -992,7 +994,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.21 colorimetricIntentImageStateTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(colorimetricIntentImageStateTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: colorimetricIntentImageStateTag has unexpected type");
 
     // ICC v4, 9.2.22 copyrightTag
     // "Permitted tag types: multiLocalizedUnicodeType"
@@ -1154,7 +1157,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.39 perceptualRenderingIntentGamutTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(perceptualRenderingIntentGamutTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: perceptualRenderingIntentGamutTag has unexpected type");
 
     // ICC v4, 9.2.40 preview0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType or lutBToAType"
@@ -1220,11 +1224,13 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.48 saturationRenderingIntentGamutTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(saturationRenderingIntentGamutTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: saturationRenderingIntentGamutTag has unexpected type");
 
     // ICC v4, 9.2.49 technologyTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(technologyTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: technologyTag has unexpected type");
 
     // ICC v4, 9.2.50 viewingCondDescTag
     // "Permitted tag types: multiLocalizedUnicodeType"
