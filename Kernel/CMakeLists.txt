@@ -480,13 +480,14 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 endif()
 
 set(AK_SOURCES
+    ../AK/Error.cpp
+    ../AK/Format.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
     ../AK/StringBuilder.cpp
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
     ../AK/Time.cpp
-    ../AK/Format.cpp
     ../AK/UUID.cpp
 )
 

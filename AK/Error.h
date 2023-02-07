@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <AK/Variant.h>
@@ -19,11 +21,26 @@
 
 namespace AK {
 
+template<typename T, typename E>
+class [[nodiscard]] ErrorOr;
+
 class Error {
 public:
+    Error(Error&&);
+    Error(Error&);
+    Error(Error const&);
+
+    ~Error();
+
     [[nodiscard]] static Error from_errno(int code) { return Error(code); }
     [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
     [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
+
+#if !defined(KERNEL)
+    // Use this in conjunction with String::formatted to create errors with runtime-dependent text.
+    // The errno can serve as context even if the string couldn't be created in OOM situations.
+    [[nodiscard]] static Error from_string(ErrorOr<String>&& string_or_error, Optional<int> code = {});
+#endif
 
     // NOTE: Prefer `from_string_literal` when directly typing out an error message:
     //
@@ -53,7 +70,7 @@ public:
     bool is_syscall() const { return m_syscall; }
 
     int code() const { return m_code; }
-    StringView string_literal() const { return m_string_literal; }
+    StringView string_literal() const;
 
 protected:
     Error(int code)
@@ -74,7 +91,20 @@ private:
     {
     }
 
+#if !defined(KERNEL)
+    // Avoid "capturing" nullptr, especially in combination with ErrorOr.
+    explicit Error(String const* owned_string_literal);
+    Error(String const* owned_string_literal, int code);
+#endif
+
+#if defined(KERNEL)
     StringView m_string_literal;
+#else
+    // NOTE: We cannot put a string itself in here, or a NonnullOwnPtr of it, since all of those depend on Error itself!
+    //       This is an unsolveable include cycle problem and we are forced to use non-idiomatic code here.
+    //       A contained string pointer may be null.
+    Variant<String const*, StringView> m_string_literal { ""sv };
+#endif
     int m_code { 0 };
     bool m_syscall { false };
 };
