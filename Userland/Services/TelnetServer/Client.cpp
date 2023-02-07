@@ -7,8 +7,8 @@
 #include "Client.h"
 
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedMemoryStream.h>
 #include <AK/DeprecatedString.h>
+#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -194,12 +194,15 @@ ErrorOr<void> Client::send_command(Command command)
 ErrorOr<void> Client::send_commands(Vector<Command> commands)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(commands.size() * 3));
-    DeprecatedOutputMemoryStream stream { buffer };
+    FixedMemoryStream stream { buffer.span() };
 
-    for (auto& command : commands)
-        stream << (u8)IAC << command.command << command.subcommand;
+    for (auto& command : commands) {
+        MUST(stream.write_value<u8>(IAC));
+        MUST(stream.write_value(command.command));
+        MUST(stream.write_value(command.subcommand));
+    }
 
-    VERIFY(stream.is_end());
+    VERIFY(TRY(stream.tell()) == buffer.size());
     TRY(m_socket->write({ buffer.data(), buffer.size() }));
     return {};
 }
