@@ -247,6 +247,82 @@ private:
     Vector<Record> m_records;
 };
 
+// ICC v4, 10.17 namedColor2Type
+class NamedColor2TagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6E636C32 }; // 'ncl2'
+
+    static ErrorOr<NonnullRefPtr<NamedColor2TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // "The encoding is the same as the encodings for the PCS colour spaces
+    //  as described in 6.3.4.2 and 10.8. Only PCSXYZ and
+    //  legacy 16-bit PCSLAB encodings are permitted. PCS
+    //  values shall be relative colorimetric."
+    // (Which I suppose implies this type must not be used in DeviceLink profiles unless
+    // the device's PCS happens to be PCSXYZ or PCSLAB.)
+    struct XYZOrLAB {
+        union {
+            struct {
+                u16 x, y, z;
+            } xyz;
+            struct {
+                u16 L, a, b;
+            } lab;
+        };
+    };
+
+    NamedColor2TagData(u32 offset, u32 size, u32 vendor_specific_flag, u32 number_of_device_coordinates, String prefix, String suffix,
+        Vector<String> root_names, Vector<XYZOrLAB> pcs_coordinates, Vector<u16> device_coordinates)
+        : TagData(offset, size, Type)
+        , m_vendor_specific_flag(vendor_specific_flag)
+        , m_number_of_device_coordinates(number_of_device_coordinates)
+        , m_prefix(move(prefix))
+        , m_suffix(move(suffix))
+        , m_root_names(move(root_names))
+        , m_pcs_coordinates(move(pcs_coordinates))
+        , m_device_coordinates(move(device_coordinates))
+    {
+        VERIFY(root_names.size() == pcs_coordinates.size());
+        VERIFY(root_names.size() * number_of_device_coordinates == device_coordinates.size());
+    }
+
+    // "(least-significant 16 bits reserved for ICC use)"
+    u32 vendor_specific_flag() const { return m_vendor_specific_flag; }
+
+    // "If this field is 0, device coordinates are not provided."
+    u32 number_of_device_coordinates() const { return m_number_of_device_coordinates; }
+
+    u32 size() { return m_root_names.size(); }
+
+    // "In order to maintain maximum portability, it is strongly recommended that
+    //  special characters of the 7-bit ASCII set not be used."
+    String const& prefix() const { return m_prefix; }                        // "7-bit ASCII"
+    String const& suffix() const { return m_suffix; }                        // "7-bit ASCII"
+    String const& root_name(u32 index) const { return m_root_names[index]; } // "7-bit ASCII"
+
+    // Returns 7-bit ASCII.
+    ErrorOr<String> color_name(u32 index);
+
+    // "The PCS representation corresponds to the header’s PCS field."
+    XYZOrLAB const& pcs_coordinates(u32 index) { return m_pcs_coordinates[index]; }
+
+    // "The device representation corresponds to the header’s “data colour space” field."
+    u16 const* device_coordinates(u32 index)
+    {
+        VERIFY((index + 1) * m_number_of_device_coordinates <= m_device_coordinates.size());
+        return m_device_coordinates.data() + index * m_number_of_device_coordinates;
+    }
+
+private:
+    u32 m_vendor_specific_flag;
+    u32 m_number_of_device_coordinates;
+    String m_prefix;
+    String m_suffix;
+    Vector<String> m_root_names;
+    Vector<XYZOrLAB> m_pcs_coordinates;
+    Vector<u16> m_device_coordinates;
+};
+
 // ICC v4, 10.18 parametricCurveType
 class ParametricCurveTagData : public TagData {
 public:

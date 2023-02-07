@@ -230,6 +230,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
         BigEndian<u32> string_length_in_bytes;
         BigEndian<u32> string_offset_in_bytes;
     };
+    static_assert(AssertSize<RawRecord, 12>());
 
     for (u32 i = 0; i < number_of_records; ++i) {
         size_t offset = 16 + i * record_size;
@@ -266,6 +267,75 @@ unsigned ParametricCurveTagData::parameter_count(FunctionType function_type)
         return 7;
     }
     VERIFY_NOT_REACHED();
+}
+
+ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.17 namedColor2Type
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    // Table 66 — namedColor2Type encoding
+    struct NamedColorHeader {
+        BigEndian<u32> vendor_specific_flag;
+        BigEndian<u32> count_of_named_colors;
+        BigEndian<u32> number_of_device_coordinates_of_each_named_color;
+        u8 prefix_for_each_color_name[32]; // null-terminated
+        u8 suffix_for_each_color_name[32]; // null-terminated
+    };
+    static_assert(AssertSize<NamedColorHeader, 76>());
+
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(NamedColorHeader))
+        return Error::from_string_literal("ICC::Profile: namedColor2Type has not enough data");
+
+    auto& header = *bit_cast<NamedColorHeader const*>(bytes.data() + 8);
+
+    unsigned const record_byte_size = 32 + sizeof(u16) * (3 + header.number_of_device_coordinates_of_each_named_color);
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(NamedColorHeader) + header.count_of_named_colors * record_byte_size)
+        return Error::from_string_literal("ICC::Profile: namedColor2Type has not enough color data");
+
+    auto buffer_to_string = [](u8 const* buffer) -> ErrorOr<String> {
+        size_t length = strnlen((char const*)buffer, 32);
+        if (length == 32)
+            return Error::from_string_literal("ICC::Profile: namedColor2Type string not \\0-terminated");
+        for (size_t i = 0; i < length; ++i)
+            if (buffer[i] >= 128)
+                return Error::from_string_literal("ICC::Profile: namedColor2Type not 7-bit ASCII");
+        return String::from_utf8({ buffer, length });
+    };
+
+    String prefix = TRY(buffer_to_string(header.prefix_for_each_color_name));
+    String suffix = TRY(buffer_to_string(header.suffix_for_each_color_name));
+
+    Vector<String> root_names;
+    Vector<XYZOrLAB> pcs_coordinates;
+    Vector<u16> device_coordinates;
+
+    TRY(root_names.try_resize(header.count_of_named_colors));
+    TRY(pcs_coordinates.try_resize(header.count_of_named_colors));
+    TRY(device_coordinates.try_resize(header.count_of_named_colors * header.number_of_device_coordinates_of_each_named_color));
+
+    for (unsigned i = 0; i < header.count_of_named_colors; ++i) {
+        u8 const* root_name = bytes.data() + 8 + sizeof(NamedColorHeader) + i * record_byte_size;
+        auto* components = bit_cast<BigEndian<u16> const*>(root_name + 32);
+
+        root_names[i] = TRY(buffer_to_string(root_name));
+        pcs_coordinates[i] = { { { components[0], components[1], components[2] } } };
+        for (unsigned j = 0; j < header.number_of_device_coordinates_of_each_named_color; ++j)
+            device_coordinates[i * header.number_of_device_coordinates_of_each_named_color + j] = components[3 + j];
+    }
+
+    return adopt_ref(*new NamedColor2TagData(offset, size, header.vendor_specific_flag, header.number_of_device_coordinates_of_each_named_color,
+        move(prefix), move(suffix), move(root_names), move(pcs_coordinates), move(device_coordinates)));
+}
+
+ErrorOr<String> NamedColor2TagData::color_name(u32 index)
+{
+    StringBuilder builder;
+    builder.append(prefix());
+    builder.append(root_name(index));
+    builder.append(suffix());
+    return builder.to_string();
 }
 
 ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
