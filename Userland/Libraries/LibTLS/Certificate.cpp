@@ -37,8 +37,8 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 {
 #define ENTER_SCOPE_WITHOUT_TYPECHECK(scope)                                               \
     do {                                                                                   \
-        if (auto result = decoder.enter(); result.has_value()) {                           \
-            dbgln_if(TLS_DEBUG, "Failed to enter object (" scope "): {}", result.value()); \
+        if (auto result = decoder.enter(); result.is_error()) {                            \
+            dbgln_if(TLS_DEBUG, "Failed to enter object (" scope "): {}", result.error()); \
             return {};                                                                     \
         }                                                                                  \
     } while (0)
@@ -59,8 +59,8 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 
 #define EXIT_SCOPE(scope)                                                                  \
     do {                                                                                   \
-        if (auto error = decoder.leave(); error.has_value()) {                             \
-            dbgln_if(TLS_DEBUG, "Error while exiting scope " scope ": {}", error.value()); \
+        if (auto error = decoder.leave(); error.is_error()) {                              \
+            dbgln_if(TLS_DEBUG, "Error while exiting scope " scope ": {}", error.error()); \
             return {};                                                                     \
         }                                                                                  \
     } while (0)
@@ -88,8 +88,8 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
 
 #define DROP_OBJECT_OR_FAIL(scope)                                        \
     do {                                                                  \
-        if (auto error = decoder.drop(); error.has_value()) {             \
-            dbgln_if(TLS_DEBUG, scope " read failed: {}", error.value()); \
+        if (auto error = decoder.drop(); error.is_error()) {              \
+            dbgln_if(TLS_DEBUG, scope " read failed: {}", error.error()); \
         }                                                                 \
     } while (0)
 
