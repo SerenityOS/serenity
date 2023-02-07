@@ -1331,25 +1331,6 @@ static bool operator==(Filter::HueRotate const& a, Filter::HueRotate const& b)
     return a.angle == b.angle;
 }
 
-static bool variant_equals(auto const& a, auto const& b)
-{
-    return a.visit([&](auto const& held_value) {
-        using HeldType = AK::Detail::Decay<decltype(held_value)>;
-        bool other_holds_same_type = b.template has<HeldType>();
-        return other_holds_same_type && held_value == b.template get<HeldType>();
-    });
-}
-
-static bool operator==(Filter::HueRotate::AngleOrZero const& a, Filter::HueRotate::AngleOrZero const& b)
-{
-    return variant_equals(a, b);
-}
-
-static bool operator==(FilterFunction const& a, FilterFunction const& b)
-{
-    return variant_equals(a, b);
-}
-
 bool FilterValueListStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
@@ -1867,15 +1848,6 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
     return builder.to_string();
 }
 
-static bool operator==(LinearGradientStyleValue::GradientDirection const& a, LinearGradientStyleValue::GradientDirection const& b)
-{
-    if (a.has<SideOrCorner>() && b.has<SideOrCorner>())
-        return a.get<SideOrCorner>() == b.get<SideOrCorner>();
-    if (a.has<Angle>() && b.has<Angle>())
-        return a.get<Angle>() == b.get<Angle>();
-    return false;
-}
-
 static bool operator==(EdgeRect const& a, EdgeRect const& b)
 {
     return a.top_edge == b.top_edge && a.right_edge == b.right_edge && a.bottom_edge == b.bottom_edge && a.left_edge == b.left_edge;
@@ -2043,8 +2015,8 @@ bool PositionValue::operator==(PositionValue const& other) const
     return (
         x_relative_to == other.x_relative_to
         && y_relative_to == other.y_relative_to
-        && variant_equals(horizontal_position, other.horizontal_position)
-        && variant_equals(vertical_position, other.vertical_position));
+        && horizontal_position == other.horizontal_position
+        && vertical_position == other.vertical_position);
 }
 
 ErrorOr<String> RadialGradientStyleValue::to_string() const
@@ -2240,7 +2212,7 @@ bool RadialGradientStyleValue::equals(StyleValue const& other) const
         return false;
     auto& other_gradient = other.as_radial_gradient();
     return (m_ending_shape == other_gradient.m_ending_shape
-        && variant_equals(m_size, other_gradient.m_size)
+        && m_size == other_gradient.m_size
         && m_position == other_gradient.m_position
         && m_color_stop_list == other_gradient.m_color_stop_list);
 }
