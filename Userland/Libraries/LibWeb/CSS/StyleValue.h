@@ -150,6 +150,7 @@ namespace Filter {
 struct Blur {
     Optional<Length> radius {};
     float resolved_radius(Layout::Node const&) const;
+    bool operator==(Filter::Blur const& b) const;
 };
 
 struct DropShadow {
@@ -164,13 +165,17 @@ struct DropShadow {
         Color color;
     };
     Resolved resolved(Layout::Node const&) const;
+    bool operator==(Filter::DropShadow const& b) const;
 };
 
 struct HueRotate {
-    struct Zero { };
+    struct Zero {
+        bool operator==(Zero const&) const;
+    };
     using AngleOrZero = Variant<Angle, Zero>;
     Optional<AngleOrZero> angle {};
     float angle_degrees() const;
+    bool operator==(Filter::HueRotate const& b) const;
 };
 
 struct Color {
@@ -185,6 +190,7 @@ struct Color {
     } operation;
     Optional<NumberPercentage> amount {};
     float resolved_amount() const;
+    bool operator==(Filter::Color const& b) const;
 };
 
 };

@@ -1306,29 +1306,29 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
     return builder.to_string();
 }
 
-static bool operator==(Filter::Blur const& a, Filter::Blur const& b)
+bool Filter::Blur::operator==(Filter::Blur const& b) const
 {
-    return a.radius == b.radius;
+    return this->radius == b.radius;
 }
 
-static bool operator==(Filter::DropShadow const& a, Filter::DropShadow const& b)
+bool Filter::DropShadow::operator==(Filter::DropShadow const& b) const
 {
-    return a.offset_x == b.offset_x && a.offset_y == b.offset_y && a.radius == b.radius && a.color == b.color;
+    return this->offset_x == b.offset_x && this->offset_y == b.offset_y && this->radius == b.radius && this->color == b.color;
 }
 
-static bool operator==(Filter::HueRotate::Zero const&, Filter::HueRotate::Zero const&)
+bool Filter::HueRotate::Zero::operator==(Filter::HueRotate::Zero const&) const
 {
     return true;
 }
 
-static bool operator==(Filter::Color const& a, Filter::Color const& b)
+bool Filter::Color::operator==(Filter::Color const& b) const
 {
-    return a.operation == b.operation && a.amount == b.amount;
+    return this->operation == b.operation && this->amount == b.amount;
 }
 
-static bool operator==(Filter::HueRotate const& a, Filter::HueRotate const& b)
+bool Filter::HueRotate::operator==(Filter::HueRotate const& b) const
 {
-    return a.angle == b.angle;
+    return this->angle == b.angle;
 }
 
 static bool variant_equals(auto const& a, auto const& b)
