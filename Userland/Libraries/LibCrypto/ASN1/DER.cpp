@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedStream.h>
+#include <AK/Stream.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
 #include <LibCrypto/ASN1/DER.h>
@@ -224,7 +224,7 @@ ErrorOr<void> Decoder::leave()
     return {};
 }
 
-ErrorOr<void> pretty_print(Decoder& decoder, DeprecatedOutputStream& stream, int indent)
+ErrorOr<void> pretty_print(Decoder& decoder, AK::Stream& stream, int indent)
 {
     while (!decoder.eof()) {
         auto tag = TRY(decoder.peek());
@@ -238,7 +238,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, DeprecatedOutputStream& stream, int
             TRY(decoder.enter());
 
             builder.append('\n');
-            stream.write(builder.string_view().bytes());
+            TRY(stream.write_entire_buffer(builder.string_view().bytes()));
 
             TRY(pretty_print(decoder, stream, indent + 2));
 
@@ -314,7 +314,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, DeprecatedOutputStream& stream, int
         }
 
         builder.append('\n');
-        stream.write(builder.string_view().bytes());
+        TRY(stream.write_entire_buffer(builder.string_view().bytes()));
     }
 
     return {};
