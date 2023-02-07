@@ -690,8 +690,11 @@ struct Formatter<Error> : Formatter<FormatString> {
 #else
         if (error.is_syscall())
             return Formatter<FormatString>::format(builder, "{}: {} (errno={})"sv, error.string_literal(), strerror(error.code()), error.code());
-        if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "{} (errno={})"sv, strerror(error.code()), error.code());
+        if (error.is_errno()) {
+            if (error.string_literal().is_empty())
+                return Formatter<FormatString>::format(builder, "{} (errno={})"sv, strerror(error.code()), error.code());
+            return Formatter<FormatString>::format(builder, "{} (errno={})"sv, error.string_literal(), error.code());
+        }
 
         return Formatter<FormatString>::format(builder, "{}"sv, error.string_literal());
 #endif
