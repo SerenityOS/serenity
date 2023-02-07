@@ -21,7 +21,7 @@ namespace Manual {
 ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 2> const& query_parameters)
 {
     if (query_parameters.size() > 2)
-        return Error::from_string_literal("Queries longer than 2 strings are not supported yet");
+        return Error::from_string(String::formatted("Queries of length {} are not supported yet", query_parameters.size()));
 
     auto query_parameter_iterator = query_parameters.begin();
 
@@ -39,7 +39,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
             auto section_directory = path_from_query.parent();
             auto man_string_location = section_directory.basename().find("man"sv);
             if (!man_string_location.has_value())
-                return Error::from_string_literal("Page is inside invalid section");
+                return Error::from_string(String::formatted("Page {} is inside invalid section", path_from_query));
             auto section_name = section_directory.basename().substring_view(man_string_location.value() + 3);
             auto section = TRY(SectionNode::try_create_from_number(section_name));
             return try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(path_from_query.title())));
@@ -56,7 +56,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
         }
         if (maybe_page.has_value())
             return maybe_page.release_value();
-        return Error::from_string_literal("Page not found");
+        return Error::from_string(String::formatted("Page {} not found", first_query_parameter));
     }
     // [section] [name]
     auto second_query_parameter = *query_parameter_iterator;
@@ -64,24 +64,24 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     auto const page = TRY(try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(second_query_parameter))));
     if (Core::File::exists(TRY(page->path())))
         return page;
-    return Error::from_string_literal("Page doesn't exist in section");
+    return Error::from_string(String::formatted("Page {} doesn't exist in section {}", second_query_parameter, TRY(section->name())));
 }
 
 ErrorOr<NonnullRefPtr<Node>> Node::try_find_from_help_url(URL const& url)
 {
     if (url.host() != "man")
-        return Error::from_string_view("Bad help operation"sv);
+        return Error::from_string(String::formatted("Bad help operation {}", url.host()));
     if (url.paths().size() < 2)
-        return Error::from_string_view("Bad help page URL"sv);
+        return Error::from_string(String::formatted("Bad help page URL {}", url.paths()));
 
     auto paths = url.paths();
     auto const section = paths.take_first();
     auto maybe_section_number = section.to_uint();
     if (!maybe_section_number.has_value())
-        return Error::from_string_view("Bad section number"sv);
+        return Error::from_string(String::formatted("Bad section number {}", section));
     auto section_number = maybe_section_number.value();
     if (section_number > number_of_sections)
-        return Error::from_string_view("Section number out of bounds"sv);
+        return Error::from_string(String::formatted("Section number {} out of bounds, there are {} sections", section_number, number_of_sections));
 
     NonnullRefPtr<Node> current_node = sections[section_number - 1];
 

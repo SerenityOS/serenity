@@ -19,10 +19,10 @@ ErrorOr<NonnullRefPtr<SectionNode>> SectionNode::try_create_from_number(StringVi
 {
     auto maybe_section_number = section.to_uint<u32>();
     if (!maybe_section_number.has_value())
-        return Error::from_string_literal("Section is not a number");
+        return Error::from_string(String::formatted("Bad section number {}", section));
     auto section_number = maybe_section_number.release_value();
     if (section_number > number_of_sections)
-        return Error::from_string_literal("Section number too large");
+        return Error::from_string(String::formatted("Section number {} out of bounds, there are {} sections", section_number, number_of_sections));
     return sections[section_number - 1];
 }
 
