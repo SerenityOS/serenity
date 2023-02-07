@@ -163,6 +163,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     record.iso_3166_1_country_code >> 8, record.iso_3166_1_country_code & 0xff,
                     record.text);
             }
+        } else if (tag_data->type() == Gfx::ICC::NamedColor2TagData::Type) {
+            auto& named_colors = static_cast<Gfx::ICC::NamedColor2TagData&>(*tag_data);
+            outln("    vendor specific flag: 0x{:08x}", named_colors.vendor_specific_flag());
+            outln("    common name prefix: \"{}\"", named_colors.prefix());
+            outln("    common name suffix: \"{}\"", named_colors.suffix());
+            outln("    {} colors:", named_colors.size());
+            for (size_t i = 0; i < min(named_colors.size(), 5u); ++i) {
+                const auto& pcs = named_colors.pcs_coordinates(i);
+
+                // FIXME: Display decoded values? (See ICC v4 6.3.4.2 and 10.8.)
+                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", MUST(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
+                if (auto number_of_device_coordinates = named_colors.number_of_device_coordinates(); number_of_device_coordinates > 0) {
+                    out(", device coordinates:");
+                    for (size_t j = 0; j < number_of_device_coordinates; ++j)
+                        out(" 0x{:04x}", named_colors.device_coordinates(i)[j]);
+                }
+                outln();
+            }
+            if (named_colors.size() > 5u)
+                outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
             auto& parametric_curve = static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data);
             switch (parametric_curve.function_type()) {

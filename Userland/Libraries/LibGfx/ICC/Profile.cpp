@@ -580,6 +580,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
         return Lut8TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case NamedColor2TagData::Type:
+        return NamedColor2TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case ParametricCurveTagData::Type:
         return ParametricCurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
@@ -1137,7 +1139,14 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.37 namedColor2Tag
     // "Permitted tag types: namedColor2Type"
-    // FIXME
+    if (auto type = m_tag_table.get(namedColor2Tag); type.has_value()) {
+        if (type.value()->type() != NamedColor2TagData::Type)
+            return Error::from_string_literal("ICC::Profile: namedColor2Tag has unexpected type");
+        // ICC v4, 10.17 namedColor2Type
+        // "The device representation corresponds to the header’s “data colour space” field.
+        //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type."
+        // FIXME: check that
+    }
 
     // ICC v4, 9.2.38 outputResponseTag
     // "Permitted tag types: responseCurveSet16Type"
