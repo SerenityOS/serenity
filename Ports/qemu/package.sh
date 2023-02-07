@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='qemu'
-version='7.1.0'
+version='7.2.0'
 useconfigure='true'
 configopts=(
     "--target-list=aarch64-softmmu,i386-softmmu,x86_64-softmmu"
@@ -14,7 +14,7 @@ configopts=(
     "--enable-tools"
 )
 depends=("glib" "pixman" "SDL2")
-files="https://download.qemu.org/qemu-${version}.tar.xz qemu-${version}.tar.xz a0634e536bded57cf38ec8a751adb124b89c776fe0846f21ab6c6728f1cbbbe6"
+files="https://download.qemu.org/qemu-${version}.tar.xz qemu-${version}.tar.xz 5b49ce2687744dad494ae90a898c52204a3406e84d072482a1e1be854eeb2157"
 auth_type='sha256'
 
 pre_patch() {
