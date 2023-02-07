@@ -7,8 +7,8 @@
 
 #include "Mixer.h"
 #include <AK/Array.h>
-#include <AK/DeprecatedMemoryStream.h>
 #include <AK/Format.h>
+#include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AudioServer/ConnectionFromClient.h>
 #include <AudioServer/Mixer.h>
@@ -99,7 +99,7 @@ void Mixer::mix()
         if (m_muted || m_main_volume < 0.01) {
             m_device->write(m_zero_filled_buffer.data(), static_cast<int>(m_zero_filled_buffer.size()));
         } else {
-            DeprecatedOutputMemoryStream stream { m_stream_buffer };
+            FixedMemoryStream stream { m_stream_buffer.span() };
 
             for (auto& mixed_sample : mixed_buffer) {
                 mixed_sample.log_multiply(static_cast<float>(m_main_volume));
@@ -107,15 +107,15 @@ void Mixer::mix()
 
                 LittleEndian<i16> out_sample;
                 out_sample = static_cast<i16>(mixed_sample.left * NumericLimits<i16>::max());
-                stream << out_sample;
+                MUST(stream.write_value(out_sample));
 
                 out_sample = static_cast<i16>(mixed_sample.right * NumericLimits<i16>::max());
-                stream << out_sample;
+                MUST(stream.write_value(out_sample));
             }
 
-            VERIFY(stream.is_end());
-            VERIFY(!stream.has_any_error());
-            m_device->write(stream.data(), static_cast<int>(stream.size()));
+            auto buffered_bytes = MUST(stream.tell());
+            VERIFY(buffered_bytes == m_stream_buffer.size());
+            m_device->write(m_stream_buffer.data(), static_cast<int>(buffered_bytes));
         }
     }
 }
