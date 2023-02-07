@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedMemoryStream.h>
+#include <AK/MemoryStream.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Ext2FS/Inode.h>
@@ -40,16 +40,15 @@ ErrorOr<void> Ext2FSInode::write_indirect_block(BlockBasedFileSystem::BlockIndex
     auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
     VERIFY(blocks_indices.size() <= entries_per_block);
 
-    auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
-    DeprecatedOutputMemoryStream stream { block_contents };
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
+    auto block_contents = TRY(ByteBuffer::create_zeroed(fs().block_size()));
+    FixedMemoryStream stream { block_contents.bytes() };
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block_contents.data());
 
     VERIFY(blocks_indices.size() <= EXT2_ADDR_PER_BLOCK(&fs().super_block()));
     for (unsigned i = 0; i < blocks_indices.size(); ++i)
-        stream << static_cast<u32>(blocks_indices[i].value());
-    stream.fill_to_end(0);
+        MUST(stream.write_value<u32>(blocks_indices[i].value()));
 
-    return fs().write_block(block, buffer, stream.size());
+    return fs().write_block(block, buffer, block_contents.size());
 }
 
 ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, Span<BlockBasedFileSystem::BlockIndex> blocks_indices, Vector<Ext2FS::BlockIndex>& new_meta_blocks, unsigned& meta_blocks)
@@ -62,10 +61,10 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_doubly_indirect_block);
 
-    auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
+    auto block_contents = TRY(ByteBuffer::create_zeroed(fs().block_size()));
     auto* block_as_pointers = (unsigned*)block_contents.data();
-    DeprecatedOutputMemoryStream stream { block_contents };
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
+    FixedMemoryStream stream { block_contents.bytes() };
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block_contents.data());
 
     if (old_blocks_length > 0) {
         TRY(fs().read_block(block, &buffer, fs().block_size()));
@@ -73,14 +72,13 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
 
     // Grow the doubly indirect block.
     for (unsigned i = 0; i < old_indirect_blocks_length; i++)
-        stream << static_cast<u32>(block_as_pointers[i]);
+        MUST(stream.write_value<u32>(block_as_pointers[i]));
     for (unsigned i = old_indirect_blocks_length; i < new_indirect_blocks_length; i++) {
         auto new_block = new_meta_blocks.take_last().value();
         dbgln_if(EXT2_BLOCKLIST_DEBUG, "Ext2FSInode[{}]::grow_doubly_indirect_block(): Allocating indirect block {} at index {}", identifier(), new_block, i);
-        stream << static_cast<u32>(new_block);
+        MUST(stream.write_value<u32>(new_block));
         meta_blocks++;
     }
-    stream.fill_to_end(0);
 
     // Write out the indirect blocks.
     for (unsigned i = old_blocks_length / entries_per_block; i < new_indirect_blocks_length; i++) {
@@ -89,7 +87,7 @@ ErrorOr<void> Ext2FSInode::grow_doubly_indirect_block(BlockBasedFileSystem::Bloc
     }
 
     // Write out the doubly indirect block.
-    return fs().write_block(block, buffer, stream.size());
+    return fs().write_block(block, buffer, block_contents.size());
 }
 
 ErrorOr<void> Ext2FSInode::shrink_doubly_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
@@ -135,10 +133,10 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
     VERIFY(blocks_indices.size() > old_blocks_length);
     VERIFY(blocks_indices.size() <= entries_per_triply_indirect_block);
 
-    auto block_contents = TRY(ByteBuffer::create_uninitialized(fs().block_size()));
+    auto block_contents = TRY(ByteBuffer::create_zeroed(fs().block_size()));
     auto* block_as_pointers = (unsigned*)block_contents.data();
-    DeprecatedOutputMemoryStream stream { block_contents };
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
+    FixedMemoryStream stream { block_contents.bytes() };
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block_contents.data());
 
     if (old_blocks_length > 0) {
         TRY(fs().read_block(block, &buffer, fs().block_size()));
@@ -146,14 +144,13 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
 
     // Grow the triply indirect block.
     for (unsigned i = 0; i < old_doubly_indirect_blocks_length; i++)
-        stream << static_cast<u32>(block_as_pointers[i]);
+        MUST(stream.write_value<u32>(block_as_pointers[i]));
     for (unsigned i = old_doubly_indirect_blocks_length; i < new_doubly_indirect_blocks_length; i++) {
         auto new_block = new_meta_blocks.take_last().value();
         dbgln_if(EXT2_BLOCKLIST_DEBUG, "Ext2FSInode[{}]::grow_triply_indirect_block(): Allocating doubly indirect block {} at index {}", identifier(), new_block, i);
-        stream << static_cast<u32>(new_block);
+        MUST(stream.write_value<u32>(new_block));
         meta_blocks++;
     }
-    stream.fill_to_end(0);
 
     // Write out the doubly indirect blocks.
     for (unsigned i = old_blocks_length / entries_per_doubly_indirect_block; i < new_doubly_indirect_blocks_length; i++) {
@@ -164,7 +161,7 @@ ErrorOr<void> Ext2FSInode::grow_triply_indirect_block(BlockBasedFileSystem::Bloc
     }
 
     // Write out the triply indirect block.
-    return fs().write_block(block, buffer, stream.size());
+    return fs().write_block(block, buffer, block_contents.size());
 }
 
 ErrorOr<void> Ext2FSInode::shrink_triply_indirect_block(BlockBasedFileSystem::BlockIndex block, size_t old_blocks_length, size_t new_blocks_length, unsigned& meta_blocks)
@@ -790,27 +787,28 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): New directory contents to write (size {}):", identifier(), directory_size);
 
     auto directory_data = TRY(ByteBuffer::create_uninitialized(directory_size));
-    DeprecatedOutputMemoryStream stream { directory_data };
+    FixedMemoryStream stream { directory_data.bytes() };
 
     for (auto& entry : entries) {
         dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::write_directory(): Writing inode: {}, name_len: {}, rec_len: {}, file_type: {}, name: {}", identifier(), entry.inode_index, u16(entry.name->length()), u16(entry.record_length), u8(entry.file_type), entry.name);
 
-        stream << u32(entry.inode_index.value());
-        stream << u16(entry.record_length);
-        stream << u8(entry.name->length());
-        stream << u8(entry.file_type);
-        stream << entry.name->bytes();
+        MUST(stream.write_value<u32>(entry.inode_index.value()));
+        MUST(stream.write_value<u16>(entry.record_length));
+        MUST(stream.write_value<u8>(entry.name->length()));
+        MUST(stream.write_value<u8>(entry.file_type));
+        MUST(stream.write_entire_buffer(entry.name->bytes()));
         int padding = entry.record_length - entry.name->length() - 8;
         for (int j = 0; j < padding; ++j)
-            stream << u8(0);
+            MUST(stream.write_value<u8>(0));
     }
 
-    VERIFY(stream.is_end());
+    auto serialized_bytes_count = TRY(stream.tell());
+    VERIFY(serialized_bytes_count == directory_size);
 
-    TRY(resize(stream.size()));
+    TRY(resize(serialized_bytes_count));
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(stream.data());
-    auto nwritten = TRY(write_bytes(0, stream.size(), buffer, nullptr));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(directory_data.data());
+    auto nwritten = TRY(write_bytes(0, serialized_bytes_count, buffer, nullptr));
     set_metadata_dirty(true);
     if (nwritten != directory_data.size())
         return EIO;
