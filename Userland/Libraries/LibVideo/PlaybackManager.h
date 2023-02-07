@@ -165,7 +165,7 @@ private:
 enum EventType : unsigned {
     DecoderErrorOccurred = (('v' << 2) | ('i' << 1) | 'd') << 4,
     VideoFramePresent,
-    PlaybackStatusChange,
+    PlaybackStateChange,
 };
 
 class DecoderErrorEvent : public Core::Event {
@@ -199,20 +199,13 @@ private:
     RefPtr<Gfx::Bitmap> m_frame;
 };
 
-class PlaybackStatusChangeEvent : public Core::Event {
+class PlaybackStateChangeEvent : public Core::Event {
 public:
-    PlaybackStatusChangeEvent() = default;
-    explicit PlaybackStatusChangeEvent(PlaybackStatus status, PlaybackStatus previous_status)
-        : Core::Event(PlaybackStatusChange)
-        , m_status(status)
-        , m_previous_status(previous_status)
+    explicit PlaybackStateChangeEvent()
+        : Core::Event(PlaybackStateChange)
     {
     }
-    virtual ~PlaybackStatusChangeEvent() = default;
-
-private:
-    PlaybackStatus m_status;
-    PlaybackStatus m_previous_status;
+    virtual ~PlaybackStateChangeEvent() = default;
 };
 
 inline StringView playback_status_to_string(PlaybackStatus status)

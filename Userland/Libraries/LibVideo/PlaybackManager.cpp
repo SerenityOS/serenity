@@ -57,7 +57,7 @@ void PlaybackManager::set_playback_status(PlaybackStatus status)
             m_present_timer->stop();
         }
 
-        m_main_loop.post_event(m_event_handler, make<PlaybackStatusChangeEvent>(status, old_status));
+        m_main_loop.post_event(m_event_handler, make<PlaybackStateChangeEvent>());
     }
 }
 
