@@ -13,7 +13,6 @@
 namespace Gfx::ICC {
 
 // ICC v4, 9.2 Tag listing
-// FIXME: Add v2-only tags too.
 #define ENUMERATE_TAG_SIGNATURES(TAG)                               \
     TAG(AToB0Tag, 0x41324230 /* 'A2B0' */)                          \
     TAG(AToB1Tag, 0x41324231 /* 'A2B1' */)                          \
@@ -65,7 +64,20 @@ namespace Gfx::ICC {
     TAG(saturationRenderingIntentGamutTag, 0x72696732 /* 'rig2' */) \
     TAG(technologyTag, 0x74656368 /* 'tech' */)                     \
     TAG(viewingCondDescTag, 0x76756564 /* 'vued' */)                \
-    TAG(viewingConditionsTag, 0x76696577 /* 'view' */)
+    TAG(viewingConditionsTag, 0x76696577 /* 'view' */)              \
+    /* The following tags are v2-only */                            \
+    TAG(crdInfoTag, 0x63726469 /* 'crdi' */)                        \
+    TAG(deviceSettingsTag, 0x64657673 /* 'devs' */)                 \
+    TAG(mediaBlackPointTag, 0x626B7074 /* 'bkpt' */)                \
+    TAG(ps2CRD0Tag, 0x70736430 /* 'psd0' */)                        \
+    TAG(ps2CRD1Tag, 0x70736431 /* 'psd1' */)                        \
+    TAG(ps2CRD2Tag, 0x70736432 /* 'psd2' */)                        \
+    TAG(ps2CRD3Tag, 0x70736433 /* 'psd3' */)                        \
+    TAG(ps2CSATag, 0x70733273 /* 'ps2s' */)                         \
+    TAG(ps2RenderingIntentTag, 0x70733269 /* 'ps2i' */)             \
+    TAG(screeningDescTag, 0x73637264 /* 'scrd' */)                  \
+    TAG(screeningTag, 0x7363726E /* 'scrn' */)                      \
+    TAG(ucrbgTag, 0x62666420 /* 'bfd ' */)
 
 #define TAG(name, id) constexpr inline TagSignature name { id };
 ENUMERATE_TAG_SIGNATURES(TAG)
