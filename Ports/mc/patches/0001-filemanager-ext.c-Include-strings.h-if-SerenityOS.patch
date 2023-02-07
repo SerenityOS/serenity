@@ -12,7 +12,7 @@ Subject: [PATCH] filemanager/ext.c: Include strings.h if SerenityOS
  1 file changed, 3 insertions(+)
 
 diff --git a/src/filemanager/ext.c b/src/filemanager/ext.c
-index a18fda0..12bd8d5 100644
+index 3c54747ad4421eaceabe154dff08651d5c202678..9d78d1999d06f07b54b0706984d0a7397e1d3d34 100644
 --- a/src/filemanager/ext.c
 +++ b/src/filemanager/ext.c
 @@ -36,6 +36,9 @@
