@@ -1247,6 +1247,32 @@ ErrorOr<void> Profile::check_tag_types()
     // "Permitted tag types: viewingConditionsType"
     // FIXME
 
+    // FIXME: Add validation for v2-only tags:
+    // - ICC v2, 6.4.14 crdInfoTag
+    //   "Tag Type: crdInfoType"
+    // - ICC v2, 6.4.17 deviceSettingsTag
+    //   "Tag Type: deviceSettingsType"
+    // - ICC v2, 6.4.24 mediaBlackPointTag
+    //   "Tag Type: XYZType"
+    // - ICC v2, 6.4.34 ps2CRD0Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.35 ps2CRD1Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.36 ps2CRD2Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.37 ps2CRD3Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.38 ps2CSATag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.39 ps2RenderingIntentTag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.42 screeningDescTag
+    //   "Tag Type: textDescriptionType"
+    // - ICC v2, 6.4.43 screeningTag
+    //   "Tag Type: screeningType"
+    // - ICC v2, 6.4.45 ucrbgTag
+    //   "Tag Type: ucrbgType"
+
     return {};
 }
 
