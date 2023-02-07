@@ -22,7 +22,6 @@ public:
     Function<void()> on_next_tab;
     Function<void()> on_previous_tab;
     Vector<Function<void()>> on_tabs;
-    Function<void()> on_about;
     Function<void(GUI::Action&)> on_show_bookmarks_bar;
     Function<void(GUI::Action&)> on_vertical_tabs;
 

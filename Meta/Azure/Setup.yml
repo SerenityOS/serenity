@@ -5,6 +5,12 @@ steps:
   - checkout: self
     persistCredentials: true
 
+  - ${{ if in(parameters.os, 'Linux', 'Serenity', 'Android') }}:
+    - script: |
+        sudo gem install apt-spy2
+        sudo apt-spy2 fix --commit --launchpad --country=US
+      displayName: 'Select best APT mirror'
+
   - ${{ if eq(parameters.os, 'Serenity') }}:
     - script: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -

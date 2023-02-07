@@ -7,7 +7,6 @@
 
 #include "SoundPlayerWidgetAdvancedView.h"
 #include "BarsVisualizationWidget.h"
-#include "Common.h"
 #include "M3UParser.h"
 #include "PlaybackManager.h"
 #include <AK/LexicalPath.h>
@@ -50,12 +49,16 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_visualization = m_player_view->add<BarsVisualizationWidget>();
 
-    m_playback_progress_slider = m_player_view->add<AutoSlider>(Orientation::Horizontal);
+    m_playback_progress_slider = m_player_view->add<GUI::HorizontalSlider>();
     m_playback_progress_slider->set_fixed_height(20);
     m_playback_progress_slider->set_jump_to_cursor(true);
     m_playback_progress_slider->set_min(0);
-    m_playback_progress_slider->on_knob_released = [&](int value) {
-        seek(value);
+    m_playback_progress_slider->on_change = [&](int value) {
+        if (!m_playback_progress_slider->knob_dragging())
+            seek(value);
+    };
+    m_playback_progress_slider->on_drag_end = [&]() {
+        seek(m_playback_progress_slider->value());
     };
 
     auto& toolbar_container = m_player_view->add<GUI::ToolbarContainer>();
@@ -219,8 +222,8 @@ void SoundPlayerWidgetAdvancedView::sound_buffer_played(FixedArray<Audio::Sample
     m_visualization->set_buffer(buffer);
     m_visualization->set_samplerate(sample_rate);
     // If the user is currently dragging the slider, don't interfere.
-    if (!m_playback_progress_slider->mouse_is_down())
-        m_playback_progress_slider->set_value(samples_played);
+    if (!m_playback_progress_slider->knob_dragging())
+        m_playback_progress_slider->set_value(samples_played, GUI::AllowCallback::No);
 }
 
 void SoundPlayerWidgetAdvancedView::volume_changed(double volume)

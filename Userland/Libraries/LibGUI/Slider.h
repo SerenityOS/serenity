@@ -40,12 +40,17 @@ public:
         return rect().shrunken(0, track_margin() * 2);
     }
 
+    Function<void()> on_drag_start;
+    Function<void()> on_drag_end;
+
 protected:
     explicit Slider(Orientation = Orientation::Vertical);
 
     virtual void paint_event(PaintEvent&) override;
+    void start_drag(Gfx::IntPoint);
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
+    void end_drag();
     virtual void mouseup_event(MouseEvent&) override;
     virtual void mousewheel_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;

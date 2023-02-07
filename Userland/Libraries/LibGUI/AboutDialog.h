@@ -13,16 +13,18 @@
 namespace GUI {
 
 class AboutDialog final : public Dialog {
-    C_OBJECT(AboutDialog)
+    C_OBJECT_ABSTRACT(AboutDialog)
 public:
+    static ErrorOr<NonnullRefPtr<AboutDialog>> try_create(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
     virtual ~AboutDialog() override = default;
 
-    static void show(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr)
+    static ErrorOr<void> show(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr)
     {
-        auto dialog = AboutDialog::construct(name, version, icon, parent_window);
+        auto dialog = TRY(AboutDialog::try_create(name, version, icon, parent_window));
         if (window_icon)
             dialog->set_icon(window_icon);
         dialog->exec();
+        return {};
     }
 
 private:

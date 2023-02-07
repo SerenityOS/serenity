@@ -26,6 +26,12 @@ jobs:
       - name: Checkout SerenityOS/serenity
         uses: actions/checkout@v3
 
+      - name: "Select best APT mirror"
+        run: |
+          sudo gem install apt-spy2
+          sudo apt-spy2 fix --commit --launchpad --country=US
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+
       - name: Install dependencies Ubuntu
         run: |
           sudo apt-get update

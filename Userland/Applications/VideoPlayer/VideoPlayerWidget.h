@@ -68,6 +68,8 @@ private:
     RefPtr<GUI::Action> m_use_fast_seeking;
 
     OwnPtr<Video::PlaybackManager> m_playback_manager;
+
+    bool m_was_playing_before_seek { false };
 };
 
 }
