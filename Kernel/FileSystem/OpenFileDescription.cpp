@@ -220,43 +220,35 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
         return EIO;
 
     size_t remaining = size;
-    ErrorOr<void> error;
     u8 stack_buffer[PAGE_SIZE];
     Bytes temp_buffer(stack_buffer, sizeof(stack_buffer));
     DeprecatedOutputMemoryStream stream { temp_buffer };
 
-    auto flush_stream_to_output_buffer = [&error, &stream, &remaining, &output_buffer]() -> bool {
-        if (error.is_error())
-            return false;
+    auto flush_stream_to_output_buffer = [&stream, &remaining, &output_buffer]() -> ErrorOr<void> {
         if (stream.size() == 0)
-            return true;
-        if (remaining < stream.size()) {
-            error = EINVAL;
-            return false;
-        }
-        if (auto result = output_buffer.write(stream.bytes()); result.is_error()) {
-            error = result.release_error();
-            return false;
-        }
+            return {};
+
+        if (remaining < stream.size())
+            return Error::from_errno(EINVAL);
+
+        TRY(output_buffer.write(stream.bytes()));
         output_buffer = output_buffer.offset(stream.size());
         remaining -= stream.size();
         stream.reset();
-        return true;
+        return {};
     };
 
-    ErrorOr<void> result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &error, &stream, this](auto& entry) -> ErrorOr<void> {
+    ErrorOr<void> result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) -> ErrorOr<void> {
         size_t serialized_size = sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * entry.name.length();
-        if (serialized_size > stream.remaining()) {
-            if (!flush_stream_to_output_buffer())
-                return error;
-        }
+        if (serialized_size > stream.remaining())
+            TRY(flush_stream_to_output_buffer());
+
         stream << (u64)entry.inode.index().value();
         stream << m_inode->fs().internal_file_type_to_directory_entry_type(entry);
         stream << (u32)entry.name.length();
         stream << entry.name.bytes();
         return {};
     });
-    flush_stream_to_output_buffer();
 
     if (result.is_error()) {
         // We should only return EFAULT when the userspace buffer is too small,
@@ -266,8 +258,8 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
         return result.release_error();
     }
 
-    if (error.is_error())
-        return error.release_error();
+    TRY(flush_stream_to_output_buffer());
+
     return size - remaining;
 }
 
