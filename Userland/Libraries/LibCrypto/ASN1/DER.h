@@ -14,18 +14,6 @@
 
 namespace Crypto::ASN1 {
 
-enum class DecodeError {
-    NoInput,
-    NonConformingType,
-    EndOfStream,
-    NotEnoughData,
-    EnteringNonConstructedTag,
-    LeavingMainContext,
-    InvalidInputFormat,
-    Overflow,
-    UnsupportedFormat,
-};
-
 class BitStringView {
 public:
     BitStringView(ReadonlyBytes data, size_t unused_bits)
@@ -60,7 +48,7 @@ public:
     }
 
     // Read a tag without consuming it (and its data).
-    Result<Tag, DecodeError> peek();
+    ErrorOr<Tag> peek();
 
     bool eof() const;
 
@@ -70,13 +58,13 @@ public:
         ValueType value;
     };
 
-    Optional<DecodeError> drop()
+    ErrorOr<void> drop()
     {
         if (m_stack.is_empty())
-            return DecodeError::NoInput;
+            return Error::from_string_literal("ASN1::Decoder: Trying to drop using an empty stack");
 
         if (eof())
-            return DecodeError::EndOfStream;
+            return Error::from_string_literal("ASN1::Decoder: Trying to drop using a decoder that is EOF");
 
         auto previous_position = m_stack;
 
@@ -105,13 +93,13 @@ public:
     }
 
     template<typename ValueType>
-    Result<ValueType, DecodeError> read(Optional<Class> class_override = {}, Optional<Kind> kind_override = {})
+    ErrorOr<ValueType> read(Optional<Class> class_override = {}, Optional<Kind> kind_override = {})
     {
         if (m_stack.is_empty())
-            return DecodeError::NoInput;
+            return Error::from_string_literal("ASN1::Decoder: Trying to read using an empty stack");
 
         if (eof())
-            return DecodeError::EndOfStream;
+            return Error::from_string_literal("ASN1::Decoder: Trying to read using a decoder that is EOF");
 
         auto previous_position = m_stack;
 
@@ -141,38 +129,38 @@ public:
         return value_or_error.release_value();
     }
 
-    Optional<DecodeError> enter();
-    Optional<DecodeError> leave();
+    ErrorOr<void> enter();
+    ErrorOr<void> leave();
 
 private:
     template<typename ValueType, typename DecodedType>
-    Result<ValueType, DecodeError> with_type_check(DecodedType&& value)
+    ErrorOr<ValueType> with_type_check(DecodedType&& value)
     {
         if constexpr (requires { ValueType { value }; })
             return ValueType { value };
 
-        return DecodeError::NonConformingType;
+        return Error::from_string_literal("ASN1::Decoder: Trying to decode a value from an incompatible type");
     }
 
     template<typename ValueType, typename DecodedType>
-    Result<ValueType, DecodeError> with_type_check(Result<DecodedType, DecodeError>&& value_or_error)
+    ErrorOr<ValueType> with_type_check(ErrorOr<DecodedType>&& value_or_error)
     {
         if (value_or_error.is_error())
             return value_or_error.error();
 
         if constexpr (IsSame<ValueType, bool> && !IsSame<DecodedType, bool>) {
-            return DecodeError::NonConformingType;
+            return Error::from_string_literal("ASN1::Decoder: Trying to decode a boolean from a non-boolean type");
         } else {
             auto&& value = value_or_error.value();
             if constexpr (requires { ValueType { value }; })
                 return ValueType { value };
         }
 
-        return DecodeError::NonConformingType;
+        return Error::from_string_literal("ASN1::Decoder: Trying to decode a value from an incompatible type");
     }
 
     template<typename ValueType>
-    Result<ValueType, DecodeError> read_value(Class klass, Kind kind, size_t length)
+    ErrorOr<ValueType> read_value(Class klass, Kind kind, size_t length)
     {
         auto data_or_error = read_bytes(length);
         if (data_or_error.is_error())
@@ -209,28 +197,23 @@ private:
         return with_type_check<ValueType>(data);
     }
 
-    Result<Tag, DecodeError> read_tag();
-    Result<size_t, DecodeError> read_length();
-    Result<u8, DecodeError> read_byte();
-    Result<ReadonlyBytes, DecodeError> read_bytes(size_t length);
+    ErrorOr<Tag> read_tag();
+    ErrorOr<size_t> read_length();
+    ErrorOr<u8> read_byte();
+    ErrorOr<ReadonlyBytes> read_bytes(size_t length);
 
-    static Result<bool, DecodeError> decode_boolean(ReadonlyBytes);
-    static Result<UnsignedBigInteger, DecodeError> decode_arbitrary_sized_integer(ReadonlyBytes);
-    static Result<StringView, DecodeError> decode_octet_string(ReadonlyBytes);
-    static Result<nullptr_t, DecodeError> decode_null(ReadonlyBytes);
-    static Result<Vector<int>, DecodeError> decode_object_identifier(ReadonlyBytes);
-    static Result<StringView, DecodeError> decode_printable_string(ReadonlyBytes);
-    static Result<BitStringView, DecodeError> decode_bit_string(ReadonlyBytes);
+    static ErrorOr<bool> decode_boolean(ReadonlyBytes);
+    static ErrorOr<UnsignedBigInteger> decode_arbitrary_sized_integer(ReadonlyBytes);
+    static ErrorOr<StringView> decode_octet_string(ReadonlyBytes);
+    static ErrorOr<nullptr_t> decode_null(ReadonlyBytes);
+    static ErrorOr<Vector<int>> decode_object_identifier(ReadonlyBytes);
+    static ErrorOr<StringView> decode_printable_string(ReadonlyBytes);
+    static ErrorOr<BitStringView> decode_bit_string(ReadonlyBytes);
 
     Vector<ReadonlyBytes> m_stack;
     Optional<Tag> m_current_tag;
 };
 
-void pretty_print(Decoder&, DeprecatedOutputStream&, int indent = 0);
+ErrorOr<void> pretty_print(Decoder&, DeprecatedOutputStream&, int indent = 0);
 
 }
-
-template<>
-struct AK::Formatter<Crypto::ASN1::DecodeError> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder&, Crypto::ASN1::DecodeError);
-};
