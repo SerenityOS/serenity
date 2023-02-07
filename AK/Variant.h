@@ -418,6 +418,15 @@ public:
         return index_of<T>() == m_index;
     }
 
+    bool operator==(Variant const& other) const
+    {
+        return this->visit([&]<typename T>(T const& self) {
+            if (auto const* p = other.get_pointer<T>())
+                return static_cast<T const&>(self) == static_cast<T const&>(*p);
+            return false;
+        });
+    }
+
     template<typename... Fs>
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
