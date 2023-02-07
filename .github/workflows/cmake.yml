@@ -43,6 +43,10 @@ jobs:
         with:
           python-version: '3.x'
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+
       # === OS SETUP ===
 
       # An attempt to avoid the (fairly common) azure apt mirror downtime.

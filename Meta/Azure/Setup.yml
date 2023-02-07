@@ -5,10 +5,16 @@ steps:
   - checkout: self
     persistCredentials: true
 
+  - task: UseRubyVersion@0
+    inputs:
+      versionSpec: '3.1'
+
+  # Hacky path workaround since the azure ruby paths don't seem to work.
   - ${{ if in(parameters.os, 'Linux', 'Serenity', 'Android') }}:
     - script: |
-        sudo gem install apt-spy2
-        sudo apt-spy2 fix --commit --launchpad --country=US
+        export PATH="$(ruby -r rubygems -e 'puts Gem.user_dir')/bin:$PATH"
+        gem install --user-install apt-spy2
+        sudo -E env "PATH=$PATH" apt-spy2 fix --commit --launchpad --country=US
       displayName: 'Select best APT mirror'
 
   - ${{ if eq(parameters.os, 'Serenity') }}:

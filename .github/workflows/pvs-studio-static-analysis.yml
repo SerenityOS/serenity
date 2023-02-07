@@ -19,6 +19,10 @@ jobs:
           wget -q -O - https://files.pvs-studio.com/beta/etc/pubkey.txt | sudo apt-key add -
           sudo wget -O /etc/apt/sources.list.d/viva64.list https://files.pvs-studio.com/beta/etc/viva64.list
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1'
+
       - name: "Select best APT mirror"
         run: |
           sudo gem install apt-spy2
