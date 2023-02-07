@@ -234,7 +234,7 @@ void VideoPlayerWidget::event(Core::Event& event)
         set_current_timestamp(m_playback_manager->current_playback_time());
 
         frame_event.accept();
-    } else if (event.type() == Video::EventType::PlaybackStatusChange) {
+    } else if (event.type() == Video::EventType::PlaybackStateChange) {
         update_play_pause_icon();
         event.accept();
     }
