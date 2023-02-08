@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DOSPackedTime.h>
 #include <AK/LexicalPath.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/Stream.h>
@@ -58,6 +60,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Archive::ZipMember member {};
         member.name = TRY(String::from_deprecated_string(canonicalized_path));
 
+        auto stat = TRY(Core::System::fstat(file->fd()));
+        auto date = Core::DateTime::from_timestamp(stat.st_mtim.tv_sec);
+        member.modification_date = to_packed_dos_date(date.year(), date.month(), date.day());
+        member.modification_time = to_packed_dos_time(date.hour(), date.minute(), date.second());
+
         auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
         if (!deflate_buffer.is_error() && deflate_buffer.value().size() < file_buffer.size()) {
             member.compressed_data = deflate_buffer.value().bytes();
@@ -85,6 +92,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         member.uncompressed_size = 0;
         member.crc32 = 0;
         member.is_directory = true;
+
+        auto stat = TRY(Core::System::stat(canonicalized_path));
+        auto date = Core::DateTime::from_timestamp(stat.st_mtim.tv_sec);
+        member.modification_date = to_packed_dos_date(date.year(), date.month(), date.day());
+        member.modification_time = to_packed_dos_time(date.hour(), date.minute(), date.second());
+
         TRY(zip_stream.add_member(member));
         outln("  adding: {} (stored 0%)", canonicalized_path);
 

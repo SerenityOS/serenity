@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/DOSPackedTime.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringUtils.h>
 #include <LibArchive/Zip.h>
@@ -16,6 +17,18 @@
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <sys/stat.h>
+
+static ErrorOr<void> adjust_modification_time(Archive::ZipMember const& zip_member)
+{
+    auto time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
+    auto seconds = static_cast<time_t>(time.to_seconds());
+    struct utimbuf buf {
+        .actime = seconds,
+        .modtime = seconds
+    };
+
+    return Core::System::utime(zip_member.name, buf);
+}
 
 static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 {
@@ -67,6 +80,11 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
     }
     default:
         VERIFY_NOT_REACHED();
+    }
+
+    if (adjust_modification_time(zip_member).is_error()) {
+        warnln("Failed setting modification_time for file {}", zip_member.name);
+        return false;
     }
 
     if (!new_file->close()) {
@@ -123,6 +141,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::chdir(output_directory_path));
     }
 
+    Vector<Archive::ZipMember> zip_directories;
+
     auto success = TRY(zip_file->for_each_member([&](auto zip_member) {
         bool keep_file = false;
 
@@ -142,10 +162,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (keep_file) {
             if (!unpack_zip_member(zip_member, quiet))
                 return IterationDecision::Break;
+            if (zip_member.is_directory)
+                zip_directories.append(zip_member);
         }
 
         return IterationDecision::Continue;
     }));
+
+    if (!success) {
+        return 1;
+    }
+
+    for (auto& directory : zip_directories) {
+        if (adjust_modification_time(directory).is_error()) {
+            warnln("Failed setting modification time for directory {}", directory.name);
+            return 1;
+        }
+    }
 
     return success ? 0 : 1;
 }

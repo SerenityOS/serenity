@@ -90,6 +90,8 @@ ErrorOr<bool> Zip::for_each_member(Function<IterationDecision(ZipMember const&)>
         member.compression_method = central_directory_record.compression_method;
         member.uncompressed_size = central_directory_record.uncompressed_size;
         member.crc32 = central_directory_record.crc32;
+        member.modification_time = central_directory_record.modification_time;
+        member.modification_date = central_directory_record.modification_date;
         member.is_directory = central_directory_record.external_attributes & zip_directory_external_attribute || member.name.bytes_as_string_view().ends_with('/'); // FIXME: better directory detection
 
         if (callback(member) == IterationDecision::Break)
@@ -122,8 +124,8 @@ ErrorOr<void> ZipOutputStream::add_member(ZipMember const& member)
         .minimum_version = minimum_version_needed(member.compression_method),
         .general_purpose_flags = { .flags = 0 },
         .compression_method = static_cast<u16>(member.compression_method),
-        .modification_time = 0, // TODO: support modification time
-        .modification_date = 0,
+        .modification_time = member.modification_time,
+        .modification_date = member.modification_date,
         .crc32 = member.crc32,
         .compressed_size = static_cast<u32>(member.compressed_data.size()),
         .uncompressed_size = member.uncompressed_size,
@@ -150,8 +152,8 @@ ErrorOr<void> ZipOutputStream::finish()
             .minimum_version = zip_version,
             .general_purpose_flags = { .flags = 0 },
             .compression_method = member.compression_method,
-            .modification_time = 0, // TODO: support modification time
-            .modification_date = 0,
+            .modification_time = member.modification_time,
+            .modification_date = member.modification_date,
             .crc32 = member.crc32,
             .compressed_size = static_cast<u32>(member.compressed_data.size()),
             .uncompressed_size = member.uncompressed_size,
