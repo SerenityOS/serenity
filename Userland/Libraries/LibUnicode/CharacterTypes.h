@@ -64,6 +64,7 @@ bool code_point_has_grapheme_break_property(u32 code_point, GraphemeBreakPropert
 bool code_point_has_word_break_property(u32 code_point, WordBreakProperty property);
 bool code_point_has_sentence_break_property(u32 code_point, SentenceBreakProperty property);
 
+Vector<size_t> find_grapheme_segmentation_boundaries(Utf32View const&);
 Vector<size_t> find_grapheme_segmentation_boundaries(Utf16View const&);
 Vector<size_t> find_word_segmentation_boundaries(Utf8View const&);
 Vector<size_t> find_word_segmentation_boundaries(Utf16View const&);

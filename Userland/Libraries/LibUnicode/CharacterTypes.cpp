@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Utf32View.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
@@ -151,7 +152,8 @@ bool __attribute__((weak)) code_point_has_grapheme_break_property(u32, GraphemeB
 bool __attribute__((weak)) code_point_has_word_break_property(u32, WordBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_sentence_break_property(u32, SentenceBreakProperty) { return {}; }
 
-Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+template<typename ViewType>
+Vector<size_t> find_grapheme_segmentation_boundaries_impl([[maybe_unused]] ViewType const& view)
 {
 #if ENABLE_UNICODE_DATA
     using GBP = GraphemeBreakProperty;
@@ -241,6 +243,16 @@ Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View 
 #else
     return {};
 #endif
+}
+
+Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf32View const& view)
+{
+    return find_grapheme_segmentation_boundaries_impl(view);
+}
+
+Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+{
+    return find_grapheme_segmentation_boundaries_impl(view);
 }
 
 template<typename ViewType>
