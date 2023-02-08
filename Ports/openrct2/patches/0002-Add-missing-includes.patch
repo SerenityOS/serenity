@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Julian=20Offenh=C3=A4user?= <offenhaeuser@protonmail.com>
+Date: Tue, 7 Feb 2023 21:21:46 +0100
+Subject: [PATCH] Add missing includes
+
+These are missing when compiling the release build.
+---
+ src/openrct2/core/String.cpp    | 1 +
+ src/openrct2/network/Socket.cpp | 2 ++
+ 2 files changed, 3 insertions(+)
+
+diff --git a/src/openrct2/core/String.cpp b/src/openrct2/core/String.cpp
+index 76c4574ed6e060dc7032b0a8c346bdbc3a435a2d..fbe23e4af894e3dbf4bc57ba3370e3f9e2ed24e7 100644
+--- a/src/openrct2/core/String.cpp
++++ b/src/openrct2/core/String.cpp
+@@ -14,6 +14,7 @@
+ #include <sstream>
+ #include <stdexcept>
+ #include <vector>
++#include <alloca.h>
+ #ifndef _WIN32
+ #    include <unicode/ucnv.h>
+ #    include <unicode/unistr.h>
+diff --git a/src/openrct2/network/Socket.cpp b/src/openrct2/network/Socket.cpp
+index 89803e28568efd38dd82845f89af97e47366f5b6..e166ed45d158d0cf516ff83b7992e04780f28edb 100644
+--- a/src/openrct2/network/Socket.cpp
++++ b/src/openrct2/network/Socket.cpp
+@@ -51,6 +51,8 @@
+     #include <netinet/tcp.h>
+     #include <sys/ioctl.h>
+     #include <sys/socket.h>
++    #include <sys/time.h>
++    #include <sys/select.h>
+     #include "../common.h"
+     using SOCKET = int32_t;
+     #define SOCKET_ERROR -1
