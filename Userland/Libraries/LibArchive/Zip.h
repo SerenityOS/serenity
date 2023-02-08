@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DOSPackedTime.h>
 #include <AK/Function.h>
 #include <AK/IterationDecision.h>
 #include <AK/String.h>
@@ -112,8 +113,8 @@ struct [[gnu::packed]] CentralDirectoryRecord {
     u16 minimum_version;
     ZipGeneralPurposeFlags general_purpose_flags;
     ZipCompressionMethod compression_method;
-    u16 modification_time;
-    u16 modification_date;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
     u32 crc32;
     u32 compressed_size;
     u32 uncompressed_size;
@@ -186,8 +187,8 @@ struct [[gnu::packed]] LocalFileHeader {
     u16 minimum_version;
     ZipGeneralPurposeFlags general_purpose_flags;
     u16 compression_method;
-    u16 modification_time;
-    u16 modification_date;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
     u32 crc32;
     u32 compressed_size;
     u32 uncompressed_size;
@@ -244,6 +245,8 @@ struct ZipMember {
     u32 uncompressed_size;
     u32 crc32;
     bool is_directory;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
 };
 
 class Zip {
