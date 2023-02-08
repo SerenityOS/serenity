@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Julian=20Offenh=C3=A4user?= <offenhaeuser@protonmail.com>
+Date: Tue, 7 Feb 2023 21:10:21 +0100
+Subject: [PATCH] Add SerenityOS platform detection
+
+We teach OpenRCT2 about the name of our platform.
+---
+ src/openrct2/Version.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/openrct2/Version.h b/src/openrct2/Version.h
+index 0e5d83aaf2cf0b0e2562065cab6c7b1526a0f1e9..428552a4f78cc9d21a15f4641144fe65b6c751e4 100644
+--- a/src/openrct2/Version.h
++++ b/src/openrct2/Version.h
+@@ -70,6 +70,9 @@
+ #ifdef __EMSCRIPTEN__
+ #    define OPENRCT2_PLATFORM "Emscripten"
+ #endif
++#ifdef __serenity__
++#    define OPENRCT2_PLATFORM "SerenityOS"
++#endif
+ #ifndef OPENRCT2_PLATFORM
+ #    error Unknown platform!
+ #endif
