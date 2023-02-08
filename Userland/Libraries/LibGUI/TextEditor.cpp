@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include <LibUnicode/GraphemeCluster.h>
 REGISTER_WIDGET(GUI, TextEditor)
 
 namespace GUI {
@@ -966,9 +967,9 @@ void TextEditor::keydown_event(KeyEvent& event)
             }
 
             auto const new_cursor = TextPosition(m_cursor.line(), m_cursor.column());
-            auto& line = this->line(new_cursor.line());
+
             // If we are not deleting a selection, then lets check if there is an emoji or glyph with multiple code points.
-            erase_count = document().get_code_points_after_cursor(new_cursor, line.next_whitespace_column(new_cursor));
+            erase_count = document().get_code_points_after_cursor(new_cursor);
 
             TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + erase_count });
             execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
@@ -1012,9 +1013,9 @@ void TextEditor::keydown_event(KeyEvent& event)
             }
 
             TextPosition const new_cursor = TextPosition(m_cursor.line(), m_cursor.column());
-            auto& line = this->line(new_cursor.line());
+
             // If we are not deleting a selection, then lets check if there is an emoji or glyph with multiple code points.
-            erase_count = document().get_code_points_before_cursor(new_cursor, line.prev_whitespace_column(new_cursor));
+            erase_count = document().get_code_points_before_cursor(new_cursor);
 
             // Backspace within line
             TextRange erased_range({ m_cursor.line(), m_cursor.column() - erase_count }, m_cursor);

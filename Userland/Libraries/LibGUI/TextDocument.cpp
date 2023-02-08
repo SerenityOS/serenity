@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AK/Format.h"
+#include "AK/Forward.h"
+#include "LibJS/Runtime/Intl/Segmenter.h"
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
 #include <AK/QuickSort.h>
@@ -15,8 +18,10 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/TextDocument.h>
 #include <LibRegex/Regex.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Emoji.h>
 
+#include <AK/BinarySearch.h>
 namespace GUI {
 
 NonnullRefPtr<TextDocument> TextDocument::create(Client* client)
@@ -404,60 +409,96 @@ DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
 }
 
 // This function will determine the number of codepoints of the glyph immediately presceding the cursor, by determining if there is an emoji. If no emoji is found it will return 1.
-int TextDocument::get_code_points_before_cursor(TextPosition const& cursor, TextPosition const& prev_word_break) const
+size_t TextDocument::get_code_points_before_cursor(TextPosition const& cursor) const
 {
     if (!cursor.is_valid())
         return 0;
 
-    auto& line = this->line(cursor.line());
+    return get_prev_grapheme_cluser_boundary(cursor);
+}
+
+// This function will return the position of the next grapheme cluster break, relative to the cursor, for "correct looking" parsing of unicode based on grapheme cluster boudary algorithm.
+size_t TextDocument::get_next_grapheme_cluser_boundary(TextPosition const& cursor) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto line = this->line(cursor.line());
     auto line_span = Span<u32 const>(line.code_points(), line.length());
-    auto cursor_span = line_span.slice(prev_word_break.column(), cursor.column() - prev_word_break.column());
-    auto get_emoji_result = get_emoji_code_points_in_span(cursor_span, cursor_span.size() - 1, 1);
-    return max(get_emoji_result, 1); // We do a max in case of a return 0, then we delete single codepoint glyphs.
+
+    if (line_span.is_empty())
+        return 0;
+
+    if (cursor.column() == line.length())
+        return 0;
+
+    auto boundaries_cache = Unicode::find_grapheme_segmentation_boundaries(Utf32View(line.code_points(), line.length()));
+
+    if (boundaries_cache.is_empty())
+        return cursor.column();
+
+    if (boundaries_cache.size() == 1)
+        return cursor.column() - boundaries_cache.at(0);
+
+    auto prev_boundary_guess = boundaries_cache.at(0);
+    auto boundary_guess = boundaries_cache.at(1);
+
+    for (size_t i = 0; i < boundaries_cache.size(); i++) {
+        auto cur_boundary = boundaries_cache.at(i);
+        // If the current boundary is further to the left, update our guess
+        if (cur_boundary < boundary_guess) {
+            prev_boundary_guess = boundary_guess;
+            boundary_guess = cur_boundary;
+        }
+    }
+
+    // Assume that the cursor cannot sit at a point that is not a boundary, so return previous guess
+    return prev_boundary_guess;
+}
+
+// This function will return the position of the previous grapheme cluster break, relative to the cursor, for "correct looking" parsing of unicode based on grapheme cluster boudary algorithm.
+size_t TextDocument::get_prev_grapheme_cluser_boundary(TextPosition const& cursor) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto line = this->line(cursor.line());
+    auto line_span = Span<u32 const>(line.code_points(), line.length());
+
+    if (line_span.is_empty())
+        return 0;
+
+    if (cursor.column() < 2)
+        return cursor.column();
+
+    auto boundaries_cache = Unicode::find_grapheme_segmentation_boundaries(Utf32View(line.code_points(), line.length()));
+    if (boundaries_cache.is_empty())
+        return cursor.column();
+
+    if (boundaries_cache.size() == 1)
+        return cursor.column() - boundaries_cache.at(0);
+
+    auto boundary_guess = boundaries_cache.at(0);
+
+    for (size_t i = 0; i < boundaries_cache.size(); i++) {
+        auto cur_boundary = boundaries_cache.at(i);
+        // If the current boundary is further to the right, update our guess
+        if ((cur_boundary - cursor.column()) > (boundary_guess - cursor.column())) {
+            boundary_guess = cur_boundary;
+        }
+    }
+
+    // Return the distance in code points from the cursor
+    return cursor.column() - boundary_guess;
 }
 
 // This function will determine the number of codepoints of the glyph immediately following the cursor, by determining if there is an emoji. If no emoji is found it will return 1.
-int TextDocument::get_code_points_after_cursor(TextPosition const& cursor, TextPosition const& next_word_break) const
+size_t TextDocument::get_code_points_after_cursor(TextPosition const& cursor) const
 {
     if (!cursor.is_valid())
         return 0;
 
-    auto& line = this->line(cursor.line());
-    auto line_span = Span<u32 const>(line.code_points(), line.length());
-    auto cursor_span = line_span.slice(cursor.column(), next_word_break.column() - cursor.column());
-
-    // First, check if the entire span an emoji.
-    auto emoji = Unicode::find_emoji_for_code_points(cursor_span);
-    size_t i = 0;
-
-    // Loop over span to see if we find emoji. Assume there is no emoji if no emoji is found assume there is no emoji.
-    while (!emoji.has_value() && i < cursor_span.size() - 1 && cursor_span.size() > 0) {
-        auto cursor_slice = cursor_span.slice(cursor.column(), i);
-        emoji = Unicode::find_emoji_for_code_points(cursor_slice);
-        ++i;
-    }
-    if (emoji.has_value())
-        return emoji.value().code_points.size();
-
-    return 1;
-}
-
-int TextDocument::get_emoji_code_points_in_span(Span<u32 const> const& cursor_span, int slice_start, size_t slice_size) const
-{
-    if (cursor_span.is_empty()) {
-        return 0;
-    }
-    if (slice_start < 0) {
-        return 0; // We have gone outside of our original span and haven't found an emoji, so assume there are none in the span.
-    }
-
-    auto cursor_slice = cursor_span.slice(slice_start, slice_size);
-    auto emoji = Unicode::find_emoji_for_code_points(cursor_slice);
-    if (emoji.has_value()) {
-        return emoji.value().code_points.size();
-    } else {
-        return get_emoji_code_points_in_span(cursor_span, slice_start - 1, slice_size + 1); // Recursively expand to the next code_point and search again.
-    }
+    return get_next_grapheme_cluser_boundary(cursor);
 }
 
 u32 TextDocument::code_point_at(TextPosition const& position) const

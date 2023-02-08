@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "AK/Format.h"
+#include "LibGUI/TextPosition.h"
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
@@ -93,9 +95,11 @@ public:
     DeprecatedString text() const;
     DeprecatedString text_in_range(TextRange const&) const;
 
-    int get_code_points_after_cursor(TextPosition const& cursor, TextPosition const& next_word_break) const;
-    int get_code_points_before_cursor(TextPosition const& cursor, TextPosition const& prev_word_break) const;
-    int get_emoji_code_points_in_span(Span<u32 const> const& cursor_span, int slice_start, size_t slice_size) const;
+    size_t get_next_grapheme_cluser_boundary(TextPosition const& cursor) const;
+    size_t get_prev_grapheme_cluser_boundary(TextPosition const& cursor) const;
+
+    size_t get_code_points_after_cursor(TextPosition const& cursor) const;
+    size_t get_code_points_before_cursor(TextPosition const& cursor) const;
 
     Vector<TextRange> find_all(StringView needle, bool regmatch = false, bool match_case = true);
 
