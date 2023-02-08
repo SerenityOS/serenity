@@ -134,7 +134,7 @@ struct PositionValue {
 
     CSSPixelPoint resolved(Layout::Node const& node, CSSPixelRect const& rect) const;
     ErrorOr<void> serialize(StringBuilder&) const;
-    bool operator==(PositionValue const&) const;
+    bool operator==(PositionValue const&) const = default;
 };
 
 struct EdgeRect {
@@ -143,6 +143,7 @@ struct EdgeRect {
     Length bottom_edge;
     Length left_edge;
     Gfx::FloatRect resolved(Layout::Node const&, Gfx::FloatRect) const;
+    bool operator==(EdgeRect const& b) const = default;
 };
 
 namespace Filter {
@@ -150,7 +151,7 @@ namespace Filter {
 struct Blur {
     Optional<Length> radius {};
     float resolved_radius(Layout::Node const&) const;
-    bool operator==(Filter::Blur const& b) const;
+    bool operator==(Filter::Blur const& b) const = default;
 };
 
 struct DropShadow {
@@ -165,7 +166,7 @@ struct DropShadow {
         Color color;
     };
     Resolved resolved(Layout::Node const&) const;
-    bool operator==(Filter::DropShadow const& b) const;
+    bool operator==(Filter::DropShadow const& b) const = default;
 };
 
 struct HueRotate {
@@ -175,7 +176,7 @@ struct HueRotate {
     using AngleOrZero = Variant<Angle, Zero>;
     Optional<AngleOrZero> angle {};
     float angle_degrees() const;
-    bool operator==(Filter::HueRotate const& b) const;
+    bool operator==(Filter::HueRotate const& b) const = default;
 };
 
 struct Color {
@@ -190,7 +191,7 @@ struct Color {
     } operation;
     Optional<NumberPercentage> amount {};
     float resolved_amount() const;
-    bool operator==(Filter::Color const& b) const;
+    bool operator==(Filter::Color const& b) const = default;
 };
 
 };
