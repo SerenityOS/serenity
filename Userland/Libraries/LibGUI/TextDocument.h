@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "AK/Format.h"
+#include "LibGUI/TextPosition.h"
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
@@ -92,6 +94,12 @@ public:
 
     DeprecatedString text() const;
     DeprecatedString text_in_range(TextRange const&) const;
+
+    size_t get_next_grapheme_cluser_boundary(TextPosition const& cursor) const;
+    size_t get_prev_grapheme_cluser_boundary(TextPosition const& cursor) const;
+
+    size_t get_code_points_after_cursor(TextPosition const& cursor) const;
+    size_t get_code_points_before_cursor(TextPosition const& cursor) const;
 
     Vector<TextRange> find_all(StringView needle, bool regmatch = false, bool match_case = true);
 
@@ -183,6 +191,8 @@ public:
 
     size_t first_non_whitespace_column() const;
     Optional<size_t> last_non_whitespace_column() const;
+    TextPosition next_whitespace_column(TextPosition const& cursor) const; // if there is no whitespace before end   then the TextPosition will be begin/end rather than empty/null
+    TextPosition prev_whitespace_column(TextPosition const& cursor) const; // if there is no whitespace before begin then the TextPosition will be begin/end rather than empty/null
     bool ends_in_whitespace() const;
     bool can_select() const;
     bool is_empty() const { return length() == 0; }
