@@ -332,13 +332,13 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
     TRY(pcs_coordinates.try_resize(header.count_of_named_colors));
     TRY(device_coordinates.try_resize(header.count_of_named_colors * header.number_of_device_coordinates_of_each_named_color));
 
-    for (unsigned i = 0; i < header.count_of_named_colors; ++i) {
+    for (size_t i = 0; i < header.count_of_named_colors; ++i) {
         u8 const* root_name = bytes.data() + 8 + sizeof(NamedColorHeader) + i * record_byte_size;
         auto* components = bit_cast<BigEndian<u16> const*>(root_name + 32);
 
         root_names[i] = TRY(buffer_to_string(root_name));
         pcs_coordinates[i] = { { { components[0], components[1], components[2] } } };
-        for (unsigned j = 0; j < header.number_of_device_coordinates_of_each_named_color; ++j)
+        for (size_t j = 0; j < header.number_of_device_coordinates_of_each_named_color; ++j)
             device_coordinates[i * header.number_of_device_coordinates_of_each_named_color + j] = components[3 + j];
     }
 
@@ -384,7 +384,7 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     auto* raw_parameters = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 12);
     Array<S15Fixed16, 7> parameters;
     parameters.fill(0);
-    for (unsigned i = 0; i < count; ++i)
+    for (size_t i = 0; i < count; ++i)
         parameters[i] = S15Fixed16::create_raw(raw_parameters[i]);
 
     return adopt_ref(*new ParametricCurveTagData(offset, size, function_type, move(parameters)));
