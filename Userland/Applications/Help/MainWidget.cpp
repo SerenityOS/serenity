@@ -12,7 +12,6 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
-#include <Applications/Help/HelpWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -41,7 +40,29 @@ namespace Help {
 
 MainWidget::MainWidget()
 {
-    load_from_gml(help_window_gml).release_value_but_fixme_should_propagate_errors();
+}
+
+ErrorOr<void> MainWidget::set_start_page(Vector<StringView, 2> query_parameters)
+{
+    auto result = Manual::Node::try_create_from_query(query_parameters);
+    if (result.is_error()) {
+        // No match, so treat the input as a search query
+        m_tab_widget->set_active_widget(m_search_container);
+        m_search_box->set_focus(true);
+        m_search_box->set_text(query_parameters.first_matching([](auto&) { return true; }).value_or(""sv));
+        m_search_box->select_all();
+        m_filter_model->set_filter_term(m_search_box->text());
+        m_go_home_action->activate();
+    } else {
+        auto const page = TRY(result.value()->path());
+        m_history.push(page);
+        open_page(page);
+    }
+    return {};
+}
+
+ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
+{
     m_toolbar = find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_search_container = find_descendant_of_type_named<GUI::Widget>("search_container");
@@ -172,29 +193,7 @@ MainWidget::MainWidget()
     GUI::Application::the()->on_action_leave = [this](GUI::Action const&) {
         m_statusbar->set_override_text({});
     };
-}
 
-ErrorOr<void> MainWidget::set_start_page(Vector<StringView, 2> query_parameters)
-{
-    auto result = Manual::Node::try_create_from_query(query_parameters);
-    if (result.is_error()) {
-        // No match, so treat the input as a search query
-        m_tab_widget->set_active_widget(m_search_container);
-        m_search_box->set_focus(true);
-        m_search_box->set_text(query_parameters.first_matching([](auto&) { return true; }).value_or(""sv));
-        m_search_box->select_all();
-        m_filter_model->set_filter_term(m_search_box->text());
-        m_go_home_action->activate();
-    } else {
-        auto const page = TRY(result.value()->path());
-        m_history.push(page);
-        open_page(page);
-    }
-    return {};
-}
-
-ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
-{
     static String const help_index_path = TRY(TRY(Manual::PageNode::help_index_page())->path());
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) {
         m_history.push(help_index_path);
