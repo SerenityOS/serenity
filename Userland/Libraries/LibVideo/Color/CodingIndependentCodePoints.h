@@ -240,4 +240,17 @@ constexpr StringView matrix_coefficients_to_string(MatrixCoefficients matrix_coe
     return "Reserved"sv;
 };
 
+constexpr StringView video_full_range_flag_to_string(VideoFullRangeFlag video_full_range_flag)
+{
+    switch (video_full_range_flag) {
+    case VideoFullRangeFlag::Studio:
+        return "Studio"sv;
+    case VideoFullRangeFlag::Full:
+        return "Full"sv;
+    case VideoFullRangeFlag::Unspecified: // Not part of the spec, serenity-specific addition for convenience.
+        return "Unspecified"sv;
+    }
+    return "Unknown"sv;
+};
+
 }
