@@ -256,10 +256,9 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_bytes(ReadonlyByte
     return bitmap;
 }
 
-ByteBuffer Bitmap::serialize_to_byte_buffer() const
+ErrorOr<ByteBuffer> Bitmap::serialize_to_byte_buffer() const
 {
-    // FIXME: Somehow handle possible OOM situation here.
-    auto buffer = ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(ARGB32) * palette_size(m_format) + size_in_bytes()).release_value_but_fixme_should_propagate_errors();
+    auto buffer = TRY(ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(ARGB32) * palette_size(m_format) + size_in_bytes()));
     DeprecatedOutputMemoryStream stream { buffer };
 
     auto write = [&]<typename T>(T value) {
@@ -271,17 +270,17 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     auto palette = palette_to_vector();
 
     if (!write(size_in_bytes()) || !write((unsigned)size().width()) || !write((unsigned)size().height()) || !write((unsigned)scale()) || !write(m_format) || !write((unsigned)palette.size()))
-        return {};
+        return Error::from_string_literal("Failed to write serialized image metadata to the buffer");
 
     for (auto& p : palette) {
         if (!write(p))
-            return {};
+            return Error::from_string_literal("Failed to write serialized palette to the buffer");
     }
 
     auto size = size_in_bytes();
     VERIFY(stream.remaining() == size);
     if (stream.write({ scanline(0), size }) != size)
-        return {};
+        return Error::from_string_literal("Failed to write serialized image data to the buffer");
 
     return buffer;
 }
