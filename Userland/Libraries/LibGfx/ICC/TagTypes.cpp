@@ -57,6 +57,23 @@ TagTypeSignature tag_type(ReadonlyBytes tag_bytes)
     return *bit_cast<BigEndian<TagTypeSignature> const*>(tag_bytes.data());
 }
 
+ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.3 cicpType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 2 * sizeof(u32) + 4 * sizeof(u8))
+        return Error::from_string_literal("ICC::Profile: cicpType has not enough data");
+
+    u8 color_primaries = bytes[8];
+    u8 transfer_characteristics = bytes[9];
+    u8 matrix_coefficients = bytes[10];
+    u8 video_full_range_flag = bytes[11];
+
+    return adopt_ref(*new CicpTagData(offset, size, color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag));
+}
+
 ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.6 curveType

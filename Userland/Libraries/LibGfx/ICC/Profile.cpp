@@ -572,6 +572,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
 
     auto type = tag_type(tag_bytes);
     switch (type) {
+    case CicpTagData::Type:
+        return CicpTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case CurveTagData::Type:
         return CurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case Lut16TagData::Type:

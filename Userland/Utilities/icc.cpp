@@ -12,6 +12,7 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
 
 template<class T>
 static ErrorOr<String> hyperlink(URL const& target, T const& label)
@@ -125,7 +126,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         tag_data_to_first_signature.set(tag_data, tag_signature);
 
-        if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
+        if (tag_data->type() == Gfx::ICC::CicpTagData::Type) {
+            auto& cicp = static_cast<Gfx::ICC::CicpTagData&>(*tag_data);
+            outln("    color primaries: {} - {}", cicp.color_primaries(),
+                Video::color_primaries_to_string((Video::ColorPrimaries)cicp.color_primaries()));
+            outln("    transfer characteristics: {} - {}", cicp.transfer_characteristics(),
+                Video::transfer_characteristics_to_string((Video::TransferCharacteristics)cicp.transfer_characteristics()));
+            outln("    matrix coefficients: {} - {}", cicp.matrix_coefficients(),
+                Video::matrix_coefficients_to_string((Video::MatrixCoefficients)cicp.matrix_coefficients()));
+            outln("    video full range flag: {}", cicp.video_full_range_flag());
+        } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
             auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
             if (curve.values().is_empty()) {
                 outln("    identity curve");

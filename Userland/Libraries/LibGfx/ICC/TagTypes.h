@@ -58,6 +58,39 @@ public:
     }
 };
 
+// ICC v4, 10.3 cicpType
+// "The cicpType specifies Coding-independent code points for video signal type identification."
+// See presentations at https://www.color.org/events/HDR_experts.xalter for background.
+class CicpTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x63696370 }; // 'cicp'
+
+    static ErrorOr<NonnullRefPtr<CicpTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    CicpTagData(u32 offset, u32 size, u8 color_primaries, u8 transfer_characteristics, u8 matrix_coefficients, u8 video_full_range_flag)
+        : TagData(offset, size, Type)
+        , m_color_primaries(color_primaries)
+        , m_transfer_characteristics(transfer_characteristics)
+        , m_matrix_coefficients(matrix_coefficients)
+        , m_video_full_range_flag(video_full_range_flag)
+    {
+    }
+
+    // "The fields ColourPrimaries, TransferCharacteristics, MatrixCoefficients, and VideoFullRangeFlag shall be
+    //  encoded as specified in Recommendation ITU-T H.273. Recommendation ITU-T H.273 (ISO/IEC 23091-2)
+    //  provides detailed descriptions of the code values and their interpretation."
+    u8 color_primaries() const { return m_color_primaries; }
+    u8 transfer_characteristics() const { return m_transfer_characteristics; }
+    u8 matrix_coefficients() const { return m_matrix_coefficients; }
+    u8 video_full_range_flag() const { return m_video_full_range_flag; }
+
+private:
+    u8 m_color_primaries;
+    u8 m_transfer_characteristics;
+    u8 m_matrix_coefficients;
+    u8 m_video_full_range_flag;
+};
+
 // ICC v4, 10.6 curveType
 class CurveTagData : public TagData {
 public:
