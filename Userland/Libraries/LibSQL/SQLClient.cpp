@@ -146,7 +146,7 @@ ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vec
     if (TRY(should_launch_server(pid_path)))
         TRY(launch_server(socket_path, pid_path, move(candidate_server_paths)));
 
-    auto socket = TRY(Core::Stream::LocalSocket::connect(move(socket_path)));
+    auto socket = TRY(Core::LocalSocket::connect(move(socket_path)));
     TRY(socket->set_blocking(true));
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) SQLClient(move(socket)));

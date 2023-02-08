@@ -13,7 +13,7 @@ namespace WebSocket {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, move(socket), 1)
 {
     s_connections.set(1, *this);

@@ -28,7 +28,7 @@
 
 namespace WebServer {
 
-Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
+Client::Client(NonnullOwnPtr<Core::BufferedTCPSocket> socket, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(move(socket))
 {

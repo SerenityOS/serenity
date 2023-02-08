@@ -10,6 +10,7 @@ namespace Core {
 
 class AnonymousBuffer;
 class ArgsParser;
+class BufferedSocketBase;
 class ChildEvent;
 class ConfigFile;
 class CustomEvent;
@@ -22,6 +23,7 @@ class Event;
 class EventLoop;
 class IODevice;
 class LocalServer;
+class LocalSocket;
 class MimeData;
 class NetworkJob;
 class NetworkResponse;
@@ -29,18 +31,19 @@ class Notifier;
 class Object;
 class ObjectClassRegistration;
 class ProcessStatisticsReader;
+class Socket;
 class SocketAddress;
 class TCPServer;
+class TCPSocket;
 class Timer;
 class TimerEvent;
 class UDPServer;
+class UDPSocket;
 
 enum class TimerShouldFireWhenNotVisible;
 
 namespace Stream {
 class File;
-class Socket;
-class BufferedSocketBase;
 }
 
 }

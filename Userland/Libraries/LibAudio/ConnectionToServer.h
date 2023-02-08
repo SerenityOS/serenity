@@ -62,7 +62,7 @@ public:
     Function<void(double volume)> on_client_volume_change;
 
 private:
-    ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    ConnectionToServer(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual void main_mix_muted_state_changed(bool) override;
     virtual void main_mix_volume_changed(double) override;

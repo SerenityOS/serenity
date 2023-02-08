@@ -170,7 +170,7 @@ static JsonValue make_success_response(JsonValue value)
     return result;
 }
 
-Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
+Client::Client(NonnullOwnPtr<Core::BufferedTCPSocket> socket, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(move(socket))
 {

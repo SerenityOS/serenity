@@ -20,7 +20,7 @@ namespace WebDriver {
 Atomic<unsigned> Client::s_next_session_id;
 NonnullOwnPtrVector<Session> Client::s_sessions;
 
-ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
+ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
 {
     if (!callbacks.launch_browser || !callbacks.launch_headless_browser)
         return Error::from_string_view("All callbacks to launch a browser must be provided"sv);
@@ -29,7 +29,7 @@ ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::Bu
     return adopt_nonnull_ref_or_enomem(new (nothrow) Client(move(socket), move(callbacks), parent));
 }
 
-Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
+Client::Client(NonnullOwnPtr<Core::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
     : Web::WebDriver::Client(move(socket), parent)
     , m_callbacks(move(callbacks))
 {

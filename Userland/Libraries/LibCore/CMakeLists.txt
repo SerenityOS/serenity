@@ -22,6 +22,7 @@ set(SOURCES
     Property.cpp
     SecretString.cpp
     SessionManagement.cpp
+    Socket.cpp
     SOCKSProxyClient.cpp
     StandardPaths.cpp
     Stream.cpp

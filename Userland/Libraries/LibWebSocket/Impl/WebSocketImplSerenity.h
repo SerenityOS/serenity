@@ -26,7 +26,7 @@ public:
     virtual void discard_connection() override;
 
 private:
-    OwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+    OwnPtr<Core::BufferedSocketBase> m_socket;
 };
 
 }

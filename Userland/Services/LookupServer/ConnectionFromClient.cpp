@@ -15,7 +15,7 @@ using namespace DNS;
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket, int client_id)
     : IPC::ConnectionFromClient<LookupClientEndpoint, LookupServerEndpoint>(*this, move(socket), client_id)
 {
     s_connections.set(client_id, *this);

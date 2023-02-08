@@ -7,6 +7,7 @@
 #include "InspectableProcess.h"
 #include <AK/JsonObject.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Socket.h>
 
 namespace InspectorServer {
 
@@ -17,7 +18,7 @@ InspectableProcess* InspectableProcess::from_pid(pid_t pid)
     return g_processes.get(pid).value_or(nullptr);
 }
 
-InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::LocalSocket> socket)
     : m_pid(pid)
     , m_socket(move(socket))
 {

@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <LibCore/NetworkJob.h>
+#include <LibCore/Socket.h>
 #include <LibGemini/GeminiRequest.h>
 #include <LibGemini/GeminiResponse.h>
 
@@ -20,14 +21,14 @@ public:
     explicit Job(GeminiRequest const&, AK::Stream&);
     virtual ~Job() override = default;
 
-    virtual void start(Core::Stream::Socket&) override;
+    virtual void start(Core::Socket&) override;
     virtual void shutdown(ShutdownMode) override;
 
     GeminiResponse* response() { return static_cast<GeminiResponse*>(Core::NetworkJob::response()); }
     GeminiResponse const* response() const { return static_cast<GeminiResponse const*>(Core::NetworkJob::response()); }
 
     const URL& url() const { return m_request.url(); }
-    Core::Stream::Socket const* socket() const { return m_socket; }
+    Core::Socket const* socket() const { return m_socket; }
 
     ErrorOr<size_t> response_length() const;
 
@@ -56,7 +57,7 @@ protected:
     Vector<ByteBuffer, 2> m_received_buffers;
     size_t m_received_size { 0 };
     size_t m_buffered_size { 0 };
-    Core::Stream::BufferedSocketBase* m_socket { nullptr };
+    Core::BufferedSocketBase* m_socket { nullptr };
 };
 
 }

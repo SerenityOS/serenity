@@ -16,7 +16,7 @@ NetworkJob::NetworkJob(AK::Stream& output_stream)
 {
 }
 
-void NetworkJob::start(Core::Stream::Socket&)
+void NetworkJob::start(Core::Socket&)
 {
 }
 

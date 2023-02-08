@@ -13,6 +13,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
+#include <LibCore/Socket.h>
 #include <LibCore/Stream.h>
 #include <LibHTTP/Forward.h>
 #include <LibHTTP/HttpRequest.h>
@@ -103,7 +104,7 @@ public:
     virtual Response print_page(Parameters parameters, JsonValue payload) = 0;
 
 protected:
-    Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
+    Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::Object* parent);
 
 private:
     using WrappedError = Variant<AK::Error, WebDriver::Error>;
@@ -116,7 +117,7 @@ private:
     ErrorOr<void, WrappedError> send_error_response(Error const& error);
     void log_response(unsigned code);
 
-    NonnullOwnPtr<Core::Stream::BufferedTCPSocket> m_socket;
+    NonnullOwnPtr<Core::BufferedTCPSocket> m_socket;
     Optional<HTTP::HttpRequest> m_request;
 };
 

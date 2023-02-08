@@ -23,7 +23,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     virtual Messages::InspectorServer::GetAllObjectsResponse get_all_objects(pid_t) override;
     virtual Messages::InspectorServer::SetInspectedObjectResponse set_inspected_object(pid_t, u64 object_id) override;

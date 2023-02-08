@@ -7,6 +7,7 @@
  */
 
 #include <LibCore/EventLoop.h>
+#include <LibCore/Socket.h>
 #include <LibWebSocket/Impl/WebSocketImplSerenity.h>
 
 namespace WebSocket {
@@ -40,18 +41,18 @@ void WebSocketImplSerenity::connect(ConnectionInfo const& connection_info)
     VERIFY(on_connected);
     VERIFY(on_connection_error);
     VERIFY(on_ready_to_read);
-    auto socket_result = [&]() -> ErrorOr<NonnullOwnPtr<Core::Stream::BufferedSocketBase>> {
+    auto socket_result = [&]() -> ErrorOr<NonnullOwnPtr<Core::BufferedSocketBase>> {
         if (connection_info.is_secure()) {
             TLS::Options options;
             options.set_alert_handler([this](auto) {
                 on_connection_error();
             });
-            return TRY(Core::Stream::BufferedSocket<TLS::TLSv12>::create(
+            return TRY(Core::BufferedSocket<TLS::TLSv12>::create(
                 TRY(TLS::TLSv12::connect(connection_info.url().host(), connection_info.url().port_or_default(), move(options)))));
         }
 
-        return TRY(Core::Stream::BufferedTCPSocket::create(
-            TRY(Core::Stream::TCPSocket::connect(connection_info.url().host(), connection_info.url().port_or_default()))));
+        return TRY(Core::BufferedTCPSocket::create(
+            TRY(Core::TCPSocket::connect(connection_info.url().host(), connection_info.url().port_or_default()))));
     }();
 
     if (socket_result.is_error()) {

@@ -21,7 +21,7 @@ public:
     virtual ~InspectorServerClient() override = default;
 
 private:
-    InspectorServerClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    InspectorServerClient(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<InspectorClientEndpoint, InspectorServerEndpoint>(*this, move(socket))
     {
     }

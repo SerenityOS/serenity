@@ -20,7 +20,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     virtual Messages::LaunchServer::OpenUrlResponse open_url(URL const&, DeprecatedString const&) override;
     virtual Messages::LaunchServer::GetHandlersForUrlResponse get_handlers_for_url(URL const&) override;

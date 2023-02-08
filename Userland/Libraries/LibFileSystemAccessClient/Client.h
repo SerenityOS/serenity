@@ -62,7 +62,7 @@ protected:
     void die() override;
 
 private:
-    explicit Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    explicit Client(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<FileSystemAccessClientEndpoint, FileSystemAccessServerEndpoint>(*this, move(socket))
     {
     }

@@ -9,7 +9,7 @@
 
 namespace WebDriver {
 
-WebContentConnection::WebContentConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<Client> client, unsigned session_id)
+WebContentConnection::WebContentConnection(NonnullOwnPtr<Core::LocalSocket> socket, NonnullRefPtr<Client> client, unsigned session_id)
     : IPC::ConnectionFromClient<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket), 1)
     , m_client(move(client))
     , m_session_id(session_id)

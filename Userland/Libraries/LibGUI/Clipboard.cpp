@@ -19,7 +19,7 @@ class ConnectionToClipboardServer final
     IPC_CLIENT_CONNECTION(ConnectionToClipboardServer, "/tmp/session/%sid/portal/clipboard"sv)
 
 private:
-    ConnectionToClipboardServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToClipboardServer(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }

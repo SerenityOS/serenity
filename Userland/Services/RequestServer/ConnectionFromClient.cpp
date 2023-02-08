@@ -17,7 +17,7 @@ namespace RequestServer {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), 1)
 {
     s_connections.set(1, *this);
@@ -123,7 +123,7 @@ struct Job {
         return *s_jobs.find(url)->value;
     }
 
-    void start(Core::Stream::Socket& socket)
+    void start(Core::Socket& socket)
     {
         auto is_connected = socket.is_open();
         VERIFY(is_connected);

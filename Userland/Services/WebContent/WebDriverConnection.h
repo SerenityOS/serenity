@@ -33,7 +33,7 @@ public:
     virtual ~WebDriverConnection() = default;
 
 private:
-    WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Web::PageClient& page_client);
+    WebDriverConnection(NonnullOwnPtr<Core::LocalSocket> socket, Web::PageClient& page_client);
 
     virtual void die() override { }
 

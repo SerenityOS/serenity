@@ -32,7 +32,7 @@ inline ErrorOr<T> decode(Decoder&)
 
 class Decoder {
 public:
-    Decoder(AK::Stream& stream, Core::Stream::LocalSocket& socket)
+    Decoder(AK::Stream& stream, Core::LocalSocket& socket)
         : m_stream(stream)
         , m_socket(socket)
     {
@@ -56,11 +56,11 @@ public:
 
     ErrorOr<size_t> decode_size();
 
-    Core::Stream::LocalSocket& socket() { return m_socket; }
+    Core::LocalSocket& socket() { return m_socket; }
 
 private:
     AK::Stream& m_stream;
-    Core::Stream::LocalSocket& m_socket;
+    Core::LocalSocket& m_socket;
 };
 
 template<Arithmetic T>

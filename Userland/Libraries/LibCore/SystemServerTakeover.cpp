@@ -5,6 +5,7 @@
  */
 
 #include "SystemServerTakeover.h"
+#include <LibCore/Socket.h>
 #include <LibCore/System.h>
 
 namespace Core {
@@ -34,7 +35,7 @@ static void parse_sockets_from_system_server()
     unsetenv(socket_takeover);
 }
 
-ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_server(DeprecatedString const& socket_path)
+ErrorOr<NonnullOwnPtr<Core::LocalSocket>> take_over_socket_from_system_server(DeprecatedString const& socket_path)
 {
     if (!s_overtaken_sockets_parsed)
         parse_sockets_from_system_server();
@@ -57,7 +58,7 @@ ErrorOr<NonnullOwnPtr<Core::Stream::LocalSocket>> take_over_socket_from_system_s
     if (!S_ISSOCK(stat.st_mode))
         return Error::from_string_literal("The fd we got from SystemServer is not a socket");
 
-    auto socket = TRY(Core::Stream::LocalSocket::adopt_fd(fd));
+    auto socket = TRY(Core::LocalSocket::adopt_fd(fd));
     // It had to be !CLOEXEC for obvious reasons, but we
     // don't need it to be !CLOEXEC anymore, so set the
     // CLOEXEC flag now.

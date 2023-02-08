@@ -37,7 +37,7 @@ class ConnectionToLaunchServer final
     , public LaunchClientEndpoint {
     IPC_CLIENT_CONNECTION(ConnectionToLaunchServer, "/tmp/session/%sid/portal/launch"sv)
 private:
-    ConnectionToLaunchServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToLaunchServer(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(socket))
     {
     }

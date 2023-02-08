@@ -95,7 +95,7 @@ StringView reply_response_name(Reply reply)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::Version version, Method method)
+ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Socket& socket, Core::SOCKSProxyClient::Version version, Method method)
 {
     Socks5VersionIdentifierAndMethodSelectionMessage message {
         .version_identifier = to_underlying(version),
@@ -120,7 +120,7 @@ ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Stream:
     return {};
 }
 
-ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::Version version, Core::SOCKSProxyClient::HostOrIPV4 target, int port, Core::SOCKSProxyClient::Command command)
+ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSProxyClient::Version version, Core::SOCKSProxyClient::HostOrIPV4 target, int port, Core::SOCKSProxyClient::Command command)
 {
     AllocatingMemoryStream stream;
 
@@ -216,7 +216,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Stream::Socket& socket, Core::
     return Reply(response_header.status);
 }
 
-ErrorOr<u8> send_username_password_authentication_message(Core::Stream::Socket& socket, Core::SOCKSProxyClient::UsernamePasswordAuthenticationData const& auth_data)
+ErrorOr<u8> send_username_password_authentication_message(Core::Socket& socket, Core::SOCKSProxyClient::UsernamePasswordAuthenticationData const& auth_data)
 {
     AllocatingMemoryStream stream;
 
@@ -314,10 +314,10 @@ ErrorOr<NonnullOwnPtr<SOCKSProxyClient>> SOCKSProxyClient::connect(HostOrIPV4 co
 {
     auto underlying = TRY(server.visit(
         [&](u32 ipv4) {
-            return Core::Stream::TCPSocket::connect({ IPv4Address(ipv4), static_cast<u16>(server_port) });
+            return Core::TCPSocket::connect({ IPv4Address(ipv4), static_cast<u16>(server_port) });
         },
         [&](DeprecatedString const& hostname) {
-            return Core::Stream::TCPSocket::connect(hostname, static_cast<u16>(server_port));
+            return Core::TCPSocket::connect(hostname, static_cast<u16>(server_port));
         }));
 
     auto socket = TRY(connect(*underlying, version, target, target_port, auth_data, command));

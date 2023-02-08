@@ -13,6 +13,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Socket.h>
 #include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Forward.h>
@@ -39,7 +40,7 @@ class ConnectionBase : public Core::Object {
 public:
     virtual ~ConnectionBase() override = default;
 
-    void set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    void set_fd_passing_socket(NonnullOwnPtr<Core::LocalSocket>);
     void set_deferred_invoker(NonnullOwnPtr<DeferredInvoker>);
     DeferredInvoker& deferred_invoker() { return *m_deferred_invoker; }
 
@@ -49,11 +50,11 @@ public:
     void shutdown();
     virtual void die() { }
 
-    Core::Stream::LocalSocket& socket() { return *m_socket; }
-    Core::Stream::LocalSocket& fd_passing_socket();
+    Core::LocalSocket& socket() { return *m_socket; }
+    Core::LocalSocket& fd_passing_socket();
 
 protected:
-    explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::Stream::LocalSocket>, u32 local_endpoint_magic);
+    explicit ConnectionBase(IPC::Stub&, NonnullOwnPtr<Core::LocalSocket>, u32 local_endpoint_magic);
 
     virtual void may_have_become_unresponsive() { }
     virtual void did_become_responsive() { }
@@ -70,8 +71,8 @@ protected:
 
     IPC::Stub& m_local_stub;
 
-    NonnullOwnPtr<Core::Stream::LocalSocket> m_socket;
-    OwnPtr<Core::Stream::LocalSocket> m_fd_passing_socket;
+    NonnullOwnPtr<Core::LocalSocket> m_socket;
+    OwnPtr<Core::LocalSocket> m_fd_passing_socket;
 
     RefPtr<Core::Timer> m_responsiveness_timer;
 
@@ -86,7 +87,7 @@ protected:
 template<typename LocalEndpoint, typename PeerEndpoint>
 class Connection : public ConnectionBase {
 public:
-    Connection(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    Connection(IPC::Stub& local_stub, NonnullOwnPtr<Core::LocalSocket> socket)
         : ConnectionBase(local_stub, move(socket), LocalEndpoint::static_magic())
     {
         m_socket->on_ready_to_read = [this] {

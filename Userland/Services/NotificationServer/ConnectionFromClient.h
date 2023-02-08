@@ -21,7 +21,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     virtual void show_notification(DeprecatedString const&, DeprecatedString const&, Gfx::ShareableBitmap const&) override;
     virtual void close_notification() override;

@@ -11,10 +11,10 @@
 
 namespace RequestServer::ConnectionCache {
 
-HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::Stream::TCPSocket, Core::Stream::Socket>>>> g_tcp_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::TCPSocket, Core::Socket>>>> g_tcp_connection_cache {};
 HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::TLSv12>>>> g_tls_connection_cache {};
 
-void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
+void request_did_finish(URL const& url, Core::Socket const* socket)
 {
     if (!socket) {
         dbgln("Request with a null socket finished for URL {}", url);
@@ -71,9 +71,9 @@ void request_did_finish(URL const& url, Core::Stream::Socket const* socket)
         }
     };
 
-    if (is<Core::Stream::BufferedSocket<TLS::TLSv12>>(socket))
+    if (is<Core::BufferedSocket<TLS::TLSv12>>(socket))
         fire_off_next_job(g_tls_connection_cache);
-    else if (is<Core::Stream::BufferedSocket<Core::Stream::Socket>>(socket))
+    else if (is<Core::BufferedSocket<Core::Socket>>(socket))
         fire_off_next_job(g_tcp_connection_cache);
     else
         dbgln("Unknown socket {} finished for URL {}", socket, url);

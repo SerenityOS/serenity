@@ -66,7 +66,7 @@ public:
     Function<void(ExecutionComplete)> on_results_exhausted;
 
 private:
-    explicit SQLClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    explicit SQLClient(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket))
     {
     }
