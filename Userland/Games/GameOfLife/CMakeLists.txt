@@ -4,7 +4,7 @@ serenity_component(
     TARGETS GameOfLife
 )
 
-compile_gml(GameOfLife.gml GameOfLifeGML.h game_of_life_gml)
+stringify_gml(GameOfLife.gml GameOfLifeGML.h game_of_life_gml)
 
 set(SOURCES
     main.cpp

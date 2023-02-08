@@ -188,6 +188,19 @@ public:
         }
     }
 
+    template<FallibleFunction<StringView, NonnullRefPtr<JsonValueNode>> Callback>
+    ErrorOr<void> try_for_each_property(Callback callback) const
+    {
+        for (auto const& child : m_properties) {
+            if (is<KeyValuePair>(child)) {
+                auto const& property = static_cast<KeyValuePair const&>(*child);
+                if (property.key() != "layout" && is<JsonValueNode>(property.value().ptr()))
+                    TRY(callback(property.key(), static_ptr_cast<JsonValueNode>(property.value())));
+            }
+        }
+        return {};
+    }
+
     template<typename Callback>
     void for_each_child_object(Callback callback) const
     {

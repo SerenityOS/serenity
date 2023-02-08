@@ -4,7 +4,7 @@ serenity_component(
     DEPENDS Help WebContent
 )
 
-compile_gml(WelcomeWindow.gml WelcomeWindowGML.h welcome_window_gml)
+stringify_gml(WelcomeWindow.gml WelcomeWindowGML.h welcome_window_gml)
 
 set(SOURCES
     WelcomeWidget.cpp

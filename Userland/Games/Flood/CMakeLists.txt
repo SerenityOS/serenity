@@ -4,8 +4,8 @@ serenity_component(
     TARGETS Flood
 )
 
-compile_gml(FloodWindow.gml FloodWindowGML.h flood_window_gml)
-compile_gml(SettingsDialog.gml SettingsDialogGML.h settings_dialog_gml)
+stringify_gml(FloodWindow.gml FloodWindowGML.h flood_window_gml)
+stringify_gml(SettingsDialog.gml SettingsDialogGML.h settings_dialog_gml)
 
 set(SOURCES
     Board.cpp

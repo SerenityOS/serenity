@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Snake
 )
 
-compile_gml(Snake.gml SnakeGML.h snake_gml)
+stringify_gml(Snake.gml SnakeGML.h snake_gml)
 
 set(SOURCES
     Game.cpp

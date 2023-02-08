@@ -5,7 +5,7 @@ serenity_component(
     DEPENDS WebContent
 )
 
-compile_gml(HelpWindow.gml HelpWindowGML.h help_window_gml)
+stringify_gml(HelpWindow.gml HelpWindowGML.h help_window_gml)
 
 set(SOURCES
     History.cpp

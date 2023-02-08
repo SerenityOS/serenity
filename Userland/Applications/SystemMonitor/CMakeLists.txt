@@ -4,8 +4,8 @@ serenity_component(
     TARGETS SystemMonitor Profiler
 )
 
-compile_gml(SystemMonitor.gml SystemMonitorGML.h system_monitor_gml)
-compile_gml(ProcessWindow.gml ProcessWindowGML.h process_window_gml)
+stringify_gml(SystemMonitor.gml SystemMonitorGML.h system_monitor_gml)
+stringify_gml(ProcessWindow.gml ProcessWindowGML.h process_window_gml)
 
 set(SOURCES
     GraphWidget.cpp

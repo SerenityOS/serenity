@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Solitaire
 )
 
-compile_gml(Solitaire.gml SolitaireGML.h solitaire_gml)
+stringify_gml(Solitaire.gml SolitaireGML.h solitaire_gml)
 
 set(SOURCES
     Game.cpp

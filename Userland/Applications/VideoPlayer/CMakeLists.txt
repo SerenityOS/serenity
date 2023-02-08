@@ -4,7 +4,7 @@ serenity_component(
     DEPENDS AudioServer
 )
 
-compile_gml(VideoPlayerWindow.gml VideoPlayerWindowGML.h videoplayer_window_gml)
+stringify_gml(VideoPlayerWindow.gml VideoPlayerWindowGML.h videoplayer_window_gml)
 
 set(SOURCES
     main.cpp

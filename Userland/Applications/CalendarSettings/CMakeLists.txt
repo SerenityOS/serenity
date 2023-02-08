@@ -4,7 +4,7 @@ serenity_component(
     TARGETS CalendarSettings
 )
 
-compile_gml(CalendarSettingsWidget.gml CalendarSettingsWidgetGML.h calendar_settings_widget_gml)
+stringify_gml(CalendarSettingsWidget.gml CalendarSettingsWidgetGML.h calendar_settings_widget_gml)
 
 set(SOURCES
     main.cpp

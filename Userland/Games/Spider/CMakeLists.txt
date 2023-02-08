@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Spider
 )
 
-compile_gml(Spider.gml SpiderGML.h spider_gml)
+stringify_gml(Spider.gml SpiderGML.h spider_gml)
 
 set(SOURCES
     Game.cpp

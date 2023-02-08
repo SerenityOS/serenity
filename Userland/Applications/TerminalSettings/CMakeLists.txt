@@ -4,8 +4,8 @@ serenity_component(
     TARGETS TerminalSettings
 )
 
-compile_gml(TerminalSettingsMain.gml TerminalSettingsMainGML.h terminal_settings_main_gml)
-compile_gml(TerminalSettingsView.gml TerminalSettingsViewGML.h terminal_settings_view_gml)
+stringify_gml(TerminalSettingsMain.gml TerminalSettingsMainGML.h terminal_settings_main_gml)
+stringify_gml(TerminalSettingsView.gml TerminalSettingsViewGML.h terminal_settings_view_gml)
 
 set(SOURCES
     TerminalSettingsWidget.cpp

@@ -4,9 +4,9 @@ serenity_component(
     TARGETS MouseSettings
 )
 
-compile_gml(Mouse.gml MouseWidgetGML.h mouse_widget_gml)
-compile_gml(Theme.gml ThemeWidgetGML.h theme_widget_gml)
-compile_gml(Highlight.gml HighlightWidgetGML.h highlight_widget_gml)
+stringify_gml(Mouse.gml MouseWidgetGML.h mouse_widget_gml)
+stringify_gml(Theme.gml ThemeWidgetGML.h theme_widget_gml)
+stringify_gml(Highlight.gml HighlightWidgetGML.h highlight_widget_gml)
 
 set(SOURCES
     DoubleClickArrowWidget.cpp

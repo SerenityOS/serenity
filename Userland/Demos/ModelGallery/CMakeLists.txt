@@ -3,7 +3,7 @@ serenity_component(
     TARGETS ModelGallery
 )
 
-compile_gml(./BasicModelTab.gml BasicModelTabGML.h basic_model_tab_gml)
+stringify_gml(./BasicModelTab.gml BasicModelTabGML.h basic_model_tab_gml)
 
 set(SOURCES
     main.cpp

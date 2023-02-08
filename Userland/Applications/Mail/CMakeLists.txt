@@ -5,7 +5,7 @@ serenity_component(
     DEPENDS WebContent
 )
 
-compile_gml(MailWindow.gml MailWindowGML.h mail_window_gml)
+stringify_gml(MailWindow.gml MailWindowGML.h mail_window_gml)
 
 set(SOURCES
     AccountHolder.cpp

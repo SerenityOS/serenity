@@ -4,9 +4,9 @@ serenity_component(
     TARGETS HexEditor
 )
 
-compile_gml(HexEditorWindow.gml HexEditorWindowGML.h hex_editor_window_gml)
-compile_gml(GoToOffsetDialog.gml GoToOffsetDialogGML.h go_to_offset_dialog_gml)
-compile_gml(FindDialog.gml FindDialogGML.h find_dialog_gml)
+stringify_gml(HexEditorWindow.gml HexEditorWindowGML.h hex_editor_window_gml)
+stringify_gml(GoToOffsetDialog.gml GoToOffsetDialogGML.h go_to_offset_dialog_gml)
+stringify_gml(FindDialog.gml FindDialogGML.h find_dialog_gml)
 
 set(SOURCES
     FindDialog.cpp

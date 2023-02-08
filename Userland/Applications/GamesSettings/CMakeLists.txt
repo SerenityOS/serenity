@@ -4,8 +4,8 @@ serenity_component(
     TARGETS GamesSettings
 )
 
-compile_gml(CardSettingsWidget.gml CardSettingsWidgetGML.h card_settings_widget_gml)
-compile_gml(ChessSettingsWidget.gml ChessSettingsWidgetGML.h chess_settings_widget_gml)
+stringify_gml(CardSettingsWidget.gml CardSettingsWidgetGML.h card_settings_widget_gml)
+stringify_gml(ChessSettingsWidget.gml ChessSettingsWidgetGML.h chess_settings_widget_gml)
 
 set(SOURCES
     main.cpp

@@ -4,8 +4,8 @@ serenity_component(
     TARGETS 2048
 )
 
-compile_gml(GameSizeDialog.gml GameSizeDialogGML.h game_size_dialog_gml)
-compile_gml(GameWindow.gml GameWindowGML.h game_window_gml)
+stringify_gml(GameSizeDialog.gml GameSizeDialogGML.h game_size_dialog_gml)
+stringify_gml(GameWindow.gml GameWindowGML.h game_window_gml)
 
 set(SOURCES
     BoardView.cpp

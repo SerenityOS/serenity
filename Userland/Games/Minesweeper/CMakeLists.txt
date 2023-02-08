@@ -4,8 +4,8 @@ serenity_component(
     TARGETS Minesweeper
 )
 
-compile_gml(MinesweeperCustomGameWindow.gml MinesweeperCustomGameWindowGML.h minesweeper_custom_game_window_gml)
-compile_gml(MinesweeperWindow.gml MinesweeperWindowGML.h minesweeper_window_gml)
+stringify_gml(MinesweeperCustomGameWindow.gml MinesweeperCustomGameWindowGML.h minesweeper_custom_game_window_gml)
+stringify_gml(MinesweeperWindow.gml MinesweeperWindowGML.h minesweeper_window_gml)
 
 set(SOURCES
     CustomGameDialog.cpp

@@ -5,9 +5,9 @@ serenity_component(
     DEPENDS FileOperation
 )
 
-compile_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
-compile_gml(FileOperationProgress.gml FileOperationProgressGML.h file_operation_progress_gml)
-compile_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h properties_window_general_tab_gml)
+stringify_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
+stringify_gml(FileOperationProgress.gml FileOperationProgressGML.h file_operation_progress_gml)
+stringify_gml(PropertiesWindowGeneralTab.gml PropertiesWindowGeneralTabGML.h properties_window_general_tab_gml)
 
 set(SOURCES
     DesktopWidget.cpp

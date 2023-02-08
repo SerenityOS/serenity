@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Calculator
 )
 
-compile_gml(CalculatorWindow.gml CalculatorGML.h calculator_gml)
+stringify_gml(CalculatorWindow.gml CalculatorGML.h calculator_gml)
 set(SOURCES
     main.cpp
     Calculator.cpp

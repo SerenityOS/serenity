@@ -4,8 +4,8 @@ serenity_component(
     TARGETS ClockSettings
 )
 
-compile_gml(ClockSettingsWidget.gml ClockSettingsWidgetGML.h clock_settings_widget_gml)
-compile_gml(TimeZoneSettingsWidget.gml TimeZoneSettingsWidgetGML.h time_zone_settings_widget_gml)
+stringify_gml(ClockSettingsWidget.gml ClockSettingsWidgetGML.h clock_settings_widget_gml)
+stringify_gml(TimeZoneSettingsWidget.gml TimeZoneSettingsWidgetGML.h time_zone_settings_widget_gml)
 
 set(SOURCES
     main.cpp

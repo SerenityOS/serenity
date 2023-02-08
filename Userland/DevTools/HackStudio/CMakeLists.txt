@@ -8,8 +8,8 @@ serenity_component(
 add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 
-compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
-compile_gml(Dialogs/Git/GitCommitDialog.gml Dialogs/Git/GitCommitDialogGML.h git_commit_dialog_gml)
+stringify_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_project_dialog_gml)
+stringify_gml(Dialogs/Git/GitCommitDialog.gml Dialogs/Git/GitCommitDialogGML.h git_commit_dialog_gml)
 
 set(SOURCES
     CodeDocument.cpp

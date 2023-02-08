@@ -4,7 +4,7 @@ serenity_component(
     TARGETS Run
 )
 
-compile_gml(Run.gml RunGML.h run_gml)
+stringify_gml(Run.gml RunGML.h run_gml)
 
 set(SOURCES
     main.cpp
