@@ -984,7 +984,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.17 cicpTag
     // "Permitted tag types: cicpType"
-    // FIXME
+    if (!has_type(cicpTag, { CicpTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: cicpTag has unexpected type");
 
     // ICC v4, 9.2.18 colorantOrderTag
     // "Permitted tag types: colorantOrderType"
