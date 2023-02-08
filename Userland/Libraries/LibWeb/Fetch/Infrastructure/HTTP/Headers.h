@@ -59,6 +59,9 @@ struct RangeHeaderValue {
     Optional<u64> end;
 };
 
+struct ExtractHeaderParseFailure {
+};
+
 [[nodiscard]] ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(ReadonlyBytes);
 [[nodiscard]] ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase_set(Span<ReadonlyBytes>);
 [[nodiscard]] bool is_header_name(ReadonlyBytes);
@@ -76,7 +79,7 @@ struct RangeHeaderValue {
 [[nodiscard]] bool is_forbidden_response_header_name(ReadonlyBytes);
 [[nodiscard]] bool is_request_body_header_name(ReadonlyBytes);
 [[nodiscard]] ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const&);
-[[nodiscard]] ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_list_values(ReadonlyBytes, HeaderList const&);
+[[nodiscard]] ErrorOr<Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty>> extract_header_list_values(ReadonlyBytes, HeaderList const&);
 [[nodiscard]] Optional<RangeHeaderValue> parse_single_range_header_value(ReadonlyBytes);
 [[nodiscard]] ErrorOr<ByteBuffer> default_user_agent_value();
 

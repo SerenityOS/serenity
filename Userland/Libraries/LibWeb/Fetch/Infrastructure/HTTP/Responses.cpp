@@ -104,13 +104,17 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<DeprecatedString> con
         return Optional<AK::URL> {};
 
     // 2. Let location be the result of extracting header list values given `Location` and response’s header list.
-    auto location_values = TRY(extract_header_list_values("Location"sv.bytes(), m_header_list));
-    if (!location_values.has_value() || location_values->size() != 1)
+    auto location_values_or_failure = TRY(extract_header_list_values("Location"sv.bytes(), m_header_list));
+    if (location_values_or_failure.has<Infrastructure::ExtractHeaderParseFailure>() || location_values_or_failure.has<Empty>())
+        return Optional<AK::URL> {};
+
+    auto const& location_values = location_values_or_failure.get<Vector<ByteBuffer>>();
+    if (location_values.size() != 1)
         return Optional<AK::URL> {};
 
     // 3. If location is a header value, then set location to the result of parsing location with response’s URL.
     auto base_url = *url();
-    auto location = AK::URLParser::parse(location_values->first(), &base_url);
+    auto location = AK::URLParser::parse(location_values.first(), &base_url);
     if (!location.is_valid())
         return Error::from_string_view("Invalid 'Location' header URL"sv);
 

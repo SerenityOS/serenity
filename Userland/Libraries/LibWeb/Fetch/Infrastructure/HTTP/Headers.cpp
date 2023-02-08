@@ -685,11 +685,11 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header
 }
 
 // https://fetch.spec.whatwg.org/#extract-header-list-values
-ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
+ErrorOr<Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty>> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
 {
     // 1. If list does not contain name, then return null.
     if (!list.contains(name))
-        return Optional<Vector<ByteBuffer>> {};
+        return Empty {};
 
     // FIXME: 2. If the ABNF for name allows a single header and list contains more than one, then return failure.
     // NOTE: If different error handling is needed, extract the desired header first.
@@ -706,10 +706,8 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_list_values(ReadonlyBytes n
         auto extract = TRY(extract_header_values(header));
 
         // 2. If extract is failure, then return failure.
-        // FIXME: Currently we treat the null return above and failure return as the same thing,
-        //        ErrorOr already signals OOM to the caller.
         if (!extract.has_value())
-            return Optional<Vector<ByteBuffer>> {};
+            return ExtractHeaderParseFailure {};
 
         // 3. Append each value in extract, in order, to values.
         values.extend(extract.release_value());
