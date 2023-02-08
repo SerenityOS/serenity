@@ -19,6 +19,8 @@ class MainWidget final : public GUI::Widget {
 public:
     virtual ~MainWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
+
     ErrorOr<void> initialize_fallibles(GUI::Window&);
     ErrorOr<void> set_start_page(Vector<StringView, 2> query_parameters);
 
