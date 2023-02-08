@@ -32,7 +32,7 @@ public:
     static void for_each(Function<void(ConnectionFromClient&)>);
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id, Mixer& mixer);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id, Mixer& mixer);
 
     virtual Messages::AudioServer::GetMainMixVolumeResponse get_main_mix_volume() override;
     virtual void set_main_mix_volume(double) override;

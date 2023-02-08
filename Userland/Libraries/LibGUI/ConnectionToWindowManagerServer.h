@@ -22,7 +22,7 @@ public:
     static ConnectionToWindowManagerServer& the();
 
 private:
-    ConnectionToWindowManagerServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToWindowManagerServer(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, move(socket))
     {
     }

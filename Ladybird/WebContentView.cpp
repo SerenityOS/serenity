@@ -600,11 +600,11 @@ void WebContentView::create_client()
     MUST(Core::System::close(wc_fd_passing_fd));
     MUST(Core::System::close(wc_fd));
 
-    auto socket = MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd));
+    auto socket = MUST(Core::LocalSocket::adopt_fd(ui_fd));
     MUST(socket->set_blocking(true));
 
     auto new_client = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(std::move(socket), *this)));
-    new_client->set_fd_passing_socket(MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+    new_client->set_fd_passing_socket(MUST(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
     m_web_content_notifier.setSocket(new_client->socket().fd().value());
     m_web_content_notifier.setEnabled(true);

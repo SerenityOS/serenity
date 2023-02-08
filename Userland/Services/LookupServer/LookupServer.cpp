@@ -237,7 +237,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
 
     auto buffer = TRY(request.to_byte_buffer());
 
-    auto udp_socket = TRY(Core::Stream::UDPSocket::connect(nameserver, 53, Time::from_seconds(1)));
+    auto udp_socket = TRY(Core::UDPSocket::connect(nameserver, 53, Time::from_seconds(1)));
     TRY(udp_socket->set_blocking(true));
 
     TRY(udp_socket->write(buffer));

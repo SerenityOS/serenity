@@ -9,6 +9,7 @@
 
 #include <AK/String.h>
 #include <LibCore/Object.h>
+#include <LibCore/Socket.h>
 #include <LibCore/Stream.h>
 #include <LibHTTP/Forward.h>
 #include <LibHTTP/HttpRequest.h>
@@ -22,7 +23,7 @@ public:
     void start();
 
 private:
-    Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket>, Core::Object* parent);
+    Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::Object* parent);
 
     struct ContentInfo {
         String type;
@@ -38,7 +39,7 @@ private:
     ErrorOr<void> handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
     bool verify_credentials(Vector<HTTP::HttpRequest::Header> const&);
 
-    NonnullOwnPtr<Core::Stream::BufferedTCPSocket> m_socket;
+    NonnullOwnPtr<Core::BufferedTCPSocket> m_socket;
 };
 
 }

@@ -23,6 +23,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibCore/SessionManagement.h>
+#include <LibCore/Socket.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/MutexProtected.h>
 #include <errno.h>
@@ -156,7 +157,7 @@ pid_t EventLoop::s_pid;
 class InspectorServerConnection : public Object {
     C_OBJECT(InspectorServerConnection)
 private:
-    explicit InspectorServerConnection(NonnullOwnPtr<Stream::LocalSocket> socket)
+    explicit InspectorServerConnection(NonnullOwnPtr<LocalSocket> socket)
         : m_socket(move(socket))
         , m_client_id(s_id_allocator.with_locked([](auto& allocator) {
             return allocator->allocate();
@@ -305,7 +306,7 @@ public:
     }
 
 private:
-    NonnullOwnPtr<Stream::LocalSocket> m_socket;
+    NonnullOwnPtr<LocalSocket> m_socket;
     WeakPtr<Object> m_inspected_object;
     int m_client_id { -1 };
 };
@@ -370,7 +371,7 @@ bool connect_to_inspector_server()
         return false;
     }
     auto inspector_server_path = maybe_path.value();
-    auto maybe_socket = Stream::LocalSocket::connect(inspector_server_path, Stream::PreventSIGPIPE::Yes);
+    auto maybe_socket = LocalSocket::connect(inspector_server_path, Socket::PreventSIGPIPE::Yes);
     if (maybe_socket.is_error()) {
         dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());
         return false;

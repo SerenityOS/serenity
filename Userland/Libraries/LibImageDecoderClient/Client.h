@@ -35,7 +35,7 @@ public:
     Function<void()> on_death;
 
 private:
-    Client(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    Client(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual void die() override;
 };

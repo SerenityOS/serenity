@@ -8,10 +8,11 @@
 
 #include <AK/OwnPtr.h>
 #include <LibCore/Proxy.h>
+#include <LibCore/Socket.h>
 #include <LibCore/Stream.h>
 
 namespace Core {
-class SOCKSProxyClient final : public Stream::Socket {
+class SOCKSProxyClient final : public Socket {
 public:
     enum class Version : u8 {
         V4 = 0x04,

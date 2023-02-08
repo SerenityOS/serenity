@@ -28,7 +28,7 @@ void ConnectionFromClient::set_database_path(DeprecatedString database_path)
     m_database_path = move(database_path);
 }
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, int client_id)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket, int client_id)
     : IPC::ConnectionFromClient<SQLClientEndpoint, SQLServerEndpoint>(*this, move(socket), client_id)
     , m_database_path(DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory()))
 {

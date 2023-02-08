@@ -19,7 +19,7 @@ class WebContentConnection
     : public IPC::ConnectionFromClient<WebDriverClientEndpoint, WebDriverServerEndpoint> {
     C_OBJECT_ABSTRACT(WebContentConnection)
 public:
-    WebContentConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, NonnullRefPtr<Client> client, unsigned session_id);
+    WebContentConnection(NonnullOwnPtr<Core::LocalSocket> socket, NonnullRefPtr<Client> client, unsigned session_id);
 
     virtual void die() override;
 

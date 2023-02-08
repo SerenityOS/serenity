@@ -30,7 +30,7 @@ public:
     bool set_certificate(Badge<WebSocket>, WebSocket&, DeprecatedString, DeprecatedString);
 
 private:
-    WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    WebSocketClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual void connected(i32) override;
     virtual void received(i32, bool, ByteBuffer const&) override;

@@ -6,8 +6,9 @@
 
 #include "Client.h"
 #include <LibCore/EventLoop.h>
+#include <LibCore/Socket.h>
 
-Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket)
+Client::Client(int id, NonnullOwnPtr<Core::TCPSocket> socket)
     : m_id(id)
     , m_socket(move(socket))
 {

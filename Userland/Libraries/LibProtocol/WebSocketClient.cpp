@@ -9,7 +9,7 @@
 
 namespace Protocol {
 
-WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionToServer<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, move(socket))
 {
 }

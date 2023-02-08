@@ -94,7 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto webcontent_socket = TRY(Core::take_over_socket_from_system_server("WebContent"sv));
     auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
-    webcontent_client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
+    webcontent_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
 
     QSocketNotifier webcontent_notifier(QSocketNotifier::Type::Read);
     proxy_socket_through_notifier(*webcontent_client, webcontent_notifier);

@@ -10,6 +10,7 @@
 #include <AK/IPv4Address.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Socket.h>
 #include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/Authentication/HMAC.h>
@@ -344,15 +345,15 @@ struct Context {
     OwnPtr<Crypto::Curves::EllipticCurve> server_key_exchange_curve;
 };
 
-class TLSv12 final : public Core::Stream::Socket {
+class TLSv12 final : public Core::Socket {
 private:
-    Core::Stream::Socket& underlying_stream()
+    Core::Socket& underlying_stream()
     {
-        return *m_stream.visit([&](auto& stream) -> Core::Stream::Socket* { return stream; });
+        return *m_stream.visit([&](auto& stream) -> Core::Socket* { return stream; });
     }
-    Core::Stream::Socket const& underlying_stream() const
+    Core::Socket const& underlying_stream() const
     {
-        return *m_stream.visit([&](auto& stream) -> Core::Stream::Socket const* { return stream; });
+        return *m_stream.visit([&](auto& stream) -> Core::Socket const* { return stream; });
     }
 
 public:
@@ -384,9 +385,9 @@ public:
     virtual void set_notifications_enabled(bool enabled) override { underlying_stream().set_notifications_enabled(enabled); }
 
     static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, u16 port, Options = {});
-    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, Core::Stream::Socket& underlying_stream, Options = {});
+    static ErrorOr<NonnullOwnPtr<TLSv12>> connect(DeprecatedString const& host, Core::Socket& underlying_stream, Options = {});
 
-    using StreamVariantType = Variant<OwnPtr<Core::Stream::Socket>, Core::Stream::Socket*>;
+    using StreamVariantType = Variant<OwnPtr<Core::Socket>, Core::Socket*>;
     explicit TLSv12(StreamVariantType, Options);
 
     bool is_established() const { return m_context.connection_status == ConnectionStatus::Established; }

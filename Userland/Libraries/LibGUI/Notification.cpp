@@ -26,7 +26,7 @@ public:
     }
 
 private:
-    explicit ConnectionToNotificationServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Notification* notification)
+    explicit ConnectionToNotificationServer(NonnullOwnPtr<Core::LocalSocket> socket, Notification* notification)
         : IPC::ConnectionToServer<NotificationClientEndpoint, NotificationServerEndpoint>(*this, move(socket))
         , m_notification(notification)
     {

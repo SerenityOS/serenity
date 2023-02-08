@@ -23,7 +23,7 @@ public:
     bool is_monitoring_domain(DeprecatedString const& domain) const { return m_monitored_domains.contains(domain); }
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     virtual void pledge_domains(Vector<DeprecatedString> const&) override;
     virtual void monitor_domain(DeprecatedString const&) override;

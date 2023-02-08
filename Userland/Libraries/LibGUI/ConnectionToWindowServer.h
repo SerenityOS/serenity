@@ -22,7 +22,7 @@ public:
     i32 expose_client_id() { return m_client_id; }
 
 private:
-    ConnectionToWindowServer(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    ConnectionToWindowServer(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual void fast_greet(Vector<Gfx::IntRect> const&, u32, u32, u32, Core::AnonymousBuffer const&, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Vector<bool> const&, i32) override;
     virtual void paint(i32, Gfx::IntSize, Vector<Gfx::IntRect> const&) override;

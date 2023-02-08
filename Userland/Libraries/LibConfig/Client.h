@@ -42,7 +42,7 @@ public:
     static Client& the();
 
 private:
-    explicit Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    explicit Client(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<ConfigClientEndpoint, ConfigServerEndpoint>(*this, move(socket))
     {
     }

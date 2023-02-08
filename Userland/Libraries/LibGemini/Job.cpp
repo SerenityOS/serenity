@@ -21,10 +21,10 @@ Job::Job(GeminiRequest const& request, AK::Stream& output_stream)
 {
 }
 
-void Job::start(Core::Stream::Socket& socket)
+void Job::start(Core::Socket& socket)
 {
     VERIFY(!m_socket);
-    m_socket = verify_cast<Core::Stream::BufferedSocketBase>(&socket);
+    m_socket = verify_cast<Core::BufferedSocketBase>(&socket);
     on_socket_connected();
 }
 

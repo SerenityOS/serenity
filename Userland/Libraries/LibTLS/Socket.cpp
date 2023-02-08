@@ -75,7 +75,7 @@ ErrorOr<size_t> TLSv12::write(ReadonlyBytes bytes)
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, u16 port, Options options)
 {
     Core::EventLoop loop;
-    OwnPtr<Core::Stream::Socket> tcp_socket = TRY(Core::Stream::TCPSocket::connect(host, port));
+    OwnPtr<Core::Socket> tcp_socket = TRY(Core::TCPSocket::connect(host, port));
     TRY(tcp_socket->set_blocking(false));
     auto tls_socket = make<TLSv12>(move(tcp_socket), move(options));
     tls_socket->set_sni(host);
@@ -94,7 +94,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, u16
     return AK::Error::from_string_view(alert_name(static_cast<AlertDescription>(256 - result)));
 }
 
-ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, Core::Stream::Socket& underlying_stream, Options options)
+ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, Core::Socket& underlying_stream, Options options)
 {
     TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));
