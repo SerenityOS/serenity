@@ -64,6 +64,12 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
         reply = qnam.get(request);
     } else if (method.equals_ignoring_case("post"sv)) {
         reply = qnam.post(request, QByteArray((char const*)request_body.data(), request_body.size()));
+    } else if (method.equals_ignoring_case("put"sv)) {
+        reply = qnam.put(request, QByteArray((char const*)request_body.data(), request_body.size()));
+    } else if (method.equals_ignoring_case("delete"sv)) {
+        reply = qnam.deleteResource(request);
+    } else {
+        reply = qnam.sendCustomRequest(request, QByteArray(method.characters()), QByteArray((char const*)request_body.data(), request_body.size()));
     }
 
     return adopt_ref(*new Request(*reply));
