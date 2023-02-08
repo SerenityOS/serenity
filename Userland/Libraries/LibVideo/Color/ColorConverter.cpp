@@ -87,7 +87,7 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
     float y_max;
     float uv_min;
     float uv_max;
-    if (cicp.color_range() == ColorRange::Studio) {
+    if (cicp.video_full_range_flag() == VideoFullRangeFlag::Studio) {
         y_min = 16.0f / 255.0f;
         y_max = 235.0f / 255.0f;
         uv_min = y_min;

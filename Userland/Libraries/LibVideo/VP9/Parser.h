@@ -45,7 +45,7 @@ private:
      * See also section 5.26. */
     Vector<size_t> parse_superframe_sizes(ReadonlyBytes);
 
-    DecoderErrorOr<ColorRange> read_color_range();
+    DecoderErrorOr<VideoFullRangeFlag> read_video_full_range_flag();
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();

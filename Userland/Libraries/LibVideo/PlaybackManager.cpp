@@ -190,7 +190,7 @@ bool PlaybackManager::decode_and_queue_one_sample()
 
     auto& cicp = decoded_frame->cicp();
     cicp.adopt_specified_values(frame_sample->container_cicp());
-    cicp.default_code_points_if_unspecified({ ColorPrimaries::BT709, TransferCharacteristics::BT709, MatrixCoefficients::BT709, ColorRange::Studio });
+    cicp.default_code_points_if_unspecified({ ColorPrimaries::BT709, TransferCharacteristics::BT709, MatrixCoefficients::BT709, VideoFullRangeFlag::Studio });
 
     // BT.601, BT.709 and BT.2020 have a similar transfer function to sRGB, so other applications
     // (Chromium, VLC) forgo transfer characteristics conversion. We will emulate that behavior by
