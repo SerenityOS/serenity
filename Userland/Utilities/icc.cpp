@@ -134,7 +134,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 Video::transfer_characteristics_to_string((Video::TransferCharacteristics)cicp.transfer_characteristics()));
             outln("    matrix coefficients: {} - {}", cicp.matrix_coefficients(),
                 Video::matrix_coefficients_to_string((Video::MatrixCoefficients)cicp.matrix_coefficients()));
-            outln("    video full range flag: {}", cicp.video_full_range_flag());
+            outln("    video full range flag: {} - {}", cicp.video_full_range_flag(),
+                Video::video_full_range_flag_to_string((Video::VideoFullRangeFlag)cicp.video_full_range_flag()));
         } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
             auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
             if (curve.values().is_empty()) {
