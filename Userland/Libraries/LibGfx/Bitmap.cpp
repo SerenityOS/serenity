@@ -7,10 +7,10 @@
 
 #include <AK/Bitmap.h>
 #include <AK/Checked.h>
-#include <AK/DeprecatedMemoryStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
+#include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
@@ -212,23 +212,14 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_byte_buffer(ByteBu
 /// - image data (= actual size * u8)
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_bytes(ReadonlyBytes bytes)
 {
-    DeprecatedInputMemoryStream stream { bytes };
-    size_t actual_size;
-    unsigned width;
-    unsigned height;
-    unsigned scale_factor;
-    BitmapFormat format;
-    unsigned palette_size;
-    Vector<ARGB32> palette;
+    FixedMemoryStream stream { bytes };
 
-    auto read = [&]<typename T>(T& value) {
-        if (stream.read({ &value, sizeof(T) }) != sizeof(T))
-            return false;
-        return true;
-    };
-
-    if (!read(actual_size) || !read(width) || !read(height) || !read(scale_factor) || !read(format) || !read(palette_size))
-        return Error::from_string_literal("Gfx::Bitmap::create_from_serialized_byte_buffer: decode failed");
+    auto actual_size = TRY(stream.read_value<size_t>());
+    auto width = TRY(stream.read_value<unsigned>());
+    auto height = TRY(stream.read_value<unsigned>());
+    auto scale_factor = TRY(stream.read_value<unsigned>());
+    auto format = TRY(stream.read_value<BitmapFormat>());
+    auto palette_size = TRY(stream.read_value<unsigned>());
 
     if (format > BitmapFormat::BGRA8888 || format < BitmapFormat::Indexed1)
         return Error::from_string_literal("Gfx::Bitmap::create_from_serialized_byte_buffer: decode failed");
@@ -236,16 +227,16 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_bytes(ReadonlyByte
     if (!check_size({ width, height }, scale_factor, format, actual_size))
         return Error::from_string_literal("Gfx::Bitmap::create_from_serialized_byte_buffer: decode failed");
 
+    Vector<ARGB32> palette;
     palette.ensure_capacity(palette_size);
     for (size_t i = 0; i < palette_size; ++i) {
-        if (!read(palette[i]))
-            return Error::from_string_literal("Gfx::Bitmap::create_from_serialized_byte_buffer: decode failed");
+        palette[i] = TRY(stream.read_value<ARGB32>());
     }
 
-    if (stream.remaining() < actual_size)
+    if (TRY(stream.size()) - TRY(stream.tell()) < actual_size)
         return Error::from_string_literal("Gfx::Bitmap::create_from_serialized_byte_buffer: decode failed");
 
-    auto data = stream.bytes().slice(stream.offset(), actual_size);
+    auto data = bytes.slice(TRY(stream.tell()), actual_size);
 
     auto bitmap = TRY(Bitmap::create(format, { width, height }, scale_factor));
 
@@ -259,28 +250,25 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_from_serialized_bytes(ReadonlyByte
 ErrorOr<ByteBuffer> Bitmap::serialize_to_byte_buffer() const
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(sizeof(size_t) + 4 * sizeof(unsigned) + sizeof(BitmapFormat) + sizeof(ARGB32) * palette_size(m_format) + size_in_bytes()));
-    DeprecatedOutputMemoryStream stream { buffer };
-
-    auto write = [&]<typename T>(T value) {
-        if (stream.write({ &value, sizeof(T) }) != sizeof(T))
-            return false;
-        return true;
-    };
+    FixedMemoryStream stream { buffer.span() };
 
     auto palette = palette_to_vector();
 
-    if (!write(size_in_bytes()) || !write((unsigned)size().width()) || !write((unsigned)size().height()) || !write((unsigned)scale()) || !write(m_format) || !write((unsigned)palette.size()))
-        return Error::from_string_literal("Failed to write serialized image metadata to the buffer");
+    TRY(stream.write_value(size_in_bytes()));
+    TRY(stream.write_value<unsigned>(size().width()));
+    TRY(stream.write_value<unsigned>(size().height()));
+    TRY(stream.write_value<unsigned>(scale()));
+    TRY(stream.write_value(m_format));
+    TRY(stream.write_value<unsigned>(palette.size()));
 
     for (auto& p : palette) {
-        if (!write(p))
-            return Error::from_string_literal("Failed to write serialized palette to the buffer");
+        TRY(stream.write_value(p));
     }
 
     auto size = size_in_bytes();
-    VERIFY(stream.remaining() == size);
-    if (stream.write({ scanline(0), size }) != size)
-        return Error::from_string_literal("Failed to write serialized image data to the buffer");
+    TRY(stream.write_entire_buffer({ scanline(0), size }));
+
+    VERIFY(TRY(stream.tell()) == TRY(stream.size()));
 
     return buffer;
 }
