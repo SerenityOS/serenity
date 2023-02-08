@@ -241,7 +241,7 @@ struct SegmentFeature {
 struct ColorConfig {
     u8 bit_depth { 8 };
     ColorSpace color_space { ColorSpace::Bt601 };
-    ColorRange color_range { ColorRange::Studio };
+    VideoFullRangeFlag color_range { VideoFullRangeFlag::Studio };
     bool subsampling_x { true };
     bool subsampling_y { true };
 };

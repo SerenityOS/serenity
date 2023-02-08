@@ -143,11 +143,11 @@ DecoderErrorOr<void> Parser::refresh_probs(FrameContext const& frame_context)
     return {};
 }
 
-DecoderErrorOr<ColorRange> Parser::read_color_range()
+DecoderErrorOr<VideoFullRangeFlag> Parser::read_video_full_range_flag()
 {
     if (TRY_READ(m_bit_stream->read_bit()))
-        return ColorRange::Full;
-    return ColorRange::Studio;
+        return VideoFullRangeFlag::Full;
+    return VideoFullRangeFlag::Studio;
 }
 
 /* (6.2) */
@@ -303,11 +303,11 @@ DecoderErrorOr<ColorConfig> Parser::parse_color_config(FrameContext const& frame
     auto color_space = static_cast<ColorSpace>(TRY_READ(m_bit_stream->read_bits(3)));
     VERIFY(color_space <= ColorSpace::RGB);
 
-    ColorRange color_range;
+    VideoFullRangeFlag video_full_range_flag;
     bool subsampling_x, subsampling_y;
 
     if (color_space != ColorSpace::RGB) {
-        color_range = TRY(read_color_range());
+        video_full_range_flag = TRY(read_video_full_range_flag());
         if (frame_context.profile == 1 || frame_context.profile == 3) {
             subsampling_x = TRY_READ(m_bit_stream->read_bit());
             subsampling_y = TRY_READ(m_bit_stream->read_bit());
@@ -318,7 +318,7 @@ DecoderErrorOr<ColorConfig> Parser::parse_color_config(FrameContext const& frame
             subsampling_y = true;
         }
     } else {
-        color_range = ColorRange::Full;
+        video_full_range_flag = VideoFullRangeFlag::Full;
         if (frame_context.profile == 1 || frame_context.profile == 3) {
             subsampling_x = false;
             subsampling_y = false;
@@ -330,7 +330,7 @@ DecoderErrorOr<ColorConfig> Parser::parse_color_config(FrameContext const& frame
         }
     }
 
-    return ColorConfig { bit_depth, color_space, color_range, subsampling_x, subsampling_y };
+    return ColorConfig { bit_depth, color_space, video_full_range_flag, subsampling_x, subsampling_y };
 }
 
 DecoderErrorOr<Gfx::Size<u32>> Parser::parse_frame_size()
