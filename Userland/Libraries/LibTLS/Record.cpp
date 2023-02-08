@@ -5,8 +5,8 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedMemoryStream.h>
 #include <AK/Endian.h>
+#include <AK/MemoryStream.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -141,15 +141,15 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         // length (2)
                         u8 aad[13];
                         Bytes aad_bytes { aad, 13 };
-                        DeprecatedOutputMemoryStream aad_stream { aad_bytes };
+                        FixedMemoryStream aad_stream { aad_bytes };
 
                         u64 seq_no = AK::convert_between_host_and_network_endian(m_context.local_sequence_number);
                         u16 len = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
 
-                        aad_stream.write({ &seq_no, sizeof(seq_no) });
-                        aad_stream.write(packet.bytes().slice(0, 3)); // content-type + version
-                        aad_stream.write({ &len, sizeof(len) });      // length
-                        VERIFY(aad_stream.is_end());
+                        MUST(aad_stream.write_value(seq_no));                             // sequence number
+                        MUST(aad_stream.write_entire_buffer(packet.bytes().slice(0, 3))); // content-type + version
+                        MUST(aad_stream.write_value(len));                                // length
+                        VERIFY(MUST(aad_stream.tell()) == MUST(aad_stream.size()));
 
                         // AEAD IV (12)
                         // IV (4)
@@ -382,15 +382,15 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 // length (2)
                 u8 aad[13];
                 Bytes aad_bytes { aad, 13 };
-                DeprecatedOutputMemoryStream aad_stream { aad_bytes };
+                FixedMemoryStream aad_stream { aad_bytes };
 
                 u64 seq_no = AK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
                 u16 len = AK::convert_between_host_and_network_endian((u16)packet_length);
 
-                aad_stream.write({ &seq_no, sizeof(seq_no) });      // Sequence number
-                aad_stream.write(buffer.slice(0, header_size - 2)); // content-type + version
-                aad_stream.write({ &len, sizeof(u16) });
-                VERIFY(aad_stream.is_end());
+                MUST(aad_stream.write_value(seq_no));                                   // sequence number
+                MUST(aad_stream.write_entire_buffer(buffer.slice(0, header_size - 2))); // content-type + version
+                MUST(aad_stream.write_value(len));                                      // length
+                VERIFY(MUST(aad_stream.tell()) == MUST(aad_stream.size()));
 
                 auto nonce = payload.slice(0, iv_length());
                 payload = payload.slice(iv_length());
