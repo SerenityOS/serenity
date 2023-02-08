@@ -12,6 +12,7 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibVideo/Color/CodingIndependentCodePoints.h>
 
 template<class T>
 static ErrorOr<String> hyperlink(URL const& target, T const& label)
@@ -125,7 +126,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         tag_data_to_first_signature.set(tag_data, tag_signature);
 
-        if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
+        if (tag_data->type() == Gfx::ICC::CicpTagData::Type) {
+            auto& cicp = static_cast<Gfx::ICC::CicpTagData&>(*tag_data);
+            outln("    color primaries: {} - {}", cicp.color_primaries(),
+                Video::color_primaries_to_string((Video::ColorPrimaries)cicp.color_primaries()));
+            outln("    transfer characteristics: {} - {}", cicp.transfer_characteristics(),
+                Video::transfer_characteristics_to_string((Video::TransferCharacteristics)cicp.transfer_characteristics()));
+            outln("    matrix coefficients: {} - {}", cicp.matrix_coefficients(),
+                Video::matrix_coefficients_to_string((Video::MatrixCoefficients)cicp.matrix_coefficients()));
+            outln("    video full range flag: {}", cicp.video_full_range_flag());
+        } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
             auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
             if (curve.values().is_empty()) {
                 outln("    identity curve");
@@ -155,6 +165,52 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    e = [ {}, {}, {},", e[0], e[1], e[2]);
             outln("          {}, {}, {},", e[3], e[4], e[5]);
             outln("          {}, {}, {} ]", e[6], e[7], e[8]);
+        } else if (tag_data->type() == Gfx::ICC::LutAToBTagData::Type) {
+            auto& a_to_b = static_cast<Gfx::ICC::LutAToBTagData&>(*tag_data);
+            outln("    {} input channels, {} output channels", a_to_b.number_of_input_channels(), a_to_b.number_of_output_channels());
+
+            if (auto const& optional_clut = a_to_b.clut(); optional_clut.has_value()) {
+                auto const& clut = optional_clut.value();
+                outln("    color lookup table: {} grid points, {}",
+                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    MUST(clut.values.visit(
+                        [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
+                        [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
+            } else {
+                outln("    color lookup table: (not set)");
+            }
+
+            if (auto const& optional_e = a_to_b.e_matrix(); optional_e.has_value()) {
+                auto const& e = optional_e.value();
+                outln("    e = [ {}, {}, {}, {},", e[0], e[1], e[2], e[9]);
+                outln("          {}, {}, {}, {},", e[3], e[4], e[5], e[10]);
+                outln("          {}, {}, {}, {} ]", e[6], e[7], e[8], e[11]);
+            } else {
+                outln("    e = (not set)");
+            }
+        } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
+            auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
+            outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
+
+            if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
+                auto const& e = optional_e.value();
+                outln("    e = [ {}, {}, {}, {},", e[0], e[1], e[2], e[9]);
+                outln("          {}, {}, {}, {},", e[3], e[4], e[5], e[10]);
+                outln("          {}, {}, {}, {} ]", e[6], e[7], e[8], e[11]);
+            } else {
+                outln("    e = (not set)");
+            }
+
+            if (auto const& optional_clut = b_to_a.clut(); optional_clut.has_value()) {
+                auto const& clut = optional_clut.value();
+                outln("    color lookup table: {} grid points, {}",
+                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    MUST(clut.values.visit(
+                        [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
+                        [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
+            } else {
+                outln("    color lookup table: (not set)");
+            }
         } else if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
             auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
             for (auto& record : multi_localized_unicode.records()) {
@@ -163,6 +219,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     record.iso_3166_1_country_code >> 8, record.iso_3166_1_country_code & 0xff,
                     record.text);
             }
+        } else if (tag_data->type() == Gfx::ICC::NamedColor2TagData::Type) {
+            auto& named_colors = static_cast<Gfx::ICC::NamedColor2TagData&>(*tag_data);
+            outln("    vendor specific flag: 0x{:08x}", named_colors.vendor_specific_flag());
+            outln("    common name prefix: \"{}\"", named_colors.prefix());
+            outln("    common name suffix: \"{}\"", named_colors.suffix());
+            outln("    {} colors:", named_colors.size());
+            for (size_t i = 0; i < min(named_colors.size(), 5u); ++i) {
+                const auto& pcs = named_colors.pcs_coordinates(i);
+
+                // FIXME: Display decoded values? (See ICC v4 6.3.4.2 and 10.8.)
+                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", MUST(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
+                if (auto number_of_device_coordinates = named_colors.number_of_device_coordinates(); number_of_device_coordinates > 0) {
+                    out(", device coordinates:");
+                    for (size_t j = 0; j < number_of_device_coordinates; ++j)
+                        out(" 0x{:04x}", named_colors.device_coordinates(i)[j]);
+                }
+                outln();
+            }
+            if (named_colors.size() > 5u)
+                outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
             auto& parametric_curve = static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data);
             switch (parametric_curve.function_type()) {
@@ -209,6 +285,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 i++;
             }
             outln(" ]");
+        } else if (tag_data->type() == Gfx::ICC::SignatureTagData::Type) {
+            auto& signature = static_cast<Gfx::ICC::SignatureTagData&>(*tag_data);
+
+            // FIXME: For colorimetricIntentImageStateTag, interpret signature according to ICC v4 Table 26
+            // FIXME: For perceptualRenderingIntentGamutTag, interpret signature according to ICC v4 Table 27
+            // FIXME: For saturationRenderingIntentGamutTag, interpret signature according to ICC v4 Table 28
+            // FIXME: For technologyTag, interpret signature according to ICC v4 Table 29
+            outln("    signature: '{:c}{:c}{:c}{:c}' / 0x{:08x}",
+                signature.signature() >> 24, (signature.signature() >> 16) & 0xff, (signature.signature() >> 8) & 0xff, signature.signature() & 0xff,
+                signature.signature());
         } else if (tag_data->type() == Gfx::ICC::TextDescriptionTagData::Type) {
             auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData&>(*tag_data);
             outln("    ascii: \"{}\"", text_description.ascii_description());

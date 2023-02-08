@@ -28,11 +28,11 @@ TEST_CASE(canonical_code_simple)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = MUST(FixedMemoryStream::construct(input));
-    auto bit_stream = MUST(LittleEndianInputBitStream::construct(move(memory_stream)));
+    auto memory_stream = MUST(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
 
     for (size_t idx = 0; idx < 9; ++idx)
-        EXPECT_EQ(MUST(huffman.read_symbol(*bit_stream)), output[idx]);
+        EXPECT_EQ(MUST(huffman.read_symbol(bit_stream)), output[idx]);
 }
 
 TEST_CASE(canonical_code_complex)
@@ -48,11 +48,11 @@ TEST_CASE(canonical_code_complex)
     };
 
     auto const huffman = Compress::CanonicalCode::from_bytes(code).value();
-    auto memory_stream = MUST(FixedMemoryStream::construct(input));
-    auto bit_stream = MUST(LittleEndianInputBitStream::construct(move(memory_stream)));
+    auto memory_stream = MUST(try_make<FixedMemoryStream>(input));
+    LittleEndianInputBitStream bit_stream { move(memory_stream) };
 
     for (size_t idx = 0; idx < 12; ++idx)
-        EXPECT_EQ(MUST(huffman.read_symbol(*bit_stream)), output[idx]);
+        EXPECT_EQ(MUST(huffman.read_symbol(bit_stream)), output[idx]);
 }
 
 TEST_CASE(deflate_decompress_compressed_block)

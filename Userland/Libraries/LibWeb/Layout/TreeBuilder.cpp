@@ -606,7 +606,11 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
 
         parent.remove_child(*table_box);
         wrapper->append_child(*table_box);
-        parent.insert_before(*wrapper, *nearest_sibling);
+
+        if (nearest_sibling)
+            parent.insert_before(*wrapper, *nearest_sibling);
+        else
+            parent.append_child(*wrapper);
     }
 }
 

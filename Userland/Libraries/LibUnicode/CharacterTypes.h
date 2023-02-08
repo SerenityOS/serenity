@@ -31,7 +31,7 @@ Optional<DeprecatedString> code_point_display_name(u32 code_point);
 Optional<StringView> code_point_block_display_name(u32 code_point);
 Optional<StringView> code_point_abbreviation(u32 code_point);
 
-Span<BlockName const> block_display_names();
+ReadonlySpan<BlockName> block_display_names();
 
 u32 canonical_combining_class(u32 code_point);
 

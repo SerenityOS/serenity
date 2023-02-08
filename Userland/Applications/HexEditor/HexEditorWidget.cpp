@@ -366,7 +366,7 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
 
     if (byte_read_count % 2 == 0) {
-        Utf16View utf16_view { Span<u16 const> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
+        Utf16View utf16_view { ReadonlySpan<u16> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
         size_t valid_code_units;
         utf16_view.validate(valid_code_units);
         if (valid_code_units == 0)

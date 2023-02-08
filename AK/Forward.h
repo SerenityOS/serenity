@@ -22,10 +22,6 @@ class BigEndianInputBitStream;
 class BigEndianOutputBitStream;
 using ByteBuffer = Detail::ByteBuffer<32>;
 class CircularBuffer;
-class DeprecatedInputStream;
-class DeprecatedInputMemoryStream;
-class DeprecatedOutputStream;
-class DeprecatedOutputMemoryStream;
 class Error;
 class FlyString;
 class GenericLexer;
@@ -61,7 +57,10 @@ struct Array;
 template<typename Container, typename ValueType>
 class SimpleIterator;
 
-using ReadonlyBytes = Span<u8 const>;
+template<typename T>
+using ReadonlySpan = Span<T const>;
+
+using ReadonlyBytes = ReadonlySpan<u8>;
 using Bytes = Span<u8>;
 
 template<typename T, AK::MemoryOrder DefaultMemoryOrder>
@@ -164,10 +163,6 @@ using AK::Bytes;
 using AK::CircularBuffer;
 using AK::CircularQueue;
 using AK::DeprecatedFlyString;
-using AK::DeprecatedInputMemoryStream;
-using AK::DeprecatedInputStream;
-using AK::DeprecatedOutputMemoryStream;
-using AK::DeprecatedOutputStream;
 using AK::DeprecatedString;
 using AK::DeprecatedStringCodePointIterator;
 using AK::DoublyLinkedList;

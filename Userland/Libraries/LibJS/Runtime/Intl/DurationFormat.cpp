@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormat.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 
 namespace JS::Intl {
 
@@ -268,7 +269,7 @@ bool is_valid_duration_record(Temporal::DurationRecord const& record)
 }
 
 // 1.1.6 GetDurationUnitOptions ( unit, options, baseStyle, stylesList, digitalBase, prevStyle ), https://tc39.es/proposal-intl-duration-format/#sec-getdurationunitoptions
-ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, Span<StringView const> styles_list, StringView digital_base, StringView previous_style)
+ThrowCompletionOr<DurationUnitOptions> get_duration_unit_options(VM& vm, String const& unit, Object const& options, StringView base_style, ReadonlySpan<StringView> styles_list, StringView digital_base, StringView previous_style)
 {
     // 1. Let style be ? GetOption(options, unit, string, stylesList, undefined).
     auto style_value = TRY(get_option(vm, options, unit.to_deprecated_string(), OptionType::String, styles_list, Empty {}));
@@ -448,7 +449,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 auto number = MUST_OR_THROW_OOM(format_numeric(vm, *number_format, MathematicalValue(value)));
 
                 // 5. Append the new Record { [[Type]]: unit, [[Value]]: num} to the end of result.
-                result.append({ unit, move(number) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ unit, move(number) }));
 
                 // 6. If unit is "hours" or "minutes", then
                 if (unit.is_one_of("hours"sv, "minutes"sv)) {
@@ -484,7 +485,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                         auto separator = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(data_locale, duration_format.numbering_system(), ::Locale::NumericSymbol::TimeSeparator)).value_or(":"sv);
 
                         // ii. Append the new Record { [[Type]]: "literal", [[Value]]: separator} to the end of result.
-                        result.append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) });
+                        TRY_OR_THROW_OOM(vm, result.try_append({ "literal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(separator)) }));
                     }
                 }
             }
@@ -507,16 +508,16 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 auto parts = MUST_OR_THROW_OOM(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
 
                 // 6. Let concat be an empty String.
-                StringBuilder concat;
+                ThrowableStringBuilder concat(vm);
 
                 // 7. For each Record { [[Type]], [[Value]], [[Unit]] } part in parts, do
                 for (auto const& part : parts) {
                     // a. Set concat to the string-concatenation of concat and part.[[Value]].
-                    concat.append(part.value);
+                    TRY(concat.append(part.value));
                 }
 
                 // 8. Append the new Record { [[Type]]: unit, [[Value]]: concat } to the end of result.
-                result.append({ unit, TRY_OR_THROW_OOM(vm, concat.to_string()) });
+                TRY_OR_THROW_OOM(vm, result.try_append({ unit, MUST_OR_THROW_OOM(concat.to_string()) }));
             }
         }
     }
@@ -560,7 +561,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
             merge = false;
             continue;
         }
-        string_result.append(part.value);
+        TRY_OR_THROW_OOM(vm, string_result.try_append(part.value));
     }
 
     // 10. Set result to ! CreatePartsFromList(lf, result).

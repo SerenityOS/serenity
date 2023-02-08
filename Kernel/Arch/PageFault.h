@@ -78,6 +78,8 @@ public:
     void set_mode(ExecutionMode execution_mode) { m_execution_mode = execution_mode; }
     ExecutionMode mode() const { return m_execution_mode; }
 
+    void set_instruction_fetch(bool b) { m_is_instruction_fetch = b; }
+
     bool is_not_present() const { return m_type == Type::PageNotPresent; }
     bool is_protection_violation() const { return m_type == Type::ProtectionViolation; }
     bool is_read() const { return m_access == Access::Read; }

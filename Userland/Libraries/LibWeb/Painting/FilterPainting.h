@@ -12,7 +12,7 @@
 
 namespace Web::Painting {
 
-void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, Span<CSS::FilterFunction const> filter_list);
+void apply_filter_list(Gfx::Bitmap& target_bitmap, Layout::Node const& node, ReadonlySpan<CSS::FilterFunction> filter_list);
 
 void apply_backdrop_filter(PaintContext&, Layout::Node const&, CSSPixelRect const&, BorderRadiiData const&, CSS::BackdropFilter const&);
 

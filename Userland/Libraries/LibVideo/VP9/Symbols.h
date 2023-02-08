@@ -9,6 +9,12 @@
 
 namespace Video::VP9 {
 
+// FIXME: These should be placed in logical groupings based on the
+//        context they are used in, and perhaps split into multiple
+//        files. While doing so, as many of these as possible should be
+//        renamed to be more human-readable, and most if not all should
+//        be constexpr variables rather than preprocessor definitions.
+
 #define REFS_PER_FRAME 3
 #define MV_FR_SIZE 4
 #define MVREF_NEIGHBOURS 8
@@ -20,7 +26,8 @@ namespace Video::VP9 {
 #define MIN_TILE_WIDTH_B64 4
 #define MAX_TILE_WIDTH_B64 64
 #define MAX_MV_REF_CANDIDATES 2
-#define NUM_REF_FRAMES 8
+#define LOG2_OF_NUM_REF_FRAMES 3
+#define NUM_REF_FRAMES 1 << LOG2_OF_NUM_REF_FRAMES
 #define MAX_REF_FRAMES 4
 #define IS_INTER_CONTEXTS 4
 #define COMP_MODE_CONTEXTS 5

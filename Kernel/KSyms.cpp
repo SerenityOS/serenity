@@ -84,7 +84,17 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
             }
         }
         auto& ksym = s_symbols[current_symbol_index];
+
+        // FIXME: Remove this ifdef once the aarch64 kernel is loaded by the Prekernel.
+        //        Currently, the aarch64 kernel is linked at a high virtual memory address, instead
+        //        of zero, so the address of a symbol does not need to be offset by the kernel_load_base.
+#if ARCH(X86_64)
         ksym.address = kernel_load_base + address;
+#elif ARCH(AARCH64)
+        ksym.address = address;
+#else
+#    error "Unknown architecture"
+#endif
         ksym.name = start_of_name;
 
         *bufptr = '\0';
@@ -163,7 +173,8 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr base_pointer, bool use_ksym
 
 void dump_backtrace_from_base_pointer(FlatPtr base_pointer)
 {
-    dump_backtrace_impl(base_pointer, g_kernel_symbols_available, PrintToScreen::Yes);
+    // FIXME: Change signature of dump_backtrace_impl to use an enum instead of a bool.
+    dump_backtrace_impl(base_pointer, /*use_ksym=*/false, PrintToScreen::No);
 }
 
 void dump_backtrace(PrintToScreen print_to_screen)

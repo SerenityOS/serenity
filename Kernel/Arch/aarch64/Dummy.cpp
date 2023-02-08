@@ -12,12 +12,6 @@
 #include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
 
-namespace Kernel {
-
-ProcessID g_init_pid { 0 };
-
-}
-
 // Delay.cpp
 namespace Kernel {
 
@@ -32,14 +26,11 @@ void microseconds_delay(u32)
 namespace Kernel::PCI {
 
 bool g_pci_access_io_probe_failed { false };
-bool g_pci_access_is_disabled_from_commandline { false };
+bool g_pci_access_is_disabled_from_commandline { true };
 
 }
 
 // x86 init
-
-multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
-size_t multiboot_copy_boot_modules_count;
 
 extern "C" {
 READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;

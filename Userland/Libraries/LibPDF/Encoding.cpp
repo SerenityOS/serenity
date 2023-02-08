@@ -168,4 +168,12 @@ u16 Encoding::get_char_code(DeprecatedString const& name) const
     return 0;
 }
 
+DeprecatedFlyString Encoding::get_name(u8 char_code) const
+{
+    auto name_iterator = m_descriptors.find(char_code);
+    if (name_iterator != m_descriptors.end())
+        return name_iterator->value;
+    return 0;
+}
+
 }

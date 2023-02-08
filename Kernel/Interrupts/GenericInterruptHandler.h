@@ -37,7 +37,7 @@ public:
 
     u8 interrupt_number() const { return m_interrupt_number; }
 
-    Span<u32 const> per_cpu_call_counts() const;
+    ReadonlySpan<u32> per_cpu_call_counts() const;
 
     virtual size_t sharing_devices_count() const = 0;
     virtual bool is_shared_handler() const = 0;

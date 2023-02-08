@@ -16,8 +16,8 @@ namespace AK {
 /// using a single read/write head.
 class FixedMemoryStream final : public SeekableStream {
 public:
-    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(Bytes bytes);
-    static ErrorOr<NonnullOwnPtr<FixedMemoryStream>> construct(ReadonlyBytes bytes);
+    explicit FixedMemoryStream(Bytes bytes);
+    explicit FixedMemoryStream(ReadonlyBytes bytes);
 
     virtual bool is_eof() const override;
     virtual bool is_open() const override;
@@ -36,9 +36,6 @@ public:
     size_t remaining() const;
 
 private:
-    explicit FixedMemoryStream(Bytes bytes);
-    explicit FixedMemoryStream(ReadonlyBytes bytes);
-
     Bytes m_bytes;
     size_t m_offset { 0 };
     bool m_writing_enabled { true };

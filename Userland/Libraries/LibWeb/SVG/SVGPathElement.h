@@ -32,6 +32,6 @@ private:
     Optional<Gfx::Path> m_path;
 };
 
-Gfx::Path path_from_path_instructions(Span<PathInstruction const>);
+Gfx::Path path_from_path_instructions(ReadonlySpan<PathInstruction>);
 
 }

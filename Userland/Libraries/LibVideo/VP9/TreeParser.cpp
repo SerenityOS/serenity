@@ -84,11 +84,7 @@ ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, Probabilit
     auto bsl = mi_width_log2_lookup[block_subsize];
     auto block_offset = mi_width_log2_lookup[Block_64x64] - bsl;
     for (auto i = 0; i < num_8x8; i++) {
-        if (column + i >= above_partition_context.size())
-            dbgln("column={}, i={}, size={}", column, i, above_partition_context.size());
         above |= above_partition_context[column + i];
-        if (row + i >= left_partition_context.size())
-            dbgln("row={}, i={}, size={}", row, i, left_partition_context.size());
         left |= left_partition_context[row + i];
     }
     above = (above & (1 << block_offset)) > 0;

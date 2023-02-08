@@ -79,10 +79,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
     // Configure the nodes context menu.
-    auto open_folder_action = GUI::Action::create("Open Folder", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
+    auto open_folder_action = GUI::Action::create("Open in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme(get_absolute_path_to_selected_node(tree_map_widget)));
     });
-    auto open_containing_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
+    auto open_containing_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
         LexicalPath path { get_absolute_path_to_selected_node(tree_map_widget) };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });

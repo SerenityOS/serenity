@@ -112,7 +112,7 @@ public:
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
-    void autocomplete(FILE*, StringView program_name, Span<char const* const> remaining_arguments);
+    void autocomplete(FILE*, StringView program_name, ReadonlySpan<char const*> remaining_arguments);
 
     Vector<Option> m_options;
     Vector<Arg> m_positional_args;

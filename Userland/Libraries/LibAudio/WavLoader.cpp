@@ -35,7 +35,7 @@ Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Stri
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Bytes buffer)
 {
-    auto stream = LOADER_TRY(FixedMemoryStream::construct(buffer));
+    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -115,23 +115,23 @@ static ErrorOr<double> read_sample(AK::Stream& stream)
 LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
 {
     FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
-    auto stream = LOADER_TRY(FixedMemoryStream::construct(move(data)));
+    FixedMemoryStream stream { data };
 
     switch (m_sample_format) {
     case PcmSampleFormat::Uint8:
-        TRY(read_samples_from_stream(*stream, read_sample<u8>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<u8>, samples));
         break;
     case PcmSampleFormat::Int16:
-        TRY(read_samples_from_stream(*stream, read_sample<i16>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<i16>, samples));
         break;
     case PcmSampleFormat::Int24:
-        TRY(read_samples_from_stream(*stream, read_sample_int24, samples));
+        TRY(read_samples_from_stream(stream, read_sample_int24, samples));
         break;
     case PcmSampleFormat::Float32:
-        TRY(read_samples_from_stream(*stream, read_sample<float>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<float>, samples));
         break;
     case PcmSampleFormat::Float64:
-        TRY(read_samples_from_stream(*stream, read_sample<double>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<double>, samples));
         break;
     default:
         VERIFY_NOT_REACHED();

@@ -77,7 +77,7 @@ public:
     String const& pattern() const { return Patterns::pattern; };
     void set_pattern(String pattern) { Patterns::pattern = move(pattern); }
 
-    Span<::Locale::CalendarRangePattern const> range_patterns() const { return m_range_patterns.span(); };
+    ReadonlySpan<::Locale::CalendarRangePattern> range_patterns() const { return m_range_patterns.span(); };
     void set_range_patterns(Vector<::Locale::CalendarRangePattern> range_patterns) { m_range_patterns = move(range_patterns); }
 
     bool has_era() const { return Patterns::era.has_value(); }

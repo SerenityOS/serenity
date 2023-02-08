@@ -269,6 +269,7 @@ void init_page_tables()
 {
     *adjust_by_mapping_base(&physical_to_virtual_offset) = KERNEL_MAPPING_BASE;
     *adjust_by_mapping_base(&kernel_mapping_base) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&kernel_load_base) = KERNEL_MAPPING_BASE;
 
     PageBumpAllocator allocator(adjust_by_mapping_base((u64*)page_tables_phys_start), adjust_by_mapping_base((u64*)page_tables_phys_end));
     auto root_table = allocator.take_page();

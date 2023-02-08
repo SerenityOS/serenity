@@ -47,35 +47,35 @@ ErrorOr<void> DwarfInfo::populate_compilation_units()
     if (!m_debug_info_data.data())
         return {};
 
-    auto debug_info_stream = TRY(FixedMemoryStream::construct(m_debug_info_data));
-    auto line_info_stream = TRY(FixedMemoryStream::construct(m_debug_line_data));
+    FixedMemoryStream debug_info_stream { m_debug_info_data };
+    FixedMemoryStream line_info_stream { m_debug_line_data };
 
-    while (!debug_info_stream->is_eof()) {
-        auto unit_offset = TRY(debug_info_stream->tell());
+    while (!debug_info_stream.is_eof()) {
+        auto unit_offset = TRY(debug_info_stream.tell());
 
-        auto compilation_unit_header = TRY(debug_info_stream->read_value<CompilationUnitHeader>());
+        auto compilation_unit_header = TRY(debug_info_stream.read_value<CompilationUnitHeader>());
         VERIFY(compilation_unit_header.common.version <= 5);
         VERIFY(compilation_unit_header.address_size() == sizeof(FlatPtr));
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
 
-        auto line_program = make<LineProgram>(*this, *line_info_stream);
+        auto line_program = make<LineProgram>(*this, line_info_stream);
 
         // HACK: Clang generates line programs for embedded resource assembly files, but not compile units.
         // Meaning that for graphical applications, some line info data would be unread, triggering the assertion below.
         // As a fix, we don't create compilation units for line programs that come from resource files.
 #if defined(AK_COMPILER_CLANG)
         if (line_program->looks_like_embedded_resource()) {
-            TRY(debug_info_stream->seek(unit_offset));
+            TRY(debug_info_stream.seek(unit_offset));
         } else
 #endif
         {
             m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header, move(line_program)));
-            TRY(debug_info_stream->discard(length_after_header));
+            TRY(debug_info_stream.discard(length_after_header));
         }
     }
 
-    VERIFY(line_info_stream->is_eof());
+    VERIFY(line_info_stream.is_eof());
     return {};
 }
 
@@ -300,14 +300,14 @@ ErrorOr<void> DwarfInfo::build_cached_dies() const
 
             Vector<DIERange> entries;
             if (die.compilation_unit().dwarf_version() == 5) {
-                auto range_lists_stream = TRY(FixedMemoryStream::construct(debug_range_lists_data()));
+                auto range_lists_stream = TRY(try_make<FixedMemoryStream>(debug_range_lists_data()));
                 TRY(range_lists_stream->seek(offset));
                 AddressRangesV5 address_ranges(move(range_lists_stream), die.compilation_unit());
                 TRY(address_ranges.for_each_range([&entries](auto range) {
                     entries.empend(range.start, range.end);
                 }));
             } else {
-                auto ranges_stream = TRY(FixedMemoryStream::construct(debug_ranges_data()));
+                auto ranges_stream = TRY(try_make<FixedMemoryStream>(debug_ranges_data()));
                 TRY(ranges_stream->seek(offset));
                 AddressRangesV4 address_ranges(move(ranges_stream), die.compilation_unit());
                 TRY(address_ranges.for_each_range([&entries](auto range) {

@@ -34,6 +34,7 @@ public:
     // and ATAPI is the exception to no-distinction rule. If we ever put SCSI support in the kernel,
     // we can create another enum class to put the distinction.
     enum class CommandSet {
+        PlainMemory,
         SCSI,
         ATA,
         NVMe,

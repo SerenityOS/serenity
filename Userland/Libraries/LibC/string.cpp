@@ -359,6 +359,25 @@ char* strstr(char const* haystack, char const* needle)
     return const_cast<char*>(haystack);
 }
 
+// https://linux.die.net/man/3/strcasestr
+char* strcasestr(char const* haystack, char const* needle)
+{
+    char nch;
+    char hch;
+
+    if ((nch = *needle++) != 0) {
+        size_t len = strlen(needle);
+        do {
+            do {
+                if ((hch = *haystack++) == 0)
+                    return nullptr;
+            } while (toupper(hch) != toupper(nch));
+        } while (strncasecmp(haystack, needle, len) != 0);
+        --haystack;
+    }
+    return const_cast<char*>(haystack);
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strpbrk.html
 char* strpbrk(char const* s, char const* accept)
 {

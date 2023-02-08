@@ -29,7 +29,7 @@ public:
         }
         virtual StringView class_name() const override { return "FakeWritesFramebufferVMObject"sv; }
         virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override { return Error::from_errno(ENOTIMPL); }
-        virtual Span<RefPtr<PhysicalPage> const> physical_pages() const override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
+        virtual ReadonlySpan<RefPtr<PhysicalPage>> physical_pages() const override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
         virtual Span<RefPtr<PhysicalPage>> physical_pages() override { return m_parent_object->fake_sink_framebuffer_physical_pages(); }
         NonnullLockRefPtr<SharedFramebufferVMObject> m_parent_object;
     };
@@ -46,7 +46,7 @@ public:
         }
         virtual StringView class_name() const override { return "RealWritesFramebufferVMObject"sv; }
         virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override { return Error::from_errno(ENOTIMPL); }
-        virtual Span<RefPtr<PhysicalPage> const> physical_pages() const override { return m_parent_object->real_framebuffer_physical_pages(); }
+        virtual ReadonlySpan<RefPtr<PhysicalPage>> physical_pages() const override { return m_parent_object->real_framebuffer_physical_pages(); }
         virtual Span<RefPtr<PhysicalPage>> physical_pages() override { return m_parent_object->real_framebuffer_physical_pages(); }
         NonnullLockRefPtr<SharedFramebufferVMObject> m_parent_object;
     };
@@ -60,14 +60,14 @@ public:
     void switch_to_fake_sink_framebuffer_writes(Badge<Kernel::DisplayConnector>);
     void switch_to_real_framebuffer_writes(Badge<Kernel::DisplayConnector>);
 
-    virtual Span<RefPtr<PhysicalPage> const> physical_pages() const override;
+    virtual ReadonlySpan<RefPtr<PhysicalPage>> physical_pages() const override;
     virtual Span<RefPtr<PhysicalPage>> physical_pages() override;
 
     Span<RefPtr<PhysicalPage>> fake_sink_framebuffer_physical_pages();
-    Span<RefPtr<PhysicalPage> const> fake_sink_framebuffer_physical_pages() const;
+    ReadonlySpan<RefPtr<PhysicalPage>> fake_sink_framebuffer_physical_pages() const;
 
     Span<RefPtr<PhysicalPage>> real_framebuffer_physical_pages();
-    Span<RefPtr<PhysicalPage> const> real_framebuffer_physical_pages() const;
+    ReadonlySpan<RefPtr<PhysicalPage>> real_framebuffer_physical_pages() const;
 
     FakeWritesFramebufferVMObject const& fake_writes_framebuffer_vmobject() const { return *m_fake_writes_framebuffer_vmobject; }
     FakeWritesFramebufferVMObject& fake_writes_framebuffer_vmobject() { return *m_fake_writes_framebuffer_vmobject; }

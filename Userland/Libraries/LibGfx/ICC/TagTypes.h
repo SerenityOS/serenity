@@ -58,6 +58,39 @@ public:
     }
 };
 
+// ICC v4, 10.3 cicpType
+// "The cicpType specifies Coding-independent code points for video signal type identification."
+// See presentations at https://www.color.org/events/HDR_experts.xalter for background.
+class CicpTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x63696370 }; // 'cicp'
+
+    static ErrorOr<NonnullRefPtr<CicpTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    CicpTagData(u32 offset, u32 size, u8 color_primaries, u8 transfer_characteristics, u8 matrix_coefficients, u8 video_full_range_flag)
+        : TagData(offset, size, Type)
+        , m_color_primaries(color_primaries)
+        , m_transfer_characteristics(transfer_characteristics)
+        , m_matrix_coefficients(matrix_coefficients)
+        , m_video_full_range_flag(video_full_range_flag)
+    {
+    }
+
+    // "The fields ColourPrimaries, TransferCharacteristics, MatrixCoefficients, and VideoFullRangeFlag shall be
+    //  encoded as specified in Recommendation ITU-T H.273. Recommendation ITU-T H.273 (ISO/IEC 23091-2)
+    //  provides detailed descriptions of the code values and their interpretation."
+    u8 color_primaries() const { return m_color_primaries; }
+    u8 transfer_characteristics() const { return m_transfer_characteristics; }
+    u8 matrix_coefficients() const { return m_matrix_coefficients; }
+    u8 video_full_range_flag() const { return m_video_full_range_flag; }
+
+private:
+    u8 m_color_primaries;
+    u8 m_transfer_characteristics;
+    u8 m_matrix_coefficients;
+    u8 m_video_full_range_flag;
+};
+
 // ICC v4, 10.6 curveType
 class CurveTagData : public TagData {
 public:
@@ -89,6 +122,10 @@ private:
 };
 
 struct EMatrix3x3 {
+    // A row-major 3x3 matrix:
+    // [ e[0] e[1] e[2] ]
+    // [ e[3] e[4] e[5] ] * v
+    // ] e[6] e[7] e[8] ]
     S15Fixed16 e[9];
 
     S15Fixed16 const& operator[](unsigned i) const
@@ -206,12 +243,58 @@ private:
     Vector<u8> m_output_tables;
 };
 
+struct EMatrix3x4 {
+    // A row-major 3x3 matrix followed by a translation vector:
+    // [ e[0] e[1] e[2] ]       [ e[9]  ]
+    // [ e[3] e[4] e[5] ] * v + [ e[10] ]
+    // [ e[6] e[7] e[8] ]       [ e[11] ]
+    S15Fixed16 e[12];
+
+    S15Fixed16 const& operator[](unsigned i) const
+    {
+        VERIFY(i < array_size(e));
+        return e[i];
+    }
+};
+
+struct CLUTData {
+    Vector<u8, 4> number_of_grid_points_in_dimension;
+    Variant<Vector<u8>, Vector<u16>> values;
+};
+
 // ICC v4, 10.12 lutAToBType
 class LutAToBTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x6D414220 }; // 'mAB '
 
-    // FIXME: Implement!
+    static ErrorOr<NonnullRefPtr<LutAToBTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<CLUTData> clut, Optional<EMatrix3x4> e)
+        : TagData(offset, size, Type)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_clut(move(clut))
+        , m_e(e)
+    {
+    }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+
+    Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+
+private:
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+
+    // "Only the following combinations are permitted:
+    //  - B;
+    //  - M, Matrix, B;
+    //  - A, CLUT, B;
+    //  - A, CLUT, M, Matrix, B."
+    Optional<CLUTData> m_clut;
+    Optional<EMatrix3x4> m_e;
 };
 
 // ICC v4, 10.13 lutBToAType
@@ -219,7 +302,34 @@ class LutBToATagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x6D424120 }; // 'mBA '
 
-    // FIXME: Implement!
+    static ErrorOr<NonnullRefPtr<LutBToATagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<EMatrix3x4> e, Optional<CLUTData> clut)
+        : TagData(offset, size, Type)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_e(e)
+        , m_clut(move(clut))
+    {
+    }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+
+    Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Optional<CLUTData> const& clut() const { return m_clut; }
+
+private:
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+
+    // "Only the following combinations are permitted:
+    //  - B;
+    //  - B, Matrix, M;
+    //  - B, CLUT, A;
+    //  - B, Matrix, M, CLUT, A."
+    Optional<EMatrix3x4> m_e;
+    Optional<CLUTData> m_clut;
 };
 
 // ICC v4, 10.15 multiLocalizedUnicodeType
@@ -245,6 +355,82 @@ public:
 
 private:
     Vector<Record> m_records;
+};
+
+// ICC v4, 10.17 namedColor2Type
+class NamedColor2TagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6E636C32 }; // 'ncl2'
+
+    static ErrorOr<NonnullRefPtr<NamedColor2TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // "The encoding is the same as the encodings for the PCS colour spaces
+    //  as described in 6.3.4.2 and 10.8. Only PCSXYZ and
+    //  legacy 16-bit PCSLAB encodings are permitted. PCS
+    //  values shall be relative colorimetric."
+    // (Which I suppose implies this type must not be used in DeviceLink profiles unless
+    // the device's PCS happens to be PCSXYZ or PCSLAB.)
+    struct XYZOrLAB {
+        union {
+            struct {
+                u16 x, y, z;
+            } xyz;
+            struct {
+                u16 L, a, b;
+            } lab;
+        };
+    };
+
+    NamedColor2TagData(u32 offset, u32 size, u32 vendor_specific_flag, u32 number_of_device_coordinates, String prefix, String suffix,
+        Vector<String> root_names, Vector<XYZOrLAB> pcs_coordinates, Vector<u16> device_coordinates)
+        : TagData(offset, size, Type)
+        , m_vendor_specific_flag(vendor_specific_flag)
+        , m_number_of_device_coordinates(number_of_device_coordinates)
+        , m_prefix(move(prefix))
+        , m_suffix(move(suffix))
+        , m_root_names(move(root_names))
+        , m_pcs_coordinates(move(pcs_coordinates))
+        , m_device_coordinates(move(device_coordinates))
+    {
+        VERIFY(root_names.size() == pcs_coordinates.size());
+        VERIFY(root_names.size() * number_of_device_coordinates == device_coordinates.size());
+    }
+
+    // "(least-significant 16 bits reserved for ICC use)"
+    u32 vendor_specific_flag() const { return m_vendor_specific_flag; }
+
+    // "If this field is 0, device coordinates are not provided."
+    u32 number_of_device_coordinates() const { return m_number_of_device_coordinates; }
+
+    u32 size() { return m_root_names.size(); }
+
+    // "In order to maintain maximum portability, it is strongly recommended that
+    //  special characters of the 7-bit ASCII set not be used."
+    String const& prefix() const { return m_prefix; }                        // "7-bit ASCII"
+    String const& suffix() const { return m_suffix; }                        // "7-bit ASCII"
+    String const& root_name(u32 index) const { return m_root_names[index]; } // "7-bit ASCII"
+
+    // Returns 7-bit ASCII.
+    ErrorOr<String> color_name(u32 index);
+
+    // "The PCS representation corresponds to the header’s PCS field."
+    XYZOrLAB const& pcs_coordinates(u32 index) { return m_pcs_coordinates[index]; }
+
+    // "The device representation corresponds to the header’s “data colour space” field."
+    u16 const* device_coordinates(u32 index)
+    {
+        VERIFY((index + 1) * m_number_of_device_coordinates <= m_device_coordinates.size());
+        return m_device_coordinates.data() + index * m_number_of_device_coordinates;
+    }
+
+private:
+    u32 m_vendor_specific_flag;
+    u32 m_number_of_device_coordinates;
+    String m_prefix;
+    String m_suffix;
+    Vector<String> m_root_names;
+    Vector<XYZOrLAB> m_pcs_coordinates;
+    Vector<u16> m_device_coordinates;
 };
 
 // ICC v4, 10.18 parametricCurveType
@@ -386,6 +572,25 @@ private:
     Optional<String> m_unicode_description;
 
     Optional<String> m_macintosh_description;
+};
+
+// ICC v4, 10.23 signatureType
+class SignatureTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x73696720 }; // 'sig '
+
+    static ErrorOr<NonnullRefPtr<SignatureTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    SignatureTagData(u32 offset, u32 size, u32 signature)
+        : TagData(offset, size, Type)
+        , m_signature(signature)
+    {
+    }
+
+    u32 signature() const { return m_signature; }
+
+private:
+    u32 m_signature;
 };
 
 // ICC v4, 10.24 textType

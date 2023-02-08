@@ -116,14 +116,14 @@ static size_t find_largest_image(ICOLoadingContext const& context)
 
 static ErrorOr<void> load_ico_directory(ICOLoadingContext& context)
 {
-    auto stream = TRY(FixedMemoryStream::construct({ context.data, context.data_size }));
+    FixedMemoryStream stream { { context.data, context.data_size } };
 
-    auto image_count = TRY(decode_ico_header(*stream));
+    auto image_count = TRY(decode_ico_header(stream));
     if (image_count == 0)
         return Error::from_string_literal("ICO file has no images");
 
     for (size_t i = 0; i < image_count; ++i) {
-        auto desc = TRY(decode_ico_direntry(*stream));
+        auto desc = TRY(decode_ico_direntry(stream));
         if (desc.offset + desc.size < desc.offset // detect integer overflow
             || (desc.offset + desc.size) > context.data_size) {
             dbgln_if(ICO_DEBUG, "load_ico_directory: offset: {} size: {} doesn't fit in ICO size: {}", desc.offset, desc.size, context.data_size);
@@ -183,8 +183,8 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context,
 
 ErrorOr<bool> ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    auto stream = TRY(FixedMemoryStream::construct(data));
-    return !decode_ico_header(*stream).is_error();
+    FixedMemoryStream stream { data };
+    return !decode_ico_header(stream).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> ICOImageDecoderPlugin::create(ReadonlyBytes data)
@@ -233,10 +233,8 @@ bool ICOImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 
 bool ICOImageDecoderPlugin::initialize()
 {
-    auto stream_or_error = FixedMemoryStream::construct(ReadonlyBytes { m_context->data, m_context->data_size });
-    if (stream_or_error.is_error())
-        return false;
-    return !decode_ico_header(*stream_or_error.value()).is_error();
+    FixedMemoryStream stream { { m_context->data, m_context->data_size } };
+    return !decode_ico_header(stream).is_error();
 }
 
 bool ICOImageDecoderPlugin::is_animated()

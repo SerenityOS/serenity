@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -2047,11 +2047,11 @@ static Optional<Calendar> keyword_to_calendar(KeywordCalendar keyword)
     }
 }
 
-Vector<HourCycle> get_regional_hour_cycles(StringView region)
+ErrorOr<Vector<HourCycle>> get_regional_hour_cycles(StringView region)
 {
     auto region_value = hour_cycle_region_from_string(region);
     if (!region_value.has_value())
-        return {};
+        return Vector<HourCycle> {};
 
     auto region_index = to_underlying(*region_value);
 
@@ -2059,7 +2059,7 @@ Vector<HourCycle> get_regional_hour_cycles(StringView region)
     auto const& regional_hour_cycles = s_hour_cycle_lists.at(regional_hour_cycles_index);
 
     Vector<HourCycle> hour_cycles;
-    hour_cycles.ensure_capacity(regional_hour_cycles.size());
+    TRY(hour_cycles.try_ensure_capacity(regional_hour_cycles.size()));
 
     for (auto hour_cycle : regional_hour_cycles)
         hour_cycles.unchecked_append(static_cast<HourCycle>(hour_cycle));
@@ -2215,7 +2215,7 @@ ErrorOr<Vector<CalendarRangePattern>> get_calendar_range12_formats(StringView lo
     return result;
 }
 
-static ErrorOr<Span<@string_index_type@ const>> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
+static ErrorOr<ReadonlySpan<@string_index_type@>> find_calendar_symbols(StringView locale, StringView calendar, CalendarSymbol symbol, CalendarPatternStyle style)
 {
     if (auto const* data = TRY(find_calendar_data(locale, calendar)); data != nullptr) {
         auto const& symbols_list = s_calendar_symbol_lists[data->symbols];
@@ -2243,7 +2243,7 @@ static ErrorOr<Span<@string_index_type@ const>> find_calendar_symbols(StringView
         return s_symbol_lists.at(symbol_list_index);
     }
 
-    return Span<@string_index_type@ const> {};
+    return ReadonlySpan<@string_index_type@> {};
 }
 
 ErrorOr<Optional<StringView>> get_calendar_era_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, Era value)

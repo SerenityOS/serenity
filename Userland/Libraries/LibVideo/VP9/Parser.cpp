@@ -221,9 +221,9 @@ DecoderErrorOr<FrameContext> Parser::uncompressed_header()
             frame_size = TRY(parse_frame_size());
             render_size = TRY(parse_render_size(frame_size));
         } else {
-            reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_f8());
-            for (auto i = 0; i < 3; i++) {
-                frame_context.reference_frame_indices[i] = TRY_READ(m_bit_stream->read_bits(3));
+            reference_frames_to_update_flags = TRY_READ(m_bit_stream->read_bits(NUM_REF_FRAMES));
+            for (auto i = 0; i < REFS_PER_FRAME; i++) {
+                frame_context.reference_frame_indices[i] = TRY_READ(m_bit_stream->read_bits(LOG2_OF_NUM_REF_FRAMES));
                 frame_context.reference_frame_sign_biases[ReferenceFrameType::LastFrame + i] = TRY_READ(m_bit_stream->read_bit());
             }
             frame_size = TRY(parse_frame_size_with_refs(frame_context.reference_frame_indices));
@@ -1582,6 +1582,10 @@ static MotionVector clamp_motion_vector(BlockContext const& block_context, Motio
 // find_mv_refs( refFrame, block ) in the spec.
 MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_context, ReferenceFrameType reference_frame, i32 block)
 {
+    // FIXME: We should be able to change behavior based on the reference motion vector that will be selected.
+    //        If block_context.y_prediction_mode() != NearMv, then we only need the first motion vector that is added to our result.
+    //        This behavior should combine this function with select_best_reference_motion_vectors(). When that is done, check whether
+    //        the motion vector clamping in that function is always a larger area than in this function. If so, we can drop that call.
     bool different_ref_found = false;
     u8 context_counter = 0;
 
@@ -1646,6 +1650,8 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
     MotionVectorPair result;
     for (auto i = 0u; i < list.size(); i++)
         result[static_cast<ReferenceIndex>(i)] = list[i];
+    result.primary = clamp_motion_vector(block_context, result.primary, MV_BORDER);
+    result.secondary = clamp_motion_vector(block_context, result.secondary, MV_BORDER);
     return result;
 }
 

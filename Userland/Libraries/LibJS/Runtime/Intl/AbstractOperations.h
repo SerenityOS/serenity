@@ -11,9 +11,11 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
 #include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
 #include <LibJS/Runtime/Temporal/AbstractOperations.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibLocale/Forward.h>
 
@@ -54,16 +56,16 @@ struct PatternPartition {
 };
 
 struct PatternPartitionWithSource : public PatternPartition {
-    static Vector<PatternPartitionWithSource> create_from_parent_list(Vector<PatternPartition> partitions)
+    static ThrowCompletionOr<Vector<PatternPartitionWithSource>> create_from_parent_list(VM& vm, Vector<PatternPartition> partitions)
     {
         Vector<PatternPartitionWithSource> result;
-        result.ensure_capacity(partitions.size());
+        TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(partitions.size()));
 
         for (auto& partition : partitions) {
             PatternPartitionWithSource partition_with_source {};
             partition_with_source.type = partition.type;
             partition_with_source.value = move(partition.value);
-            result.append(move(partition_with_source));
+            result.unchecked_append(move(partition_with_source));
         }
 
         return result;
@@ -86,10 +88,10 @@ bool is_well_formed_unit_identifier(StringView unit_identifier);
 ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM&, Value locales);
 Optional<StringView> best_available_locale(StringView locale);
 ThrowCompletionOr<String> insert_unicode_extension_and_canonicalize(VM&, ::Locale::LocaleID locale_id, ::Locale::LocaleExtension extension);
-ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<String> const& requested_locales, LocaleOptions const& options, Span<StringView const> relevant_extension_keys);
+ThrowCompletionOr<LocaleResult> resolve_locale(VM&, Vector<String> const& requested_locales, LocaleOptions const& options, ReadonlySpan<StringView> relevant_extension_keys);
 ThrowCompletionOr<Array*> supported_locales(VM&, Vector<String> const& requested_locales, Value options);
 ThrowCompletionOr<Object*> coerce_options_to_object(VM&, Value options);
-ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, Span<StringView const> string_values, StringOrBoolean fallback);
+ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, ReadonlySpan<StringView> string_values, StringOrBoolean fallback);
 ThrowCompletionOr<Optional<int>> default_number_option(VM&, Value value, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Optional<int>> get_number_option(VM&, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback);
 ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM&, StringView pattern);
@@ -97,7 +99,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM&, StringView pa
 template<size_t Size>
 ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, StringView const (&string_values)[Size], StringOrBoolean fallback)
 {
-    return get_boolean_or_string_number_format_option(vm, options, property, Span<StringView const> { string_values }, move(fallback));
+    return get_boolean_or_string_number_format_option(vm, options, property, ReadonlySpan<StringView> { string_values }, move(fallback));
 }
 
 // NOTE: ECMA-402's GetOption is being removed in favor of a shared ECMA-262 GetOption in the Temporal proposal.

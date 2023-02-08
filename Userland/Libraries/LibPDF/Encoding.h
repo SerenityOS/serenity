@@ -641,6 +641,8 @@ public:
     HashMap<DeprecatedString, CharCodeType> const& name_mapping() const { return m_name_mapping; }
 
     u16 get_char_code(DeprecatedString const&) const;
+    DeprecatedFlyString get_name(u8 char_code) const;
+
     void set(CharCodeType char_code, DeprecatedFlyString const& glyph_name);
 
 protected:

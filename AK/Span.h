@@ -192,7 +192,7 @@ public:
         return false;
     }
 
-    [[nodiscard]] bool constexpr starts_with(Span<T const> other) const
+    [[nodiscard]] bool constexpr starts_with(ReadonlySpan<T> other) const
     {
         if (size() < other.size())
             return false;
@@ -250,7 +250,7 @@ public:
         return TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
-    ALWAYS_INLINE constexpr operator Span<T const>() const
+    ALWAYS_INLINE constexpr operator ReadonlySpan<T>() const
     {
         return { data(), size() };
     }
@@ -271,7 +271,10 @@ struct Traits<Span<T>> : public GenericTraits<Span<T>> {
     constexpr static bool is_trivial() { return true; }
 };
 
-using ReadonlyBytes = Span<u8 const>;
+template<typename T>
+using ReadonlySpan = Span<T const>;
+
+using ReadonlyBytes = ReadonlySpan<u8>;
 using Bytes = Span<u8>;
 
 }
@@ -279,5 +282,6 @@ using Bytes = Span<u8>;
 #if USING_AK_GLOBALLY
 using AK::Bytes;
 using AK::ReadonlyBytes;
+using AK::ReadonlySpan;
 using AK::Span;
 #endif

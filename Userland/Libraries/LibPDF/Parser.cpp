@@ -446,7 +446,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     ReadonlyBytes bytes;
 
     auto maybe_length = dict->get(CommonNames::Length);
-    if (maybe_length.has_value() && (!maybe_length->has<Reference>())) {
+    if (maybe_length.has_value() && m_document->can_resolve_refefences()) {
         // The PDF writer has kindly provided us with the direct length of the stream
         m_reader.save();
         auto length = TRY(m_document->resolve_to<int>(maybe_length.value()));
@@ -457,17 +457,13 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
     } else {
         // We have to look for the endstream keyword
         auto stream_start = m_reader.offset();
-
-        while (true) {
-            m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
-            auto potential_stream_end = m_reader.offset();
-            m_reader.consume_eol();
-            if (!m_reader.matches("endstream"))
-                continue;
-
-            bytes = m_reader.bytes().slice(stream_start, potential_stream_end - stream_start);
-            break;
+        while (!m_reader.matches("endstream")) {
+            m_reader.consume();
+            m_reader.move_until('e');
         }
+        auto stream_end = m_reader.offset();
+        m_reader.consume_eol();
+        bytes = m_reader.bytes().slice(stream_start, stream_end - stream_start);
     }
 
     m_reader.move_by(9);

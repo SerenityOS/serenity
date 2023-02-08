@@ -856,13 +856,13 @@ struct CodePointDecompositionRaw {
 struct CodePointDecomposition {
     u32 code_point { 0 };
     CompatibilityFormattingTag tag { CompatibilityFormattingTag::Canonical };
-    Span<u32 const> decomposition;
+    ReadonlySpan<u32> decomposition;
 };
 
 Optional<Locale> locale_from_string(StringView locale);
 
-Span<SpecialCasing const* const> special_case_mapping(u32 code_point);
-Span<CaseFolding const* const> case_folding_mapping(u32 code_point);
+ReadonlySpan<SpecialCasing const*> special_case_mapping(u32 code_point);
+ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point);
 
 }
 )~~~");
@@ -1133,7 +1133,7 @@ static constexpr Array<CodePointRange, @size@> @name@ { {
         generator.set("name", collection_name);
         generator.set("size", DeprecatedString::number(property_names.size()));
         generator.append(R"~~~(
-static constexpr Array<Span<CodePointRange const>, @size@> @name@ { {)~~~");
+static constexpr Array<ReadonlySpan<CodePointRange>, @size@> @name@ { {)~~~");
 
         for (auto const& property_name : property_names) {
             generator.set("name", DeprecatedString::formatted(property_format, property_name));
@@ -1197,7 +1197,7 @@ Optional<StringView> code_point_block_display_name(u32 code_point)
     return {};
 }
 
-Span<BlockName const> block_display_names()
+ReadonlySpan<BlockName> block_display_names()
 {
     static auto display_names = []() {
         Array<BlockName, s_block_display_names.size()> display_names;
@@ -1247,7 +1247,7 @@ u32 @method@(u32 code_point)
     append_code_point_mapping_search("to_unicode_titlecase"sv, "s_titlecase_mappings"sv, "code_point"sv);
 
     generator.append(R"~~~(
-Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
+ReadonlySpan<SpecialCasing const*> special_case_mapping(u32 code_point)
 {
     auto const* mapping = binary_search(s_special_case_mappings, code_point, nullptr, CodePointComparator<SpecialCaseMapping> {});
     if (mapping == nullptr)
@@ -1256,7 +1256,7 @@ Span<SpecialCasing const* const> special_case_mapping(u32 code_point)
     return mapping->special_casing.span().slice(0, mapping->special_casing_size);
 }
 
-Span<CaseFolding const* const> case_folding_mapping(u32 code_point)
+ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point)
 {
     auto const* mapping = binary_search(s_case_folding_mappings, code_point, nullptr, CodePointComparator<CaseFoldingMapping> {});
     if (mapping == nullptr)
@@ -1281,7 +1281,7 @@ Optional<CodePointDecomposition const> code_point_decomposition(u32 code_point)
     auto const* mapping = binary_search(s_decomposition_mappings, code_point, nullptr, CodePointComparator<CodePointDecompositionRaw> {});
     if (mapping == nullptr)
         return {};
-    return CodePointDecomposition { mapping->code_point, mapping->tag, Span<u32 const> { s_decomposition_mappings_data.data() + mapping->decomposition_index, mapping->decomposition_count } };
+    return CodePointDecomposition { mapping->code_point, mapping->tag, ReadonlySpan<u32> { s_decomposition_mappings_data.data() + mapping->decomposition_index, mapping->decomposition_count } };
 }
 
 Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t index)
@@ -1289,7 +1289,7 @@ Optional<CodePointDecomposition const> code_point_decomposition_by_index(size_t 
     if (index >= s_decomposition_mappings.size())
         return {};
     auto const& mapping = s_decomposition_mappings[index];
-    return CodePointDecomposition { mapping.code_point, mapping.tag, Span<u32 const> { s_decomposition_mappings_data.data() + mapping.decomposition_index, mapping.decomposition_count } };
+    return CodePointDecomposition { mapping.code_point, mapping.tag, ReadonlySpan<u32> { s_decomposition_mappings_data.data() + mapping.decomposition_index, mapping.decomposition_count } };
 }
 )~~~");
 

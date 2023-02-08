@@ -24,7 +24,7 @@ public:
         }
     }
 
-    void transform(Span<float const> data, Span<float> output)
+    void transform(ReadonlySpan<float> data, Span<float> output)
     {
         assert(N == 2 * data.size());
         assert(N == output.size());

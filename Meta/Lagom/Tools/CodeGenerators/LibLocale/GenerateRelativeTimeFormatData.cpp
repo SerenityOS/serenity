@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -247,7 +247,7 @@ static constexpr Array<@relative_time_format_index_type@, @size@> @name@ { {)~~~
     generate_mapping(generator, cldr.locales, cldr.unique_formats.type_that_fits(), "s_locale_relative_time_formats"sv, "s_number_systems_digits_{}"sv, nullptr, [&](auto const& name, auto const& value) { append_list(name, value.time_units); });
 
     generator.append(R"~~~(
-Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)
+ErrorOr<Vector<RelativeTimeFormat>> get_relative_time_format_patterns(StringView locale, TimeUnit time_unit, StringView tense_or_number, Style style)
 {
     Vector<RelativeTimeFormat> formats;
 
@@ -268,7 +268,7 @@ Vector<RelativeTimeFormat> get_relative_time_format_patterns(StringView locale, 
         if (decode_string(locale_format.tense_or_number) != tense_or_number)
             continue;
 
-        formats.append(locale_format.to_relative_time_format());
+        TRY(formats.try_append(locale_format.to_relative_time_format()));
     }
 
     return formats;

@@ -121,7 +121,7 @@ public:
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> scaled(float sx, float sy) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> cropped(Gfx::IntRect, Optional<BitmapFormat> new_bitmap_format = {}) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_bitmap_backed_by_anonymous_buffer() const;
-    [[nodiscard]] ByteBuffer serialize_to_byte_buffer() const;
+    [[nodiscard]] ErrorOr<ByteBuffer> serialize_to_byte_buffer() const;
 
     [[nodiscard]] ShareableBitmap to_shareable_bitmap() const;
 

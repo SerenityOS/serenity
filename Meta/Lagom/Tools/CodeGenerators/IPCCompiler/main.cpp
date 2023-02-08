@@ -586,8 +586,8 @@ public:
 
     static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::Stream::LocalSocket& socket)
     {
-        auto stream = TRY(FixedMemoryStream::construct(buffer));
-        auto message_endpoint_magic = TRY(stream->read_value<u32>());)~~~");
+        FixedMemoryStream stream { buffer };
+        auto message_endpoint_magic = TRY(stream.read_value<u32>());)~~~");
     generator.append(R"~~~(
 
         if (message_endpoint_magic != @endpoint.magic@) {)~~~");
@@ -599,7 +599,7 @@ public:
             return Error::from_string_literal("Endpoint magic number mismatch, not my message!");
         }
 
-        auto message_id = TRY(stream->read_value<i32>());)~~~");
+        auto message_id = TRY(stream.read_value<i32>());)~~~");
     generator.appendln(R"~~~(
 
         switch (message_id) {)~~~");
@@ -613,7 +613,7 @@ public:
 
             message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@:
-            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(*stream, socket));)~~~");
+            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(stream, socket));)~~~");
         };
 
         do_decode_message(message.name);

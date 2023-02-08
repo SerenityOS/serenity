@@ -9,7 +9,7 @@
 #include <LibGUI/Process.h>
 
 template<typename StringType>
-void spawn_or_show_error(GUI::Window* parent_window, StringView path, Span<StringType const> arguments)
+void spawn_or_show_error(GUI::Window* parent_window, StringView path, ReadonlySpan<StringType> arguments)
 {
     auto spawn_result = Core::Process::spawn(path, arguments);
     if (spawn_result.is_error())
@@ -18,17 +18,17 @@ void spawn_or_show_error(GUI::Window* parent_window, StringView path, Span<Strin
 
 namespace GUI {
 
-void Process::spawn_or_show_error(Window* parent_window, StringView path, Span<DeprecatedString const> arguments)
+void Process::spawn_or_show_error(Window* parent_window, StringView path, ReadonlySpan<DeprecatedString> arguments)
 {
     ::spawn_or_show_error<DeprecatedString>(parent_window, path, arguments);
 }
 
-void Process::spawn_or_show_error(Window* parent_window, StringView path, Span<StringView const> arguments)
+void Process::spawn_or_show_error(Window* parent_window, StringView path, ReadonlySpan<StringView> arguments)
 {
     ::spawn_or_show_error<StringView>(parent_window, path, arguments);
 }
 
-void Process::spawn_or_show_error(Window* parent_window, StringView path, Span<char const* const> arguments)
+void Process::spawn_or_show_error(Window* parent_window, StringView path, ReadonlySpan<char const*> arguments)
 {
     ::spawn_or_show_error<char const*>(parent_window, path, arguments);
 }

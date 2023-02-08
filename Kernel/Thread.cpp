@@ -958,6 +958,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     auto* tracer = process.tracer();
     if (signal == SIGSTOP || (tracer && default_signal_action(signal) == DefaultSignalAction::DumpCore)) {
         dbgln_if(SIGNAL_DEBUG, "Signal {} stopping this thread", signal);
+        if (tracer)
+            tracer->set_regs(get_register_dump_from_stack());
         set_state(Thread::State::Stopped, signal);
         return DispatchSignalResult::Yield;
     }

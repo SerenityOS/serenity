@@ -152,7 +152,7 @@ void HardwareScreenBackend::set_head_buffer(int head_index)
     VERIFY(rc == 0);
 }
 
-ErrorOr<void> HardwareScreenBackend::flush_framebuffer_rects(int buffer_index, Span<FBRect const> flush_rects)
+ErrorOr<void> HardwareScreenBackend::flush_framebuffer_rects(int buffer_index, ReadonlySpan<FBRect> flush_rects)
 {
     int rc = fb_flush_buffers(m_display_connector_fd, buffer_index, flush_rects.data(), (unsigned)flush_rects.size());
     if (rc == -ENOTSUP)

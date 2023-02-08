@@ -36,10 +36,10 @@ void handle_crash(Kernel::RegisterState const& regs, char const* description, in
 
     if (crashed_in_kernel) {
         process.address_space().with([&](auto& space) { space->dump_regions(); });
-        PANIC("Crash in ring 0");
+        PANIC("Crash in kernel");
     }
 
-    process.crash(signal, regs.ip(), out_of_memory);
+    process.crash(signal, { regs }, out_of_memory);
 }
 
 }

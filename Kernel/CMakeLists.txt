@@ -41,6 +41,7 @@ set(KERNEL_SOURCES
     Bus/VirtIO/RNG.cpp
     CommandLine.cpp
     Coredump.cpp
+    CrashHandler.cpp
     Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
@@ -102,6 +103,8 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeInterruptQueue.cpp
     Storage/NVMe/NVMePollQueue.cpp
     Storage/NVMe/NVMeQueue.cpp
+    Storage/Ramdisk/Controller.cpp
+    Storage/Ramdisk/Device.cpp
     Storage/DiskPartition.cpp
     Storage/StorageController.cpp
     Storage/StorageDevice.cpp
@@ -411,7 +414,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/PageDirectory.cpp
@@ -452,7 +454,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CPUID.cpp
-        Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/init.cpp
@@ -482,6 +483,8 @@ endif()
 set(AK_SOURCES
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
+    ../AK/MemoryStream.cpp
+    ../AK/Stream.cpp
     ../AK/StringBuilder.cpp
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
@@ -725,6 +728,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     embed_resource(Kernel serenity_boot_logo "Arch/aarch64/SerenityLogoRGB.ppm")
+    embed_resource(Kernel disk_image "../Build/aarch64/_disk_image")
     add_custom_command(
             TARGET Kernel POST_BUILD
             COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img

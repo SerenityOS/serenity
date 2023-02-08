@@ -572,18 +572,28 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
 
     auto type = tag_type(tag_bytes);
     switch (type) {
+    case CicpTagData::Type:
+        return CicpTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case CurveTagData::Type:
         return CurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case Lut16TagData::Type:
         return Lut16TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case Lut8TagData::Type:
         return Lut8TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case LutAToBTagData::Type:
+        return LutAToBTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case LutBToATagData::Type:
+        return LutBToATagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case NamedColor2TagData::Type:
+        return NamedColor2TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case ParametricCurveTagData::Type:
         return ParametricCurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
         return S15Fixed16ArrayTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case SignatureTagData::Type:
+        return SignatureTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextDescriptionTagData::Type:
         return TextDescriptionTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextTagData::Type:
@@ -865,6 +875,10 @@ ErrorOr<void> Profile::check_tag_types()
     // Profile ID of /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
     static constexpr Crypto::Hash::MD5::DigestType apple_itu_2020_id = { 0x57, 0x0b, 0x1b, 0x76, 0xc6, 0xa0, 0x50, 0xaa, 0x9f, 0x6c, 0x53, 0x8d, 0xbe, 0x2d, 0x3e, 0xf0 };
 
+    // Profile ID of the "Display P3" profiles embedded in the images on https://webkit.org/blog-files/color-gamut/comparison.html
+    // (The macOS 13.1 /System/Library/ColorSync/Profiles/Display\ P3.icc file no longer has this quirk.)
+    static constexpr Crypto::Hash::MD5::DigestType apple_p3_2015_id = { 0xe5, 0xbb, 0x0e, 0x98, 0x67, 0xbd, 0x46, 0xcd, 0x4b, 0xbe, 0x44, 0x6e, 0xbd, 0x1b, 0x75, 0x98 };
+
     auto has_type = [&](auto tag, std::initializer_list<TagTypeSignature> types, std::initializer_list<TagTypeSignature> v4_types) {
         if (auto type = m_tag_table.get(tag); type.has_value()) {
             auto type_matches = [&](auto wanted_type) { return type.value()->type() == wanted_type; };
@@ -974,7 +988,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.17 cicpTag
     // "Permitted tag types: cicpType"
-    // FIXME
+    if (!has_type(cicpTag, { CicpTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: cicpTag has unexpected type");
 
     // ICC v4, 9.2.18 colorantOrderTag
     // "Permitted tag types: colorantOrderType"
@@ -990,7 +1005,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.21 colorimetricIntentImageStateTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(colorimetricIntentImageStateTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: colorimetricIntentImageStateTag has unexpected type");
 
     // ICC v4, 9.2.22 copyrightTag
     // "Permitted tag types: multiLocalizedUnicodeType"
@@ -1000,7 +1016,7 @@ ErrorOr<void> Profile::check_tag_types()
         // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
         // that still uses the v2 'text' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
         // https://openradar.appspot.com/radar?id=5529765549178880
-        bool has_v2_cprt_type_in_v4_file_quirk = id() == apple_itu_2020_id;
+        bool has_v2_cprt_type_in_v4_file_quirk = id() == apple_itu_2020_id || id() == apple_p3_2015_id;
         if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type && (!has_v2_cprt_type_in_v4_file_quirk || type.value()->type() != TextTagData::Type))
             return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v4 type");
         if (is_v2() && type.value()->type() != TextTagData::Type)
@@ -1137,7 +1153,14 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.37 namedColor2Tag
     // "Permitted tag types: namedColor2Type"
-    // FIXME
+    if (auto type = m_tag_table.get(namedColor2Tag); type.has_value()) {
+        if (type.value()->type() != NamedColor2TagData::Type)
+            return Error::from_string_literal("ICC::Profile: namedColor2Tag has unexpected type");
+        // ICC v4, 10.17 namedColor2Type
+        // "The device representation corresponds to the header’s “data colour space” field.
+        //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type."
+        // FIXME: check that
+    }
 
     // ICC v4, 9.2.38 outputResponseTag
     // "Permitted tag types: responseCurveSet16Type"
@@ -1145,7 +1168,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.39 perceptualRenderingIntentGamutTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(perceptualRenderingIntentGamutTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: perceptualRenderingIntentGamutTag has unexpected type");
 
     // ICC v4, 9.2.40 preview0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType or lutBToAType"
@@ -1176,7 +1200,7 @@ ErrorOr<void> Profile::check_tag_types()
         // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
         // that still uses the v2 'desc' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
         // https://openradar.appspot.com/radar?id=5529765549178880
-        bool has_v2_desc_type_in_v4_file_quirk = id() == apple_itu_2020_id;
+        bool has_v2_desc_type_in_v4_file_quirk = id() == apple_itu_2020_id || id() == apple_p3_2015_id;
         if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type && (!has_v2_desc_type_in_v4_file_quirk || type.value()->type() != TextDescriptionTagData::Type))
             return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v4 type");
         if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
@@ -1211,11 +1235,13 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.48 saturationRenderingIntentGamutTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(saturationRenderingIntentGamutTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: saturationRenderingIntentGamutTag has unexpected type");
 
     // ICC v4, 9.2.49 technologyTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(technologyTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: technologyTag has unexpected type");
 
     // ICC v4, 9.2.50 viewingCondDescTag
     // "Permitted tag types: multiLocalizedUnicodeType"
@@ -1231,6 +1257,32 @@ ErrorOr<void> Profile::check_tag_types()
     // ICC v4, 9.2.51 viewingConditionsTag
     // "Permitted tag types: viewingConditionsType"
     // FIXME
+
+    // FIXME: Add validation for v2-only tags:
+    // - ICC v2, 6.4.14 crdInfoTag
+    //   "Tag Type: crdInfoType"
+    // - ICC v2, 6.4.17 deviceSettingsTag
+    //   "Tag Type: deviceSettingsType"
+    // - ICC v2, 6.4.24 mediaBlackPointTag
+    //   "Tag Type: XYZType"
+    // - ICC v2, 6.4.34 ps2CRD0Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.35 ps2CRD1Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.36 ps2CRD2Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.37 ps2CRD3Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.38 ps2CSATag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.39 ps2RenderingIntentTag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.42 screeningDescTag
+    //   "Tag Type: textDescriptionType"
+    // - ICC v2, 6.4.43 screeningTag
+    //   "Tag Type: screeningType"
+    // - ICC v2, 6.4.45 ucrbgTag
+    //   "Tag Type: ucrbgType"
 
     return {};
 }

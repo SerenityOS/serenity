@@ -43,6 +43,7 @@ __attribute__((warn_unused_result)) size_t strlcpy(char* dest, char const* src, 
 char* strchr(char const*, int c);
 char* strchrnul(char const*, int c);
 char* strstr(char const* haystack, char const* needle);
+char* strcasestr(char const* haystack, char const* needle);
 char* strrchr(char const*, int c);
 
 char* index(char const* str, int ch);

@@ -25,13 +25,10 @@
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibTextCodec/Decoder.h>
-#include <fcntl.h>
 #include <signal.h>
-#include <stdio.h>
-#include <unistd.h>
 
 RefPtr<JS::VM> g_vm;
-Vector<DeprecatedString> g_repl_statements;
+Vector<String> g_repl_statements;
 JS::Handle<JS::Value> g_last_value = JS::make_handle(JS::js_undefined());
 
 class ReplObject final : public JS::GlobalObject {
@@ -80,7 +77,7 @@ static bool s_print_last_result = false;
 static bool s_strip_ansi = false;
 static bool s_disable_source_location_hints = false;
 static RefPtr<Line::Editor> s_editor;
-static DeprecatedString s_history_path = DeprecatedString::formatted("{}/.js-history", Core::StandardPaths::home_directory());
+static String s_history_path = String {};
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
@@ -101,7 +98,7 @@ static ErrorOr<void> print(JS::Value value, PrintTarget target = PrintTarget::St
     return print(value, *stream);
 }
 
-static DeprecatedString prompt_for_level(int level)
+static ErrorOr<String> prompt_for_level(int level)
 {
     static StringBuilder prompt_builder;
     prompt_builder.clear();
@@ -110,23 +107,23 @@ static DeprecatedString prompt_for_level(int level)
     for (auto i = 0; i < level; ++i)
         prompt_builder.append("    "sv);
 
-    return prompt_builder.to_deprecated_string();
+    return prompt_builder.to_string();
 }
 
-static DeprecatedString read_next_piece()
+static ErrorOr<String> read_next_piece()
 {
     StringBuilder piece;
 
     auto line_level_delta_for_next_line { 0 };
 
     do {
-        auto line_result = s_editor->get_line(prompt_for_level(s_repl_line_level));
+        auto line_result = s_editor->get_line(TRY(prompt_for_level(s_repl_line_level)).to_deprecated_string());
 
         line_level_delta_for_next_line = 0;
 
         if (line_result.is_error()) {
             s_fail_repl = true;
-            return "";
+            return String {};
         }
 
         auto& line = line_result.value();
@@ -182,33 +179,23 @@ static DeprecatedString read_next_piece()
         }
     } while (s_repl_line_level + line_level_delta_for_next_line > 0);
 
-    return piece.to_deprecated_string();
+    return piece.to_string();
 }
 
-static bool write_to_file(DeprecatedString const& path)
+static ErrorOr<void> write_to_file(String const& path)
 {
-    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write, 0666));
     for (size_t i = 0; i < g_repl_statements.size(); i++) {
-        auto line = g_repl_statements[i];
-        if (line.length() && i != g_repl_statements.size() - 1) {
-            ssize_t nwritten = write(fd, line.characters(), line.length());
-            if (nwritten < 0) {
-                close(fd);
-                return false;
-            }
+        auto line = g_repl_statements[i].bytes();
+        if (line.size() > 0 && i != g_repl_statements.size() - 1) {
+            TRY(file->write(line));
         }
         if (i != g_repl_statements.size() - 1) {
-            char ch = '\n';
-            ssize_t nwritten = write(fd, &ch, 1);
-            if (nwritten != 1) {
-                perror("write");
-                close(fd);
-                return false;
-            }
+            TRY(file->write_value('\n'));
         }
     }
-    close(fd);
-    return true;
+    file->close();
+    return {};
 }
 
 static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView source, StringView source_name)
@@ -296,13 +283,13 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
         if (!thrown_value.is_object() || !is<JS::Error>(thrown_value.as_object()))
             return {};
-        auto& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
+        auto const& traceback = static_cast<JS::Error const&>(thrown_value.as_object()).traceback();
         if (traceback.size() > 1) {
             unsigned repetitions = 0;
             for (size_t i = 0; i < traceback.size(); ++i) {
-                auto& traceback_frame = traceback[i];
+                auto const& traceback_frame = traceback[i];
                 if (i + 1 < traceback.size()) {
-                    auto& next_traceback_frame = traceback[i + 1];
+                    auto const& next_traceback_frame = traceback[i + 1];
                     if (next_traceback_frame.function_name == traceback_frame.function_name) {
                         repetitions++;
                         continue;
@@ -365,7 +352,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
-    auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto filename = TRY(vm.argument(0).to_string(vm));
     auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
@@ -421,8 +408,8 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 {
     if (!vm.argument_count())
         return JS::Value(false);
-    DeprecatedString save_path = vm.argument(0).to_string_without_side_effects();
-    if (write_to_file(save_path)) {
+    auto const save_path = TRY(vm.argument(0).to_string(vm));
+    if (!write_to_file(save_path).is_error()) {
         return JS::Value(true);
     }
     return JS::Value(false);
@@ -505,7 +492,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 static ErrorOr<void> repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
-        DeprecatedString piece = read_next_piece();
+        auto const piece = TRY(read_next_piece());
         if (Utf8View { piece }.trim(JS::whitespace_characters).is_empty())
             continue;
 
@@ -627,6 +614,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool syntax_highlight = !disable_syntax_highlight;
 
+    s_history_path = TRY(String::formatted("{}/.js-history", Core::StandardPaths::home_directory()));
+
     g_vm = JS::VM::create();
     g_vm->enable_default_host_import_module_dynamically_hook();
 
@@ -661,12 +650,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto& global_environment = interpreter->realm().global_environment();
 
         s_editor = Line::Editor::construct();
-        s_editor->load_history(s_history_path);
+        s_editor->load_history(s_history_path.to_deprecated_string());
 
         signal(SIGINT, [](int) {
             if (!s_editor->is_editing())
                 sigint_handler();
-            s_editor->save_history(s_history_path);
+            s_editor->save_history(s_history_path.to_deprecated_string());
         });
 
         s_editor->on_display_refresh = [syntax_highlight](Line::Editor& editor) {
@@ -729,7 +718,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            editor.set_prompt(prompt_for_level(open_indents));
+            editor.set_prompt(prompt_for_level(open_indents).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
         };
 
         auto complete = [&interpreter, &global_environment](Line::Editor const& editor) -> Vector<Line::CompletionSuggestion> {
@@ -861,7 +850,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
         s_editor->on_tab_complete = move(complete);
         TRY(repl(*interpreter));
-        s_editor->save_history(s_history_path);
+        s_editor->save_history(s_history_path.to_deprecated_string());
     } else {
         interpreter = JS::Interpreter::create<ScriptObject>(*g_vm);
         auto& console_object = *interpreter->realm().intrinsics().console_object();

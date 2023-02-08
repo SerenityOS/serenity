@@ -46,11 +46,15 @@ enum ExtendedCommand {
     CallOtherSubr = 16,
     Pop,
     SetCurrentPoint = 33,
+    Hflex,
+    Flex,
+    Hflex1,
+    Flex1,
 };
 
-RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
+RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
-    auto path = build_char(char_code, width, subpixel_offset);
+    auto path = build_char(char_name, width, subpixel_offset);
     auto bounding_box = path.bounding_box().size();
 
     u32 w = (u32)ceilf(bounding_box.width()) + 2;
@@ -61,28 +65,27 @@ RefPtr<Gfx::Bitmap> Type1FontProgram::rasterize_glyph(u32 char_code, float width
     return rasterizer.accumulate();
 }
 
-Gfx::Path Type1FontProgram::build_char(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
+Gfx::Path Type1FontProgram::build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset)
 {
-    auto maybe_glyph = m_glyph_map.get(char_code);
+    auto maybe_glyph = m_glyph_map.get(char_name);
     if (!maybe_glyph.has_value())
         return {};
 
-    auto& glyph = maybe_glyph.value();
+    auto const& glyph = maybe_glyph.value();
     auto transform = Gfx::AffineTransform()
                          .translate(subpixel_offset.to_float_point())
                          .multiply(glyph_transform_to_device_space(glyph, width));
 
     // Translate such that the top-left point is at [0, 0].
-    auto bounding_box = glyph.path.bounding_box();
+    auto bounding_box = glyph.path().bounding_box();
     Gfx::FloatPoint translation(-bounding_box.x(), -(bounding_box.y() + bounding_box.height()));
     transform.translate(translation);
-
-    return glyph.path.copy_transformed(transform);
+    return glyph.path().copy_transformed(transform);
 }
 
-Gfx::FloatPoint Type1FontProgram::glyph_translation(u32 char_code, float width) const
+Gfx::FloatPoint Type1FontProgram::glyph_translation(DeprecatedFlyString const& char_name, float width) const
 {
-    auto maybe_glyph = m_glyph_map.get(char_code);
+    auto maybe_glyph = m_glyph_map.get(char_name);
     if (!maybe_glyph.has_value())
         return {};
 
@@ -90,7 +93,7 @@ Gfx::FloatPoint Type1FontProgram::glyph_translation(u32 char_code, float width) 
     auto transform = glyph_transform_to_device_space(glyph, width);
 
     // Undo the translation we applied earlier.
-    auto bounding_box = glyph.path.bounding_box();
+    auto bounding_box = glyph.path().bounding_box();
     Gfx::FloatPoint translation(bounding_box.x(), bounding_box.y() + bounding_box.height());
 
     return transform.map(translation);
@@ -98,13 +101,31 @@ Gfx::FloatPoint Type1FontProgram::glyph_translation(u32 char_code, float width) 
 
 Gfx::AffineTransform Type1FontProgram::glyph_transform_to_device_space(Glyph const& glyph, float width) const
 {
-    auto scale = width / (m_font_matrix.a() * glyph.width + m_font_matrix.e());
+    auto scale = width / (m_font_matrix.a() * glyph.width() + m_font_matrix.e());
     auto transform = m_font_matrix;
 
     // Convert character space to device space.
     transform.scale(scale, -scale);
 
     return transform;
+}
+
+void Type1FontProgram::consolidate_glyphs()
+{
+    for (auto& [name, glyph] : m_glyph_map) {
+        if (!glyph.is_accented_character())
+            continue;
+        auto maybe_base_glyph = m_glyph_map.get(glyph.accented_character().base_character);
+        if (!maybe_base_glyph.has_value())
+            continue;
+        auto glyph_path = maybe_base_glyph.value().path();
+        auto maybe_accent_glyph = m_glyph_map.get(glyph.accented_character().accent_character);
+        if (maybe_accent_glyph.has_value()) {
+            auto path = maybe_accent_glyph.value().path();
+            glyph_path.append_path(move(path));
+        }
+        glyph.path() = glyph_path;
+    }
 }
 
 PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes const& data, Vector<ByteBuffer> const& subroutines, GlyphParserState& state, bool is_type2)
@@ -128,7 +149,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
         return value;
     };
 
-    auto& path = state.glyph.path;
+    auto& path = state.glyph.path();
     auto& point = state.point;
 
     // Core operations: move to, line to, curve to
@@ -210,8 +231,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
     auto maybe_read_width = [&](EvenOrOdd required_argument_count) {
         if (!is_type2 || !is_first_command || state.sp % 2 != required_argument_count)
             return;
-        state.glyph.width = pop_front();
-        state.glyph.width_specified = true;
+        state.glyph.set_width(pop_front());
     };
 
     // Parse the stream of parameters and commands that make up a glyph outline.
@@ -377,10 +397,20 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 case DotSection:
                 case VStem3:
                 case HStem3:
-                case Seac:
                     // FIXME: Do something with these?
                     state.sp = 0;
                     break;
+
+                case Seac: {
+                    auto achar = pop();
+                    auto bchar = pop();
+                    auto ady = pop();
+                    auto adx = pop();
+                    // auto asb = pop();
+                    state.glyph.set_accented_character(AccentedCharacter { (u8)bchar, (u8)achar, adx, ady });
+                    state.sp = 0;
+                    break;
+                }
 
                 case Div: {
                     auto num2 = pop();
@@ -412,6 +442,14 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                     break;
                 }
 
+                case Hflex:
+                case Flex:
+                case Hflex1:
+                case Flex1:
+                    // TODO: implement these
+                    state.sp = 0;
+                    break;
+
                 default:
                     return error(DeprecatedString::formatted("Unhandled command: 12 {}", data[i]));
                 }
@@ -422,8 +460,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 auto wx = pop();
                 auto sbx = pop();
 
-                state.glyph.width = wx;
-                state.glyph.width_specified = true;
+                state.glyph.set_width(wx);
                 state.point = { sbx, 0.0f };
                 state.sp = 0;
                 break;
