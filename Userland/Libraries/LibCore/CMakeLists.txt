@@ -4,12 +4,12 @@ set(SOURCES
     Command.cpp
     ConfigFile.cpp
     DateTime.cpp
+    DeprecatedFile.cpp
     Directory.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
     Event.cpp
     EventLoop.cpp
-    File.cpp
     IODevice.cpp
     LockFile.cpp
     MappedFile.cpp

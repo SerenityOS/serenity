@@ -12,7 +12,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -1156,7 +1156,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
     DeprecatedString exec_filename;
 
     if (search_in_path == SearchInPath::Yes) {
-        auto maybe_executable = Core::File::resolve_executable_from_environment(filename);
+        auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename);
 
         if (!maybe_executable.has_value())
             return ENOENT;
@@ -1195,7 +1195,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
-            auto maybe_executable = Core::File::resolve_executable_from_environment(filename_string);
+            auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename_string);
 
             if (!maybe_executable.has_value()) {
                 errno_rollback.set_override_rollback_value(ENOENT);

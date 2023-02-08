@@ -6,6 +6,10 @@
 
 #include <LibPartition/EBRPartitionTable.h>
 
+#ifndef KERNEL
+#    include <LibCore/DeprecatedFile.h>
+#endif
+
 namespace Partition {
 
 #ifdef KERNEL
@@ -13,7 +17,7 @@ ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(K
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(device)));
 #else
-ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::File> device_file)
+ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) EBRPartitionTable(move(device_file))));
 #endif
@@ -27,7 +31,7 @@ ErrorOr<NonnullOwnPtr<EBRPartitionTable>> EBRPartitionTable::try_to_initialize(N
 #ifdef KERNEL
 void EBRPartitionTable::search_extended_partition(Kernel::StorageDevice const& device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
 #else
-void EBRPartitionTable::search_extended_partition(NonnullRefPtr<Core::File> device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
+void EBRPartitionTable::search_extended_partition(NonnullRefPtr<Core::DeprecatedFile> device, MBRPartitionTable& checked_ebr, u64 current_block_offset, size_t limit)
 #endif
 {
     if (limit == 0)
@@ -51,7 +55,7 @@ void EBRPartitionTable::search_extended_partition(NonnullRefPtr<Core::File> devi
 #ifdef KERNEL
 EBRPartitionTable::EBRPartitionTable(Kernel::StorageDevice const& device)
 #else
-EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<Core::File> device)
+EBRPartitionTable::EBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device)
 #endif
     : MBRPartitionTable(device)
 {

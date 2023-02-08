@@ -11,7 +11,7 @@
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menubar.h>
@@ -60,9 +60,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
     args_parser.parse(arguments);
 
-    auto argument_absolute_path = Core::File::real_path_for(path_argument);
+    auto argument_absolute_path = Core::DeprecatedFile::real_path_for(path_argument);
 
-    auto project_path = Core::File::real_path_for(".");
+    auto project_path = Core::DeprecatedFile::real_path_for(".");
     if (!mode_coredump) {
         if (!argument_absolute_path.is_null())
             project_path = argument_absolute_path;
@@ -143,7 +143,7 @@ static Optional<DeprecatedString> last_opened_project_path()
     if (projects.size() == 0)
         return {};
 
-    if (!Core::File::exists(projects[0]))
+    if (!Core::DeprecatedFile::exists(projects[0]))
         return {};
 
     return { projects[0] };

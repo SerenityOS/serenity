@@ -10,7 +10,6 @@
 #include <AK/LexicalPath.h>
 #include <Applications/Spreadsheet/CSVImportGML.h>
 #include <Applications/Spreadsheet/FormatSelectionPageGML.h>
-#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>

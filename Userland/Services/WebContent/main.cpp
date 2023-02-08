@@ -5,8 +5,8 @@
  */
 
 #include "ImageCodecPluginSerenity.h"
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     // This must be first; we can't check if /tmp/webdriver exists once we've unveiled other paths.
     auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
-    if (Core::File::exists(webdriver_socket_path))
+    if (Core::DeprecatedFile::exists(webdriver_socket_path))
         TRY(Core::System::unveil(webdriver_socket_path, "rw"sv));
 
     TRY(Core::System::unveil("/res", "r"));

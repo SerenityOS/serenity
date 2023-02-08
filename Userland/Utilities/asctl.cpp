@@ -11,7 +11,6 @@
 #include <LibAudio/ConnectionToServer.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <math.h>

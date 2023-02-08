@@ -7,7 +7,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
 #include <LibCore/Group.h>
 #include <LibCore/System.h>
 #include <LibCore/UmaskScope.h>

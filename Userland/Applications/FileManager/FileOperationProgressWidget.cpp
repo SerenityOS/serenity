@@ -8,7 +8,6 @@
 #include "FileOperationProgressWidget.h"
 #include "FileUtils.h"
 #include <Applications/FileManager/FileOperationProgressGML.h>
-#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>

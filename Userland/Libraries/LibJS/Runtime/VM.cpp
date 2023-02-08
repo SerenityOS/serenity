@@ -12,7 +12,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -833,18 +833,18 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
     auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
     if (module_type == "json"sv)
         extensions = { "json"sv };
-    if (!Core::File::exists(filename)) {
+    if (!Core::DeprecatedFile::exists(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo.ext"
             auto resolved_filepath = DeprecatedString::formatted("{}.{}", filename, extension);
-            if (Core::File::exists(resolved_filepath))
+            if (Core::DeprecatedFile::exists(resolved_filepath))
                 return resolved_filepath;
         }
-    } else if (Core::File::is_directory(filename)) {
+    } else if (Core::DeprecatedFile::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
             auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
-            if (Core::File::exists(resolved_filepath))
+            if (Core::DeprecatedFile::exists(resolved_filepath))
                 return resolved_filepath;
         }
     }
@@ -916,7 +916,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
-    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
         return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);

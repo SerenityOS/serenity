@@ -14,7 +14,6 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <LibAudio/Loader.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 
 namespace Audio {

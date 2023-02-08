@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibLine/Editor.h>
@@ -366,7 +366,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     SQLRepl repl(loop, database_name, move(sql_client));
 
-    if (!suppress_sqlrc && Core::File::exists(sqlrc_path))
+    if (!suppress_sqlrc && Core::DeprecatedFile::exists(sqlrc_path))
         repl.source_file(sqlrc_path);
     if (!file_to_source.is_empty())
         repl.source_file(file_to_source);

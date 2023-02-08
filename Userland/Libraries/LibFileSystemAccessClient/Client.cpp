@@ -6,7 +6,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/MessageBox.h>
@@ -41,7 +40,7 @@ DeprecatedResult Client::try_request_file_read_only_approved_deprecated(GUI::Win
     if (path.starts_with('/')) {
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, path);
     } else {
-        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
+        auto full_path = LexicalPath::join(Core::DeprecatedFile::current_working_directory(), path).string();
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path);
     }
 
@@ -66,7 +65,7 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
     if (path.starts_with('/')) {
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, path);
     } else {
-        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
+        auto full_path = LexicalPath::join(Core::DeprecatedFile::current_working_directory(), path).string();
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path);
     }
 
@@ -114,7 +113,7 @@ DeprecatedResult Client::try_request_file_deprecated(GUI::Window* parent_window,
     if (path.starts_with('/')) {
         async_request_file(id, parent_window_server_client_id, parent_window_id, path, mode);
     } else {
-        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
+        auto full_path = LexicalPath::join(Core::DeprecatedFile::current_working_directory(), path).string();
         async_request_file(id, parent_window_server_client_id, parent_window_id, full_path, mode);
     }
 
@@ -139,7 +138,7 @@ Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& 
     if (path.starts_with('/')) {
         async_request_file(id, parent_window_server_client_id, parent_window_id, path, mode);
     } else {
-        auto full_path = LexicalPath::join(Core::File::current_working_directory(), path).string();
+        auto full_path = LexicalPath::join(Core::DeprecatedFile::current_working_directory(), path).string();
         async_request_file(id, parent_window_server_client_id, parent_window_id, full_path, mode);
     }
 
@@ -253,22 +252,22 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         return;
     }
 
-    if (Core::File::is_device(ipc_file->fd())) {
+    if (Core::DeprecatedFile::is_device(ipc_file->fd())) {
         GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
         resolve_any_promise(Error::from_string_literal("Cannot open device files"));
         return;
     }
 
-    if (Core::File::is_directory(ipc_file->fd())) {
+    if (Core::DeprecatedFile::is_directory(ipc_file->fd())) {
         GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open directory", *chosen_file));
         resolve_any_promise(Error::from_errno(EISDIR));
         return;
     }
 
     if (request_data.promise.has<PromiseType<DeprecatedResult>>()) {
-        auto file = Core::File::construct();
+        auto file = Core::DeprecatedFile::construct();
         auto fd = ipc_file->take_fd();
-        file->open(fd, Core::OpenMode::ReadWrite, Core::File::ShouldCloseFileDescriptor::Yes);
+        file->open(fd, Core::OpenMode::ReadWrite, Core::DeprecatedFile::ShouldCloseFileDescriptor::Yes);
         file->set_filename(*chosen_file);
 
         request_data.promise.get<PromiseType<DeprecatedResult>>()->resolve(file);

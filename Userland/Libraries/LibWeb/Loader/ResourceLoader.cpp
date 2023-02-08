@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>

@@ -12,7 +12,7 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Stream.h>
 #include <LibManual/Path.h>
 
@@ -49,7 +49,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
         Optional<NonnullRefPtr<PageNode>> maybe_page;
         for (auto const& section : sections) {
             auto const page = TRY(try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(first_query_parameter))));
-            if (Core::File::exists(TRY(page->path()))) {
+            if (Core::DeprecatedFile::exists(TRY(page->path()))) {
                 maybe_page = page;
                 break;
             }
@@ -62,7 +62,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     auto second_query_parameter = *query_parameter_iterator;
     auto section = TRY(SectionNode::try_create_from_number(first_query_parameter));
     auto const page = TRY(try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(second_query_parameter))));
-    if (Core::File::exists(TRY(page->path())))
+    if (Core::DeprecatedFile::exists(TRY(page->path())))
         return page;
     return Error::from_string_literal("Page doesn't exist in section");
 }

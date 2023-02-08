@@ -19,10 +19,10 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -220,7 +220,7 @@ Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
     }
 
     StringBuilder resolved_base_path_builder;
-    resolved_base_path_builder.append(Core::File::real_path_for(base));
+    resolved_base_path_builder.append(Core::DeprecatedFile::real_path_for(base));
     if (S_ISDIR(statbuf.st_mode))
         resolved_base_path_builder.append('/');
 
@@ -337,7 +337,7 @@ DeprecatedString Shell::resolve_path(DeprecatedString path) const
     if (!path.starts_with('/'))
         path = DeprecatedString::formatted("{}/{}", cwd, path);
 
-    return Core::File::real_path_for(path);
+    return Core::DeprecatedFile::real_path_for(path);
 }
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
@@ -522,7 +522,7 @@ Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
     auto parts = name.split_view('/');
     auto path = name.to_deprecated_string();
     if (parts.size() > 1) {
-        auto file = Core::File::open(path.characters(), Core::OpenMode::ReadOnly);
+        auto file = Core::DeprecatedFile::open(path.characters(), Core::OpenMode::ReadOnly);
         if (!file.is_error() && !file.value()->is_directory() && access(path.characters(), X_OK) == 0)
             return RunnablePath { RunnablePath::Kind::Executable, name };
     }
@@ -906,7 +906,7 @@ void Shell::execute_process(Vector<char const*>&& argv)
         }
         if (saved_errno == ENOENT) {
             do {
-                auto file_result = Core::File::open(argv[0], Core::OpenMode::ReadOnly);
+                auto file_result = Core::DeprecatedFile::open(argv[0], Core::OpenMode::ReadOnly);
                 if (file_result.is_error())
                     break;
                 auto& file = file_result.value();
@@ -1045,7 +1045,7 @@ bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
     TemporaryChange interactive_change { m_is_interactive, false };
     TemporaryChange<Optional<SourcePosition>> source_change { m_source_position, SourcePosition { .source_file = filename, .literal_source_text = {}, .position = {} } };
 
-    auto file_result = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file_result = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
     if (file_result.is_error()) {
         auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_result.error());
         if (explicitly_invoked)
@@ -1364,7 +1364,7 @@ void Shell::cache_path()
         cached_path.append({ RunnablePath::Kind::Alias, name });
     }
 
-    // TODO: Can we make this rely on Core::File::resolve_executable_from_environment()?
+    // TODO: Can we make this rely on Core::DeprecatedFile::resolve_executable_from_environment()?
     DeprecatedString path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
@@ -2391,7 +2391,7 @@ void Shell::possibly_print_error() const
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
         if (!source_position.source_file.is_null()) {
-            auto file = Core::File::open(source_position.source_file, Core::OpenMode::ReadOnly);
+            auto file = Core::DeprecatedFile::open(source_position.source_file, Core::OpenMode::ReadOnly);
             if (file.is_error()) {
                 warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file.error(), source_position.source_file);
                 return;

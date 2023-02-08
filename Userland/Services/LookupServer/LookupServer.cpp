@@ -12,7 +12,7 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/Stream.h>
 #include <LibDNS/Packet.h>
@@ -83,7 +83,7 @@ void LookupServer::load_etc_hosts()
         m_etc_hosts.ensure(name).empend(name, record_type, RecordClass::IN, s_static_ttl, move(data), false);
     };
 
-    auto file = Core::File::construct("/etc/hosts");
+    auto file = Core::DeprecatedFile::construct("/etc/hosts");
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to open '/etc/hosts'");
         return;

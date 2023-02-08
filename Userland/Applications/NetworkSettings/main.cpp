@@ -9,7 +9,6 @@
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
 
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>

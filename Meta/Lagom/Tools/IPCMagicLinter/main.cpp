@@ -7,7 +7,7 @@
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 
 // Exit code is bitwise-or of these values:
 static constexpr auto EXIT_COLLISION = 0x1;
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     bool had_errors = false;
     for (int file_index = 1; file_index < argc; ++file_index) {
         DeprecatedString filename(argv[file_index]);
-        auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Error: Cannot open '{}': {}", filename, file_or_error.error());
             had_errors = true;

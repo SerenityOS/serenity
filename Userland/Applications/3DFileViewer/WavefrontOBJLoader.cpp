@@ -8,7 +8,7 @@
 
 #include "WavefrontOBJLoader.h"
 #include <AK/FixedArray.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <stdlib.h>
 
 static inline GLuint get_index_value(StringView& representation)
@@ -16,7 +16,7 @@ static inline GLuint get_index_value(StringView& representation)
     return representation.to_uint().value_or(1) - 1;
 }
 
-ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(Core::File& file)
+ErrorOr<NonnullRefPtr<Mesh>> WavefrontOBJLoader::load(Core::DeprecatedFile& file)
 {
     Vector<Vertex> vertices;
     Vector<Vertex> normals;

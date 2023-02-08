@@ -44,10 +44,10 @@ public:
     explicit MBRPartitionTable(Kernel::StorageDevice const&);
     MBRPartitionTable(Kernel::StorageDevice const&, u32 start_lba);
 #else
-    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(NonnullRefPtr<Core::File>);
-    static OwnPtr<MBRPartitionTable> try_to_initialize(NonnullRefPtr<Core::File>, u32 start_lba);
-    explicit MBRPartitionTable(NonnullRefPtr<Core::File>);
-    MBRPartitionTable(NonnullRefPtr<Core::File>, u32 start_lba);
+    static ErrorOr<NonnullOwnPtr<MBRPartitionTable>> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>);
+    static OwnPtr<MBRPartitionTable> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>, u32 start_lba);
+    explicit MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile>);
+    MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile>, u32 start_lba);
 #endif
 
     bool is_protective_mbr() const;

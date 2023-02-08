@@ -8,8 +8,8 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/OpenType/Font.h>
@@ -136,7 +136,7 @@ void FontDatabase::load_all_fonts_from_path(DeprecatedString const& root)
         while (dir_iterator.has_next()) {
             auto path = dir_iterator.next_full_path();
 
-            if (Core::File::is_directory(path)) {
+            if (Core::DeprecatedFile::is_directory(path)) {
                 path_queue.enqueue(path);
                 continue;
             }

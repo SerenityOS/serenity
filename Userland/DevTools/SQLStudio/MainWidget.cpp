@@ -6,8 +6,8 @@
  */
 
 #include <DevTools/SQLStudio/SQLStudioGML.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -45,7 +45,7 @@ static Vector<DeprecatedString> lookup_database_names()
     static constexpr auto database_extension = ".db"sv;
 
     auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
-    if (!Core::File::exists(database_path))
+    if (!Core::DeprecatedFile::exists(database_path))
         return {};
 
     Core::DirIterator iterator(move(database_path), Core::DirIterator::SkipParentAndBaseDir);

@@ -6,7 +6,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -310,7 +310,7 @@ void FilePicker::on_file_return()
         path = LexicalPath::join(m_model->root_path(), path).string();
     }
 
-    bool file_exists = Core::File::exists(path);
+    bool file_exists = Core::DeprecatedFile::exists(path);
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
         MessageBox::show(this, DeprecatedString::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found"sv, MessageBox::Type::Error, MessageBox::InputType::OK);

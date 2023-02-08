@@ -7,8 +7,8 @@
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -30,27 +30,27 @@
 
 namespace Core {
 
-ErrorOr<NonnullRefPtr<File>> File::open(DeprecatedString filename, OpenMode mode, mode_t permissions)
+ErrorOr<NonnullRefPtr<DeprecatedFile>> DeprecatedFile::open(DeprecatedString filename, OpenMode mode, mode_t permissions)
 {
-    auto file = File::construct(move(filename));
+    auto file = DeprecatedFile::construct(move(filename));
     if (!file->open_impl(mode, permissions))
         return Error::from_errno(file->error());
     return file;
 }
 
-File::File(DeprecatedString filename, Object* parent)
+DeprecatedFile::DeprecatedFile(DeprecatedString filename, Object* parent)
     : IODevice(parent)
     , m_filename(move(filename))
 {
 }
 
-File::~File()
+DeprecatedFile::~DeprecatedFile()
 {
     if (m_should_close_file_descriptor == ShouldCloseFileDescriptor::Yes && mode() != OpenMode::NotOpen)
         close();
 }
 
-bool File::open(int fd, OpenMode mode, ShouldCloseFileDescriptor should_close)
+bool DeprecatedFile::open(int fd, OpenMode mode, ShouldCloseFileDescriptor should_close)
 {
     set_fd(fd);
     set_mode(mode);
@@ -58,12 +58,12 @@ bool File::open(int fd, OpenMode mode, ShouldCloseFileDescriptor should_close)
     return true;
 }
 
-bool File::open(OpenMode mode)
+bool DeprecatedFile::open(OpenMode mode)
 {
     return open_impl(mode, 0666);
 }
 
-bool File::open_impl(OpenMode mode, mode_t permissions)
+bool DeprecatedFile::open_impl(OpenMode mode, mode_t permissions)
 {
     VERIFY(!m_filename.is_null());
     int flags = 0;
@@ -96,18 +96,18 @@ bool File::open_impl(OpenMode mode, mode_t permissions)
     return true;
 }
 
-int File::leak_fd()
+int DeprecatedFile::leak_fd()
 {
     m_should_close_file_descriptor = ShouldCloseFileDescriptor::No;
     return fd();
 }
 
-bool File::is_device() const
+bool DeprecatedFile::is_device() const
 {
     return is_device(fd());
 }
 
-bool File::is_device(DeprecatedString const& filename)
+bool DeprecatedFile::is_device(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
@@ -115,7 +115,7 @@ bool File::is_device(DeprecatedString const& filename)
     return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
 
-bool File::is_device(int fd)
+bool DeprecatedFile::is_device(int fd)
 {
     struct stat st;
     if (fstat(fd, &st) < 0)
@@ -123,7 +123,7 @@ bool File::is_device(int fd)
     return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
 
-bool File::is_block_device() const
+bool DeprecatedFile::is_block_device() const
 {
     struct stat stat;
     if (fstat(fd(), &stat) < 0)
@@ -131,7 +131,7 @@ bool File::is_block_device() const
     return S_ISBLK(stat.st_mode);
 }
 
-bool File::is_block_device(DeprecatedString const& filename)
+bool DeprecatedFile::is_block_device(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
@@ -139,7 +139,7 @@ bool File::is_block_device(DeprecatedString const& filename)
     return S_ISBLK(st.st_mode);
 }
 
-bool File::is_char_device() const
+bool DeprecatedFile::is_char_device() const
 {
     struct stat stat;
     if (fstat(fd(), &stat) < 0)
@@ -147,7 +147,7 @@ bool File::is_char_device() const
     return S_ISCHR(stat.st_mode);
 }
 
-bool File::is_char_device(DeprecatedString const& filename)
+bool DeprecatedFile::is_char_device(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
@@ -155,12 +155,12 @@ bool File::is_char_device(DeprecatedString const& filename)
     return S_ISCHR(st.st_mode);
 }
 
-bool File::is_directory() const
+bool DeprecatedFile::is_directory() const
 {
     return is_directory(fd());
 }
 
-bool File::is_directory(DeprecatedString const& filename)
+bool DeprecatedFile::is_directory(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
@@ -168,7 +168,7 @@ bool File::is_directory(DeprecatedString const& filename)
     return S_ISDIR(st.st_mode);
 }
 
-bool File::is_directory(int fd)
+bool DeprecatedFile::is_directory(int fd)
 {
     struct stat st;
     if (fstat(fd, &st) < 0)
@@ -176,7 +176,7 @@ bool File::is_directory(int fd)
     return S_ISDIR(st.st_mode);
 }
 
-bool File::is_link() const
+bool DeprecatedFile::is_link() const
 {
     struct stat stat;
     if (fstat(fd(), &stat) < 0)
@@ -184,7 +184,7 @@ bool File::is_link() const
     return S_ISLNK(stat.st_mode);
 }
 
-bool File::is_link(DeprecatedString const& filename)
+bool DeprecatedFile::is_link(DeprecatedString const& filename)
 {
     struct stat st;
     if (lstat(filename.characters(), &st) < 0)
@@ -192,17 +192,17 @@ bool File::is_link(DeprecatedString const& filename)
     return S_ISLNK(st.st_mode);
 }
 
-bool File::looks_like_shared_library() const
+bool DeprecatedFile::looks_like_shared_library() const
 {
-    return File::looks_like_shared_library(m_filename);
+    return DeprecatedFile::looks_like_shared_library(m_filename);
 }
 
-bool File::looks_like_shared_library(DeprecatedString const& filename)
+bool DeprecatedFile::looks_like_shared_library(DeprecatedString const& filename)
 {
     return filename.ends_with(".so"sv) || filename.contains(".so."sv);
 }
 
-bool File::can_delete_or_move(StringView path)
+bool DeprecatedFile::can_delete_or_move(StringView path)
 {
     VERIFY(!path.is_empty());
     auto directory = LexicalPath::dirname(path);
@@ -229,12 +229,12 @@ bool File::can_delete_or_move(StringView path)
     return user_id == 0 || directory_stat.st_uid == user_id || stat_or_empty(path).st_uid == user_id;
 }
 
-bool File::exists(StringView filename)
+bool DeprecatedFile::exists(StringView filename)
 {
     return !Core::System::stat(filename).is_error();
 }
 
-ErrorOr<size_t> File::size(DeprecatedString const& filename)
+ErrorOr<size_t> DeprecatedFile::size(DeprecatedString const& filename)
 {
     struct stat st;
     if (stat(filename.characters(), &st) < 0)
@@ -242,7 +242,7 @@ ErrorOr<size_t> File::size(DeprecatedString const& filename)
     return st.st_size;
 }
 
-DeprecatedString File::real_path_for(DeprecatedString const& filename)
+DeprecatedString DeprecatedFile::real_path_for(DeprecatedString const& filename)
 {
     if (filename.is_null())
         return {};
@@ -252,7 +252,7 @@ DeprecatedString File::real_path_for(DeprecatedString const& filename)
     return real_path;
 }
 
-DeprecatedString File::current_working_directory()
+DeprecatedString DeprecatedFile::current_working_directory()
 {
     char* cwd = getcwd(nullptr, 0);
     if (!cwd) {
@@ -266,15 +266,15 @@ DeprecatedString File::current_working_directory()
     return cwd_as_string;
 }
 
-DeprecatedString File::absolute_path(DeprecatedString const& path)
+DeprecatedString DeprecatedFile::absolute_path(DeprecatedString const& path)
 {
-    if (File::exists(path))
-        return File::real_path_for(path);
+    if (DeprecatedFile::exists(path))
+        return DeprecatedFile::real_path_for(path);
 
     if (path.starts_with("/"sv))
         return LexicalPath::canonicalized_path(path);
 
-    auto working_directory = File::current_working_directory();
+    auto working_directory = DeprecatedFile::current_working_directory();
     auto full_path = LexicalPath::join(working_directory, path);
 
     return LexicalPath::canonicalized_path(full_path.string());
@@ -282,7 +282,7 @@ DeprecatedString File::absolute_path(DeprecatedString const& path)
 
 #ifdef AK_OS_SERENITY
 
-ErrorOr<DeprecatedString> File::read_link(DeprecatedString const& link_path)
+ErrorOr<DeprecatedString> DeprecatedFile::read_link(DeprecatedString const& link_path)
 {
     // First, try using a 64-byte buffer, that ought to be enough for anybody.
     char small_buffer[64];
@@ -323,7 +323,7 @@ ErrorOr<DeprecatedString> File::read_link(DeprecatedString const& link_path)
 
 // This is a sad version for other systems. It has to always make a copy of the
 // link path, and to always make two syscalls to get the right size first.
-ErrorOr<DeprecatedString> File::read_link(DeprecatedString const& link_path)
+ErrorOr<DeprecatedString> DeprecatedFile::read_link(DeprecatedString const& link_path)
 {
     struct stat statbuf = {};
     int rc = lstat(link_path.characters(), &statbuf);
@@ -341,32 +341,32 @@ ErrorOr<DeprecatedString> File::read_link(DeprecatedString const& link_path)
 
 #endif
 
-static RefPtr<File> stdin_file;
-static RefPtr<File> stdout_file;
-static RefPtr<File> stderr_file;
+static RefPtr<DeprecatedFile> stdin_file;
+static RefPtr<DeprecatedFile> stdout_file;
+static RefPtr<DeprecatedFile> stderr_file;
 
-NonnullRefPtr<File> File::standard_input()
+NonnullRefPtr<DeprecatedFile> DeprecatedFile::standard_input()
 {
     if (!stdin_file) {
-        stdin_file = File::construct();
+        stdin_file = DeprecatedFile::construct();
         stdin_file->open(STDIN_FILENO, OpenMode::ReadOnly, ShouldCloseFileDescriptor::No);
     }
     return *stdin_file;
 }
 
-NonnullRefPtr<File> File::standard_output()
+NonnullRefPtr<DeprecatedFile> DeprecatedFile::standard_output()
 {
     if (!stdout_file) {
-        stdout_file = File::construct();
+        stdout_file = DeprecatedFile::construct();
         stdout_file->open(STDOUT_FILENO, OpenMode::WriteOnly, ShouldCloseFileDescriptor::No);
     }
     return *stdout_file;
 }
 
-NonnullRefPtr<File> File::standard_error()
+NonnullRefPtr<DeprecatedFile> DeprecatedFile::standard_error()
 {
     if (!stderr_file) {
-        stderr_file = File::construct();
+        stderr_file = DeprecatedFile::construct();
         stderr_file->open(STDERR_FILENO, OpenMode::WriteOnly, ShouldCloseFileDescriptor::No);
     }
     return *stderr_file;
@@ -397,7 +397,7 @@ static DeprecatedString get_duplicate_name(DeprecatedString const& path, int dup
     return duplicated_name.to_deprecated_string();
 }
 
-ErrorOr<void, File::CopyError> File::copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)
+ErrorOr<void, DeprecatedFile::CopyError> DeprecatedFile::copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode recursion_mode, LinkMode link_mode, AddDuplicateFileMarker add_duplicate_file_marker, PreserveMode preserve_mode)
 {
     if (add_duplicate_file_marker == AddDuplicateFileMarker::Yes) {
         int duplicate_count = 0;
@@ -409,7 +409,7 @@ ErrorOr<void, File::CopyError> File::copy_file_or_directory(DeprecatedString con
         }
     }
 
-    auto source_or_error = File::open(src_path, OpenMode::ReadOnly);
+    auto source_or_error = DeprecatedFile::open(src_path, OpenMode::ReadOnly);
     if (source_or_error.is_error())
         return CopyError { errno, false };
 
@@ -435,7 +435,7 @@ ErrorOr<void, File::CopyError> File::copy_file_or_directory(DeprecatedString con
     return copy_file(dst_path, src_stat, source, preserve_mode);
 }
 
-ErrorOr<void, File::CopyError> File::copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, File& source, PreserveMode preserve_mode)
+ErrorOr<void, DeprecatedFile::CopyError> DeprecatedFile::copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, DeprecatedFile& source, PreserveMode preserve_mode)
 {
     int dst_fd = creat(dst_path.characters(), 0666);
     if (dst_fd < 0) {
@@ -507,14 +507,14 @@ ErrorOr<void, File::CopyError> File::copy_file(DeprecatedString const& dst_path,
     return {};
 }
 
-ErrorOr<void, File::CopyError> File::copy_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, struct stat const& src_stat, LinkMode link, PreserveMode preserve_mode)
+ErrorOr<void, DeprecatedFile::CopyError> DeprecatedFile::copy_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, struct stat const& src_stat, LinkMode link, PreserveMode preserve_mode)
 {
     if (mkdir(dst_path.characters(), 0755) < 0)
         return CopyError { errno, false };
 
-    DeprecatedString src_rp = File::real_path_for(src_path);
+    DeprecatedString src_rp = DeprecatedFile::real_path_for(src_path);
     src_rp = DeprecatedString::formatted("{}/", src_rp);
-    DeprecatedString dst_rp = File::real_path_for(dst_path);
+    DeprecatedString dst_rp = DeprecatedFile::real_path_for(dst_path);
     dst_rp = DeprecatedString::formatted("{}/", dst_rp);
 
     if (!dst_rp.is_empty() && dst_rp.starts_with(src_rp))
@@ -562,7 +562,7 @@ ErrorOr<void, File::CopyError> File::copy_directory(DeprecatedString const& dst_
     return {};
 }
 
-ErrorOr<void> File::link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path)
+ErrorOr<void> DeprecatedFile::link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path)
 {
     int duplicate_count = 0;
     while (access(get_duplicate_name(dst_path, duplicate_count).characters(), F_OK) == 0) {
@@ -576,7 +576,7 @@ ErrorOr<void> File::link_file(DeprecatedString const& dst_path, DeprecatedString
     return {};
 }
 
-ErrorOr<void> File::remove(StringView path, RecursionMode mode)
+ErrorOr<void> DeprecatedFile::remove(StringView path, RecursionMode mode)
 {
     auto path_stat = TRY(Core::System::lstat(path));
 
@@ -597,7 +597,7 @@ ErrorOr<void> File::remove(StringView path, RecursionMode mode)
     return {};
 }
 
-Optional<DeprecatedString> File::resolve_executable_from_environment(StringView filename)
+Optional<DeprecatedString> DeprecatedFile::resolve_executable_from_environment(StringView filename)
 {
     if (filename.is_empty())
         return {};

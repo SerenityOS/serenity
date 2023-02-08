@@ -9,7 +9,6 @@
 #include <AK/Endian.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>

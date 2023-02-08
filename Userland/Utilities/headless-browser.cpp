@@ -14,8 +14,8 @@
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
@@ -691,8 +691,8 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             DeprecatedString output_file_path = "output.png";
             dbgln("Saving to {}", output_file_path);
 
-            if (Core::File::exists(output_file_path))
-                MUST(Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed));
+            if (Core::DeprecatedFile::exists(output_file_path))
+                MUST(Core::DeprecatedFile::remove(output_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
 
             auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
 

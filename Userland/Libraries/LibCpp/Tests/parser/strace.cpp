@@ -20,7 +20,7 @@ int main(int argc, char** argv)
     Vector<const char*> child_argv;
 
     const char* output_filename = nullptr;
-    auto trace_file = Core::File::standard_error();
+    auto trace_file = Core::DeprecatedFile::standard_error();
 
     Core::ArgsParser parser;
     parser.set_general_help(
@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     parser.parse(argc, argv);
 
     if (output_filename != nullptr) {
-        auto open_result = Core::File::open(output_filename, Core::OpenMode::WriteOnly);
+        auto open_result = Core::DeprecatedFile::open(output_filename, Core::OpenMode::WriteOnly);
         if (open_result.is_error()) {
             outln(stderr, "Failed to open output file: {}", open_result.error());
             return 1;

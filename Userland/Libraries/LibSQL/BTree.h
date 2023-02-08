@@ -13,7 +13,6 @@
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>

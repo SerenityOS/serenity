@@ -10,7 +10,6 @@
 #include <LibCore/Command.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <unistd.h>

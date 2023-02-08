@@ -7,7 +7,7 @@
 
 #include "Player.h"
 #include <LibAudio/FlacLoader.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 
 Player::Player(Audio::ConnectionToServer& audio_client_connection)
     : m_audio_client_connection(audio_client_connection)
@@ -44,7 +44,7 @@ void Player::play_file_path(DeprecatedString const& path)
     if (path.is_null())
         return;
 
-    if (!Core::File::exists(path)) {
+    if (!Core::DeprecatedFile::exists(path)) {
         audio_load_error(path, "File does not exist"sv);
         return;
     }

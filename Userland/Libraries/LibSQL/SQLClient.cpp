@@ -10,8 +10,8 @@
 #include <LibSQL/SQLClient.h>
 
 #if !defined(AK_OS_SERENITY)
+#    include <LibCore/DeprecatedFile.h>
 #    include <LibCore/Directory.h>
-#    include <LibCore/File.h>
 #    include <LibCore/SocketAddress.h>
 #    include <LibCore/StandardPaths.h>
 #    include <LibCore/Stream.h>
@@ -25,7 +25,7 @@ namespace SQL {
 // This is heavily based on how SystemServer's Service creates its socket.
 static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
 {
-    if (Core::File::exists(socket_path))
+    if (Core::DeprecatedFile::exists(socket_path))
         TRY(Core::System::unlink(socket_path));
 
 #    ifdef SOCK_NONBLOCK
@@ -103,7 +103,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
 
 static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
 {
-    if (!Core::File::exists(pid_path))
+    if (!Core::DeprecatedFile::exists(pid_path))
         return true;
 
     Optional<pid_t> pid;

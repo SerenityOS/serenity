@@ -7,6 +7,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <signal.h>
 #include <stdio.h>
@@ -152,7 +153,7 @@ int main(int argc, char** argv)
         common_path = DeprecatedString::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
 #endif
     }
-    if (!Core::File::is_directory(test_root)) {
+    if (!Core::DeprecatedFile::is_directory(test_root)) {
         warnln("Test root is not a directory: {}", test_root);
         return 1;
     }
@@ -170,8 +171,8 @@ int main(int argc, char** argv)
 #endif
     }
 
-    test_root = Core::File::real_path_for(test_root);
-    common_path = Core::File::real_path_for(common_path);
+    test_root = Core::DeprecatedFile::real_path_for(test_root);
+    common_path = Core::DeprecatedFile::real_path_for(common_path);
 
     if (chdir(test_root.characters()) < 0) {
         auto saved_errno = errno;

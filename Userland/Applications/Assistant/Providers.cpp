@@ -10,7 +10,6 @@
 #include <AK/URL.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -23,6 +22,7 @@
 #include <fcntl.h>
 #include <serenity.h>
 #include <spawn.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 namespace Assistant {

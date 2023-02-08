@@ -12,7 +12,6 @@
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>
-#include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>

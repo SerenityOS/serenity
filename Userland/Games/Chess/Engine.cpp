@@ -5,7 +5,7 @@
  */
 
 #include "Engine.h"
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -48,12 +48,12 @@ Engine::Engine(StringView command)
     close(wpipefds[0]);
     close(rpipefds[1]);
 
-    auto infile = Core::File::construct();
-    infile->open(rpipefds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+    auto infile = Core::DeprecatedFile::construct();
+    infile->open(rpipefds[0], Core::OpenMode::ReadOnly, Core::DeprecatedFile::ShouldCloseFileDescriptor::Yes);
     set_in(infile);
 
-    auto outfile = Core::File::construct();
-    outfile->open(wpipefds[1], Core::OpenMode::WriteOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+    auto outfile = Core::DeprecatedFile::construct();
+    outfile->open(wpipefds[1], Core::OpenMode::WriteOnly, Core::DeprecatedFile::ShouldCloseFileDescriptor::Yes);
     set_out(outfile);
 
     send_command(Chess::UCI::UCICommand());

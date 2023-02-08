@@ -11,7 +11,7 @@
 #include <AK/String.h>
 #include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
 #include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Window.h>
@@ -37,7 +37,7 @@ private:
     String m_filename;
 };
 
-using DeprecatedResult = ErrorOr<NonnullRefPtr<Core::File>>;
+using DeprecatedResult = ErrorOr<NonnullRefPtr<Core::DeprecatedFile>>;
 using Result = ErrorOr<File>;
 
 class Client final

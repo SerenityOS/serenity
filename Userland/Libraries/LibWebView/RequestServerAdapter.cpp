@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/File.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 #include <LibWebView/RequestServerAdapter.h>

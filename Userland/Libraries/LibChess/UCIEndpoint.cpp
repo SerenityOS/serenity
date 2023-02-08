@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 
 namespace Chess::UCI {
 

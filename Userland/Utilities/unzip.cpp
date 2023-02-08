@@ -11,8 +11,8 @@
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
@@ -42,7 +42,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
         return true;
     }
     MUST(Core::Directory::create(LexicalPath(zip_member.name.to_deprecated_string()).parent(), Core::Directory::CreateDirectories::Yes));
-    auto new_file = Core::File::construct(zip_member.name.to_deprecated_string());
+    auto new_file = Core::DeprecatedFile::construct(zip_member.name.to_deprecated_string());
     if (!new_file->open(Core::OpenMode::WriteOnly)) {
         warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
         return false;
@@ -94,7 +94,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
     if (checksum.digest() != zip_member.crc32) {
         warnln("Failed decompressing file {}: CRC32 mismatch", zip_member.name);
-        MUST(Core::File::remove(zip_member.name, Core::File::RecursionMode::Disallowed));
+        MUST(Core::DeprecatedFile::remove(zip_member.name, Core::DeprecatedFile::RecursionMode::Disallowed));
         return false;
     }
 

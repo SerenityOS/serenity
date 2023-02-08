@@ -245,7 +245,7 @@ private:
     HashMap<int, NonnullRefPtr<Thread>> m_threads;
     NonnullOwnPtrVector<Process> m_processes;
     NonnullOwnPtrVector<CpuInfo> m_cpus;
-    RefPtr<Core::File> m_proc_all;
+    RefPtr<Core::DeprecatedFile> m_proc_all;
     GUI::Icon m_kernel_process_icon;
     u64 m_total_time_scheduled { 0 };
     u64 m_total_time_scheduled_kernel { 0 };

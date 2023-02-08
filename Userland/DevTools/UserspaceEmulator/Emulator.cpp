@@ -13,7 +13,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringUtils.h>
 #include <Kernel/API/MemoryLayout.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
@@ -424,7 +423,7 @@ MmapRegion const* Emulator::load_library_from_address(FlatPtr address)
         return {};
 
     DeprecatedString lib_path = lib_name;
-    if (Core::File::looks_like_shared_library(lib_name))
+    if (Core::DeprecatedFile::looks_like_shared_library(lib_name))
         lib_path = DeprecatedString::formatted("/usr/lib/{}", lib_path);
 
     if (!m_dynamic_library_cache.contains(lib_path)) {
@@ -462,7 +461,7 @@ Optional<Emulator::SymbolInfo> Emulator::symbol_at(FlatPtr address)
     auto const* first_region = (lib_name.is_null() || lib_name.is_empty()) ? address_region : first_region_for_object(lib_name);
     VERIFY(first_region);
     auto lib_path = lib_name;
-    if (Core::File::looks_like_shared_library(lib_name)) {
+    if (Core::DeprecatedFile::looks_like_shared_library(lib_name)) {
         lib_path = DeprecatedString::formatted("/usr/lib/{}", lib_name);
     }
 

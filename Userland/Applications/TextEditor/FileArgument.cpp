@@ -6,7 +6,6 @@
  */
 
 #include "FileArgument.h"
-#include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 
 namespace TextEditor {

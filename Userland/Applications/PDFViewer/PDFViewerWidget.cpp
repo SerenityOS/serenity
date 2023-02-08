@@ -12,7 +12,6 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/Variant.h>
-#include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>

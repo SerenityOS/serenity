@@ -11,8 +11,8 @@
 #include "ViewWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Timer.h>
@@ -195,7 +195,7 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
         m_timer->stop();
     }
 
-    m_path = Core::File::real_path_for(path);
+    m_path = Core::DeprecatedFile::real_path_for(path);
     reset_view();
 }
 

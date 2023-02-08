@@ -21,12 +21,12 @@ namespace Core {
 /// Use of Core::File for reading/writing data is deprecated.
 /// Please use Core::Stream::File and Core::Stream::BufferedFile instead.
 ///
-class File final : public IODevice {
-    C_OBJECT(File)
+class DeprecatedFile final : public IODevice {
+    C_OBJECT(DeprecatedFile)
 public:
-    virtual ~File() override;
+    virtual ~DeprecatedFile() override;
 
-    static ErrorOr<NonnullRefPtr<File>> open(DeprecatedString filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullRefPtr<DeprecatedFile>> open(DeprecatedString filename, OpenMode, mode_t = 0644);
 
     DeprecatedString filename() const { return m_filename; }
     void set_filename(const DeprecatedString filename) { m_filename = move(filename); }
@@ -86,7 +86,7 @@ public:
         bool tried_recursing;
     };
 
-    static ErrorOr<void, CopyError> copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
+    static ErrorOr<void, CopyError> copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, DeprecatedFile& source, PreserveMode = PreserveMode::Nothing);
     static ErrorOr<void, CopyError> copy_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
     static ErrorOr<void, CopyError> copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
 
@@ -105,18 +105,18 @@ public:
     bool open(int fd, OpenMode, ShouldCloseFileDescriptor);
     [[nodiscard]] int leak_fd();
 
-    static NonnullRefPtr<File> standard_input();
-    static NonnullRefPtr<File> standard_output();
-    static NonnullRefPtr<File> standard_error();
+    static NonnullRefPtr<DeprecatedFile> standard_input();
+    static NonnullRefPtr<DeprecatedFile> standard_output();
+    static NonnullRefPtr<DeprecatedFile> standard_error();
 
     static Optional<DeprecatedString> resolve_executable_from_environment(StringView filename);
 
 private:
-    File(Object* parent = nullptr)
+    DeprecatedFile(Object* parent = nullptr)
         : IODevice(parent)
     {
     }
-    explicit File(DeprecatedString filename, Object* parent = nullptr);
+    explicit DeprecatedFile(DeprecatedString filename, Object* parent = nullptr);
 
     bool open_impl(OpenMode, mode_t);
 
@@ -124,6 +124,6 @@ private:
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
 
-AK_ENUM_BITWISE_OPERATORS(File::PreserveMode);
+AK_ENUM_BITWISE_OPERATORS(DeprecatedFile::PreserveMode);
 
 }

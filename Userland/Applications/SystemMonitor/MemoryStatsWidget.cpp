@@ -9,7 +9,7 @@
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Object.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
@@ -104,7 +104,7 @@ static inline u64 page_count_to_bytes(size_t count)
 
 void MemoryStatsWidget::refresh()
 {
-    auto proc_memstat = Core::File::construct("/sys/kernel/memstat");
+    auto proc_memstat = Core::DeprecatedFile::construct("/sys/kernel/memstat");
     if (!proc_memstat->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 

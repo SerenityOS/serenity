@@ -10,7 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -444,7 +444,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
 
 void DebugSession::update_loaded_libs()
 {
-    auto file = Core::File::construct(DeprecatedString::formatted("/proc/{}/vm", m_debuggee_pid));
+    auto file = Core::DeprecatedFile::construct(DeprecatedString::formatted("/proc/{}/vm", m_debuggee_pid));
     bool rc = file->open(Core::OpenMode::ReadOnly);
     VERIFY(rc);
 
@@ -476,7 +476,7 @@ void DebugSession::update_loaded_libs()
             return IterationDecision::Continue;
 
         DeprecatedString lib_name = object_path.value();
-        if (Core::File::looks_like_shared_library(lib_name))
+        if (Core::DeprecatedFile::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 
         FlatPtr base_address = entry.as_object().get_addr("address"sv).value_or(0);
