@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Julian=20Offenh=C3=A4user?= <offenhaeuser@protonmail.com>
+Date: Tue, 7 Feb 2023 21:25:16 +0100
+Subject: [PATCH] Read the executable path from /proc/self/exe
+
+When looking for the executable path, we behave exactly like Linux.
+---
+ src/openrct2/platform/Platform.Linux.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/openrct2/platform/Platform.Linux.cpp b/src/openrct2/platform/Platform.Linux.cpp
+index fb1f1e58d92a9e8823f1c8ff82bcf1efc448a8fd..eea10444874fced76027421350c7a4402bbbbfe0 100644
+--- a/src/openrct2/platform/Platform.Linux.cpp
++++ b/src/openrct2/platform/Platform.Linux.cpp
+@@ -129,7 +129,7 @@ namespace Platform
+     std::string GetCurrentExecutablePath()
+     {
+         char exePath[PATH_MAX] = { 0 };
+-#    ifdef __linux__
++#    if defined(__linux__) || defined(__serenity__)
+         auto bytesRead = readlink("/proc/self/exe", exePath, sizeof(exePath));
+         if (bytesRead == -1)
+         {
