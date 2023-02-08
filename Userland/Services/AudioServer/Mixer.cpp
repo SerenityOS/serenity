@@ -13,6 +13,7 @@
 #include <AudioServer/ConnectionFromClient.h>
 #include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Timer.h>
 #include <pthread.h>
 #include <sys/ioctl.h>
@@ -21,7 +22,7 @@ namespace AudioServer {
 
 Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
     // FIXME: Allow AudioServer to use other audio channels as well
-    : m_device(Core::File::construct("/dev/audio/0", this))
+    : m_device(Core::DeprecatedFile::construct("/dev/audio/0", this))
     , m_sound_thread(Threading::Thread::construct(
           [this] {
               mix();

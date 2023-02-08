@@ -11,7 +11,7 @@
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Stream.h>
 
 [[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
@@ -138,10 +138,10 @@ static HashTable<DeprecatedString> import_stack;
 Optional<Interface&> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
-    if (!Core::File::exists(include_path))
+    if (!Core::DeprecatedFile::exists(include_path))
         report_parsing_error(DeprecatedString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
-    auto real_path = Core::File::real_path_for(include_path);
+    auto real_path = Core::DeprecatedFile::real_path_for(include_path);
     if (top_level_resolved_imports().contains(real_path))
         return *top_level_resolved_imports().find(real_path)->value;
 
@@ -884,7 +884,7 @@ void resolve_function_typedefs(Interface& interface, FunctionType& function)
 
 Interface& Parser::parse()
 {
-    auto this_module = Core::File::real_path_for(filename);
+    auto this_module = Core::DeprecatedFile::real_path_for(filename);
 
     auto interface_ptr = make<Interface>();
     auto& interface = *interface_ptr;

@@ -9,8 +9,8 @@
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
 #include <AK/ScopeGuard.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/Parser.h>
@@ -736,7 +736,7 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
         if (!path.starts_with(partial_basename))
             continue;
 
-        if (Core::File::is_directory(LexicalPath::join(full_dir, path).string())) {
+        if (Core::DeprecatedFile::is_directory(LexicalPath::join(full_dir, path).string())) {
             // FIXME: Don't dismiss the autocomplete when filling these suggestions.
             auto completion = DeprecatedString::formatted("{}{}{}/", prefix, include_dir, path);
             options.empend(completion, include_dir.length() + partial_basename.length() + 1, CodeComprehension::Language::Cpp, path, CodeComprehension::AutocompleteResultEntry::HideAutocompleteAfterApplying::No);

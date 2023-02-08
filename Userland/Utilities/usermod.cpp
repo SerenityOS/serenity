@@ -6,7 +6,7 @@
 
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <pwd.h>
@@ -103,11 +103,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto maybe_error = Core::System::rename(target_account.home_directory(), new_home_directory);
             if (maybe_error.is_error()) {
                 if (maybe_error.error().code() == EXDEV) {
-                    auto result = Core::File::copy_file_or_directory(
+                    auto result = Core::DeprecatedFile::copy_file_or_directory(
                         new_home_directory, target_account.home_directory().characters(),
-                        Core::File::RecursionMode::Allowed,
-                        Core::File::LinkMode::Disallowed,
-                        Core::File::AddDuplicateFileMarker::No);
+                        Core::DeprecatedFile::RecursionMode::Allowed,
+                        Core::DeprecatedFile::LinkMode::Disallowed,
+                        Core::DeprecatedFile::AddDuplicateFileMarker::No);
 
                     if (result.is_error()) {
                         warnln("usermod: could not move directory {} : {}", target_account.home_directory().characters(), static_cast<Error const&>(result.error()));

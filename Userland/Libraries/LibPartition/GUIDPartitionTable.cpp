@@ -7,6 +7,10 @@
 #include <AK/Debug.h>
 #include <LibPartition/GUIDPartitionTable.h>
 
+#ifndef KERNEL
+#    include <LibCore/DeprecatedFile.h>
+#endif
+
 namespace Partition {
 
 #define GPT_SIGNATURE2 0x54524150
@@ -49,7 +53,7 @@ ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(device)));
 #else
-ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(NonnullRefPtr<Core::File> device_file)
+ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) GUIDPartitionTable(move(device_file))));
 #endif
@@ -62,7 +66,7 @@ ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> GUIDPartitionTable::try_to_initialize
 GUIDPartitionTable::GUIDPartitionTable(Kernel::StorageDevice const& device)
     : MBRPartitionTable(device)
 #else
-GUIDPartitionTable::GUIDPartitionTable(NonnullRefPtr<Core::File> device_file)
+GUIDPartitionTable::GUIDPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file)
     : MBRPartitionTable(move(device_file))
 #endif
 {

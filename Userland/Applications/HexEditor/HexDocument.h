@@ -6,11 +6,13 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/File.h>
+#include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
 
 constexpr Time COMMAND_COMMIT_TIME = Time::from_milliseconds(400);

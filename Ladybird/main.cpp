@@ -13,8 +13,8 @@
 #include <Browser/CookieJar.h>
 #include <Browser/Database.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -79,8 +79,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto get_formatted_url = [&](StringView const& raw_url) -> URL {
         URL url = raw_url;
-        if (Core::File::exists(raw_url))
-            url = URL::create_with_file_scheme(Core::File::real_path_for(raw_url));
+        if (Core::DeprecatedFile::exists(raw_url))
+            url = URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(raw_url));
         else if (!url.is_valid())
             url = DeprecatedString::formatted("http://{}", raw_url);
         return url;

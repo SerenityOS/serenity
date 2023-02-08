@@ -5,7 +5,6 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibELF/Image.h>

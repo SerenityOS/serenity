@@ -6,9 +6,9 @@
 
 #include "Shell.h"
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <signal.h>
@@ -183,7 +183,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
 
     if (format) {
-        auto file = TRY(Core::File::open(format, Core::OpenMode::ReadOnly));
+        auto file = TRY(Core::DeprecatedFile::open(format, Core::OpenMode::ReadOnly));
 
         initialize();
 
@@ -224,7 +224,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             DeprecatedString file_path = name;
             if (file_path.starts_with('~'))
                 file_path = shell->expand_tilde(file_path);
-            if (Core::File::exists(file_path)) {
+            if (Core::DeprecatedFile::exists(file_path)) {
                 shell->run_file(file_path, false);
             }
         };

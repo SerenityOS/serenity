@@ -7,7 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibTest/TestCase.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -217,7 +217,7 @@ TEST_CASE(unlink_symlink)
         perror("symlink");
     }
 
-    auto target_or_error = Core::File::read_link("/tmp/linky");
+    auto target_or_error = Core::DeprecatedFile::read_link("/tmp/linky");
     EXPECT(!target_or_error.is_error());
 
     auto target = target_or_error.release_value();

@@ -11,7 +11,7 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         while (try_again) {
             try_again = false;
 
-            auto deletion_result = Core::File::remove(selected_node_path, Core::File::RecursionMode::Allowed);
+            auto deletion_result = Core::DeprecatedFile::remove(selected_node_path, Core::DeprecatedFile::RecursionMode::Allowed);
             if (deletion_result.is_error()) {
                 auto retry_message_result = GUI::MessageBox::show(window,
                     DeprecatedString::formatted("Failed to delete \"{}\": {}. Retry?",
@@ -164,8 +164,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         DeprecatedString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
         if (selected_node_path.is_empty())
             return;
-        delete_action->set_enabled(Core::File::can_delete_or_move(selected_node_path));
-        if (Core::File::is_directory(selected_node_path)) {
+        delete_action->set_enabled(Core::DeprecatedFile::can_delete_or_move(selected_node_path));
+        if (Core::DeprecatedFile::is_directory(selected_node_path)) {
             open_folder_action->set_visible(true);
             open_containing_folder_action->set_visible(false);
         } else {

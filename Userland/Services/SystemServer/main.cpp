@@ -13,10 +13,10 @@
 #include <Kernel/API/DeviceEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <errno.h>
@@ -72,7 +72,7 @@ static ErrorOr<void> determine_system_mode()
             g_system_mode = "text";
     });
 
-    auto f = Core::File::construct("/sys/kernel/system_mode");
+    auto f = Core::DeprecatedFile::construct("/sys/kernel/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue and assume "text" mode.
@@ -188,7 +188,7 @@ static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
 
 static ErrorOr<void> populate_devtmpfs_devices_based_on_devctl()
 {
-    auto f = Core::File::construct("/dev/devctl");
+    auto f = Core::DeprecatedFile::construct("/dev/devctl");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         warnln("Failed to open /dev/devctl - {}", f->error_string());
         VERIFY_NOT_REACHED();

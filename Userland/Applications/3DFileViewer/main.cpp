@@ -6,7 +6,6 @@
  */
 
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGL/GL/gl.h>
@@ -34,7 +33,7 @@ class GLContextWidget final : public GUI::Frame {
 
 public:
     bool load_path(DeprecatedString const& fname);
-    bool load_file(Core::File& file);
+    bool load_file(Core::DeprecatedFile& file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -291,7 +290,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
 bool GLContextWidget::load_path(DeprecatedString const& filename)
 {
-    auto file = Core::File::construct(filename);
+    auto file = Core::DeprecatedFile::construct(filename);
 
     if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
@@ -301,7 +300,7 @@ bool GLContextWidget::load_path(DeprecatedString const& filename)
     return load_file(file);
 }
 
-bool GLContextWidget::load_file(Core::File& file)
+bool GLContextWidget::load_file(Core::DeprecatedFile& file)
 {
     auto const& filename = file.filename();
     if (!filename.ends_with(".obj"sv)) {
@@ -330,11 +329,11 @@ bool GLContextWidget::load_file(Core::File& file)
     builder.append(filename.split('.').at(0));
     builder.append(".bmp"sv);
 
-    DeprecatedString texture_path = Core::File::absolute_path(builder.string_view());
+    DeprecatedString texture_path = Core::DeprecatedFile::absolute_path(builder.string_view());
 
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
-    if (Core::File::exists(texture_path)) {
+    if (Core::DeprecatedFile::exists(texture_path)) {
         auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_path);
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
@@ -403,7 +402,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto file = response.value();
         if (widget->load_file(*file)) {
-            auto canonical_path = Core::File::absolute_path(file->filename());
+            auto canonical_path = Core::DeprecatedFile::absolute_path(file->filename());
             window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
         }
     }));
@@ -592,7 +591,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto filename = arguments.argc > 1 ? arguments.argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
     if (widget->load_path(filename)) {
-        auto canonical_path = Core::File::absolute_path(filename);
+        auto canonical_path = Core::DeprecatedFile::absolute_path(filename);
         window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
     }
 

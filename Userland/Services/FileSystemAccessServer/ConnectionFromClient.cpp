@@ -5,7 +5,7 @@
  */
 
 #include <FileSystemAccessServer/ConnectionFromClient.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -67,7 +67,7 @@ void ConnectionFromClient::request_file_handler(i32 request_id, i32 window_serve
 
         auto pid = this->socket().peer_pid().release_value_but_fixme_should_propagate_errors();
         auto exe_link = LexicalPath("/proc").append(DeprecatedString::number(pid)).append("exe"sv).string();
-        auto exe_path = Core::File::real_path_for(exe_link);
+        auto exe_path = Core::DeprecatedFile::real_path_for(exe_link);
 
         auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 

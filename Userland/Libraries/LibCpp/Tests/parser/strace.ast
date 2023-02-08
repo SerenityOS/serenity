@@ -108,13 +108,13 @@ TranslationUnit[0:0->144:0]
             [const] char
         output_filename
         NullPointerLiteral[21:34->21:40]
-      VariableDeclaration[22:4->22:50]
+      VariableDeclaration[22:4->22:60]
         NamedType[22:4->22:7]
           auto
         trace_file
-        FunctionCall[22:22->22:50]
-          Name[22:22->22:47]
-          Core::File::standard_error
+        FunctionCall[22:22->22:60]
+          Name[22:22->22:57]
+          Core::DeprecatedFile::standard_error
       VariableDeclaration[24:4->24:27]
         NamedType[24:4->24:19]
           Core::ArgsParser
@@ -192,16 +192,16 @@ TranslationUnit[0:0->144:0]
           NullPointerLiteral[33:27->33:33]
         Then:
         BlockStatement[33:36->42:4]
-          VariableDeclaration[34:8->34:87]
+          VariableDeclaration[34:8->34:97]
             NamedType[34:8->34:11]
               auto
             open_result
-            FunctionCall[34:27->34:87]
-              Name[34:27->34:42]
-              Core::File::open
-              Name[34:44->34:58]
+            FunctionCall[34:27->34:97]
+              Name[34:27->34:52]
+              Core::DeprecatedFile::open
+              Name[34:54->34:68]
               output_filename
-              Name[34:61->34:85]
+              Name[34:71->34:95]
               Core::OpenMode::WriteOnly
           IfStatement[35:8->39:8]
             Predicate:

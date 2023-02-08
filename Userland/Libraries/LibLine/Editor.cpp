@@ -18,9 +18,9 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -251,7 +251,7 @@ void Editor::add_to_history(DeprecatedString const& line)
 
 bool Editor::load_history(DeprecatedString const& path)
 {
-    auto history_file = Core::File::construct(path);
+    auto history_file = Core::DeprecatedFile::construct(path);
     if (!history_file->open(Core::OpenMode::ReadOnly))
         return false;
     auto data = history_file->read_all();
@@ -311,7 +311,7 @@ bool Editor::save_history(DeprecatedString const& path)
 {
     Vector<HistoryEntry> final_history { { "", 0 } };
     {
-        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadWrite, 0600);
+        auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadWrite, 0600);
         if (file_or_error.is_error())
             return false;
         auto file = file_or_error.release_value();
@@ -326,7 +326,7 @@ bool Editor::save_history(DeprecatedString const& path)
             [](HistoryEntry const& left, HistoryEntry const& right) { return left.timestamp < right.timestamp; });
     }
 
-    auto file_or_error = Core::File::open(path, Core::OpenMode::WriteOnly, 0600);
+    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::WriteOnly, 0600);
     if (file_or_error.is_error())
         return false;
     auto file = file_or_error.release_value();

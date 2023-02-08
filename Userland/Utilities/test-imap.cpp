@@ -5,8 +5,8 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/GetPassword.h>
 #include <LibIMAP/Client.h>
 #include <LibMain/Main.h>
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (interactive_password) {
         password = TRY(Core::get_password());
     } else {
-        auto standard_input = Core::File::standard_input();
+        auto standard_input = Core::DeprecatedFile::standard_input();
         password = Core::SecretString::take_ownership(standard_input->read_all());
     }
 

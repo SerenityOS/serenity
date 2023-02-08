@@ -9,7 +9,7 @@
 #include <AK/URL.h>
 #include <AK/URLParser.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <LibXML/DOM/Document.h>
@@ -515,7 +515,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(filename, "File to read from", "file");
     parser.parse(arguments);
 
-    s_path = Core::File::real_path_for(filename);
+    s_path = Core::DeprecatedFile::real_path_for(filename);
     auto file = TRY(Core::Stream::File::open(s_path, Core::Stream::OpenMode::Read));
     auto contents = TRY(file->read_until_eof());
 

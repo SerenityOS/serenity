@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtr.h>
 #include <LibPartition/DiskPartitionMetadata.h>
 
 #ifdef KERNEL
 #    include <Kernel/Storage/StorageDevice.h>
 #else
-#    include <LibCore/File.h>
+#    include <LibCore/Forward.h>
 #endif
 
 namespace Partition {
@@ -31,8 +32,8 @@ protected:
     explicit PartitionTable(Kernel::StorageDevice const&);
     NonnullRefPtr<Kernel::StorageDevice> m_device;
 #else
-    explicit PartitionTable(NonnullRefPtr<Core::File>);
-    NonnullRefPtr<Core::File> m_device_file;
+    explicit PartitionTable(NonnullRefPtr<Core::DeprecatedFile>);
+    NonnullRefPtr<Core::DeprecatedFile> m_device_file;
 #endif
 
     Vector<DiskPartitionMetadata> m_partitions;

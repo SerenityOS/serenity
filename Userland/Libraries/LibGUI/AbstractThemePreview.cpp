@@ -11,7 +11,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringView.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
 #include <LibGUI/AbstractThemePreview.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>

@@ -12,7 +12,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Process.h>
 #include <LibDesktop/AppFile.h>
@@ -179,7 +179,7 @@ Vector<DeprecatedString> Launcher::handlers_with_details_for_url(const URL& url)
 
 Optional<DeprecatedString> Launcher::mime_type_for_file(DeprecatedString path)
 {
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         return {};
     } else {
@@ -308,7 +308,7 @@ void Launcher::for_each_handler_for_path(DeprecatedString const& path, Function<
         return;
 
     if (S_ISLNK(st.st_mode)) {
-        auto link_target_or_error = Core::File::read_link(path);
+        auto link_target_or_error = Core::DeprecatedFile::read_link(path);
         if (link_target_or_error.is_error()) {
             perror("read_link");
             return;
@@ -316,7 +316,7 @@ void Launcher::for_each_handler_for_path(DeprecatedString const& path, Function<
 
         auto link_target = LexicalPath { link_target_or_error.release_value() };
         LexicalPath absolute_link_target = link_target.is_absolute() ? link_target : LexicalPath::join(LexicalPath::dirname(path), link_target.string());
-        auto real_path = Core::File::real_path_for(absolute_link_target.string());
+        auto real_path = Core::DeprecatedFile::real_path_for(absolute_link_target.string());
         return for_each_handler_for_path(real_path, [&](auto const& handler) -> bool {
             return f(handler);
         });

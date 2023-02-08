@@ -14,7 +14,7 @@
 #include <Applications/Browser/WindowActions.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
@@ -131,8 +131,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto url_from_argument_string = [](DeprecatedString const& string) -> URL {
-        if (Core::File::exists(string)) {
-            return URL::create_with_file_scheme(Core::File::real_path_for(string));
+        if (Core::DeprecatedFile::exists(string)) {
+            return URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(string));
         }
         return Browser::url_from_user_input(string);
     };

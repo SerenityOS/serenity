@@ -11,7 +11,6 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibIDL/IDLParser.h>
 #include <LibIDL/Types.h>

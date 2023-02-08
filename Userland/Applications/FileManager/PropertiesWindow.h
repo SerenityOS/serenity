@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Queue.h>
-#include <LibCore/File.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/FileSystemModel.h>

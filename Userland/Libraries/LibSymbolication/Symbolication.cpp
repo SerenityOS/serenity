@@ -10,7 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibSymbolication/Symbolication.h>
@@ -37,7 +37,7 @@ static KernelBaseState s_kernel_base_state = KernelBaseState::Uninitialized;
 Optional<FlatPtr> kernel_base()
 {
     if (s_kernel_base_state == KernelBaseState::Uninitialized) {
-        auto file = Core::File::open("/sys/kernel/load_base", Core::OpenMode::ReadOnly);
+        auto file = Core::DeprecatedFile::open("/sys/kernel/load_base", Core::OpenMode::ReadOnly);
         if (file.is_error()) {
             s_kernel_base_state = KernelBaseState::Invalid;
             return {};
@@ -65,7 +65,7 @@ Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, Incl
         bool found = false;
         for (auto& search_path : search_paths) {
             full_path = LexicalPath::join(search_path, path).string();
-            if (Core::File::exists(full_path)) {
+            if (Core::DeprecatedFile::exists(full_path)) {
                 found = true;
                 break;
             }
@@ -147,7 +147,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
     {
         auto stack_path = DeprecatedString::formatted("/proc/{}/stacks/{}", pid, tid);
-        auto file_or_error = Core::File::open(stack_path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::DeprecatedFile::open(stack_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", stack_path, file_or_error.error());
             return {};
@@ -167,7 +167,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
     {
         auto vm_path = DeprecatedString::formatted("/proc/{}/vm", pid);
-        auto file_or_error = Core::File::open(vm_path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::DeprecatedFile::open(vm_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", vm_path, file_or_error.error());
             return {};

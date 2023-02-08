@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibTest/TestCase.h>
 #include <unistd.h>
 
 static bool files_have_same_contents(DeprecatedString filename1, DeprecatedString filename2)
 {
-    auto file1 = Core::File::open(filename1, Core::OpenMode::ReadOnly).value();
-    auto file2 = Core::File::open(filename2, Core::OpenMode::ReadOnly).value();
+    auto file1 = Core::DeprecatedFile::open(filename1, Core::OpenMode::ReadOnly).value();
+    auto file2 = Core::DeprecatedFile::open(filename2, Core::OpenMode::ReadOnly).value();
     auto contents1 = file1->read_all(), contents2 = file2->read_all();
     return contents1 == contents2;
 }
@@ -19,14 +19,14 @@ static bool files_have_same_contents(DeprecatedString filename1, DeprecatedStrin
 TEST_CASE(file_readline)
 {
     auto path = "long_lines.txt";
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         warnln("Failed to open {}: {}", path, file_or_error.error());
         VERIFY_NOT_REACHED();
     }
     auto file = file_or_error.release_value();
     auto output_path = "/tmp/output.txt";
-    auto outfile_or_error = Core::File::open(output_path, Core::OpenMode::WriteOnly);
+    auto outfile_or_error = Core::DeprecatedFile::open(output_path, Core::OpenMode::WriteOnly);
     auto outputfile = outfile_or_error.release_value();
     while (file->can_read_line()) {
         outputfile->write(file->read_line());
@@ -41,7 +41,7 @@ TEST_CASE(file_readline)
 TEST_CASE(file_get_read_position)
 {
     const DeprecatedString path = "10kb.txt";
-    auto file = Core::File::open(path, Core::OpenMode::ReadOnly).release_value();
+    auto file = Core::DeprecatedFile::open(path, Core::OpenMode::ReadOnly).release_value();
 
     const size_t step_size = 98;
     for (size_t i = 0; i < 10240 - step_size; i += step_size) {
@@ -73,14 +73,14 @@ TEST_CASE(file_get_read_position)
 TEST_CASE(file_lines_range)
 {
     auto path = "long_lines.txt";
-    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         warnln("Failed to open {}: {}", path, file_or_error.error());
         VERIFY_NOT_REACHED();
     }
     auto file = file_or_error.release_value();
     auto output_path = "/tmp/output.txt";
-    auto outfile_or_error = Core::File::open(output_path, Core::OpenMode::WriteOnly);
+    auto outfile_or_error = Core::DeprecatedFile::open(output_path, Core::OpenMode::WriteOnly);
     auto outputfile = outfile_or_error.release_value();
     for (auto line : file->lines()) {
         outputfile->write(line);

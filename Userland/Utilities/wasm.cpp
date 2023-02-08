@@ -7,7 +7,6 @@
 
 #include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>

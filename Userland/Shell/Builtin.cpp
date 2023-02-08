@@ -12,8 +12,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -61,7 +61,7 @@ static Vector<DeprecatedString> find_matching_executables_in_path(StringView fil
         auto file = DeprecatedString::formatted("{}/{}", directory, filename);
 
         if (follow_symlinks == FollowSymlinks::Yes) {
-            auto path_or_error = Core::File::read_link(file);
+            auto path_or_error = Core::DeprecatedFile::read_link(file);
             if (!path_or_error.is_error())
                 file = path_or_error.release_value();
         }
@@ -332,7 +332,7 @@ int Shell::builtin_type(int argc, char const** argv)
         }
 
         // check if its an executable in PATH
-        auto fullpath = Core::File::resolve_executable_from_environment(command);
+        auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment(command);
         if (fullpath.has_value()) {
             printf("%s is %s\n", command.characters(), escape_token(fullpath.release_value()).characters());
             continue;
@@ -372,7 +372,7 @@ int Shell::builtin_cd(int argc, char const** argv)
         }
     }
 
-    auto real_path = Core::File::real_path_for(new_path);
+    auto real_path = Core::DeprecatedFile::real_path_for(new_path);
     if (real_path.is_empty()) {
         warnln("Invalid path '{}'", new_path);
         return 1;
@@ -1175,7 +1175,7 @@ int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<DeprecatedString> replaced_values;
-    auto kill_path = Core::File::resolve_executable_from_environment("kill"sv);
+    auto kill_path = Core::DeprecatedFile::resolve_executable_from_environment("kill"sv);
     if (!kill_path.has_value()) {
         warnln("kill: `kill' not found in PATH");
         return 126;

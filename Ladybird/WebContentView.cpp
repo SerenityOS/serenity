@@ -24,7 +24,6 @@
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>

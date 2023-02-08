@@ -19,7 +19,7 @@
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
@@ -107,14 +107,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!initial_location.is_empty()) {
         if (!ignore_path_resolution)
-            initial_location = Core::File::real_path_for(initial_location);
+            initial_location = Core::DeprecatedFile::real_path_for(initial_location);
 
-        if (!Core::File::is_directory(initial_location))
+        if (!Core::DeprecatedFile::is_directory(initial_location))
             is_selection_mode = true;
     }
 
     if (initial_location.is_empty())
-        initial_location = Core::File::current_working_directory();
+        initial_location = Core::DeprecatedFile::current_working_directory();
 
     if (initial_location.is_empty())
         initial_location = Core::StandardPaths::home_directory();
@@ -188,7 +188,7 @@ void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Wi
 {
     auto path = selected_file_paths.first();
     auto destination = DeprecatedString::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
-    if (auto result = Core::File::link_file(destination, path); result.is_error()) {
+    if (auto result = Core::DeprecatedFile::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, DeprecatedString::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager"sv,
             GUI::MessageBox::Type::Error);
     }
@@ -456,7 +456,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
 
         for (auto& path : paths) {
-            if (Core::File::is_directory(path))
+            if (Core::DeprecatedFile::is_directory(path))
                 Desktop::Launcher::open(URL::create_with_file_scheme(path));
         }
     });
@@ -469,7 +469,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
 
         for (auto& path : paths) {
-            if (Core::File::is_directory(path)) {
+            if (Core::DeprecatedFile::is_directory(path)) {
                 spawn_terminal(path);
             }
         }
@@ -814,7 +814,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                     paths = directory_view->selected_file_paths();
 
                 for (auto& path : paths) {
-                    if (Core::File::is_directory(path))
+                    if (Core::DeprecatedFile::is_directory(path))
                         Desktop::Launcher::open(URL::create_with_file_scheme(path));
                 }
             },
@@ -833,7 +833,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                     paths = directory_view->selected_file_paths();
 
                 for (auto& path : paths) {
-                    if (Core::File::is_directory(path)) {
+                    if (Core::DeprecatedFile::is_directory(path)) {
                         spawn_terminal(path);
                     }
                 }
@@ -1090,7 +1090,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         if (!segment_index.has_value())
             return;
         auto selected_path = breadcrumbbar.segment_data(*segment_index);
-        if (Core::File::is_directory(selected_path)) {
+        if (Core::DeprecatedFile::is_directory(selected_path)) {
             directory_view->open(selected_path);
         } else {
             dbgln("Breadcrumb path '{}' doesn't exist", selected_path);
@@ -1121,7 +1121,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                 // If the path change was because the directory we were in was deleted,
                 // remove the breadcrumbs for it.
                 if ((new_segment_index + 1 < breadcrumbbar.segment_count())
-                    && !Core::File::is_directory(breadcrumbbar.segment_data(new_segment_index + 1))) {
+                    && !Core::DeprecatedFile::is_directory(breadcrumbbar.segment_data(new_segment_index + 1))) {
                     breadcrumbbar.remove_end_segments(new_segment_index + 1);
                 }
             } else {

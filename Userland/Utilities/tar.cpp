@@ -11,9 +11,9 @@
 #include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("{}", filename);
 
             if (extract) {
-                DeprecatedString absolute_path = Core::File::absolute_path(filename);
+                DeprecatedString absolute_path = Core::DeprecatedFile::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 
@@ -220,7 +220,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Archive::TarOutputStream tar_stream(move(output_stream));
 
         auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
-            auto file = Core::File::construct(path);
+            auto file = Core::DeprecatedFile::construct(path);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 warnln("Failed to open {}: {}", path, file->error_string());
                 return {};
@@ -257,9 +257,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
             while (it.has_next()) {
                 auto child_path = it.next_full_path();
-                if (!dereference && Core::File::is_link(child_path)) {
+                if (!dereference && Core::DeprecatedFile::is_link(child_path)) {
                     TRY(add_link(child_path));
-                } else if (!Core::File::is_directory(child_path)) {
+                } else if (!Core::DeprecatedFile::is_directory(child_path)) {
                     TRY(add_file(child_path));
                 } else {
                     TRY(handle_directory(child_path, handle_directory));
@@ -270,7 +270,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
 
         for (auto const& path : paths) {
-            if (Core::File::is_directory(path)) {
+            if (Core::DeprecatedFile::is_directory(path)) {
                 TRY(add_directory(path, add_directory));
             } else {
                 TRY(add_file(path));

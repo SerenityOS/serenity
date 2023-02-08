@@ -9,7 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibELF/Image.h>
@@ -255,7 +255,7 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
         return s_directory_icon;
     }
     if (S_ISLNK(mode)) {
-        auto raw_symlink_target_or_error = Core::File::read_link(path);
+        auto raw_symlink_target_or_error = Core::DeprecatedFile::read_link(path);
         if (raw_symlink_target_or_error.is_error())
             return s_symlink_icon;
 
@@ -267,7 +267,7 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {
-            target_path = Core::File::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
+            target_path = Core::DeprecatedFile::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
 

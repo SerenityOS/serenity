@@ -5,14 +5,14 @@
  */
 
 #include <AK/JsonObject.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibGUI/JsonArrayModel.h>
 
 namespace GUI {
 
 void JsonArrayModel::invalidate()
 {
-    auto file = Core::File::construct(m_json_path);
+    auto file = Core::DeprecatedFile::construct(m_json_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Unable to open {}", file->filename());
         m_array.clear();
@@ -30,7 +30,7 @@ void JsonArrayModel::invalidate()
 
 void JsonArrayModel::update()
 {
-    auto file = Core::File::construct(m_json_path);
+    auto file = Core::DeprecatedFile::construct(m_json_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Unable to open {}", file->filename());
         m_array.clear();
@@ -48,7 +48,7 @@ void JsonArrayModel::update()
 
 bool JsonArrayModel::store()
 {
-    auto file = Core::File::construct(m_json_path);
+    auto file = Core::DeprecatedFile::construct(m_json_path);
     if (!file->open(Core::OpenMode::WriteOnly)) {
         dbgln("Unable to open {}", file->filename());
         return false;

@@ -19,7 +19,7 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
@@ -272,7 +272,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Since this should never happen anyway, fail early.
             return 1;
         }
-        files.set(Core::File::real_path_for(path), MarkdownLinkage::analyze(*document));
+        files.set(Core::DeprecatedFile::real_path_for(path), MarkdownLinkage::analyze(*document));
     }
 
     outln("Checking links ...");
@@ -293,7 +293,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
             }
-            if (!Core::File::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
+            if (!Core::DeprecatedFile::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
                     file_item.key, file_link.file_path, file_link.label, pointee_file);
                 any_problems = true;

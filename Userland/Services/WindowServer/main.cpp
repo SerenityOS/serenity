@@ -11,8 +11,8 @@
 #include "WindowManager.h"
 #include <Kernel/API/Graphics.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
@@ -85,7 +85,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 if (!path.starts_with("connector"sv))
                     continue;
                 auto full_path = DeprecatedString::formatted("/dev/gpu/{}", path);
-                if (!Core::File::is_device(full_path))
+                if (!Core::DeprecatedFile::is_device(full_path))
                     continue;
                 auto display_connector_fd = TRY(Core::System::open(full_path, O_RDWR | O_CLOEXEC));
                 if (int rc = graphics_connector_set_responsible(display_connector_fd); rc != 0)

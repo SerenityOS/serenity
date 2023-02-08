@@ -10,8 +10,8 @@
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>

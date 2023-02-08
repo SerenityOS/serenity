@@ -10,8 +10,8 @@
 #include <LibAudio/Loader.h>
 #include <LibAudio/Resampler.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <math.h>
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
-    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"sv));
+    TRY(Core::System::unveil(Core::DeprecatedFile::absolute_path(path), "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop loop;

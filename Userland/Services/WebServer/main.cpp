@@ -8,8 +8,8 @@
 
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
@@ -56,8 +56,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto real_document_root_path = Core::File::real_path_for(document_root_path);
-    if (!Core::File::exists(real_document_root_path)) {
+    auto real_document_root_path = Core::DeprecatedFile::real_path_for(document_root_path);
+    if (!Core::DeprecatedFile::exists(real_document_root_path)) {
         warnln("Root path does not exist: '{}'", document_root_path);
         return 1;
     }

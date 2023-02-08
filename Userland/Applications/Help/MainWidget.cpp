@@ -14,7 +14,6 @@
 #include <AK/URL.h>
 #include <Applications/Help/HelpWindowGML.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>

@@ -36,7 +36,7 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode, ShouldCloseFi
     }
 
     if (!has_any_flag(mode, OpenMode::ReadWrite)) {
-        dbgln("Core::File::adopt_fd: Attempting to adopt a file with neither Read nor Write specified in mode");
+        dbgln("Core::DeprecatedFile::adopt_fd: Attempting to adopt a file with neither Read nor Write specified in mode");
         return Error::from_errno(EINVAL);
     }
 

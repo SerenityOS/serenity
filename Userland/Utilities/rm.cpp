@@ -7,7 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto result = Core::File::remove(path, recursive ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed);
+        auto result = Core::DeprecatedFile::remove(path, recursive ? Core::DeprecatedFile::RecursionMode::Allowed : Core::DeprecatedFile::RecursionMode::Disallowed);
 
         if (result.is_error()) {
             auto error = result.release_error();

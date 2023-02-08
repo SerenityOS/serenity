@@ -9,7 +9,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <Applications/Run/RunGML.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
@@ -143,9 +143,9 @@ bool RunWindow::run_via_launch(DeprecatedString const& run_input)
     auto url = URL::create_with_url_or_path(run_input);
 
     if (url.scheme() == "file") {
-        auto real_path = Core::File::real_path_for(url.path());
+        auto real_path = Core::DeprecatedFile::real_path_for(url.path());
         if (real_path.is_null()) {
-            // errno *should* be preserved from Core::File::real_path_for().
+            // errno *should* be preserved from Core::DeprecatedFile::real_path_for().
             warnln("Failed to launch '{}': {}", url.path(), strerror(errno));
             return false;
         }

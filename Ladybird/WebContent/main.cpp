@@ -15,7 +15,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>

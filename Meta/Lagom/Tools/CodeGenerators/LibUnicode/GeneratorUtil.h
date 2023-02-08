@@ -20,7 +20,6 @@
 #include <AK/Traits.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibLocale/Locale.h>
 

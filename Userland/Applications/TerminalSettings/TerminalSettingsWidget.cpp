@@ -12,7 +12,6 @@
 #include <Applications/TerminalSettings/TerminalSettingsViewGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>

@@ -10,6 +10,7 @@
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -102,7 +103,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     type->set_text(get_description(m_mode));
 
     if (S_ISLNK(m_mode)) {
-        auto link_destination_or_error = Core::File::read_link(m_path);
+        auto link_destination_or_error = Core::DeprecatedFile::read_link(m_path);
         if (link_destination_or_error.is_error()) {
             perror("readlink");
         } else {
@@ -214,7 +215,7 @@ bool PropertiesWindow::apply_changes()
         DeprecatedString new_name = m_name_box->text();
         DeprecatedString new_file = make_full_path(new_name).characters();
 
-        if (Core::File::exists(new_file)) {
+        if (Core::DeprecatedFile::exists(new_file)) {
             GUI::MessageBox::show(this, DeprecatedString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }
