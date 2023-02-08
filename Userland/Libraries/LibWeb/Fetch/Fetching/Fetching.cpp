@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -812,6 +813,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
 
     JS::GCPtr<PendingResponse> pending_actual_response;
 
+    auto returned_pending_response = PendingResponse::create(vm, request);
+
     // 5. If response is null, then:
     if (!response) {
         // 1. If makeCORSPreflight is true and one of these conditions is true:
@@ -819,30 +822,56 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
         //       CORS-preflight fetch which, if successful, populates the cache. The purpose of the CORS-preflight
         //       fetch is to ensure the fetched resource is familiar with the CORS protocol. The cache is there to
         //       minimize the number of CORS-preflight fetches.
+        JS::GCPtr<PendingResponse> pending_preflight_response;
         if (make_cors_preflight == MakeCORSPreflight::Yes && (
-                // FIXME: - There is no method cache entry match for request’s method using request, and either request’s
-                //          method is not a CORS-safelisted method or request’s use-CORS-preflight flag is set.
-                false
-                // FIXME: - There is at least one item in the CORS-unsafe request-header names with request’s header list for
-                //          which there is no header-name cache entry match using request.
-                || false)) {
-            // FIXME: 1. Let preflightResponse be the result of running CORS-preflight fetch given request.
-            // FIXME: 2. If preflightResponse is a network error, then return preflightResponse.
+                // - There is no method cache entry match for request’s method using request, and either request’s
+                //   method is not a CORS-safelisted method or request’s use-CORS-preflight flag is set.
+                //   FIXME: We currently have no cache, so there will always be no method cache entry.
+                (!Infrastructure::is_cors_safelisted_method(request->method()) || request->use_cors_preflight())
+                // - There is at least one item in the CORS-unsafe request-header names with request’s header list for
+                //   which there is no header-name cache entry match using request.
+                //   FIXME: We currently have no cache, so there will always be no header-name cache entry.
+                || !TRY_OR_THROW_OOM(vm, Infrastructure::get_cors_unsafe_header_names(request->header_list())).is_empty())) {
+            // 1. Let preflightResponse be the result of running CORS-preflight fetch given request.
+            pending_preflight_response = TRY(cors_preflight_fetch(realm, request));
+
+            // NOTE: Step 2 is performed in pending_preflight_response's load callback below.
         }
 
-        // 2. If request’s redirect mode is "follow", then set request’s service-workers mode to "none".
-        // NOTE: Redirects coming from the network (as opposed to from a service worker) are not to be exposed to a
-        //       service worker.
-        if (request->redirect_mode() == Infrastructure::Request::RedirectMode::Follow)
-            request->set_service_workers_mode(Infrastructure::Request::ServiceWorkersMode::None);
+        auto fetch_main_content = [request = JS::make_handle(request), realm = JS::make_handle(realm), fetch_params = JS::make_handle(const_cast<Infrastructure::FetchParams&>(fetch_params))]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> {
+            // 2. If request’s redirect mode is "follow", then set request’s service-workers mode to "none".
+            // NOTE: Redirects coming from the network (as opposed to from a service worker) are not to be exposed to a
+            //       service worker.
+            if (request->redirect_mode() == Infrastructure::Request::RedirectMode::Follow)
+                request->set_service_workers_mode(Infrastructure::Request::ServiceWorkersMode::None);
 
-        // 3. Set response and actualResponse to the result of running HTTP-network-or-cache fetch given fetchParams.
-        pending_actual_response = TRY(http_network_or_cache_fetch(realm, fetch_params));
+            // 3. Set response and actualResponse to the result of running HTTP-network-or-cache fetch given fetchParams.
+            return http_network_or_cache_fetch(*realm, *fetch_params);
+        };
+
+        if (pending_preflight_response) {
+            pending_actual_response = PendingResponse::create(vm, request);
+            pending_preflight_response->when_loaded([returned_pending_response, pending_actual_response, fetch_main_content = move(fetch_main_content)](JS::NonnullGCPtr<Infrastructure::Response> preflight_response) {
+                dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'HTTP fetch' pending_preflight_response load callback");
+
+                // 2. If preflightResponse is a network error, then return preflightResponse.
+                if (preflight_response->is_network_error()) {
+                    returned_pending_response->resolve(preflight_response);
+                    return;
+                }
+
+                auto pending_main_content_response = TRY_OR_IGNORE(fetch_main_content());
+                pending_main_content_response->when_loaded([pending_actual_response](JS::NonnullGCPtr<Infrastructure::Response> main_content_response) {
+                    dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'HTTP fetch' pending_main_content_response load callback");
+                    pending_actual_response->resolve(main_content_response);
+                });
+            });
+        } else {
+            pending_actual_response = TRY(fetch_main_content());
+        }
     } else {
         pending_actual_response = PendingResponse::create(vm, request, Infrastructure::Response::create(vm));
     }
-
-    auto returned_pending_response = PendingResponse::create(vm, request);
 
     pending_actual_response->when_loaded([&realm, &vm, &fetch_params, request, response, actual_response, returned_pending_response, response_was_null = !response](JS::NonnullGCPtr<Infrastructure::Response> resolved_actual_response) mutable {
         dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'HTTP fetch' pending_actual_response load callback");
@@ -1644,6 +1673,225 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
         });
 
     return pending_response;
+}
+
+// https://fetch.spec.whatwg.org/#cors-preflight-fetch-0
+WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::Realm& realm, Infrastructure::Request const& request)
+{
+    dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'CORS-preflight fetch' with request @ {}", &request);
+
+    auto& vm = realm.vm();
+
+    // 1. Let preflight be a new request whose method is `OPTIONS`, URL list is a clone of request’s URL list, initiator is
+    //    request’s initiator, destination is request’s destination, origin is request’s origin, referrer is request’s referrer,
+    //    referrer policy is request’s referrer policy, mode is "cors", and response tainting is "cors".
+    auto preflight = Fetch::Infrastructure::Request::create(vm);
+    preflight->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy("OPTIONS"sv.bytes())));
+    preflight->set_url_list(request.url_list());
+    preflight->set_initiator(request.initiator());
+    preflight->set_destination(request.destination());
+    preflight->set_origin(request.origin());
+    preflight->set_referrer(request.referrer());
+    preflight->set_referrer_policy(request.referrer_policy());
+    preflight->set_mode(Infrastructure::Request::Mode::CORS);
+    preflight->set_response_tainting(Infrastructure::Request::ResponseTainting::CORS);
+
+    // 2. Append (`Accept`, `*/*`) to preflight’s header list.
+    auto temp_header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Accept"sv, "*/*"sv));
+    TRY_OR_THROW_OOM(vm, preflight->header_list()->append(move(temp_header)));
+
+    // 3. Append (`Access-Control-Request-Method`, request’s method) to preflight’s header list.
+    temp_header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Access-Control-Request-Method"sv, request.method()));
+    TRY_OR_THROW_OOM(vm, preflight->header_list()->append(move(temp_header)));
+
+    // 4. Let headers be the CORS-unsafe request-header names with request’s header list.
+    auto headers = TRY_OR_THROW_OOM(vm, Infrastructure::get_cors_unsafe_header_names(request.header_list()));
+
+    // 5. If headers is not empty, then:
+    if (!headers.is_empty()) {
+        // 1. Let value be the items in headers separated from each other by `,`.
+        // NOTE: This intentionally does not use combine, as 0x20 following 0x2C is not the way this was implemented,
+        //       for better or worse.
+        ByteBuffer value;
+
+        bool first = true;
+        for (auto const& header : headers) {
+            if (!first)
+                TRY_OR_THROW_OOM(vm, value.try_append(','));
+            TRY_OR_THROW_OOM(vm, value.try_append(header));
+            first = false;
+        }
+
+        // 2. Append (`Access-Control-Request-Headers`, value) to preflight’s header list.
+        temp_header = Infrastructure::Header {
+            .name = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("Access-Control-Request-Headers"sv.bytes())),
+            .value = move(value),
+        };
+        TRY_OR_THROW_OOM(vm, preflight->header_list()->append(move(temp_header)));
+    }
+
+    // 6. Let response be the result of running HTTP-network-or-cache fetch given a new fetch params whose request is preflight.
+    // FIXME: The spec doesn't say anything about timing_info here, but FetchParams requires a non-null FetchTimingInfo object.
+    auto timing_info = Infrastructure::FetchTimingInfo::create(vm);
+    auto fetch_params = Infrastructure::FetchParams::create(vm, preflight, timing_info);
+
+    auto returned_pending_response = PendingResponse::create(vm, request);
+
+    auto preflight_response = TRY(http_network_or_cache_fetch(realm, fetch_params));
+
+    preflight_response->when_loaded([&vm, &request, returned_pending_response](JS::NonnullGCPtr<Infrastructure::Response> response) {
+        dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'CORS-preflight fetch' preflight_response load callback");
+
+        // 7. If a CORS check for request and response returns success and response’s status is an ok status, then:
+        // NOTE: The CORS check is done on request rather than preflight to ensure the correct credentials mode is used.
+        if (TRY_OR_IGNORE(cors_check(request, response)) && Infrastructure::is_ok_status(response->status())) {
+            // 1. Let methods be the result of extracting header list values given `Access-Control-Allow-Methods` and response’s header list.
+            auto methods_or_failure = TRY_OR_IGNORE(Infrastructure::extract_header_list_values("Access-Control-Allow-Methods"sv.bytes(), response->header_list()));
+
+            // 2. Let headerNames be the result of extracting header list values given `Access-Control-Allow-Headers` and
+            //    response’s header list.
+            auto header_names_or_failure = TRY_OR_IGNORE(Infrastructure::extract_header_list_values("Access-Control-Allow-Headers"sv.bytes(), response->header_list()));
+
+            // 3. If either methods or headerNames is failure, return a network error.
+            if (methods_or_failure.has<Infrastructure::ExtractHeaderParseFailure>()) {
+                returned_pending_response->resolve(Infrastructure::Response::network_error(vm, "The Access-Control-Allow-Methods in the CORS-preflight response is syntactically invalid"sv));
+                return;
+            }
+
+            if (header_names_or_failure.has<Infrastructure::ExtractHeaderParseFailure>()) {
+                returned_pending_response->resolve(Infrastructure::Response::network_error(vm, "The Access-Control-Allow-Headers in the CORS-preflight response is syntactically invalid"sv));
+                return;
+            }
+
+            // NOTE: We treat "methods_or_failure" being `Empty` as empty Vector here.
+            auto methods = methods_or_failure.has<Vector<ByteBuffer>>() ? methods_or_failure.get<Vector<ByteBuffer>>() : Vector<ByteBuffer> {};
+
+            // NOTE: We treat "header_names_or_failure" being `Empty` as empty Vector here.
+            auto header_names = header_names_or_failure.has<Vector<ByteBuffer>>() ? header_names_or_failure.get<Vector<ByteBuffer>>() : Vector<ByteBuffer> {};
+
+            // FIXME: Remove this once extract_header_list_values validates the header and returns multiple values.
+            if (!methods.is_empty()) {
+                VERIFY(methods.size() == 1);
+
+                auto split_methods = StringView { methods.first() }.split_view(',');
+                Vector<ByteBuffer> trimmed_methods;
+
+                for (auto const& method : split_methods) {
+                    auto trimmed_method = method.trim(" \t"sv);
+                    auto trimmed_method_as_byte_buffer = TRY_OR_IGNORE(ByteBuffer::copy(trimmed_method.bytes()));
+                    TRY_OR_IGNORE(trimmed_methods.try_append(move(trimmed_method_as_byte_buffer)));
+                }
+
+                methods = move(trimmed_methods);
+            }
+
+            // FIXME: Remove this once extract_header_list_values validates the header and returns multiple values.
+            if (!header_names.is_empty()) {
+                VERIFY(header_names.size() == 1);
+
+                auto split_header_names = StringView { header_names.first() }.split_view(',');
+                Vector<ByteBuffer> trimmed_header_names;
+
+                for (auto const& header_name : split_header_names) {
+                    auto trimmed_header_name = header_name.trim(" \t"sv);
+                    auto trimmed_header_name_as_byte_buffer = TRY_OR_IGNORE(ByteBuffer::copy(trimmed_header_name.bytes()));
+                    TRY_OR_IGNORE(trimmed_header_names.try_append(move(trimmed_header_name_as_byte_buffer)));
+                }
+
+                header_names = move(trimmed_header_names);
+            }
+
+            // 4. If methods is null and request’s use-CORS-preflight flag is set, then set methods to a new list containing request’s method.
+            // NOTE: This ensures that a CORS-preflight fetch that happened due to request’s use-CORS-preflight flag being set is cached.
+            if (methods.is_empty() && request.use_cors_preflight())
+                methods = Vector { TRY_OR_IGNORE(ByteBuffer::copy(request.method())) };
+
+            // 5. If request’s method is not in methods, request’s method is not a CORS-safelisted method, and request’s credentials mode
+            //    is "include" or methods does not contain `*`, then return a network error.
+            if (!methods.contains_slow(request.method()) && !Infrastructure::is_cors_safelisted_method(request.method())) {
+                if (request.credentials_mode() == Infrastructure::Request::CredentialsMode::Include) {
+                    returned_pending_response->resolve(Infrastructure::Response::network_error(vm, DeprecatedString::formatted("Non-CORS-safelisted method '{}' not found in the CORS-preflight response's Access-Control-Allow-Methods header (the header may be missing). '*' is not allowed as the main request includes credentials."sv, StringView { request.method() })));
+                    return;
+                }
+
+                if (!methods.contains_slow("*"sv.bytes())) {
+                    returned_pending_response->resolve(Infrastructure::Response::network_error(vm, DeprecatedString::formatted("Non-CORS-safelisted method '{}' not found in the CORS-preflight response's Access-Control-Allow-Methods header and there was no '*' entry. The header may be missing."sv, StringView { request.method() })));
+                    return;
+                }
+            }
+
+            // 6. If one of request’s header list’s names is a CORS non-wildcard request-header name and is not a byte-case-insensitive match
+            //    for an item in headerNames, then return a network error.
+            for (auto const& header : *request.header_list()) {
+                if (Infrastructure::is_cors_non_wildcard_request_header_name(header.name)) {
+                    bool is_in_header_names = false;
+
+                    for (auto const& allowed_header_name : header_names) {
+                        if (StringView { allowed_header_name }.equals_ignoring_case(header.name)) {
+                            is_in_header_names = true;
+                            break;
+                        }
+                    }
+
+                    if (!is_in_header_names) {
+                        returned_pending_response->resolve(Infrastructure::Response::network_error(vm, DeprecatedString::formatted("Main request contains the header '{}' that is not specified in the CORS-preflight response's Access-Control-Allow-Headers header (the header may be missing). '*' does not capture this header."sv, StringView { header.name })));
+                        return;
+                    }
+                }
+            }
+
+            // 7. For each unsafeName of the CORS-unsafe request-header names with request’s header list, if unsafeName is not a
+            //    byte-case-insensitive match for an item in headerNames and request’s credentials mode is "include" or headerNames
+            //    does not contain `*`, return a network error.
+            auto unsafe_names = TRY_OR_IGNORE(Infrastructure::get_cors_unsafe_header_names(request.header_list()));
+            for (auto const& unsafe_name : unsafe_names) {
+                bool is_in_header_names = false;
+
+                for (auto const& header_name : header_names) {
+                    if (StringView { unsafe_name }.equals_ignoring_case(header_name)) {
+                        is_in_header_names = true;
+                        break;
+                    }
+                }
+
+                if (!is_in_header_names) {
+                    if (request.credentials_mode() == Infrastructure::Request::CredentialsMode::Include) {
+                        returned_pending_response->resolve(Infrastructure::Response::network_error(vm, DeprecatedString::formatted("CORS-unsafe request-header '{}' not found in the CORS-preflight response's Access-Control-Allow-Headers header (the header may be missing). '*' is not allowed as the main request includes credentials."sv, StringView { unsafe_name })));
+                        return;
+                    }
+
+                    if (!header_names.contains_slow("*"sv.bytes())) {
+                        returned_pending_response->resolve(Infrastructure::Response::network_error(vm, DeprecatedString::formatted("CORS-unsafe request-header '{}' not found in the CORS-preflight response's Access-Control-Allow-Headers header and there was no '*' entry. The header may be missing."sv, StringView { unsafe_name })));
+                        return;
+                    }
+                }
+            }
+
+            // FIXME: 8. Let max-age be the result of extracting header list values given `Access-Control-Max-Age` and response’s header list.
+            // FIXME: 9. If max-age is failure or null, then set max-age to 5.
+            // FIXME: 10. If max-age is greater than an imposed limit on max-age, then set max-age to the imposed limit.
+
+            // 11. If the user agent does not provide for a cache, then return response.
+            // NOTE: Since we don't currently have a cache, this is always true.
+            returned_pending_response->resolve(response);
+            return;
+
+            // FIXME: 12. For each method in methods for which there is a method cache entry match using request, set matching entry’s max-age
+            //            to max-age.
+            // FIXME: 13. For each method in methods for which there is no method cache entry match using request, create a new cache entry
+            //            with request, max-age, method, and null.
+            // FIXME: 14. For each headerName in headerNames for which there is a header-name cache entry match using request, set matching
+            //            entry’s max-age to max-age.
+            // FIXME: 15. For each headerName in headerNames for which there is no header-name cache entry match using request, create a
+            //            new cache entry with request, max-age, null, and headerName.
+            // FIXME: 16. Return response.
+        }
+
+        // 8. Otherwise, return a network error.
+        returned_pending_response->resolve(Infrastructure::Response::network_error(vm, "CORS-preflight check failed"));
+    });
+
+    return returned_pending_response;
 }
 
 }
