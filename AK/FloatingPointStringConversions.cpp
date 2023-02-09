@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BigIntBase.h>
 #include <AK/CharacterTypes.h>
 #include <AK/FloatingPointStringConversions.h>
 #include <AK/Format.h>
@@ -1367,26 +1368,12 @@ static FloatingPointBuilder binary_to_decimal(u64 mantissa, i64 exponent)
     };
 }
 
-static constexpr u64 multiply_with_carry(u64 x, u64 y, u64& carry)
-{
-    u128 result = (u128 { x } * y) + carry;
-    carry = result.high();
-    return result.low();
-}
-
-static constexpr u64 add_with_overflow(u64 x, u64 y, bool& did_overflow)
-{
-    u64 value;
-    did_overflow = __builtin_add_overflow(x, y, &value);
-    return value;
-}
-
 class MinimalBigInt {
 public:
     MinimalBigInt() = default;
     MinimalBigInt(u64 value)
     {
-        append(value);
+        StorageOperations::copy(Detail::get_storage_of(value), get_storage(words_in_u64));
     }
 
     static MinimalBigInt from_decimal_floating_point(BasicParseResult const& parse_result, size_t& digits_parsed, size_t max_total_digits)
@@ -1503,34 +1490,35 @@ public:
         // Top word should be non-zero
         VERIFY(m_words[m_used_length - 1] != 0);
 
-        auto leading_zeros = count_leading_zeroes(m_words[m_used_length - 1]);
-        if (m_used_length == 1)
-            return m_words[0] << leading_zeros;
+        auto top_u64_start = static_cast<size_t>(size_in_bits()) - 64;
+        u64 top_u64 = 0;
 
-        for (size_t i = 0; i < m_used_length - 2; i++) {
-            if (m_words[i] != 0) {
-                has_truncated_bits = true;
-                break;
+        for (size_t i = 0; i < m_used_length; ++i) {
+            size_t word_start = i * word_size;
+            size_t word_end = word_start + word_size;
+
+            if (top_u64_start < word_end) {
+                if (top_u64_start >= word_start) {
+                    auto shift = top_u64_start - word_start;
+                    top_u64 = m_words[i] >> shift;
+                    has_truncated_bits |= m_words[i] ^ (top_u64 << shift);
+                } else {
+                    top_u64 |= static_cast<u64>(m_words[i]) << (word_start - top_u64_start);
+                }
+            } else {
+                has_truncated_bits |= m_words[i];
             }
         }
 
-        if (leading_zeros == 0) {
-            // Shift of 64+ is undefined so this has to be a separate case
-            has_truncated_bits |= m_words[m_used_length - 2] != 0;
-            return m_words[m_used_length - 1] << leading_zeros;
-        }
-
-        auto bits_from_second = 64 - leading_zeros;
-        has_truncated_bits |= (m_words[m_used_length - 2] << leading_zeros) != 0;
-        return (m_words[m_used_length - 1] << leading_zeros) | (m_words[m_used_length - 2] >> bits_from_second);
+        return top_u64;
     }
 
     i32 size_in_bits() const
     {
         if (m_used_length == 0)
             return 0;
-        // This is guaranteed to be at most max_size_in_words * 64 so not above i32 max
-        return static_cast<i32>(64 * (m_used_length)-count_leading_zeroes(m_words[m_used_length - 1]));
+        // This is guaranteed to be at most max_words_needed * word_size so not above i32 max
+        return static_cast<i32>(word_size * m_used_length) - count_leading_zeroes(m_words[m_used_length - 1]);
     }
 
     void multiply_with_power_of_10(u32 exponent)
@@ -1589,75 +1577,45 @@ public:
 
     void multiply_with_power_of_2(u32 exponent)
     {
-        // It's cheaper to shift bits first since that creates at most 1 new word
-        shift_bits(exponent % 64);
-        shift_words(exponent / 64);
+        if (exponent) {
+            size_t max_new_length = m_used_length + (exponent + word_size - 1) / word_size;
+            if (m_used_length != max_words_needed)
+                m_words[m_used_length] = 0;
+            auto storage = get_storage(max_new_length);
+
+            StorageOperations::shift_left(storage, exponent, storage);
+            trim_last_word_if_zero();
+        }
     }
 
     enum class CompareResult {
-        Equal,
-        GreaterThan,
-        LessThan
+        Equal = 0,
+        GreaterThan = 1,
+        LessThan = -1
     };
 
     CompareResult compare_to(MinimalBigInt const& other) const
     {
-        if (m_used_length > other.m_used_length)
-            return CompareResult::GreaterThan;
-
-        if (m_used_length < other.m_used_length)
-            return CompareResult::LessThan;
-
-        // Now we know it's the same size
-        for (size_t i = m_used_length; i > 0; --i) {
-            auto our_word = m_words[i - 1];
-            auto their_word = other.m_words[i - 1];
-
-            if (our_word > their_word)
-                return CompareResult::GreaterThan;
-            if (their_word > our_word)
-                return CompareResult::LessThan;
-        }
-
-        return CompareResult::Equal;
+        return static_cast<CompareResult>(StorageOperations::compare(get_storage(), other.get_storage(), false));
     }
 
 private:
-    void shift_words(u32 amount)
+    UnsignedStorageSpan get_storage(size_t new_length = 0)
     {
-        if (amount == 0)
-            return;
-
-        VERIFY(amount + m_used_length <= max_words_needed);
-
-        for (size_t i = m_used_length + amount - 1; i > amount - 1; --i)
-            m_words[i] = m_words[i - amount];
-
-        for (size_t i = 0; i < amount; ++i)
-            m_words[i] = 0;
-
-        m_used_length += amount;
+        if (new_length > m_used_length)
+            m_used_length = min(max_words_needed, new_length);
+        return { m_words.data(), m_used_length };
     }
 
-    void shift_bits(u32 amount)
+    UnsignedStorageReadonlySpan get_storage() const
     {
-        if (amount == 0)
-            return;
+        return { m_words.data(), m_used_length };
+    }
 
-        VERIFY(amount < 64);
-
-        u32 inverse = 64 - amount;
-        u64 last_word = 0;
-
-        for (size_t i = 0; i < m_used_length; ++i) {
-            u64 word = m_words[i];
-            m_words[i] = (word << amount) | (last_word >> inverse);
-            last_word = word;
-        }
-
-        u64 carry = last_word >> inverse;
-        if (carry != 0)
-            append(carry);
+    void trim_last_word_if_zero()
+    {
+        if (m_used_length > 0 && !m_words[m_used_length - 1])
+            --m_used_length;
     }
 
     static constexpr Array<u64, 20> powers_of_ten_uint64 = {
@@ -1669,27 +1627,35 @@ private:
 
     void multiply_with_small(u64 value)
     {
-        u64 carry = 0;
-        for (size_t i = 0; i < m_used_length; ++i)
-            m_words[i] = multiply_with_carry(m_words[i], value, carry);
-
-        if (carry != 0)
-            append(carry);
+        if (value <= max_word) {
+            auto native_value = static_cast<NativeWord>(value);
+            NativeWord carry = 0;
+            for (size_t i = 0; i < m_used_length; ++i) {
+                auto result = UFixedBigInt<word_size>(m_words[i]).wide_multiply(native_value) + carry;
+                carry = result.high();
+                m_words[i] = result.low();
+            }
+            if (carry != 0)
+                m_words[m_used_length++] = carry;
+        } else {
+            // word_size == 32 && value > NumericLimits<u32>::max()
+            auto copy = *this;
+            StorageOperations::baseline_mul(copy.get_storage(), Detail::get_storage_of(value), get_storage(m_used_length + 2), g_null_allocator);
+            trim_last_word_if_zero();
+        }
     }
 
     void add_small(u64 value)
     {
-        bool overflow;
-        size_t index = 0;
-        while (value != 0 && index < m_used_length) {
-            m_words[index] = add_with_overflow(m_words[index], value, overflow);
-
-            value = overflow ? 1 : 0;
-            ++index;
+        if (m_used_length == 0 && value <= max_word) {
+            m_words[m_used_length++] = static_cast<NativeWord>(value);
+            return;
         }
 
-        if (value != 0)
-            append(value);
+        auto initial_storage = get_storage();
+        auto expanded_storage = get_storage(max(m_used_length, words_in_u64));
+        if (StorageOperations::add<false>(initial_storage, Detail::get_storage_of(value), expanded_storage))
+            m_words[m_used_length++] = 1;
     }
 
     void add_digits(u64 value, size_t digits_for_value)
@@ -1700,21 +1666,15 @@ private:
         add_small(value);
     }
 
-    void append(u64 word)
-    {
-        VERIFY(m_used_length <= max_words_needed);
-        m_words[m_used_length] = word;
-        ++m_used_length;
-    }
-
     // The max valid words we might need are log2(10^(769 + 342)), max digits + max exponent
-    static constexpr size_t max_words_needed = 58;
+    static constexpr size_t words_in_u64 = word_size == 64 ? 1 : 2;
+    static constexpr size_t max_words_needed = 58 * words_in_u64;
 
     size_t m_used_length = 0;
 
     // FIXME: This is an array just to avoid allocations, but the max size is only needed for
     //        massive amount of digits, so a smaller vector would work for most cases.
-    Array<u64, max_words_needed> m_words {};
+    Array<NativeWord, max_words_needed> m_words {};
 };
 
 static bool round_nearest_tie_even(FloatingPointBuilder& value, bool did_truncate_bits, i32 shift)
