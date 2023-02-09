@@ -15,7 +15,7 @@ namespace Video {
 
 #define TRY_OR_FATAL_ERROR(expression)                                                               \
     ({                                                                                               \
-        auto _fatal_expression = (expression);                                                       \
+        auto&& _fatal_expression = (expression);                                                     \
         if (_fatal_expression.is_error()) {                                                          \
             dispatch_fatal_error(_fatal_expression.release_error());                                 \
             return;                                                                                  \
@@ -156,7 +156,7 @@ bool PlaybackManager::decode_and_queue_one_sample()
 
 #define TRY_OR_ENQUEUE_ERROR(expression)                                                                                \
     ({                                                                                                                  \
-        auto _temporary_result = ((expression));                                                                        \
+        auto&& _temporary_result = ((expression));                                                                      \
         if (_temporary_result.is_error()) {                                                                             \
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Enqueued decoder error: {}", _temporary_result.error().string_literal()); \
             m_frame_queue->enqueue(FrameQueueItem::error_marker(_temporary_result.release_error()));                    \

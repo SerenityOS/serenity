@@ -21,7 +21,7 @@ namespace JS {
     ({                                                                                               \
         /* Ignore -Wshadow to allow nesting the macro. */                                            \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
-            auto _temporary_result = (expression));                                                  \
+            auto&& _temporary_result = (expression));                                                \
         if (_temporary_result.is_error()) {                                                          \
             VERIFY(_temporary_result.error().code() == ENOMEM);                                      \
             return vm.throw_completion<JS::InternalError>(JS::ErrorType::OutOfMemory);               \
@@ -35,7 +35,7 @@ namespace JS {
     ({                                                                                                 \
         /* Ignore -Wshadow to allow nesting the macro. */                                              \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                               \
-            auto _temporary_result = (expression));                                                    \
+            auto&& _temporary_result = (expression));                                                  \
         if (_temporary_result.is_error()) {                                                            \
             auto _completion = _temporary_result.release_error();                                      \
                                                                                                        \

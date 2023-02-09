@@ -79,7 +79,7 @@ private:
 
 #define DECODER_TRY(category, expression)                                                  \
     ({                                                                                     \
-        auto _result = ((expression));                                                     \
+        auto&& _result = ((expression));                                                   \
         if (_result.is_error()) [[unlikely]] {                                             \
             auto _error_string = _result.release_error().string_literal();                 \
             return DecoderError::from_source_location(                                     \
