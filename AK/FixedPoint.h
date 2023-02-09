@@ -95,6 +95,15 @@ public:
         return create_raw(m_value & radix_mask);
     }
 
+    constexpr This clamp(This minimum, This maximum) const
+    {
+        if (*this < minimum)
+            return minimum;
+        if (*this > maximum)
+            return maximum;
+        return *this;
+    }
+
     constexpr This round() const
     {
         return This { static_cast<Underlying>(*this) };
