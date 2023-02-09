@@ -7,6 +7,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
@@ -36,7 +37,7 @@ static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView
     if constexpr (SAVE_OUTPUT) {
         auto target_path = LexicalPath("/home/anon").append(reference_filename);
         auto qoi_buffer = Gfx::QOIWriter::encode(bitmap);
-        auto qoi_output_stream = MUST(Core::Stream::File::open(target_path.string(), Core::Stream::OpenMode::Write));
+        auto qoi_output_stream = MUST(Core::File::open(target_path.string(), Core::File::OpenMode::Write));
         MUST(qoi_output_stream->write_entire_buffer(qoi_buffer));
     }
 

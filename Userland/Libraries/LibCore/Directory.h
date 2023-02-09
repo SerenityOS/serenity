@@ -11,6 +11,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Noncopyable.h>
 #include <AK/Optional.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -37,7 +38,7 @@ public:
     static ErrorOr<Directory> create(DeprecatedString path, CreateDirectories, mode_t creation_mode = 0755);
     static ErrorOr<Directory> adopt_fd(int fd, Optional<LexicalPath> path = {});
 
-    ErrorOr<NonnullOwnPtr<Stream::File>> open(StringView filename, Stream::OpenMode mode) const;
+    ErrorOr<NonnullOwnPtr<File>> open(StringView filename, File::OpenMode mode) const;
     ErrorOr<struct stat> stat() const;
     ErrorOr<DirIterator> create_iterator() const;
 

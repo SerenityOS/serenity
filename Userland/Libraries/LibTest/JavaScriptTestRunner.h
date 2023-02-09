@@ -17,6 +17,7 @@
 #include <AK/Result.h>
 #include <AK/Tuple.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
@@ -217,7 +218,7 @@ inline JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm&
 inline ByteBuffer load_entire_file(StringView path)
 {
     auto try_load_entire_file = [](StringView const& path) -> ErrorOr<ByteBuffer> {
-        auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto file_size = TRY(file->size());
         auto content = TRY(ByteBuffer::create_uninitialized(file_size));
         TRY(file->read(content.bytes()));

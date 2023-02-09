@@ -8,6 +8,7 @@
 
 #include "KeyboardMapperWidget.h"
 #include "KeyPositions.h"
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
@@ -191,7 +192,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
 
     // Write to file.
     DeprecatedString file_content = map_json.to_deprecated_string();
-    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Write));
     TRY(file->write(file_content.bytes()));
     file->close();
 

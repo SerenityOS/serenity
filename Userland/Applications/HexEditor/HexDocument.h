@@ -52,7 +52,7 @@ public:
     size_t size() const override;
     Type type() const override;
     void clear_changes() override;
-    ErrorOr<void> write_to_file(Core::Stream::File& file);
+    ErrorOr<void> write_to_file(Core::File& file);
 
 private:
     ByteBuffer m_buffer;
@@ -60,16 +60,16 @@ private:
 
 class HexDocumentFile final : public HexDocument {
 public:
-    static ErrorOr<NonnullOwnPtr<HexDocumentFile>> create(NonnullOwnPtr<Core::Stream::File> file);
+    static ErrorOr<NonnullOwnPtr<HexDocumentFile>> create(NonnullOwnPtr<Core::File> file);
     virtual ~HexDocumentFile() = default;
 
     HexDocumentFile(HexDocumentFile&&) = default;
     HexDocumentFile(HexDocumentFile const&) = delete;
 
-    ErrorOr<void> set_file(NonnullOwnPtr<Core::Stream::File> file);
-    NonnullOwnPtr<Core::Stream::File> const& file() const;
+    ErrorOr<void> set_file(NonnullOwnPtr<Core::File> file);
+    NonnullOwnPtr<Core::File> const& file() const;
     ErrorOr<void> write_to_file();
-    ErrorOr<void> write_to_file(Core::Stream::File& file);
+    ErrorOr<void> write_to_file(Core::File& file);
     Cell get(size_t position) override;
     u8 get_unchanged(size_t position) override;
     size_t size() const override;
@@ -77,12 +77,12 @@ public:
     void clear_changes() override;
 
 private:
-    explicit HexDocumentFile(NonnullOwnPtr<Core::Stream::File> file);
+    explicit HexDocumentFile(NonnullOwnPtr<Core::File> file);
     ErrorOr<void> initialize_internal_state();
 
     void ensure_position_in_buffer(size_t position);
 
-    NonnullOwnPtr<Core::Stream::File> m_file;
+    NonnullOwnPtr<Core::File> m_file;
     size_t m_file_size;
 
     Array<u8, 2048> m_buffer;

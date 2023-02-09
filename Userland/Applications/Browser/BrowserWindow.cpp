@@ -488,7 +488,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     m_search_engine_actions.add_action(*m_disable_search_engine_action);
     m_disable_search_engine_action->set_checked(true);
 
-    auto search_engines_file = TRY(Core::Stream::File::open(Browser::search_engines_file_path(), Core::Stream::OpenMode::Read));
+    auto search_engines_file = TRY(Core::File::open(Browser::search_engines_file_path(), Core::File::OpenMode::Read));
     auto file_size = TRY(search_engines_file->size());
     auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
     if (!search_engines_file->read_entire_buffer(buffer).is_error()) {
@@ -775,7 +775,7 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
 
     auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
 
-    auto screenshot_file = TRY(Core::Stream::File::open(path.string(), Core::Stream::OpenMode::Write));
+    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
     TRY(screenshot_file->write(encoded));
 
     return {};

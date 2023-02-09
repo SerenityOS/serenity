@@ -29,8 +29,8 @@ public:
         DeprecatedString source_file_name = filename.replace("../../"sv, source_root_path, ReplaceMode::FirstOnly);
 
         auto try_read_lines = [&]() -> ErrorOr<void> {
-            auto unbuffered_file = TRY(Core::Stream::File::open(source_file_name, Core::Stream::OpenMode::Read));
-            auto file = TRY(Core::Stream::BufferedFile::create(move(unbuffered_file)));
+            auto unbuffered_file = TRY(Core::File::open(source_file_name, Core::File::OpenMode::Read));
+            auto file = TRY(Core::BufferedFile::create(move(unbuffered_file)));
 
             Array<u8, 1024> buffer;
             while (!file->is_eof())

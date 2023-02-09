@@ -12,6 +12,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
@@ -50,12 +51,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     outln("Archive: {}", zip_file_path);
-    auto file_stream = TRY(Core::Stream::File::open(zip_file_path, Core::Stream::OpenMode::Write));
+    auto file_stream = TRY(Core::File::open(zip_file_path, Core::File::OpenMode::Write));
     Archive::ZipOutputStream zip_stream(move(file_stream));
 
     auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
         auto canonicalized_path = LexicalPath::canonicalized_path(path);
-        auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto file_buffer = TRY(file->read_until_eof());
         Archive::ZipMember member {};
         member.name = TRY(String::from_deprecated_string(canonicalized_path));

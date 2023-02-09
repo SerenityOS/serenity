@@ -34,7 +34,7 @@ public:
 private:
     ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_filesystem(DeprecatedString const& filename) const;
     ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_fd(int fd) const;
-    ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_file(NonnullOwnPtr<Core::Stream::File>) const;
+    ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_file(NonnullOwnPtr<Core::File>) const;
     static RefPtr<GUI::TextDocument> create_with_content(DeprecatedString const&);
 
 private:

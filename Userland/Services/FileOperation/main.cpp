@@ -11,6 +11,7 @@
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -38,7 +39,7 @@ static ErrorOr<int> perform_copy(Vector<StringView> const& sources, DeprecatedSt
 static ErrorOr<int> perform_move(Vector<StringView> const& sources, DeprecatedString const& destination);
 static ErrorOr<int> perform_delete(Vector<StringView> const& sources);
 static ErrorOr<int> execute_work_items(Vector<WorkItem> const& items);
-static ErrorOr<NonnullOwnPtr<Core::Stream::File>> open_destination_file(DeprecatedString const& destination);
+static ErrorOr<NonnullOwnPtr<Core::File>> open_destination_file(DeprecatedString const& destination);
 static DeprecatedString deduplicate_destination_file_name(DeprecatedString const& destination);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -230,7 +231,7 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
         };
 
         auto copy_file = [&](DeprecatedString const& source, DeprecatedString const& destination) -> ErrorOr<int> {
-            auto source_file = TRY(Core::Stream::File::open(source, Core::Stream::OpenMode::Read));
+            auto source_file = TRY(Core::File::open(source, Core::File::OpenMode::Read));
             // FIXME: When the file already exists, let the user choose the next action instead of renaming it by default.
             auto destination_file = TRY(open_destination_file(destination));
             auto buffer = TRY(ByteBuffer::create_zeroed(64 * KiB));
@@ -327,9 +328,9 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
     return 0;
 }
 
-ErrorOr<NonnullOwnPtr<Core::Stream::File>> open_destination_file(DeprecatedString const& destination)
+ErrorOr<NonnullOwnPtr<Core::File>> open_destination_file(DeprecatedString const& destination)
 {
-    auto destination_file_or_error = Core::Stream::File::open(destination, (Core::Stream::OpenMode)(Core::Stream::OpenMode::Write | Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::MustBeNew));
+    auto destination_file_or_error = Core::File::open(destination, (Core::File::OpenMode)(Core::File::OpenMode::Write | Core::File::OpenMode::Truncate | Core::File::OpenMode::MustBeNew));
     if (destination_file_or_error.is_error() && destination_file_or_error.error().code() == EEXIST) {
         return open_destination_file(deduplicate_destination_file_name(destination));
     }

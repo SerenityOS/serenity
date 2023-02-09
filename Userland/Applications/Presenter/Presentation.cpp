@@ -7,6 +7,7 @@
 
 #include "Presentation.h"
 #include <AK/JsonObject.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibGUI/Window.h>
 #include <errno_codes.h>
@@ -79,7 +80,7 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
 {
     if (file_name.is_empty())
         return ENOENT;
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(file_name, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open_file_or_standard_stream(file_name, Core::File::OpenMode::Read));
     auto contents = TRY(file->read_until_eof());
     auto content_string = StringView { contents };
     auto json = TRY(JsonValue::from_string(content_string));

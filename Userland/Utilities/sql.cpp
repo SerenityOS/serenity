@@ -152,7 +152,7 @@ private:
     NonnullRefPtr<SQL::SQLClient> m_sql_client;
     SQL::ConnectionID m_connection_id { 0 };
     Core::EventLoop& m_loop;
-    OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
+    OwnPtr<Core::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
     Vector<DeprecatedString> m_input_file_chain {};
     Array<u8, 4096> m_buffer {};
@@ -161,13 +161,13 @@ private:
     {
         if (!m_input_file && !m_input_file_chain.is_empty()) {
             auto file_name = m_input_file_chain.take_first();
-            auto file_or_error = Core::Stream::File::open(file_name, Core::Stream::OpenMode::Read);
+            auto file_or_error = Core::File::open(file_name, Core::File::OpenMode::Read);
             if (file_or_error.is_error()) {
                 warnln("Input file {} could not be opened: {}", file_name, file_or_error.error());
                 return {};
             }
 
-            auto buffered_file_or_error = Core::Stream::BufferedFile::create(file_or_error.release_value());
+            auto buffered_file_or_error = Core::BufferedFile::create(file_or_error.release_value());
             if (buffered_file_or_error.is_error()) {
                 warnln("Input file {} could not be buffered: {}", file_name, buffered_file_or_error.error());
                 return {};

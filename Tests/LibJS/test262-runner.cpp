@@ -12,6 +12,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
@@ -139,7 +140,7 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
 {
     auto cache = s_cached_harness_files.find(harness_file);
     if (cache == s_cached_harness_files.end()) {
-        auto file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}{}", s_harness_file_directory, harness_file), Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(DeprecatedString::formatted("{}{}", s_harness_file_directory, harness_file), Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             return TestError {
                 NegativePhase::Harness,
@@ -679,12 +680,12 @@ int main(int argc, char** argv)
 #define DISARM_TIMER() \
     alarm(0)
 
-    auto standard_input_or_error = Core::Stream::File::standard_input();
+    auto standard_input_or_error = Core::File::standard_input();
     if (standard_input_or_error.is_error())
         return exit_setup_input_failure;
 
     Array<u8, 1024> input_buffer {};
-    auto buffered_standard_input_or_error = Core::Stream::BufferedFile::create(standard_input_or_error.release_value());
+    auto buffered_standard_input_or_error = Core::BufferedFile::create(standard_input_or_error.release_value());
     if (buffered_standard_input_or_error.is_error())
         return exit_setup_input_failure;
 
@@ -708,7 +709,7 @@ int main(int argc, char** argv)
             VERIFY(!s_harness_file_directory.is_empty());
         }
 
-        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Could not open file: {}", path);
             return exit_read_file_failure;

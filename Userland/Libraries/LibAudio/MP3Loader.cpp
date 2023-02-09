@@ -8,6 +8,7 @@
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
 #include <AK/FixedArray.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -21,7 +22,7 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<MP3LoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());

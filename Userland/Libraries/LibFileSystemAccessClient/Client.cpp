@@ -72,23 +72,23 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
     return handle_promise<Result>(id);
 }
 
-static Core::Stream::OpenMode to_stream_open_mode(Core::OpenMode open_mode)
+static Core::File::OpenMode to_stream_open_mode(Core::OpenMode open_mode)
 {
-    Core::Stream::OpenMode result {};
+    Core::File::OpenMode result {};
     if ((open_mode & Core::OpenMode::ReadOnly) == Core::OpenMode::ReadOnly)
-        result |= Core::Stream::OpenMode::Read;
+        result |= Core::File::OpenMode::Read;
     if ((open_mode & Core::OpenMode::WriteOnly) == Core::OpenMode::WriteOnly)
-        result |= Core::Stream::OpenMode::Write;
+        result |= Core::File::OpenMode::Write;
     if ((open_mode & Core::OpenMode::ReadWrite) == Core::OpenMode::ReadWrite)
-        result |= Core::Stream::OpenMode::ReadWrite;
+        result |= Core::File::OpenMode::ReadWrite;
     if ((open_mode & Core::OpenMode::Append) == Core::OpenMode::Append)
-        result |= Core::Stream::OpenMode::Append;
+        result |= Core::File::OpenMode::Append;
     if ((open_mode & Core::OpenMode::Truncate) == Core::OpenMode::Truncate)
-        result |= Core::Stream::OpenMode::Truncate;
+        result |= Core::File::OpenMode::Truncate;
     if ((open_mode & Core::OpenMode::MustBeNew) == Core::OpenMode::MustBeNew)
-        result |= Core::Stream::OpenMode::MustBeNew;
+        result |= Core::File::OpenMode::MustBeNew;
     if ((open_mode & Core::OpenMode::KeepOnExec) == Core::OpenMode::KeepOnExec)
-        result |= Core::Stream::OpenMode::KeepOnExec;
+        result |= Core::File::OpenMode::KeepOnExec;
 
     return result;
 }
@@ -120,7 +120,7 @@ DeprecatedResult Client::try_request_file_deprecated(GUI::Window* parent_window,
     return handle_promise<DeprecatedResult>(id);
 }
 
-Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::Stream::OpenMode mode)
+Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::File::OpenMode mode)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
@@ -167,7 +167,7 @@ DeprecatedResult Client::try_open_file_deprecated(GUI::Window* parent_window, De
     return handle_promise<DeprecatedResult>(id);
 }
 
-Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::Stream::OpenMode requested_access)
+Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::File::OpenMode requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
@@ -209,7 +209,7 @@ DeprecatedResult Client::try_save_file_deprecated(GUI::Window* parent_window, De
     return handle_promise<DeprecatedResult>(id);
 }
 
-Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::Stream::OpenMode requested_access)
+Result Client::save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::File::OpenMode requested_access)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
@@ -275,7 +275,7 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
     }
 
     auto file_or_error = [&]() -> ErrorOr<File> {
-        auto stream = TRY(Core::Stream::File::adopt_fd(ipc_file->take_fd(), Core::Stream::OpenMode::ReadWrite));
+        auto stream = TRY(Core::File::adopt_fd(ipc_file->take_fd(), Core::File::OpenMode::ReadWrite));
         auto filename = TRY(String::from_deprecated_string(*chosen_file));
         return File({}, move(stream), filename);
     }();

@@ -602,7 +602,7 @@ ErrorOr<void> Editor::interrupted()
 
     m_finish = false;
     {
-        auto stderr_stream = TRY(Core::Stream::File::standard_error());
+        auto stderr_stream = TRY(Core::File::standard_error());
         TRY(reposition_cursor(*stderr_stream, true));
         if (TRY(m_suggestion_display->cleanup()))
             TRY(reposition_cursor(*stderr_stream, true));
@@ -648,7 +648,7 @@ ErrorOr<void> Editor::handle_resize_event(bool reset_origin)
 
     set_origin(m_origin_row, 1);
 
-    auto stderr_stream = TRY(Core::Stream::File::standard_error());
+    auto stderr_stream = TRY(Core::File::standard_error());
 
     TRY(reposition_cursor(*stderr_stream, true));
     TRY(m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns));
@@ -665,7 +665,7 @@ ErrorOr<void> Editor::really_quit_event_loop()
 {
     m_finish = false;
     {
-        auto stderr_stream = TRY(Core::Stream::File::standard_error());
+        auto stderr_stream = TRY(Core::File::standard_error());
         TRY(reposition_cursor(*stderr_stream, true));
         TRY(stderr_stream->write_entire_buffer("\n"sv.bytes()));
     }
@@ -731,7 +731,7 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
     strip_styles(true);
 
     {
-        auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+        auto stderr_stream = Core::File::standard_error().release_value_but_fixme_should_propagate_errors();
         auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
         for (size_t i = 0; i < prompt_lines; ++i)
             stderr_stream->write_entire_buffer("\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
@@ -1173,7 +1173,7 @@ ErrorOr<void> Editor::handle_read_event()
             for (auto& view : completion_result.insert)
                 insert(view);
 
-            auto stderr_stream = TRY(Core::Stream::File::standard_error());
+            auto stderr_stream = TRY(Core::File::standard_error());
             TRY(reposition_cursor(*stderr_stream));
 
             if (completion_result.style_to_apply.has_value()) {
@@ -1252,7 +1252,7 @@ ErrorOr<void> Editor::cleanup_suggestions()
         // We probably have some suggestions drawn,
         // let's clean them up.
         if (TRY(m_suggestion_display->cleanup())) {
-            auto stderr_stream = TRY(Core::Stream::File::standard_error());
+            auto stderr_stream = TRY(Core::File::standard_error());
             TRY(reposition_cursor(*stderr_stream));
             m_refresh_needed = true;
         }
@@ -1326,7 +1326,7 @@ ErrorOr<void> Editor::cleanup()
     if (new_lines < m_shown_lines)
         m_extra_forward_lines = max(m_shown_lines - new_lines, m_extra_forward_lines);
 
-    auto stderr_stream = TRY(Core::Stream::File::standard_error());
+    auto stderr_stream = TRY(Core::File::standard_error());
     TRY(reposition_cursor(*stderr_stream, true));
     auto current_line = num_lines() - 1;
     TRY(VT::clear_lines(current_line, m_extra_forward_lines, *stderr_stream));

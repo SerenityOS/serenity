@@ -7,6 +7,7 @@
 
 #include <AK/Array.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -37,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(seek_to, "Seek to a byte offset", "seek", 's', "offset");
     args_parser.parse(args);
 
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     if (seek_to.has_value())
         TRY(file->seek(seek_to.value(), SeekMode::SetPosition));
 

@@ -6,6 +6,7 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -16,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/sys/kernel/jails", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto jails_data = TRY(Core::Stream::File::open("/sys/kernel/jails"sv, Core::Stream::OpenMode::Read));
+    auto jails_data = TRY(Core::File::open("/sys/kernel/jails"sv, Core::File::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 

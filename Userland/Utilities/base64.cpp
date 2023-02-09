@@ -6,6 +6,7 @@
 
 #include <AK/Base64.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -22,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filepath, "", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(filepath, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open_file_or_standard_stream(filepath, Core::File::OpenMode::Read));
     ByteBuffer buffer = TRY(file->read_until_eof());
 
     TRY(Core::System::pledge("stdio"));

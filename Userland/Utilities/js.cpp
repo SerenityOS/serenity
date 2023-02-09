@@ -95,7 +95,7 @@ enum class PrintTarget {
 
 static ErrorOr<void> print(JS::Value value, PrintTarget target = PrintTarget::StandardOutput)
 {
-    auto stream = TRY(target == PrintTarget::StandardError ? Core::Stream::File::standard_error() : Core::Stream::File::standard_output());
+    auto stream = TRY(target == PrintTarget::StandardError ? Core::File::standard_error() : Core::File::standard_output());
     return print(value, *stream);
 }
 
@@ -185,7 +185,7 @@ static ErrorOr<String> read_next_piece()
 
 static ErrorOr<void> write_to_file(String const& path)
 {
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write, 0666));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Write, 0666));
     for (size_t i = 0; i < g_repl_statements.size(); i++) {
         auto line = g_repl_statements[i].bytes();
         if (line.size() > 0 && i != g_repl_statements.size() - 1) {
@@ -334,7 +334,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
     auto& realm = *vm.current_realm();
 
     auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
@@ -354,7 +354,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
     auto filename = TRY(vm.argument(0).to_string(vm));
-    auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
 
@@ -871,7 +871,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
 
             for (auto& path : script_paths) {
-                auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+                auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
                 auto file_contents = TRY(file->read_until_eof());
                 auto source = StringView { file_contents };
 

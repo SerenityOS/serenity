@@ -6,6 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCpp/Parser.h>
 #include <LibTest/TestCase.h>
@@ -15,7 +16,7 @@ constexpr char TESTS_ROOT_DIR[] = "/home/anon/Tests/cpp-tests/parser";
 
 static DeprecatedString read_all(DeprecatedString const& path)
 {
-    auto file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = MUST(Core::File::open(path, Core::File::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     MUST(file->read_entire_buffer(content.bytes()));

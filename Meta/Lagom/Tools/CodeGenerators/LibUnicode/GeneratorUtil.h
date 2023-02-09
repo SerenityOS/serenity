@@ -20,6 +20,7 @@
 #include <AK/Traits.h>
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibLocale/Locale.h>
 
@@ -323,18 +324,18 @@ struct CanonicalLanguageID {
     Vector<size_t> variants {};
 };
 
-inline ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file(StringView path, Core::Stream::OpenMode mode)
+inline ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file(StringView path, Core::File::OpenMode mode)
 {
     if (path.is_empty())
         return Error::from_string_literal("Provided path is empty, please provide all command line options");
 
-    auto file = TRY(Core::Stream::File::open(path, mode));
-    return Core::Stream::BufferedFile::create(move(file));
+    auto file = TRY(Core::File::open(path, mode));
+    return Core::BufferedFile::create(move(file));
 }
 
 inline ErrorOr<JsonValue> read_json_file(StringView path)
 {
-    auto file = TRY(open_file(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(open_file(path, Core::File::OpenMode::Read));
     auto buffer = TRY(file->read_until_eof());
 
     return JsonValue::from_string(buffer);

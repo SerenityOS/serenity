@@ -38,7 +38,7 @@ private:
     RefPtr<GUI::Button> m_close_button;
     RefPtr<GUI::CheckBox> m_close_on_finish_checkbox;
     RefPtr<GUI::ImageWidget> m_browser_image;
-    OwnPtr<Core::Stream::File> m_output_file_stream;
+    OwnPtr<Core::File> m_output_file_stream;
     Core::ElapsedTimer m_elapsed_timer;
 };
 

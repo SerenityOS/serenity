@@ -14,6 +14,7 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 
@@ -355,7 +356,7 @@ Vector<FunctionDefinition> create_function_definitions(DeprecatedString function
     return functions;
 }
 
-ErrorOr<void> generate_header_file(JsonObject& api_data, Core::Stream::File& file)
+ErrorOr<void> generate_header_file(JsonObject& api_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -409,7 +410,7 @@ ErrorOr<void> generate_header_file(JsonObject& api_data, Core::Stream::File& fil
     return {};
 }
 
-ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::Stream::File& file)
+ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -535,7 +536,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::Stream::F
 
 ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)
 {
-    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
     auto json_size = TRY(file->size());
     auto json_data = TRY(ByteBuffer::create_uninitialized(json_size));
     TRY(file->read_entire_buffer(json_data.bytes()));
@@ -558,8 +559,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(json.is_object());
     auto api_data = json.as_object();
 
-    auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(Core::File::open(generated_implementation_path, Core::File::OpenMode::Write));
 
     TRY(generate_header_file(api_data, *generated_header_file));
     TRY(generate_implementation_file(api_data, *generated_implementation_file));

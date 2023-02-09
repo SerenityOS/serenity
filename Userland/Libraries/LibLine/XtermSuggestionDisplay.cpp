@@ -7,6 +7,7 @@
 #include <AK/BinarySearch.h>
 #include <AK/Function.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibLine/SuggestionDisplay.h>
 #include <LibLine/VT.h>
 #include <stdio.h>
@@ -17,7 +18,7 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
 {
     did_display();
 
-    auto stderr_stream = TRY(Core::Stream::File::standard_error());
+    auto stderr_stream = TRY(Core::File::standard_error());
 
     size_t longest_suggestion_length = 0;
     size_t longest_suggestion_byte_length = 0;
@@ -161,7 +162,7 @@ ErrorOr<bool> XtermSuggestionDisplay::cleanup()
     did_cleanup();
 
     if (m_lines_used_for_last_suggestions) {
-        auto stderr_stream = TRY(Core::Stream::File::standard_error());
+        auto stderr_stream = TRY(Core::File::standard_error());
         TRY(VT::clear_lines(0, m_lines_used_for_last_suggestions, *stderr_stream));
         m_lines_used_for_last_suggestions = 0;
         return true;

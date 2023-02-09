@@ -20,7 +20,7 @@ ThemePreviewWidget::ThemePreviewWidget(Gfx::Palette const& palette)
 
 ErrorOr<void> ThemePreviewWidget::set_theme(DeprecatedString path)
 {
-    auto config_file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto config_file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     TRY(set_theme_from_file(path, move(config_file)));
     return {};
 }

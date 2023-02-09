@@ -1288,7 +1288,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), url.path(), Core::Stream::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), url.path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
         open_image(response.release_value());

@@ -224,11 +224,11 @@ Vector<Color> PaletteWidget::colors()
     return colors;
 }
 
-ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::File> file)
 {
     Vector<Color> palette;
     Array<u8, PAGE_SIZE> buffer;
-    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
 
     while (TRY(buffered_file->can_read_line())) {
         auto line = TRY(buffered_file->read_line(buffer));
@@ -252,11 +252,11 @@ ErrorOr<Vector<Color>> PaletteWidget::load_palette_file(NonnullOwnPtr<Core::Stre
 
 ErrorOr<Vector<Color>> PaletteWidget::load_palette_path(DeprecatedString const& file_path)
 {
-    auto file = TRY(Core::Stream::File::open(file_path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(file_path, Core::File::OpenMode::Read));
     return load_palette_file(move(file));
 }
 
-ErrorOr<void> PaletteWidget::save_palette_file(Vector<Color> palette, NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<void> PaletteWidget::save_palette_file(Vector<Color> palette, NonnullOwnPtr<Core::File> file)
 {
     for (auto& color : palette) {
         TRY(file->write_entire_buffer(color.to_deprecated_string_without_alpha().bytes()));

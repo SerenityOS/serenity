@@ -29,7 +29,7 @@ void ScriptEditor::new_script_with_temp_name(DeprecatedString name)
 
 ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
 {
-    auto file = TRY(Core::Stream::File::open(file_path.string(), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(file_path.string(), Core::File::OpenMode::Read));
     auto buffer = TRY(file->read_until_eof());
 
     set_text({ buffer.bytes() });
@@ -40,7 +40,7 @@ ErrorOr<void> ScriptEditor::open_script_from_file(LexicalPath const& file_path)
 
 static ErrorOr<void> save_text_to_file(StringView filename, DeprecatedString text)
 {
-    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Write));
 
     if (!text.is_empty())
         TRY(file->write_entire_buffer(text.bytes()));

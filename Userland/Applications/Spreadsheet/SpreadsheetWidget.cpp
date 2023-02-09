@@ -147,7 +147,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
             return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename(), Core::Stream::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), current_filename(), Core::File::OpenMode::Write);
         if (response.is_error())
             return;
         save(response.value().filename(), response.value().stream());
@@ -493,7 +493,7 @@ void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType 
     }
 }
 
-void SpreadsheetWidget::save(String const& filename, Core::Stream::File& file)
+void SpreadsheetWidget::save(String const& filename, Core::File& file)
 {
     auto result = m_workbook->write_to_file(filename, file);
     if (result.is_error()) {
@@ -504,7 +504,7 @@ void SpreadsheetWidget::save(String const& filename, Core::Stream::File& file)
     window()->set_modified(false);
 }
 
-void SpreadsheetWidget::load_file(String const& filename, Core::Stream::File& file)
+void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
 {
     auto result = m_workbook->open_file(filename, file);
     if (result.is_error()) {
@@ -523,7 +523,7 @@ void SpreadsheetWidget::load_file(String const& filename, Core::Stream::File& fi
     update_window_title();
 }
 
-void SpreadsheetWidget::import_sheets(String const& filename, Core::Stream::File& file)
+void SpreadsheetWidget::import_sheets(String const& filename, Core::File& file)
 {
     auto result = m_workbook->import_file(filename, file);
     if (result.is_error()) {

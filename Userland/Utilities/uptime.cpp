@@ -6,6 +6,7 @@
  */
 
 #include <AK/NumberFormat.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -14,7 +15,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    auto file = TRY(Core::Stream::File::open("/sys/kernel/uptime"sv, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open("/sys/kernel/uptime"sv, Core::File::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 

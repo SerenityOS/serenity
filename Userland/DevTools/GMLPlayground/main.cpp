@@ -157,7 +157,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().request_file(window, file_path, Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window, file_path, Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
         if (response.is_error())
             return;
 

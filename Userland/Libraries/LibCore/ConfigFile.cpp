@@ -40,8 +40,8 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open_for_system(DeprecatedString 
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, AllowWriting allow_altering)
 {
-    auto maybe_file = Stream::File::open(filename, allow_altering == AllowWriting::Yes ? Stream::OpenMode::ReadWrite : Stream::OpenMode::Read);
-    OwnPtr<Stream::BufferedFile> buffered_file;
+    auto maybe_file = File::open(filename, allow_altering == AllowWriting::Yes ? File::OpenMode::ReadWrite : File::OpenMode::Read);
+    OwnPtr<BufferedFile> buffered_file;
     if (maybe_file.is_error()) {
         // If we attempted to open a read-only file that does not exist, we ignore the error, making it appear
         // the same as if we had opened an empty file. This behavior is a little weird, but is required by
@@ -49,7 +49,7 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& file
         if (!(allow_altering == AllowWriting::No && maybe_file.error().code() == ENOENT))
             return maybe_file.release_error();
     } else {
-        buffered_file = TRY(Stream::BufferedFile::create(maybe_file.release_value()));
+        buffered_file = TRY(BufferedFile::create(maybe_file.release_value()));
     }
 
     auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(buffered_file))));
@@ -59,20 +59,20 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& file
 
 ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, int fd)
 {
-    auto file = TRY(Stream::File::adopt_fd(fd, Stream::OpenMode::ReadWrite));
+    auto file = TRY(File::adopt_fd(fd, File::OpenMode::ReadWrite));
     return open(filename, move(file));
 }
 
-ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto buffered_file = TRY(Stream::BufferedFile::create(move(file)));
+    auto buffered_file = TRY(BufferedFile::create(move(file)));
 
     auto config_file = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ConfigFile(filename, move(buffered_file))));
     TRY(config_file->reparse());
     return config_file;
 }
 
-ConfigFile::ConfigFile(DeprecatedString const& filename, OwnPtr<Stream::BufferedFile> open_file)
+ConfigFile::ConfigFile(DeprecatedString const& filename, OwnPtr<BufferedFile> open_file)
     : m_filename(filename)
     , m_file(move(open_file))
 {

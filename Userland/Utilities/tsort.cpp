@@ -7,6 +7,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/HashMap.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -103,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(quiet, "Suppress warnings about cycles", "quiet", 'q');
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     auto input_bytes = TRY(file->read_until_eof());
     auto inputs = StringView(input_bytes).split_view_if(is_ascii_space);
 

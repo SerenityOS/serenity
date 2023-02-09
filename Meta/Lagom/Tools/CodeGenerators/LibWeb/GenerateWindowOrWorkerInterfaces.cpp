@@ -9,6 +9,7 @@
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibIDL/IDLParser.h>
 #include <LibIDL/Types.h>
@@ -110,7 +111,7 @@ class @legacy_constructor_class@;)~~~");
 )~~~");
 
     auto generated_forward_path = LexicalPath(output_path).append("Forward.h"sv).string();
-    auto generated_forward_file = TRY(Core::Stream::File::open(generated_forward_path, Core::Stream::OpenMode::Write));
+    auto generated_forward_file = TRY(Core::File::open(generated_forward_path, Core::File::OpenMode::Write));
     TRY(generated_forward_file->write(generator.as_string_view().bytes()));
 
     return {};
@@ -224,7 +225,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 )~~~");
 
     auto generated_intrinsics_path = LexicalPath(output_path).append("IntrinsicDefinitions.cpp"sv).string();
-    auto generated_intrinsics_file = TRY(Core::Stream::File::open(generated_intrinsics_path, Core::Stream::OpenMode::Write));
+    auto generated_intrinsics_file = TRY(Core::File::open(generated_intrinsics_path, Core::File::OpenMode::Write));
     TRY(generated_intrinsics_file->write(generator.as_string_view().bytes()));
 
     return {};
@@ -250,7 +251,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object&);
 )~~~");
 
     auto generated_header_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.h", class_name)).string();
-    auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
     TRY(generated_header_file->write(generator.as_string_view().bytes()));
 
     return {};
@@ -332,7 +333,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
 )~~~");
 
     auto generated_implementation_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.cpp", class_name)).string();
-    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_implementation_file = TRY(Core::File::open(generated_implementation_path, Core::File::OpenMode::Write));
     TRY(generated_implementation_file->write(generator.as_string_view().bytes()));
 
     return {};
@@ -359,7 +360,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Read in all IDL files, we must own the storage for all of these for the lifetime of the program
     Vector<DeprecatedString> file_contents;
     for (DeprecatedString const& path : paths) {
-        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             s_error_string = DeprecatedString::formatted("Unable to open file {}", path);
             return Error::from_string_view(s_error_string);

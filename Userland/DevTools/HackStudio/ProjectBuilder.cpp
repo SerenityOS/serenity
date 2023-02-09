@@ -112,7 +112,7 @@ ErrorOr<void> ProjectBuilder::build_serenity_component()
 
 ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_path)
 {
-    auto file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Read));
     auto content = TRY(file->read_until_eof());
 
     static Regex<ECMA262> const component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
@@ -135,7 +135,7 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
     if (Core::DeprecatedFile::exists(cmake_file_path))
         MUST(Core::DeprecatedFile::remove(cmake_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
 
-    auto cmake_file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Write));
+    auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Write));
     TRY(cmake_file->write_entire_buffer(generate_cmake_file_content().bytes()));
 
     TRY(m_terminal->run_command(DeprecatedString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"

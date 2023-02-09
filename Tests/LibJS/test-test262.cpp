@@ -14,6 +14,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -131,16 +132,16 @@ public:
         TRY(Core::System::close(write_pipe_fds[0]));
         TRY(Core::System::close(read_pipe_fds[1]));
 
-        auto infile = TRY(Core::Stream::File::adopt_fd(read_pipe_fds[0], Core::Stream::OpenMode::Read));
+        auto infile = TRY(Core::File::adopt_fd(read_pipe_fds[0], Core::File::OpenMode::Read));
 
-        auto outfile = TRY(Core::Stream::File::adopt_fd(write_pipe_fds[1], Core::Stream::OpenMode::Write));
+        auto outfile = TRY(Core::File::adopt_fd(write_pipe_fds[1], Core::File::OpenMode::Write));
 
         runner_kill.disarm();
 
         return make<Test262RunnerHandler>(pid, move(infile), move(outfile));
     }
 
-    Test262RunnerHandler(pid_t pid, NonnullOwnPtr<Core::Stream::File> in_file, NonnullOwnPtr<Core::Stream::File> out_file)
+    Test262RunnerHandler(pid_t pid, NonnullOwnPtr<Core::File> in_file, NonnullOwnPtr<Core::File> out_file)
         : m_pid(pid)
         , m_input(move(in_file))
         , m_output(move(out_file))
@@ -218,8 +219,8 @@ public:
 
 public:
     pid_t m_pid;
-    NonnullOwnPtr<Core::Stream::File> m_input;
-    NonnullOwnPtr<Core::Stream::File> m_output;
+    NonnullOwnPtr<Core::File> m_input;
+    NonnullOwnPtr<Core::File> m_output;
 };
 
 static ErrorOr<HashMap<size_t, TestResult>> run_test_files(Span<DeprecatedString> files, size_t offset, StringView command, char const* const arguments[])
@@ -411,7 +412,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 void write_per_file(HashMap<size_t, TestResult> const& result_map, Vector<DeprecatedString> const& paths, StringView per_file_name, double time_taken_in_ms)
 {
 
-    auto file_or_error = Core::Stream::File::open(per_file_name, Core::Stream::OpenMode::Write);
+    auto file_or_error = Core::File::open(per_file_name, Core::File::OpenMode::Write);
     if (file_or_error.is_error()) {
         warnln("Failed to open per file for writing at {}: {}", per_file_name, file_or_error.error().string_literal());
         return;

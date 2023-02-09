@@ -219,7 +219,7 @@ static CodePointRange parse_code_point_range(StringView list)
     return code_point_range;
 }
 
-static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_special_casing(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -290,7 +290,7 @@ static ErrorOr<void> parse_special_casing(Core::Stream::BufferedFile& file, Unic
     return {};
 }
 
-static ErrorOr<void> parse_case_folding(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_case_folding(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -338,7 +338,7 @@ static ErrorOr<void> parse_case_folding(Core::Stream::BufferedFile& file, Unicod
     return {};
 }
 
-static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList& prop_list, bool multi_value_property = false, bool sanitize_property = false)
+static ErrorOr<void> parse_prop_list(Core::BufferedFile& file, PropList& prop_list, bool multi_value_property = false, bool sanitize_property = false)
 {
     Array<u8, 1024> buffer;
 
@@ -371,7 +371,7 @@ static ErrorOr<void> parse_prop_list(Core::Stream::BufferedFile& file, PropList&
     return {};
 }
 
-static ErrorOr<void> parse_alias_list(Core::Stream::BufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
+static ErrorOr<void> parse_alias_list(Core::BufferedFile& file, PropList const& prop_list, Vector<Alias>& prop_aliases)
 {
     DeprecatedString current_property;
     Array<u8, 1024> buffer;
@@ -417,7 +417,7 @@ static ErrorOr<void> parse_alias_list(Core::Stream::BufferedFile& file, PropList
     return {};
 }
 
-static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_name_aliases(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -448,7 +448,7 @@ static ErrorOr<void> parse_name_aliases(Core::Stream::BufferedFile& file, Unicod
     return {};
 }
 
-static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
+static ErrorOr<void> parse_value_alias_list(Core::BufferedFile& file, StringView desired_category, Vector<DeprecatedString> const& value_list, Vector<Alias>& prop_aliases, bool primary_value_is_first = true, bool sanitize_alias = false)
 {
     TRY(file.seek(0, SeekMode::SetPosition));
     Array<u8, 1024> buffer;
@@ -494,7 +494,7 @@ static ErrorOr<void> parse_value_alias_list(Core::Stream::BufferedFile& file, St
     return {};
 }
 
-static ErrorOr<void> parse_normalization_props(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_normalization_props(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
 
@@ -628,7 +628,7 @@ static Optional<CodePointDecomposition> parse_decomposition_mapping(StringView s
     return mapping;
 }
 
-static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_block_display_names(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     Array<u8, 1024> buffer;
     while (TRY(file.can_read_line())) {
@@ -651,7 +651,7 @@ static ErrorOr<void> parse_block_display_names(Core::Stream::BufferedFile& file,
     return {};
 }
 
-static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> parse_unicode_data(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     Optional<u32> code_point_range_start;
 
@@ -756,7 +756,7 @@ static ErrorOr<void> parse_unicode_data(Core::Stream::BufferedFile& file, Unicod
     return {};
 }
 
-static ErrorOr<void> generate_unicode_data_header(Core::Stream::BufferedFile& file, UnicodeData& unicode_data)
+static ErrorOr<void> generate_unicode_data_header(Core::BufferedFile& file, UnicodeData& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -871,7 +871,7 @@ ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point);
     return {};
 }
 
-static ErrorOr<void> generate_unicode_data_implementation(Core::Stream::BufferedFile& file, UnicodeData const& unicode_data)
+static ErrorOr<void> generate_unicode_data_implementation(Core::BufferedFile& file, UnicodeData const& unicode_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1530,26 +1530,26 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(sentence_break_path, "Path to SentenceBreakProperty.txt file", "sentence-break-path", 'i', "sentence-break-path");
     args_parser.parse(arguments);
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
-    auto unicode_data_file = TRY(open_file(unicode_data_path, Core::Stream::OpenMode::Read));
-    auto derived_general_category_file = TRY(open_file(derived_general_category_path, Core::Stream::OpenMode::Read));
-    auto special_casing_file = TRY(open_file(special_casing_path, Core::Stream::OpenMode::Read));
-    auto case_folding_file = TRY(open_file(case_folding_path, Core::Stream::OpenMode::Read));
-    auto prop_list_file = TRY(open_file(prop_list_path, Core::Stream::OpenMode::Read));
-    auto derived_core_prop_file = TRY(open_file(derived_core_prop_path, Core::Stream::OpenMode::Read));
-    auto derived_binary_prop_file = TRY(open_file(derived_binary_prop_path, Core::Stream::OpenMode::Read));
-    auto prop_alias_file = TRY(open_file(prop_alias_path, Core::Stream::OpenMode::Read));
-    auto prop_value_alias_file = TRY(open_file(prop_value_alias_path, Core::Stream::OpenMode::Read));
-    auto name_alias_file = TRY(open_file(name_alias_path, Core::Stream::OpenMode::Read));
-    auto scripts_file = TRY(open_file(scripts_path, Core::Stream::OpenMode::Read));
-    auto script_extensions_file = TRY(open_file(script_extensions_path, Core::Stream::OpenMode::Read));
-    auto blocks_file = TRY(open_file(blocks_path, Core::Stream::OpenMode::Read));
-    auto emoji_data_file = TRY(open_file(emoji_data_path, Core::Stream::OpenMode::Read));
-    auto normalization_file = TRY(open_file(normalization_path, Core::Stream::OpenMode::Read));
-    auto grapheme_break_file = TRY(open_file(grapheme_break_path, Core::Stream::OpenMode::Read));
-    auto word_break_file = TRY(open_file(word_break_path, Core::Stream::OpenMode::Read));
-    auto sentence_break_file = TRY(open_file(sentence_break_path, Core::Stream::OpenMode::Read));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
+    auto unicode_data_file = TRY(open_file(unicode_data_path, Core::File::OpenMode::Read));
+    auto derived_general_category_file = TRY(open_file(derived_general_category_path, Core::File::OpenMode::Read));
+    auto special_casing_file = TRY(open_file(special_casing_path, Core::File::OpenMode::Read));
+    auto case_folding_file = TRY(open_file(case_folding_path, Core::File::OpenMode::Read));
+    auto prop_list_file = TRY(open_file(prop_list_path, Core::File::OpenMode::Read));
+    auto derived_core_prop_file = TRY(open_file(derived_core_prop_path, Core::File::OpenMode::Read));
+    auto derived_binary_prop_file = TRY(open_file(derived_binary_prop_path, Core::File::OpenMode::Read));
+    auto prop_alias_file = TRY(open_file(prop_alias_path, Core::File::OpenMode::Read));
+    auto prop_value_alias_file = TRY(open_file(prop_value_alias_path, Core::File::OpenMode::Read));
+    auto name_alias_file = TRY(open_file(name_alias_path, Core::File::OpenMode::Read));
+    auto scripts_file = TRY(open_file(scripts_path, Core::File::OpenMode::Read));
+    auto script_extensions_file = TRY(open_file(script_extensions_path, Core::File::OpenMode::Read));
+    auto blocks_file = TRY(open_file(blocks_path, Core::File::OpenMode::Read));
+    auto emoji_data_file = TRY(open_file(emoji_data_path, Core::File::OpenMode::Read));
+    auto normalization_file = TRY(open_file(normalization_path, Core::File::OpenMode::Read));
+    auto grapheme_break_file = TRY(open_file(grapheme_break_path, Core::File::OpenMode::Read));
+    auto word_break_file = TRY(open_file(word_break_path, Core::File::OpenMode::Read));
+    auto sentence_break_file = TRY(open_file(sentence_break_path, Core::File::OpenMode::Read));
 
     UnicodeData unicode_data {};
     TRY(parse_special_casing(*special_casing_file, unicode_data));

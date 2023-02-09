@@ -67,7 +67,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
         server_pid = TRY(Core::System::fork());
 
         if (server_pid != 0) {
-            auto server_pid_file = TRY(Core::Stream::File::open(pid_path, Core::Stream::OpenMode::Write));
+            auto server_pid_file = TRY(Core::File::open(pid_path, Core::File::OpenMode::Write));
             TRY(server_pid_file->write(DeprecatedString::number(server_pid).bytes()));
 
             TRY(Core::System::kill(getpid(), SIGTERM));
@@ -108,7 +108,7 @@ static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
 
     Optional<pid_t> pid;
     {
-        auto server_pid_file = Core::Stream::File::open(pid_path, Core::Stream::OpenMode::Read);
+        auto server_pid_file = Core::File::open(pid_path, Core::File::OpenMode::Read);
         if (server_pid_file.is_error()) {
             warnln("Could not open SQLServer PID file '{}': {}", pid_path, server_pid_file.error());
             return server_pid_file.release_error();

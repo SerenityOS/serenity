@@ -10,6 +10,7 @@
 #include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -42,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     dbgln("Updating utmp from UID={} GID={} EGID={} PID={}", getuid(), getgid(), getegid(), pid);
 
-    auto file = TRY(Core::Stream::File::open("/var/run/utmp"sv, Core::Stream::OpenMode::ReadWrite));
+    auto file = TRY(Core::File::open("/var/run/utmp"sv, Core::File::OpenMode::ReadWrite));
 
     auto file_contents = TRY(file->read_until_eof());
     auto previous_json = TRY(JsonValue::from_string(file_contents));

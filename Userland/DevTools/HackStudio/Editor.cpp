@@ -232,7 +232,7 @@ void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hov
     }
 
     dbgln_if(EDITOR_DEBUG, "opening {}", it->value);
-    auto file_or_error = Core::Stream::File::open(it->value, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(it->value, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
         dbgln("Failed to open {}, {}", it->value, file_or_error.error());
         return;

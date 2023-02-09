@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/Adler32.h>
@@ -46,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Array<u8, PAGE_SIZE> buffer;
 
     for (auto& path : paths) {
-        auto file_or_error = Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read);
         auto filepath = (path == "-") ? "/dev/stdin" : path;
         if (file_or_error.is_error()) {
             warnln("{}: {}: {}", arguments.strings[0], filepath, file_or_error.error());

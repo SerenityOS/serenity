@@ -9,6 +9,7 @@
 
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <unistd.h>
 
@@ -41,7 +42,7 @@ public:
     }
 
     template<typename... Args>
-    File(Core::Stream::File& file, Args... args)
+    File(Core::File& file, Args... args)
         : File(file.leak_fd(Badge<File> {}), args...)
     {
     }

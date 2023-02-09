@@ -20,6 +20,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
@@ -249,7 +250,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("Reading and parsing Markdown files ...");
     HashMap<DeprecatedString, MarkdownLinkage> files;
     for (auto path : file_paths) {
-        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Failed to open {}: {}", path, file_or_error.error());
             // Since this should never happen anyway, fail early.

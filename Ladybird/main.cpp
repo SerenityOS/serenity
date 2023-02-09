@@ -31,8 +31,8 @@ static ErrorOr<void> handle_attached_debugger()
     // incorrectly forwards the signal to us even when it's set to
     // "nopass". See https://sourceware.org/bugzilla/show_bug.cgi?id=9425
     // for details.
-    auto unbuffered_status_file = TRY(Core::Stream::File::open("/proc/self/status"sv, Core::Stream::OpenMode::Read));
-    auto status_file = TRY(Core::Stream::BufferedFile::create(move(unbuffered_status_file)));
+    auto unbuffered_status_file = TRY(Core::File::open("/proc/self/status"sv, Core::File::OpenMode::Read));
+    auto status_file = TRY(Core::BufferedFile::create(move(unbuffered_status_file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(status_file->can_read_line())) {
         auto line = TRY(status_file->read_line(buffer));

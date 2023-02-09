@@ -74,7 +74,7 @@ private:
     Gfx::IntPoint m_mouse_offset {};
     Core::ElapsedTimer m_idle_sleep_timer;
 
-    NonnullOwnPtr<Core::Stream::File> m_proc_all;
+    NonnullOwnPtr<Core::File> m_proc_all;
 
     State m_state { State::Roaming };
     State m_frame { State::Frame1 };

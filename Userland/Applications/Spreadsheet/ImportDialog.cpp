@@ -174,7 +174,7 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::Stream::File& file, Workbook& workbook)
+ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(&parent);
     wizard->set_title("File Import Wizard");

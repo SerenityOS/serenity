@@ -17,7 +17,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 {
     auto& realm = *vm.current_realm();
     auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto file = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    auto file = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file.is_error())
         return vm.throw_completion<JS::TypeError>(strerror(file.error().code()));
 

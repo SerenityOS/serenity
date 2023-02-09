@@ -236,7 +236,7 @@ OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path)
 {
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
 
     auto json = JsonValue::from_string(TRY(file->read_until_eof()));
     if (json.is_error() || !json.value().is_object())

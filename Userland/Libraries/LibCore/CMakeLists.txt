@@ -10,6 +10,7 @@ set(SOURCES
     ElapsedTimer.cpp
     Event.cpp
     EventLoop.cpp
+    File.cpp
     IODevice.cpp
     LockFile.cpp
     MappedFile.cpp
@@ -25,7 +26,6 @@ set(SOURCES
     Socket.cpp
     SOCKSProxyClient.cpp
     StandardPaths.cpp
-    Stream.cpp
     System.cpp
     SystemServerTakeover.cpp
     TCPServer.cpp

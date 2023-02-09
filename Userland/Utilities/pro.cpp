@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    auto output_stream = ConditionalOutputStream { [&] { return should_save_stream_data; }, TRY(Core::Stream::File::adopt_fd(output_fd, Core::Stream::OpenMode::Write)) };
+    auto output_stream = ConditionalOutputStream { [&] { return should_save_stream_data; }, TRY(Core::File::adopt_fd(output_fd, Core::File::OpenMode::Write)) };
 
     // https://httpwg.org/specs/rfc9110.html#authentication
     auto const has_credentials = !credentials.is_empty();

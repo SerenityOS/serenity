@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/GML/Formatter.h>
@@ -13,8 +14,8 @@
 static ErrorOr<bool> format_file(StringView path, bool inplace)
 {
     auto read_from_stdin = path == "-";
-    auto open_mode = (inplace && !read_from_stdin) ? Core::Stream::OpenMode::ReadWrite : Core::Stream::OpenMode::Read;
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, open_mode));
+    auto open_mode = (inplace && !read_from_stdin) ? Core::File::OpenMode::ReadWrite : Core::File::OpenMode::Read;
+    auto file = TRY(Core::File::open_file_or_standard_stream(path, open_mode));
 
     auto contents = TRY(file->read_until_eof());
     auto formatted_gml_or_error = GUI::GML::format_gml(contents);

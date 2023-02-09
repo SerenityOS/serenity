@@ -7,6 +7,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 
@@ -15,7 +16,7 @@ static bool s_set_variable = false;
 static DeprecatedString get_variable(StringView name)
 {
     auto path = DeprecatedString::formatted("/sys/kernel/variables/{}", name);
-    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+    auto file = Core::File::open(path, Core::File::OpenMode::Read);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());
         return {};
@@ -43,7 +44,7 @@ static bool write_variable(StringView name, StringView value)
     if (old_value.is_null())
         return false;
     auto path = DeprecatedString::formatted("/sys/kernel/variables/{}", name);
-    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Write);
+    auto file = Core::File::open(path, Core::File::OpenMode::Write);
     if (file.is_error()) {
         warnln("Failed to open {}: {}", path, file.error());
         return false;

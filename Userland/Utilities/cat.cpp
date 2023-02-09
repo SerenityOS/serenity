@@ -7,6 +7,7 @@
 
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -25,11 +26,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (paths.is_empty())
         paths.append("-"sv);
 
-    Vector<NonnullOwnPtr<Core::Stream::File>> files;
+    Vector<NonnullOwnPtr<Core::File>> files;
     TRY(files.try_ensure_capacity(paths.size()));
 
     for (auto const& path : paths) {
-        if (auto result = Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read); result.is_error())
+        if (auto result = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read); result.is_error())
             warnln("Failed to open {}: {}", path, result.release_error());
         else
             files.unchecked_append(result.release_value());

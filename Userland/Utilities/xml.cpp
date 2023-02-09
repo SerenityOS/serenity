@@ -10,6 +10,7 @@
 #include <AK/URLParser.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <LibXML/DOM/Document.h>
@@ -371,7 +372,7 @@ static auto parse(StringView contents)
                 if (url.scheme() != "file")
                     return Error::from_string_literal("NYI: Nonlocal entity");
 
-                auto file = TRY(Core::Stream::File::open(url.path(), Core::Stream::OpenMode::Read));
+                auto file = TRY(Core::File::open(url.path(), Core::File::OpenMode::Read));
                 return DeprecatedString::copy(TRY(file->read_until_eof()));
             },
         },
@@ -440,7 +441,7 @@ static void do_run_tests(XML::Document& document)
                 continue;
             }
 
-            auto file_result = Core::Stream::File::open(url.path(), Core::Stream::OpenMode::Read);
+            auto file_result = Core::File::open(url.path(), Core::File::OpenMode::Read);
             if (file_result.is_error()) {
                 warnln("Read error for {}: {}", url.path(), file_result.error());
                 s_test_results.set(url.path(), TestResult::RunnerFailed);
@@ -468,7 +469,7 @@ static void do_run_tests(XML::Document& document)
             auto out = suite.attributes.find("OUTPUT");
             if (out != suite.attributes.end()) {
                 auto out_path = LexicalPath::join(test_base_path, out->value).string();
-                auto file_result = Core::Stream::File::open(out_path, Core::Stream::OpenMode::Read);
+                auto file_result = Core::File::open(out_path, Core::File::OpenMode::Read);
                 if (file_result.is_error()) {
                     warnln("Read error for {}: {}", out_path, file_result.error());
                     s_test_results.set(url.path(), TestResult::RunnerFailed);
@@ -516,7 +517,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
 
     s_path = Core::DeprecatedFile::real_path_for(filename);
-    auto file = TRY(Core::Stream::File::open(s_path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(s_path, Core::File::OpenMode::Read));
     auto contents = TRY(file->read_until_eof());
 
     auto xml_parser = parse(contents);

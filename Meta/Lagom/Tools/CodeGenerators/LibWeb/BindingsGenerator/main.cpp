@@ -11,6 +11,7 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibIDL/IDLParser.h>
 #include <LibIDL/Types.h>
@@ -64,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
 
     LexicalPath lexical_path(path);
     auto& namespace_ = lexical_path.parts_view().at(lexical_path.parts_view().size() - 2);
@@ -74,7 +75,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (import_base_path.is_null())
         import_base_path = lexical_path.dirname();
 
-    auto output_file = TRY(Core::Stream::File::open_file_or_standard_stream(output_path, Core::Stream::OpenMode::Write));
+    auto output_file = TRY(Core::File::open_file_or_standard_stream(output_path, Core::File::OpenMode::Write));
 
     IDL::Parser parser(path, data, import_base_path);
     auto& interface = parser.parse();
@@ -151,7 +152,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(output_file->write(output_builder.string_view().bytes()));
 
     if (!depfile_path.is_null()) {
-        auto depfile = TRY(Core::Stream::File::open_file_or_standard_stream(depfile_path, Core::Stream::OpenMode::Write));
+        auto depfile = TRY(Core::File::open_file_or_standard_stream(depfile_path, Core::File::OpenMode::Write));
 
         StringBuilder depfile_builder;
         depfile_builder.append(depfile_target.is_null() ? output_path : depfile_target);

@@ -303,7 +303,7 @@ MainWidget::MainWidget()
             m_save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path, Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path, Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
         if (response.is_error())
             return;
 
@@ -746,7 +746,7 @@ void MainWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-ErrorOr<void> MainWidget::read_file(String const& filename, Core::Stream::File& file)
+ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)
 {
     m_editor->set_text(TRY(file.read_until_eof()));
     set_path(filename);
