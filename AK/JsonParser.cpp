@@ -21,7 +21,7 @@ constexpr bool is_space(int ch)
 ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
 {
     if (!consume_specific('"'))
-        return Error::from_string_literal("JsonParser: Expected '\"'");
+        return Error::formatted("JsonParser: Expected '\"' at input index {}", m_index);
     StringBuilder final_sb;
 
     for (;;) {
@@ -34,7 +34,7 @@ ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
             if (ch == '"' || ch == '\\')
                 break;
             if (is_ascii_c0_control(ch))
-                return Error::from_string_literal("JsonParser: Error while parsing string");
+                return Error::formatted("JsonParser: Error while parsing string at input index {}", m_index);
             ++peek_index;
         }
 
@@ -103,20 +103,20 @@ ErrorOr<DeprecatedString> JsonParser::consume_and_unescape_string()
         if (next_is('u')) {
             ignore();
             if (tell_remaining() < 4)
-                return Error::from_string_literal("JsonParser: EOF while parsing Unicode escape");
+                return Error::formatted("JsonParser: EOF while parsing Unicode escape at input index {}", m_index);
 
             auto code_point = AK::StringUtils::convert_to_uint_from_hex(consume(4));
             if (code_point.has_value()) {
                 final_sb.append_code_point(code_point.value());
                 continue;
             }
-            return Error::from_string_literal("JsonParser: Error while parsing Unicode escape");
+            return Error::formatted("JsonParser: Error while parsing Unicode escape at input index {}", m_index);
         }
 
-        return Error::from_string_literal("JsonParser: Error while parsing string");
+        return Error::formatted("JsonParser: Error while parsing string at input index {}", m_index);
     }
     if (!consume_specific('"'))
-        return Error::from_string_literal("JsonParser: Expected '\"'");
+        return Error::formatted("JsonParser: Expected '\"' at input index {}", m_index);
 
     return final_sb.to_deprecated_string();
 }
@@ -125,7 +125,7 @@ ErrorOr<JsonValue> JsonParser::parse_object()
 {
     JsonObject object;
     if (!consume_specific('{'))
-        return Error::from_string_literal("JsonParser: Expected '{'");
+        return Error::formatted("JsonParser: Expected '{{' at input index {}", m_index);
     for (;;) {
         ignore_while(is_space);
         if (peek() == '}')
@@ -133,10 +133,10 @@ ErrorOr<JsonValue> JsonParser::parse_object()
         ignore_while(is_space);
         auto name = TRY(consume_and_unescape_string());
         if (name.is_null())
-            return Error::from_string_literal("JsonParser: Expected object property name");
+            return Error::formatted("JsonParser: Expected object property name at input index {}", m_index);
         ignore_while(is_space);
         if (!consume_specific(':'))
-            return Error::from_string_literal("JsonParser: Expected ':'");
+            return Error::formatted("JsonParser: Expected ':' at input index {}", m_index);
         ignore_while(is_space);
         auto value = TRY(parse_helper());
         object.set(name, move(value));
@@ -144,13 +144,13 @@ ErrorOr<JsonValue> JsonParser::parse_object()
         if (peek() == '}')
             break;
         if (!consume_specific(','))
-            return Error::from_string_literal("JsonParser: Expected ','");
+            return Error::formatted("JsonParser: Expected ',' at input index {}", m_index);
         ignore_while(is_space);
         if (peek() == '}')
-            return Error::from_string_literal("JsonParser: Unexpected '}'");
+            return Error::formatted("JsonParser: Unexpected '}}' at input index {}", m_index);
     }
     if (!consume_specific('}'))
-        return Error::from_string_literal("JsonParser: Expected '}'");
+        return Error::formatted("JsonParser: Expected '}}' at input index {}", m_index);
     return JsonValue { move(object) };
 }
 
@@ -158,7 +158,7 @@ ErrorOr<JsonValue> JsonParser::parse_array()
 {
     JsonArray array;
     if (!consume_specific('['))
-        return Error::from_string_literal("JsonParser: Expected '['");
+        return Error::formatted("JsonParser: Expected '[' at input index {}", m_index);
     for (;;) {
         ignore_while(is_space);
         if (peek() == ']')
@@ -169,14 +169,14 @@ ErrorOr<JsonValue> JsonParser::parse_array()
         if (peek() == ']')
             break;
         if (!consume_specific(','))
-            return Error::from_string_literal("JsonParser: Expected ','");
+            return Error::formatted("JsonParser: Expected ',' at input index {}", m_index);
         ignore_while(is_space);
         if (peek() == ']')
-            return Error::from_string_literal("JsonParser: Unexpected ']'");
+            return Error::formatted("JsonParser: Unexpected ']' at input index {}", m_index);
     }
     ignore_while(is_space);
     if (!consume_specific(']'))
-        return Error::from_string_literal("JsonParser: Expected ']'");
+        return Error::formatted("JsonParser: Expected ']' at input index {}", m_index);
     return JsonValue { move(array) };
 }
 
@@ -199,7 +199,7 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         negative = true;
 
         if (!is_ascii_digit(peek()))
-            return Error::from_string_literal("JsonParser: Unexpected '-' without further digits");
+            return Error::formatted("JsonParser: Unexpected '-' without further digits at input index {}", m_index);
     }
 
     auto fallback_to_double_parse = [&]() -> ErrorOr<JsonValue> {
@@ -223,12 +223,12 @@ ErrorOr<JsonValue> JsonParser::parse_number()
 
             return JsonValue(parse_result.value);
         }
-        return Error::from_string_literal("JsonParser: Invalid floating point");
+        return Error::formatted("JsonParser: Invalid floating point at input index {}", m_index);
     };
 
     if (peek() == '0') {
         if (is_ascii_digit(peek(1)))
-            return Error::from_string_literal("JsonParser: Cannot have leading zeros");
+            return Error::formatted("JsonParser: Cannot have leading zeros at input index {}", m_index);
 
         // Leading zeros are not allowed, however we can have a '.' or 'e' with
         // valid digits after just a zero. These cases will be detected by having the next element
@@ -240,14 +240,14 @@ ErrorOr<JsonValue> JsonParser::parse_number()
         char ch = peek();
         if (ch == '.') {
             if (!is_ascii_digit(peek(1)))
-                return Error::from_string_literal("JsonParser: Must have digits after decimal point");
+                return Error::formatted("JsonParser: Must have digits after decimal point at input index {}", m_index);
 
             return fallback_to_double_parse();
         }
         if (ch == 'e' || ch == 'E') {
             char next = peek(1);
             if (!is_ascii_digit(next) && ((next != '+' && next != '-') || !is_ascii_digit(peek(2))))
-                return Error::from_string_literal("JsonParser: Must have digits after exponent with an optional sign inbetween");
+                return Error::formatted("JsonParser: Must have digits after exponent with an optional sign inbetween at input index {}", m_index);
 
             return fallback_to_double_parse();
         }
@@ -291,21 +291,21 @@ ErrorOr<JsonValue> JsonParser::parse_number()
 ErrorOr<JsonValue> JsonParser::parse_true()
 {
     if (!consume_specific("true"))
-        return Error::from_string_literal("JsonParser: Expected 'true'");
+        return Error::formatted("JsonParser: Expected 'true' at input index {}", m_index);
     return JsonValue(true);
 }
 
 ErrorOr<JsonValue> JsonParser::parse_false()
 {
     if (!consume_specific("false"))
-        return Error::from_string_literal("JsonParser: Expected 'false'");
+        return Error::formatted("JsonParser: Expected 'false' at input index {}", m_index);
     return JsonValue(false);
 }
 
 ErrorOr<JsonValue> JsonParser::parse_null()
 {
     if (!consume_specific("null"))
-        return Error::from_string_literal("JsonParser: Expected 'null'");
+        return Error::formatted("JsonParser: Expected 'null' at input index {}", m_index);
     return JsonValue(JsonValue::Type::Null);
 }
 
@@ -340,7 +340,7 @@ ErrorOr<JsonValue> JsonParser::parse_helper()
         return parse_null();
     }
 
-    return Error::from_string_literal("JsonParser: Unexpected character");
+    return Error::formatted("JsonParser: Unexpected character at input index {}", m_index);
 }
 
 ErrorOr<JsonValue> JsonParser::parse()
@@ -348,7 +348,7 @@ ErrorOr<JsonValue> JsonParser::parse()
     auto result = TRY(parse_helper());
     ignore_while(is_space);
     if (!is_eof())
-        return Error::from_string_literal("JsonParser: Didn't consume all input");
+        return Error::formatted("JsonParser: Didn't consume all input at input index {}", m_index);
     return result;
 }
 
