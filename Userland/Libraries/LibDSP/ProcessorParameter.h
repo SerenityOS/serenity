@@ -137,8 +137,7 @@ public:
     ParameterFixedPoint default_value() const { return m_default_value; }
     void set_value(ParameterFixedPoint value)
     {
-        VERIFY(value <= m_max_value && value >= m_min_value);
-        Detail::ProcessorParameterSingleValue<ParameterFixedPoint>::set_value(value);
+        Detail::ProcessorParameterSingleValue<ParameterFixedPoint>::set_value(value.clamp(min_value(), max_value()));
     }
 
 private:
