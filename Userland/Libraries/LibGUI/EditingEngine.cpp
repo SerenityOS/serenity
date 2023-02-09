@@ -301,15 +301,8 @@ EditingEngine::DidMoveALine EditingEngine::move_one_up(KeyEvent const& event)
             }
             return DidMoveALine::No;
         }
-        TextPosition new_cursor;
-        if (m_editor->is_wrapping_enabled()) {
-            auto position_above = m_editor->cursor_content_rect().location().translated(0, -m_editor->line_height());
-            new_cursor = m_editor->text_position_at_content_position(position_above);
-        } else {
-            size_t new_line = m_editor->cursor().line() - 1;
-            size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
-            new_cursor = { new_line, new_column };
-        }
+        auto position_above = m_editor->cursor_content_rect().location().translated(0, -m_editor->line_height());
+        TextPosition new_cursor = m_editor->text_position_at_content_position(position_above);
         m_editor->set_cursor(new_cursor);
     }
     return DidMoveALine::No;
@@ -325,15 +318,8 @@ EditingEngine::DidMoveALine EditingEngine::move_one_down(KeyEvent const& event)
             }
             return DidMoveALine::No;
         }
-        TextPosition new_cursor;
-        if (m_editor->is_wrapping_enabled()) {
-            auto position_below = m_editor->cursor_content_rect().location().translated(0, m_editor->line_height());
-            new_cursor = m_editor->text_position_at_content_position(position_below);
-        } else {
-            size_t new_line = m_editor->cursor().line() + 1;
-            size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
-            new_cursor = { new_line, new_column };
-        }
+        auto position_below = m_editor->cursor_content_rect().location().translated(0, m_editor->line_height());
+        TextPosition new_cursor = m_editor->text_position_at_content_position(position_below);
         m_editor->set_cursor(new_cursor);
     }
     return DidMoveALine::No;
@@ -343,17 +329,8 @@ void EditingEngine::move_up(double page_height_factor)
 {
     if (m_editor->cursor().line() > 0 || m_editor->is_wrapping_enabled()) {
         int pixels = (int)(m_editor->visible_content_rect().height() * page_height_factor);
-
-        TextPosition new_cursor;
-        if (m_editor->is_wrapping_enabled()) {
-            auto position_above = m_editor->cursor_content_rect().location().translated(0, -pixels);
-            new_cursor = m_editor->text_position_at_content_position(position_above);
-        } else {
-            size_t page_step = (size_t)pixels / (size_t)m_editor->line_height();
-            size_t new_line = m_editor->cursor().line() < page_step ? 0 : m_editor->cursor().line() - page_step;
-            size_t new_column = min(m_editor->cursor().column(), m_editor->line(new_line).length());
-            new_cursor = { new_line, new_column };
-        }
+        auto position_above = m_editor->cursor_content_rect().location().translated(0, -pixels);
+        TextPosition new_cursor = m_editor->text_position_at_content_position(position_above);
         m_editor->set_cursor(new_cursor);
     }
 };
@@ -362,15 +339,8 @@ void EditingEngine::move_down(double page_height_factor)
 {
     if (m_editor->cursor().line() < (m_editor->line_count() - 1) || m_editor->is_wrapping_enabled()) {
         int pixels = (int)(m_editor->visible_content_rect().height() * page_height_factor);
-        TextPosition new_cursor;
-        if (m_editor->is_wrapping_enabled()) {
-            auto position_below = m_editor->cursor_content_rect().location().translated(0, pixels);
-            new_cursor = m_editor->text_position_at_content_position(position_below);
-        } else {
-            size_t new_line = min(m_editor->line_count() - 1, m_editor->cursor().line() + pixels / m_editor->line_height());
-            size_t new_column = min(m_editor->cursor().column(), m_editor->lines()[new_line].length());
-            new_cursor = { new_line, new_column };
-        }
+        auto position_below = m_editor->cursor_content_rect().location().translated(0, pixels);
+        TextPosition new_cursor = m_editor->text_position_at_content_position(position_below);
         m_editor->set_cursor(new_cursor);
     };
 }

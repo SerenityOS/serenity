@@ -149,18 +149,14 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
     size_t line_index = 0;
 
     if (position.y() >= 0) {
-        if (is_wrapping_enabled()) {
-            for (size_t i = 0; i < line_count(); ++i) {
-                auto& rect = m_line_visual_data[i].visual_rect;
-                if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
-                    line_index = i;
-                    break;
-                }
-                if (position.y() > rect.bottom())
-                    line_index = line_count() - 1;
+        for (size_t i = 0; i < line_count(); ++i) {
+            auto& rect = m_line_visual_data[i].visual_rect;
+            if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
+                line_index = i;
+                break;
             }
-        } else {
-            line_index = (size_t)(position.y() / line_height());
+            if (position.y() > rect.bottom())
+                line_index = line_count() - 1;
         }
         line_index = max((size_t)0, min(line_index, line_count() - 1));
     }
@@ -1357,14 +1353,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
-    if (is_wrapping_enabled())
-        return m_line_visual_data[line_index].visual_rect;
-    return {
-        content_x_for_position({ line_index, 0 }),
-        (int)line_index * line_height(),
-        text_width_for_font(line.view(), font()),
-        line_height()
-    };
+    return m_line_visual_data[line_index].visual_rect;
 }
 
 void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
