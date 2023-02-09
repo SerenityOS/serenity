@@ -352,7 +352,9 @@ void AbstractTableView::model_did_update(unsigned flags)
 {
     AbstractView::model_did_update(flags);
     update_row_sizes();
-    update_column_sizes();
+    if (!(flags & Model::UpdateFlag::DontResizeColumns))
+        update_column_sizes();
+
     update_content_size();
     update();
 }
