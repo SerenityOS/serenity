@@ -124,7 +124,7 @@ protected:
 
     Role m_role { Role::None };
 
-    ErrorOr<void> so_error() const
+    Optional<ErrnoCode> const& so_error() const
     {
         VERIFY(m_mutex.is_exclusively_locked_by_current_thread());
         return m_so_error;
@@ -133,14 +133,16 @@ protected:
     Error set_so_error(ErrnoCode error_code)
     {
         MutexLocker locker(mutex());
-        auto error = Error::from_errno(error_code);
-        m_so_error = error;
-        return error;
+        m_so_error = error_code;
+
+        return Error::from_errno(error_code);
     }
+
     Error set_so_error(Error error)
     {
         MutexLocker locker(mutex());
-        m_so_error = error;
+        m_so_error = static_cast<ErrnoCode>(error.code());
+
         return error;
     }
 
@@ -178,7 +180,7 @@ private:
     Time m_send_timeout {};
     int m_timestamp { 0 };
 
-    ErrorOr<void> m_so_error;
+    Optional<ErrnoCode> m_so_error;
 
     NonnullLockRefPtrVector<Socket> m_pending;
 };
