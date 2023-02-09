@@ -24,19 +24,11 @@ class TrackControlsWidget final : public GUI::Frame {
 public:
     virtual ~TrackControlsWidget() override = default;
 
-    void update_knobs();
-
 private:
     TrackControlsWidget(TrackManager&, MainWidget&);
 
     TrackManager& m_track_manager;
     MainWidget& m_main_widget;
 
-    RefPtr<GUI::Widget> m_octave_container;
-    RefPtr<GUI::Slider> m_octave_knob;
-    RefPtr<GUI::Label> m_octave_value;
-
     NonnullRefPtrVector<ProcessorParameterWidget> m_parameter_widgets;
-
-    bool m_change_underlying { true };
 };

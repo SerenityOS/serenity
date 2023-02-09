@@ -30,8 +30,8 @@ public:
 
     ErrorOr<void> add_track_actions(GUI::Menu&);
 
-    void set_octave_and_ensure_note_change(DSP::Keyboard::Direction);
-    void set_octave_and_ensure_note_change(int);
+    void change_octave_via_keys(DSP::Keyboard::Direction);
+    void set_octave_via_slider(int octave);
 
 private:
     explicit MainWidget(TrackManager&, AudioPlayerLoop&);
@@ -59,6 +59,11 @@ private:
     RefPtr<KeysWidget> m_keys_widget;
     RefPtr<TrackControlsWidget> m_knobs_widget;
     RefPtr<PlayerWidget> m_player_widget;
+
+    RefPtr<GUI::Widget> m_octave_container;
+    RefPtr<GUI::Slider> m_octave_knob;
+    RefPtr<GUI::Label> m_octave_value;
+    bool m_octave_change_in_progress { false };
 
     // Not the piano keys, but the computer keyboard keys!
     bool m_keys_pressed[key_code_count] { false };
