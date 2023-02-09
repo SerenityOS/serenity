@@ -35,7 +35,6 @@ struct QOILoadingContext {
     OwnPtr<AK::Stream> stream {};
     QOIHeader header {};
     RefPtr<Bitmap> bitmap;
-    Optional<Error> error;
 };
 
 class QOIImageDecoderPlugin final : public ImageDecoderPlugin {

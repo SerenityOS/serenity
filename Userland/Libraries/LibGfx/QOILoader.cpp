@@ -217,6 +217,9 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
     if (index > 0)
         return Error::from_string_literal("Invalid frame index");
 
+    // No one should try to decode the frame again after an error was already returned.
+    VERIFY(m_context->state != QOILoadingContext::State::Error);
+
     if (m_context->state == QOILoadingContext::State::NotDecoded) {
         TRY(decode_header_and_update_context(*m_context->stream));
         TRY(decode_image_and_update_context(*m_context->stream));
@@ -224,14 +227,9 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
         TRY(decode_image_and_update_context(*m_context->stream));
     }
 
-    if (m_context->state == QOILoadingContext::State::ImageDecoded) {
-        VERIFY(m_context->bitmap);
-        return ImageFrameDescriptor { m_context->bitmap, 0 };
-    }
-
-    VERIFY(m_context->state == QOILoadingContext::State::Error);
-    VERIFY(m_context->error.has_value());
-    return *m_context->error;
+    VERIFY(m_context->state == QOILoadingContext::State::ImageDecoded);
+    VERIFY(m_context->bitmap);
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
 ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(AK::Stream& stream)
@@ -240,8 +238,7 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(AK::Stream
     auto error_or_header = decode_qoi_header(stream);
     if (error_or_header.is_error()) {
         m_context->state = QOILoadingContext::State::Error;
-        m_context->error = error_or_header.release_error();
-        return *m_context->error;
+        return error_or_header.release_error();
     }
     m_context->state = QOILoadingContext::State::HeaderDecoded;
     m_context->header = error_or_header.release_value();
@@ -254,8 +251,7 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(AK::Stream&
     auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height);
     if (error_or_bitmap.is_error()) {
         m_context->state = QOILoadingContext::State::Error;
-        m_context->error = error_or_bitmap.release_error();
-        return *m_context->error;
+        return error_or_bitmap.release_error();
     }
     m_context->state = QOILoadingContext::State::ImageDecoded;
     m_context->bitmap = error_or_bitmap.release_value();
