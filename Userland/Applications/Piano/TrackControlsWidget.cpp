@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "KnobsWidget.h"
+#include "TrackControlsWidget.h"
 #include "MainWidget.h"
 #include "ProcessorParameterWidget/ParameterWidget.h"
 #include "TrackManager.h"
@@ -16,7 +16,7 @@
 #include <LibGUI/Slider.h>
 #include <LibGfx/Orientation.h>
 
-KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
+TrackControlsWidget::TrackControlsWidget(TrackManager& track_manager, MainWidget& main_widget)
     : m_track_manager(track_manager)
     , m_main_widget(main_widget)
 {
@@ -52,7 +52,7 @@ KnobsWidget::KnobsWidget(TrackManager& track_manager, MainWidget& main_widget)
         m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
 }
 
-void KnobsWidget::update_knobs()
+void TrackControlsWidget::update_knobs()
 {
     // FIXME: This is needed because when the slider is changed normally, we
     // need to change the underlying value, but if the keyboard was used, we
