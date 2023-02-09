@@ -1460,7 +1460,7 @@ void TextEditor::timer_event(Core::TimerEvent&)
 
 bool TextEditor::write_to_file(DeprecatedString const& path)
 {
-    auto file = Core::File::construct(path);
+    auto file = Core::Stream::construct(path);
     if (!file->open(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate)) {
         warnln("Error opening {}: {}", path, strerror(file->error()));
         return false;
@@ -1469,7 +1469,7 @@ bool TextEditor::write_to_file(DeprecatedString const& path)
     return write_to_file(*file);
 }
 
-bool TextEditor::write_to_file(Core::File& file)
+bool TextEditor::write_to_file(Core::Stream& file)
 {
     off_t file_size = 0;
     if (line_count() == 1 && line(0).is_empty()) {

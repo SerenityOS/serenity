@@ -204,7 +204,7 @@ void DirectoryView::setup_model()
 
         while (model_root.string() != "/") {
             model_root = model_root.parent();
-            if (Core::File::is_directory(model_root.string()))
+            if (Core::Stream::is_directory(model_root.string()))
                 break;
         }
 
@@ -405,8 +405,8 @@ void DirectoryView::add_path_to_history(DeprecatedString path)
 
 bool DirectoryView::open(DeprecatedString const& path)
 {
-    auto real_path = Core::File::real_path_for(path);
-    if (real_path.is_null() || !Core::File::is_directory(path))
+    auto real_path = Core::Stream::real_path_for(path);
+    if (real_path.is_null() || !Core::Stream::is_directory(path))
         return false;
 
     if (chdir(real_path.characters()) < 0) {
@@ -555,7 +555,7 @@ bool DirectoryView::can_modify_current_selection()
     // FIXME: remove once Clang formats this properly.
     // clang-format off
     return selections.first_matching([&](auto& index) {
-        return Core::File::can_delete_or_move(node(index).full_path());
+        return Core::Stream::can_delete_or_move(node(index).full_path());
     }).has_value();
     // clang-format on
 }

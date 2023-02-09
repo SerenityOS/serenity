@@ -17,7 +17,7 @@ static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 struct CachedDomain {
     DeprecatedString domain;
     NonnullRefPtr<Core::ConfigFile> config;
-    RefPtr<Core::FileWatcher> watcher;
+    RefPtr<Core::StreamWatcher> watcher;
 };
 
 static HashMap<DeprecatedString, NonnullOwnPtr<CachedDomain>> s_cache;
@@ -39,9 +39,9 @@ static Core::ConfigFile& ensure_domain_config(DeprecatedString const& domain)
 
     auto config = Core::ConfigFile::open_for_app(domain, Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
     // FIXME: Use a single FileWatcher with multiple watches inside.
-    auto watcher_or_error = Core::FileWatcher::create(Core::FileWatcherFlags::Nonblock);
+    auto watcher_or_error = Core::StreamWatcher::create(Core::StreamWatcherFlags::Nonblock);
     VERIFY(!watcher_or_error.is_error());
-    auto result = watcher_or_error.value()->add_watch(config->filename(), Core::FileWatcherEvent::Type::ContentModified);
+    auto result = watcher_or_error.value()->add_watch(config->filename(), Core::StreamWatcherEvent::Type::ContentModified);
     VERIFY(!result.is_error());
     watcher_or_error.value()->on_change = [config, domain](auto&) {
         auto new_config = Core::ConfigFile::open(config->filename(), Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();

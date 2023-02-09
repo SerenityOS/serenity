@@ -33,12 +33,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     mode_t const default_mode = 0755;
     mode_t const mask_reference_mode = 0777;
 
-    Core::FilePermissionsMask mask;
+    Core::StreamPermissionsMask mask;
 
     if (mode_string.is_empty()) {
         mask.assign_permissions(default_mode);
     } else {
-        mask = TRY(Core::FilePermissionsMask::parse(mode_string));
+        mask = TRY(Core::StreamPermissionsMask::parse(mode_string));
     }
 
     bool has_errors = false;

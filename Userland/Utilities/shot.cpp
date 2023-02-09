@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool printed_hyperlink = false;
     if (isatty(STDOUT_FILENO)) {
-        auto full_path = Core::File::real_path_for(output_path);
+        auto full_path = Core::Stream::real_path_for(output_path);
         if (!full_path.is_null()) {
             char hostname[HOST_NAME_MAX];
             VERIFY(gethostname(hostname, sizeof(hostname)) == 0);

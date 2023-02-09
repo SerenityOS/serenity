@@ -195,7 +195,7 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
         m_timer->stop();
     }
 
-    m_path = Core::File::real_path_for(path);
+    m_path = Core::Stream::real_path_for(path);
     reset_view();
 }
 

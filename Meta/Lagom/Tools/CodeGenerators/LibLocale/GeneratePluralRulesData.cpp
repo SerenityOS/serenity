@@ -398,7 +398,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
 
     LexicalPath core_supplemental_path(move(core_path));
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    VERIFY(Core::Stream::is_directory(core_supplemental_path.string()));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));

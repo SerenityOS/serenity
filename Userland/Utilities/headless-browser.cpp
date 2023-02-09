@@ -335,7 +335,7 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Core::Stream&) override
         {
         }
 
@@ -414,7 +414,7 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Core::Stream&) override
         {
         }
 
@@ -483,7 +483,7 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Core::Stream&) override
         {
         }
 
@@ -691,8 +691,8 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             DeprecatedString output_file_path = "output.png";
             dbgln("Saving to {}", output_file_path);
 
-            if (Core::File::exists(output_file_path))
-                MUST(Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed));
+            if (Core::Stream::exists(output_file_path))
+                MUST(Core::Stream::remove(output_file_path, Core::Stream::RecursionMode::Disallowed));
 
             auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
 

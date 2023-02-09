@@ -365,12 +365,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else {
         test_root = "/usr/Tests";
     }
-    if (!Core::File::is_directory(test_root)) {
+    if (!Core::Stream::is_directory(test_root)) {
         warnln("Test root is not a directory: {}", test_root);
         return 1;
     }
 
-    test_root = Core::File::real_path_for(test_root);
+    test_root = Core::Stream::real_path_for(test_root);
 
     auto void_or_error = Core::System::chdir(test_root);
     if (void_or_error.is_error()) {

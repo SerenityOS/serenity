@@ -19,8 +19,8 @@ public:
     static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
     explicit GUIDPartitionTable(Kernel::StorageDevice const&);
 #else
-    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(NonnullRefPtr<Core::File>);
-    explicit GUIDPartitionTable(NonnullRefPtr<Core::File>);
+    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(NonnullRefPtr<Core::Stream>);
+    explicit GUIDPartitionTable(NonnullRefPtr<Core::Stream>);
 #endif
 
     virtual bool is_valid() const override

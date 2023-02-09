@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(paths, "Paths to file", "paths");
     args_parser.parse(arguments);
 
-    auto mask = TRY(Core::FilePermissionsMask::parse(mode));
+    auto mask = TRY(Core::StreamPermissionsMask::parse(mode));
 
     Function<ErrorOr<void>(StringView const&)> update_path_permissions = [&](StringView const& path) -> ErrorOr<void> {
         auto stat = TRY(Core::System::lstat(path));

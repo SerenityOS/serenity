@@ -704,7 +704,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
 
     LexicalPath core_supplemental_path(move(core_path));
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    VERIFY(Core::Stream::is_directory(core_supplemental_path.string()));
 
     TRY(parse_number_system_digits(core_supplemental_path.string(), cldr));
 

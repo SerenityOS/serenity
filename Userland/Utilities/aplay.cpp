@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
-    TRY(Core::System::unveil(Core::File::absolute_path(path), "r"sv));
+    TRY(Core::System::unveil(Core::Stream::absolute_path(path), "r"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     Core::EventLoop loop;

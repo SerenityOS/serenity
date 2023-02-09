@@ -18,5 +18,5 @@ public:
     MeshLoader() = default;
     virtual ~MeshLoader() = default;
 
-    virtual ErrorOr<NonnullRefPtr<Mesh>> load(Core::File& file) = 0;
+    virtual ErrorOr<NonnullRefPtr<Mesh>> load(Core::Stream& file) = 0;
 };

@@ -93,7 +93,7 @@ void LibraryMetadata::handle_mmap(FlatPtr base, size_t size, DeprecatedString co
         DeprecatedString full_path;
         if (path_string.starts_with('/'))
             full_path = path_string;
-        else if (Core::File::looks_like_shared_library(path_string))
+        else if (Core::Stream::looks_like_shared_library(path_string))
             full_path = DeprecatedString::formatted("/usr/lib/{}", path);
         else
             full_path = path_string;

@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto result = Core::File::remove(path, recursive ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed);
+        auto result = Core::Stream::remove(path, recursive ? Core::Stream::RecursionMode::Allowed : Core::Stream::RecursionMode::Disallowed);
 
         if (result.is_error()) {
             auto error = result.error();

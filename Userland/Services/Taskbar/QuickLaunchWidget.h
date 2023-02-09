@@ -98,7 +98,7 @@ private:
     RefPtr<GUI::Menu> m_context_menu;
     RefPtr<GUI::Action> m_context_menu_default_action;
     DeprecatedString m_context_menu_app_name;
-    RefPtr<Core::FileWatcher> m_watcher;
+    RefPtr<Core::StreamWatcher> m_watcher;
 };
 
 }

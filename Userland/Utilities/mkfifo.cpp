@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (!mode_string.is_empty()) {
-        auto mask = TRY(Core::FilePermissionsMask::parse(mode_string));
+        auto mask = TRY(Core::StreamPermissionsMask::parse(mode_string));
         mode = mask.apply(mask_reference_mode);
     }
 

@@ -37,7 +37,7 @@ private:
     String m_filename;
 };
 
-using DeprecatedResult = ErrorOr<NonnullRefPtr<Core::File>>;
+using DeprecatedResult = ErrorOr<NonnullRefPtr<Core::Stream>>;
 using Result = ErrorOr<File>;
 
 class Client final

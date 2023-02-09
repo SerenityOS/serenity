@@ -167,13 +167,13 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
         widget->m_statusbar->set_override_text({});
     };
 
-    auto maybe_watcher = Core::FileWatcher::create();
+    auto maybe_watcher = Core::StreamWatcher::create();
     if (maybe_watcher.is_error()) {
         warnln("Couldn't create a file watcher, deleted files won't be noticed! Error: {}", maybe_watcher.error());
     } else {
         widget->m_file_watcher = maybe_watcher.release_value();
-        widget->m_file_watcher->on_change = [widget](Core::FileWatcherEvent const& event) {
-            if (event.type != Core::FileWatcherEvent::Type::Deleted)
+        widget->m_file_watcher->on_change = [widget](Core::StreamWatcherEvent const& event) {
+            if (event.type != Core::StreamWatcherEvent::Type::Deleted)
                 return;
 
             if (event.event_path.starts_with(widget->project().root_path())) {
@@ -312,7 +312,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
     if (full_filename.starts_with(project().root_path())) {
         filename = LexicalPath::relative_path(full_filename, project().root_path());
     }
-    if (Core::File::is_directory(filename) || !Core::File::exists(filename))
+    if (Core::Stream::is_directory(filename) || !Core::Stream::exists(filename))
         return false;
 
     auto editor_wrapper_or_none = m_all_editor_wrappers.first_matching([&](auto& wrapper) {
@@ -347,7 +347,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
         m_open_files_vector.append(filename);
 
         if (!m_file_watcher.is_null()) {
-            auto watch_result = m_file_watcher->add_watch(filename, Core::FileWatcherEvent::Type::Deleted);
+            auto watch_result = m_file_watcher->add_watch(filename, Core::StreamWatcherEvent::Type::Deleted);
             if (watch_result.is_error()) {
                 warnln("Couldn't watch '{}'", filename);
             }
@@ -534,13 +534,13 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Dep
         DeprecatedString filepath;
 
         if (!path_to_selected.is_empty()) {
-            VERIFY(Core::File::exists(path_to_selected.first()));
+            VERIFY(Core::Stream::exists(path_to_selected.first()));
 
             LexicalPath selected(path_to_selected.first());
 
             DeprecatedString dir_path;
 
-            if (Core::File::is_directory(selected.string()))
+            if (Core::Stream::is_directory(selected.string()))
                 dir_path = selected.string();
             else
                 dir_path = selected.dirname();
@@ -574,7 +574,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_actio
 
             DeprecatedString dir_path;
 
-            if (Core::File::is_directory(selected.string()))
+            if (Core::Stream::is_directory(selected.string()))
                 dir_path = selected.string();
             else
                 dir_path = selected.dirname();
@@ -682,7 +682,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             }
 
             bool is_directory = S_ISDIR(st.st_mode);
-            if (auto result = Core::File::remove(file, Core::File::RecursionMode::Allowed); result.is_error()) {
+            if (auto result = Core::Stream::remove(file, Core::Stream::RecursionMode::Allowed); result.is_error()) {
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
@@ -904,7 +904,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
         Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(),
             old_filename.is_null() ? "Untitled"sv : old_path.title(),
             old_filename.is_null() ? "txt"sv : old_path.extension(),
-            Core::File::absolute_path(old_path.dirname()));
+            Core::Stream::absolute_path(old_path.dirname()));
         if (!save_path.has_value()) {
             return;
         }
@@ -1001,7 +1001,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_debug_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"sv));
     return GUI::Action::create("&Debug", icon, [this](auto&) {
-        if (!Core::File::exists(get_project_executable_path())) {
+        if (!Core::Stream::exists(get_project_executable_path())) {
             GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
@@ -1213,7 +1213,7 @@ void HackStudioWidget::file_renamed(DeprecatedString const& old_name, Deprecated
 
     if (m_file_watcher->is_watching(old_name)) {
         VERIFY(!m_file_watcher->remove_watch(old_name).is_error());
-        VERIFY(!m_file_watcher->add_watch(new_name, Core::FileWatcherEvent::Type::Deleted).is_error());
+        VERIFY(!m_file_watcher->add_watch(new_name, Core::StreamWatcherEvent::Type::Deleted).is_error());
     }
 
     update_window_title();
@@ -1245,7 +1245,7 @@ void HackStudioWidget::configure_project_tree_view()
 
         auto selections = m_project_tree_view->selection().indices();
         auto it = selections.find_if([&](auto selected_file) {
-            return Core::File::can_delete_or_move(m_project->model().full_path(selected_file));
+            return Core::Stream::can_delete_or_move(m_project->model().full_path(selected_file));
         });
         bool has_permissions = it != selections.end();
         m_tree_view_rename_action->set_enabled(has_permissions);
@@ -1779,10 +1779,10 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_config
 
         DeprecatedString formatted_error_string_holder;
         auto save_configuration_or_error = [&]() -> ErrorOr<void> {
-            if (Core::File::exists(absolute_config_file_path))
+            if (Core::Stream::exists(absolute_config_file_path))
                 return {};
 
-            if (Core::File::exists(parent_directory) && !Core::File::is_directory(parent_directory)) {
+            if (Core::Stream::exists(parent_directory) && !Core::Stream::is_directory(parent_directory)) {
                 formatted_error_string_holder = DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory);
                 return Error::from_string_view(formatted_error_string_holder);
             }

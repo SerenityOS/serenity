@@ -51,7 +51,7 @@ MaybeLoaderError WavLoaderPlugin::initialize()
 }
 
 template<typename SampleReader>
-MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(AK::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
+MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(Core::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
 {
     switch (m_num_channels) {
     case 1:
@@ -72,7 +72,7 @@ MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(AK::Stream& stream, S
 }
 
 // There's no i24 type + we need to do the endianness conversion manually anyways.
-static ErrorOr<double> read_sample_int24(AK::Stream& stream)
+static ErrorOr<double> read_sample_int24(Core::Stream& stream)
 {
     u8 byte = 0;
     TRY(stream.read(Bytes { &byte, 1 }));
@@ -93,7 +93,7 @@ static ErrorOr<double> read_sample_int24(AK::Stream& stream)
 }
 
 template<typename T>
-static ErrorOr<double> read_sample(AK::Stream& stream)
+static ErrorOr<double> read_sample(Core::Stream& stream)
 {
     T sample { 0 };
     TRY(stream.read(Bytes { &sample, sizeof(T) }));

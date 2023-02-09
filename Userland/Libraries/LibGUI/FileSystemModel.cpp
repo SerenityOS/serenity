@@ -61,7 +61,7 @@ bool FileSystemModel::Node::fetch_data(DeprecatedString const& full_path, bool i
     mtime = st.st_mtime;
 
     if (S_ISLNK(mode)) {
-        auto sym_link_target_or_error = Core::File::read_link(full_path);
+        auto sym_link_target_or_error = Core::Stream::read_link(full_path);
         if (sym_link_target_or_error.is_error())
             perror("readlink");
         else {
@@ -143,10 +143,10 @@ void FileSystemModel::Node::traverse_if_needed()
     if (!m_model.m_file_watcher->is_watching(full_path)) {
         // We are not already watching this file, watch it
         auto result = m_model.m_file_watcher->add_watch(full_path,
-            Core::FileWatcherEvent::Type::MetadataModified
-                | Core::FileWatcherEvent::Type::ChildCreated
-                | Core::FileWatcherEvent::Type::ChildDeleted
-                | Core::FileWatcherEvent::Type::Deleted);
+            Core::StreamWatcherEvent::Type::MetadataModified
+                | Core::StreamWatcherEvent::Type::ChildCreated
+                | Core::StreamWatcherEvent::Type::ChildDeleted
+                | Core::StreamWatcherEvent::Type::Deleted);
 
         if (result.is_error()) {
             dbgln("Couldn't watch '{}': {}", full_path, result.error());
@@ -273,14 +273,14 @@ FileSystemModel::FileSystemModel(DeprecatedString root_path, Mode mode)
         m_group_names.set(group->gr_gid, group->gr_name);
     endgrent();
 
-    auto result = Core::FileWatcher::create();
+    auto result = Core::StreamWatcher::create();
     if (result.is_error()) {
         dbgln("{}", result.error());
         VERIFY_NOT_REACHED();
     }
 
     m_file_watcher = result.release_value();
-    m_file_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
+    m_file_watcher->on_change = [this](Core::StreamWatcherEvent const& event) {
         handle_file_event(event);
     };
 
@@ -380,9 +380,9 @@ void FileSystemModel::invalidate()
     Model::invalidate();
 }
 
-void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
+void FileSystemModel::handle_file_event(Core::StreamWatcherEvent const& event)
 {
-    if (event.type == Core::FileWatcherEvent::Type::ChildCreated) {
+    if (event.type == Core::StreamWatcherEvent::Type::ChildCreated) {
         if (node_for_path(event.event_path).has_value())
             return;
     } else {
@@ -391,7 +391,7 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
     }
 
     switch (event.type) {
-    case Core::FileWatcherEvent::Type::ChildCreated: {
+    case Core::StreamWatcherEvent::Type::ChildCreated: {
         LexicalPath path { event.event_path };
         auto& parts = path.parts_view();
         StringView child_name = parts.last();
@@ -421,8 +421,8 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
         end_insert_rows();
         break;
     }
-    case Core::FileWatcherEvent::Type::Deleted:
-    case Core::FileWatcherEvent::Type::ChildDeleted: {
+    case Core::StreamWatcherEvent::Type::Deleted:
+    case Core::StreamWatcherEvent::Type::ChildDeleted: {
         auto child = node_for_path(event.event_path);
         if (!child.has_value()) {
             dbgln("Got a ChildDeleted/Deleted on '{}' but the child does not exist?! (already gone?)", event.event_path);
@@ -455,7 +455,7 @@ void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
 
         break;
     }
-    case Core::FileWatcherEvent::Type::MetadataModified: {
+    case Core::StreamWatcherEvent::Type::MetadataModified: {
         // FIXME: Do we do anything in case the metadata is modified?
         //        Perhaps re-stat'ing the modified node would make sense
         //        here, but let's leave that to when we actually need it.

@@ -17,7 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath fattr chown"));
 
     bool link = false;
-    auto preserve = Core::File::PreserveMode::Nothing;
+    auto preserve = Core::Stream::PreserveMode::Nothing;
     bool recursion_allowed = false;
     bool verbose = false;
     Vector<StringView> sources;
@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "attributes",
         [&preserve](char const* s) {
             if (!s) {
-                preserve = Core::File::PreserveMode::Permissions | Core::File::PreserveMode::Ownership | Core::File::PreserveMode::Timestamps;
+                preserve = Core::Stream::PreserveMode::Permissions | Core::Stream::PreserveMode::Ownership | Core::Stream::PreserveMode::Timestamps;
                 return true;
             }
 
@@ -41,11 +41,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             StringView { s, strlen(s) }.for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
                 if (value == "mode"sv) {
-                    preserve |= Core::File::PreserveMode::Permissions;
+                    preserve |= Core::Stream::PreserveMode::Permissions;
                 } else if (value == "ownership"sv) {
-                    preserve |= Core::File::PreserveMode::Ownership;
+                    preserve |= Core::Stream::PreserveMode::Ownership;
                 } else if (value == "timestamps"sv) {
-                    preserve |= Core::File::PreserveMode::Timestamps;
+                    preserve |= Core::Stream::PreserveMode::Timestamps;
                 } else {
                     warnln("cp: Unknown or unimplemented --preserve attribute: '{}'", value);
                     values_ok = false;
@@ -63,24 +63,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(destination, "Destination file path", "destination");
     args_parser.parse(arguments);
 
-    if (has_flag(preserve, Core::File::PreserveMode::Permissions)) {
+    if (has_flag(preserve, Core::Stream::PreserveMode::Permissions)) {
         umask(0);
     } else {
         TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
     }
 
-    bool destination_is_existing_dir = Core::File::is_directory(destination);
+    bool destination_is_existing_dir = Core::Stream::is_directory(destination);
 
     for (auto& source : sources) {
         auto destination_path = destination_is_existing_dir
             ? DeprecatedString::formatted("{}/{}", destination, LexicalPath::basename(source))
             : destination;
 
-        auto result = Core::File::copy_file_or_directory(
+        auto result = Core::Stream::copy_file_or_directory(
             destination_path, source,
-            recursion_allowed ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed,
-            link ? Core::File::LinkMode::Allowed : Core::File::LinkMode::Disallowed,
-            Core::File::AddDuplicateFileMarker::No,
+            recursion_allowed ? Core::Stream::RecursionMode::Allowed : Core::Stream::RecursionMode::Disallowed,
+            link ? Core::Stream::LinkMode::Allowed : Core::Stream::LinkMode::Disallowed,
+            Core::Stream::AddDuplicateFileMarker::No,
             preserve);
 
         if (result.is_error()) {

@@ -172,8 +172,8 @@ ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& bu
     auto file_name_to_watch = entry->file_name_to_watch();
     if (!file_name_to_watch.is_null()) {
         if (!m_watcher) {
-            m_watcher = TRY(Core::FileWatcher::create());
-            m_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
+            m_watcher = TRY(Core::StreamWatcher::create());
+            m_watcher->on_change = [this](Core::StreamWatcherEvent const& event) {
                 auto name = sanitize_entry_name(event.event_path);
                 dbgln("Removing QuickLaunch entry {}", name);
                 auto button = find_child_of_type_named<GUI::Button>(name);
@@ -181,7 +181,7 @@ ErrorOr<void> QuickLaunchWidget::add_or_adjust_button(DeprecatedString const& bu
                     remove_child(*button);
             };
         }
-        TRY(m_watcher->add_watch(file_name_to_watch, Core::FileWatcherEvent::Type::Deleted));
+        TRY(m_watcher->add_watch(file_name_to_watch, Core::StreamWatcherEvent::Type::Deleted));
     }
 
     auto button = find_child_of_type_named<GUI::Button>(button_name);

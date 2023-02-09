@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     for (auto path : paths) {
-        auto destination = TRY(Core::File::read_link(path));
+        auto destination = TRY(Core::Stream::read_link(path));
         out("{}", destination);
         if (!no_newline)
             outln();

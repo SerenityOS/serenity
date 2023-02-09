@@ -217,7 +217,7 @@ TEST_CASE(unlink_symlink)
         perror("symlink");
     }
 
-    auto target_or_error = Core::File::read_link("/tmp/linky");
+    auto target_or_error = Core::Stream::read_link("/tmp/linky");
     EXPECT(!target_or_error.is_error());
 
     auto target = target_or_error.release_value();

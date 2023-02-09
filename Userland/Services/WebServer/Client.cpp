@@ -132,7 +132,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     path_builder.append(requested_path);
     auto real_path = TRY(path_builder.to_string());
 
-    if (Core::File::is_directory(real_path.bytes_as_string_view())) {
+    if (Core::Stream::is_directory(real_path.bytes_as_string_view())) {
         if (!resource_decoded.ends_with('/')) {
             StringBuilder red;
 
@@ -147,14 +147,14 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         index_html_path_builder.append(real_path);
         index_html_path_builder.append("/index.html"sv);
         auto index_html_path = TRY(index_html_path_builder.to_string());
-        if (!Core::File::exists(index_html_path)) {
+        if (!Core::Stream::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
         }
         real_path = index_html_path;
     }
 
-    auto file = Core::File::construct(real_path.bytes_as_string_view());
+    auto file = Core::Stream::construct(real_path.bytes_as_string_view());
     if (!file->open(Core::OpenMode::ReadOnly)) {
         TRY(send_error_response(404, request));
         return false;
@@ -169,13 +169,13 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
     auto const info = ContentInfo {
         .type = TRY(String::from_deprecated_string(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
-        .length = TRY(Core::File::size(real_path.bytes_as_string_view()))
+        .length = TRY(Core::Stream::size(real_path.bytes_as_string_view()))
     };
     TRY(send_response(*stream, request, move(info)));
     return true;
 }
 
-ErrorOr<void> Client::send_response(AK::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
+ErrorOr<void> Client::send_response(Core::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);

@@ -19,7 +19,7 @@ class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
 public:
-    explicit Job(HttpRequest&&, AK::Stream&);
+    explicit Job(HttpRequest&&, Core::Stream&);
     virtual ~Job() override = default;
 
     virtual void start(Core::Stream::Socket&) override;

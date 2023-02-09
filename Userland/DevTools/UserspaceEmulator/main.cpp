@@ -46,9 +46,9 @@ int main(int argc, char** argv, char** env)
 
     DeprecatedString executable_path;
     if (arguments[0].contains("/"sv))
-        executable_path = Core::File::real_path_for(arguments[0]);
+        executable_path = Core::Stream::real_path_for(arguments[0]);
     else
-        executable_path = Core::File::resolve_executable_from_environment(arguments[0]).value_or({});
+        executable_path = Core::Stream::resolve_executable_from_environment(arguments[0]).value_or({});
     if (executable_path.is_empty()) {
         reportln("Cannot find executable for '{}'."sv, arguments[0]);
         return 1;
@@ -57,7 +57,7 @@ int main(int argc, char** argv, char** env)
     if (dump_profile && profile_dump_path.is_empty())
         profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
-    OwnPtr<AK::Stream> profile_stream;
+    OwnPtr<Core::Stream> profile_stream;
     OwnPtr<NonnullOwnPtrVector<DeprecatedString>> profile_strings;
     OwnPtr<Vector<int>> profile_string_id_map;
 

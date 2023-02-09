@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (size_t i = 0; i < files.size(); i++) {
         auto path = files[i].name;
 
-        if (flag_recursive && Core::File::is_directory(path)) {
+        if (flag_recursive && Core::Stream::is_directory(path)) {
             size_t subdirs = 0;
             Core::DirIterator di(path, Core::DirIterator::SkipParentAndBaseDir);
 
@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             while (di.has_next()) {
                 DeprecatedString directory = di.next_full_path();
-                if (Core::File::is_directory(directory) && !Core::File::is_link(directory)) {
+                if (Core::Stream::is_directory(directory) && !Core::Stream::is_link(directory)) {
                     ++subdirs;
                     FileMetadata new_file;
                     new_file.name = move(directory);
@@ -184,7 +184,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        bool show_dir_separator = files.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
+        bool show_dir_separator = files.size() > 1 && Core::Stream::is_directory(path) && !flag_list_directories_only;
         if (show_dir_separator) {
             printf("%s:\n", path.characters());
         }
@@ -237,7 +237,7 @@ static DeprecatedString& hostname()
 static size_t print_name(const struct stat& st, DeprecatedString const& name, char const* path_for_link_resolution, char const* path_for_hyperlink)
 {
     if (!flag_disable_hyperlinks) {
-        auto full_path = Core::File::real_path_for(path_for_hyperlink);
+        auto full_path = Core::Stream::real_path_for(path_for_hyperlink);
         if (!full_path.is_null()) {
             auto url = URL::create_with_file_scheme(full_path, {}, hostname());
             out("\033]8;;{}\033\\", url.serialize());
@@ -274,7 +274,7 @@ static size_t print_name(const struct stat& st, DeprecatedString const& name, ch
     }
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution) {
-            auto link_destination_or_error = Core::File::read_link(path_for_link_resolution);
+            auto link_destination_or_error = Core::Stream::read_link(path_for_link_resolution);
             if (link_destination_or_error.is_error()) {
                 perror("readlink");
             } else {

@@ -163,12 +163,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto file_watcher = Core::BlockingFileWatcher();
         for (auto const& file : files_to_watch) {
-            if (!Core::File::exists(file)) {
+            if (!Core::Stream::exists(file)) {
                 warnln("Cannot watch '{}', it does not exist.", file);
                 return 1;
             }
             if (!file_watcher.is_watching(file)) {
-                auto could_add_to_watch = TRY(file_watcher.add_watch(file, Core::FileWatcherEvent::Type::MetadataModified));
+                auto could_add_to_watch = TRY(file_watcher.add_watch(file, Core::StreamWatcherEvent::Type::MetadataModified));
                 if (!could_add_to_watch) {
                     warnln("Could not add '{}' to watch list.", file);
                     return 1;

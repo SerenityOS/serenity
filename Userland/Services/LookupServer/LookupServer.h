@@ -38,7 +38,7 @@ private:
     RefPtr<DNSServer> m_dns_server;
     RefPtr<MulticastDNS> m_mdns;
     Vector<DeprecatedString> m_nameservers;
-    RefPtr<Core::FileWatcher> m_file_watcher;
+    RefPtr<Core::StreamWatcher> m_file_watcher;
     HashMap<Name, Vector<Answer>, Name::Traits> m_etc_hosts;
     HashMap<Name, Vector<Answer>, Name::Traits> m_lookup_cache;
 };

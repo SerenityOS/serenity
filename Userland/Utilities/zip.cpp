@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     DeprecatedString zip_file_path { zip_path };
-    if (Core::File::exists(zip_file_path)) {
+    if (Core::Stream::exists(zip_file_path)) {
         if (force) {
             outln("{} already exists, overwriting...", zip_file_path);
         } else {
@@ -94,9 +94,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
             auto child_path = it.next_full_path();
-            if (Core::File::is_link(child_path))
+            if (Core::Stream::is_link(child_path))
                 return {};
-            if (!Core::File::is_directory(child_path)) {
+            if (!Core::Stream::is_directory(child_path)) {
                 auto result = add_file(child_path);
                 if (result.is_error())
                     warnln("Couldn't add file '{}': {}", child_path, result.error());
@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     for (auto const& source_path : source_paths) {
-        if (Core::File::is_directory(source_path)) {
+        if (Core::Stream::is_directory(source_path)) {
             auto result = add_directory(source_path, add_directory);
             if (result.is_error())
                 warnln("Couldn't add directory '{}': {}", source_path, result.error());

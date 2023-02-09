@@ -35,26 +35,26 @@ public:
 
     virtual void event(Core::Event&) override;
 
-    Core::IODevice& in() { return *m_in; }
-    Core::IODevice& out() { return *m_out; }
+    Core::Stream& in() { return *m_in; }
+    Core::Stream& out() { return *m_out; }
 
-    void set_in(RefPtr<Core::IODevice> in)
+    void set_in(RefPtr<Core::Stream> in)
     {
         m_in = in;
         set_in_notifier();
     }
-    void set_out(RefPtr<Core::IODevice> out) { m_out = out; }
+    void set_out(RefPtr<Core::Stream> out) { m_out = out; }
 
 protected:
     Endpoint() = default;
-    Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
+    Endpoint(NonnullRefPtr<Core::Stream> in, NonnullRefPtr<Core::Stream> out);
 
 private:
     void set_in_notifier();
     NonnullOwnPtr<Command> read_command();
 
-    RefPtr<Core::IODevice> m_in;
-    RefPtr<Core::IODevice> m_out;
+    RefPtr<Core::Stream> m_in;
+    RefPtr<Core::Stream> m_out;
     RefPtr<Core::Notifier> m_in_notifier;
 };
 

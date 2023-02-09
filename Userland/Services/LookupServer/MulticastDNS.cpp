@@ -119,7 +119,7 @@ ErrorOr<size_t> MulticastDNS::emit_packet(Packet const& packet, sockaddr_in cons
 
 Vector<IPv4Address> MulticastDNS::local_addresses() const
 {
-    auto file = Core::File::construct("/sys/kernel/net/adapters");
+    auto file = Core::Stream::construct("/sys/kernel/net/adapters");
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to open /sys/kernel/net/adapters: {}", file->error_string());
         return {};

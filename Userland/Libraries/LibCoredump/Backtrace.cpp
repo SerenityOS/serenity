@@ -26,7 +26,7 @@ ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, M
     if (maybe_ptr.has_value())
         return *maybe_ptr;
 
-    if (!Core::File::exists(path))
+    if (!Core::Stream::exists(path))
         return nullptr;
 
     auto file_or_error = Core::MappedFile::map(path);

@@ -105,9 +105,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(f->seek(0, SeekMode::FromEndPosition));
 
         Core::EventLoop event_loop;
-        auto watcher = TRY(Core::FileWatcher::create());
-        watcher->on_change = [&](Core::FileWatcherEvent const& event) {
-            if (event.type == Core::FileWatcherEvent::Type::ContentModified) {
+        auto watcher = TRY(Core::StreamWatcher::create());
+        watcher->on_change = [&](Core::StreamWatcherEvent const& event) {
+            if (event.type == Core::StreamWatcherEvent::Type::ContentModified) {
                 auto buffer_or_error = f->read_until_eof();
                 if (buffer_or_error.is_error()) {
                     auto error = buffer_or_error.error();
@@ -127,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
         };
-        TRY(watcher->add_watch(file, Core::FileWatcherEvent::Type::ContentModified));
+        TRY(watcher->add_watch(file, Core::StreamWatcherEvent::Type::ContentModified));
         TRY(Core::System::pledge("stdio"));
         return event_loop.exec();
     }

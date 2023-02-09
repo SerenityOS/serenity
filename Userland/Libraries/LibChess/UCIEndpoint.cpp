@@ -13,7 +13,7 @@
 
 namespace Chess::UCI {
 
-Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
+Endpoint::Endpoint(NonnullRefPtr<Core::Stream> in, NonnullRefPtr<Core::Stream> out)
     : m_in(in)
     , m_out(out)
     , m_in_notifier(Core::Notifier::construct(in->fd(), Core::Notifier::Read))

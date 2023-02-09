@@ -114,7 +114,7 @@ TranslationUnit[0:0->144:0]
         trace_file
         FunctionCall[22:22->22:50]
           Name[22:22->22:47]
-          Core::File::standard_error
+          Core::Stream::standard_error
       VariableDeclaration[24:4->24:27]
         NamedType[24:4->24:19]
           Core::ArgsParser
@@ -198,7 +198,7 @@ TranslationUnit[0:0->144:0]
             open_result
             FunctionCall[34:27->34:87]
               Name[34:27->34:42]
-              Core::File::open
+              Core::Stream::open
               Name[34:44->34:58]
               output_filename
               Name[34:61->34:85]

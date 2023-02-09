@@ -129,7 +129,7 @@ private:
     Threading::Mutex m_pending_mutex;
     Threading::ConditionVariable m_mixing_necessary { m_pending_mutex };
 
-    RefPtr<Core::File> m_device;
+    RefPtr<Core::Stream> m_device;
 
     NonnullRefPtr<Threading::Thread> m_sound_thread;
 

@@ -183,7 +183,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.parse(arguments);
 
     if (format) {
-        auto file = TRY(Core::File::open(format, Core::OpenMode::ReadOnly));
+        auto file = TRY(Core::Stream::open(format, Core::OpenMode::ReadOnly));
 
         initialize();
 
@@ -224,7 +224,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             DeprecatedString file_path = name;
             if (file_path.starts_with('~'))
                 file_path = shell->expand_tilde(file_path);
-            if (Core::File::exists(file_path)) {
+            if (Core::Stream::exists(file_path)) {
                 shell->run_file(file_path, false);
             }
         };

@@ -73,8 +73,8 @@ ErrorOr<CommandResult> command(DeprecatedString const& program, Vector<Deprecate
     close(stderr_pipe[1]);
 
     auto read_all_from_pipe = [](int pipe[2]) {
-        auto result_file = Core::File::construct();
-        if (!result_file->open(pipe[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
+        auto result_file = Core::Stream::construct();
+        if (!result_file->open(pipe[0], Core::OpenMode::ReadOnly, Core::Stream::ShouldCloseFileDescriptor::Yes)) {
             perror("open");
             VERIFY_NOT_REACHED();
         }

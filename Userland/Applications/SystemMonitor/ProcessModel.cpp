@@ -32,7 +32,7 @@ ProcessModel::ProcessModel()
     VERIFY(!s_the);
     s_the = this;
 
-    auto file = Core::File::construct("/sys/kernel/cpuinfo");
+    auto file = Core::Stream::construct("/sys/kernel/cpuinfo");
     if (file->open(Core::OpenMode::ReadOnly)) {
         auto buffer = file->read_all();
         auto json = JsonValue::from_string({ buffer });

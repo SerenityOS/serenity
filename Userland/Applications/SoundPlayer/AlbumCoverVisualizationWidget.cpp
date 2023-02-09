@@ -48,7 +48,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> AlbumCoverVisualizationWidget::get_album_cov
     static constexpr auto possible_cover_filenames = Array { "cover.png"sv, "cover.jpg"sv };
     for (auto& it : possible_cover_filenames) {
         LexicalPath cover_path = LexicalPath::join(directory, it);
-        if (Core::File::exists(cover_path.string()))
+        if (Core::Stream::exists(cover_path.string()))
             return Gfx::Bitmap::load_from_file(cover_path.string());
     }
 

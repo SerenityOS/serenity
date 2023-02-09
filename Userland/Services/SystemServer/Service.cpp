@@ -123,7 +123,7 @@ ErrorOr<void> Service::activate()
 
 ErrorOr<void> Service::spawn(int socket_fd)
 {
-    if (!Core::File::exists(m_executable_path)) {
+    if (!Core::Stream::exists(m_executable_path)) {
         dbgln("{}: binary \"{}\" does not exist, skipping service.", name(), m_executable_path);
         return Error::from_errno(ENOENT);
     }

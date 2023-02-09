@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        NonnullOwnPtr<AK::Stream> input_stream = TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
+        NonnullOwnPtr<Core::Stream> input_stream = TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
 
         if (gzip)
             input_stream = make<Compress::GzipDecompressor>(move(input_stream));
@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("{}", filename);
 
             if (extract) {
-                DeprecatedString absolute_path = Core::File::absolute_path(filename);
+                DeprecatedString absolute_path = Core::Stream::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 
@@ -206,7 +206,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        NonnullOwnPtr<AK::Stream> output_stream = TRY(Core::Stream::File::standard_output());
+        NonnullOwnPtr<Core::Stream> output_stream = TRY(Core::Stream::File::standard_output());
 
         if (!archive_file.is_empty())
             output_stream = TRY(Core::Stream::File::open(archive_file, Core::Stream::OpenMode::Write));
@@ -220,7 +220,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Archive::TarOutputStream tar_stream(move(output_stream));
 
         auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
-            auto file = Core::File::construct(path);
+            auto file = Core::Stream::construct(path);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 warnln("Failed to open {}: {}", path, file->error_string());
                 return {};
@@ -257,9 +257,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
             while (it.has_next()) {
                 auto child_path = it.next_full_path();
-                if (!dereference && Core::File::is_link(child_path)) {
+                if (!dereference && Core::Stream::is_link(child_path)) {
                     TRY(add_link(child_path));
-                } else if (!Core::File::is_directory(child_path)) {
+                } else if (!Core::Stream::is_directory(child_path)) {
                     TRY(add_file(child_path));
                 } else {
                     TRY(handle_directory(child_path, handle_directory));
@@ -270,7 +270,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
 
         for (auto const& path : paths) {
-            if (Core::File::is_directory(path)) {
+            if (Core::Stream::is_directory(path)) {
                 TRY(add_directory(path, add_directory));
             } else {
                 TRY(add_file(path));

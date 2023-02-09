@@ -22,7 +22,7 @@ static Vector<DeprecatedString> get_device_paths()
     Core::DirIterator iterator("/dev", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_full_path();
-        if (Core::File::is_block_device(path))
+        if (Core::Stream::is_block_device(path))
             device_paths.append(path);
     }
     return device_paths;

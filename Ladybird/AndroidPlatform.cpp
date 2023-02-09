@@ -68,7 +68,7 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
 {
     constexpr size_t buffer_size = 4096;
 
-    auto file = TRY(Core::File::open(archive_file, Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::open(archive_file, Core::OpenMode::ReadOnly));
 
     DeprecatedString old_pwd = TRY(Core::System::getcwd());
 
@@ -155,7 +155,7 @@ ErrorOr<void> extract_tar_archive(DeprecatedString archive_file, DeprecatedStrin
             path = path.prepend(header.prefix());
         DeprecatedString filename = get_override("path"sv).value_or(path.string());
 
-        DeprecatedString absolute_path = Core::File::absolute_path(filename);
+        DeprecatedString absolute_path = Core::Stream::absolute_path(filename);
         auto parent_path = LexicalPath(absolute_path).parent();
 
         switch (header.type_flag()) {

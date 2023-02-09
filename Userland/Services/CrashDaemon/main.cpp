@@ -47,12 +47,12 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath proc exec"));
 
     Core::BlockingFileWatcher watcher;
-    TRY(watcher.add_watch("/tmp/coredump", Core::FileWatcherEvent::Type::ChildCreated));
+    TRY(watcher.add_watch("/tmp/coredump", Core::StreamWatcherEvent::Type::ChildCreated));
 
     while (true) {
         auto event = watcher.wait_for_event();
         VERIFY(event.has_value());
-        if (event.value().type != Core::FileWatcherEvent::Type::ChildCreated)
+        if (event.value().type != Core::StreamWatcherEvent::Type::ChildCreated)
             continue;
         auto& coredump_path = event.value().event_path;
         dbgln("New coredump file: {}", coredump_path);

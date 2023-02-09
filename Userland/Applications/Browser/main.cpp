@@ -131,8 +131,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto url_from_argument_string = [](DeprecatedString const& string) -> URL {
-        if (Core::File::exists(string)) {
-            return URL::create_with_file_scheme(Core::File::real_path_for(string));
+        if (Core::Stream::exists(string)) {
+            return URL::create_with_file_scheme(Core::Stream::real_path_for(string));
         }
         return Browser::url_from_user_input(string);
     };
@@ -144,8 +144,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto cookie_jar = TRY(Browser::CookieJar::create(*database));
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
 
-    auto content_filters_watcher = TRY(Core::FileWatcher::create());
-    content_filters_watcher->on_change = [&](Core::FileWatcherEvent const&) {
+    auto content_filters_watcher = TRY(Core::StreamWatcher::create());
+    content_filters_watcher->on_change = [&](Core::StreamWatcherEvent const&) {
         dbgln("Reloading content filters because config file changed");
         auto error = load_content_filters();
         if (error.is_error()) {
@@ -154,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         window->content_filters_changed();
     };
-    TRY(content_filters_watcher->add_watch(DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::FileWatcherEvent::Type::ContentModified));
+    TRY(content_filters_watcher->add_watch(DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::StreamWatcherEvent::Type::ContentModified));
 
     app->on_action_enter = [&](GUI::Action& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {

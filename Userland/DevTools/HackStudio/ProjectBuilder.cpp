@@ -125,15 +125,15 @@ ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_p
 
 ErrorOr<void> ProjectBuilder::initialize_build_directory()
 {
-    if (!Core::File::exists(build_directory())) {
+    if (!Core::Stream::exists(build_directory())) {
         if (mkdir(LexicalPath::join(build_directory()).string().characters(), 0700)) {
             return Error::from_errno(errno);
         }
     }
 
     auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
-    if (Core::File::exists(cmake_file_path))
-        MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed));
+    if (Core::Stream::exists(cmake_file_path))
+        MUST(Core::Stream::remove(cmake_file_path, Core::Stream::RecursionMode::Disallowed));
 
     auto cmake_file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Write));
     TRY(cmake_file->write_entire_buffer(generate_cmake_file_content().bytes()));
@@ -151,7 +151,7 @@ Optional<DeprecatedString> ProjectBuilder::find_cmake_file_for(StringView file_p
     auto directory = LexicalPath::dirname(file_path);
     while (!directory.is_empty()) {
         auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv);
-        if (Core::File::exists(cmake_path.string()))
+        if (Core::Stream::exists(cmake_path.string()))
             return cmake_path.string();
         directory = LexicalPath::dirname(directory);
     }

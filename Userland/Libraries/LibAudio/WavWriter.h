@@ -31,7 +31,7 @@ public:
     u32 sample_rate() const { return m_sample_rate; }
     u16 num_channels() const { return m_num_channels; }
     u16 bits_per_sample() const { return m_bits_per_sample; }
-    RefPtr<Core::File> file() const { return m_file; }
+    RefPtr<Core::Stream> file() const { return m_file; }
 
     void set_file(StringView path);
     void set_num_channels(int num_channels) { m_num_channels = num_channels; }
@@ -42,7 +42,7 @@ public:
 
 private:
     void write_header();
-    RefPtr<Core::File> m_file;
+    RefPtr<Core::Stream> m_file;
     DeprecatedString m_error_string;
     bool m_finalized { false };
 

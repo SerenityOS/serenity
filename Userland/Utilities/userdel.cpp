@@ -47,14 +47,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (access(target_account.home_directory().characters(), F_OK) == -1)
             return 0;
 
-        auto const real_path = Core::File::real_path_for(target_account.home_directory());
+        auto const real_path = Core::Stream::real_path_for(target_account.home_directory());
 
         if (real_path == "/") {
             warnln("home directory is /, not deleted!");
             return 12;
         }
 
-        if (auto result = Core::File::remove(real_path, Core::File::RecursionMode::Allowed); result.is_error()) {
+        if (auto result = Core::Stream::remove(real_path, Core::Stream::RecursionMode::Allowed); result.is_error()) {
             warnln("{}", result.release_error());
             return 12;
         }

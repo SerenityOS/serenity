@@ -297,7 +297,7 @@ DeprecatedString Reader::resolve_object_path(StringView name) const
     //       (e.g. UserspaceEmulator, LibSymbolication, Profiler, and DynamicLinker itself)
     //       We should consider creating unified implementation in the future.
 
-    if (name.starts_with('/') || !Core::File::looks_like_shared_library(name)) {
+    if (name.starts_with('/') || !Core::Stream::looks_like_shared_library(name)) {
         return name;
     }
 

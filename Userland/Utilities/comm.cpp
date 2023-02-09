@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return false;
         }
 
-        if (path != "-" && Core::File::is_directory(path)) {
+        if (path != "-" && Core::Stream::is_directory(path)) {
             warnln("Failed to open file{} '{}': is a directory", file_number, path);
             return false;
         }

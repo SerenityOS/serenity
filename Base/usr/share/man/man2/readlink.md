@@ -26,12 +26,12 @@ and sets `errno` to describe the error.
 ## Notes
 
 The underlying system call always returns the full size of the target path on
-success, not the number of bytes written. `Core::File::read_link()` makes use
+success, not the number of bytes written. `Core::Stream::read_link()` makes use
 of this to provide an alternative way to read links that doesn't require the
 caller to pick a buffer size and allocate a buffer straight up.
 
 Since it's essentially impossible to guess the right buffer size for reading
-links, it's strongly recommended that everything uses `Core::File::read_link()`
+links, it's strongly recommended that everything uses `Core::Stream::read_link()`
 instead.
 
 ## Examples
@@ -55,7 +55,7 @@ pid_t read_pid_using_readlink()
 
 pid_t read_pid_using_core_file()
 {
-    auto target = Core::File::read_link("/proc/self");
+    auto target = Core::Stream::read_link("/proc/self");
     if (target.is_null())
         return -1;
     auto pid = target.to_uint();

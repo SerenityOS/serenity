@@ -150,7 +150,7 @@ Optional<DeprecatedString> NewProjectDialog::get_available_project_name()
             ? chosen_name
             : DeprecatedString::formatted("{}-{}", chosen_name, i);
 
-        if (!Core::File::exists(DeprecatedString::formatted("{}/{}", create_in, candidate)))
+        if (!Core::Stream::exists(DeprecatedString::formatted("{}/{}", create_in, candidate)))
             return candidate;
     }
 
@@ -188,7 +188,7 @@ void NewProjectDialog::do_create_project()
     }
 
     auto create_in = m_create_in_input->text();
-    if (!Core::File::exists(create_in) || !Core::File::is_directory(create_in)) {
+    if (!Core::Stream::exists(create_in) || !Core::Stream::is_directory(create_in)) {
         auto result = GUI::MessageBox::show(this, DeprecatedString::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (result != GUI::MessageBox::ExecResult::Yes)
             return;

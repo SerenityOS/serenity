@@ -44,10 +44,10 @@ LookupServer::LookupServer()
 
     load_etc_hosts();
 
-    auto maybe_file_watcher = Core::FileWatcher::create();
+    auto maybe_file_watcher = Core::StreamWatcher::create();
     // NOTE: If this happens during startup, something is very wrong.
     if (maybe_file_watcher.is_error()) {
-        dbgln("Core::FileWatcher::create(): {}", maybe_file_watcher.error());
+        dbgln("Core::StreamWatcher::create(): {}", maybe_file_watcher.error());
         VERIFY_NOT_REACHED();
     }
     m_file_watcher = maybe_file_watcher.release_value();
@@ -57,13 +57,13 @@ LookupServer::LookupServer()
         load_etc_hosts();
     };
 
-    auto result = m_file_watcher->add_watch("/etc/hosts", Core::FileWatcherEvent::Type::ContentModified | Core::FileWatcherEvent::Type::Deleted);
+    auto result = m_file_watcher->add_watch("/etc/hosts", Core::StreamWatcherEvent::Type::ContentModified | Core::StreamWatcherEvent::Type::Deleted);
     // NOTE: If this happens during startup, something is very wrong.
     if (result.is_error()) {
-        dbgln("Core::FileWatcher::add_watch(): {}", result.error());
+        dbgln("Core::StreamWatcher::add_watch(): {}", result.error());
         VERIFY_NOT_REACHED();
     } else if (!result.value()) {
-        dbgln("Core::FileWatcher::add_watch(): {}", result.value());
+        dbgln("Core::StreamWatcher::add_watch(): {}", result.value());
         VERIFY_NOT_REACHED();
     }
 
@@ -83,7 +83,7 @@ void LookupServer::load_etc_hosts()
         m_etc_hosts.ensure(name).empend(name, record_type, RecordClass::IN, s_static_ttl, move(data), false);
     };
 
-    auto file = Core::File::construct("/etc/hosts");
+    auto file = Core::Stream::construct("/etc/hosts");
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to open '/etc/hosts'");
         return;

@@ -90,16 +90,16 @@ protected:
 namespace AK {
 
 template<>
-struct Formatter<Core::FileWatcherEvent> : Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent const& value)
+struct Formatter<Core::StreamWatcherEvent> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Core::StreamWatcherEvent const& value)
     {
         return Formatter<FormatString>::format(builder, "FileWatcherEvent(\"{}\", {})"sv, value.event_path, value.type);
     }
 };
 
 template<>
-struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
-    ErrorOr<void> format(FormatBuilder& builder, Core::FileWatcherEvent::Type const& value)
+struct Formatter<Core::StreamWatcherEvent::Type> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Core::StreamWatcherEvent::Type const& value)
     {
         bool had_any_flag = false;
 
@@ -116,11 +116,11 @@ struct Formatter<Core::FileWatcherEvent::Type> : Formatter<FormatString> {
         };
 
         TRY(builder.put_string("["sv));
-        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ChildCreated, "ChildCreated"sv));
-        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ChildDeleted, "ChildDeleted"sv));
-        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::Deleted, "Deleted"sv));
-        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::ContentModified, "ContentModified"sv));
-        TRY(put_string_if_has_flag(Core::FileWatcherEvent::Type::MetadataModified, "MetadataModified"sv));
+        TRY(put_string_if_has_flag(Core::StreamWatcherEvent::Type::ChildCreated, "ChildCreated"sv));
+        TRY(put_string_if_has_flag(Core::StreamWatcherEvent::Type::ChildDeleted, "ChildDeleted"sv));
+        TRY(put_string_if_has_flag(Core::StreamWatcherEvent::Type::Deleted, "Deleted"sv));
+        TRY(put_string_if_has_flag(Core::StreamWatcherEvent::Type::ContentModified, "ContentModified"sv));
+        TRY(put_string_if_has_flag(Core::StreamWatcherEvent::Type::MetadataModified, "MetadataModified"sv));
         TRY(builder.put_string("]"sv));
 
         VERIFY(had_any_flag);

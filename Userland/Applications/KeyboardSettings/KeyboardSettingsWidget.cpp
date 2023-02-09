@@ -153,7 +153,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
 {
     load_from_gml(keyboard_widget_gml).release_value_but_fixme_should_propagate_errors();
 
-    auto proc_keymap = Core::File::construct("/sys/kernel/keymap");
+    auto proc_keymap = Core::Stream::construct("/sys/kernel/keymap");
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 

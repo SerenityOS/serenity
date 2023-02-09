@@ -22,7 +22,7 @@ ErrorOr<CharacterMapData> CharacterMapFile::load_from_file(DeprecatedString cons
         path = full_path.to_deprecated_string();
     }
 
-    auto file = TRY(Core::File::open(path, Core::OpenMode::ReadOnly));
+    auto file = TRY(Core::Stream::open(path, Core::OpenMode::ReadOnly));
     auto file_contents = file->read_all();
     auto json_result = TRY(JsonValue::from_string(file_contents));
     auto const& json = json_result.as_object();

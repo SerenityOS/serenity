@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    if (!Core::File::exists(path)) {
+    if (!Core::Stream::exists(path)) {
         warnln("File does not exist: '{}'", path);
         return 1;
     }

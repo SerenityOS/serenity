@@ -48,12 +48,12 @@ Engine::Engine(StringView command)
     close(wpipefds[0]);
     close(rpipefds[1]);
 
-    auto infile = Core::File::construct();
-    infile->open(rpipefds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+    auto infile = Core::Stream::construct();
+    infile->open(rpipefds[0], Core::OpenMode::ReadOnly, Core::Stream::ShouldCloseFileDescriptor::Yes);
     set_in(infile);
 
-    auto outfile = Core::File::construct();
-    outfile->open(wpipefds[1], Core::OpenMode::WriteOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+    auto outfile = Core::Stream::construct();
+    outfile->open(wpipefds[1], Core::OpenMode::WriteOnly, Core::Stream::ShouldCloseFileDescriptor::Yes);
     set_out(outfile);
 
     send_command(Chess::UCI::UCICommand());

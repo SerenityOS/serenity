@@ -95,7 +95,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, bool disable_re
     };
 
     if (S_ISLNK(m_mode)) {
-        auto link_destination_or_error = Core::File::read_link(path);
+        auto link_destination_or_error = Core::Stream::read_link(path);
         if (link_destination_or_error.is_error()) {
             perror("readlink");
         } else {
@@ -193,7 +193,7 @@ bool PropertiesWindow::apply_changes()
         DeprecatedString new_name = m_name_box->text();
         DeprecatedString new_file = make_full_path(new_name).characters();
 
-        if (Core::File::exists(new_file)) {
+        if (Core::Stream::exists(new_file)) {
             GUI::MessageBox::show(this, DeprecatedString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }

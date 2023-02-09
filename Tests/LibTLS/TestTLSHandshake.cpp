@@ -27,11 +27,11 @@ DeprecatedString locate_ca_certs_file();
 
 DeprecatedString locate_ca_certs_file()
 {
-    if (Core::File::exists(ca_certs_file)) {
+    if (Core::Stream::exists(ca_certs_file)) {
         return ca_certs_file;
     }
     auto on_target_path = DeprecatedString("/etc/ca_certs.ini");
-    if (Core::File::exists(on_target_path)) {
+    if (Core::Stream::exists(on_target_path)) {
         return on_target_path;
     }
     return "";

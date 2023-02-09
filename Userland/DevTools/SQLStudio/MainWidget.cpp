@@ -45,7 +45,7 @@ static Vector<DeprecatedString> lookup_database_names()
     static constexpr auto database_extension = ".db"sv;
 
     auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
-    if (!Core::File::exists(database_path))
+    if (!Core::Stream::exists(database_path))
         return {};
 
     Core::DirIterator iterator(move(database_path), Core::DirIterator::SkipParentAndBaseDir);

@@ -182,7 +182,7 @@ private:
     RefPtr<GUI::TabWidget> m_current_editor_tab_widget;
 
     HashMap<DeprecatedString, NonnullRefPtr<ProjectFile>> m_open_files;
-    RefPtr<Core::FileWatcher> m_file_watcher;
+    RefPtr<Core::StreamWatcher> m_file_watcher;
     Vector<DeprecatedString> m_open_files_vector; // NOTE: This contains the keys from m_open_files and m_file_watchers
 
     OwnPtr<Project> m_project;

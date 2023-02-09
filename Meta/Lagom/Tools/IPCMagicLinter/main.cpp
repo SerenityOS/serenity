@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     bool had_errors = false;
     for (int file_index = 1; file_index < argc; ++file_index) {
         DeprecatedString filename(argv[file_index]);
-        auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::Stream::open(filename, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Error: Cannot open '{}': {}", filename, file_or_error.error());
             had_errors = true;

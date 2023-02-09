@@ -832,18 +832,18 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
     auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
     if (module_type == "json"sv)
         extensions = { "json"sv };
-    if (!Core::File::exists(filename)) {
+    if (!Core::Stream::exists(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo.ext"
             auto resolved_filepath = DeprecatedString::formatted("{}.{}", filename, extension);
-            if (Core::File::exists(resolved_filepath))
+            if (Core::Stream::exists(resolved_filepath))
                 return resolved_filepath;
         }
-    } else if (Core::File::is_directory(filename)) {
+    } else if (Core::Stream::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
             auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
-            if (Core::File::exists(resolved_filepath))
+            if (Core::Stream::exists(resolved_filepath))
                 return resolved_filepath;
         }
     }
@@ -915,7 +915,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
-    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::Stream::open(filename, Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
         return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);

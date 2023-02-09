@@ -25,7 +25,7 @@ static void initialize_if_needed()
         return;
 
     auto user_config = DeprecatedString::formatted("{}/CommonLocations.json", Core::StandardPaths::config_directory());
-    if (Core::File::exists(user_config)) {
+    if (Core::Stream::exists(user_config)) {
         auto maybe_error = CommonLocationsProvider::load_from_json(user_config);
         if (!maybe_error.is_error())
             return;

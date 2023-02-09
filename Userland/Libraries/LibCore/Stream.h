@@ -35,7 +35,7 @@ enum class PreventSIGPIPE {
 
 /// The Socket class is the base class for all concrete BSD-style socket
 /// classes. Sockets are non-seekable streams which can be read byte-wise.
-class Socket : public AK::Stream {
+class Socket : public Core::Stream {
 public:
     Socket(Socket&&) = default;
     Socket& operator=(Socket&&) = default;

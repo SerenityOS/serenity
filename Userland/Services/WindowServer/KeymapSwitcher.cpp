@@ -16,13 +16,13 @@ namespace WindowServer {
 
 KeymapSwitcher::KeymapSwitcher()
 {
-    m_file_watcher = MUST(Core::FileWatcher::create());
+    m_file_watcher = MUST(Core::StreamWatcher::create());
 
     m_file_watcher->on_change = [this](auto&) {
         refresh();
     };
 
-    MUST(m_file_watcher->add_watch(m_keyboard_config, Core::FileWatcherEvent::Type::ContentModified));
+    MUST(m_file_watcher->add_watch(m_keyboard_config, Core::StreamWatcherEvent::Type::ContentModified));
 
     refresh();
 }
@@ -90,7 +90,7 @@ void KeymapSwitcher::next_keymap()
 
 DeprecatedString KeymapSwitcher::get_current_keymap() const
 {
-    auto proc_keymap = Core::File::construct("/sys/kernel/keymap");
+    auto proc_keymap = Core::Stream::construct("/sys/kernel/keymap");
     if (!proc_keymap->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 

@@ -245,7 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();
-                if (!Core::File::is_directory(path)) {
+                if (!Core::Stream::is_directory(path)) {
                     auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1, path.length() - base.length() - 1);
                     if (auto result = handle_file(key, true); result.is_error() && !suppress_errors)
                         warnln("Failed with file {}: {}", key, result.release_error());

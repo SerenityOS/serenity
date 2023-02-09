@@ -43,7 +43,7 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
     )
 endif()
 
-# FIXME: Implement Core::FileWatcher for macOS, *BSD, and Windows.
+# FIXME: Implement Core::StreamWatcher for macOS, *BSD, and Windows.
 if (SERENITYOS)
     list(APPEND SOURCES FileWatcherSerenity.cpp)
 elseif (LINUX AND NOT EMSCRIPTEN)

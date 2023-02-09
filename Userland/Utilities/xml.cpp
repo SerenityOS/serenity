@@ -515,7 +515,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(filename, "File to read from", "file");
     parser.parse(arguments);
 
-    s_path = Core::File::real_path_for(filename);
+    s_path = Core::Stream::real_path_for(filename);
     auto file = TRY(Core::Stream::File::open(s_path, Core::Stream::OpenMode::Read));
     auto contents = TRY(file->read_until_eof());
 

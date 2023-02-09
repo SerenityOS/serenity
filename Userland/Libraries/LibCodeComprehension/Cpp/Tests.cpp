@@ -77,7 +77,7 @@ int run_tests()
 
 static void add_file(FileDB& filedb, DeprecatedString const& name)
 {
-    auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
+    auto file = Core::Stream::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
     VERIFY(!file.is_error());
     filedb.add(name, DeprecatedString::copy(file.value()->read_all()));
 }

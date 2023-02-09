@@ -130,7 +130,7 @@ public:
     void insert_at_cursor_or_replace_selection(StringView);
     void replace_all_text_without_resetting_undo_stack(StringView text);
     bool write_to_file(DeprecatedString const& path);
-    bool write_to_file(Core::File&);
+    bool write_to_file(Core::Stream&);
     ErrorOr<void> write_to_file(Core::Stream::File&);
     bool has_selection() const { return m_selection.is_valid(); }
     DeprecatedString selected_text() const;

@@ -192,7 +192,7 @@ using AK::SeekableStream;
 using AK::SinglyLinkedList;
 using AK::Span;
 using AK::StackInfo;
-using AK::Stream;
+using Core::Stream;
 using AK::String;
 using AK::StringBuilder;
 using AK::StringImpl;

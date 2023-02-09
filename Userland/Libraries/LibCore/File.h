@@ -18,7 +18,7 @@
 namespace Core {
 
 ///
-/// Use of Core::File for reading/writing data is deprecated.
+/// Use of Core::Stream for reading/writing data is deprecated.
 /// Please use Core::Stream::File and Core::Stream::BufferedFile instead.
 ///
 class File final : public IODevice {

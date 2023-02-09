@@ -16,6 +16,6 @@ ErrorOr<int> serenity_main(Main::Arguments)
     Core::EventLoop loop;
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto engine = TRY(ChessEngine::try_create(Core::File::standard_input(), Core::File::standard_output()));
+    auto engine = TRY(ChessEngine::try_create(Core::Stream::standard_input(), Core::Stream::standard_output()));
     return loop.exec();
 }

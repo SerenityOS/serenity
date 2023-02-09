@@ -21,7 +21,7 @@ public:
 
 private:
     ChessEngine() = default;
-    ChessEngine(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
+    ChessEngine(NonnullRefPtr<Core::Stream> in, NonnullRefPtr<Core::Stream> out)
         : Endpoint(in, out)
     {
     }

@@ -21,7 +21,7 @@ namespace AudioServer {
 
 Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config)
     // FIXME: Allow AudioServer to use other audio channels as well
-    : m_device(Core::File::construct("/dev/audio/0", this))
+    : m_device(Core::Stream::construct("/dev/audio/0", this))
     , m_sound_thread(Threading::Thread::construct(
           [this] {
               mix();

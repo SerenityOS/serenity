@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool all_ok = true;
 
     for (auto& url_or_path : urls_or_paths) {
-        auto path = Core::File::real_path_for(url_or_path);
+        auto path = Core::Stream::real_path_for(url_or_path);
         auto url = URL::create_with_url_or_path(path.is_null() ? url_or_path : path.view());
 
         if (!Desktop::Launcher::open(url)) {

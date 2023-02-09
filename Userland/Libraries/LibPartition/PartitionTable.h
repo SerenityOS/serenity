@@ -31,8 +31,8 @@ protected:
     explicit PartitionTable(Kernel::StorageDevice const&);
     NonnullRefPtr<Kernel::StorageDevice> m_device;
 #else
-    explicit PartitionTable(NonnullRefPtr<Core::File>);
-    NonnullRefPtr<Core::File> m_device_file;
+    explicit PartitionTable(NonnullRefPtr<Core::Stream>);
+    NonnullRefPtr<Core::Stream> m_device_file;
 #endif
 
     Vector<DiskPartitionMetadata> m_partitions;

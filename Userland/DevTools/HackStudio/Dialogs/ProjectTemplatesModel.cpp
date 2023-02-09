@@ -21,7 +21,7 @@ ProjectTemplatesModel::ProjectTemplatesModel()
     : m_templates()
     , m_mapping()
 {
-    auto watcher_or_error = Core::FileWatcher::create();
+    auto watcher_or_error = Core::StreamWatcher::create();
     if (!watcher_or_error.is_error()) {
         m_file_watcher = watcher_or_error.release_value();
         m_file_watcher->on_change = [&](auto) {
@@ -30,8 +30,8 @@ ProjectTemplatesModel::ProjectTemplatesModel()
 
         auto watch_result = m_file_watcher->add_watch(
             ProjectTemplate::templates_path(),
-            Core::FileWatcherEvent::Type::ChildCreated
-                | Core::FileWatcherEvent::Type::ChildDeleted);
+            Core::StreamWatcherEvent::Type::ChildCreated
+                | Core::StreamWatcherEvent::Type::ChildDeleted);
 
         if (watch_result.is_error()) {
             warnln("Unable to watch templates directory, templates will not automatically refresh. Error: {}", watch_result.error());

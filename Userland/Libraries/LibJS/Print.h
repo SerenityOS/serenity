@@ -15,7 +15,7 @@
 namespace JS {
 struct PrintContext {
     JS::VM& vm;
-    AK::Stream& stream;
+    Core::Stream& stream;
     bool strip_ansi { false };
 };
 

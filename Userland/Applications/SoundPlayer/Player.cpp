@@ -44,7 +44,7 @@ void Player::play_file_path(DeprecatedString const& path)
     if (path.is_null())
         return;
 
-    if (!Core::File::exists(path)) {
+    if (!Core::Stream::exists(path)) {
         audio_load_error(path, "File does not exist"sv);
         return;
     }

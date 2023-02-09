@@ -163,7 +163,7 @@ private:
     bool fetch_thumbnail_for(Node const& node);
     GUI::Icon icon_for(Node const& node) const;
 
-    void handle_file_event(Core::FileWatcherEvent const& event);
+    void handle_file_event(Core::StreamWatcherEvent const& event);
 
     DeprecatedString m_root_path;
     Mode m_mode { Invalid };
@@ -176,7 +176,7 @@ private:
 
     bool m_should_show_dotfiles { false };
 
-    RefPtr<Core::FileWatcher> m_file_watcher;
+    RefPtr<Core::StreamWatcher> m_file_watcher;
 };
 
 }

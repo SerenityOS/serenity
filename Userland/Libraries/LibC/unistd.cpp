@@ -188,7 +188,7 @@ int execvpe(char const* filename, char* const argv[], char* const envp[])
 
     ScopedValueRollback errno_rollback(errno);
 
-    // TODO: Make this use the PATH search implementation from Core::File.
+    // TODO: Make this use the PATH search implementation from Core::Stream.
     DeprecatedString path = getenv("PATH");
     if (path.is_empty())
         path = DEFAULT_PATH;

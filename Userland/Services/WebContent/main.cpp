@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     // This must be first; we can't check if /tmp/webdriver exists once we've unveiled other paths.
     auto webdriver_socket_path = DeprecatedString::formatted("{}/webdriver", TRY(Core::StandardPaths::runtime_directory()));
-    if (Core::File::exists(webdriver_socket_path))
+    if (Core::Stream::exists(webdriver_socket_path))
         TRY(Core::System::unveil(webdriver_socket_path, "rw"sv));
 
     TRY(Core::System::unveil("/res", "r"));

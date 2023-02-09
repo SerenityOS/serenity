@@ -36,7 +36,7 @@ private:
 
     Vector<AK::DeprecatedString> m_keymaps;
 
-    RefPtr<Core::FileWatcher> m_file_watcher;
+    RefPtr<Core::StreamWatcher> m_file_watcher;
 
     char const* m_keyboard_config = "/etc/Keyboard.ini";
 };

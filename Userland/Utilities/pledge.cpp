@@ -13,7 +13,7 @@
 
 static ErrorOr<bool> is_dynamically_linked_executable(StringView filename)
 {
-    auto maybe_executable = Core::File::resolve_executable_from_environment(filename);
+    auto maybe_executable = Core::Stream::resolve_executable_from_environment(filename);
 
     if (!maybe_executable.has_value())
         return ENOENT;
