@@ -197,6 +197,8 @@ public:
     virtual DeprecatedString qualified_name() const = 0;
     virtual DeprecatedString human_readable_name() const = 0;
 
+    virtual RefPtr<Font> with_size(float point_size) const = 0;
+
     Font const& bold_variant() const;
 
 private:

@@ -381,6 +381,11 @@ DeprecatedString BitmapFont::variant() const
     return builder.to_deprecated_string();
 }
 
+RefPtr<Font> BitmapFont::with_size(float point_size) const
+{
+    return Gfx::FontDatabase::the().get(family(), point_size, weight(), width(), slope());
+}
+
 Font const& Font::bold_variant() const
 {
     if (m_bold_variant)

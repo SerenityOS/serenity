@@ -67,6 +67,8 @@ public:
     virtual DeprecatedString qualified_name() const override { return DeprecatedString::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()); }
     virtual DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
+    virtual RefPtr<Font> with_size(float point_size) const override;
+
 private:
     NonnullRefPtr<VectorFont> m_font;
     float m_x_scale { 0.0f };

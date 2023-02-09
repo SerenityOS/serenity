@@ -125,6 +125,8 @@ public:
     DeprecatedString qualified_name() const override;
     DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
+    virtual RefPtr<Font> with_size(float point_size) const override;
+
 private:
     BitmapFont(DeprecatedString name, DeprecatedString family, u8* rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
