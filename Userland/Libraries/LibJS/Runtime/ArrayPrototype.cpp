@@ -993,7 +993,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
     // FWIW: engine262, a "100% spec compliant" ECMA-262 impl, aborts with "too much recursion".
     // Same applies to Array.prototype.toLocaleString().
     if (s_array_join_seen_objects.contains(this_object))
-        return PrimitiveString::create(vm, "");
+        return PrimitiveString::create(vm, String {});
     s_array_join_seen_objects.set(this_object);
     ArmedScopeGuard unsee_object_guard = [&] {
         s_array_join_seen_objects.remove(this_object);
@@ -1704,7 +1704,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     auto* this_object = TRY(vm.this_value().to_object(vm));
 
     if (s_array_join_seen_objects.contains(this_object))
-        return PrimitiveString::create(vm, "");
+        return PrimitiveString::create(vm, String {});
     s_array_join_seen_objects.set(this_object);
     ArmedScopeGuard unsee_object_guard = [&] {
         s_array_join_seen_objects.remove(this_object);

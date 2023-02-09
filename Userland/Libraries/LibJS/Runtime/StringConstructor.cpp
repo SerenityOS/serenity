@@ -59,7 +59,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> StringConstructor::construct(FunctionObj
 
     PrimitiveString* primitive_string;
     if (!vm.argument_count())
-        primitive_string = PrimitiveString::create(vm, "");
+        primitive_string = PrimitiveString::create(vm, String {});
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     auto literal_segments = TRY(length_of_array_like(vm, *raw));
 
     if (literal_segments == 0)
-        return PrimitiveString::create(vm, "");
+        return PrimitiveString::create(vm, String {});
 
     auto const number_of_substituions = vm.argument_count() - 1;
 
