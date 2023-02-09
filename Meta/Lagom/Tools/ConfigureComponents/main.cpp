@@ -47,7 +47,7 @@ enum class WhiptailMode {
 
 static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_file)
 {
-    VERIFY(!config_file.read_entry("Global", "build_everything", {}).is_empty());
+    VERIFY(!config_file.read_entry("Global"sv, "build_everything"sv, {}).is_empty());
     Vector<ComponentData> components;
 
     auto groups = config_file.groups();
@@ -58,11 +58,11 @@ static Vector<ComponentData> read_component_data(Core::ConfigFile const& config_
     for (auto& component_name : groups) {
         if (component_name == "Global")
             continue;
-        auto description = config_file.read_entry(component_name, "description", "");
-        auto recommended = config_file.read_bool_entry(component_name, "recommended", false);
-        auto required = config_file.read_bool_entry(component_name, "required", false);
-        auto user_selected = config_file.read_bool_entry(component_name, "user_selected", false);
-        auto depends = config_file.read_entry(component_name, "depends", "").split(';');
+        auto description = config_file.read_entry(component_name, "description"sv, "");
+        auto recommended = config_file.read_bool_entry(component_name, "recommended"sv, false);
+        auto required = config_file.read_bool_entry(component_name, "required"sv, false);
+        auto user_selected = config_file.read_bool_entry(component_name, "user_selected"sv, false);
+        auto depends = config_file.read_entry(component_name, "depends"sv, "").split(';');
         // NOTE: Recommended and required shouldn't be set at the same time.
         VERIFY(!recommended || !required);
         ComponentCategory category { ComponentCategory::Optional };
@@ -254,7 +254,7 @@ int main()
         return 1;
     }
 
-    bool build_everything = components_file->read_bool_entry("Global", "build_everything", false);
+    bool build_everything = components_file->read_bool_entry("Global"sv, "build_everything"sv, false);
     auto components = read_component_data(components_file);
     warnln("{} components were read from 'components.ini'.", components.size());
 

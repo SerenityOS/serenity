@@ -34,7 +34,7 @@ ErrorOr<void> KeymapStatusWidget::refresh_menu()
     m_context_menu = GUI::Menu::construct();
 
     auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini"));
-    auto keymaps_string = mapper_config->read_entry("Mapping", "Keymaps", "");
+    auto keymaps_string = mapper_config->read_entry("Mapping"sv, "Keymaps"sv, "");
     auto keymaps = keymaps_string.split(',');
 
     for (auto& keymap : keymaps) {

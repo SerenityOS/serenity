@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/dev/input/keyboard/0", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
     auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini"));
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
+    auto keymaps = mapper_config->read_entry("Mapping"sv, "Keymaps"sv, "");
 
     auto keymaps_vector = keymaps.split(',');
     if (keymaps_vector.size() == 0)
@@ -29,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     TRY(Core::Process::spawn("/bin/keymap"sv, Array { "-m", keymaps_vector.first().characters() }, {}, Core::Process::KeepAsChild::Yes));
 
-    bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
+    bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable"sv, "NumLock"sv, true);
     auto keyboard_device = TRY(Core::File::open("/dev/input/keyboard/0"sv, Core::File::OpenMode::Read));
     TRY(Core::System::ioctl(keyboard_device->fd(), KEYBOARD_IOCTL_SET_NUM_LOCK, enable_num_lock));
 

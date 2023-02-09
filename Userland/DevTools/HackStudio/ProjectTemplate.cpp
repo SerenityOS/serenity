@@ -35,22 +35,22 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(DeprecatedString con
         return {};
     auto config = maybe_config.release_value();
 
-    if (!config->has_group("HackStudioTemplate")
-        || !config->has_key("HackStudioTemplate", "Name")
-        || !config->has_key("HackStudioTemplate", "Description")
-        || !config->has_key("HackStudioTemplate", "IconName32x"))
+    if (!config->has_group("HackStudioTemplate"sv)
+        || !config->has_key("HackStudioTemplate"sv, "Name"sv)
+        || !config->has_key("HackStudioTemplate"sv, "Description"sv)
+        || !config->has_key("HackStudioTemplate"sv, "IconName32x"sv))
         return {};
 
     auto id = LexicalPath::title(manifest_path);
-    auto name = config->read_entry("HackStudioTemplate", "Name");
-    auto description = config->read_entry("HackStudioTemplate", "Description");
-    int priority = config->read_num_entry("HackStudioTemplate", "Priority", 0);
+    auto name = config->read_entry("HackStudioTemplate"sv, "Name"sv);
+    auto description = config->read_entry("HackStudioTemplate"sv, "Description"sv);
+    int priority = config->read_num_entry("HackStudioTemplate"sv, "Priority"sv, 0);
 
     // Attempt to read in the template icons
     // Fallback to a generic executable icon if one isn't found
     auto icon = GUI::Icon::default_icon("filetype-executable"sv);
 
-    auto bitmap_path_32 = DeprecatedString::formatted("/res/icons/hackstudio/templates-32x32/{}.png", config->read_entry("HackStudioTemplate", "IconName32x"));
+    auto bitmap_path_32 = DeprecatedString::formatted("/res/icons/hackstudio/templates-32x32/{}.png", config->read_entry("HackStudioTemplate"sv, "IconName32x"sv));
 
     if (FileSystem::exists(bitmap_path_32)) {
         auto bitmap_or_error = Gfx::Bitmap::load_from_file(bitmap_path_32);

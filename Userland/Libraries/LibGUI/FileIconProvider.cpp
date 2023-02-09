@@ -90,9 +90,9 @@ static void initialize_if_needed()
     initialize_filetype_image_icon_if_needed();
     initialize_executable_icon_if_needed();
 
-    for (auto& filetype : config->keys("Icons")) {
+    for (auto& filetype : config->keys("Icons"sv)) {
         s_filetype_icons.set(filetype, Icon::default_icon(DeprecatedString::formatted("filetype-{}", filetype)));
-        s_filetype_patterns.set(filetype, config->read_entry("Icons", filetype).split(','));
+        s_filetype_patterns.set(filetype, config->read_entry("Icons"sv, filetype).split(','));
     }
 
     s_initialized = true;

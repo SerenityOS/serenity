@@ -152,7 +152,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
             }
         }
         auto& category_menu = parent_menu->add_submenu(String::from_deprecated_string(child_category).release_value_but_fixme_should_propagate_errors());
-        auto category_icon_path = category_icons->read_entry("16x16", category);
+        auto category_icon_path = category_icons->read_entry("16x16"sv, category);
         if (!category_icon_path.is_empty()) {
             auto icon_or_error = Gfx::Bitmap::load_from_file(category_icon_path);
             if (!icon_or_error.is_error())

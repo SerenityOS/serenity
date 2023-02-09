@@ -31,7 +31,7 @@ void KeymapSwitcher::refresh()
     m_keymaps.clear();
 
     auto mapper_config(Core::ConfigFile::open(m_keyboard_config).release_value_but_fixme_should_propagate_errors());
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
+    auto keymaps = mapper_config->read_entry("Mapping"sv, "Keymaps"sv, "");
 
     auto keymaps_vector = keymaps.split(',');
 

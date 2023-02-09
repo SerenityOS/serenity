@@ -41,7 +41,7 @@ LookupServer::LookupServer()
 
     auto config = Core::ConfigFile::open_for_system("LookupServer").release_value_but_fixme_should_propagate_errors();
     dbgln("Using network config file at {}", config->filename());
-    m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
+    m_nameservers = config->read_entry("DNS"sv, "Nameservers"sv, "1.1.1.1,1.0.0.1").split(',');
 
     load_etc_hosts();
 
@@ -68,7 +68,7 @@ LookupServer::LookupServer()
         VERIFY_NOT_REACHED();
     }
 
-    if (config->read_bool_entry("DNS", "EnableServer")) {
+    if (config->read_bool_entry("DNS"sv, "EnableServer"sv)) {
         m_dns_server = DNSServer::construct(this);
         // TODO: drop root privileges here.
     }

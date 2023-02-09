@@ -101,8 +101,8 @@ void Launcher::load_handlers(DeprecatedString const& af_dir)
 
 void Launcher::load_config(Core::ConfigFile const& cfg)
 {
-    for (auto key : cfg.keys("MimeType")) {
-        auto handler = cfg.read_entry("MimeType", key).trim_whitespace();
+    for (auto key : cfg.keys("MimeType"sv)) {
+        auto handler = cfg.read_entry("MimeType"sv, key).trim_whitespace();
         if (handler.is_empty())
             continue;
         if (access(handler.characters(), X_OK) != 0)
@@ -110,8 +110,8 @@ void Launcher::load_config(Core::ConfigFile const& cfg)
         m_mime_handlers.set(key.to_lowercase(), handler);
     }
 
-    for (auto key : cfg.keys("FileType")) {
-        auto handler = cfg.read_entry("FileType", key).trim_whitespace();
+    for (auto key : cfg.keys("FileType"sv)) {
+        auto handler = cfg.read_entry("FileType"sv, key).trim_whitespace();
         if (handler.is_empty())
             continue;
         if (access(handler.characters(), X_OK) != 0)
@@ -119,8 +119,8 @@ void Launcher::load_config(Core::ConfigFile const& cfg)
         m_file_handlers.set(key.to_lowercase(), handler);
     }
 
-    for (auto key : cfg.keys("Protocol")) {
-        auto handler = cfg.read_entry("Protocol", key).trim_whitespace();
+    for (auto key : cfg.keys("Protocol"sv)) {
+        auto handler = cfg.read_entry("Protocol"sv, key).trim_whitespace();
         if (handler.is_empty())
             continue;
         if (access(handler.characters(), X_OK) != 0)

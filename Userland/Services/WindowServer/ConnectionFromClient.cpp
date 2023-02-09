@@ -898,7 +898,7 @@ Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_
 
 Messages::WindowServer::GetSystemThemeResponse ConnectionFromClient::get_system_theme()
 {
-    return g_config->read_entry("Theme", "Name");
+    return g_config->read_entry("Theme"sv, "Name"sv);
 }
 
 Messages::WindowServer::SetSystemThemeOverrideResponse ConnectionFromClient::set_system_theme_override(Core::AnonymousBuffer const& theme_override)
@@ -954,7 +954,7 @@ Messages::WindowServer::GetCursorHighlightColorResponse ConnectionFromClient::ge
 
 Messages::WindowServer::GetCursorThemeResponse ConnectionFromClient::get_cursor_theme()
 {
-    return g_config->read_entry("Mouse", "CursorTheme");
+    return g_config->read_entry("Mouse"sv, "CursorTheme"sv);
 }
 
 Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_fonts(DeprecatedString const& default_font_query, DeprecatedString const& fixed_width_font_query, DeprecatedString const& window_title_font_query)

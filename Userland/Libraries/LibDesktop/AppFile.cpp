@@ -51,45 +51,45 @@ AppFile::AppFile(StringView path)
 
 bool AppFile::validate() const
 {
-    if (m_config->read_entry("App", "Name").trim_whitespace().is_empty())
+    if (m_config->read_entry("App"sv, "Name"sv).trim_whitespace().is_empty())
         return false;
-    if (m_config->read_entry("App", "Executable").trim_whitespace().is_empty())
+    if (m_config->read_entry("App"sv, "Executable"sv).trim_whitespace().is_empty())
         return false;
     return true;
 }
 
 DeprecatedString AppFile::name() const
 {
-    auto name = m_config->read_entry("App", "Name").trim_whitespace();
+    auto name = m_config->read_entry("App"sv, "Name"sv).trim_whitespace();
     VERIFY(!name.is_empty());
     return name;
 }
 
 DeprecatedString AppFile::executable() const
 {
-    auto executable = m_config->read_entry("App", "Executable").trim_whitespace();
+    auto executable = m_config->read_entry("App"sv, "Executable"sv).trim_whitespace();
     VERIFY(!executable.is_empty());
     return executable;
 }
 
 DeprecatedString AppFile::description() const
 {
-    return m_config->read_entry("App", "Description").trim_whitespace();
+    return m_config->read_entry("App"sv, "Description"sv).trim_whitespace();
 }
 
 DeprecatedString AppFile::category() const
 {
-    return m_config->read_entry("App", "Category").trim_whitespace();
+    return m_config->read_entry("App"sv, "Category"sv).trim_whitespace();
 }
 
 DeprecatedString AppFile::working_directory() const
 {
-    return m_config->read_entry("App", "WorkingDirectory").trim_whitespace();
+    return m_config->read_entry("App"sv, "WorkingDirectory"sv).trim_whitespace();
 }
 
 DeprecatedString AppFile::icon_path() const
 {
-    return m_config->read_entry("App", "IconPath").trim_whitespace();
+    return m_config->read_entry("App"sv, "IconPath"sv).trim_whitespace();
 }
 
 GUI::Icon AppFile::icon() const
@@ -104,23 +104,23 @@ GUI::Icon AppFile::icon() const
 
 bool AppFile::run_in_terminal() const
 {
-    return m_config->read_bool_entry("App", "RunInTerminal", false);
+    return m_config->read_bool_entry("App"sv, "RunInTerminal"sv, false);
 }
 
 bool AppFile::requires_root() const
 {
-    return m_config->read_bool_entry("App", "RequiresRoot", false);
+    return m_config->read_bool_entry("App"sv, "RequiresRoot"sv, false);
 }
 
 bool AppFile::exclude_from_system_menu() const
 {
-    return m_config->read_bool_entry("App", "ExcludeFromSystemMenu", false);
+    return m_config->read_bool_entry("App"sv, "ExcludeFromSystemMenu"sv, false);
 }
 
 Vector<DeprecatedString> AppFile::launcher_mime_types() const
 {
     Vector<DeprecatedString> mime_types;
-    for (auto& entry : m_config->read_entry("Launcher", "MimeTypes").split(',')) {
+    for (auto& entry : m_config->read_entry("Launcher"sv, "MimeTypes"sv).split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
             mime_types.append(entry);
@@ -131,7 +131,7 @@ Vector<DeprecatedString> AppFile::launcher_mime_types() const
 Vector<DeprecatedString> AppFile::launcher_file_types() const
 {
     Vector<DeprecatedString> file_types;
-    for (auto& entry : m_config->read_entry("Launcher", "FileTypes").split(',')) {
+    for (auto& entry : m_config->read_entry("Launcher"sv, "FileTypes"sv).split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
             file_types.append(entry);
@@ -142,7 +142,7 @@ Vector<DeprecatedString> AppFile::launcher_file_types() const
 Vector<DeprecatedString> AppFile::launcher_protocols() const
 {
     Vector<DeprecatedString> protocols;
-    for (auto& entry : m_config->read_entry("Launcher", "Protocols").split(',')) {
+    for (auto& entry : m_config->read_entry("Launcher"sv, "Protocols"sv).split(',')) {
         entry = entry.trim_whitespace();
         if (!entry.is_empty())
             protocols.append(entry);

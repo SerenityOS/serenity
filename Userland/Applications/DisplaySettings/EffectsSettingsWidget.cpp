@@ -114,19 +114,19 @@ ErrorOr<void> EffectsSettingsWidget::load_settings()
 {
     auto ws_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
     Vector<bool> effects = {
-        ws_config->read_bool_entry("Effects", "AnimateMenus", true),
-        ws_config->read_bool_entry("Effects", "FlashMenus", true),
-        ws_config->read_bool_entry("Effects", "AnimateWindows", true),
-        ws_config->read_bool_entry("Effects", "SmoothScrolling", true),
-        ws_config->read_bool_entry("Effects", "TabAccents", true),
-        ws_config->read_bool_entry("Effects", "SplitterKnurls", true),
-        ws_config->read_bool_entry("Effects", "Tooltips", true),
-        ws_config->read_bool_entry("Effects", "MenuShadow", true),
-        ws_config->read_bool_entry("Effects", "WindowShadow", true),
-        ws_config->read_bool_entry("Effects", "TooltipShadow", true),
+        ws_config->read_bool_entry("Effects"sv, "AnimateMenus"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "FlashMenus"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "AnimateWindows"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "SmoothScrolling"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "TabAccents"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "SplitterKnurls"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "Tooltips"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "MenuShadow"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "WindowShadow"sv, true),
+        ws_config->read_bool_entry("Effects"sv, "TooltipShadow"sv, true),
     };
-    auto geometry = WindowServer::ShowGeometryTools::string_to_enum(ws_config->read_entry("Effects", "ShowGeometry", "OnMoveAndResize"));
-    auto tile_window = WindowServer::TileWindowTools::string_to_enum(ws_config->read_entry("Effects", "TileWindow", "ShowTileOverlay"));
+    auto geometry = WindowServer::ShowGeometryTools::string_to_enum(ws_config->read_entry("Effects"sv, "ShowGeometry"sv, "OnMoveAndResize"));
+    auto tile_window = WindowServer::TileWindowTools::string_to_enum(ws_config->read_entry("Effects"sv, "TileWindow"sv, "ShowTileOverlay"));
     m_system_effects = { effects, geometry, tile_window };
 
     static constexpr Array geometry_list = {

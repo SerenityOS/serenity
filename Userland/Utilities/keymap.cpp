@@ -76,7 +76,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(mapper_config->sync());
     }
 
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps");
+    auto keymaps = mapper_config->read_entry("Mapping"sv, "Keymaps"sv);
     auto keymaps_vector = keymaps.split(',');
 
     if (!mapping.is_empty()) {

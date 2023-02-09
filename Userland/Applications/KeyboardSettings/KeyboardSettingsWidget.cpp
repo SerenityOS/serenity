@@ -162,7 +162,7 @@ KeyboardSettingsWidget::KeyboardSettingsWidget()
     dbgln("KeyboardSettings thinks the current keymap is: {}", m_initial_active_keymap);
 
     auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini").release_value_but_fixme_should_propagate_errors());
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
+    auto keymaps = mapper_config->read_entry("Mapping"sv, "Keymaps"sv, "");
 
     auto keymaps_vector = keymaps.split(',');
 

@@ -72,22 +72,22 @@ WindowManager::WindowManager(Gfx::PaletteImpl& palette)
 
 void WindowManager::reload_config()
 {
-    unsigned workspace_rows = (unsigned)g_config->read_num_entry("Workspaces", "Rows", default_window_stack_rows);
-    unsigned workspace_columns = (unsigned)g_config->read_num_entry("Workspaces", "Columns", default_window_stack_columns);
+    unsigned workspace_rows = (unsigned)g_config->read_num_entry("Workspaces"sv, "Rows"sv, default_window_stack_rows);
+    unsigned workspace_columns = (unsigned)g_config->read_num_entry("Workspaces"sv, "Columns"sv, default_window_stack_columns);
     if (workspace_rows == 0 || workspace_columns == 0 || workspace_rows > max_window_stack_rows || workspace_columns > max_window_stack_columns) {
         workspace_rows = default_window_stack_rows;
         workspace_columns = default_window_stack_columns;
     }
     apply_workspace_settings(workspace_rows, workspace_columns, false);
 
-    m_double_click_speed = g_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_mouse_buttons_switched = g_config->read_bool_entry("Mouse", "ButtonsSwitched", false);
-    m_natural_scroll = g_config->read_bool_entry("Mouse", "NaturalScroll", false);
-    m_cursor_highlight_radius = g_config->read_num_entry("Mouse", "CursorHighlightRadius", 25);
+    m_double_click_speed = g_config->read_num_entry("Input"sv, "DoubleClickSpeed"sv, 250);
+    m_mouse_buttons_switched = g_config->read_bool_entry("Mouse"sv, "ButtonsSwitched"sv, false);
+    m_natural_scroll = g_config->read_bool_entry("Mouse"sv, "NaturalScroll"sv, false);
+    m_cursor_highlight_radius = g_config->read_num_entry("Mouse"sv, "CursorHighlightRadius"sv, 25);
     Color default_highlight_color = Color::NamedColor::Red;
     default_highlight_color.set_alpha(110);
-    m_cursor_highlight_color = Color::from_string(g_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
-    apply_cursor_theme(g_config->read_entry("Mouse", "CursorTheme", "Default"));
+    m_cursor_highlight_color = Color::from_string(g_config->read_entry("Mouse"sv, "CursorHighlightColor"sv)).value_or(default_highlight_color);
+    apply_cursor_theme(g_config->read_entry("Mouse"sv, "CursorTheme"sv, "Default"));
 
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, DeprecatedString const& name) {
         if (bitmap) {
@@ -98,7 +98,7 @@ void WindowManager::reload_config()
         }
     };
 
-    reload_graphic(m_overlay_rect_shadow, g_config->read_entry("Graphics", "OverlayRectShadow"));
+    reload_graphic(m_overlay_rect_shadow, g_config->read_entry("Graphics"sv, "OverlayRectShadow"sv));
     Compositor::the().invalidate_after_theme_or_font_change();
 
     WindowFrame::reload_config();
@@ -2135,7 +2135,7 @@ void WindowManager::set_accepts_drag(bool accepts)
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
-    Compositor::the().set_background_color(g_config->read_entry("Background", "Color", palette().desktop_background().to_deprecated_string()));
+    Compositor::the().set_background_color(g_config->read_entry("Background"sv, "Color"sv, palette().desktop_background().to_deprecated_string()));
     WindowFrame::reload_config();
     for_each_window_stack([&](auto& window_stack) {
         window_stack.for_each_window([&](Window& window) {
@@ -2171,11 +2171,11 @@ bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString t
         m_preferred_color_scheme = color_scheme_path.value();
     } else if (!color_scheme_path.has_value()) {
         g_config->write_bool_entry("Theme", "LoadCustomColorScheme", false);
-        g_config->remove_entry("Theme", "CustomColorSchemePath");
+        g_config->remove_entry("Theme"sv, "CustomColorSchemePath"sv);
         m_preferred_color_scheme = OptionalNone();
     }
     if (!keep_desktop_background)
-        g_config->remove_entry("Background", "Color");
+        g_config->remove_entry("Background"sv, "Color"sv);
     if (!sync_config_to_disk())
         return false;
     invalidate_after_theme_or_font_change();
@@ -2203,7 +2203,7 @@ Optional<Core::AnonymousBuffer> WindowManager::get_theme_override() const
 void WindowManager::clear_theme_override()
 {
     m_theme_overridden = false;
-    auto previous_theme_name = g_config->read_entry("Theme", "Name");
+    auto previous_theme_name = g_config->read_entry("Theme"sv, "Name"sv);
     auto previous_theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name), m_preferred_color_scheme));
     Gfx::set_system_theme(previous_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
@@ -2327,11 +2327,11 @@ void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
     auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor const>& cursor, DeprecatedString const& name) {
+    auto reload_cursor = [&](RefPtr<Cursor const>& cursor, StringView name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
         static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
-        cursor = Cursor::create(DeprecatedString::formatted("/res/cursor-themes/{}/{}", theme_name, cursor_theme_config->read_entry("Cursor", name)), s_default_cursor_path);
+        cursor = Cursor::create(DeprecatedString::formatted("/res/cursor-themes/{}/{}", theme_name, cursor_theme_config->read_entry("Cursor"sv, name)), s_default_cursor_path);
 
         if (is_current_cursor) {
             Compositor::the().current_cursor_was_reloaded(cursor.ptr());
@@ -2346,25 +2346,25 @@ void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
         }
     };
 
-    reload_cursor(m_hidden_cursor, "Hidden");
-    reload_cursor(m_arrow_cursor, "Arrow");
-    reload_cursor(m_hand_cursor, "Hand");
-    reload_cursor(m_help_cursor, "Help");
-    reload_cursor(m_resize_horizontally_cursor, "ResizeH");
-    reload_cursor(m_resize_vertically_cursor, "ResizeV");
-    reload_cursor(m_resize_diagonally_tlbr_cursor, "ResizeDTLBR");
-    reload_cursor(m_resize_diagonally_bltr_cursor, "ResizeDBLTR");
-    reload_cursor(m_resize_column_cursor, "ResizeColumn");
-    reload_cursor(m_resize_row_cursor, "ResizeRow");
-    reload_cursor(m_i_beam_cursor, "IBeam");
-    reload_cursor(m_disallowed_cursor, "Disallowed");
-    reload_cursor(m_move_cursor, "Move");
-    reload_cursor(m_drag_cursor, "Drag");
-    reload_cursor(m_drag_copy_cursor, "DragCopy");
-    reload_cursor(m_wait_cursor, "Wait");
-    reload_cursor(m_crosshair_cursor, "Crosshair");
-    reload_cursor(m_eyedropper_cursor, "Eyedropper");
-    reload_cursor(m_zoom_cursor, "Zoom");
+    reload_cursor(m_hidden_cursor, "Hidden"sv);
+    reload_cursor(m_arrow_cursor, "Arrow"sv);
+    reload_cursor(m_hand_cursor, "Hand"sv);
+    reload_cursor(m_help_cursor, "Help"sv);
+    reload_cursor(m_resize_horizontally_cursor, "ResizeH"sv);
+    reload_cursor(m_resize_vertically_cursor, "ResizeV"sv);
+    reload_cursor(m_resize_diagonally_tlbr_cursor, "ResizeDTLBR"sv);
+    reload_cursor(m_resize_diagonally_bltr_cursor, "ResizeDBLTR"sv);
+    reload_cursor(m_resize_column_cursor, "ResizeColumn"sv);
+    reload_cursor(m_resize_row_cursor, "ResizeRow"sv);
+    reload_cursor(m_i_beam_cursor, "IBeam"sv);
+    reload_cursor(m_disallowed_cursor, "Disallowed"sv);
+    reload_cursor(m_move_cursor, "Move"sv);
+    reload_cursor(m_drag_cursor, "Drag"sv);
+    reload_cursor(m_drag_copy_cursor, "DragCopy"sv);
+    reload_cursor(m_wait_cursor, "Wait"sv);
+    reload_cursor(m_crosshair_cursor, "Crosshair"sv);
+    reload_cursor(m_eyedropper_cursor, "Eyedropper"sv);
+    reload_cursor(m_zoom_cursor, "Zoom"sv);
 
     Compositor::the().invalidate_cursor();
     g_config->write_entry("Mouse", "CursorTheme", theme_name);
@@ -2412,19 +2412,19 @@ void WindowManager::apply_system_effects(Vector<bool> effects, ShowGeometry geom
 void WindowManager::load_system_effects()
 {
     Vector<bool> effects = {
-        g_config->read_bool_entry("Effects", "AnimateMenus", true),
-        g_config->read_bool_entry("Effects", "FlashMenus", true),
-        g_config->read_bool_entry("Effects", "AnimateWindows", true),
-        g_config->read_bool_entry("Effects", "SmoothScrolling", true),
-        g_config->read_bool_entry("Effects", "TabAccents", true),
-        g_config->read_bool_entry("Effects", "SplitterKnurls", true),
-        g_config->read_bool_entry("Effects", "Tooltips", true),
-        g_config->read_bool_entry("Effects", "MenuShadow", true),
-        g_config->read_bool_entry("Effects", "WindowShadow", true),
-        g_config->read_bool_entry("Effects", "TooltipShadow", true)
+        g_config->read_bool_entry("Effects"sv, "AnimateMenus"sv, true),
+        g_config->read_bool_entry("Effects"sv, "FlashMenus"sv, true),
+        g_config->read_bool_entry("Effects"sv, "AnimateWindows"sv, true),
+        g_config->read_bool_entry("Effects"sv, "SmoothScrolling"sv, true),
+        g_config->read_bool_entry("Effects"sv, "TabAccents"sv, true),
+        g_config->read_bool_entry("Effects"sv, "SplitterKnurls"sv, true),
+        g_config->read_bool_entry("Effects"sv, "Tooltips"sv, true),
+        g_config->read_bool_entry("Effects"sv, "MenuShadow"sv, true),
+        g_config->read_bool_entry("Effects"sv, "WindowShadow"sv, true),
+        g_config->read_bool_entry("Effects"sv, "TooltipShadow"sv, true)
     };
-    ShowGeometry geometry = ShowGeometryTools::string_to_enum(g_config->read_entry("Effects", "ShowGeometry", "OnMoveAndResize"));
-    TileWindow tile_window = TileWindowTools::string_to_enum(g_config->read_entry("Effects", "TileWindow", "ShowTileOverlay"));
+    ShowGeometry geometry = ShowGeometryTools::string_to_enum(g_config->read_entry("Effects"sv, "ShowGeometry"sv, "OnMoveAndResize"));
+    TileWindow tile_window = TileWindowTools::string_to_enum(g_config->read_entry("Effects"sv, "TileWindow"sv, "ShowTileOverlay"));
     m_system_effects = { effects, geometry, tile_window };
 
     ConnectionFromClient::for_each_client([&](auto& client) {

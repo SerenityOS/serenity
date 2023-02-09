@@ -29,8 +29,8 @@ Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> d
           "AudioServer[mixer]"sv))
     , m_config(move(config))
 {
-    m_muted = m_config->read_bool_entry("Master", "Mute", false);
-    m_main_volume = static_cast<double>(m_config->read_num_entry("Master", "Volume", 100)) / 100.0;
+    m_muted = m_config->read_bool_entry("Master"sv, "Mute"sv, false);
+    m_main_volume = static_cast<double>(m_config->read_num_entry("Master"sv, "Volume"sv, 100)) / 100.0;
 
     m_sound_thread->start();
 }

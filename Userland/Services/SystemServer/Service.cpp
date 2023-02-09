@@ -270,11 +270,11 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     VERIFY(config.has_group(name));
 
     set_name(name);
-    m_executable_path = config.read_entry(name, "Executable", DeprecatedString::formatted("/bin/{}", this->name()));
-    m_extra_arguments = config.read_entry(name, "Arguments", "");
-    m_stdio_file_path = config.read_entry(name, "StdIO");
+    m_executable_path = config.read_entry(name, "Executable"sv, DeprecatedString::formatted("/bin/{}", this->name()));
+    m_extra_arguments = config.read_entry(name, "Arguments"sv, "");
+    m_stdio_file_path = config.read_entry(name, "StdIO"sv);
 
-    DeprecatedString prio = config.read_entry(name, "Priority");
+    DeprecatedString prio = config.read_entry(name, "Priority"sv);
     if (prio == "low")
         m_priority = 10;
     else if (prio == "normal" || prio.is_null())
@@ -284,10 +284,10 @@ Service::Service(Core::ConfigFile const& config, StringView name)
     else
         VERIFY_NOT_REACHED();
 
-    m_keep_alive = config.read_bool_entry(name, "KeepAlive");
-    m_lazy = config.read_bool_entry(name, "Lazy");
+    m_keep_alive = config.read_bool_entry(name, "KeepAlive"sv);
+    m_lazy = config.read_bool_entry(name, "Lazy"sv);
 
-    m_user = config.read_entry(name, "User");
+    m_user = config.read_entry(name, "User"sv);
     if (!m_user.is_null()) {
         auto result = Core::Account::from_name(m_user, Core::Account::Read::PasswdOnly);
         if (result.is_error())
@@ -296,14 +296,14 @@ Service::Service(Core::ConfigFile const& config, StringView name)
             m_account = result.value();
     }
 
-    m_working_directory = config.read_entry(name, "WorkingDirectory");
-    m_environment = config.read_entry(name, "Environment");
-    m_system_modes = config.read_entry(name, "SystemModes", "graphical").split(',');
-    m_multi_instance = config.read_bool_entry(name, "MultiInstance");
-    m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections");
+    m_working_directory = config.read_entry(name, "WorkingDirectory"sv);
+    m_environment = config.read_entry(name, "Environment"sv);
+    m_system_modes = config.read_entry(name, "SystemModes"sv, "graphical").split(',');
+    m_multi_instance = config.read_bool_entry(name, "MultiInstance"sv);
+    m_accept_socket_connections = config.read_bool_entry(name, "AcceptSocketConnections"sv);
 
-    DeprecatedString socket_entry = config.read_entry(name, "Socket");
-    DeprecatedString socket_permissions_entry = config.read_entry(name, "SocketPermissions", "0600");
+    DeprecatedString socket_entry = config.read_entry(name, "Socket"sv);
+    DeprecatedString socket_permissions_entry = config.read_entry(name, "SocketPermissions"sv, "0600");
 
     if (!socket_entry.is_null()) {
         Vector<DeprecatedString> socket_paths = socket_entry.split(',');

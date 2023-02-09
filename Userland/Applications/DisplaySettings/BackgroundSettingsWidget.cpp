@@ -146,7 +146,7 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
         m_monitor_widget->set_wallpaper(selected_wallpaper);
     }
 
-    auto mode = TRY(String::from_deprecated_string(ws_config->read_entry("Background", "Mode", "Center")));
+    auto mode = TRY(String::from_deprecated_string(ws_config->read_entry("Background"sv, "Mode"sv, "Center")));
     if (!m_modes.contains_slow(mode)) {
         warnln("Invalid background mode '{}' in WindowServer config, falling back to 'Center'", mode);
         mode = TRY(String::from_utf8("Center"sv));
@@ -155,7 +155,7 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
     m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0), GUI::AllowCallback::No);
 
     auto palette_desktop_color = palette().desktop_background();
-    auto background_color = ws_config->read_entry("Background", "Color", "");
+    auto background_color = ws_config->read_entry("Background"sv, "Color"sv, "");
 
     if (!background_color.is_empty()) {
         auto opt_color = Color::from_string(background_color);

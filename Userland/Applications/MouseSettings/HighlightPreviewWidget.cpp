@@ -32,7 +32,7 @@ ErrorOr<void> HighlightPreviewWidget::reload_cursor()
     };
     constexpr auto default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;
     auto cursor_path = DeprecatedString::formatted("/res/cursor-themes/{}/{}",
-        cursor_theme, cursor_theme_config->read_entry("Cursor", "Arrow"));
+        cursor_theme, cursor_theme_config->read_entry("Cursor"sv, "Arrow"sv));
     m_cursor_bitmap = TRY(load_bitmap(cursor_path, default_cursor_path));
     m_cursor_params = Gfx::CursorParams::parse_from_filename(cursor_path, m_cursor_bitmap->rect().center()).constrained(*m_cursor_bitmap);
     // Setup cursor animation:

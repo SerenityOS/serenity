@@ -228,12 +228,12 @@ bool ScreenLayout::normalize()
 bool ScreenLayout::load_config(Core::ConfigFile const& config_file, DeprecatedString* error_msg)
 {
     screens.clear_with_capacity();
-    main_screen_index = config_file.read_num_entry("Screens", "MainScreen", 0);
+    main_screen_index = config_file.read_num_entry("Screens"sv, "MainScreen"sv, 0);
     for (size_t index = 0;; index++) {
         auto group_name = DeprecatedString::formatted("Screen{}", index);
         if (!config_file.has_group(group_name))
             break;
-        auto str_mode = config_file.read_entry(group_name, "Mode");
+        auto str_mode = config_file.read_entry(group_name, "Mode"sv);
         Screen::Mode mode { Screen::Mode::Invalid };
         if (str_mode == "Device") {
             mode = Screen::Mode::Device;
@@ -246,11 +246,11 @@ bool ScreenLayout::load_config(Core::ConfigFile const& config_file, DeprecatedSt
             *this = {};
             return false;
         }
-        auto device = (mode == Screen::Mode::Device) ? config_file.read_entry(group_name, "Device") : Optional<DeprecatedString> {};
+        auto device = (mode == Screen::Mode::Device) ? config_file.read_entry(group_name, "Device"sv) : Optional<DeprecatedString> {};
         screens.append({ mode, device,
-            { config_file.read_num_entry(group_name, "Left"), config_file.read_num_entry(group_name, "Top") },
-            { config_file.read_num_entry(group_name, "Width"), config_file.read_num_entry(group_name, "Height") },
-            config_file.read_num_entry(group_name, "ScaleFactor", 1) });
+            { config_file.read_num_entry(group_name, "Left"sv), config_file.read_num_entry(group_name, "Top"sv) },
+            { config_file.read_num_entry(group_name, "Width"sv), config_file.read_num_entry(group_name, "Height"sv) },
+            config_file.read_num_entry(group_name, "ScaleFactor"sv, 1) });
     }
     if (!is_valid(error_msg)) {
         *this = {};

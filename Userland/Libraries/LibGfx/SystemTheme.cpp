@@ -46,8 +46,8 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
             memcpy(buffer.data<SystemTheme>(), theme_buffer.data<SystemTheme>(), sizeof(SystemTheme));
     }
 
-    auto get_color = [&](auto& name) -> Optional<Color> {
-        auto color_string = file.read_entry("Colors", name);
+    auto get_color = [&](StringView name) -> Optional<Color> {
+        auto color_string = file.read_entry("Colors"sv, name);
         auto color = Color::from_string(color_string);
         if (color_scheme.has_value() && color_scheme.value() == "Custom"sv)
             return color;
@@ -57,13 +57,13 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
                 maybe_color_config = Core::ConfigFile::open("/res/color-schemes/Default.ini");
             auto color_config = maybe_color_config.release_value();
             if (name == "ColorSchemeBackground"sv)
-                color = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
+                color = Gfx::Color::from_string(color_config->read_entry("Primary"sv, "Background"sv));
             else if (name == "ColorSchemeForeground"sv)
-                color = Gfx::Color::from_string(color_config->read_entry("Primary", "Foreground"));
-            else if (strncmp(name, "Bright", 6) == 0)
-                color = Gfx::Color::from_string(color_config->read_entry("Bright", name + 6));
+                color = Gfx::Color::from_string(color_config->read_entry("Primary"sv, "Foreground"sv));
+            else if (name.starts_with("Bright"sv))
+                color = Gfx::Color::from_string(color_config->read_entry("Bright"sv, name.substring_view(6)));
             else
-                color = Gfx::Color::from_string(color_config->read_entry("Normal", name));
+                color = Gfx::Color::from_string(color_config->read_entry("Normal"sv, name));
 
             if (!color.has_value())
                 return Color(Color::Black);
@@ -71,12 +71,12 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
         return color.value();
     };
 
-    auto get_flag = [&](auto& name) {
-        return file.read_bool_entry("Flags", name, false);
+    auto get_flag = [&](StringView name) {
+        return file.read_bool_entry("Flags"sv, name, false);
     };
 
-    auto get_alignment = [&](auto& name, auto role) {
-        auto alignment = file.read_entry("Alignments", name).to_lowercase();
+    auto get_alignment = [&](StringView name, auto role) {
+        auto alignment = file.read_entry("Alignments"sv, name).to_lowercase();
         if (alignment.is_empty()) {
             switch (role) {
             case (int)AlignmentRole::TitleAlignment:
@@ -98,8 +98,8 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
         return Gfx::TextAlignment::CenterLeft;
     };
 
-    auto get_metric = [&](auto& name, auto role) {
-        int metric = file.read_num_entry("Metrics", name, -1);
+    auto get_metric = [&](StringView name, auto role) {
+        int metric = file.read_num_entry("Metrics"sv, name, -1);
         if (metric == -1) {
             switch (role) {
             case (int)MetricRole::BorderThickness:
@@ -120,8 +120,8 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
         return metric;
     };
 
-    auto get_path = [&](auto& name, auto role, bool allow_empty) {
-        auto path = file.read_entry("Paths", name);
+    auto get_path = [&](StringView name, auto role, bool allow_empty) {
+        auto path = file.read_entry("Paths"sv, name);
         if (path.is_empty()) {
             switch (role) {
             case (int)PathRole::TitleButtonIcons:
@@ -135,7 +135,7 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
 
 #define ENCODE_PATH(x, allow_empty)                                                                              \
     do {                                                                                                         \
-        auto path = get_path(#x, (int)PathRole::x, allow_empty);                                                 \
+        auto path = get_path(#x##sv, (int)PathRole::x, allow_empty);                                             \
         memcpy(data->path[(int)PathRole::x], path, min(strlen(path) + 1, sizeof(data->path[(int)PathRole::x]))); \
         data->path[(int)PathRole::x][sizeof(data->path[(int)PathRole::x]) - 1] = '\0';                           \
     } while (0)
@@ -152,7 +152,7 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
 #undef __ENUMERATE_COLOR_ROLE
 #define __ENUMERATE_COLOR_ROLE(role)                                    \
     {                                                                   \
-        Optional<Color> result = get_color(#role);                      \
+        Optional<Color> result = get_color(#role##sv);                  \
         if (result.has_value())                                         \
             data->color[(int)ColorRole::role] = result.value().value(); \
     }
@@ -161,22 +161,22 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
 
 #undef __ENUMERATE_ALIGNMENT_ROLE
 #define __ENUMERATE_ALIGNMENT_ROLE(role) \
-    data->alignment[(int)AlignmentRole::role] = get_alignment(#role, (int)AlignmentRole::role);
+    data->alignment[(int)AlignmentRole::role] = get_alignment(#role##sv, (int)AlignmentRole::role);
     ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
 #undef __ENUMERATE_ALIGNMENT_ROLE
 
 #undef __ENUMERATE_FLAG_ROLE
-#define __ENUMERATE_FLAG_ROLE(role)                            \
-    {                                                          \
-        if (#role != "BoldTextAsBright"sv)                     \
-            data->flag[(int)FlagRole::role] = get_flag(#role); \
+#define __ENUMERATE_FLAG_ROLE(role)                                \
+    {                                                              \
+        if (#role != "BoldTextAsBright"sv)                         \
+            data->flag[(int)FlagRole::role] = get_flag(#role##sv); \
     }
     ENUMERATE_FLAG_ROLES(__ENUMERATE_FLAG_ROLE)
 #undef __ENUMERATE_FLAG_ROLE
 
 #undef __ENUMERATE_METRIC_ROLE
 #define __ENUMERATE_METRIC_ROLE(role) \
-    data->metric[(int)MetricRole::role] = get_metric(#role, (int)MetricRole::role);
+    data->metric[(int)MetricRole::role] = get_metric(#role##sv, (int)MetricRole::role);
     ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
 #undef __ENUMERATE_METRIC_ROLE
 
@@ -184,7 +184,7 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
         auto maybe_color_config = Core::ConfigFile::open(data->path[(int)PathRole::ColorScheme]);
         if (!maybe_color_config.is_error()) {
             auto color_config = maybe_color_config.release_value();
-            data->flag[(int)FlagRole::BoldTextAsBright] = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
+            data->flag[(int)FlagRole::BoldTextAsBright] = color_config->read_bool_entry("Options"sv, "ShowBoldTextAsBright"sv, true);
         }
     }
 

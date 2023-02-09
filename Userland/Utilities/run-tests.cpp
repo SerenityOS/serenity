@@ -47,8 +47,8 @@ public:
         , m_unlink_coredumps(unlink_coredumps)
     {
         if (!run_skipped_tests) {
-            m_skip_directories = m_config->read_entry("Global", "SkipDirectories", "").split(' ');
-            m_skip_files = m_config->read_entry("Global", "SkipTests", "").split(' ');
+            m_skip_directories = m_config->read_entry("Global"sv, "SkipDirectories"sv, "").split(' ');
+            m_skip_files = m_config->read_entry("Global"sv, "SkipTests"sv, "").split(' ');
         }
     }
 
@@ -256,7 +256,7 @@ FileResult TestRunner::run_test_file(DeprecatedString const& test_path)
 
     Vector<char const*, 4> argv;
     argv.append(basename.characters());
-    auto extra_args = m_config->read_entry(path_for_test.basename(), "Arguments", "").split(' ');
+    auto extra_args = m_config->read_entry(path_for_test.basename(), "Arguments"sv, "").split(' ');
     for (auto& arg : extra_args)
         argv.append(arg.characters());
     argv.append(nullptr);
@@ -397,7 +397,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         warnln("Empty configuration file ({}) loaded!", config_file.is_empty() ? "User config for Tests" : config_file.characters());
 
     if (exclude_pattern.is_empty())
-        exclude_pattern = config->read_entry("Global", "NotTestsPattern", "$^"); // default is match nothing (aka match end then beginning)
+        exclude_pattern = config->read_entry("Global"sv, "NotTestsPattern"sv, "$^"); // default is match nothing (aka match end then beginning)
 
     Regex<PosixExtended> exclude_regex(exclude_pattern, {});
     if (exclude_regex.parser_result.error != regex::Error::NoError) {
@@ -407,7 +407,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     // we need to preconfigure this, because we can't autoinitialize Regex types
     // in the Testrunner
-    auto skip_regex_pattern = config->read_entry("Global", "SkipRegex", "$^");
+    auto skip_regex_pattern = config->read_entry("Global"sv, "SkipRegex"sv, "$^");
     Regex<PosixExtended> skip_regex { skip_regex_pattern, {} };
     if (skip_regex.parser_result.error != regex::Error::NoError) {
         warnln("SkipRegex pattern \"{}\" is invalid", skip_regex_pattern);

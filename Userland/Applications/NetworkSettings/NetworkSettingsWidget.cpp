@@ -86,17 +86,17 @@ NetworkSettingsWidget::NetworkSettingsWidget()
 
         bool adapter_exists_in_config = config_file->has_group(adapter_name);
 
-        bool enabled = config_file->read_bool_entry(adapter_name, "Enabled", true);
+        bool enabled = config_file->read_bool_entry(adapter_name, "Enabled"sv, true);
         if (enabled)
             selected_adapter_index = index;
 
         NetworkAdapterData adapter_data;
         adapter_data.enabled = enabled;
-        adapter_data.dhcp = config_file->read_bool_entry(adapter_name, "DHCP", !adapter_exists_in_config);
-        adapter_data.ip_address = config_file->read_entry(adapter_name, "IPv4Address");
-        auto netmask = IPv4Address::from_string(config_file->read_entry(adapter_name, "IPv4Netmask"));
+        adapter_data.dhcp = config_file->read_bool_entry(adapter_name, "DHCP"sv, !adapter_exists_in_config);
+        adapter_data.ip_address = config_file->read_entry(adapter_name, "IPv4Address"sv);
+        auto netmask = IPv4Address::from_string(config_file->read_entry(adapter_name, "IPv4Netmask"sv));
         adapter_data.cidr = netmask.has_value() ? netmask_to_cidr(*netmask) : 32;
-        adapter_data.default_gateway = config_file->read_entry(adapter_name, "IPv4Gateway");
+        adapter_data.default_gateway = config_file->read_entry(adapter_name, "IPv4Gateway"sv);
         m_network_adapters.set(adapter_name, move(adapter_data));
         m_adapter_names.append(adapter_name);
         index++;

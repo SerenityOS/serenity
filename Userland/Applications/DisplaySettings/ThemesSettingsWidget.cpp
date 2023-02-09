@@ -91,7 +91,7 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     }
 
     auto theme_config = TRY(Core::ConfigFile::open(m_selected_theme->path));
-    if (!selected_color_scheme_index.has_value() || GUI::Widget::palette().color_scheme_path() != theme_config->read_entry("Paths", "ColorScheme")) {
+    if (!selected_color_scheme_index.has_value() || GUI::Widget::palette().color_scheme_path() != theme_config->read_entry("Paths"sv, "ColorScheme"sv)) {
         if (m_color_scheme_names.size() > 1) {
             color_scheme_combo.set_enabled(true);
             find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->set_checked(true);
@@ -187,7 +187,7 @@ void ThemesSettingsWidget::apply_settings()
             GUI::MessageBox::show_error(window(), "Failed to open theme config file"sv);
             return;
         }
-        auto preferred_color_scheme_path = get_color_scheme_name_from_pathname(theme_config.release_value()->read_entry("Paths", "ColorScheme"));
+        auto preferred_color_scheme_path = get_color_scheme_name_from_pathname(theme_config.release_value()->read_entry("Paths"sv, "ColorScheme"sv));
         auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, OptionalNone());
         if (!set_theme_result || preferred_color_scheme_path.is_error()) {
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);

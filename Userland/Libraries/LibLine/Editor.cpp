@@ -42,10 +42,10 @@ Configuration Configuration::from_config(StringView libname)
     auto config_file = Core::ConfigFile::open_for_lib(libname).release_value_but_fixme_should_propagate_errors();
 
     // Read behavior options.
-    auto refresh = config_file->read_entry("behavior", "refresh", "lazy");
-    auto operation = config_file->read_entry("behavior", "operation_mode");
-    auto bracketed_paste = config_file->read_bool_entry("behavior", "bracketed_paste", true);
-    auto default_text_editor = config_file->read_entry("behavior", "default_text_editor");
+    auto refresh = config_file->read_entry("behavior"sv, "refresh"sv, "lazy");
+    auto operation = config_file->read_entry("behavior"sv, "operation_mode"sv);
+    auto bracketed_paste = config_file->read_bool_entry("behavior"sv, "bracketed_paste"sv, true);
+    auto default_text_editor = config_file->read_entry("behavior"sv, "default_text_editor"sv);
 
     Configuration::Flags flags { Configuration::Flags::None };
     if (bracketed_paste)
@@ -74,7 +74,7 @@ Configuration Configuration::from_config(StringView libname)
 
     // Read keybinds.
 
-    for (auto& binding_key : config_file->keys("keybinds")) {
+    for (auto& binding_key : config_file->keys("keybinds"sv)) {
         GenericLexer key_lexer(binding_key);
         auto has_ctrl = false;
         auto alt = false;
@@ -118,7 +118,7 @@ Configuration Configuration::from_config(StringView libname)
             has_ctrl = false;
         }
 
-        GenericLexer value_lexer { config_file->read_entry("keybinds", binding_key) };
+        GenericLexer value_lexer { config_file->read_entry("keybinds"sv, binding_key) };
         StringBuilder value_builder;
         while (!value_lexer.is_eof())
             value_builder.append(value_lexer.consume_escaped_character());

@@ -20,7 +20,7 @@ AppletManager::AppletManager()
 {
     s_the = this;
 
-    auto order = g_config->read_entry("Applet", "Order");
+    auto order = g_config->read_entry("Applet"sv, "Order"sv);
     order_vector = order.split(',');
 }
 
