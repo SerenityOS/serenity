@@ -89,8 +89,17 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
 
 Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_latin_font(StringView name)
 {
-    bool is_bold = name.contains("bold"sv);
-    bool is_italic = name.contains("italic"sv);
+    bool is_bold = name.contains("bold"sv, CaseSensitivity::CaseInsensitive);
+    bool is_italic = name.contains("italic"sv, CaseSensitivity::CaseInsensitive);
+
+    DeprecatedString font_family;
+    if (name.contains("times"sv, CaseSensitivity::CaseInsensitive)) {
+        font_family = "Liberation Serif";
+    } else if (name.contains("courier"sv, CaseSensitivity::CaseInsensitive)) {
+        font_family = "Liberation Mono";
+    } else {
+        font_family = "Liberation Sans";
+    }
 
     DeprecatedString font_variant;
 
@@ -104,7 +113,7 @@ Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_lati
         font_variant = "Regular";
     }
 
-    return { "Liberation Serif", font_variant };
+    return { font_family, font_variant };
 }
 
 }
