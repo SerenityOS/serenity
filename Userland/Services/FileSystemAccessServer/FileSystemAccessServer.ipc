@@ -1,5 +1,4 @@
 #include <AK/URL.h>
-#include <LibCore/Stream.h>
 
 endpoint FileSystemAccessServer
 {

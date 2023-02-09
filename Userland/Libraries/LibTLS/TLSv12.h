@@ -11,7 +11,6 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
-#include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>

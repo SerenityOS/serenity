@@ -8,7 +8,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/Command.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/Stream.h>
 #include <LibRegex/Regex.h>
 #include <fcntl.h>
 #include <sys/stat.h>

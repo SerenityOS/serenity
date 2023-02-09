@@ -8,12 +8,13 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/CircularBuffer.h>
 #include <AK/Endian.h>
 #include <AK/Forward.h>
 #include <AK/MaybeOwned.h>
+#include <AK/Stream.h>
 #include <AK/Vector.h>
 #include <LibCompress/DeflateTables.h>
-#include <LibCore/Stream.h>
 
 namespace Compress {
 

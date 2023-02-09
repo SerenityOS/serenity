@@ -10,7 +10,6 @@
 #include <AK/IPv4Address.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 
 namespace Core {
 

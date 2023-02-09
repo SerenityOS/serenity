@@ -8,7 +8,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 
 #define DEFAULT_LINE_COUNT 10

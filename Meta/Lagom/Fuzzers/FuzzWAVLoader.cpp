@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Stream.h>
 #include <LibAudio/WavLoader.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -7,7 +7,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCpp/Parser.h>
 #include <LibTest/TestCase.h>
 #include <unistd.h>

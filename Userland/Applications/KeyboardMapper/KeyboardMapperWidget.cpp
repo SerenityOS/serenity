@@ -9,7 +9,6 @@
 #include "KeyboardMapperWidget.h"
 #include "KeyPositions.h"
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/MessageBox.h>

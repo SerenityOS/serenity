@@ -6,6 +6,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Endian.h>
 #include <AK/MemoryStream.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>

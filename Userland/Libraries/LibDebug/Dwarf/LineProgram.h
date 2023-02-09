@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
 #include <LibDebug/Dwarf/DwarfTypes.h>
 
 namespace Debug::Dwarf {

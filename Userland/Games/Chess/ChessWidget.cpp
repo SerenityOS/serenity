@@ -11,7 +11,6 @@
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/AntiAliasingPainter.h>

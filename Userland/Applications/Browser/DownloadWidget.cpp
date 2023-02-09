@@ -10,7 +10,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

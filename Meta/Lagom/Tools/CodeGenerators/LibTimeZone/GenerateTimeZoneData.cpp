@@ -14,7 +14,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
 #include <LibTimeZone/TimeZone.h>
 
 namespace {

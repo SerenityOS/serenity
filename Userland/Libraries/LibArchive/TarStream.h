@@ -9,8 +9,8 @@
 
 #include <AK/MaybeOwned.h>
 #include <AK/Span.h>
+#include <AK/Stream.h>
 #include <LibArchive/Tar.h>
-#include <LibCore/Stream.h>
 
 namespace Archive {
 

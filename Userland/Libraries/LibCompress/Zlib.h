@@ -7,12 +7,13 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Endian.h>
 #include <AK/MaybeOwned.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/Span.h>
+#include <AK/Stream.h>
 #include <AK/Types.h>
-#include <LibCore/Stream.h>
 #include <LibCrypto/Checksum/Adler32.h>
 
 namespace Compress {

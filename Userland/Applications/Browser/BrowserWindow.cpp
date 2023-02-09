@@ -19,7 +19,6 @@
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>

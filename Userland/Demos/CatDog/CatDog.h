@@ -12,7 +12,6 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>

@@ -10,7 +10,6 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Stream.h>
 
 #include "Command.h"
 #include "Parser.h"

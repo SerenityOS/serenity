@@ -9,7 +9,6 @@
 #include "SpreadsheetView.h"
 #include "Workbook.h"
 #include <AK/NonnullRefPtrVector.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/Widget.h>

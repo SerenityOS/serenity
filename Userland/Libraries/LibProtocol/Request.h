@@ -14,7 +14,6 @@
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Stream.h>
 #include <LibIPC/Forward.h>
 
 namespace Protocol {

@@ -50,7 +50,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f83b5e719
 --- /dev/null
 +++ b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
-@@ -0,0 +1,166 @@
+@@ -0,0 +1,165 @@
 +/*
 + * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
 + * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -91,7 +91,6 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +#include <LibCore/DeprecatedFile.h>
 +#include <LibCore/File.h>
 +#include <LibCore/ProcessStatisticsReader.h>
-+#include <LibCore/Stream.h>
 +#include <stdio.h>
 +#include <string.h>
 +

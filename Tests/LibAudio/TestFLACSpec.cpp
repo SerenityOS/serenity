@@ -8,7 +8,6 @@
 #include <AK/Types.h>
 #include <LibAudio/FlacLoader.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
 #include <LibTest/TestCase.h>
 
 struct FlacTest : Test::TestCase {

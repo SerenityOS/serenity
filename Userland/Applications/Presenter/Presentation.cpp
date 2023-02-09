@@ -8,7 +8,6 @@
 #include "Presentation.h"
 #include <AK/JsonObject.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Window.h>
 #include <errno_codes.h>
 

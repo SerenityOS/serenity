@@ -9,7 +9,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>

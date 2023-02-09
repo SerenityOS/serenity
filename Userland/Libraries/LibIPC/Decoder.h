@@ -15,7 +15,7 @@
 #include <AK/TypeList.h>
 #include <AK/Variant.h>
 #include <LibCore/SharedCircularQueue.h>
-#include <LibCore/Stream.h>
+#include <LibCore/Socket.h>
 #include <LibIPC/Concepts.h>
 #include <LibIPC/File.h>
 #include <LibIPC/Forward.h>

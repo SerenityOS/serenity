@@ -7,7 +7,6 @@
 #include <AK/SourceGenerator.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 enum class PnpIdColumns {
     ManufacturerName,

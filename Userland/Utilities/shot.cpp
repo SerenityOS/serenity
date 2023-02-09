@@ -13,7 +13,6 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ConnectionToWindowServer.h>

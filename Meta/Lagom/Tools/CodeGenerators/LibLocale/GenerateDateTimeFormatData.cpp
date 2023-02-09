@@ -24,7 +24,6 @@
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
 #include <LibLocale/DateTimeFormat.h>
 #include <LibTimeZone/TimeZone.h>
 

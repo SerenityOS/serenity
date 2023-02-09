@@ -9,7 +9,6 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibMarkdown/Document.h>
 #include <LibTest/TestCase.h>
 #include <LibTest/TestSuite.h>

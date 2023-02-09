@@ -13,7 +13,6 @@
 #include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 
 namespace SQL {
 

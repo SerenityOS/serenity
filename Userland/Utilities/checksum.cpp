@@ -7,7 +7,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Hash/HashManager.h>
 #include <LibMain/Main.h>

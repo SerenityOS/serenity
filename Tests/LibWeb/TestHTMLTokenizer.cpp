@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 
 using Tokenizer = Web::HTML::HTMLTokenizer;

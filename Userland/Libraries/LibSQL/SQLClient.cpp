@@ -14,7 +14,6 @@
 #    include <LibCore/Directory.h>
 #    include <LibCore/SocketAddress.h>
 #    include <LibCore/StandardPaths.h>
-#    include <LibCore/Stream.h>
 #    include <LibCore/System.h>
 #endif
 

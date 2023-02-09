@@ -12,7 +12,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibSQL/AST/Lexer.h>

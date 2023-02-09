@@ -10,7 +10,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/API/VirGL.h>
-#include <LibCore/Stream.h>
 #include <LibGPU/Device.h>
 #include <LibVirtGPU/VirGLProtocol.h>
 

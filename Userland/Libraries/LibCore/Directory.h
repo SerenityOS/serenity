@@ -12,7 +12,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/Optional.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <dirent.h>
 #include <sys/stat.h>
 

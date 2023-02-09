@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/Stream.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/MessageBox.h>

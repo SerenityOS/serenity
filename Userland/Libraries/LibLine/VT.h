@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibCore/Stream.h>
 #include <LibLine/Style.h>
 
 namespace Line {

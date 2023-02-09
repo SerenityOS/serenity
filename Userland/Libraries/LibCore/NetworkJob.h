@@ -8,9 +8,9 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/Stream.h>
 #include <LibCore/Forward.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 
 namespace Core {
 

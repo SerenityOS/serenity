@@ -10,7 +10,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/MessageBox.h>

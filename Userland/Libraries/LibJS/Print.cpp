@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Stream.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>

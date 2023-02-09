@@ -19,7 +19,6 @@
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Sample.h>
 #include <LibAudio/SampleFormats.h>
-#include <LibCore/Stream.h>
 
 namespace Audio {
 

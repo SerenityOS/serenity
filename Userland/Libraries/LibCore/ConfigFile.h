@@ -11,11 +11,11 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 namespace Core {
 

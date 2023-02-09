@@ -16,7 +16,6 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibTest/TestRunnerUtil.h>

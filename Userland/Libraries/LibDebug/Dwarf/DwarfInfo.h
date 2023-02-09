@@ -14,7 +14,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>
-#include <LibCore/Stream.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibELF/Image.h>
 

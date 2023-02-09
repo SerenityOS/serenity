@@ -12,7 +12,6 @@
 #include "Client.h"
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <unistd.h>
 

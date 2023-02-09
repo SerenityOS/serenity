@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibCore/Socket.h>
-#include <LibCore/Stream.h>
 
 class Client : public RefCounted<Client> {
 public:

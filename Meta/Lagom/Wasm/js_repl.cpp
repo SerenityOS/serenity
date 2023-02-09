@@ -9,7 +9,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/BasicBlock.h>

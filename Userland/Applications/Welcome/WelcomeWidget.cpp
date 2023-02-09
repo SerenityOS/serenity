@@ -10,7 +10,6 @@
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>

@@ -8,7 +8,6 @@
 
 #include <LibCompress/Brotli.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 static void run_test(StringView const file_name)
 {

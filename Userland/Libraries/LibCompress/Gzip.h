@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
+#include <AK/Stream.h>
 #include <LibCompress/Deflate.h>
-#include <LibCore/Stream.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
 namespace Compress {

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibCore/Stream.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {

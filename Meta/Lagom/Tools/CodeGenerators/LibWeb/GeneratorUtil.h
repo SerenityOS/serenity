@@ -11,7 +11,6 @@
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <ctype.h>
 
 DeprecatedString title_casify(DeprecatedString const& dashy_name)

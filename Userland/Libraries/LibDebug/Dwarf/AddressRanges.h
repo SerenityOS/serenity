@@ -10,7 +10,6 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
-#include <LibCore/Stream.h>
 
 namespace Debug::Dwarf {
 
