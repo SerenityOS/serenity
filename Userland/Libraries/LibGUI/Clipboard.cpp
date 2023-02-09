@@ -57,14 +57,14 @@ Clipboard& Clipboard::the()
 Clipboard::DataAndType Clipboard::fetch_data_and_type() const
 {
     auto response = connection().get_clipboard_data();
+    auto type = response.mime_type();
+    auto metadata = response.metadata().entries();
     if (!response.data().is_valid())
-        return {};
+        return { {}, type, metadata };
     auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
     if (data.is_error())
         return {};
 
-    auto type = response.mime_type();
-    auto metadata = response.metadata().entries();
     return { data.release_value(), type, metadata };
 }
 
@@ -125,15 +125,18 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
 
 void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
+    if (data.is_empty()) {
+        connection().async_set_clipboard_data({}, type, metadata);
+        return;
+    }
+
     auto buffer_or_error = Core::AnonymousBuffer::create_with_size(data.size());
     if (buffer_or_error.is_error()) {
         dbgln("GUI::Clipboard::set_data() failed to create a buffer");
         return;
     }
     auto buffer = buffer_or_error.release_value();
-    if (!data.is_empty())
-        memcpy(buffer.data<void>(), data.data(), data.size());
-
+    memcpy(buffer.data<void>(), data.data(), data.size());
     connection().async_set_clipboard_data(move(buffer), type, metadata);
 }
 
