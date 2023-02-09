@@ -123,6 +123,11 @@ u8 ScaledFont::glyph_fixed_width() const
     return glyph_metrics(glyph_id_for_code_point(' ')).advance_width;
 }
 
+RefPtr<Font> ScaledFont::with_size(float point_size) const
+{
+    return adopt_ref(*new Gfx::ScaledFont(*m_font, point_size, point_size));
+}
+
 Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
 {
     return m_pixel_metrics;
