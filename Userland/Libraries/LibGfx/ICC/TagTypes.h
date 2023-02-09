@@ -59,6 +59,46 @@ public:
     }
 };
 
+// ICC v4, 10.2 chromaticityType
+class ChromaticityTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6368726D }; // 'chrm'
+
+    static ErrorOr<NonnullRefPtr<ChromaticityTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // ICC v4, Table 31 — Colorant and phosphor encoding
+    enum class PhosphorOrColorantType : u16 {
+        Unknown = 0,
+        ITU_R_BT_709_2 = 1,
+        SMPTE_RP145 = 2,
+        EBU_Tech_3213_E = 3,
+        P22 = 4,
+        P3 = 5,
+        ITU_R_BT_2020 = 6,
+    };
+
+    static StringView phosphor_or_colorant_type_name(PhosphorOrColorantType);
+
+    struct xyCoordinate {
+        U16Fixed16 x;
+        U16Fixed16 y;
+    };
+
+    ChromaticityTagData(u32 offset, u32 size, PhosphorOrColorantType phosphor_or_colorant_type, Vector<xyCoordinate> xy_coordinates)
+        : TagData(offset, size, Type)
+        , m_phosphor_or_colorant_type(phosphor_or_colorant_type)
+        , m_xy_coordinates(move(xy_coordinates))
+    {
+    }
+
+    PhosphorOrColorantType phosphor_or_colorant_type() const { return m_phosphor_or_colorant_type; }
+    Vector<xyCoordinate> xy_coordinates() const { return m_xy_coordinates; }
+
+private:
+    PhosphorOrColorantType m_phosphor_or_colorant_type;
+    Vector<xyCoordinate> m_xy_coordinates;
+};
+
 // ICC v4, 10.3 cicpType
 // "The cicpType specifies Coding-independent code points for video signal type identification."
 // See presentations at https://www.color.org/events/HDR_experts.xalter for background.

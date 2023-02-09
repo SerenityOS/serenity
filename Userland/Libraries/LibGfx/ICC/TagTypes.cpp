@@ -83,6 +83,72 @@ TagTypeSignature tag_type(ReadonlyBytes tag_bytes)
     return *bit_cast<BigEndian<TagTypeSignature> const*>(tag_bytes.data());
 }
 
+StringView ChromaticityTagData::phosphor_or_colorant_type_name(PhosphorOrColorantType phosphor_or_colorant_type)
+{
+    switch (phosphor_or_colorant_type) {
+    case PhosphorOrColorantType::Unknown:
+        return "Unknown"sv;
+    case PhosphorOrColorantType::ITU_R_BT_709_2:
+        return "ITU-R BT.709-2"sv;
+    case PhosphorOrColorantType::SMPTE_RP145:
+        return "SMPTE RP145"sv;
+    case PhosphorOrColorantType::EBU_Tech_3213_E:
+        return "EBU Tech. 3213-E"sv;
+    case PhosphorOrColorantType::P22:
+        return "P22"sv;
+    case PhosphorOrColorantType::P3:
+        return "P3"sv;
+    case PhosphorOrColorantType::ITU_R_BT_2020:
+        return "ITU-R BT.2020"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<NonnullRefPtr<ChromaticityTagData>> ChromaticityTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.2 chromaticityType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16))
+        return Error::from_string_literal("ICC::Profile: chromaticityType has not enough data");
+
+    u16 number_of_device_channels = *bit_cast<BigEndian<u16> const*>(bytes.data() + 8);
+    PhosphorOrColorantType phosphor_or_colorant_type = *bit_cast<BigEndian<PhosphorOrColorantType> const*>(bytes.data() + 10);
+
+    switch (phosphor_or_colorant_type) {
+    case PhosphorOrColorantType::Unknown:
+    case PhosphorOrColorantType::ITU_R_BT_709_2:
+    case PhosphorOrColorantType::SMPTE_RP145:
+    case PhosphorOrColorantType::EBU_Tech_3213_E:
+    case PhosphorOrColorantType::P22:
+    case PhosphorOrColorantType::P3:
+    case PhosphorOrColorantType::ITU_R_BT_2020:
+        break;
+    default:
+        return Error::from_string_literal("ICC::Profile: chromaticityType invalid phosphor_or_colorant_type");
+    }
+
+    // "If the value is 0001h to 0004h, the number of channels shall be three..."
+    if (phosphor_or_colorant_type != PhosphorOrColorantType::Unknown && number_of_device_channels != 3)
+        return Error::from_string_literal("ICC::Profile: chromaticityType unexpected number of channels for phosphor_or_colorant_type");
+
+    if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16) + number_of_device_channels * 2 * sizeof(u16Fixed16Number))
+        return Error::from_string_literal("ICC::Profile: chromaticityType has not enough data for xy coordinates");
+
+    auto* raw_xy_coordinates = bit_cast<BigEndian<u16Fixed16Number> const*>(bytes.data() + 12);
+    Vector<xyCoordinate> xy_coordinates;
+    TRY(xy_coordinates.try_resize(number_of_device_channels));
+    for (size_t i = 0; i < number_of_device_channels; ++i) {
+        xy_coordinates[i].x = U16Fixed16::create_raw(raw_xy_coordinates[2 * i]);
+        xy_coordinates[i].y = U16Fixed16::create_raw(raw_xy_coordinates[2 * i + 1]);
+    }
+
+    // FIXME: Once I find files that have phosphor_or_colorant_type != Unknown, check that the values match the values in Table 31.
+
+    return adopt_ref(*new ChromaticityTagData(offset, size, phosphor_or_colorant_type, move(xy_coordinates)));
+}
+
 ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.3 cicpType
