@@ -51,6 +51,7 @@ public:
     enum UpdateFlag {
         DontInvalidateIndices = 0,
         InvalidateAllIndices = 1 << 0,
+        DontResizeColumns = 1 << 1,
     };
 
     enum MatchesFlag {
