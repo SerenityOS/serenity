@@ -212,6 +212,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 outln("    color lookup table: (not set)");
             }
+        } else if (tag_data->type() == Gfx::ICC::MeasurementTagData::Type) {
+            auto& measurement = static_cast<Gfx::ICC::MeasurementTagData&>(*tag_data);
+            outln("    standard observer: {}", Gfx::ICC::MeasurementTagData::standard_observer_name(measurement.standard_observer()));
+            outln("    tristimulus value for measurement backing: {}", measurement.tristimulus_value_for_measurement_backing());
+            outln("    measurement geometry: {}", Gfx::ICC::MeasurementTagData::measurement_geometry_name(measurement.measurement_geometry()));
+            outln("    measurement flare: {} %", measurement.measurement_flare() * 100);
+            outln("    standard illuminant: {}", Gfx::ICC::MeasurementTagData::standard_illuminant_name(measurement.standard_illuminant()));
         } else if (tag_data->type() == Gfx::ICC::MultiLocalizedUnicodeTagData::Type) {
             auto& multi_localized_unicode = static_cast<Gfx::ICC::MultiLocalizedUnicodeTagData&>(*tag_data);
             for (auto& record : multi_localized_unicode.records()) {

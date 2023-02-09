@@ -16,6 +16,9 @@ namespace {
 // ICC V4, 4.6 s15Fixed16Number
 using s15Fixed16Number = i32;
 
+// ICC V4, 4.7 u16Fixed16Number
+using u16Fixed16Number = u32;
+
 // ICC V4, 4.14 XYZNumber
 struct XYZNumber {
     BigEndian<s15Fixed16Number> x;
@@ -430,6 +433,125 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
 
     // FIXME: Pass curve data once it's read above.
     return adopt_ref(*new LutBToATagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, e, move(clut_data)));
+}
+
+ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.14 measurementType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    // Table 49 — measurementType structure
+    struct MeasurementHeader {
+        BigEndian<StandardObserver> standard_observer;
+        XYZNumber tristimulus_value_for_measurement_backing;
+        BigEndian<MeasurementGeometry> measurement_geometry;
+        BigEndian<u16Fixed16Number> measurement_flare;
+        BigEndian<StandardIlluminant> standard_illuminant;
+    };
+    static_assert(AssertSize<MeasurementHeader, 28>());
+
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(MeasurementHeader))
+        return Error::from_string_literal("ICC::Profile: measurementTag has not enough data");
+
+    auto& header = *bit_cast<MeasurementHeader const*>(bytes.data() + 8);
+
+    TRY(validate_standard_observer(header.standard_observer));
+    TRY(validate_measurement_geometry(header.measurement_geometry));
+    TRY(validate_standard_illuminant(header.standard_illuminant));
+
+    return adopt_ref(*new MeasurementTagData(offset, size, header.standard_observer, header.tristimulus_value_for_measurement_backing,
+        header.measurement_geometry, U16Fixed16::create_raw(header.measurement_flare), header.standard_illuminant));
+}
+
+ErrorOr<void> MeasurementTagData::validate_standard_observer(StandardObserver standard_observer)
+{
+    switch (standard_observer) {
+    case StandardObserver::Unknown:
+    case StandardObserver::CIE_1931_standard_colorimetric_observer:
+    case StandardObserver::CIE_1964_standard_colorimetric_observer:
+        return {};
+    }
+    return Error::from_string_literal("ICC::Profile: unknown standard_observer");
+}
+
+StringView MeasurementTagData::standard_observer_name(StandardObserver standard_observer)
+{
+    switch (standard_observer) {
+    case StandardObserver::Unknown:
+        return "Unknown"sv;
+    case StandardObserver::CIE_1931_standard_colorimetric_observer:
+        return "CIE 1931 standard colorimetric observer"sv;
+    case StandardObserver::CIE_1964_standard_colorimetric_observer:
+        return "CIE 1964 standard colorimetric observer"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> MeasurementTagData::validate_measurement_geometry(MeasurementGeometry measurement_geometry)
+{
+    switch (measurement_geometry) {
+    case MeasurementGeometry::Unknown:
+    case MeasurementGeometry::Degrees_0_45_or_45_0:
+    case MeasurementGeometry::Degrees_0_d_or_d_0:
+        return {};
+    }
+    return Error::from_string_literal("ICC::Profile: unknown measurement_geometry");
+}
+
+StringView MeasurementTagData::measurement_geometry_name(MeasurementGeometry measurement_geometry)
+{
+    switch (measurement_geometry) {
+    case MeasurementGeometry::Unknown:
+        return "Unknown"sv;
+    case MeasurementGeometry::Degrees_0_45_or_45_0:
+        return "0°:45° or 45°:0°"sv;
+    case MeasurementGeometry::Degrees_0_d_or_d_0:
+        return "0°:d or d:0°"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> MeasurementTagData::validate_standard_illuminant(StandardIlluminant standard_illuminant)
+{
+    switch (standard_illuminant) {
+    case StandardIlluminant::Unknown:
+    case StandardIlluminant::D50:
+    case StandardIlluminant::D65:
+    case StandardIlluminant::D93:
+    case StandardIlluminant::F2:
+    case StandardIlluminant::D55:
+    case StandardIlluminant::A:
+    case StandardIlluminant::Equi_Power_E:
+    case StandardIlluminant::F8:
+        return {};
+    }
+    return Error::from_string_literal("ICC::Profile: unknown standard_illuminant");
+}
+
+StringView MeasurementTagData::standard_illuminant_name(StandardIlluminant standard_illuminant)
+{
+    switch (standard_illuminant) {
+    case StandardIlluminant::Unknown:
+        return "Unknown"sv;
+    case StandardIlluminant::D50:
+        return "D50"sv;
+    case StandardIlluminant::D65:
+        return "D65"sv;
+    case StandardIlluminant::D93:
+        return "D93"sv;
+    case StandardIlluminant::F2:
+        return "F2"sv;
+    case StandardIlluminant::D55:
+        return "D55"sv;
+    case StandardIlluminant::A:
+        return "A"sv;
+    case StandardIlluminant::Equi_Power_E:
+        return "Equi-Power (E)"sv;
+    case StandardIlluminant::F8:
+        return "F8"sv;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
