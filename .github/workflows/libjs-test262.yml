@@ -45,11 +45,6 @@ jobs:
           repository: tc39/test262-parser-tests
           path: test262-parser-tests
 
-      - name: "Select best APT mirror"
-        run: |
-          sudo gem install apt-spy2
-          sudo apt-spy2 fix --commit --launchpad --country=US
-
       - name: Install dependencies
         run: |
           sudo apt-get update

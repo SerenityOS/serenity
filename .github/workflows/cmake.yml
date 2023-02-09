@@ -45,12 +45,6 @@ jobs:
 
       # === OS SETUP ===
 
-      # An attempt to avoid the (fairly common) azure apt mirror downtime.
-      - name: "Select best APT mirror"
-        run: |
-          sudo gem install apt-spy2
-          sudo apt-spy2 fix --commit --launchpad --country=US
-
       # Do we need to update the package cache first?
       # sudo apt-get update -qq
       - name: "Install Ubuntu dependencies"
