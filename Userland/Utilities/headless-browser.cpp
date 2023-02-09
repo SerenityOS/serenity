@@ -694,7 +694,7 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             if (Core::DeprecatedFile::exists(output_file_path))
                 MUST(Core::DeprecatedFile::remove(output_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
 
-            auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
+            auto output_file = MUST(Core::File::open(output_file_path, Core::File::OpenMode::Write));
 
             auto output_rect = page_client.screen_rect();
             auto output_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, output_rect.size().to_type<int>()));

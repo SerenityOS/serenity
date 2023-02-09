@@ -61,7 +61,7 @@ int main(int argc, char** argv, char** env)
     OwnPtr<Vector<int>> profile_string_id_map;
 
     if (dump_profile) {
-        auto profile_stream_or_error = Core::Stream::File::open(profile_dump_path, Core::Stream::OpenMode::Write);
+        auto profile_stream_or_error = Core::File::open(profile_dump_path, Core::File::OpenMode::Write);
         if (profile_stream_or_error.is_error()) {
             warnln("Failed to open '{}' for writing: {}", profile_dump_path, profile_stream_or_error.error());
             return 1;

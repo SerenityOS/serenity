@@ -5,22 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Stream.h"
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
-#ifdef AK_OS_SERENITY
-#    include <serenity.h>
-#endif
-#ifdef AK_OS_FREEBSD
-#    include <sys/ucred.h>
-#endif
 
-namespace Core::Stream {
+namespace Core {
 
 ErrorOr<NonnullOwnPtr<File>> File::open(StringView filename, OpenMode mode, mode_t permissions)
 {
@@ -36,7 +26,7 @@ ErrorOr<NonnullOwnPtr<File>> File::adopt_fd(int fd, OpenMode mode, ShouldCloseFi
     }
 
     if (!has_any_flag(mode, OpenMode::ReadWrite)) {
-        dbgln("Core::DeprecatedFile::adopt_fd: Attempting to adopt a file with neither Read nor Write specified in mode");
+        dbgln("Core::File::adopt_fd: Attempting to adopt a file with neither Read nor Write specified in mode");
         return Error::from_errno(EINVAL);
     }
 

@@ -1006,7 +1006,7 @@ Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
 
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+    auto file = Core::File::open(path, Core::File::OpenMode::Read);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else

@@ -7,6 +7,7 @@
 
 #include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
@@ -338,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!parse_result.has_value())
         return 1;
 
-    g_stdout = TRY(Core::Stream::File::standard_output());
+    g_stdout = TRY(Core::File::standard_output());
     g_printer = TRY(try_make<Wasm::Printer>(*g_stdout));
 
     if (print && !attempt_instantiate) {

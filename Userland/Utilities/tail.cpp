@@ -6,13 +6,14 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 
 #define DEFAULT_LINE_COUNT 10
 
-static ErrorOr<void> tail_from_pos(Core::Stream::File& file, off_t startline)
+static ErrorOr<void> tail_from_pos(Core::File& file, off_t startline)
 {
     TRY(file.seek(startline + 1, SeekMode::SetPosition));
     auto buffer = TRY(file.read_until_eof());
@@ -20,7 +21,7 @@ static ErrorOr<void> tail_from_pos(Core::Stream::File& file, off_t startline)
     return {};
 }
 
-static ErrorOr<off_t> find_seek_pos(Core::Stream::File& file, int wanted_lines)
+static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines)
 {
     // Rather than reading the whole file, start at the end and work backwards,
     // stopping when we've found the number of lines we want.
@@ -61,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(file, "File path", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto f = TRY(Core::Stream::File::open_file_or_standard_stream(file, Core::Stream::OpenMode::Read));
+    auto f = TRY(Core::File::open_file_or_standard_stream(file, Core::File::OpenMode::Read));
     if (!follow)
         TRY(Core::System::pledge("stdio"));
 

@@ -375,7 +375,7 @@ void TreeMapWidget::recalculate_path_for_new_tree()
 static ErrorOr<void> fill_mounts(Vector<MountInfo>& output)
 {
     // Output info about currently mounted filesystems.
-    auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open("/sys/kernel/df"sv, Core::File::OpenMode::Read));
 
     auto content = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(content));

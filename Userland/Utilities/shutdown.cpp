@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -14,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    auto file = TRY(Core::Stream::File::open("/sys/kernel/power_state"sv, Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::File::open("/sys/kernel/power_state"sv, Core::File::OpenMode::Write));
 
     const DeprecatedString file_contents = "2";
     TRY(file->write(file_contents.bytes()));

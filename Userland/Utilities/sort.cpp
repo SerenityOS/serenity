@@ -9,6 +9,7 @@
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -60,8 +61,8 @@ struct Options {
 
 static ErrorOr<void> load_file(Options options, StringView filename, Vector<Line>& lines, HashTable<Line>& seen)
 {
-    auto file = TRY(Core::Stream::BufferedFile::create(
-        TRY(Core::Stream::File::open_file_or_standard_stream(filename, Core::Stream::OpenMode::Read))));
+    auto file = TRY(Core::BufferedFile::create(
+        TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read))));
 
     // FIXME: Unlimited line length
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));

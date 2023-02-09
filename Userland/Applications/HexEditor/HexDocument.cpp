@@ -5,6 +5,7 @@
  */
 
 #include "HexDocument.h"
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 
 void HexDocument::set(size_t position, u8 value)
@@ -58,7 +59,7 @@ void HexDocumentMemory::clear_changes()
     m_changes.clear();
 }
 
-ErrorOr<void> HexDocumentMemory::write_to_file(Core::Stream::File& file)
+ErrorOr<void> HexDocumentMemory::write_to_file(Core::File& file)
 {
     TRY(file.seek(0, SeekMode::SetPosition));
     TRY(file.write(m_buffer));
@@ -69,7 +70,7 @@ ErrorOr<void> HexDocumentMemory::write_to_file(Core::Stream::File& file)
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullOwnPtr<Core::File> file)
 {
     auto document = TRY(adopt_nonnull_own_or_enomem(new HexDocumentFile(move(file))));
     TRY(document->initialize_internal_state());
@@ -77,7 +78,7 @@ ErrorOr<NonnullOwnPtr<HexDocumentFile>> HexDocumentFile::create(NonnullOwnPtr<Co
     return document;
 }
 
-HexDocumentFile::HexDocumentFile(NonnullOwnPtr<Core::Stream::File> file)
+HexDocumentFile::HexDocumentFile(NonnullOwnPtr<Core::File> file)
     : m_file(move(file))
 {
 }
@@ -94,7 +95,7 @@ ErrorOr<void> HexDocumentFile::write_to_file()
     return {};
 }
 
-ErrorOr<void> HexDocumentFile::write_to_file(Core::Stream::File& file)
+ErrorOr<void> HexDocumentFile::write_to_file(Core::File& file)
 {
     TRY(file.truncate(size()));
 
@@ -149,7 +150,7 @@ void HexDocumentFile::clear_changes()
     m_changes.clear();
 }
 
-ErrorOr<void> HexDocumentFile::set_file(NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<void> HexDocumentFile::set_file(NonnullOwnPtr<Core::File> file)
 {
     m_file = move(file);
     TRY(initialize_internal_state());
@@ -171,7 +172,7 @@ ErrorOr<void> HexDocumentFile::initialize_internal_state()
     return {};
 }
 
-NonnullOwnPtr<Core::Stream::File> const& HexDocumentFile::file() const
+NonnullOwnPtr<Core::File> const& HexDocumentFile::file() const
 {
     return m_file;
 }

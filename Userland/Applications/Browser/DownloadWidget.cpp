@@ -47,7 +47,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     };
 
     {
-        auto file_or_error = Core::Stream::File::open(m_destination_path, Core::Stream::OpenMode::Write);
+        auto file_or_error = Core::File::open(m_destination_path, Core::File::OpenMode::Write);
         if (file_or_error.is_error()) {
             GUI::MessageBox::show(window(), DeprecatedString::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
             window()->close();

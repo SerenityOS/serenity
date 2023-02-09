@@ -11,6 +11,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibCore/Object.h>
 #include <LibCore/Stream.h>
 
@@ -99,7 +100,7 @@ private:
     void initialize_zero_block();
     void update_zero_block();
 
-    OwnPtr<Core::Stream::BufferedFile> m_file;
+    OwnPtr<Core::BufferedFile> m_file;
     u32 m_free_list { 0 };
     u32 m_next_block { 1 };
     u32 m_end_of_file { 1 };

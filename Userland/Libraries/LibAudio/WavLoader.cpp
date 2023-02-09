@@ -13,6 +13,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/Try.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -25,7 +26,7 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());

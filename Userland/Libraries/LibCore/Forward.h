@@ -21,6 +21,7 @@ class DeferredInvocationContext;
 class ElapsedTimer;
 class Event;
 class EventLoop;
+class File;
 class IODevice;
 class LocalServer;
 class LocalSocket;
@@ -41,9 +42,5 @@ class UDPServer;
 class UDPSocket;
 
 enum class TimerShouldFireWhenNotVisible;
-
-namespace Stream {
-class File;
-}
 
 }

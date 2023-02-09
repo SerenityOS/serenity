@@ -25,7 +25,7 @@ class HexEditorWidget final : public GUI::Widget {
     C_OBJECT(HexEditorWidget)
 public:
     virtual ~HexEditorWidget() override = default;
-    void open_file(String const& filename, NonnullOwnPtr<Core::Stream::File>);
+    void open_file(String const& filename, NonnullOwnPtr<Core::File>);
     void initialize_menubar(GUI::Window&);
     bool request_close();
 

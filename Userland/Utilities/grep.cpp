@@ -13,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -215,8 +216,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
                                user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> ErrorOr<void> {
-            auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
-            auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+            auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
+            auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
 
             for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
                 Array<u8, PAGE_SIZE> buffer;

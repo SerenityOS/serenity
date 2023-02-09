@@ -426,7 +426,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR&)
+static ErrorOr<void> generate_unicode_locale_header(Core::BufferedFile& file, CLDR&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -447,7 +447,7 @@ namespace Locale {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -673,8 +673,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(locale_names_path, "Path to cldr-localenames directory", "locale-names-path", 'l', "locale-names-path");
     args_parser.parse(arguments);
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
 
     CLDR cldr;
     TRY(parse_all_locales(core_path, locale_names_path, cldr));

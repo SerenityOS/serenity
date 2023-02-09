@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibDiff/Generator.h>
@@ -23,8 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
     parser.parse(arguments);
 
-    auto file1 = TRY(Core::Stream::File::open(filename1, Core::Stream::OpenMode::Read));
-    auto file2 = TRY(Core::Stream::File::open(filename2, Core::Stream::OpenMode::Read));
+    auto file1 = TRY(Core::File::open(filename1, Core::File::OpenMode::Read));
+    auto file2 = TRY(Core::File::open(filename2, Core::File::OpenMode::Read));
 
     bool color_output = TRY(Core::System::isatty(STDOUT_FILENO));
 

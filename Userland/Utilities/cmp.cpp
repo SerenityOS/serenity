@@ -5,20 +5,21 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-static ErrorOr<NonnullOwnPtr<Core::Stream::BufferedFile>> open_file_or_stdin(DeprecatedString const& filename)
+static ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file_or_stdin(DeprecatedString const& filename)
 {
-    OwnPtr<Core::Stream::File> file;
+    OwnPtr<Core::File> file;
     if (filename == "-") {
-        file = TRY(Core::Stream::File::adopt_fd(STDIN_FILENO, Core::Stream::OpenMode::Read));
+        file = TRY(Core::File::adopt_fd(STDIN_FILENO, Core::File::OpenMode::Read));
     } else {
-        file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+        file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
     }
-    return TRY(Core::Stream::BufferedFile::create(file.release_nonnull()));
+    return TRY(Core::BufferedFile::create(file.release_nonnull()));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

@@ -6,6 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Hash/HashManager.h>
@@ -55,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int failed_verification_count = 0;
 
     for (auto const& path : paths) {
-        auto file_or_error = Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             ++read_fail_count;
             has_error = true;
@@ -87,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 // line[0] = checksum
                 // line[1] = filename
                 StringView const filename = line[1];
-                auto file_from_filename_or_error = Core::Stream::File::open_file_or_standard_stream(filename, Core::Stream::OpenMode::Read);
+                auto file_from_filename_or_error = Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read);
                 if (file_from_filename_or_error.is_error()) {
                     ++read_fail_count;
                     warnln("{}: {}", filename, file_from_filename_or_error.release_error());

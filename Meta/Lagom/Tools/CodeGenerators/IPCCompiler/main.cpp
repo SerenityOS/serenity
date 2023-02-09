@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
@@ -69,7 +70,7 @@ static bool is_primitive_type(DeprecatedString const& type)
 static bool is_simple_type(DeprecatedString const& type)
 {
     // Small types that it makes sense just to pass by value.
-    return type.is_one_of("Gfx::Color", "Gfx::IntPoint", "Gfx::FloatPoint", "Gfx::IntSize", "Gfx::FloatSize", "Core::Stream::OpenMode");
+    return type.is_one_of("Gfx::Color", "Gfx::IntPoint", "Gfx::FloatPoint", "Gfx::IntSize", "Gfx::FloatSize", "Core::File::OpenMode");
 }
 
 static bool is_primitive_or_simple_type(DeprecatedString const& type)
@@ -796,7 +797,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto file = TRY(Core::Stream::File::open(arguments.strings[1], Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(arguments.strings[1], Core::File::OpenMode::Read));
 
     auto file_contents = TRY(file->read_until_eof());
 

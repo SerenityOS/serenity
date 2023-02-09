@@ -7,6 +7,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
@@ -25,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto file = TRY(Core::Stream::File::open("/var/run/utmp"sv, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open("/var/run/utmp"sv, Core::File::OpenMode::Read));
     auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
     if (!json.is_object()) {

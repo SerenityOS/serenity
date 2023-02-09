@@ -111,13 +111,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(DeprecatedString::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+        file_or_error = Core::File::open(DeprecatedString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         return file_or_error.release_error();
     auto file = file_or_error.release_value();
-    auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));

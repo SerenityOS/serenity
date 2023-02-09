@@ -1460,12 +1460,12 @@ void TextEditor::timer_event(Core::TimerEvent&)
 
 ErrorOr<void> TextEditor::write_to_file(StringView path)
 {
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write | Core::Stream::OpenMode::Truncate));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate));
     TRY(write_to_file(*file));
     return {};
 }
 
-ErrorOr<void> TextEditor::write_to_file(Core::Stream::File& file)
+ErrorOr<void> TextEditor::write_to_file(Core::File& file)
 {
     off_t file_size = 0;
     if (line_count() == 1 && line(0).is_empty()) {

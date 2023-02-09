@@ -24,7 +24,7 @@ void Request::stream_into(AK::Stream& stream)
 {
     VERIFY(!m_internal_stream_data);
 
-    m_internal_stream_data = make<InternalStreamData>(MUST(Core::Stream::File::adopt_fd(fd(), Core::Stream::OpenMode::Read)));
+    m_internal_stream_data = make<InternalStreamData>(MUST(Core::File::adopt_fd(fd(), Core::File::OpenMode::Read)));
     m_internal_stream_data->read_notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
 
     auto user_on_finish = move(on_finish);

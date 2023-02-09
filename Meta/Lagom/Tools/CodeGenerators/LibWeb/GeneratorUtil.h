@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <ctype.h>
 
@@ -56,7 +57,7 @@ DeprecatedString snake_casify(DeprecatedString const& dashy_name)
 
 ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)
 {
-    auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
     auto json_size = TRY(file->size());
     auto json_data = TRY(ByteBuffer::create_uninitialized(json_size));
     TRY(file->read_entire_buffer(json_data.bytes()));

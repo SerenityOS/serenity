@@ -144,13 +144,13 @@ private:
         GUI::Process::spawn_or_show_error(window(), "/bin/SystemMonitor"sv, Array { "-t", m_graph_type == GraphType::Network ? "network" : "graphs" });
     }
 
-    ErrorOr<JsonValue> get_data_as_json(OwnPtr<Core::Stream::File>& file, StringView filename)
+    ErrorOr<JsonValue> get_data_as_json(OwnPtr<Core::File>& file, StringView filename)
     {
         if (file) {
             // Seeking to the beginning causes a data refresh!
             TRY(file->seek(0, SeekMode::SetPosition));
         } else {
-            file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
+            file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
         }
 
         auto file_contents = TRY(file->read_until_eof());
@@ -231,9 +231,9 @@ private:
     static constexpr u64 const scale_unit = 8000;
     u64 m_current_scale { scale_unit };
     DeprecatedString m_tooltip;
-    OwnPtr<Core::Stream::File> m_proc_stat;
-    OwnPtr<Core::Stream::File> m_proc_mem;
-    OwnPtr<Core::Stream::File> m_proc_net;
+    OwnPtr<Core::File> m_proc_stat;
+    OwnPtr<Core::File> m_proc_mem;
+    OwnPtr<Core::File> m_proc_net;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

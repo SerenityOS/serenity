@@ -317,7 +317,7 @@ static void parse_rule(StringView rule_line, TimeZoneData& time_zone_data)
 static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& time_zone_data)
 {
     // For reference, the man page for `zic` has the best documentation of the TZDB file format.
-    auto file = TRY(open_file(time_zone_path, Core::Stream::OpenMode::Read));
+    auto file = TRY(open_file(time_zone_path, Core::File::OpenMode::Read));
     Array<u8, 1024> buffer {};
 
     Vector<TimeZoneOffset>* last_parsed_zone = nullptr;
@@ -346,7 +346,7 @@ static ErrorOr<void> parse_time_zones(StringView time_zone_path, TimeZoneData& t
     return {};
 }
 
-static ErrorOr<void> parse_time_zone_coordinates(Core::Stream::BufferedFile& file, TimeZoneData& time_zone_data)
+static ErrorOr<void> parse_time_zone_coordinates(Core::BufferedFile& file, TimeZoneData& time_zone_data)
 {
     auto parse_coordinate = [](auto coordinate) {
         VERIFY(coordinate.substring_view(0, 1).is_one_of("+"sv, "-"sv));
@@ -448,7 +448,7 @@ static DeprecatedString format_identifier(StringView owner, DeprecatedString ide
     return identifier;
 }
 
-static ErrorOr<void> generate_time_zone_data_header(Core::Stream::BufferedFile& file, TimeZoneData& time_zone_data)
+static ErrorOr<void> generate_time_zone_data_header(Core::BufferedFile& file, TimeZoneData& time_zone_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -473,7 +473,7 @@ namespace TimeZone {
     return {};
 }
 
-static ErrorOr<void> generate_time_zone_data_implementation(Core::Stream::BufferedFile& file, TimeZoneData& time_zone_data)
+static ErrorOr<void> generate_time_zone_data_implementation(Core::BufferedFile& file, TimeZoneData& time_zone_data)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -819,9 +819,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(time_zone_paths, "Paths to the time zone database files", "time-zone-paths");
     args_parser.parse(arguments);
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
-    auto time_zone_coordinates_file = TRY(open_file(time_zone_coordinates_path, Core::Stream::OpenMode::Read));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
+    auto time_zone_coordinates_file = TRY(open_file(time_zone_coordinates_path, Core::File::OpenMode::Read));
 
     TimeZoneData time_zone_data {};
     for (auto time_zone_path : time_zone_paths)

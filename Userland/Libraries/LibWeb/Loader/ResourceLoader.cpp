@@ -250,7 +250,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
             auto const fd = file_or_error.value();
 
-            auto maybe_file = Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read);
+            auto maybe_file = Core::File::adopt_fd(fd, Core::File::OpenMode::Read);
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)

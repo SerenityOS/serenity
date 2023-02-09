@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -89,31 +90,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto function = convert_sysfs_value_to_uint(function_parts[1]);
 
         auto vendor_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/vendor", dir);
-        auto vendor_id_file = Core::Stream::File::open(vendor_id_filename, Core::Stream::OpenMode::Read);
+        auto vendor_id_file = Core::File::open(vendor_id_filename, Core::File::OpenMode::Read);
         if (vendor_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", vendor_id_filename, vendor_id_file.error());
             continue;
         }
         auto device_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/device_id", dir);
-        auto device_id_file = Core::Stream::File::open(device_id_filename, Core::Stream::OpenMode::Read);
+        auto device_id_file = Core::File::open(device_id_filename, Core::File::OpenMode::Read);
         if (device_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", device_id_filename, device_id_file.error());
             continue;
         }
         auto class_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/class", dir);
-        auto class_id_file = Core::Stream::File::open(class_id_filename, Core::Stream::OpenMode::Read);
+        auto class_id_file = Core::File::open(class_id_filename, Core::File::OpenMode::Read);
         if (class_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", class_id_filename, class_id_file.error());
             continue;
         }
         auto subclass_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/subclass", dir);
-        auto subclass_id_file = Core::Stream::File::open(subclass_id_filename, Core::Stream::OpenMode::Read);
+        auto subclass_id_file = Core::File::open(subclass_id_filename, Core::File::OpenMode::Read);
         if (subclass_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", subclass_id_filename, subclass_id_file.error());
             continue;
         }
         auto revision_id_filename = DeprecatedString::formatted("/sys/bus/pci/{}/revision", dir);
-        auto revision_id_file = Core::Stream::File::open(revision_id_filename, Core::Stream::OpenMode::Read);
+        auto revision_id_file = Core::File::open(revision_id_filename, Core::File::OpenMode::Read);
         if (revision_id_file.is_error()) {
             dbgln("Error: Could not open {}: {}", revision_id_filename, revision_id_file.error());
             continue;
@@ -177,7 +178,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         for (size_t bar_index = 0; bar_index <= 5; bar_index++) {
             auto bar_value_filename = DeprecatedString::formatted("/sys/bus/pci/{}/bar{}", dir, bar_index);
-            auto bar_value_file = Core::Stream::File::open(bar_value_filename, Core::Stream::OpenMode::Read);
+            auto bar_value_file = Core::File::open(bar_value_filename, Core::File::OpenMode::Read);
             if (bar_value_file.is_error()) {
                 dbgln("Error: Could not open {}: {}", bar_value_filename, bar_value_file.error());
                 continue;

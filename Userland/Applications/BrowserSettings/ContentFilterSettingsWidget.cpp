@@ -28,8 +28,8 @@ static DeprecatedString filter_list_file_path()
 ErrorOr<void> DomainListModel::load()
 {
     // FIXME: This should be somewhat shared with Browser.
-    auto file = TRY(Core::Stream::File::open(filter_list_file_path(), Core::Stream::OpenMode::Read));
-    auto content_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto file = TRY(Core::File::open(filter_list_file_path(), Core::File::OpenMode::Read));
+    auto content_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(content_filter_list->can_read_line())) {
         auto line = TRY(content_filter_list->read_line(buffer));
@@ -50,7 +50,7 @@ ErrorOr<void> DomainListModel::save()
     for (auto const& domain : m_domain_list)
         TRY(builder.try_appendff("{}\n", domain));
 
-    auto file = TRY(Core::Stream::File::open(filter_list_file_path(), Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::File::open(filter_list_file_path(), Core::File::OpenMode::Write));
     TRY(file->write(builder.to_byte_buffer().bytes()));
     return {};
 }

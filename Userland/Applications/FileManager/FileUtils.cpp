@@ -99,8 +99,8 @@ ErrorOr<void> run_file_operation(FileOperation operation, Vector<DeprecatedStrin
         VERIFY_NOT_REACHED();
     }
 
-    auto pipe_input_file = TRY(Core::Stream::File::adopt_fd(pipe_fds[0], Core::Stream::OpenMode::Read));
-    auto buffered_pipe = TRY(Core::Stream::BufferedFile::create(move(pipe_input_file)));
+    auto pipe_input_file = TRY(Core::File::adopt_fd(pipe_fds[0], Core::File::OpenMode::Read));
+    auto buffered_pipe = TRY(Core::BufferedFile::create(move(pipe_input_file)));
 
     (void)TRY(window->set_main_widget<FileOperationProgressWidget>(operation, move(buffered_pipe), pipe_fds[0]));
     window->resize(320, 190);

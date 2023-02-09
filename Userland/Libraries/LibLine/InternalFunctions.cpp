@@ -9,6 +9,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
+#include <LibCore/File.h>
 #include <LibLine/Editor.h>
 #include <stdio.h>
 #include <sys/wait.h>
@@ -341,7 +342,7 @@ void Editor::enter_search()
         auto& search_string = search_string_result.value();
 
         // Manually cleanup the search line.
-        auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+        auto stderr_stream = Core::File::standard_error().release_value_but_fixme_should_propagate_errors();
         reposition_cursor(*stderr_stream).release_value_but_fixme_should_propagate_errors();
         auto search_metrics = actual_rendered_string_metrics(search_string, {});
         auto metrics = actual_rendered_string_metrics(search_prompt, {});
@@ -433,7 +434,7 @@ void Editor::go_end()
 void Editor::clear_screen()
 {
     warn("\033[3J\033[H\033[2J");
-    auto stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+    auto stream = Core::File::standard_error().release_value_but_fixme_should_propagate_errors();
     VT::move_absolute(1, 1, *stream).release_value_but_fixme_should_propagate_errors();
     set_origin(1, 1);
     m_refresh_needed = true;
@@ -528,7 +529,7 @@ void Editor::edit_in_external_editor()
 
     {
         auto write_fd = dup(fd);
-        auto stream = Core::Stream::File::adopt_fd(write_fd, Core::Stream::OpenMode::Write).release_value_but_fixme_should_propagate_errors();
+        auto stream = Core::File::adopt_fd(write_fd, Core::File::OpenMode::Write).release_value_but_fixme_should_propagate_errors();
         StringBuilder builder;
         builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
         auto bytes = builder.string_view().bytes();
@@ -569,7 +570,7 @@ void Editor::edit_in_external_editor()
     }
 
     {
-        auto file = Core::Stream::File::open({ file_path, strlen(file_path) }, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+        auto file = Core::File::open({ file_path, strlen(file_path) }, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
         auto contents = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
         StringView data { contents };
         while (data.ends_with('\n'))

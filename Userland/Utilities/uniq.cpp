@@ -8,11 +8,12 @@
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <unistd.h>
 
-static ErrorOr<void> write_line_content(StringView line, size_t count, bool duplicates_only, bool print_count, Core::Stream::File& outfile)
+static ErrorOr<void> write_line_content(StringView line, size_t count, bool duplicates_only, bool print_count, Core::File& outfile)
 {
     if (duplicates_only && count <= 1)
         return {};
@@ -79,8 +80,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    auto infile = TRY(Core::Stream::BufferedFile::create(TRY(Core::Stream::File::open_file_or_standard_stream(inpath, Core::Stream::OpenMode::Read))));
-    auto outfile = TRY(Core::Stream::File::open_file_or_standard_stream(outpath, Core::Stream::OpenMode::Write));
+    auto infile = TRY(Core::BufferedFile::create(TRY(Core::File::open_file_or_standard_stream(inpath, Core::File::OpenMode::Read))));
+    auto outfile = TRY(Core::File::open_file_or_standard_stream(outpath, Core::File::OpenMode::Write));
 
     size_t count = 0;
     ByteBuffer previous_buf = TRY(ByteBuffer::create_uninitialized(1024));

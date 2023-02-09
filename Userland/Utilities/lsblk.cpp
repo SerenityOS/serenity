@@ -9,6 +9,7 @@
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -38,19 +39,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     while (di.has_next()) {
         auto dir = di.next_path();
         auto command_set_filename = DeprecatedString::formatted("/sys/devices/storage/{}/command_set", dir);
-        auto command_set_file = Core::Stream::File::open(command_set_filename, Core::Stream::OpenMode::Read);
+        auto command_set_file = Core::File::open(command_set_filename, Core::File::OpenMode::Read);
         if (command_set_file.is_error()) {
             dbgln("Error: Could not open {}: {}", command_set_filename, command_set_file.error());
             continue;
         }
         auto last_lba_filename = DeprecatedString::formatted("/sys/devices/storage/{}/last_lba", dir);
-        auto last_lba_file = Core::Stream::File::open(last_lba_filename, Core::Stream::OpenMode::Read);
+        auto last_lba_file = Core::File::open(last_lba_filename, Core::File::OpenMode::Read);
         if (last_lba_file.is_error()) {
             dbgln("Error: Could not open {}: {}", last_lba_filename, last_lba_file.error());
             continue;
         }
         auto sector_size_filename = DeprecatedString::formatted("/sys/devices/storage/{}/sector_size", dir);
-        auto sector_size_file = Core::Stream::File::open(sector_size_filename, Core::Stream::OpenMode::Read);
+        auto sector_size_file = Core::File::open(sector_size_filename, Core::File::OpenMode::Read);
         if (sector_size_file.is_error()) {
             dbgln("Error: Could not open {}: {}", sector_size_filename, sector_size_file.error());
             continue;

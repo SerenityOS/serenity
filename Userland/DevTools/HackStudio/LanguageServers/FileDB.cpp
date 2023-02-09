@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullRefPtr.h>
+#include <LibCore/File.h>
 
 namespace LanguageServers {
 
@@ -74,13 +75,13 @@ DeprecatedString FileDB::to_absolute_path(DeprecatedString const& filename) cons
 
 ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_filesystem(DeprecatedString const& filename) const
 {
-    auto file = TRY(Core::Stream::File::open(to_absolute_path(filename), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(to_absolute_path(filename), Core::File::OpenMode::Read));
     return create_from_file(move(file));
 }
 
 ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_fd(int fd) const
 {
-    auto file = TRY(Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::adopt_fd(fd, Core::File::OpenMode::Read));
     return create_from_file(move(file));
 }
 
@@ -101,7 +102,7 @@ public:
 };
 static DefaultDocumentClient s_default_document_client;
 
-ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_file(NonnullOwnPtr<Core::Stream::File> file) const
+ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_file(NonnullOwnPtr<Core::File> file) const
 {
     auto content = TRY(file->read_until_eof());
     auto document = GUI::TextDocument::create(&s_default_document_client);

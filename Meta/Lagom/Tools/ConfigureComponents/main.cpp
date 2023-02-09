@@ -192,7 +192,7 @@ static Result<Vector<DeprecatedString>, int> run_whiptail(WhiptailMode mode, Vec
         return return_code;
     }
 
-    auto file_or_error = Core::Stream::File::adopt_fd(read_fd, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::adopt_fd(read_fd, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
         warnln("\e[31mError:\e[0m Could not adopt file descriptor for reading: {}", file_or_error.error());
         return -1;

@@ -50,7 +50,7 @@ bool Workbook::set_filename(DeprecatedString const& filename)
     return true;
 }
 
-ErrorOr<void, DeprecatedString> Workbook::open_file(String const& filename, Core::Stream::File& file)
+ErrorOr<void, DeprecatedString> Workbook::open_file(String const& filename, Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
@@ -62,7 +62,7 @@ ErrorOr<void, DeprecatedString> Workbook::open_file(String const& filename, Core
     return {};
 }
 
-ErrorOr<void> Workbook::write_to_file(String const& filename, Core::Stream::File& stream)
+ErrorOr<void> Workbook::write_to_file(String const& filename, Core::File& stream)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 
@@ -74,7 +74,7 @@ ErrorOr<void> Workbook::write_to_file(String const& filename, Core::Stream::File
     return {};
 }
 
-ErrorOr<bool, DeprecatedString> Workbook::import_file(String const& filename, Core::Stream::File& file)
+ErrorOr<bool, DeprecatedString> Workbook::import_file(String const& filename, Core::File& file)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
 

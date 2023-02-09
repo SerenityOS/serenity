@@ -550,7 +550,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Dep
 
         filepath = DeprecatedString::formatted("{}{}", filepath, filename);
 
-        auto file_or_error = Core::Stream::File::open(filepath, Core::Stream::OpenMode::Write | Core::Stream::OpenMode::MustBeNew);
+        auto file_or_error = Core::File::open(filepath, Core::File::OpenMode::Write | Core::File::OpenMode::MustBeNew);
         if (file_or_error.is_error()) {
             GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to create '{}': {}", filepath, file_or_error.error()));
             return;
@@ -1791,7 +1791,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_config
             if (maybe_error.is_error() && maybe_error.error().code() != EEXIST)
                 return maybe_error.release_error();
 
-            auto file = TRY(Core::Stream::File::open(absolute_config_file_path, Core::Stream::OpenMode::Write));
+            auto file = TRY(Core::File::open(absolute_config_file_path, Core::File::OpenMode::Write));
             TRY(file->write_entire_buffer(
                 "{\n"
                 "    \"build_command\": \"your build command here\",\n"

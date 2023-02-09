@@ -16,6 +16,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
@@ -165,7 +166,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         return false;
     }
 
-    auto stream = TRY(Core::Stream::File::open(real_path.bytes_as_string_view(), Core::Stream::OpenMode::Read));
+    auto stream = TRY(Core::File::open(real_path.bytes_as_string_view(), Core::File::OpenMode::Read));
 
     auto const info = ContentInfo {
         .type = TRY(String::from_deprecated_string(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),

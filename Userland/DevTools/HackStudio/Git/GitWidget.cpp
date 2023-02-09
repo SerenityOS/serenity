@@ -155,7 +155,7 @@ void GitWidget::set_view_diff_callback(ViewDiffCallback callback)
 void GitWidget::show_diff(DeprecatedString const& file_path)
 {
     if (!m_git_repo->is_tracked(file_path)) {
-        auto file = Core::Stream::File::open(file_path, Core::Stream::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
+        auto file = Core::File::open(file_path, Core::File::OpenMode::Read).release_value_but_fixme_should_propagate_errors();
         auto content = file->read_until_eof().release_value_but_fixme_should_propagate_errors();
         m_view_diff_callback("", Diff::generate_only_additions(content));
         return;

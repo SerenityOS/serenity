@@ -6,6 +6,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
@@ -107,7 +108,7 @@ private:
     {
         StringBuilder adapter_info;
 
-        auto file_or_error = Core::Stream::File::open("/sys/kernel/net/adapters"sv, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open("/sys/kernel/net/adapters"sv, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             dbgln("Error: Could not open /sys/kernel/net/adapters: {}", file_or_error.error());
             return "";

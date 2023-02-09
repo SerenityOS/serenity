@@ -47,8 +47,8 @@ ErrorOr<void> Heap::open()
     if (file_size > 0)
         m_next_block = m_end_of_file = file_size / BLOCKSIZE;
 
-    auto file = TRY(Core::Stream::File::open(name(), Core::Stream::OpenMode::ReadWrite));
-    m_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto file = TRY(Core::File::open(name(), Core::File::OpenMode::ReadWrite));
+    m_file = TRY(Core::BufferedFile::create(move(file)));
 
     if (file_size > 0) {
         if (auto error_maybe = read_zero_block(); error_maybe.is_error()) {

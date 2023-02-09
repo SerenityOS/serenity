@@ -348,7 +348,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }
 
-void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
+void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
     auto maybe_error = try_open_file(path, move(file));
     if (maybe_error.is_error()) {
@@ -359,7 +359,7 @@ void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::Stream::Fil
     }
 }
 
-PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
+PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
     window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", path));
 

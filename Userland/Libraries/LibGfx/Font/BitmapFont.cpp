@@ -9,6 +9,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
@@ -257,7 +258,7 @@ ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
     memcpy(header.name, m_name.characters(), min(m_name.length(), sizeof(header.name) - 1));
     memcpy(header.family, m_family.characters(), min(m_family.length(), sizeof(header.family) - 1));
 
-    auto stream = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write));
+    auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     TRY(stream->write_entire_buffer({ &header, sizeof(header) }));
     TRY(stream->write_entire_buffer({ m_range_mask, m_range_mask_size }));

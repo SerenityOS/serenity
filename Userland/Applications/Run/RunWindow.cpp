@@ -170,8 +170,8 @@ DeprecatedString RunWindow::history_file_path()
 ErrorOr<void> RunWindow::load_history()
 {
     m_path_history.clear();
-    auto file = TRY(Core::Stream::File::open(history_file_path(), Core::Stream::OpenMode::Read));
-    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto file = TRY(Core::File::open(history_file_path(), Core::File::OpenMode::Read));
+    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> line_buffer;
 
     while (!buffered_file->is_eof()) {
@@ -184,7 +184,7 @@ ErrorOr<void> RunWindow::load_history()
 
 ErrorOr<void> RunWindow::save_history()
 {
-    auto file = TRY(Core::Stream::File::open(history_file_path(), Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::File::open(history_file_path(), Core::File::OpenMode::Write));
 
     // Write the first 25 items of history
     for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)

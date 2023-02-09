@@ -250,12 +250,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.has_value()) {
-            auto result = FileSystemAccessClient::Client::the().request_file(&window, *m_path, Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().request_file(&window, *m_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value().filename(), result.value().release_stream());
         } else {
-            auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value().filename(), result.value().release_stream());
@@ -264,7 +264,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_action));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+        auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
         if (result.is_error())
             return;
         save_to_file(result.value().filename(), result.value().release_stream());
@@ -315,7 +315,7 @@ void MainWidget::set_path(DeprecatedString path)
     update_title();
 }
 
-void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     auto theme = Core::ConfigFile::open(filename.to_deprecated_string(), move(file)).release_value_but_fixme_should_propagate_errors();
 
@@ -601,7 +601,7 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     path_input.set_text(*result);
 }
 
-ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     auto config_file = TRY(Core::ConfigFile::open(filename.to_deprecated_string(), move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
@@ -669,7 +669,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
 

@@ -9,6 +9,7 @@
 #include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -112,8 +113,8 @@ static ErrorOr<void> mount_all()
 
     bool all_ok = true;
     auto process_fstab_entries = [&](StringView path) -> ErrorOr<void> {
-        auto file_unbuffered = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-        auto file = TRY(Core::Stream::BufferedFile::create(move(file_unbuffered)));
+        auto file_unbuffered = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+        auto file = TRY(Core::BufferedFile::create(move(file_unbuffered)));
 
         while (TRY(file->can_read_line())) {
             auto line = TRY(file->read_line(buffer));
@@ -148,7 +149,7 @@ static ErrorOr<void> mount_all()
 static ErrorOr<void> print_mounts()
 {
     // Output info about currently mounted filesystems.
-    auto df = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
+    auto df = TRY(Core::File::open("/sys/kernel/df"sv, Core::File::OpenMode::Read));
 
     auto content = TRY(df->read_until_eof());
     auto json = TRY(JsonValue::from_string(content));

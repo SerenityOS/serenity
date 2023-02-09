@@ -8,6 +8,7 @@
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -26,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/vm", pid), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(DeprecatedString::formatted("/proc/{}/vm", pid), Core::File::OpenMode::Read));
 
     outln("{}:", pid);
 

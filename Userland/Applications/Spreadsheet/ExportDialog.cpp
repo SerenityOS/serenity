@@ -178,7 +178,7 @@ void CSVExportDialogPage::update_preview()
         m_data_preview_text_editor->set_text(DeprecatedString::formatted("Cannot update preview: {}", maybe_error.error()));
 }
 
-ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::Stream::File& file, DeprecatedString filename, Workbook& workbook)
+ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, DeprecatedString filename, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(GUI::Application::the()->active_window());
     wizard->set_title("File Export Wizard");

@@ -8,6 +8,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -116,17 +117,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto command = TRY(parse_command(command_input));
 
-    Optional<NonnullOwnPtr<Core::Stream::File>> maybe_output_file;
+    Optional<NonnullOwnPtr<Core::File>> maybe_output_file;
     if (command.output_filepath.has_value())
-        maybe_output_file = TRY(Core::Stream::File::open_file_or_standard_stream(command.output_filepath.release_value(), Core::Stream::OpenMode::Write));
+        maybe_output_file = TRY(Core::File::open_file_or_standard_stream(command.output_filepath.release_value(), Core::File::OpenMode::Write));
 
     if (filepaths.is_empty())
         filepaths = { "-"sv };
 
     Array<u8, PAGE_SIZE> buffer {};
     for (auto const& filepath : filepaths) {
-        auto file_unbuffered = TRY(Core::Stream::File::open_file_or_standard_stream(filepath, Core::Stream::OpenMode::Read));
-        auto file = TRY(Core::Stream::BufferedFile::create(move(file_unbuffered)));
+        auto file_unbuffered = TRY(Core::File::open_file_or_standard_stream(filepath, Core::File::OpenMode::Read));
+        auto file = TRY(Core::BufferedFile::create(move(file_unbuffered)));
 
         while (!file->is_eof()) {
             auto line = TRY(file->read_line(buffer));

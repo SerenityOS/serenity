@@ -12,6 +12,7 @@
 #include <AK/QuickSort.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -92,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln();
 
     if (!flag_set && !flag_delete) {
-        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/arp"sv, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open("/sys/kernel/net/arp"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 
