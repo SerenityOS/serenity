@@ -19,15 +19,15 @@
 class TrackManager;
 class MainWidget;
 
-class KnobsWidget final : public GUI::Frame {
-    C_OBJECT(KnobsWidget)
+class TrackControlsWidget final : public GUI::Frame {
+    C_OBJECT(TrackControlsWidget)
 public:
-    virtual ~KnobsWidget() override = default;
+    virtual ~TrackControlsWidget() override = default;
 
     void update_knobs();
 
 private:
-    KnobsWidget(TrackManager&, MainWidget&);
+    TrackControlsWidget(TrackManager&, MainWidget&);
 
     TrackManager& m_track_manager;
     MainWidget& m_main_widget;

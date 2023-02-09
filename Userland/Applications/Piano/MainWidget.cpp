@@ -8,10 +8,10 @@
 
 #include "MainWidget.h"
 #include "KeysWidget.h"
-#include "KnobsWidget.h"
 #include "PlayerWidget.h"
 #include "RollWidget.h"
 #include "SamplerWidget.h"
+#include "TrackControlsWidget.h"
 #include "TrackManager.h"
 #include "WaveWidget.h"
 #include <LibGUI/Action.h>
@@ -55,7 +55,7 @@ ErrorOr<void> MainWidget::initialize()
 
     m_keys_widget = TRY(m_keys_and_knobs_container->try_add<KeysWidget>(m_track_manager.keyboard()));
 
-    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<KnobsWidget>(m_track_manager, *this));
+    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<TrackControlsWidget>(m_track_manager, *this));
 
     m_roll_widget->set_keys_widget(m_keys_widget);
 

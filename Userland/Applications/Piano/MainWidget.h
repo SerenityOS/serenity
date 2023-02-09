@@ -19,7 +19,7 @@ class WaveWidget;
 class RollWidget;
 class SamplerWidget;
 class KeysWidget;
-class KnobsWidget;
+class TrackControlsWidget;
 class PlayerWidget;
 
 class MainWidget final : public GUI::Widget {
@@ -57,7 +57,7 @@ private:
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Widget> m_keys_and_knobs_container;
     RefPtr<KeysWidget> m_keys_widget;
-    RefPtr<KnobsWidget> m_knobs_widget;
+    RefPtr<TrackControlsWidget> m_knobs_widget;
     RefPtr<PlayerWidget> m_player_widget;
 
     // Not the piano keys, but the computer keyboard keys!
