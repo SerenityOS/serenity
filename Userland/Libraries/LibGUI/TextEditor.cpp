@@ -395,9 +395,9 @@ Gfx::IntRect TextEditor::gutter_rect_in_inner_coordinates() const
 Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
 {
     return {
-        m_horizontal_content_padding + (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + 1) : 0),
+        m_horizontal_content_padding + ruler_width() + gutter_width(),
         0,
-        frame_inner_rect().width() - (m_horizontal_content_padding * 2) - width_occupied_by_vertical_scrollbar() - ruler_width(),
+        frame_inner_rect().width() - (m_horizontal_content_padding * 2) - width_occupied_by_vertical_scrollbar() - ruler_width() - gutter_width(),
         frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar()
     };
 }
