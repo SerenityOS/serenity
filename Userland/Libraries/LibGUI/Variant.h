@@ -204,6 +204,7 @@ public:
     {
         return visit(
             [](Empty) -> DeprecatedString { return "[null]"; },
+            [](DeprecatedString v) { return v; },
             [](Gfx::TextAlignment v) { return DeprecatedString::formatted("Gfx::TextAlignment::{}", Gfx::to_string(v)); },
             [](Gfx::ColorRole v) { return DeprecatedString::formatted("Gfx::ColorRole::{}", Gfx::to_string(v)); },
             [](Gfx::AlignmentRole v) { return DeprecatedString::formatted("Gfx::AlignmentRole::{}", Gfx::to_string(v)); },
