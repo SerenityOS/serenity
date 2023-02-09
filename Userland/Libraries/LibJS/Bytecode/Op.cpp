@@ -150,7 +150,7 @@ static ThrowCompletionOr<Value> not_(VM&, Value value)
 
 static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 {
-    return Value(PrimitiveString::create(vm, value.typeof()));
+    return MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
 }
 
 #define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                   \
@@ -1035,7 +1035,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     // 2. If val is a Reference Record, then
     //    a. If IsUnresolvableReference(val) is true, return "undefined".
     if (reference.is_unresolvable()) {
-        interpreter.accumulator() = PrimitiveString::create(vm, "undefined"sv);
+        interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "undefined"sv));
         return {};
     }
 
@@ -1044,7 +1044,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 
     // 4. NOTE: This step is replaced in section B.3.6.3.
     // 5. Return a String according to Table 41.
-    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
+    interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
     return {};
 }
 

@@ -883,7 +883,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
     if (!is<RegExpObject>(regexp_object)) {
         // a. If SameValue(R, %RegExp.prototype%) is true, return "(?:)".
         if (same_value(regexp_object, realm.intrinsics().regexp_prototype()))
-            return PrimitiveString::create(vm, "(?:)");
+            return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "(?:)"sv));
 
         // b. Otherwise, throw a TypeError exception.
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp");
