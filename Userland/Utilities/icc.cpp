@@ -126,7 +126,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         tag_data_to_first_signature.set(tag_data, tag_signature);
 
-        if (tag_data->type() == Gfx::ICC::CicpTagData::Type) {
+        if (tag_data->type() == Gfx::ICC::ChromaticityTagData::Type) {
+            auto& chromaticity = static_cast<Gfx::ICC::ChromaticityTagData&>(*tag_data);
+            outln("    phosphor or colorant type: {}", Gfx::ICC::ChromaticityTagData::phosphor_or_colorant_type_name(chromaticity.phosphor_or_colorant_type()));
+            for (auto const& xy : chromaticity.xy_coordinates())
+                outln("    x, y: {}, {}", xy.x, xy.y);
+        } else if (tag_data->type() == Gfx::ICC::CicpTagData::Type) {
             auto& cicp = static_cast<Gfx::ICC::CicpTagData&>(*tag_data);
             outln("    color primaries: {} - {}", cicp.color_primaries(),
                 Video::color_primaries_to_string((Video::ColorPrimaries)cicp.color_primaries()));
