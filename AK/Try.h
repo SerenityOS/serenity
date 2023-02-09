@@ -25,7 +25,7 @@
     ({                                                                                               \
         /* Ignore -Wshadow to allow nesting the macro. */                                            \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
-            auto _temporary_result = (expression));                                                  \
+            auto&& _temporary_result = (expression));                                                \
         static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
             "Do not return a reference from a fallible expression");                                 \
         if (_temporary_result.is_error()) [[unlikely]]                                               \
@@ -37,7 +37,7 @@
     ({                                                                                               \
         /* Ignore -Wshadow to allow nesting the macro. */                                            \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
-            auto _temporary_result = (expression));                                                  \
+            auto&& _temporary_result = (expression));                                                \
         static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
             "Do not return a reference from a fallible expression");                                 \
         VERIFY(!_temporary_result.is_error());                                                       \

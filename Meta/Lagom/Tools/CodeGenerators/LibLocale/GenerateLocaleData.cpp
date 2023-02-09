@@ -233,7 +233,7 @@ struct CLDR {
 // with locales such as "en-GB-oed" that are canonically invalid locale IDs.
 #define TRY_OR_DISCARD(expression)                                                                   \
     ({                                                                                               \
-        auto _temporary_result = (expression);                                                       \
+        auto&& _temporary_result = (expression);                                                     \
         if (_temporary_result.is_error())                                                            \
             return;                                                                                  \
         static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \

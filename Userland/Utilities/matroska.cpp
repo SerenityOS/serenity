@@ -12,7 +12,7 @@
 
 #define TRY_PARSE(expression)                                                                        \
     ({                                                                                               \
-        auto _temporary_result = ((expression));                                                     \
+        auto&& _temporary_result = ((expression));                                                   \
         if (_temporary_result.is_error()) [[unlikely]] {                                             \
             outln("Encountered a parsing error: {}", _temporary_result.error().string_literal());    \
             return Error::from_string_literal("Failed to parse :(");                                 \
