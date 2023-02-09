@@ -130,10 +130,10 @@ void BackgroundSettingsWidget::load_current_settings()
         m_monitor_widget->set_wallpaper(selected_wallpaper);
     }
 
-    auto mode = ws_config->read_entry("Background", "Mode", "center");
+    auto mode = ws_config->read_entry("Background", "Mode", "Center");
     if (!m_modes.contains_slow(mode)) {
-        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'center'", mode);
-        mode = "center";
+        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'Center'", mode);
+        mode = "Center";
     }
     m_monitor_widget->set_wallpaper_mode(mode);
     m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0), GUI::AllowCallback::No);
