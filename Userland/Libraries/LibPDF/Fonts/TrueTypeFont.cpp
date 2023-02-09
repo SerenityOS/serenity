@@ -19,13 +19,13 @@ PDFErrorOr<PDFFont::CommonData> TrueTypeFont::parse_data(Document* document, Non
     TRY(data.load_from_dict(document, dict, font_size));
 
     if (!data.is_standard_font) {
-        auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
-        if (!descriptor->contains(CommonNames::FontFile2))
-            return data;
-
-        auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
-        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
-        data.font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, font_size, font_size));
+        auto descriptor = TRY(dict->get_dict(document, CommonNames::FontDescriptor));
+        if (descriptor->contains(CommonNames::FontFile2)) {
+            auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
+            auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
+            float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
+            data.font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
+        }
     }
 
     return data;
