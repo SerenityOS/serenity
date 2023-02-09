@@ -334,7 +334,7 @@ void Plan9FS::thread_main()
             MutexLocker locker(m_lock);
 
             for (auto& it : m_completions) {
-                it.value->result = result;
+                it.value->result = Error::copy(result.error());
                 it.value->completed = true;
             }
             m_completions.clear();
