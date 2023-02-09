@@ -194,7 +194,7 @@ void SheetModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& valu
 void SheetModel::update()
 {
     m_sheet->update();
-    did_update(UpdateFlag::DontInvalidateIndices);
+    did_update(UpdateFlag::DontInvalidateIndices | Model::UpdateFlag::DontResizeColumns);
 }
 
 CellsUndoCommand::CellsUndoCommand(Vector<CellChange> cell_changes)
