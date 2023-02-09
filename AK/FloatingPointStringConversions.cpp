@@ -434,8 +434,7 @@ constexpr static u128 compute_power_of_five(i64 exponent)
             base *= 5u;
         }
 
-        auto z = u4096::my_size() * 8
-            - base.clz();
+        auto z = 4096 - base.clz();
 
         auto b = z + 127;
         u4096 base2 { 1u };
@@ -457,8 +456,7 @@ constexpr static u128 compute_power_of_five(i64 exponent)
         base *= 5u;
     }
 
-    auto z = u4096::my_size() * 8
-        - base.clz();
+    auto z = 4096 - base.clz();
 
     auto b = 2 * z + 128;
 

@@ -112,7 +112,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     [[maybe_unused]] u128 md5_checksum;
     VERIFY(streaminfo_data.is_aligned_to_byte_boundary());
     auto md5_bytes_read = LOADER_TRY(streaminfo_data.read(md5_checksum.bytes()));
-    FLAC_VERIFY(md5_bytes_read.size() == md5_checksum.my_size(), LoaderError::Category::IO, "MD5 Checksum size");
+    FLAC_VERIFY(md5_bytes_read.size() == sizeof(md5_checksum), LoaderError::Category::IO, "MD5 Checksum size");
     md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
     // Parse other blocks
