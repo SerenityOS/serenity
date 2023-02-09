@@ -21,10 +21,10 @@
 namespace AK {
 namespace Detail {
 template<typename T>
-constexpr bool CanBePlacedInErrorFormattedStringBuffer = IsOneOf<T, u8, u16, u32, u64, i8, i16, i32, i64, StringView>;
+constexpr bool CanBePlacedInErrorFormattedStringBuffer = IsSame<T, StringView> || IsIntegral<T>;
 
 template<typename... Ts>
-consteval size_t error_formatted_string_buffer_encoded_size()
+constexpr size_t error_formatted_string_buffer_encoded_size()
 {
     return ((sizeof(Ts) + 1) + ...);
 }
@@ -35,13 +35,7 @@ consteval size_t error_formatted_string_buffer_encoded_size()
 ///   FormatBufferEntry ::= Type [u8 * Type.s]
 ///   FormatBuffer ::= FormatBufferEntry Type::Nothing
 template<typename FormatBuffer, typename... Ts>
-// FIXME: clang-format indents this excessively, remove this when it no longer does that.
-// clang-format off
-constexpr bool FitsInErrorFormattedStringBuffer = requires {
-    requires(Detail::CanBePlacedInErrorFormattedStringBuffer<Ts> && ...);
-    requires Detail::error_formatted_string_buffer_encoded_size<Ts...>() <= sizeof(FormatBuffer) - sizeof(u8);
-};
-// clang-format on
+concept FitsInErrorFormattedStringBuffer = requires { requires(Detail::CanBePlacedInErrorFormattedStringBuffer<Ts> && ...); requires(Detail::error_formatted_string_buffer_encoded_size<Ts...>() <= sizeof(FormatBuffer) - sizeof(u8)); };
 
 class Error {
 private:
@@ -210,21 +204,21 @@ private:
                 VERIFY_NOT_REACHED();
 
             FormattedString::Type tag;
-            if constexpr (IsSame<T, i8>)
+            if constexpr (sizeof(T) == 1 && IsSigned<T>)
                 tag = FormattedString::Type::I8;
-            else if constexpr (IsSame<T, u8>)
+            else if constexpr (sizeof(T) == 1 && IsUnsigned<T>)
                 tag = FormattedString::Type::U8;
-            else if constexpr (IsSame<T, i16>)
+            else if constexpr (sizeof(T) == 2 && IsSigned<T>)
                 tag = FormattedString::Type::I16;
-            else if constexpr (IsSame<T, u16>)
+            else if constexpr (sizeof(T) == 2 && IsUnsigned<T>)
                 tag = FormattedString::Type::U16;
-            else if constexpr (IsSame<T, i32>)
+            else if constexpr (sizeof(T) == 4 && IsSigned<T>)
                 tag = FormattedString::Type::I32;
-            else if constexpr (IsSame<T, u32>)
+            else if constexpr (sizeof(T) == 4 && IsUnsigned<T>)
                 tag = FormattedString::Type::U32;
-            else if constexpr (IsSame<T, i64>)
+            else if constexpr (sizeof(T) == 8 && IsSigned<T>)
                 tag = FormattedString::Type::I64;
-            else if constexpr (IsSame<T, u64>)
+            else if constexpr (sizeof(T) == 8 && IsUnsigned<T>)
                 tag = FormattedString::Type::U64;
             else if constexpr (IsSame<T, StringView>)
                 tag = FormattedString::Type::StringView;
