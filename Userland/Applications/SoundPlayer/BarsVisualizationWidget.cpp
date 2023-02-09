@@ -75,7 +75,7 @@ void BarsVisualizationWidget::render(GUI::PaintEvent& event, FixedArray<float> c
     int const top_vertical_margin = 15;
     int const pixels_inbetween_groups = frame_inner_rect().width() > 350 ? 5 : 2;
     int const pixel_per_group_width = (frame_inner_rect().width() - horizontal_margin * 2 - pixels_inbetween_groups * (bar_count - 1)) / bar_count;
-    int const max_height = frame_inner_rect().height() - top_vertical_margin;
+    int const max_height = AK::max(0, frame_inner_rect().height() - top_vertical_margin);
     int current_xpos = horizontal_margin;
     for (size_t g = 0; g < bar_count; g++) {
         m_gfx_falling_bars[g] = AK::min(clamp(max_height - static_cast<int>(groups[g] * static_cast<float>(max_height) * 0.8f), 0, max_height), m_gfx_falling_bars[g]);
