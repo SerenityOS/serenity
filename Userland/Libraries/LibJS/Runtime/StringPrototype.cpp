@@ -494,7 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
-    auto rx = TRY(regexp_create(vm, regexp, PrimitiveString::create(vm, "g")));
+    auto rx = TRY(regexp_create(vm, regexp, PrimitiveString::create(vm, String::from_utf8_short_string("g"sv))));
     return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_match_all(), PrimitiveString::create(vm, move(string))));
 }
 
