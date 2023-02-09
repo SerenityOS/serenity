@@ -1529,50 +1529,131 @@ public:
 
     void multiply_with_power_of_5(u32 exponent)
     {
-        // FIXME: We might be able to store a bigger power of 5 but this would
-        //        require a wide multiply, so perhaps using u4096 would be
-        //        better to get wide multiply and not duplicate logic.
-        static constexpr Array<u64, 28> power_of_5 = {
-            1ul,
-            5ul,
-            25ul,
-            125ul,
-            625ul,
-            3125ul,
-            15625ul,
-            78125ul,
-            390625ul,
-            1953125ul,
-            9765625ul,
-            48828125ul,
-            244140625ul,
-            1220703125ul,
-            6103515625ul,
-            30517578125ul,
-            152587890625ul,
-            762939453125ul,
-            3814697265625ul,
-            19073486328125ul,
-            95367431640625ul,
-            476837158203125ul,
-            2384185791015625ul,
-            11920928955078125ul,
-            59604644775390625ul,
-            298023223876953125ul,
-            1490116119384765625ul,
-            7450580596923828125ul,
-        };
+        // FIXME: Using UFixedBigInt here does not feel right. We need to nicely (without
+        //        reinterpret_cast and ifs) convert u64 to NativeWord (if NativeWord == u32)
+        //        and one of UFixedBigInt constructors happens to do this exact job.
+        //
+        // To calculate this lookup table, we compute 5 ** (2 ** i) for all i \in [0; 10], split
+        // numbers into 64-bit words and concatenate the results, writing corresponding sizes to
+        // `sizes` array in `power_of_5` lambda.
+        static constexpr UFixedBigInt<82 * 64> power_of_5_coefficients = { {
+            5ull,
+            25ull,
+            625ull,
+            390625ull,
+            152587890625ull,
+            3273344365508751233ull,
+            1262ull,
+            7942358959831785217ull,
+            16807427164405733357ull,
+            1593091ull,
+            279109966635548161ull,
+            2554917779393558781ull,
+            14124656261812188652ull,
+            11976055582626787546ull,
+            2537941837315ull,
+            13750482914757213185ull,
+            1302999927698857842ull,
+            14936872543252795590ull,
+            2788415840139466767ull,
+            2095640732773017264ull,
+            7205570348933370714ull,
+            7348167152523113408ull,
+            9285516396840364274ull,
+            6907659600622710236ull,
+            349175ull,
+            8643096425819600897ull,
+            6743743997439985372ull,
+            14059704609098336919ull,
+            10729359125898331411ull,
+            4933048501514368705ull,
+            12258131603170554683ull,
+            2172371001088594721ull,
+            13569903330219142946ull,
+            13809142207969578845ull,
+            16716360519037769646ull,
+            9631256923806107285ull,
+            12866941232305103710ull,
+            1397931361048440292ull,
+            7619627737732970332ull,
+            12725409486282665900ull,
+            11703051443360963910ull,
+            9947078370803086083ull,
+            13966287901448440471ull,
+            121923442132ull,
+            17679772531488845825ull,
+            2216509366347768155ull,
+            1568689219195129479ull,
+            5511594616325588277ull,
+            1067709417009240089ull,
+            9070650952098657518ull,
+            11515285870634858015ull,
+            2539561553659505564ull,
+            17604889300961091799ull,
+            14511540856854204724ull,
+            12099083339557485471ull,
+            7115240299237943815ull,
+            313979240050606788ull,
+            10004784664717172195ull,
+            15570268847930131473ull,
+            10359715202835930803ull,
+            17685054012115162812ull,
+            13183273382855797757ull,
+            7743260039872919062ull,
+            9284593436392572926ull,
+            11105921222066415013ull,
+            18198799323400703846ull,
+            16314988383739458320ull,
+            4387527177871570570ull,
+            8476708682254672590ull,
+            4925096874831034057ull,
+            14075687868072027455ull,
+            112866656203221926ull,
+            9852830467773230418ull,
+            25755239915196746ull,
+            2201493076310172510ull,
+            8342165458688466438ull,
+            13954006576066379050ull,
+            15193819059903295636ull,
+            12565616718911389531ull,
+            3815854855847885129ull,
+            15696762163583540628ull,
+            805ull,
+        } };
 
-        static constexpr u32 max_step = power_of_5.size() - 1;
-        static constexpr u64 max_power = power_of_5[max_step];
+        // power_of_5[i] = 5 ** (2 ** i)
+        static constexpr auto power_of_5 = [&] {
+            constexpr size_t powers_count = 11;
 
-        while (exponent >= max_step) {
-            multiply_with_small(max_power);
-            exponent -= max_step;
+            Array<UnsignedStorageReadonlySpan, powers_count> result;
+            Array<size_t, powers_count> sizes = { 1, 1, 1, 1, 1, 2, 3, 5, 10, 19, 38 };
+
+            size_t offset = 0;
+            for (size_t i = 0; i < powers_count; ++i) {
+                if constexpr (SameAs<NativeWord, u32>)
+                    sizes[i] *= 2;
+                result[i] = UnsignedStorageReadonlySpan(power_of_5_coefficients.span().slice(offset, sizes[i]));
+                offset += sizes[i];
+            }
+
+            return result;
+        }();
+
+        VERIFY(exponent < (1 << power_of_5.size()));
+
+        // Binary exponentiation
+        for (size_t i = 0; i < power_of_5.size(); ++i) {
+            if (exponent >> i & 1) {
+                if (power_of_5[i].size() == 1) {
+                    multiply_with_small(power_of_5[i][0]);
+                } else {
+                    auto copy = *this;
+                    StorageOperations::baseline_mul(copy.get_storage(), power_of_5[i],
+                        get_storage(m_used_length + power_of_5[i].size()), g_null_allocator);
+                    trim_last_word_if_zero();
+                }
+            }
         }
-
-        if (exponent > 0)
-            multiply_with_small(power_of_5[exponent]);
     }
 
     void multiply_with_power_of_2(u32 exponent)
