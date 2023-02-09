@@ -21,7 +21,7 @@ ThrowCompletionOr<void> AggregateErrorPrototype::initialize(Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.name, PrimitiveString::create(vm, "AggregateError"), attr);
-    define_direct_property(vm.names.message, PrimitiveString::create(vm, ""), attr);
+    define_direct_property(vm.names.message, PrimitiveString::create(vm, String {}), attr);
 
     return {};
 }

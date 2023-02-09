@@ -622,7 +622,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
         else if (specifier == "%c"sv) {
             // NOTE: This has no spec yet. `%c` specifiers treat the argument as CSS styling for the log message.
             add_css_style_to_current_message(TRY(current.to_deprecated_string(vm)));
-            converted = PrimitiveString::create(vm, "");
+            converted = PrimitiveString::create(vm, String {});
         }
 
         // 7. If any of the previous steps set converted, replace specifier in target with converted.

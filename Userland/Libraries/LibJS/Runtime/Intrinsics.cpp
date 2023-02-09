@@ -232,7 +232,7 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
         },
         0, "", &realm);
     m_throw_type_error_function->define_direct_property(vm.names.length, Value(0), 0);
-    m_throw_type_error_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, ""), 0);
+    m_throw_type_error_function->define_direct_property(vm.names.name, PrimitiveString::create(vm, String {}), 0);
     MUST(m_throw_type_error_function->internal_prevent_extensions());
 
     initialize_constructor(vm, vm.names.Error, *m_error_constructor, m_error_prototype);
