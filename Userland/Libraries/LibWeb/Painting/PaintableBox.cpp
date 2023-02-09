@@ -8,6 +8,7 @@
 #include <AK/GenericShorthands.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -511,14 +512,30 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
 
-        painter.draw_text_run(baseline_start.to_type<int>(), view, fragment.layout_node().font(), text_node.computed_values().color());
+        auto& font = fragment.layout_node().font();
+        auto scaled_font = [&]() -> RefPtr<Gfx::Font> {
+            auto device_font_pt_size = context.enclosing_device_pixels(font.presentation_size());
+            FontSelector font_selector = { font.family(), static_cast<float>(device_font_pt_size.value()), font.weight(), font.width(), font.slope() };
+            if (auto cached_font = FontCache::the().get(font_selector)) {
+                return cached_font;
+            }
+
+            if (auto font_with_device_pt_size = font.with_size(static_cast<float>(device_font_pt_size.value()))) {
+                FontCache::the().set(font_selector, *font_with_device_pt_size);
+                return font_with_device_pt_size;
+            }
+
+            return {};
+        }();
+
+        painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font ? *scaled_font : font, text_node.computed_values().color());
 
         auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
         if (!selection_rect.is_empty()) {
             painter.fill_rect(selection_rect, context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(selection_rect);
-            painter.draw_text_run(baseline_start.to_type<int>(), view, fragment.layout_node().font(), context.palette().selection_text());
+            painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font ? *scaled_font : font, context.palette().selection_text());
         }
 
         paint_text_decoration(context, painter, text_node, fragment);
