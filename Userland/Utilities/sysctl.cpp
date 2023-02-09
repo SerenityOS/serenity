@@ -8,7 +8,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 
 static bool s_set_variable = false;

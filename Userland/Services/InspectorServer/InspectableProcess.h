@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include <LibCore/Stream.h>
+#include <LibCore/Socket.h>
+#include <sys/types.h>
 
 namespace InspectorServer {
 

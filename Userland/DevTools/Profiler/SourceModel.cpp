@@ -7,7 +7,6 @@
 #include "SourceModel.h"
 #include "Gradient.h"
 #include "Profile.h"
-#include <LibCore/Stream.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibSymbolication/Symbolication.h>

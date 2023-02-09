@@ -5,8 +5,8 @@
  */
 
 #include "HexDocument.h"
+#include <AK/TypeCasts.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 void HexDocument::set(size_t position, u8 value)
 {

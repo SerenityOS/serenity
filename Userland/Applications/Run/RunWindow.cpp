@@ -11,7 +11,6 @@
 #include <Applications/Run/RunGML.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Event.h>

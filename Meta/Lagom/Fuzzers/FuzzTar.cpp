@@ -7,7 +7,6 @@
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtr.h>
 #include <LibArchive/TarStream.h>
-#include <LibCore/Stream.h>
 #include <stdio.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)

@@ -11,7 +11,6 @@
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>

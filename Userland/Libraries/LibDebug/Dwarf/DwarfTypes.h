@@ -6,8 +6,9 @@
 
 #pragma once
 
+#include <AK/Error.h>
+#include <AK/Stream.h>
 #include <AK/Types.h>
-#include <LibCore/Stream.h>
 
 namespace Debug::Dwarf {
 

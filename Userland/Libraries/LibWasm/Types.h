@@ -13,7 +13,6 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Result.h>
 #include <AK/Variant.h>
-#include <LibCore/Stream.h>
 #include <LibWasm/Constants.h>
 #include <LibWasm/Forward.h>
 #include <LibWasm/Opcode.h>

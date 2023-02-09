@@ -8,7 +8,6 @@
 
 #include <AK/Function.h>
 #include <LibCore/Promise.h>
-#include <LibCore/Stream.h>
 #include <LibIMAP/Parser.h>
 #include <LibTLS/TLSv12.h>
 

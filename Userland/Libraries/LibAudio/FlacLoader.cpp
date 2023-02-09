@@ -22,7 +22,6 @@
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Resampler.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 namespace Audio {
 

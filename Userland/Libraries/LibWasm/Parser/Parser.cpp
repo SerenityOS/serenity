@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Endian.h>
 #include <AK/LEB128.h>
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>

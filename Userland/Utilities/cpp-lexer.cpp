@@ -7,7 +7,6 @@
 #include <AK/Try.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCpp/Lexer.h>
 #include <LibMain/Main.h>
 

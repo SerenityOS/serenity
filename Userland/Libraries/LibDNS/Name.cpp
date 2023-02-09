@@ -7,6 +7,7 @@
 
 #include "Name.h"
 #include <AK/Random.h>
+#include <AK/Stream.h>
 #include <AK/Vector.h>
 #include <ctype.h>
 

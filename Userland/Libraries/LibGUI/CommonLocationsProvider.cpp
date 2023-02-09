@@ -11,7 +11,6 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/CommonLocationsProvider.h>
 #include <unistd.h>
 

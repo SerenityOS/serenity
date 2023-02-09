@@ -11,9 +11,10 @@
 #include <AK/DOSPackedTime.h>
 #include <AK/Function.h>
 #include <AK/IterationDecision.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
 #include <string.h>
 
 namespace Archive {

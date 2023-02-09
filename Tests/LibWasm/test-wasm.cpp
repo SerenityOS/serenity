@@ -5,7 +5,6 @@
  */
 
 #include <AK/MemoryStream.h>
-#include <LibCore/Stream.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/Types.h>

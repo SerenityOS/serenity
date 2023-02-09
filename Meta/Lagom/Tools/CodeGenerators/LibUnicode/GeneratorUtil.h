@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Function.h>
 #include <AK/HashFunctions.h>
 #include <AK/HashMap.h>
 #include <AK/JsonValue.h>
@@ -21,7 +22,6 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibLocale/Locale.h>
 
 template<class T>

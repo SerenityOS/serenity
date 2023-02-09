@@ -10,7 +10,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 M3UParser::M3UParser()
 {

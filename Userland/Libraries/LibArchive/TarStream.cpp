@@ -7,6 +7,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/OwnPtr.h>
 #include <LibArchive/TarStream.h>
 #include <string.h>
 

@@ -7,7 +7,6 @@
 #include "GitWidget.h"
 #include "../Dialogs/Git/GitCommitDialog.h"
 #include "GitFilesModel.h"
-#include <LibCore/Stream.h>
 #include <LibDiff/Format.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <LibCore/Stream.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <WebContent/WebDriverClientEndpoint.h>
 #include <WebContent/WebDriverServerEndpoint.h>

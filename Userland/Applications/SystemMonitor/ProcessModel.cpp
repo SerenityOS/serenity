@@ -12,7 +12,6 @@
 #include <AK/NumberFormat.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ModelIndex.h>

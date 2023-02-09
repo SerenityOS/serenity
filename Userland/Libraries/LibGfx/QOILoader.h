@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <LibCore/Stream.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/ImageDecoder.h>
 

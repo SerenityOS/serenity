@@ -7,7 +7,6 @@
 #include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
 

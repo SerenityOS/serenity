@@ -9,7 +9,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <LibCore/Stream.h>
 
 namespace DNS {
 

@@ -21,7 +21,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
 {

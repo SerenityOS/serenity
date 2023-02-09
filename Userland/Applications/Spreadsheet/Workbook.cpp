@@ -11,7 +11,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/StringView.h>
 #include <LibCore/MimeData.h>
-#include <LibCore/Stream.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Window.h>

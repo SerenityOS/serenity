@@ -14,7 +14,6 @@
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
 #include <LibCore/Socket.h>
-#include <LibCore/Stream.h>
 #include <LibHTTP/Forward.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibWeb/WebDriver/Error.h>

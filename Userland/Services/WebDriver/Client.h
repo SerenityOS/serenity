@@ -11,7 +11,6 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 #include <LibWeb/WebDriver/Client.h>
 #include <LibWeb/WebDriver/Error.h>
 #include <LibWeb/WebDriver/Response.h>

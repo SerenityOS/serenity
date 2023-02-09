@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibCore/Stream.h>
+#include <LibCore/Socket.h>
 
 namespace Core {
 

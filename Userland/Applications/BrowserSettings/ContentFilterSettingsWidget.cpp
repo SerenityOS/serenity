@@ -10,7 +10,6 @@
 #include <Applications/BrowserSettings/ContentFilterSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>

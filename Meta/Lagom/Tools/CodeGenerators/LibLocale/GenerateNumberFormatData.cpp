@@ -25,7 +25,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
 #include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/NumberFormat.h>

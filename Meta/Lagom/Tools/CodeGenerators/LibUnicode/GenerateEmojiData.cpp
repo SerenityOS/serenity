@@ -13,7 +13,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
-#include <LibCore/Stream.h>
 #include <LibUnicode/Emoji.h>
 
 struct Emoji {

@@ -13,7 +13,6 @@
 #include <AK/StringView.h>
 #include <AK/URL.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/Stream.h>
 #include <LibManual/Path.h>
 
 namespace Manual {

@@ -16,7 +16,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/RelativeTimeFormat.h>
 

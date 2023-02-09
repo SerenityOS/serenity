@@ -5,7 +5,6 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <LibCore/Stream.h>
 #include <LibIMAP/Client.h>
 
 namespace IMAP {

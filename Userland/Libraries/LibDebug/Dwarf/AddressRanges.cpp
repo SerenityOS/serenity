@@ -7,7 +7,6 @@
 #include "AddressRanges.h"
 #include "DwarfTypes.h"
 #include <AK/LEB128.h>
-#include <LibCore/Stream.h>
 
 namespace Debug::Dwarf {
 

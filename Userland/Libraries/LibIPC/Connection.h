@@ -14,7 +14,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>
-#include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Forward.h>
 #include <LibIPC/Message.h>

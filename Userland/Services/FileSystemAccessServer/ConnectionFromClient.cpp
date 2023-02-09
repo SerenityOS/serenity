@@ -6,7 +6,6 @@
 
 #include <FileSystemAccessServer/ConnectionFromClient.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FilePicker.h>

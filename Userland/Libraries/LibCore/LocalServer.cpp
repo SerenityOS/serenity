@@ -8,7 +8,6 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/Socket.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
 #include <fcntl.h>

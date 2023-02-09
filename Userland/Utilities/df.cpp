@@ -9,7 +9,6 @@
 #include <AK/NumberFormat.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <inttypes.h>
 #include <stdlib.h>

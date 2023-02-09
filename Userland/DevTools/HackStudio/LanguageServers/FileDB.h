@@ -10,7 +10,6 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibCodeComprehension/FileDB.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/TextDocument.h>
 
 namespace LanguageServers {

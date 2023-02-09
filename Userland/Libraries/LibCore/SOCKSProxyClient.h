@@ -9,7 +9,6 @@
 #include <AK/OwnPtr.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/Socket.h>
-#include <LibCore/Stream.h>
 
 namespace Core {
 class SOCKSProxyClient final : public Socket {

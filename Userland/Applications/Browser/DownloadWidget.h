@@ -9,7 +9,6 @@
 
 #include <AK/URL.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Widget.h>

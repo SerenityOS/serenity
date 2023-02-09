@@ -15,7 +15,6 @@
 #include <AK/Variant.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/Stream.h>
 #include <LibLocale/PluralRules.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)

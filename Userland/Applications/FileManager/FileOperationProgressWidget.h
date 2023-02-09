@@ -9,7 +9,6 @@
 #include "FileUtils.h"
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Widget.h>
 
 namespace FileManager {

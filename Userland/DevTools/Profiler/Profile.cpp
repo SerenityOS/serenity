@@ -16,7 +16,6 @@
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
-#include <LibCore/Stream.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
 #include <sys/stat.h>

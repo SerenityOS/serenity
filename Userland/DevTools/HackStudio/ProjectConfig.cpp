@@ -7,7 +7,6 @@
 #include "ProjectConfig.h"
 #include <AK/NonnullOwnPtr.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 namespace HackStudio {
 

@@ -10,7 +10,6 @@
 #include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <unistd.h>
 
 namespace IPC {

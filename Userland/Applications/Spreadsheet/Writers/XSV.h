@@ -9,10 +9,10 @@
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/OwnPtr.h>
+#include <AK/Stream.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
 
 namespace Writer {
 
