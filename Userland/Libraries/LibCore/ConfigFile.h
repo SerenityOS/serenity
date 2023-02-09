@@ -34,19 +34,19 @@ public:
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, NonnullOwnPtr<Core::File>);
     ~ConfigFile();
 
-    bool has_group(DeprecatedString const&) const;
-    bool has_key(DeprecatedString const& group, DeprecatedString const& key) const;
+    bool has_group(StringView) const;
+    bool has_key(StringView group, StringView key) const;
 
     Vector<DeprecatedString> groups() const;
-    Vector<DeprecatedString> keys(DeprecatedString const& group) const;
+    Vector<DeprecatedString> keys(StringView group) const;
 
     size_t num_groups() const { return m_groups.size(); }
 
-    DeprecatedString read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value = DeprecatedString()) const;
-    bool read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value = false) const;
+    DeprecatedString read_entry(StringView group, StringView key, DeprecatedString const& default_value = DeprecatedString()) const;
+    bool read_bool_entry(StringView group, StringView key, bool default_value = false) const;
 
     template<Integral T = int>
-    T read_num_entry(DeprecatedString const& group, DeprecatedString const& key, T default_value = 0) const
+    T read_num_entry(StringView group, StringView key, T default_value = 0) const
     {
         if (!has_key(group, key))
             return default_value;
@@ -73,8 +73,8 @@ public:
     ErrorOr<void> sync();
 
     void add_group(DeprecatedString const& group);
-    void remove_group(DeprecatedString const& group);
-    void remove_entry(DeprecatedString const& group, DeprecatedString const& key);
+    void remove_group(StringView group);
+    void remove_entry(StringView group, StringView key);
 
     DeprecatedString const& filename() const { return m_filename; }
 

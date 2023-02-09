@@ -140,7 +140,7 @@ ErrorOr<void> ConfigFile::reparse()
     return {};
 }
 
-DeprecatedString ConfigFile::read_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& default_value) const
+DeprecatedString ConfigFile::read_entry(StringView group, StringView key, DeprecatedString const& default_value) const
 {
     if (!has_key(group, key)) {
         return default_value;
@@ -150,7 +150,7 @@ DeprecatedString ConfigFile::read_entry(DeprecatedString const& group, Deprecate
     return jt->value;
 }
 
-bool ConfigFile::read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value) const
+bool ConfigFile::read_bool_entry(StringView group, StringView key, bool default_value) const
 {
     auto value = read_entry(group, key, default_value ? "true" : "false");
     return value == "1" || value.equals_ignoring_ascii_case("true"sv);
@@ -204,7 +204,7 @@ Vector<DeprecatedString> ConfigFile::groups() const
     return m_groups.keys();
 }
 
-Vector<DeprecatedString> ConfigFile::keys(DeprecatedString const& group) const
+Vector<DeprecatedString> ConfigFile::keys(StringView group) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -212,7 +212,7 @@ Vector<DeprecatedString> ConfigFile::keys(DeprecatedString const& group) const
     return it->value.keys();
 }
 
-bool ConfigFile::has_key(DeprecatedString const& group, DeprecatedString const& key) const
+bool ConfigFile::has_key(StringView group, StringView key) const
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
@@ -220,7 +220,7 @@ bool ConfigFile::has_key(DeprecatedString const& group, DeprecatedString const& 
     return it->value.contains(key);
 }
 
-bool ConfigFile::has_group(DeprecatedString const& group) const
+bool ConfigFile::has_group(StringView group) const
 {
     return m_groups.contains(group);
 }
@@ -231,13 +231,13 @@ void ConfigFile::add_group(DeprecatedString const& group)
     m_dirty = true;
 }
 
-void ConfigFile::remove_group(DeprecatedString const& group)
+void ConfigFile::remove_group(StringView group)
 {
     m_groups.remove(group);
     m_dirty = true;
 }
 
-void ConfigFile::remove_entry(DeprecatedString const& group, DeprecatedString const& key)
+void ConfigFile::remove_entry(StringView group, StringView key)
 {
     auto it = m_groups.find(group);
     if (it == m_groups.end())
