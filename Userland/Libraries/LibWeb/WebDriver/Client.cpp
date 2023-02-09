@@ -110,7 +110,7 @@ static constexpr auto s_webdriver_endpoints = Array {
 // https://w3c.github.io/webdriver/#dfn-match-a-request
 static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request)
 {
-    dbgln_if(WEBDRIVER_DEBUG, "match_route({}, {})", HTTP::to_deprecated_string(request.method()), request.resource());
+    dbgln_if(WEBDRIVER_DEBUG, "match_route({}, {})", HTTP::to_string_view(request.method()), request.resource());
 
     auto request_path = request.resource().view();
     Vector<String> parameters;
@@ -129,7 +129,7 @@ static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request
     };
 
     for (auto const& route : s_webdriver_endpoints) {
-        dbgln_if(WEBDRIVER_DEBUG, "- Checking {} {}", HTTP::to_deprecated_string(route.method), route.path);
+        dbgln_if(WEBDRIVER_DEBUG, "- Checking {} {}", HTTP::to_string_view(route.method), route.path);
         if (route.method != request.method())
             continue;
 
