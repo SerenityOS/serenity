@@ -1021,8 +1021,8 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_debug_action()
             return;
         }
 
-        Debugger::the().set_child_setup_callback([this, ptm_res]() {
-            return m_terminal_wrapper->setup_slave_pseudoterminal(ptm_res.value());
+        Debugger::the().set_child_setup_callback([this, ptm_res = ptm_res.release_value()]() {
+            return m_terminal_wrapper->setup_slave_pseudoterminal(ptm_res);
         });
 
         m_debugger_thread = Threading::Thread::construct(Debugger::start_static);
@@ -1789,7 +1789,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_config
 
             auto maybe_error = Core::System::mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory), 0755);
             if (maybe_error.is_error() && maybe_error.error().code() != EEXIST)
-                return maybe_error.error();
+                return maybe_error.release_error();
 
             auto file = TRY(Core::Stream::File::open(absolute_config_file_path, Core::Stream::OpenMode::Write));
             TRY(file->write_entire_buffer(

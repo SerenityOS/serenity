@@ -33,7 +33,7 @@ ErrorOr<void> Shader::compile()
     if (object_file_or_error.is_error()) {
         m_compile_status = false;
         m_info_log = compiler.messages();
-        return object_file_or_error.error();
+        return object_file_or_error.release_error();
     }
 
     m_object_file = object_file_or_error.release_value();

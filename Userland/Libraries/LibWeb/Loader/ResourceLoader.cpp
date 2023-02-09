@@ -172,7 +172,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
-    auto const log_failure = [url_for_logging, id](auto const& request, auto const error_message) {
+    auto const log_failure = [url_for_logging, id](auto const& request, auto const& error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
         emit_signpost(DeprecatedString::formatted("Failed load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);

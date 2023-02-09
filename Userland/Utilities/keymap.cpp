@@ -65,10 +65,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         // Verify that all specified keymaps are loadable
         for (auto& keymap_name : mappings_vector) {
-            auto keymap = Keyboard::CharacterMap::load_from_file(keymap_name);
-            if (keymap.is_error()) {
+            if (auto keymap = Keyboard::CharacterMap::load_from_file(keymap_name); keymap.is_error()) {
                 warnln("Cannot load keymap {}: {}({})", keymap_name, keymap.error().string_literal(), keymap.error().code());
-                return keymap.error();
+                return keymap.release_error();
             }
         }
 

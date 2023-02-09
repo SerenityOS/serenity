@@ -85,7 +85,7 @@ void PlaybackManager::dispatch_fatal_error(Error error)
     // FIXME: For threading, this will have to use a pre-allocated event to send to the main loop
     //        to be able to gracefully handle OOM.
     VERIFY(&m_main_loop == &Core::EventLoop::current());
-    FatalPlaybackErrorEvent event { error };
+    FatalPlaybackErrorEvent event { move(error) };
     m_event_handler.dispatch_event(event);
 }
 

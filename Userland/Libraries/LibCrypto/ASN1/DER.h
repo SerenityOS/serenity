@@ -71,13 +71,13 @@ public:
         auto tag_or_error = peek();
         if (tag_or_error.is_error()) {
             m_stack = move(previous_position);
-            return tag_or_error.error();
+            return tag_or_error.release_error();
         }
 
         auto length_or_error = read_length();
         if (length_or_error.is_error()) {
             m_stack = move(previous_position);
-            return length_or_error.error();
+            return length_or_error.release_error();
         }
 
         auto length = length_or_error.value();
@@ -85,7 +85,7 @@ public:
         auto bytes_result = read_bytes(length);
         if (bytes_result.is_error()) {
             m_stack = move(previous_position);
-            return bytes_result.error();
+            return bytes_result.release_error();
         }
 
         m_current_tag.clear();
@@ -106,13 +106,13 @@ public:
         auto tag_or_error = peek();
         if (tag_or_error.is_error()) {
             m_stack = move(previous_position);
-            return tag_or_error.error();
+            return tag_or_error.release_error();
         }
 
         auto length_or_error = read_length();
         if (length_or_error.is_error()) {
             m_stack = move(previous_position);
-            return length_or_error.error();
+            return length_or_error.release_error();
         }
 
         auto tag = tag_or_error.value();
@@ -121,7 +121,7 @@ public:
         auto value_or_error = read_value<ValueType>(class_override.value_or(tag.class_), kind_override.value_or(tag.kind), length);
         if (value_or_error.is_error()) {
             m_stack = move(previous_position);
-            return value_or_error.error();
+            return value_or_error.release_error();
         }
 
         m_current_tag.clear();
@@ -146,7 +146,7 @@ private:
     ErrorOr<ValueType> with_type_check(ErrorOr<DecodedType>&& value_or_error)
     {
         if (value_or_error.is_error())
-            return value_or_error.error();
+            return value_or_error.release_error();
 
         if constexpr (IsSame<ValueType, bool> && !IsSame<DecodedType, bool>) {
             return Error::from_string_literal("ASN1::Decoder: Trying to decode a boolean from a non-boolean type");
@@ -162,10 +162,7 @@ private:
     template<typename ValueType>
     ErrorOr<ValueType> read_value(Class klass, Kind kind, size_t length)
     {
-        auto data_or_error = read_bytes(length);
-        if (data_or_error.is_error())
-            return data_or_error.error();
-        auto data = data_or_error.value();
+        auto data = TRY(read_bytes(length));
 
         if (klass != Class::Universal)
             return with_type_check<ValueType>(data);

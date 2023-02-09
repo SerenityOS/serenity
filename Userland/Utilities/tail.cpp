@@ -110,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (event.type == Core::FileWatcherEvent::Type::ContentModified) {
                 auto buffer_or_error = f->read_until_eof();
                 if (buffer_or_error.is_error()) {
-                    auto error = buffer_or_error.error();
+                    auto error = buffer_or_error.release_error();
                     warnln(error.string_literal());
                     event_loop.quit(error.code());
                     return;
@@ -120,7 +120,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                 auto potential_error = f->seek(0, SeekMode::FromEndPosition);
                 if (potential_error.is_error()) {
-                    auto error = potential_error.error();
+                    auto error = potential_error.release_error();
                     warnln(error.string_literal());
                     event_loop.quit(error.code());
                     return;

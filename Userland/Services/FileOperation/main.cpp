@@ -243,7 +243,7 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
                 if (auto result = destination_file->write(bytes_read); result.is_error()) {
                     // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
                     report_warning(DeprecatedString::formatted("Failed to write to destination file: {}", result.error()));
-                    return result.error();
+                    return result.release_error();
                 }
                 item_done += bytes_read.size();
                 executed_work_bytes += bytes_read.size();

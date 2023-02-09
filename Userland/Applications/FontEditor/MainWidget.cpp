@@ -101,9 +101,9 @@ ErrorOr<void> MainWidget::create_actions()
         new_font_wizard->hide();
         auto maybe_font = new_font_wizard->create_font();
         if (maybe_font.is_error())
-            return show_error(maybe_font.error(), "Creating new font failed"sv);
+            return show_error(maybe_font.release_error(), "Creating new font failed"sv);
         if (auto result = initialize({}, move(maybe_font.value())); result.is_error())
-            show_error(result.error(), "Initializing new font failed"sv);
+            show_error(result.release_error(), "Initializing new font failed"sv);
     });
     m_new_action->set_status_tip("Create a new font");
 
@@ -114,14 +114,14 @@ ErrorOr<void> MainWidget::create_actions()
         if (!open_path.has_value())
             return;
         if (auto result = open_file(open_path.value()); result.is_error())
-            show_error(result.error(), "Opening"sv, LexicalPath { open_path.value() }.basename());
+            show_error(result.release_error(), "Opening"sv, LexicalPath { open_path.value() }.basename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.is_empty())
             return m_save_as_action->activate();
         if (auto result = save_file(m_path); result.is_error())
-            show_error(result.error(), "Saving"sv, LexicalPath { m_path }.basename());
+            show_error(result.release_error(), "Saving"sv, LexicalPath { m_path }.basename());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -130,17 +130,17 @@ ErrorOr<void> MainWidget::create_actions()
         if (!save_path.has_value())
             return;
         if (auto result = save_file(save_path.value()); result.is_error())
-            show_error(result.error(), "Saving"sv, lexical_path.basename());
+            show_error(result.release_error(), "Saving"sv, lexical_path.basename());
     });
 
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         if (auto result = cut_selected_glyphs(); result.is_error())
-            show_error(result.error(), "Cutting selection failed"sv);
+            show_error(result.release_error(), "Cutting selection failed"sv);
     });
 
     m_copy_action = GUI::CommonActions::make_copy_action([&](auto&) {
         if (auto result = copy_selected_glyphs(); result.is_error())
-            show_error(result.error(), "Copying selection failed"sv);
+            show_error(result.release_error(), "Copying selection failed"sv);
     });
 
     m_paste_action = GUI::CommonActions::make_paste_action([&](auto&) {
@@ -178,7 +178,7 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_preview_action = GUI::Action::create("&Preview Font", { Mod_Ctrl, Key_P }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv)), [&](auto&) {
         if (!m_font_preview_window) {
             if (auto maybe_window = create_preview_window(); maybe_window.is_error())
-                show_error(maybe_window.error(), "Creating preview window failed"sv);
+                show_error(maybe_window.release_error(), "Creating preview window failed"sv);
             else
                 m_font_preview_window = maybe_window.release_value();
         }
@@ -792,12 +792,12 @@ void MainWidget::push_undo()
 {
     auto maybe_state = m_undo_selection->save_state();
     if (maybe_state.is_error())
-        return show_error(maybe_state.error(), "Saving undo state failed"sv);
+        return show_error(maybe_state.release_error(), "Saving undo state failed"sv);
     auto maybe_command = try_make<SelectionUndoCommand>(*m_undo_selection, move(maybe_state.value()));
     if (maybe_command.is_error())
-        return show_error(maybe_command.error(), "Making undo command failed"sv);
+        return show_error(maybe_command.release_error(), "Making undo command failed"sv);
     if (auto maybe_push = m_undo_stack->try_push(move(maybe_command.value())); maybe_push.is_error())
-        show_error(maybe_push.error(), "Pushing undo stack failed"sv);
+        show_error(maybe_push.release_error(), "Pushing undo stack failed"sv);
 }
 
 void MainWidget::reset_selection_and_push_undo()
@@ -976,7 +976,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
 
         if (auto result = open_file(urls.first().path()); result.is_error())
-            show_error(result.error(), "Opening"sv, LexicalPath { urls.first().path() }.basename());
+            show_error(result.release_error(), "Opening"sv, LexicalPath { urls.first().path() }.basename());
     }
 }
 
