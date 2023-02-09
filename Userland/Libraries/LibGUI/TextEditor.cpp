@@ -623,13 +623,13 @@ void TextEditor::paint_event(PaintEvent& event)
                         continue;
                     }
                     size_t span_end;
-                    bool span_consumned;
+                    bool span_consumed;
                     if (span.range.end().line() > line_index || span.range.end().column() > start_of_visual_line + visual_line_text.length()) {
                         span_end = visual_line_text.length();
-                        span_consumned = false;
+                        span_consumed = false;
                     } else {
                         span_end = span.range.end().column() - start_of_visual_line;
-                        span_consumned = true;
+                        span_consumed = true;
                     }
 
                     if (span_start != next_column) {
@@ -643,7 +643,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                     draw_text_helper(span_start, span_end, font, span.attributes);
                     next_column = span_end;
-                    if (!span_consumned) {
+                    if (!span_consumed) {
                         // continue with same span on next line
                         break;
                     } else {
