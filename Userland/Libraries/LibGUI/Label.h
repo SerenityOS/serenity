@@ -40,6 +40,7 @@ public:
 
     virtual Optional<UISize> calculated_preferred_size() const override;
     int text_calculated_preferred_height() const;
+    int text_calculated_preferred_width() const;
 
     Gfx::IntRect text_rect() const;
 
