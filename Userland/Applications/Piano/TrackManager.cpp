@@ -74,6 +74,5 @@ int TrackManager::next_track_index() const
     auto next_track_index = m_current_track + 1;
     if (next_track_index >= m_tracks.size())
         return 0;
-    else
-        return next_track_index;
+    return static_cast<int>(next_track_index);
 }

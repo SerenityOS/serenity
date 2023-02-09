@@ -94,8 +94,7 @@ void MainWidget::keydown_event(GUI::KeyEvent& event)
         // This is to stop held-down keys from creating multiple events.
         if (m_keys_pressed[event.key()])
             return;
-        else
-            m_keys_pressed[event.key()] = true;
+        m_keys_pressed[event.key()] = true;
 
         bool event_was_accepted = false;
         if (note_key_action(event.key(), DSP::Keyboard::Switch::On))
