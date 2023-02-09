@@ -53,7 +53,7 @@ ErrorOr<void> Heap::open()
     if (file_size > 0) {
         if (auto error_maybe = read_zero_block(); error_maybe.is_error()) {
             m_file = nullptr;
-            return error_maybe.error();
+            return error_maybe.release_error();
         }
     } else {
         initialize_zero_block();

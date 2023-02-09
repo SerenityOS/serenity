@@ -47,7 +47,7 @@ ErrorOr<NonnullRefPtr<ConfigFile>> ConfigFile::open(DeprecatedString const& file
         // the same as if we had opened an empty file. This behavior is a little weird, but is required by
         // user code, which does not check the config file exists before opening.
         if (!(allow_altering == AllowWriting::No && maybe_file.error().code() == ENOENT))
-            return maybe_file.error();
+            return maybe_file.release_error();
     } else {
         buffered_file = TRY(Stream::BufferedFile::create(maybe_file.release_value()));
     }

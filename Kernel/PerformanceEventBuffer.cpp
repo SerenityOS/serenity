@@ -22,7 +22,7 @@ PerformanceEventBuffer::PerformanceEventBuffer(NonnullOwnPtr<KBuffer> buffer)
 {
 }
 
-NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
+NEVER_INLINE ErrorOr<void> PerformanceEventBuffer::append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> const& arg6)
 {
     FlatPtr base_pointer = (FlatPtr)__builtin_frame_address(0);
     return append_with_ip_and_bp(current_thread->pid(), current_thread->tid(), 0, base_pointer, type, 0, arg1, arg2, arg3, arg4, arg5, arg6);
@@ -66,13 +66,13 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
 }
 
 ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid, RegisterState const& regs,
-    int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
+    int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> const& arg6)
 {
     return append_with_ip_and_bp(pid, tid, regs.ip(), regs.bp(), type, lost_samples, arg1, arg2, arg3, arg4, arg5, arg6);
 }
 
 ErrorOr<void> PerformanceEventBuffer::append_with_ip_and_bp(ProcessID pid, ThreadID tid,
-    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> arg6)
+    FlatPtr ip, FlatPtr bp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4, u64 arg5, ErrorOr<FlatPtr> const& arg6)
 {
     if (count() >= capacity())
         return ENOBUFS;

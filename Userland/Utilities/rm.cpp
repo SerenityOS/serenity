@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto result = Core::File::remove(path, recursive ? Core::File::RecursionMode::Allowed : Core::File::RecursionMode::Disallowed);
 
         if (result.is_error()) {
-            auto error = result.error();
+            auto error = result.release_error();
 
             if (force && error.is_errno() && error.code() == ENOENT)
                 continue;

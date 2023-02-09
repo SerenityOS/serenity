@@ -403,7 +403,7 @@ ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKer
             nreceived = receive_packet_buffered(description, offset_buffer, offset_buffer_length, flags, user_addr, user_addr_length, packet_timestamp, blocking);
 
         if (nreceived.is_error())
-            total_nreceived = nreceived;
+            total_nreceived = move(nreceived);
         else
             total_nreceived.value() += nreceived.value();
     } while ((flags & MSG_WAITALL) && !total_nreceived.is_error() && total_nreceived.value() < buffer_length);

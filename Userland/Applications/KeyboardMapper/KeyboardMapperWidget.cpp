@@ -27,9 +27,8 @@ bool KeyboardMapperWidget::request_close()
         return true;
     auto result = GUI::MessageBox::ask_about_unsaved_changes(window(), m_filename);
     if (result == GUI::MessageBox::ExecResult::Yes) {
-        ErrorOr<void> error_or = save();
-        if (error_or.is_error())
-            show_error_to_user(error_or.error());
+        if (auto error_or = save(); error_or.is_error())
+            show_error_to_user(error_or.release_error());
 
         if (!window()->is_modified())
             return true;

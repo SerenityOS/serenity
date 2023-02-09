@@ -531,7 +531,7 @@ ErrorOr<void, File::CopyError> File::copy_directory(DeprecatedString const& dst_
             DeprecatedString::formatted("{}/{}", src_path, filename),
             RecursionMode::Allowed, link, AddDuplicateFileMarker::Yes, preserve_mode);
         if (result.is_error())
-            return result.error();
+            return result.release_error();
     }
 
     auto my_umask = umask(0);

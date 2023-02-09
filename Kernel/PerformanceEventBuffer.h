@@ -110,11 +110,11 @@ class PerformanceEventBuffer {
 public:
     static OwnPtr<PerformanceEventBuffer> try_create_with_size(size_t buffer_size);
 
-    ErrorOr<void> append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread = Thread::current(), FlatPtr arg4 = 0, u64 arg5 = 0, ErrorOr<FlatPtr> arg6 = 0);
+    ErrorOr<void> append(int type, FlatPtr arg1, FlatPtr arg2, StringView arg3, Thread* current_thread = Thread::current(), FlatPtr arg4 = 0, u64 arg5 = 0, ErrorOr<FlatPtr> const& arg6 = 0);
     ErrorOr<void> append_with_ip_and_bp(ProcessID pid, ThreadID tid, FlatPtr eip, FlatPtr ebp,
-        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4 = 0, u64 arg5 = {}, ErrorOr<FlatPtr> arg6 = 0);
+        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4 = 0, u64 arg5 = {}, ErrorOr<FlatPtr> const& arg6 = 0);
     ErrorOr<void> append_with_ip_and_bp(ProcessID pid, ThreadID tid, RegisterState const& regs,
-        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4 = 0, u64 arg5 = {}, ErrorOr<FlatPtr> arg6 = 0);
+        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, StringView arg3, FlatPtr arg4 = 0, u64 arg5 = {}, ErrorOr<FlatPtr> const& arg6 = 0);
 
     void clear()
     {

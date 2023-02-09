@@ -65,7 +65,7 @@ ErrorOr<void> Program::link(GPU::Device& device)
     if (linked_vertex_shader_or_error.is_error()) {
         m_link_status = false;
         m_info_log = linker.messages();
-        return linked_vertex_shader_or_error.error();
+        return linked_vertex_shader_or_error.release_error();
     }
 
     m_linked_vertex_shader = linked_vertex_shader_or_error.release_value();
@@ -81,7 +81,7 @@ ErrorOr<void> Program::link(GPU::Device& device)
     if (linked_fragment_shader_or_error.is_error()) {
         m_link_status = false;
         m_info_log = linker.messages();
-        return linked_fragment_shader_or_error.error();
+        return linked_fragment_shader_or_error.release_error();
     }
 
     m_linked_fragment_shader = linked_fragment_shader_or_error.release_value();

@@ -238,8 +238,8 @@ public:
 
     void request_file(Web::FileRequest request) override
     {
-        auto const file = Core::System::open(request.path(), O_RDONLY);
-        request.on_file_request_finish(file);
+        auto file = Core::System::open(request.path(), O_RDONLY);
+        request.on_file_request_finish(move(file));
     }
 
 private:

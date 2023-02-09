@@ -907,14 +907,14 @@ ErrorOr<IterationDecision> Parser::for_each_detailed_timing(Function<IterationDe
         });
         if (result.is_error()) {
             dbgln("Failed to iterate DTDs in CEA861 extension block: {}", result.error());
-            extension_error = result.error();
+            extension_error = result.release_error();
             return IterationDecision::Break;
         }
 
         return result.value();
     }));
     if (extension_error.has_value())
-        return extension_error.value();
+        return extension_error.release_value();
     return result;
 }
 
@@ -948,7 +948,7 @@ ErrorOr<IterationDecision> Parser::for_each_short_video_descriptor(Function<Iter
             return callback(block_id, is_native, vic);
         });
         if (result.is_error()) {
-            extension_error = result.error();
+            extension_error = result.release_error();
             return IterationDecision::Break;
         }
         return result.value();
@@ -985,14 +985,14 @@ ErrorOr<IterationDecision> Parser::for_each_display_descriptor(Function<Iteratio
         });
         if (result.is_error()) {
             dbgln("Failed to iterate display descriptors in CEA861 extension block: {}", result.error());
-            extension_error = result.error();
+            extension_error = result.release_error();
             return IterationDecision::Break;
         }
 
         return result.value();
     }));
     if (extension_error.has_value())
-        return extension_error.value();
+        return extension_error.release_value();
     return result;
 }
 

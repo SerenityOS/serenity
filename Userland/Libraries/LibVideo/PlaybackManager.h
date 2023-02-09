@@ -247,11 +247,11 @@ class FatalPlaybackErrorEvent : public Core::Event {
 public:
     explicit FatalPlaybackErrorEvent(Error error)
         : Core::Event(FatalPlaybackError)
-        , m_error(error)
+        , m_error(move(error))
     {
     }
     virtual ~FatalPlaybackErrorEvent() = default;
-    Error error() { return m_error; }
+    Error const& error() { return m_error; }
 
 private:
     Error m_error;

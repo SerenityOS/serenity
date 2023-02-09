@@ -238,12 +238,12 @@ private:
             auto result = stream().read(fillable_slice);
             if (result.is_error()) {
                 if (!result.error().is_errno())
-                    return result.error();
+                    return result.release_error();
                 if (result.error().code() == EINTR)
                     continue;
                 if (result.error().code() == EAGAIN)
                     break;
-                return result.error();
+                return result.release_error();
             }
             auto const filled_slice = result.value();
             VERIFY(m_buffer.write(filled_slice) == filled_slice.size());

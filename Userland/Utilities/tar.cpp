@@ -181,7 +181,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                     auto result_or_error = Core::System::mkdir(absolute_path, header_mode);
                     if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)
-                        return result_or_error.error();
+                        return result_or_error.release_error();
                     break;
                 }
                 default:
