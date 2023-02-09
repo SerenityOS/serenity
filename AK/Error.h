@@ -21,6 +21,9 @@ namespace AK {
 
 class Error {
 public:
+    ALWAYS_INLINE Error(Error&&) = default;
+    ALWAYS_INLINE Error& operator=(Error&&) = default;
+
     [[nodiscard]] static Error from_errno(int code) { return Error(code); }
     [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
     [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
@@ -79,6 +82,9 @@ private:
     {
     }
 
+    Error(Error const&) = default;
+    Error& operator=(Error const&) = default;
+
     StringView m_string_literal;
     int m_code { 0 };
     bool m_syscall { false };
@@ -100,23 +106,10 @@ public:
     }
 
     ALWAYS_INLINE ErrorOr(ErrorOr&&) = default;
-    ALWAYS_INLINE ErrorOr(ErrorOr const&) = default;
     ALWAYS_INLINE ErrorOr& operator=(ErrorOr&&) = default;
-    ALWAYS_INLINE ErrorOr& operator=(ErrorOr const&) = default;
 
-    template<typename U>
-    ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType> const& value)
-    requires(IsConvertible<U, T>)
-        : m_value_or_error(value.m_value_or_error.visit([](U const& v) -> Variant<T, ErrorType> { return v; }, [](ErrorType const& error) -> Variant<T, ErrorType> { return error; }))
-    {
-    }
-
-    template<typename U>
-    ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>& value)
-    requires(IsConvertible<U, T>)
-        : m_value_or_error(value.m_value_or_error.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
-    {
-    }
+    ErrorOr(ErrorOr const&) = delete;
+    ErrorOr& operator=(ErrorOr const&) = delete;
 
     template<typename U>
     ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>&& value)
