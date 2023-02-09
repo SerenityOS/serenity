@@ -25,6 +25,11 @@ public:
     [[nodiscard]] static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
     [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
 
+    [[nodiscard]] static Error copy(Error const& error)
+    {
+        return Error(error);
+    }
+
     // NOTE: Prefer `from_string_literal` when directly typing out an error message:
     //
     //     return Error::from_string_literal("Class: Some failure");
