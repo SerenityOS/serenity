@@ -375,7 +375,7 @@ void StackingContext::paint(PaintContext& context) const
 
     if (opacity < 1.0f || !affine_transform.is_identity_or_translation()) {
         auto transform_origin = this->transform_origin();
-        auto source_rect = paintable().absolute_paint_rect().to_type<float>().translated(-transform_origin);
+        auto source_rect = context.enclosing_device_rect(paintable().absolute_paint_rect()).to_type<int>().to_type<float>().translated(-transform_origin);
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
         auto destination_rect = transformed_destination_rect.to_rounded<int>();
 
