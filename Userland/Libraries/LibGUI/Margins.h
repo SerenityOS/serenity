@@ -42,6 +42,29 @@ public:
         , m_left(left)
     {
     }
+
+    // GML compatibility constructors only for use in auto-generated code.
+
+    explicit Margins(Array<i64, 1> all)
+        : Margins(all[0])
+    {
+    }
+
+    explicit Margins(Array<i64, 2> vertical_horizontal)
+        : Margins(vertical_horizontal[0], vertical_horizontal[1])
+    {
+    }
+
+    explicit Margins(Array<i64, 3> top_horizontal_bottom)
+        : Margins(top_horizontal_bottom[0], top_horizontal_bottom[1], top_horizontal_bottom[2])
+    {
+    }
+
+    explicit Margins(Array<i64, 4> margins)
+        : Margins(margins[0], margins[1], margins[2], margins[3])
+    {
+    }
+
     ~Margins() = default;
 
     [[nodiscard]] Gfx::IntRect applied_to(Gfx::IntRect const& input) const
