@@ -441,12 +441,6 @@ public:
     constexpr auto& operator%=(U const& other) { return *this = *this % other; }
     constexpr auto& operator%=(IntegerWrapper const& other) { return *this = *this % other; }
 
-    // FIXME: Replace uses with more general `assumed_bit_size<T>`.
-    static constexpr size_t my_size()
-    {
-        return sizeof(Storage);
-    }
-
     // Note: If there ever be need for non side-channel proof sqrt/pow/pow_mod of UFixedBigInt, you
     //       can restore them from Git history.
 
