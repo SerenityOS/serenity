@@ -17,6 +17,7 @@
 namespace Gfx::ICC {
 
 using S15Fixed16 = FixedPoint<16, i32>;
+using U16Fixed16 = FixedPoint<16, u32>;
 
 struct XYZ {
     double x { 0 };
@@ -330,6 +331,71 @@ private:
     //  - B, Matrix, M, CLUT, A."
     Optional<EMatrix3x4> m_e;
     Optional<CLUTData> m_clut;
+};
+
+// ICC v4, 10.14 measurementType
+class MeasurementTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D656173 }; // 'meas'
+
+    static ErrorOr<NonnullRefPtr<MeasurementTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // Table 50 — Standard observer encodings
+    enum class StandardObserver {
+        Unknown = 0,
+        CIE_1931_standard_colorimetric_observer = 1,
+        CIE_1964_standard_colorimetric_observer = 2,
+    };
+    static ErrorOr<void> validate_standard_observer(StandardObserver);
+    static StringView standard_observer_name(StandardObserver);
+
+    // Table 51 — Measurement geometry encodings
+    enum class MeasurementGeometry {
+        Unknown = 0,
+        Degrees_0_45_or_45_0 = 1,
+        Degrees_0_d_or_d_0 = 2,
+    };
+    static ErrorOr<void> validate_measurement_geometry(MeasurementGeometry);
+    static StringView measurement_geometry_name(MeasurementGeometry);
+
+    // Table 53 — Standard illuminant encodings
+    enum class StandardIlluminant {
+        Unknown = 0,
+        D50 = 1,
+        D65 = 2,
+        D93 = 3,
+        F2 = 4,
+        D55 = 5,
+        A = 6,
+        Equi_Power_E = 7,
+        F8 = 8,
+    };
+    static ErrorOr<void> validate_standard_illuminant(StandardIlluminant);
+    static StringView standard_illuminant_name(StandardIlluminant);
+
+    MeasurementTagData(u32 offset, u32 size, StandardObserver standard_observer, XYZ tristimulus_value_for_measurement_backing,
+        MeasurementGeometry measurement_geometry, U16Fixed16 measurement_flare, StandardIlluminant standard_illuminant)
+        : TagData(offset, size, Type)
+        , m_standard_observer(standard_observer)
+        , m_tristimulus_value_for_measurement_backing(tristimulus_value_for_measurement_backing)
+        , m_measurement_geometry(measurement_geometry)
+        , m_measurement_flare(measurement_flare)
+        , m_standard_illuminant(standard_illuminant)
+    {
+    }
+
+    StandardObserver standard_observer() const { return m_standard_observer; }
+    XYZ const& tristimulus_value_for_measurement_backing() const { return m_tristimulus_value_for_measurement_backing; }
+    MeasurementGeometry measurement_geometry() const { return m_measurement_geometry; }
+    U16Fixed16 measurement_flare() const { return m_measurement_flare; }
+    StandardIlluminant standard_illuminant() const { return m_standard_illuminant; }
+
+private:
+    StandardObserver m_standard_observer;
+    XYZ m_tristimulus_value_for_measurement_backing;
+    MeasurementGeometry m_measurement_geometry;
+    U16Fixed16 m_measurement_flare;
+    StandardIlluminant m_standard_illuminant;
 };
 
 // ICC v4, 10.15 multiLocalizedUnicodeType

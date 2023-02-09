@@ -584,6 +584,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
         return LutAToBTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case LutBToATagData::Type:
         return LutBToATagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case MeasurementTagData::Type:
+        return MeasurementTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case NamedColor2TagData::Type:
@@ -1115,7 +1117,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.34 measurementTag
     // "Permitted tag types: measurementType"
-    // FIXME
+    if (!has_type(measurementTag, { MeasurementTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: measurementTag has unexpected type");
 
     // ICC v4, 9.2.35 metadataTag
     // "Permitted tag types: dictType"
