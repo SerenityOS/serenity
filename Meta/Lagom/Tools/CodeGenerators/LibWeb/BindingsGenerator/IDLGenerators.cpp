@@ -2576,7 +2576,7 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@name@"), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@name@"sv)), JS::Attribute::Configurable);
 
     MUST_OR_THROW_OOM(Object::initialize(realm));
     return {};
@@ -2890,7 +2890,7 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Object::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "Iterator"), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
 
     return {};
 }

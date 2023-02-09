@@ -210,7 +210,7 @@ public:
     void set_unit_display(StringView unit_display) { m_unit_display = ::Locale::style_from_string(unit_display); }
 
     UseGrouping use_grouping() const { return m_use_grouping; }
-    Value use_grouping_to_value(VM&) const;
+    ThrowCompletionOr<Value> use_grouping_to_value(VM&) const;
     void set_use_grouping(StringOrBoolean const& use_grouping);
 
     Notation notation() const { return m_notation; }

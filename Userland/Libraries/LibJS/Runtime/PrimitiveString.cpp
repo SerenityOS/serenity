@@ -188,6 +188,11 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, String string)
     return *new_string;
 }
 
+ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> PrimitiveString::create(VM& vm, StringView string)
+{
+    return create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(string)));
+}
+
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString string)
 {
     if (string.is_empty())
@@ -207,6 +212,11 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedString s
         return *new_string;
     }
     return *it->value;
+}
+
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedFlyString const& string)
+{
+    return create(vm, string.impl());
 }
 
 NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, PrimitiveString& lhs, PrimitiveString& rhs)

@@ -1627,7 +1627,7 @@ Completion UnaryExpression::execute(Interpreter& interpreter) const
     case UnaryOp::Minus:
         return TRY(unary_minus(vm, lhs_result));
     case UnaryOp::Typeof:
-        return Value { PrimitiveString::create(vm, lhs_result.typeof()) };
+        return Value { MUST_OR_THROW_OOM(PrimitiveString::create(vm, lhs_result.typeof())) };
     case UnaryOp::Void:
         return js_undefined();
     case UnaryOp::Delete:

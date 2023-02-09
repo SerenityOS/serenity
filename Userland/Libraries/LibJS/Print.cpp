@@ -64,7 +64,25 @@
 #include <LibJS/Runtime/WeakSet.h>
 
 namespace {
+
 ErrorOr<void> print_value(JS::PrintContext&, JS::Value value, HashTable<JS::Object*>& seen_objects);
+
+template<typename T>
+ErrorOr<void> print_value(JS::PrintContext& print_context, JS::ThrowCompletionOr<T> value_or_error, HashTable<JS::Object*>& seen_objects)
+{
+    if (value_or_error.is_error()) {
+        auto error = value_or_error.release_error();
+
+        // We can't explicitly check for OOM because InternalError does not store the ErrorType
+        VERIFY(error.value().has_value());
+        VERIFY(error.value()->is_object());
+        VERIFY(is<JS::InternalError>(error.value()->as_object()));
+
+        return Error::from_errno(ENOMEM);
+    }
+
+    return print_value(print_context, value_or_error.release_value(), seen_objects);
+}
 
 DeprecatedString strip_ansi(StringView format_string)
 {

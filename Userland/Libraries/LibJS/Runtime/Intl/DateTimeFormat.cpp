@@ -136,7 +136,7 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
         // a. For each property name prop of « "year", "month", "day" », do
         for (auto const& property : AK::Array { vm.names.year, vm.names.month, vm.names.day }) {
             // i. Perform ? CreateDataPropertyOrThrow(options, prop, "numeric").
-            TRY(options->create_data_property_or_throw(property, PrimitiveString::create(vm, "numeric"sv)));
+            TRY(options->create_data_property_or_throw(property, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "numeric"sv))));
         }
     }
 
@@ -145,7 +145,7 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
         // a. For each property name prop of « "hour", "minute", "second" », do
         for (auto const& property : AK::Array { vm.names.hour, vm.names.minute, vm.names.second }) {
             // i. Perform ? CreateDataPropertyOrThrow(options, prop, "numeric").
-            TRY(options->create_data_property_or_throw(property, PrimitiveString::create(vm, "numeric"sv)));
+            TRY(options->create_data_property_or_throw(property, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "numeric"sv))));
         }
     }
 
@@ -875,7 +875,7 @@ ThrowCompletionOr<Array*> format_date_time_to_parts(VM& vm, DateTimeFormat& date
         auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
-        MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));
+        MUST(object->create_data_property_or_throw(vm.names.type, MUST_OR_THROW_OOM(PrimitiveString::create(vm, part.type))));
 
         // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
         MUST(object->create_data_property_or_throw(vm.names.value, PrimitiveString::create(vm, move(part.value))));
@@ -1192,13 +1192,13 @@ ThrowCompletionOr<Array*> format_date_time_range_to_parts(VM& vm, DateTimeFormat
         auto object = Object::create(realm, realm.intrinsics().object_prototype());
 
         // b. Perform ! CreateDataPropertyOrThrow(O, "type", part.[[Type]]).
-        MUST(object->create_data_property_or_throw(vm.names.type, PrimitiveString::create(vm, part.type)));
+        MUST(object->create_data_property_or_throw(vm.names.type, MUST_OR_THROW_OOM(PrimitiveString::create(vm, part.type))));
 
         // c. Perform ! CreateDataPropertyOrThrow(O, "value", part.[[Value]]).
         MUST(object->create_data_property_or_throw(vm.names.value, PrimitiveString::create(vm, move(part.value))));
 
         // d. Perform ! CreateDataPropertyOrThrow(O, "source", part.[[Source]]).
-        MUST(object->create_data_property_or_throw(vm.names.source, PrimitiveString::create(vm, part.source)));
+        MUST(object->create_data_property_or_throw(vm.names.source, MUST_OR_THROW_OOM(PrimitiveString::create(vm, part.source))));
 
         // e. Perform ! CreateDataProperty(result, ! ToString(n), O).
         MUST(result->create_data_property_or_throw(n, object));

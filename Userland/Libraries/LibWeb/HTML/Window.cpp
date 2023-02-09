@@ -1769,7 +1769,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
         options = JS::Object::create(realm, nullptr);
         MUST(options->set("left", vm.argument(0), ShouldThrowExceptions::No));
         MUST(options->set("top", vm.argument(1), ShouldThrowExceptions::No));
-        MUST(options->set("behavior", JS::PrimitiveString::create(vm, "auto"), ShouldThrowExceptions::No));
+        MUST(options->set("behavior", MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "auto"sv)), ShouldThrowExceptions::No));
     }
 
     auto left_value = TRY(options->get("left"));
