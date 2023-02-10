@@ -225,7 +225,7 @@ u8 Decoder::merge_prob(u8 pre_prob, u32 count_0, u32 count_1, u8 count_sat, u8 m
     }
     auto count = min(total_decode_count, count_sat);
     auto factor = (max_update_factor * count) / count_sat;
-    return round_2(pre_prob * (256 - factor) + (prob * factor), 8);
+    return rounded_right_shift(pre_prob * (256 - factor) + (prob * factor), 8);
 }
 
 u32 Decoder::merge_probs(int const* tree, int index, u8* probs, u32* counts, u8 count_sat, u8 max_update_factor)
@@ -483,12 +483,12 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
             predicted_sample_at(block_size - 1, j) = left_column[block_size - 1];
         // 2. pred[ i ][ 0 ] = Round2( leftCol[ i ] + leftCol[ i + 1 ], 1 ) for i = 0..size-2
         for (auto i = 0u; i < block_size - 1u; i++)
-            predicted_sample_at(i, 0) = round_2(left_column[i] + left_column[i + 1], 1);
+            predicted_sample_at(i, 0) = rounded_right_shift(left_column[i] + left_column[i + 1], 1);
         // 3. pred[ i ][ 1 ] = Round2( leftCol[ i ] + 2 * leftCol[ i + 1 ] + leftCol[ i + 2 ], 2 ) for i = 0..size-3
         for (auto i = 0u; i < block_size - 2u; i++)
-            predicted_sample_at(i, 1) = round_2(left_column[i] + (2 * left_column[i + 1]) + left_column[i + 2], 2);
+            predicted_sample_at(i, 1) = rounded_right_shift(left_column[i] + (2 * left_column[i + 1]) + left_column[i + 2], 2);
         // 4. pred[ size - 2 ][ 1 ] = Round2( leftCol[ size - 2 ] + 3 * leftCol[ size - 1 ], 2 )
-        predicted_sample_at(block_size - 2, 1) = round_2(left_column[block_size - 2] + (3 * left_column[block_size - 1]), 2);
+        predicted_sample_at(block_size - 2, 1) = rounded_right_shift(left_column[block_size - 2] + (3 * left_column[block_size - 1]), 2);
         // 5. pred[ i ][ j ] = pred[ i + 1 ][ j - 2 ] for i = (size-2)..0, for j = 2..size-1
         // NOTE – In the last step i iterates in reverse order.
         for (auto i = block_size - 2u;;) {
@@ -507,7 +507,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
                 // pred[ i ][ j ] is set equal to (i + j + 2 < size * 2) ?
                 if (i + j + 2 < block_size * 2)
                     // Round2( aboveRow[ i + j ] + aboveRow[ i + j + 1 ] * 2 + aboveRow[ i + j + 2 ], 2 ) :
-                    predicted_sample_at(i, j) = round_2(above_row_at(i + j) + above_row_at(i + j + 1) * 2 + above_row_at(i + j + 2), 2);
+                    predicted_sample_at(i, j) = rounded_right_shift(above_row_at(i + j) + above_row_at(i + j + 1) * 2 + above_row_at(i + j + 2), 2);
                 else
                     // aboveRow[ 2 * size - 1 ]
                     predicted_sample_at(i, j) = above_row_at(2 * block_size - 1);
@@ -523,10 +523,10 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
                 // pred[ i ][ j ] is set equal to (i & 1) ?
                 if (i & 1)
                     // Round2( aboveRow[ i/2 + j ] + aboveRow[ i/2 + j + 1 ] * 2 + aboveRow[ i/2 + j + 2 ], 2 ) :
-                    predicted_sample_at(i, j) = round_2(above_row_at(row_index) + above_row_at(row_index + 1) * 2 + above_row_at(row_index + 2), 2);
+                    predicted_sample_at(i, j) = rounded_right_shift(above_row_at(row_index) + above_row_at(row_index + 1) * 2 + above_row_at(row_index + 2), 2);
                 else
                     // Round2( aboveRow[ i/2 + j ] + aboveRow[ i/2 + j + 1 ], 1 ) for i = 0..size-1, for j = 0..size-1.
-                    predicted_sample_at(i, j) = round_2(above_row_at(row_index) + above_row_at(row_index + 1), 1);
+                    predicted_sample_at(i, j) = rounded_right_shift(above_row_at(row_index) + above_row_at(row_index + 1), 1);
             }
         }
         break;
@@ -534,17 +534,17 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
         // Otherwise if mode is equal to D117_PRED, the following applies:
         // 1. pred[ 0 ][ j ] = Round2( aboveRow[ j - 1 ] + aboveRow[ j ], 1 ) for j = 0..size-1
         for (auto j = 0; j < block_size; j++)
-            predicted_sample_at(0, j) = round_2(above_row_at(j - 1) + above_row_at(j), 1);
+            predicted_sample_at(0, j) = rounded_right_shift(above_row_at(j - 1) + above_row_at(j), 1);
         // 2. pred[ 1 ][ 0 ] = Round2( leftCol[ 0 ] + 2 * aboveRow[ -1 ] + aboveRow[ 0 ], 2 )
-        predicted_sample_at(1, 0) = round_2(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
+        predicted_sample_at(1, 0) = rounded_right_shift(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
         // 3. pred[ 1 ][ j ] = Round2( aboveRow[ j - 2 ] + 2 * aboveRow[ j - 1 ] + aboveRow[ j ], 2 ) for j = 1..size-1
         for (auto j = 1; j < block_size; j++)
-            predicted_sample_at(1, j) = round_2(above_row_at(j - 2) + 2 * above_row_at(j - 1) + above_row_at(j), 2);
+            predicted_sample_at(1, j) = rounded_right_shift(above_row_at(j - 2) + 2 * above_row_at(j - 1) + above_row_at(j), 2);
         // 4. pred[ 2 ][ 0 ] = Round2( aboveRow[ -1 ] + 2 * leftCol[ 0 ] + leftCol[ 1 ], 2 )
-        predicted_sample_at(2, 0) = round_2(above_row_at(-1) + 2 * left_column[0] + left_column[1], 2);
+        predicted_sample_at(2, 0) = rounded_right_shift(above_row_at(-1) + 2 * left_column[0] + left_column[1], 2);
         // 5. pred[ i ][ 0 ] = Round2( leftCol[ i - 3 ] + 2 * leftCol[ i - 2 ] + leftCol[ i - 1 ], 2 ) for i = 3..size-1
         for (auto i = 3u; i < block_size; i++)
-            predicted_sample_at(i, 0) = round_2(left_column[i - 3] + 2 * left_column[i - 2] + left_column[i - 1], 2);
+            predicted_sample_at(i, 0) = rounded_right_shift(left_column[i - 3] + 2 * left_column[i - 2] + left_column[i - 1], 2);
         // 6. pred[ i ][ j ] = pred[ i - 2 ][ j - 1 ] for i = 2..size-1, for j = 1..size-1
         for (auto i = 2u; i < block_size; i++) {
             for (auto j = 1u; j < block_size; j++)
@@ -554,15 +554,15 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     case PredictionMode::D135Pred:
         // Otherwise if mode is equal to D135_PRED, the following applies:
         // 1. pred[ 0 ][ 0 ] = Round2( leftCol[ 0 ] + 2 * aboveRow[ -1 ] + aboveRow[ 0 ], 2 )
-        predicted_sample_at(0, 0) = round_2(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
+        predicted_sample_at(0, 0) = rounded_right_shift(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
         // 2. pred[ 0 ][ j ] = Round2( aboveRow[ j - 2 ] + 2 * aboveRow[ j - 1 ] + aboveRow[ j ], 2 ) for j = 1..size-1
         for (auto j = 1; j < block_size; j++)
-            predicted_sample_at(0, j) = round_2(above_row_at(j - 2) + 2 * above_row_at(j - 1) + above_row_at(j), 2);
+            predicted_sample_at(0, j) = rounded_right_shift(above_row_at(j - 2) + 2 * above_row_at(j - 1) + above_row_at(j), 2);
         // 3. pred[ 1 ][ 0 ] = Round2( aboveRow [ -1 ] + 2 * leftCol[ 0 ] + leftCol[ 1 ], 2 ) for i = 1..size-1
-        predicted_sample_at(1, 0) = round_2(above_row_at(-1) + 2 * left_column[0] + left_column[1], 2);
+        predicted_sample_at(1, 0) = rounded_right_shift(above_row_at(-1) + 2 * left_column[0] + left_column[1], 2);
         // 4. pred[ i ][ 0 ] = Round2( leftCol[ i - 2 ] + 2 * leftCol[ i - 1 ] + leftCol[ i ], 2 ) for i = 2..size-1
         for (auto i = 2u; i < block_size; i++)
-            predicted_sample_at(i, 0) = round_2(left_column[i - 2] + 2 * left_column[i - 1] + left_column[i], 2);
+            predicted_sample_at(i, 0) = rounded_right_shift(left_column[i - 2] + 2 * left_column[i - 1] + left_column[i], 2);
         // 5. pred[ i ][ j ] = pred[ i - 1 ][ j - 1 ] for i = 1..size-1, for j = 1..size-1
         for (auto i = 1u; i < block_size; i++) {
             for (auto j = 1; j < block_size; j++)
@@ -572,20 +572,20 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     case PredictionMode::D153Pred:
         // Otherwise if mode is equal to D153_PRED, the following applies:
         // 1. pred[ 0 ][ 0 ] = Round2( leftCol[ 0 ] + aboveRow[ -1 ], 1 )
-        predicted_sample_at(0, 0) = round_2(left_column[0] + above_row_at(-1), 1);
+        predicted_sample_at(0, 0) = rounded_right_shift(left_column[0] + above_row_at(-1), 1);
         // 2. pred[ i ][ 0 ] = Round2( leftCol[ i - 1] + leftCol[ i ], 1 ) for i = 1..size-1
         for (auto i = 1u; i < block_size; i++)
-            predicted_sample_at(i, 0) = round_2(left_column[i - 1] + left_column[i], 1);
+            predicted_sample_at(i, 0) = rounded_right_shift(left_column[i - 1] + left_column[i], 1);
         // 3. pred[ 0 ][ 1 ] = Round2( leftCol[ 0 ] + 2 * aboveRow[ -1 ] + aboveRow[ 0 ], 2 )
-        predicted_sample_at(0, 1) = round_2(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
+        predicted_sample_at(0, 1) = rounded_right_shift(left_column[0] + 2 * above_row_at(-1) + above_row_at(0), 2);
         // 4. pred[ 1 ][ 1 ] = Round2( aboveRow[ -1 ] + 2 * leftCol [ 0 ] + leftCol [ 1 ], 2 )
-        predicted_sample_at(1, 1) = round_2(above_row_at(-1) + 2 * left_column[0] + left_column[1], 2);
+        predicted_sample_at(1, 1) = rounded_right_shift(above_row_at(-1) + 2 * left_column[0] + left_column[1], 2);
         // 5. pred[ i ][ 1 ] = Round2( leftCol[ i - 2 ] + 2 * leftCol[ i - 1 ] + leftCol[ i ], 2 ) for i = 2..size-1
         for (auto i = 2u; i < block_size; i++)
-            predicted_sample_at(i, 1) = round_2(left_column[i - 2] + 2 * left_column[i - 1] + left_column[i], 2);
+            predicted_sample_at(i, 1) = rounded_right_shift(left_column[i - 2] + 2 * left_column[i - 1] + left_column[i], 2);
         // 6. pred[ 0 ][ j ] = Round2( aboveRow[ j - 3 ] + 2 * aboveRow[ j - 2 ] + aboveRow[ j - 1 ], 2 ) for j = 2..size-1
         for (auto j = 2; j < block_size; j++)
-            predicted_sample_at(0, j) = round_2(above_row_at(j - 3) + 2 * above_row_at(j - 2) + above_row_at(j - 1), 2);
+            predicted_sample_at(0, j) = rounded_right_shift(above_row_at(j - 3) + 2 * above_row_at(j - 2) + above_row_at(j - 1), 2);
         // 7. pred[ i ][ j ] = pred[ i - 1 ][ j - 2 ] for i = 1..size-1, for j = 2..size-1
         for (auto i = 1u; i < block_size; i++) {
             for (auto j = 2u; j < block_size; j++)
@@ -915,7 +915,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
                     clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3));
                 accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
             }
-            intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, round_2(accumulated_samples, 7));
+            intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
         }
     }
 
@@ -928,7 +928,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
                 auto sample = intermediate_buffer_at((samples_start >> 4) + t, column);
                 accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
             }
-            block_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, round_2(accumulated_samples, 7));
+            block_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
         }
     }
 
@@ -991,7 +991,7 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
 
     for (auto i = 0u; i < height_in_frame_buffer; i++) {
         for (auto j = 0u; j < width_in_frame_buffer; j++)
-            frame_buffer_at(y + i, x + j) = round_2(predicted_buffer_at(predicted_span, i, j) + predicted_buffer_at(second_predicted_span, i, j), 1);
+            frame_buffer_at(y + i, x + j) = rounded_right_shift(predicted_buffer_at(predicted_span, i, j) + predicted_buffer_at(second_predicted_span, i, j), 1);
     }
 
     return {};
@@ -1166,7 +1166,7 @@ inline i32 Decoder::sin64(u8 angle)
 }
 
 template<typename T>
-inline i32 Decoder::round_2(T value, u8 bits)
+inline i32 Decoder::rounded_right_shift(T value, u8 bits)
 {
     value = (value + static_cast<T>(1u << (bits - 1u))) >> bits;
     return static_cast<i32>(value);
@@ -1182,9 +1182,9 @@ inline void Decoder::butterfly_rotation_in_place(Span<Intermediate> data, size_t
     // 2. The variable y is set equal to T[ a ] * sin64( angle ) + T[ b ] * cos64( angle ).
     i64 rotated_b = data[index_a] * sin + data[index_b] * cos;
     // 3. T[ a ] is set equal to Round2( x, 14 ).
-    data[index_a] = round_2(rotated_a, 14);
+    data[index_a] = rounded_right_shift(rotated_a, 14);
     // 4. T[ b ] is set equal to Round2( y, 14 ).
-    data[index_b] = round_2(rotated_b, 14);
+    data[index_b] = rounded_right_shift(rotated_b, 14);
 
     // The function B( a ,b, angle, 1 ) performs a butterfly rotation and flip specified by the following ordered steps:
     // 1. The function B( a, b, angle, 0 ) is invoked.
@@ -1436,13 +1436,13 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_4(Span<Intermedi
     s3 = x0 + x1 - x3;
 
     // T[ 0 ] = Round2( s0, 14 )
-    data[0] = round_2(s0, 14);
+    data[0] = rounded_right_shift(s0, 14);
     // T[ 1 ] = Round2( s1, 14 )
-    data[1] = round_2(s1, 14);
+    data[1] = rounded_right_shift(s1, 14);
     // T[ 2 ] = Round2( s2, 14 )
-    data[2] = round_2(s2, 14);
+    data[2] = rounded_right_shift(s2, 14);
     // T[ 3 ] = Round2( s3, 14 )
-    data[3] = round_2(s3, 14);
+    data[3] = rounded_right_shift(s3, 14);
 
     // (8.7.1.1) The inverse asymmetric discrete sine transforms also make use of an intermediate array named S.
     // The values in this array require higher precision to avoid overflow. Using signed integers with 24 +
@@ -1483,9 +1483,9 @@ inline void Decoder::hadamard_rotation(Span<S> source, Span<D> destination, size
     S a = source[index_a];
     S b = source[index_b];
     // 1. T[ a ] is set equal to Round2( S[ a ] + S[ b ], 14 ).
-    destination[index_a] = round_2(a + b, 14);
+    destination[index_a] = rounded_right_shift(a + b, 14);
     // 2. T[ b ] is set equal to Round2( S[ a ] - S[ b ], 14 ).
-    destination[index_b] = round_2(a - b, 14);
+    destination[index_b] = rounded_right_shift(a - b, 14);
 }
 
 inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_8(Span<Intermediate> data)
@@ -1716,7 +1716,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
         if (!block_context.frame_context.is_lossless()) {
             for (auto i = 0u; i < block_size; i++) {
                 auto index = index_from_row_and_column(i, j, block_size);
-                dequantized[index] = round_2(dequantized[index], min(6, log2_of_block_size + 2));
+                dequantized[index] = rounded_right_shift(dequantized[index], min(6, log2_of_block_size + 2));
             }
         }
     }
