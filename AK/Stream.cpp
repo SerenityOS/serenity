@@ -20,15 +20,10 @@ ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
 
         auto result = read(buffer.slice(nread));
         if (result.is_error()) {
-#ifdef KERNEL
-            if (result.error().code() == EINTR) {
-                continue;
-            }
-#else
             if (result.error().is_errno() && result.error().code() == EINTR) {
                 continue;
             }
-#endif
+
             return result.release_error();
         }
 
@@ -89,15 +84,10 @@ ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
     while (nwritten < buffer.size()) {
         auto result = write(buffer.slice(nwritten));
         if (result.is_error()) {
-#ifdef KERNEL
-            if (result.error().code() == EINTR) {
-                continue;
-            }
-#else
             if (result.error().is_errno() && result.error().code() == EINTR) {
                 continue;
             }
-#endif
+
             return result.release_error();
         }
 
