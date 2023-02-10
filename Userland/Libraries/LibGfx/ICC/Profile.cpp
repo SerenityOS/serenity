@@ -600,6 +600,8 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
         return TextDescriptionTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextTagData::Type:
         return TextTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case ViewingConditionsTagData::Type:
+        return ViewingConditionsTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case XYZTagData::Type:
         return XYZTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     default:
@@ -1259,7 +1261,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.51 viewingConditionsTag
     // "Permitted tag types: viewingConditionsType"
-    // FIXME
+    if (!has_type(viewingConditionsTag, { ViewingConditionsTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: viewingConditionsTag has unexpected type");
 
     // FIXME: Add validation for v2-only tags:
     // - ICC v2, 6.4.14 crdInfoTag

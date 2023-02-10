@@ -679,6 +679,32 @@ private:
     String m_text;
 };
 
+// ICC v4, 10.30 viewingConditionsType
+class ViewingConditionsTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x76696577 }; // 'view'
+
+    static ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    ViewingConditionsTagData(u32 offset, u32 size, XYZ const& unnormalized_ciexyz_values_for_illuminant,
+        XYZ const& unnormalized_ciexyz_values_for_surround, MeasurementTagData::StandardIlluminant illuminant_type)
+        : TagData(offset, size, Type)
+        , m_unnormalized_ciexyz_values_for_illuminant(unnormalized_ciexyz_values_for_illuminant)
+        , m_unnormalized_ciexyz_values_for_surround(unnormalized_ciexyz_values_for_surround)
+        , m_illuminant_type(illuminant_type)
+    {
+    }
+
+    XYZ const& unnormalized_ciexyz_values_for_illuminant() const { return m_unnormalized_ciexyz_values_for_illuminant; }
+    XYZ const& unnormalized_ciexyz_values_for_surround() const { return m_unnormalized_ciexyz_values_for_surround; }
+    MeasurementTagData::StandardIlluminant illuminant_type() const { return m_illuminant_type; }
+
+private:
+    XYZ m_unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
+    XYZ m_unnormalized_ciexyz_values_for_surround;   // "(in which Y is in cd/m2)"
+    MeasurementTagData::StandardIlluminant m_illuminant_type;
+};
+
 // ICC v4, 10.31 XYZType
 class XYZTagData : public TagData {
 public:

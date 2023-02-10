@@ -934,6 +934,31 @@ ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes,
     return adopt_ref(*new TextTagData(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1)))));
 }
 
+ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.30 viewingConditionsType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    // Table 84 — viewingConditionsType encoding
+    struct ViewingConditionsHeader {
+        XYZNumber unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
+        XYZNumber unnormalized_ciexyz_values_for_surround;   // "(in which Y is in cd/m2)"
+        BigEndian<MeasurementTagData::StandardIlluminant> illuminant_type;
+    };
+    static_assert(AssertSize<ViewingConditionsHeader, 28>());
+
+    if (bytes.size() < 2 * sizeof(u32) + sizeof(ViewingConditionsHeader))
+        return Error::from_string_literal("ICC::Profile: viewingConditionsType has not enough data");
+
+    auto& header = *bit_cast<ViewingConditionsHeader const*>(bytes.data() + 8);
+
+    TRY(MeasurementTagData::validate_standard_illuminant(header.illuminant_type));
+
+    return adopt_ref(*new ViewingConditionsTagData(offset, size, header.unnormalized_ciexyz_values_for_illuminant,
+        header.unnormalized_ciexyz_values_for_surround, header.illuminant_type));
+}
+
 ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.31 XYZType
