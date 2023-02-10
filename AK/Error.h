@@ -38,12 +38,14 @@ public:
         return Error(syscall_name, rc);
     }
     [[nodiscard]] static Error from_string_view(StringView string_literal) { return Error(string_literal); }
+#endif
 
     [[nodiscard]] static Error copy(Error const& error)
     {
         return Error(error);
     }
 
+#ifndef KERNEL
     // NOTE: Prefer `from_string_literal` when directly typing out an error message:
     //
     //     return Error::from_string_literal("Class: Some failure");
@@ -108,10 +110,12 @@ private:
         , m_syscall(true)
     {
     }
+#endif
 
     Error(Error const&) = default;
     Error& operator=(Error const&) = default;
 
+#ifndef KERNEL
     StringView m_string_literal;
 #endif
 
