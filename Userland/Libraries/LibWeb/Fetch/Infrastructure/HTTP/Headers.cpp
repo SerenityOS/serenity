@@ -352,7 +352,7 @@ ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase
             continue;
         auto bytes = TRY(ByteBuffer::copy(name));
         Infra::byte_lowercase(bytes);
-        header_names_seen.set(bytes);
+        header_names_seen.set(name);
         header_names_set.append(move(bytes));
     }
 
