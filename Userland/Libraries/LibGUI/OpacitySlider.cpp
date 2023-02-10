@@ -22,6 +22,7 @@ OpacitySlider::OpacitySlider(Gfx::Orientation orientation)
     set_min(0);
     set_max(100);
     set_value(100);
+    set_preferred_size(SpecialDimension::Fit);
 }
 
 Gfx::IntRect OpacitySlider::frame_inner_rect() const
@@ -192,17 +193,15 @@ void OpacitySlider::mousewheel_event(MouseEvent& event)
 Optional<UISize> OpacitySlider::calculated_min_size() const
 {
     if (orientation() == Gfx::Orientation::Vertical)
-        return { { 20, 40 } };
-    else
-        return { { 40, 20 } };
+        return { { 22, 40 } };
+    return { { 40, 22 } };
 }
 
 Optional<UISize> OpacitySlider::calculated_preferred_size() const
 {
     if (orientation() == Gfx::Orientation::Vertical)
         return { { SpecialDimension::Shrink, SpecialDimension::OpportunisticGrow } };
-    else
-        return { { SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink } };
+    return { { SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink } };
 }
 
 }
