@@ -24,7 +24,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     // FIXME: Implement vertical mode
     VERIFY(orientation == Orientation::Horizontal);
 
-    set_fixed_height(20);
+    set_preferred_size(SpecialDimension::Fit);
 
     m_textbox = add<GUI::TextBox>();
     m_textbox->set_relative_rect({ 0, 0, 34, 20 });
@@ -119,9 +119,14 @@ Gfx::IntRect ValueSlider::bar_rect() const
     return bar_rect;
 }
 
+int ValueSlider::knob_length() const
+{
+    return m_knob_style == KnobStyle::Wide ? 13 : 7;
+}
+
 Gfx::IntRect ValueSlider::knob_rect() const
 {
-    int knob_thickness = m_knob_style == KnobStyle::Wide ? 13 : 7;
+    int knob_thickness = knob_length();
 
     Gfx::IntRect knob_rect = bar_rect();
     knob_rect.set_width(knob_thickness);
@@ -200,6 +205,22 @@ void ValueSlider::mouseup_event(MouseEvent& event)
         return;
 
     m_dragging = false;
+}
+
+Optional<UISize> ValueSlider::calculated_min_size() const
+{
+    auto content_min_size = m_textbox->effective_min_size();
+
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { content_min_size.width(), content_min_size.height().as_int() + knob_length() } };
+    return { { content_min_size.width().as_int() + knob_length(), content_min_size.height() } };
+}
+
+Optional<UISize> ValueSlider::calculated_preferred_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { SpecialDimension::Shrink, SpecialDimension::OpportunisticGrow } };
+    return { { SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink } };
 }
 
 }
