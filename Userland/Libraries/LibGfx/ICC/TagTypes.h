@@ -303,6 +303,8 @@ struct CLUTData {
     Variant<Vector<u8>, Vector<u16>> values;
 };
 
+using LutCurveType = NonnullRefPtr<TagData>; // FIXME: Variant<CurveTagData, ParametricCurveTagData> instead?
+
 // ICC v4, 10.12 lutAToBType
 class LutAToBTagData : public TagData {
 public:
@@ -310,32 +312,47 @@ public:
 
     static ErrorOr<NonnullRefPtr<LutAToBTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
-    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<CLUTData> clut, Optional<EMatrix3x4> e)
+    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels,
+        Optional<Vector<LutCurveType>> a_curves, Optional<CLUTData> clut, Optional<Vector<LutCurveType>> m_curves, Optional<EMatrix3x4> e, Vector<LutCurveType> b_curves)
         : TagData(offset, size, Type)
         , m_number_of_input_channels(number_of_input_channels)
         , m_number_of_output_channels(number_of_output_channels)
+        , m_a_curves(move(a_curves))
         , m_clut(move(clut))
+        , m_m_curves(move(m_curves))
         , m_e(e)
+        , m_b_curves(move(b_curves))
     {
+        VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_input_channels);
+        VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_output_channels);
+        VERIFY(m_b_curves.size() == m_number_of_output_channels);
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
     u8 number_of_output_channels() const { return m_number_of_output_channels; }
 
+    Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
     Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
     Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
 
 private:
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
 
-    // "Only the following combinations are permitted:
+    // "It is possible to use any or all of these processing elements. At least one processing element shall be included.
+    //  Only the following combinations are permitted:
     //  - B;
     //  - M, Matrix, B;
     //  - A, CLUT, B;
     //  - A, CLUT, M, Matrix, B."
+    // This seems to imply that the B curve is not in fact optional.
+    Optional<Vector<LutCurveType>> m_a_curves;
     Optional<CLUTData> m_clut;
+    Optional<Vector<LutCurveType>> m_m_curves;
     Optional<EMatrix3x4> m_e;
+    Vector<LutCurveType> m_b_curves;
 };
 
 // ICC v4, 10.13 lutBToAType
@@ -345,32 +362,47 @@ public:
 
     static ErrorOr<NonnullRefPtr<LutBToATagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
-    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<EMatrix3x4> e, Optional<CLUTData> clut)
+    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels,
+        Vector<LutCurveType> b_curves, Optional<EMatrix3x4> e, Optional<Vector<LutCurveType>> m_curves, Optional<CLUTData> clut, Optional<Vector<LutCurveType>> a_curves)
         : TagData(offset, size, Type)
         , m_number_of_input_channels(number_of_input_channels)
         , m_number_of_output_channels(number_of_output_channels)
+        , m_b_curves(move(b_curves))
         , m_e(e)
+        , m_m_curves(move(m_curves))
         , m_clut(move(clut))
+        , m_a_curves(move(a_curves))
     {
+        VERIFY(m_b_curves.size() == m_number_of_input_channels);
+        VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_input_channels);
+        VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_output_channels);
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
     u8 number_of_output_channels() const { return m_number_of_output_channels; }
 
+    Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
     Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
     Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
 
 private:
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
 
-    // "Only the following combinations are permitted:
+    // "It is possible to use any or all of these processing elements. At least one processing element shall be included.
+    //  Only the following combinations are permitted:
     //  - B;
     //  - B, Matrix, M;
     //  - B, CLUT, A;
     //  - B, Matrix, M, CLUT, A."
+    // This seems to imply that the B curve is not in fact optional.
+    Vector<LutCurveType> m_b_curves;
     Optional<EMatrix3x4> m_e;
+    Optional<Vector<LutCurveType>> m_m_curves;
     Optional<CLUTData> m_clut;
+    Optional<Vector<LutCurveType>> m_a_curves;
 };
 
 // ICC v4, 10.14 measurementType

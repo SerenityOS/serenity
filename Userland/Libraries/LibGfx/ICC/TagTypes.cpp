@@ -358,6 +358,17 @@ static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader c
     return CLUTData { move(number_of_grid_points_in_dimension), move(values) };
 }
 
+static ErrorOr<Vector<LutCurveType>> read_curves(ReadonlyBytes bytes, u32 offset, u32 count)
+{
+    Vector<LutCurveType> curves;
+    // FIXME: Implement.
+    (void)bytes;
+    (void)offset;
+    for (u32 i = 0; i < count; ++i)
+        TRY(curves.try_append(adopt_ref(*new CurveTagData(0, 0, {}))));
+    return curves;
+}
+
 ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.12 lutAToBType
@@ -372,6 +383,7 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
         return Error::from_string_literal("ICC::Profile: lutAToBType reserved_for_padding not 0");
 
     // "Curve data elements may be shared. For example, the offsets for A, B and M curves can be identical."
+    // FIXME: Implement sharing curve objects when that happens. (I haven't seen it happen in practice yet.)
 
     // 10.12.2 “A” curves
     // "There are the same number of “A” curves as there are input channels. The “A” curves may only be used when
@@ -379,9 +391,9 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
     //  Each “A” curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
     //  is as indicated by the convention of the respective curve type. Note that the entire tag type, including the tag
     //  type signature and reserved bytes, is included for each curve."
-    if (header.offset_to_a_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> a_curves;
+    if (header.offset_to_a_curves)
+        a_curves = TRY(read_curves(bytes, header.offset_to_a_curves, header.number_of_input_channels));
 
     // 10.12.3 CLUT
     Optional<CLUTData> clut_data;
@@ -398,9 +410,9 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
     //  or a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the respective
     //  curve type. Note that the entire tag type, including the tag type signature and reserved bytes, is included for
     //  each curve. The “M” curves may only be used when the matrix is used."
-    if (header.offset_to_m_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> m_curves;
+    if (header.offset_to_m_curves)
+        m_curves = TRY(read_curves(bytes, header.offset_to_m_curves, header.number_of_output_channels));
 
     // 10.12.5 Matrix
     // "The matrix is organized as a 3 x 4 array. The elements appear in order from e1-e12. The matrix elements are
@@ -422,12 +434,12 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
     //  parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the respective curve
     //  type. Note that the entire tag type, including the tag type signature and reserved bytes, are included for each
     //  curve."
-    if (header.offset_to_b_curves) {
-        // FIXME
-    }
+    if (!header.offset_to_b_curves)
+        return Error::from_string_literal("ICC::Profile: lutAToBType without B curves");
+    Vector<LutCurveType> b_curves = TRY(read_curves(bytes, header.offset_to_b_curves, header.number_of_output_channels));
 
-    // FIXME: Pass curve data once it's read above.
-    return adopt_ref(*new LutAToBTagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, move(clut_data), e));
+    return adopt_ref(*new LutAToBTagData(offset, size, header.number_of_input_channels, header.number_of_output_channels,
+        move(a_curves), move(clut_data), move(m_curves), e, move(b_curves)));
 }
 
 ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -444,6 +456,7 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
         return Error::from_string_literal("ICC::Profile: lutBToAType reserved_for_padding not 0");
 
     // "Curve data elements may be shared. For example, the offsets for A, B and M curves may be identical."
+    // FIXME: Implement sharing curve objects when that happens. (I haven't seen it happen in practice yet.)
 
     // 10.13.2 “B” curves
     // "There are the same number of “B” curves as there are input channels. The curves are stored sequentially, with
@@ -451,9 +464,9 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     //  or a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the proper curve
     //  type. Note that the entire tag type, including the tag type signature and reserved bytes, is included for each
     //  curve."
-    if (header.offset_to_b_curves) {
-        // FIXME
-    }
+    if (!header.offset_to_b_curves)
+        return Error::from_string_literal("ICC::Profile: lutBToAType without B curves");
+    Vector<LutCurveType> b_curves = TRY(read_curves(bytes, header.offset_to_b_curves, header.number_of_input_channels));
 
     // 10.13.3 Matrix
     // "The matrix is organized as a 3 x 4 array. The elements of the matrix appear in the type in order from e1 to e12.
@@ -475,9 +488,9 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     //  a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the proper curve
     //  type. Note that the entire tag type, including the tag type signature and reserved bytes, are included for each
     //  curve. The “M” curves may only be used when the matrix is used."
-    if (header.offset_to_m_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> m_curves;
+    if (header.offset_to_m_curves)
+        m_curves = TRY(read_curves(bytes, header.offset_to_m_curves, header.number_of_input_channels));
 
     // 10.13.5 CLUT
     Optional<CLUTData> clut_data;
@@ -494,12 +507,12 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     //  Each “A” curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
     //  is as indicated by the convention of the proper curve type. Note that the entire tag type, including the tag type
     //  signature and reserved bytes, is included for each curve."
-    if (header.offset_to_a_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> a_curves;
+    if (header.offset_to_a_curves)
+        a_curves = TRY(read_curves(bytes, header.offset_to_a_curves, header.number_of_output_channels));
 
-    // FIXME: Pass curve data once it's read above.
-    return adopt_ref(*new LutBToATagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, e, move(clut_data)));
+    return adopt_ref(*new LutBToATagData(offset, size, header.number_of_input_channels, header.number_of_output_channels,
+        move(b_curves), e, move(m_curves), move(clut_data), move(a_curves)));
 }
 
 ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
