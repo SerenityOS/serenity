@@ -572,3 +572,48 @@ TEST_CASE(reverse_range_for_loop)
     for (auto item : v.in_reverse())
         EXPECT_EQ(item, index--);
 }
+
+static bool is_inline_element(auto& el, auto& vector)
+{
+    uintptr_t vector_ptr = (uintptr_t)&vector;
+    uintptr_t element_ptr = (uintptr_t)&el;
+    return (element_ptr >= vector_ptr && element_ptr < (vector_ptr + sizeof(vector)));
+}
+
+TEST_CASE(uses_inline_capacity_when_appended_to)
+{
+    Vector<int, 10> v;
+    v.unchecked_append(1);
+    v.unchecked_append(123);
+    v.unchecked_append(50);
+    v.unchecked_append(43);
+
+    for (auto& el : v)
+        EXPECT(is_inline_element(el, v));
+}
+
+TEST_CASE(uses_inline_capacity_when_constructed_from_initializer_list)
+{
+    Vector<int, 10> v { 10, 9, 3, 1, 3 };
+
+    for (auto& el : v)
+        EXPECT(is_inline_element(el, v));
+}
+
+TEST_CASE(uses_inline_capacity_when_constructed_from_other_vector)
+{
+    Vector other { 4, 3, 2, 1 };
+    Vector<int, 10> v(other);
+
+    for (auto& el : v)
+        EXPECT(is_inline_element(el, v));
+}
+
+TEST_CASE(uses_inline_capacity_when_constructed_from_span)
+{
+    Array array { "f00", "bar", "baz" };
+    Vector<char const*, 10> v(array.span());
+
+    for (auto& el : v)
+        EXPECT(is_inline_element(el, v));
+}
