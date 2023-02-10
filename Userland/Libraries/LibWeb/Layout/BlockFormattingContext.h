@@ -46,7 +46,7 @@ public:
 
     void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, CSSPixels y, LineBuilder* = nullptr);
 
-    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const&, CSSPixels& current_y);
+    void layout_block_level_box(Box const&, BlockContainer const&, LayoutMode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const&);
 
     virtual bool can_determine_size_of_child() const override { return true; }
     virtual void determine_width_of_child(Box const&, AvailableSpace const&) override;
@@ -149,6 +149,8 @@ private:
             current_collapsible_margins.clear();
         }
     };
+
+    Optional<CSSPixels> m_y_offset_of_current_block_container;
 
     BlockMarginState m_margin_state;
 
