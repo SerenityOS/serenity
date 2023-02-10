@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,6 +50,7 @@ public:
     WebIDL::ExceptionOr<void> append(DeprecatedString const& name, DeprecatedString const& value);
     WebIDL::ExceptionOr<void> delete_(DeprecatedString const& name);
     WebIDL::ExceptionOr<DeprecatedString> get(DeprecatedString const& name);
+    WebIDL::ExceptionOr<Vector<DeprecatedString>> get_set_cookie();
     WebIDL::ExceptionOr<bool> has(DeprecatedString const& name);
     WebIDL::ExceptionOr<void> set(DeprecatedString const& name, DeprecatedString const& value);
 
