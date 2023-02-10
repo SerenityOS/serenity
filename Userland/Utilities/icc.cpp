@@ -311,6 +311,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             out_optional("    macintosh", MUST(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
         } else if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
             outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
+        } else if (tag_data->type() == Gfx::ICC::ViewingConditionsTagData::Type) {
+            auto& viewing_conditions = static_cast<Gfx::ICC::ViewingConditionsTagData&>(*tag_data);
+            outln("    unnormalized CIEXYZ values for illuminant (in which Y is in cd/m²): {}", viewing_conditions.unnormalized_ciexyz_values_for_illuminant());
+            outln("    unnormalized CIEXYZ values for surround (in which Y is in cd/m²): {}", viewing_conditions.unnormalized_ciexyz_values_for_surround());
+            outln("    illuminant type: {}", Gfx::ICC::MeasurementTagData::standard_illuminant_name(viewing_conditions.illuminant_type()));
         } else if (tag_data->type() == Gfx::ICC::XYZTagData::Type) {
             for (auto& xyz : static_cast<Gfx::ICC::XYZTagData&>(*tag_data).xyzs())
                 outln("    {}", xyz);
