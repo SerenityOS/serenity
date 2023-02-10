@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TemporaryChange.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Dump.h>
@@ -450,7 +451,7 @@ CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Bo
     return 0;
 }
 
-void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const& available_space, CSSPixels& current_y)
+void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContainer const& block_container, LayoutMode layout_mode, CSSPixels& bottom_of_lowest_margin_box, AvailableSpace const& available_space)
 {
     auto& box_state = m_state.get_mutable(box);
 
@@ -463,9 +464,11 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
     if (is<ListItemMarkerBox>(box))
         return;
 
+    auto const y = m_y_offset_of_current_block_container.value();
+
     if (box.is_floating()) {
         auto margin_top = !m_margin_state.has_block_container_waiting_for_final_y_position() ? m_margin_state.current_collapsed_margin() : 0;
-        layout_floating_box(box, block_container, layout_mode, available_space, margin_top + current_y);
+        layout_floating_box(box, block_container, layout_mode, available_space, margin_top + y);
         bottom_of_lowest_margin_box = max(bottom_of_lowest_margin_box, box_state.offset.y() + box_state.content_height() + box_state.margin_box_bottom());
         return;
     }
@@ -489,7 +492,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         margin_top = 0;
     }
 
-    place_block_level_element_in_normal_flow_vertically(box, current_y + margin_top);
+    place_block_level_element_in_normal_flow_vertically(box, y + margin_top);
     place_block_level_element_in_normal_flow_horizontally(box, available_space);
 
     OwnPtr<FormattingContext> independent_formatting_context;
@@ -510,7 +513,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
                 } else if (!m_margin_state.has_block_container_waiting_for_final_y_position()) {
                     // margin-top of block container can be updated during children layout hence it's final y position yet to be determined
                     m_margin_state.register_block_container_y_position_update_callback([&](CSSPixels margin_top) {
-                        place_block_level_element_in_normal_flow_vertically(box, margin_top + current_y + box_state.border_box_top());
+                        place_block_level_element_in_normal_flow_vertically(box, margin_top + y + box_state.border_box_top());
                     });
                 }
 
@@ -525,7 +528,7 @@ void BlockFormattingContext::layout_block_level_box(Box const& box, BlockContain
         if (!m_margin_state.box_last_in_flow_child_margin_bottom_collapsed) {
             m_margin_state.reset();
         }
-        current_y = box_state.offset.y() + box_state.content_height() + box_state.border_box_bottom();
+        m_y_offset_of_current_block_container = box_state.offset.y() + box_state.content_height() + box_state.border_box_bottom();
     }
     m_margin_state.box_last_in_flow_child_margin_bottom_collapsed = false;
 
@@ -549,10 +552,10 @@ void BlockFormattingContext::layout_block_level_children(BlockContainer const& b
     VERIFY(!block_container.children_are_inline());
 
     CSSPixels bottom_of_lowest_margin_box = 0;
-    CSSPixels current_y = 0;
 
+    TemporaryChange<Optional<CSSPixels>> change { m_y_offset_of_current_block_container, CSSPixels(0) };
     block_container.for_each_child_of_type<Box>([&](Box& box) {
-        layout_block_level_box(box, block_container, layout_mode, bottom_of_lowest_margin_box, available_space, current_y);
+        layout_block_level_box(box, block_container, layout_mode, bottom_of_lowest_margin_box, available_space);
         return IterationDecision::Continue;
     });
 
