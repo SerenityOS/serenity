@@ -55,7 +55,6 @@ private:
 public:
     using ValueType = T;
     Vector()
-        : m_capacity(inline_capacity)
     {
     }
 
@@ -833,7 +832,7 @@ private:
     StorageType& raw_at(size_t index) { return *slot(index); }
 
     size_t m_size { 0 };
-    size_t m_capacity { 0 };
+    size_t m_capacity { inline_capacity };
 
     static constexpr size_t storage_size()
     {
