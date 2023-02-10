@@ -7,9 +7,9 @@
 
 #include "PDFViewerWidget.h"
 #include <LibConfig/Client.h>
+#include <LibContentAccessClient/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
-#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (file_path) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, file_path);
+        auto response = ContentAccessClient::Client::the().request_url_read_only_approve_local(window, URL::create_with_url_or_path(file_path));
         if (response.is_error())
             return 1;
         pdf_viewer_widget->open_file(response.value().filename(), response.value().release_stream());

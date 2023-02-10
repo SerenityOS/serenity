@@ -1,6 +1,7 @@
 serenity_component(
     PDFViewer
     TARGETS PDFViewer
+    DEPENDS ContentAccessServer
 )
 
 set(SOURCES
@@ -13,4 +14,4 @@ set(SOURCES
     )
 
 serenity_app(PDFViewer ICON app-pdf-viewer)
-target_link_libraries(PDFViewer PRIVATE LibCore LibGfx LibGUI LibPDF LibFileSystemAccessClient LibConfig LibMain)
+target_link_libraries(PDFViewer PRIVATE LibCore LibGfx LibGUI LibPDF LibContentAccessClient LibFileSystemAccessClient LibConfig LibMain)
