@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/BodyInit.h>

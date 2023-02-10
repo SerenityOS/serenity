@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/Forward.h>
 
