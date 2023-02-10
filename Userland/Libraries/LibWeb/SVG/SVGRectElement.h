@@ -33,7 +33,7 @@ private:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
-    Gfx::FloatPoint calculate_used_corner_radius_values();
+    Gfx::FloatSize calculate_used_corner_radius_values() const;
 
     Optional<Gfx::Path> m_path;
 

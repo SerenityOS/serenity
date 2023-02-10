@@ -107,7 +107,7 @@ private:
 
 class EllipticalArcSegment final : public Segment {
 public:
-    EllipticalArcSegment(FloatPoint point, FloatPoint center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, bool large_arc, bool sweep)
+    EllipticalArcSegment(FloatPoint point, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, bool large_arc, bool sweep)
         : Segment(point)
         , m_center(center)
         , m_radii(radii)
@@ -122,7 +122,7 @@ public:
     virtual ~EllipticalArcSegment() override = default;
 
     FloatPoint center() const { return m_center; }
-    FloatPoint radii() const { return m_radii; }
+    FloatSize radii() const { return m_radii; }
     float x_axis_rotation() const { return m_x_axis_rotation; }
     float theta_1() const { return m_theta_1; }
     float theta_delta() const { return m_theta_delta; }
@@ -133,7 +133,7 @@ private:
     virtual Type type() const override { return Segment::Type::EllipticalArcTo; }
 
     FloatPoint m_center;
-    FloatPoint m_radii;
+    FloatSize m_radii;
     float m_x_axis_rotation;
     float m_theta_1;
     float m_theta_delta;
@@ -184,14 +184,14 @@ public:
         invalidate_split_lines();
     }
 
-    void elliptical_arc_to(FloatPoint point, FloatPoint radii, double x_axis_rotation, bool large_arc, bool sweep);
+    void elliptical_arc_to(FloatPoint point, FloatSize radii, double x_axis_rotation, bool large_arc, bool sweep);
     void arc_to(FloatPoint point, float radius, bool large_arc, bool sweep)
     {
         elliptical_arc_to(point, { radius, radius }, 0, large_arc, sweep);
     }
 
     // Note: This does not do any sanity checks!
-    void elliptical_arc_to(FloatPoint endpoint, FloatPoint center, FloatPoint radii, double x_axis_rotation, double theta, double theta_delta, bool large_arc, bool sweep)
+    void elliptical_arc_to(FloatPoint endpoint, FloatPoint center, FloatSize radii, double x_axis_rotation, double theta, double theta_delta, bool large_arc, bool sweep)
     {
         append_segment<EllipticalArcSegment>(
             endpoint,

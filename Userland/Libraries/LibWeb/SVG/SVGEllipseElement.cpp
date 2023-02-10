@@ -60,7 +60,7 @@ Gfx::Path& SVGEllipseElement::get_path()
         return m_path.value();
     }
 
-    Gfx::FloatPoint radii = { rx, ry };
+    Gfx::FloatSize radii = { rx, ry };
     double x_axis_rotation = 0;
     bool large_arc = false;
     bool sweep = true; // Note: Spec says it should be false, but it's wrong. https://github.com/w3c/svgwg/issues/765

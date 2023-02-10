@@ -14,12 +14,12 @@
 
 namespace Gfx {
 
-void Path::elliptical_arc_to(FloatPoint point, FloatPoint radii, double x_axis_rotation, bool large_arc, bool sweep)
+void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, double x_axis_rotation, bool large_arc, bool sweep)
 {
     auto next_point = point;
 
-    double rx = radii.x();
-    double ry = radii.y();
+    double rx = radii.width();
+    double ry = radii.height();
 
     double x_axis_rotation_c = AK::cos(x_axis_rotation);
     double x_axis_rotation_s = AK::sin(x_axis_rotation);

@@ -2254,9 +2254,9 @@ void Painter::draw_cubic_bezier_curve(IntPoint control_point_0, IntPoint control
 }
 
 // static
-void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>& callback)
+void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>& callback)
 {
-    if (radii.x() <= 0 || radii.y() <= 0)
+    if (radii.width() <= 0 || radii.height() <= 0)
         return;
 
     auto start = p1;
@@ -2270,8 +2270,8 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
 
     auto relative_start = start - center;
 
-    auto a = radii.x();
-    auto b = radii.y();
+    auto a = radii.width();
+    auto b = radii.height();
 
     // The segments are at most 1 long
     auto largest_radius = max(a, b);
@@ -2306,12 +2306,12 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
 }
 
 // static
-void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&& callback)
+void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&& callback)
 {
     for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
 }
 
-void Painter::draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
+void Painter::draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 

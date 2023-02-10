@@ -69,8 +69,8 @@ Gfx::Path& SVGRectElement::get_path()
     }
 
     auto corner_radii = calculate_used_corner_radius_values();
-    float rx = corner_radii.x();
-    float ry = corner_radii.y();
+    float rx = corner_radii.width();
+    float ry = corner_radii.height();
 
     // 1. perform an absolute moveto operation to location (x+rx,y);
     path.move_to({ x + rx, y });
@@ -120,7 +120,7 @@ Gfx::Path& SVGRectElement::get_path()
     return m_path.value();
 }
 
-Gfx::FloatPoint SVGRectElement::calculate_used_corner_radius_values()
+Gfx::FloatSize SVGRectElement::calculate_used_corner_radius_values() const
 {
     // 1. Let rx and ry be length values.
     float rx = 0;
@@ -158,7 +158,7 @@ Gfx::FloatPoint SVGRectElement::calculate_used_corner_radius_values()
         ry = half_height;
 
     // 8. The effective values of ‘rx’ and ‘ry’ are rx and ry, respectively.
-    return Gfx::FloatPoint { rx, ry };
+    return { rx, ry };
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementXAttribute

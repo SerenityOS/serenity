@@ -282,7 +282,7 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
     }
 }
 
-void AntiAliasingPainter::draw_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
+void AntiAliasingPainter::draw_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, float thickness, Painter::LineStyle style)
 {
     Painter::for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, [&](FloatPoint fp1, FloatPoint fp2) {
         draw_line_for_path(fp1, fp2, color, thickness, style);
