@@ -43,6 +43,10 @@ private:
     int value_at(Gfx::IntPoint position) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect knob_rect() const;
+    int knob_length() const;
+
+    virtual Optional<UISize> calculated_min_size() const override;
+    virtual Optional<UISize> calculated_preferred_size() const override;
 
     String m_suffix {};
     Orientation m_orientation { Orientation::Horizontal };
