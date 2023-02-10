@@ -11,7 +11,7 @@
 
 namespace Core {
 
-NetworkJob::NetworkJob(AK::Stream& output_stream)
+NetworkJob::NetworkJob(Stream& output_stream)
     : m_output_stream(output_stream)
 {
 }

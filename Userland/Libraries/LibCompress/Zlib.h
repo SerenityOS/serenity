@@ -62,9 +62,9 @@ private:
     ReadonlyBytes m_data_bytes;
 };
 
-class ZlibCompressor : public AK::Stream {
+class ZlibCompressor : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(MaybeOwned<AK::Stream>, ZlibCompressionLevel = ZlibCompressionLevel::Default);
+    static ErrorOr<NonnullOwnPtr<ZlibCompressor>> construct(MaybeOwned<Stream>, ZlibCompressionLevel = ZlibCompressionLevel::Default);
     ~ZlibCompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -77,12 +77,12 @@ public:
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes, ZlibCompressionLevel = ZlibCompressionLevel::Default);
 
 private:
-    ZlibCompressor(MaybeOwned<AK::Stream> stream, NonnullOwnPtr<AK::Stream> compressor_stream);
+    ZlibCompressor(MaybeOwned<Stream> stream, NonnullOwnPtr<Stream> compressor_stream);
     ErrorOr<void> write_header(ZlibCompressionMethod, ZlibCompressionLevel);
 
     bool m_finished { false };
-    MaybeOwned<AK::Stream> m_output_stream;
-    NonnullOwnPtr<AK::Stream> m_compressor;
+    MaybeOwned<Stream> m_output_stream;
+    NonnullOwnPtr<Stream> m_compressor;
     Crypto::Checksum::Adler32 m_adler32_checksum;
 };
 

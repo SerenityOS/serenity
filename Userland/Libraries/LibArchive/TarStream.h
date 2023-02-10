@@ -16,7 +16,7 @@ namespace Archive {
 
 class TarInputStream;
 
-class TarFileStream : public AK::Stream {
+class TarFileStream : public Stream {
 public:
     virtual ErrorOr<Bytes> read(Bytes) override;
     virtual ErrorOr<size_t> write(ReadonlyBytes) override;
@@ -34,7 +34,7 @@ private:
 
 class TarInputStream {
 public:
-    static ErrorOr<NonnullOwnPtr<TarInputStream>> construct(NonnullOwnPtr<AK::Stream>);
+    static ErrorOr<NonnullOwnPtr<TarInputStream>> construct(NonnullOwnPtr<Stream>);
     ErrorOr<void> advance();
     bool finished() const { return m_found_end_of_archive || m_stream->is_eof(); }
     ErrorOr<bool> valid() const;
@@ -45,11 +45,11 @@ public:
     ErrorOr<void> for_each_extended_header(F func);
 
 private:
-    TarInputStream(NonnullOwnPtr<AK::Stream>);
+    TarInputStream(NonnullOwnPtr<Stream>);
     ErrorOr<void> load_next_header();
 
     TarFileHeader m_header;
-    NonnullOwnPtr<AK::Stream> m_stream;
+    NonnullOwnPtr<Stream> m_stream;
     unsigned long m_file_offset { 0 };
     int m_generation { 0 };
     bool m_found_end_of_archive { false };
@@ -59,14 +59,14 @@ private:
 
 class TarOutputStream {
 public:
-    TarOutputStream(MaybeOwned<AK::Stream>);
+    TarOutputStream(MaybeOwned<Stream>);
     ErrorOr<void> add_file(StringView path, mode_t, ReadonlyBytes);
     ErrorOr<void> add_link(StringView path, mode_t, StringView);
     ErrorOr<void> add_directory(StringView path, mode_t);
     ErrorOr<void> finish();
 
 private:
-    MaybeOwned<AK::Stream> m_stream;
+    MaybeOwned<Stream> m_stream;
     bool m_finished { false };
 
     friend class TarFileStream;

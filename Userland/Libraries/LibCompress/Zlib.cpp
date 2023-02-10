@@ -69,7 +69,7 @@ u32 ZlibDecompressor::checksum()
     return m_checksum;
 }
 
-ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(MaybeOwned<AK::Stream> stream, ZlibCompressionLevel compression_level)
+ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(MaybeOwned<Stream> stream, ZlibCompressionLevel compression_level)
 {
     // Zlib only defines Deflate as a compression method.
     auto compression_method = ZlibCompressionMethod::Deflate;
@@ -83,7 +83,7 @@ ErrorOr<NonnullOwnPtr<ZlibCompressor>> ZlibCompressor::construct(MaybeOwned<AK::
     return zlib_compressor;
 }
 
-ZlibCompressor::ZlibCompressor(MaybeOwned<AK::Stream> stream, NonnullOwnPtr<AK::Stream> compressor_stream)
+ZlibCompressor::ZlibCompressor(MaybeOwned<Stream> stream, NonnullOwnPtr<Stream> compressor_stream)
     : m_output_stream(move(stream))
     , m_compressor(move(compressor_stream))
 {
@@ -164,7 +164,7 @@ ErrorOr<void> ZlibCompressor::finish()
 ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompressionLevel compression_level)
 {
     auto output_stream = TRY(try_make<AllocatingMemoryStream>());
-    auto zlib_stream = TRY(ZlibCompressor::construct(MaybeOwned<AK::Stream>(*output_stream), compression_level));
+    auto zlib_stream = TRY(ZlibCompressor::construct(MaybeOwned<Stream>(*output_stream), compression_level));
 
     TRY(zlib_stream->write_entire_buffer(bytes));
 

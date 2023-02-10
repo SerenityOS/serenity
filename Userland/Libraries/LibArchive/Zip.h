@@ -57,7 +57,7 @@ struct [[gnu::packed]] EndOfCentralDirectory {
         return true;
     }
 
-    ErrorOr<void> write(AK::Stream& stream) const
+    ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -143,7 +143,7 @@ struct [[gnu::packed]] CentralDirectoryRecord {
         return true;
     }
 
-    ErrorOr<void> write(AK::Stream& stream) const
+    ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -212,7 +212,7 @@ struct [[gnu::packed]] LocalFileHeader {
         return true;
     }
 
-    ErrorOr<void> write(AK::Stream& stream) const
+    ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -271,13 +271,13 @@ private:
 
 class ZipOutputStream {
 public:
-    ZipOutputStream(NonnullOwnPtr<AK::Stream>);
+    ZipOutputStream(NonnullOwnPtr<Stream>);
 
     ErrorOr<void> add_member(ZipMember const&);
     ErrorOr<void> finish();
 
 private:
-    NonnullOwnPtr<AK::Stream> m_stream;
+    NonnullOwnPtr<Stream> m_stream;
     Vector<ZipMember> m_members;
 
     bool m_finished { false };

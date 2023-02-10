@@ -17,7 +17,7 @@ DeprecatedString instruction_name(OpCode const& opcode);
 Optional<OpCode> instruction_from_name(StringView name);
 
 struct Printer {
-    explicit Printer(AK::Stream& stream, size_t initial_indent = 0)
+    explicit Printer(Stream& stream, size_t initial_indent = 0)
         : m_stream(stream)
         , m_indent(initial_indent)
     {
@@ -71,7 +71,7 @@ private:
         m_stream.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
     }
 
-    AK::Stream& m_stream;
+    Stream& m_stream;
     size_t m_indent { 0 };
 };
 

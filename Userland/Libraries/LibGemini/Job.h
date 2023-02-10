@@ -18,7 +18,7 @@ class Job : public Core::NetworkJob {
     C_OBJECT(Job);
 
 public:
-    explicit Job(GeminiRequest const&, AK::Stream&);
+    explicit Job(GeminiRequest const&, Stream&);
     virtual ~Job() override = default;
 
     virtual void start(Core::Socket&) override;

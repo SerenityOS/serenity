@@ -42,7 +42,7 @@ Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Byte
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    m_bitstream = LOADER_TRY(try_make<BigEndianInputBitStream>(MaybeOwned<AK::Stream>(*m_stream)));
+    m_bitstream = LOADER_TRY(try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(*m_stream)));
 
     TRY(synchronize());
 
@@ -243,7 +243,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     TRY(m_bit_reservoir.discard(old_reservoir_size - frame.main_data_begin));
 
-    BigEndianInputBitStream reservoir_stream { MaybeOwned<AK::Stream>(m_bit_reservoir) };
+    BigEndianInputBitStream reservoir_stream { MaybeOwned<Stream>(m_bit_reservoir) };
 
     for (size_t granule_index = 0; granule_index < 2; granule_index++) {
         for (size_t channel_index = 0; channel_index < header.channel_count(); channel_index++) {

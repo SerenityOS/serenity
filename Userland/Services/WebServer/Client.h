@@ -30,7 +30,7 @@ private:
     };
 
     ErrorOr<bool> handle_request(ReadonlyBytes);
-    ErrorOr<void> send_response(AK::Stream&, HTTP::HttpRequest const&, ContentInfo);
+    ErrorOr<void> send_response(Stream&, HTTP::HttpRequest const&, ContentInfo);
     ErrorOr<void> send_redirect(StringView redirect, HTTP::HttpRequest const&);
     ErrorOr<void> send_error_response(unsigned code, HTTP::HttpRequest const&, Vector<String> const& headers = {});
     void die();

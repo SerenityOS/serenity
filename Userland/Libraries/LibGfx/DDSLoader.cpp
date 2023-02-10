@@ -202,7 +202,7 @@ static DXGIFormat get_format(DDSPixelFormat format)
     return DXGI_FORMAT_UNKNOWN;
 }
 
-static ErrorOr<void> decode_dx5_alpha_block(AK::Stream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
+static ErrorOr<void> decode_dx5_alpha_block(Stream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
 {
     auto color0 = TRY(stream.read_value<LittleEndian<u8>>());
     auto color1 = TRY(stream.read_value<LittleEndian<u8>>());
@@ -265,7 +265,7 @@ static ErrorOr<void> decode_dx5_alpha_block(AK::Stream& stream, DDSLoadingContex
     return {};
 }
 
-static ErrorOr<void> decode_dx3_alpha_block(AK::Stream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
+static ErrorOr<void> decode_dx3_alpha_block(Stream& stream, DDSLoadingContext& context, u64 bitmap_x, u64 bitmap_y)
 {
     auto a0 = TRY(stream.read_value<LittleEndian<u8>>());
     auto a1 = TRY(stream.read_value<LittleEndian<u8>>());
@@ -313,7 +313,7 @@ static void unpack_rbg_565(u32 rgb, u8* output)
     output[3] = 255;
 }
 
-static ErrorOr<void> decode_color_block(AK::Stream& stream, DDSLoadingContext& context, bool dxt1, u64 bitmap_x, u64 bitmap_y)
+static ErrorOr<void> decode_color_block(Stream& stream, DDSLoadingContext& context, bool dxt1, u64 bitmap_x, u64 bitmap_y)
 {
     auto c0_low = TRY(stream.read_value<LittleEndian<u8>>());
     auto c0_high = TRY(stream.read_value<LittleEndian<u8>>());
@@ -369,7 +369,7 @@ static ErrorOr<void> decode_color_block(AK::Stream& stream, DDSLoadingContext& c
     return {};
 }
 
-static ErrorOr<void> decode_dxt(AK::Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
+static ErrorOr<void> decode_dxt(Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 y)
 {
     if (format == DXGI_FORMAT_BC1_UNORM) {
         for (size_t x = 0; x < width; x += 4) {
@@ -393,7 +393,7 @@ static ErrorOr<void> decode_dxt(AK::Stream& stream, DDSLoadingContext& context, 
 
     return {};
 }
-static ErrorOr<void> decode_bitmap(AK::Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
+static ErrorOr<void> decode_bitmap(Stream& stream, DDSLoadingContext& context, DXGIFormat format, u64 width, u64 height)
 {
     Vector<u32> dxt_formats = { DXGI_FORMAT_BC1_UNORM, DXGI_FORMAT_BC2_UNORM, DXGI_FORMAT_BC3_UNORM };
     if (dxt_formats.contains_slow(format)) {

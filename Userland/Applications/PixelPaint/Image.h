@@ -72,9 +72,9 @@ public:
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect, float scale) const;
 
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
-    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_png_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<AK::Stream>) const;
+    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_png_to_file(NonnullOwnPtr<Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<Stream>) const;
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);

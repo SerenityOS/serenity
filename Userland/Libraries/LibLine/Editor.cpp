@@ -1582,7 +1582,7 @@ void Editor::strip_styles(bool strip_anchored)
     m_refresh_needed = true;
 }
 
-ErrorOr<void> Editor::reposition_cursor(AK::Stream& stream, bool to_end)
+ErrorOr<void> Editor::reposition_cursor(Stream& stream, bool to_end)
 {
     auto cursor = m_cursor;
     auto saved_cursor = m_cursor;
@@ -1604,12 +1604,12 @@ ErrorOr<void> Editor::reposition_cursor(AK::Stream& stream, bool to_end)
     return {};
 }
 
-ErrorOr<void> VT::move_absolute(u32 row, u32 col, AK::Stream& stream)
+ErrorOr<void> VT::move_absolute(u32 row, u32 col, Stream& stream)
 {
     return stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{}H", row, col).bytes());
 }
 
-ErrorOr<void> VT::move_relative(int row, int col, AK::Stream& stream)
+ErrorOr<void> VT::move_relative(int row, int col, Stream& stream)
 {
     char x_op = 'A', y_op = 'D';
 
@@ -1761,7 +1761,7 @@ DeprecatedString Style::to_deprecated_string() const
     return builder.to_deprecated_string();
 }
 
-ErrorOr<void> VT::apply_style(Style const& style, AK::Stream& stream, bool is_starting)
+ErrorOr<void> VT::apply_style(Style const& style, Stream& stream, bool is_starting)
 {
     if (is_starting) {
         TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{};{}m{}{}{}",
@@ -1779,7 +1779,7 @@ ErrorOr<void> VT::apply_style(Style const& style, AK::Stream& stream, bool is_st
     return {};
 }
 
-ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, AK::Stream& stream)
+ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, Stream& stream)
 {
     if (count_below + count_above == 0) {
         TRY(stream.write_entire_buffer("\033[2K"sv.bytes()));
@@ -1798,17 +1798,17 @@ ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, AK::Stream
     return {};
 }
 
-ErrorOr<void> VT::save_cursor(AK::Stream& stream)
+ErrorOr<void> VT::save_cursor(Stream& stream)
 {
     return stream.write_entire_buffer("\033[s"sv.bytes());
 }
 
-ErrorOr<void> VT::restore_cursor(AK::Stream& stream)
+ErrorOr<void> VT::restore_cursor(Stream& stream)
 {
     return stream.write_entire_buffer("\033[u"sv.bytes());
 }
 
-ErrorOr<void> VT::clear_to_end_of_line(AK::Stream& stream)
+ErrorOr<void> VT::clear_to_end_of_line(Stream& stream)
 {
     return stream.write_entire_buffer("\033[K"sv.bytes());
 }

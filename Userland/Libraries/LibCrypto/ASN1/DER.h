@@ -211,6 +211,6 @@ private:
     Optional<Tag> m_current_tag;
 };
 
-ErrorOr<void> pretty_print(Decoder&, AK::Stream&, int indent = 0);
+ErrorOr<void> pretty_print(Decoder&, Stream&, int indent = 0);
 
 }

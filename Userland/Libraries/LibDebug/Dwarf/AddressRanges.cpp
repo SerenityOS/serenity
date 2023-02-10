@@ -10,7 +10,7 @@
 
 namespace Debug::Dwarf {
 
-AddressRangesV5::AddressRangesV5(NonnullOwnPtr<AK::Stream> range_lists_stream, CompilationUnit const& compilation_unit)
+AddressRangesV5::AddressRangesV5(NonnullOwnPtr<Stream> range_lists_stream, CompilationUnit const& compilation_unit)
     : m_range_lists_stream(move(range_lists_stream))
     , m_compilation_unit(compilation_unit)
 {
@@ -77,7 +77,7 @@ ErrorOr<void> AddressRangesV5::for_each_range(Function<void(Range)> callback)
     return {};
 }
 
-AddressRangesV4::AddressRangesV4(NonnullOwnPtr<AK::Stream> ranges_stream, CompilationUnit const& compilation_unit)
+AddressRangesV4::AddressRangesV4(NonnullOwnPtr<Stream> ranges_stream, CompilationUnit const& compilation_unit)
     : m_ranges_stream(move(ranges_stream))
     , m_compilation_unit(compilation_unit)
 {

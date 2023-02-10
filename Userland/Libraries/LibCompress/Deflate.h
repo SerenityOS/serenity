@@ -39,7 +39,7 @@ private:
     Array<u16, 288> m_bit_code_lengths {};
 };
 
-class DeflateDecompressor final : public AK::Stream {
+class DeflateDecompressor final : public Stream {
 private:
     class CompressedBlock {
     public:
@@ -76,7 +76,7 @@ public:
     friend CompressedBlock;
     friend UncompressedBlock;
 
-    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(MaybeOwned<AK::Stream> stream);
+    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(MaybeOwned<Stream> stream);
     ~DeflateDecompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;
@@ -88,7 +88,7 @@ public:
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    DeflateDecompressor(MaybeOwned<AK::Stream> stream, CircularBuffer buffer);
+    DeflateDecompressor(MaybeOwned<Stream> stream, CircularBuffer buffer);
 
     ErrorOr<u32> decode_length(u32);
     ErrorOr<u32> decode_distance(u32);
@@ -106,7 +106,7 @@ private:
     CircularBuffer m_output_buffer;
 };
 
-class DeflateCompressor final : public AK::Stream {
+class DeflateCompressor final : public Stream {
 public:
     static constexpr size_t block_size = 32 * KiB - 1; // TODO: this can theoretically be increased to 64 KiB - 2
     static constexpr size_t window_size = block_size * 2;
@@ -141,7 +141,7 @@ public:
         BEST // WARNING: this one can take an unreasonable amount of time!
     };
 
-    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(MaybeOwned<AK::Stream>, CompressionLevel = CompressionLevel::GOOD);
+    static ErrorOr<NonnullOwnPtr<DeflateCompressor>> construct(MaybeOwned<Stream>, CompressionLevel = CompressionLevel::GOOD);
     ~DeflateCompressor();
 
     virtual ErrorOr<Bytes> read(Bytes) override;

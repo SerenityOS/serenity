@@ -102,7 +102,7 @@ ErrorOr<bool> Zip::for_each_member(Function<IterationDecision(ZipMember const&)>
     return true;
 }
 
-ZipOutputStream::ZipOutputStream(NonnullOwnPtr<AK::Stream> stream)
+ZipOutputStream::ZipOutputStream(NonnullOwnPtr<Stream> stream)
     : m_stream(move(stream))
 {
 }
