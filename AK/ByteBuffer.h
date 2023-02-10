@@ -332,6 +332,14 @@ struct Traits<ByteBuffer> : public GenericTraits<ByteBuffer> {
     {
         return Traits<ReadonlyBytes>::hash(byte_buffer.span());
     }
+    static bool equals(ByteBuffer const& byte_buffer, Bytes const& other)
+    {
+        return byte_buffer.bytes() == other;
+    }
+    static bool equals(ByteBuffer const& byte_buffer, ReadonlyBytes const& other)
+    {
+        return byte_buffer.bytes() == other;
+    }
 };
 
 }
