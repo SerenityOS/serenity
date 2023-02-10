@@ -32,27 +32,6 @@ ErrorOr<Bytes> TLSv12::read_some(Bytes bytes)
     return Bytes { bytes.data(), size_to_read };
 }
 
-DeprecatedString TLSv12::read_line(size_t max_size)
-{
-    if (!can_read_line())
-        return {};
-
-    auto* start = m_context.application_buffer.data();
-    auto* newline = (u8*)memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size());
-    VERIFY(newline);
-
-    size_t offset = newline - start;
-
-    if (offset > max_size)
-        return {};
-
-    DeprecatedString line { bit_cast<char const*>(start), offset, Chomp };
-    // FIXME: Propagate errors.
-    m_context.application_buffer = MUST(m_context.application_buffer.slice(offset + 1, m_context.application_buffer.size() - offset - 1));
-
-    return line;
-}
-
 ErrorOr<size_t> TLSv12::write_some(ReadonlyBytes bytes)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
