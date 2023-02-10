@@ -695,6 +695,13 @@ public:
 
     u32 signature() const { return m_signature; }
 
+    static Optional<StringView> colorimetric_intent_image_state_signature_name(u32);
+    static Optional<StringView> perceptual_rendering_intent_gamut_signature_name(u32);
+    static Optional<StringView> saturation_rendering_intent_gamut_signature_name(u32);
+    static Optional<StringView> technology_signature_name(u32);
+
+    Optional<StringView> name_for_tag(TagSignature);
+
 private:
     u32 m_signature;
 };
