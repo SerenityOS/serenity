@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include "File.h"
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
@@ -18,24 +19,6 @@
 #include <LibIPC/ConnectionToServer.h>
 
 namespace FileSystemAccessClient {
-
-class Client;
-class File {
-public:
-    File(Badge<Client>, NonnullOwnPtr<Core::File> stream, String filename)
-        : m_stream(move(stream))
-        , m_filename(filename)
-    {
-    }
-
-    Core::File& stream() const { return *m_stream; }
-    NonnullOwnPtr<Core::File> release_stream() { return move(m_stream); }
-    String filename() const { return m_filename; }
-
-private:
-    NonnullOwnPtr<Core::File> m_stream;
-    String m_filename;
-};
 
 using DeprecatedResult = ErrorOr<NonnullRefPtr<Core::DeprecatedFile>>;
 using Result = ErrorOr<File>;

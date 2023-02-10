@@ -1,0 +1,6 @@
+#include <AK/URL.h>
+
+endpoint ContentAccessClient
+{
+    handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> fd, Optional<URL> chosen_url) =|
+}
