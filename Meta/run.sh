@@ -299,10 +299,22 @@ if [ "$SERENITY_ARCH" = "aarch64" ]; then
     -kernel Kernel/Kernel
     "
 else
-    SERENITY_KERNEL_AND_INITRD="
-    -kernel Kernel/Prekernel/Kernel
-    "
+    [ -z "$SERENITY_ENABLE_INITRAMFS" ] && SERENITY_ENABLE_INITRAMFS="off"
+    if [ "$SERENITY_ENABLE_INITRAMFS" = "off" ]; then
+        SERENITY_KERNEL_AND_INITRD="
+        -kernel Kernel/Prekernel/Kernel
+        "
+    else
+        SERENITY_KERNEL_AND_INITRD="
+        -kernel Kernel/Prekernel/Kernel
+        -initrd initramfs.serecpio
+        "
+    fi
 fi
+
+
+
+
 
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
