@@ -503,7 +503,7 @@ ErrorOr<struct stat> lstat(StringView path)
     HANDLE_SYSCALL_RETURN_VALUE("lstat", rc, st);
 #else
     DeprecatedString path_string = path;
-    if (::stat(path_string.characters(), &st) < 0)
+    if (::lstat(path_string.characters(), &st) < 0)
         return Error::from_syscall("lstat"sv, -errno);
     return st;
 #endif
