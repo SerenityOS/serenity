@@ -21,6 +21,7 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/StringPrototype.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/SourceTextModule.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
@@ -531,16 +532,16 @@ public:
     // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
     virtual JS::ThrowCompletionOr<JS::Value> printer(JS::Console::LogLevel log_level, PrinterArguments arguments) override
     {
-        DeprecatedString indent = DeprecatedString::repeated("  "sv, m_group_stack_depth);
+        auto indent = TRY_OR_THROW_OOM(*g_vm, String::repeated(' ', m_group_stack_depth * 2));
 
         if (log_level == JS::Console::LogLevel::Trace) {
             auto trace = arguments.get<JS::Console::Trace>();
-            StringBuilder builder;
+            JS::ThrowableStringBuilder builder(*g_vm);
             if (!trace.label.is_empty())
-                builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label);
+                MUST_OR_THROW_OOM(builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label));
 
             for (auto& function_name : trace.stack)
-                builder.appendff("{}-> {}\n", indent, function_name);
+                MUST_OR_THROW_OOM(builder.appendff("{}-> {}\n", indent, function_name));
 
             outln("{}", builder.string_view());
             return JS::js_undefined();
@@ -553,7 +554,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+        auto output = TRY_OR_THROW_OOM(*g_vm, String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>()));
 #ifdef AK_OS_SERENITY
         m_console.output_debug_message(log_level, output);
 #endif
