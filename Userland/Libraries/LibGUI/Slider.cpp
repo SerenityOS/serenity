@@ -24,6 +24,8 @@ Slider::Slider(Orientation orientation)
         { KnobSizeMode::Fixed, "Fixed" },
         { KnobSizeMode::Proportional, "Proportional" });
     REGISTER_BOOL_PROPERTY("jump_to_cursor", jump_to_cursor, set_jump_to_cursor);
+
+    set_preferred_size(SpecialDimension::Fit);
 }
 
 void Slider::paint_event(PaintEvent& event)
@@ -197,6 +199,20 @@ void Slider::set_knob_hovered(bool hovered)
         return;
     m_knob_hovered = hovered;
     update(knob_rect());
+}
+
+Optional<UISize> Slider::calculated_min_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { knob_secondary_size(), knob_fixed_primary_size() * 2 + track_margin() * 2 } };
+    return { { knob_fixed_primary_size() * 2 + track_margin() * 2, knob_secondary_size() } };
+}
+
+Optional<UISize> Slider::calculated_preferred_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { SpecialDimension::Shrink, SpecialDimension::OpportunisticGrow } };
+    return { { SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink } };
 }
 
 }
