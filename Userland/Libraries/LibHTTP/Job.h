@@ -22,7 +22,7 @@ public:
     explicit Job(HttpRequest&&, Stream&);
     virtual ~Job() override = default;
 
-    virtual void start(Core::Socket&) override;
+    virtual void start(Core::BufferedSocketBase&) override;
     virtual void shutdown(ShutdownMode) override;
 
     Core::Socket const* socket() const { return m_socket; }
