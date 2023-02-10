@@ -421,6 +421,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
+    s_editor->save_history(s_history_path.to_deprecated_string());
     if (!vm.argument_count())
         exit(0);
     exit(TRY(vm.argument(0).to_number(vm)).as_double());
