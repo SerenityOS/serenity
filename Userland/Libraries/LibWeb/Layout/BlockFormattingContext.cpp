@@ -636,6 +636,8 @@ void BlockFormattingContext::place_block_level_element_in_normal_flow_vertically
             for (auto* containing_block = child_box.containing_block(); containing_block && containing_block != &root(); containing_block = containing_block->containing_block())
                 clearance_y_in_containing_block -= m_state.get(*containing_block).offset.y();
 
+            if (clearance_y_in_containing_block > y)
+                m_y_offset_of_current_block_container = clearance_y_in_containing_block;
             y = max(y, clearance_y_in_containing_block);
             float_side.clear();
         }
