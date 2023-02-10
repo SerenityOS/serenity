@@ -2,7 +2,7 @@ serenity_component(
     TextEditor
     RECOMMENDED
     TARGETS TextEditor
-    DEPENDS ImageDecoder RequestServer WebContent FileSystemAccessServer
+    DEPENDS ImageDecoder RequestServer WebContent FileSystemAccessServer ContentAccessServer
 )
 
 compile_gml(TextEditorWindow.gml TextEditorWindowGML.h text_editor_window_gml)
@@ -18,4 +18,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(TextEditor ICON app-text-editor)
-target_link_libraries(TextEditor PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibShell LibRegex LibDesktop LibCpp LibJS LibSQL LibSyntax LibFileSystemAccessClient LibConfig LibMain)
+target_link_libraries(TextEditor PRIVATE LibCore LibWebView LibWeb LibMarkdown LibGfx LibGUI LibShell LibRegex LibDesktop LibCpp LibJS LibSQL LibSyntax LibContentAccessClient LibFileSystemAccessClient LibConfig LibMain)

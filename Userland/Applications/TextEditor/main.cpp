@@ -7,6 +7,7 @@
 #include "FileArgument.h"
 #include "MainWidget.h"
 #include <LibConfig/Client.h>
+#include <LibContentAccessClient/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -73,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (file_to_edit) {
         FileArgument parsed_argument(file_to_edit);
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, parsed_argument.filename());
+        auto response = ContentAccessClient::Client::the().request_url_read_only_approve_local(window, URL::create_with_url_or_path(parsed_argument.filename()));
 
         if (response.is_error()) {
             if (response.error().code() == ENOENT)
