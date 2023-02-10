@@ -45,6 +45,8 @@ protected:
     virtual void paint_event(PaintEvent&) override;
 
 private:
+    virtual Optional<UISize> calculated_preferred_size() const override;
+
     Format m_format { Percentage };
     int m_min { 0 };
     int m_max { 100 };
