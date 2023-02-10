@@ -20,7 +20,7 @@ bool Request::stop()
     return m_client->stop_request({}, *this);
 }
 
-void Request::stream_into(AK::Stream& stream)
+void Request::stream_into(Stream& stream)
 {
     VERIFY(!m_internal_stream_data);
 

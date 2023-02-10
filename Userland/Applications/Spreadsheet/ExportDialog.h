@@ -27,7 +27,7 @@ struct CSVExportDialogPage {
         Preview
     };
 
-    ErrorOr<void> generate(AK::Stream&, GenerationType);
+    ErrorOr<void> generate(Stream&, GenerationType);
 
 protected:
     void update_preview();

@@ -21,7 +21,7 @@ static constexpr u8 QOI_OP_RUN = 0b11000000;
 static constexpr u8 QOI_MASK_2 = 0b11000000;
 static constexpr u8 END_MARKER[] = { 0, 0, 0, 0, 0, 0, 0, 1 };
 
-static ErrorOr<QOIHeader> decode_qoi_header(AK::Stream& stream)
+static ErrorOr<QOIHeader> decode_qoi_header(Stream& stream)
 {
     auto header = TRY(stream.read_value<QOIHeader>());
     if (StringView { header.magic, array_size(header.magic) } != QOI_MAGIC)
@@ -31,7 +31,7 @@ static ErrorOr<QOIHeader> decode_qoi_header(AK::Stream& stream)
     return header;
 }
 
-static ErrorOr<Color> decode_qoi_op_rgb(AK::Stream& stream, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_rgb(Stream& stream, u8 first_byte, Color pixel)
 {
     VERIFY(first_byte == QOI_OP_RGB);
     u8 bytes[3];
@@ -41,7 +41,7 @@ static ErrorOr<Color> decode_qoi_op_rgb(AK::Stream& stream, u8 first_byte, Color
     return Color { bytes[0], bytes[1], bytes[2], pixel.alpha() };
 }
 
-static ErrorOr<Color> decode_qoi_op_rgba(AK::Stream& stream, u8 first_byte)
+static ErrorOr<Color> decode_qoi_op_rgba(Stream& stream, u8 first_byte)
 {
     VERIFY(first_byte == QOI_OP_RGBA);
     u8 bytes[4];
@@ -49,7 +49,7 @@ static ErrorOr<Color> decode_qoi_op_rgba(AK::Stream& stream, u8 first_byte)
     return Color { bytes[0], bytes[1], bytes[2], bytes[3] };
 }
 
-static ErrorOr<u8> decode_qoi_op_index(AK::Stream&, u8 first_byte)
+static ErrorOr<u8> decode_qoi_op_index(Stream&, u8 first_byte)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_INDEX);
     u8 index = first_byte & ~QOI_MASK_2;
@@ -57,7 +57,7 @@ static ErrorOr<u8> decode_qoi_op_index(AK::Stream&, u8 first_byte)
     return index;
 }
 
-static ErrorOr<Color> decode_qoi_op_diff(AK::Stream&, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_diff(Stream&, u8 first_byte, Color pixel)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_DIFF);
     u8 dr = (first_byte & 0b00110000) >> 4;
@@ -74,7 +74,7 @@ static ErrorOr<Color> decode_qoi_op_diff(AK::Stream&, u8 first_byte, Color pixel
     };
 }
 
-static ErrorOr<Color> decode_qoi_op_luma(AK::Stream& stream, u8 first_byte, Color pixel)
+static ErrorOr<Color> decode_qoi_op_luma(Stream& stream, u8 first_byte, Color pixel)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_LUMA);
     auto byte = TRY(stream.read_value<u8>());
@@ -91,7 +91,7 @@ static ErrorOr<Color> decode_qoi_op_luma(AK::Stream& stream, u8 first_byte, Colo
     };
 }
 
-static ErrorOr<u8> decode_qoi_op_run(AK::Stream&, u8 first_byte)
+static ErrorOr<u8> decode_qoi_op_run(Stream&, u8 first_byte)
 {
     VERIFY((first_byte & QOI_MASK_2) == QOI_OP_RUN);
     u8 run = first_byte & ~QOI_MASK_2;
@@ -107,7 +107,7 @@ static ErrorOr<u8> decode_qoi_op_run(AK::Stream&, u8 first_byte)
     return run;
 }
 
-static ErrorOr<void> decode_qoi_end_marker(AK::Stream& stream)
+static ErrorOr<void> decode_qoi_end_marker(Stream& stream)
 {
     u8 bytes[array_size(END_MARKER)];
     TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
@@ -118,7 +118,7 @@ static ErrorOr<void> decode_qoi_end_marker(AK::Stream& stream)
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(AK::Stream& stream, u32 width, u32 height)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(Stream& stream, u32 width, u32 height)
 {
     // FIXME: Why is Gfx::Bitmap's size signed? Makes no sense whatsoever.
     if (width > NumericLimits<int>::max())
@@ -162,7 +162,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_qoi_image(AK::Stream& stream, u32 w
     return { move(bitmap) };
 }
 
-QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<AK::Stream> stream)
+QOIImageDecoderPlugin::QOIImageDecoderPlugin(NonnullOwnPtr<Stream> stream)
 {
     m_context = make<QOILoadingContext>();
     m_context->stream = move(stream);
@@ -232,7 +232,7 @@ ErrorOr<ImageFrameDescriptor> QOIImageDecoderPlugin::frame(size_t index)
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(AK::Stream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(Stream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::HeaderDecoded);
     auto error_or_header = decode_qoi_header(stream);
@@ -245,7 +245,7 @@ ErrorOr<void> QOIImageDecoderPlugin::decode_header_and_update_context(AK::Stream
     return {};
 }
 
-ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(AK::Stream& stream)
+ErrorOr<void> QOIImageDecoderPlugin::decode_image_and_update_context(Stream& stream)
 {
     VERIFY(m_context->state < QOILoadingContext::State::ImageDecoded);
     auto error_or_bitmap = decode_qoi_image(stream, m_context->header.width, m_context->header.height);

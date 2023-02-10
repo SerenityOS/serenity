@@ -14,7 +14,7 @@
 namespace AK {
 
 template<typename T>
-concept StreamLike = IsBaseOf<AK::Stream, T>;
+concept StreamLike = IsBaseOf<Stream, T>;
 template<typename T>
 concept SeekableStreamLike = IsBaseOf<SeekableStream, T>;
 

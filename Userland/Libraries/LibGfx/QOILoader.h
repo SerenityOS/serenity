@@ -31,7 +31,7 @@ struct QOILoadingContext {
         Error,
     };
     State state { State::NotDecoded };
-    OwnPtr<AK::Stream> stream {};
+    OwnPtr<Stream> stream {};
     QOIHeader header {};
     RefPtr<Bitmap> bitmap;
 };
@@ -54,10 +54,10 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    ErrorOr<void> decode_header_and_update_context(AK::Stream&);
-    ErrorOr<void> decode_image_and_update_context(AK::Stream&);
+    ErrorOr<void> decode_header_and_update_context(Stream&);
+    ErrorOr<void> decode_image_and_update_context(Stream&);
 
-    QOIImageDecoderPlugin(NonnullOwnPtr<AK::Stream>);
+    QOIImageDecoderPlugin(NonnullOwnPtr<Stream>);
 
     OwnPtr<QOILoadingContext> m_context;
 };

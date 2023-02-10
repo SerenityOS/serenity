@@ -76,7 +76,7 @@ void Name::randomize_case()
     m_name = builder.to_deprecated_string();
 }
 
-ErrorOr<void> Name::write_to_stream(AK::Stream& stream) const
+ErrorOr<void> Name::write_to_stream(Stream& stream) const
 {
     auto parts = as_string().split_view('.');
     for (auto& part : parts) {

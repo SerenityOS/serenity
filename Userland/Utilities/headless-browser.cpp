@@ -334,7 +334,7 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Stream&) override
         {
         }
 
@@ -413,7 +413,7 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Stream&) override
         {
         }
 
@@ -482,7 +482,7 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Stream&) override
         {
         }
 

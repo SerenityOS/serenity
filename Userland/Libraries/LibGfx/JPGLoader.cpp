@@ -460,7 +460,7 @@ static inline bool is_valid_marker(const Marker marker)
     return false;
 }
 
-static inline ErrorOr<Marker> read_marker_at_cursor(AK::Stream& stream)
+static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
 {
     u16 marker = TRY(stream.read_value<BigEndian<u16>>());
     if (is_valid_marker(marker))
@@ -839,7 +839,7 @@ static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPGLoad
     return {};
 }
 
-static ErrorOr<void> skip_marker_with_length(AK::Stream& stream)
+static ErrorOr<void> skip_marker_with_length(Stream& stream)
 {
     u16 bytes_to_skip = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(stream.discard(bytes_to_skip));

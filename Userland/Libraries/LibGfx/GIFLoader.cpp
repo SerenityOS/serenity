@@ -89,7 +89,7 @@ enum class GIFFormat {
     GIF89a,
 };
 
-static ErrorOr<GIFFormat> decode_gif_header(AK::Stream& stream)
+static ErrorOr<GIFFormat> decode_gif_header(Stream& stream)
 {
     static auto valid_header_87 = "GIF87a"sv;
     static auto valid_header_89 = "GIF89a"sv;

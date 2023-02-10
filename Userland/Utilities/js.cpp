@@ -81,7 +81,7 @@ static String s_history_path = String {};
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
-static ErrorOr<void> print(JS::Value value, AK::Stream& stream)
+static ErrorOr<void> print(JS::Value value, Stream& stream)
 {
     JS::PrintContext print_context { .vm = *g_vm, .stream = stream, .strip_ansi = s_strip_ansi };
     return JS::print(value, print_context);

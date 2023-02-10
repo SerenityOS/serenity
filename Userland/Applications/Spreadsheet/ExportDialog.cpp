@@ -88,7 +88,7 @@ CSVExportDialogPage::CSVExportDialogPage(Sheet const& sheet)
     update_preview();
 }
 
-auto CSVExportDialogPage::generate(AK::Stream& stream, GenerationType type) -> ErrorOr<void>
+auto CSVExportDialogPage::generate(Stream& stream, GenerationType type) -> ErrorOr<void>
 {
     auto delimiter = TRY([this]() -> ErrorOr<DeprecatedString> {
         if (m_delimiter_other_radio->is_checked()) {

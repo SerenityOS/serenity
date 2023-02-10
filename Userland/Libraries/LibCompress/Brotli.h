@@ -13,9 +13,6 @@
 
 namespace Compress {
 
-using AK::LittleEndianInputBitStream;
-using AK::Stream;
-
 class BrotliDecompressionStream : public Stream {
 public:
     enum class State {

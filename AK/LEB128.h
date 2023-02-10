@@ -24,7 +24,7 @@ public:
 
     constexpr operator ValueType() const { return m_value; }
 
-    static ErrorOr<LEB128<ValueType>> read_from_stream(AK::Stream& stream)
+    static ErrorOr<LEB128<ValueType>> read_from_stream(Stream& stream)
     requires(Unsigned<ValueType>)
     {
         ValueType result {};
@@ -53,7 +53,7 @@ public:
         return LEB128<ValueType> { result };
     }
 
-    static ErrorOr<LEB128<ValueType>> read_from_stream(AK::Stream& stream)
+    static ErrorOr<LEB128<ValueType>> read_from_stream(Stream& stream)
     requires(Signed<ValueType>)
     {
         // Note: We read into a u64 to simplify the parsing logic;

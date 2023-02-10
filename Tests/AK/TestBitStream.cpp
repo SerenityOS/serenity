@@ -15,8 +15,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    LittleEndianOutputBitStream bit_write_stream { MaybeOwned<AK::Stream>(*memory_stream) };
-    LittleEndianInputBitStream bit_read_stream { MaybeOwned<AK::Stream>(*memory_stream) };
+    LittleEndianOutputBitStream bit_write_stream { MaybeOwned<Stream>(*memory_stream) };
+    LittleEndianInputBitStream bit_read_stream { MaybeOwned<Stream>(*memory_stream) };
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {
@@ -71,8 +71,8 @@ TEST_CASE(big_endian_bit_stream_input_output_match)
 
     // Note: The bit stream only ever reads from/writes to the underlying stream in one byte chunks,
     // so testing with sizes that will not trigger a write will yield unexpected results.
-    BigEndianOutputBitStream bit_write_stream { MaybeOwned<AK::Stream>(*memory_stream) };
-    BigEndianInputBitStream bit_read_stream { MaybeOwned<AK::Stream>(*memory_stream) };
+    BigEndianOutputBitStream bit_write_stream { MaybeOwned<Stream>(*memory_stream) };
+    BigEndianInputBitStream bit_read_stream { MaybeOwned<Stream>(*memory_stream) };
 
     // Test two mirrored chunks of a fully mirrored pattern to check that we are not dropping bits.
     {

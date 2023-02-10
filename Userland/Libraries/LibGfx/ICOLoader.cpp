@@ -75,7 +75,7 @@ struct ICOLoadingContext {
     size_t largest_index;
 };
 
-static ErrorOr<size_t> decode_ico_header(AK::Stream& stream)
+static ErrorOr<size_t> decode_ico_header(Stream& stream)
 {
     auto header = TRY(stream.read_value<ICONDIR>());
     if (header.must_be_0 != 0 || header.must_be_1 != 1)
@@ -83,7 +83,7 @@ static ErrorOr<size_t> decode_ico_header(AK::Stream& stream)
     return { header.image_count };
 }
 
-static ErrorOr<ICOImageDescriptor> decode_ico_direntry(AK::Stream& stream)
+static ErrorOr<ICOImageDescriptor> decode_ico_direntry(Stream& stream)
 {
     auto entry = TRY(stream.read_value<ICONDIRENTRY>());
     ICOImageDescriptor desc = { entry.width, entry.height, entry.bits_per_pixel, entry.offset, entry.size, nullptr };

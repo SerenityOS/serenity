@@ -32,7 +32,7 @@ inline ErrorOr<T> decode(Decoder&)
 
 class Decoder {
 public:
-    Decoder(AK::Stream& stream, Core::LocalSocket& socket)
+    Decoder(Stream& stream, Core::LocalSocket& socket)
         : m_stream(stream)
         , m_socket(socket)
     {
@@ -59,7 +59,7 @@ public:
     Core::LocalSocket& socket() { return m_socket; }
 
 private:
-    AK::Stream& m_stream;
+    Stream& m_stream;
     Core::LocalSocket& m_socket;
 };
 
