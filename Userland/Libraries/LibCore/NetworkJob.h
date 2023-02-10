@@ -41,7 +41,7 @@ public:
         DetachFromSocket,
         CloseSocket,
     };
-    virtual void start(Core::Socket&) = 0;
+    virtual void start(Core::BufferedSocketBase&) = 0;
     virtual void shutdown(ShutdownMode) = 0;
     virtual void fail(Error error) { did_fail(error); }
 
