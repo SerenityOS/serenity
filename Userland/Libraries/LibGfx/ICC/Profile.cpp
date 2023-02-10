@@ -995,8 +995,24 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.17 cicpTag
     // "Permitted tag types: cicpType"
-    if (!has_type(cicpTag, { CicpTagData::Type }, {}))
-        return Error::from_string_literal("ICC::Profile: cicpTag has unexpected type");
+    if (auto type = m_tag_table.get(cicpTag); type.has_value()) {
+        if (type.value()->type() != CicpTagData::Type)
+            return Error::from_string_literal("ICC::Profile: cicpTag has unexpected type");
+
+        // "The colour encoding specified by the CICP tag content shall be equivalent to the data colour space encoding
+        //  represented by this ICC profile.
+        //  NOTE The ICC colour transform cannot match every possible rendering of a CICP colour encoding."
+        // FIXME: Figure out what that means and check for it.
+
+        // "This tag may be present when the data colour space in the profile header is RGB, YCbCr, or XYZ, and the
+        //  profile class in the profile header is Input or Display. The tag shall not be present for other data colour spaces
+        //  or profile classes indicated in the profile header."
+        bool is_color_space_allowed = data_color_space() == ColorSpace::RGB || data_color_space() == ColorSpace::YCbCr || data_color_space() == ColorSpace::nCIEXYZ;
+        bool is_profile_class_allowed = device_class() == DeviceClass::InputDevice || device_class() == DeviceClass::DisplayDevice;
+        bool cicp_is_allowed = is_color_space_allowed && is_profile_class_allowed;
+        if (!cicp_is_allowed)
+            return Error::from_string_literal("ICC::Profile: cicpTag present but not allowed");
+    }
 
     // ICC v4, 9.2.18 colorantOrderTag
     // "Permitted tag types: colorantOrderType"
