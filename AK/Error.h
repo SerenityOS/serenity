@@ -76,11 +76,11 @@ public:
     }
 
     int code() const { return m_code; }
-#ifndef KERNEL
     bool is_errno() const
     {
         return m_code != 0;
     }
+#ifndef KERNEL
     bool is_syscall() const
     {
         return m_syscall;
