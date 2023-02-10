@@ -15,7 +15,7 @@
 
 namespace JS {
 
-class ThrowableStringBuilder : public AK::StringBuilder {
+class ThrowableStringBuilder : private AK::StringBuilder {
 public:
     explicit ThrowableStringBuilder(VM&);
 
@@ -24,6 +24,10 @@ public:
     ThrowCompletionOr<void> append(Utf16View const&);
     ThrowCompletionOr<void> append_code_point(u32 value);
     ThrowCompletionOr<String> to_string() const;
+
+    using AK::StringBuilder::is_empty;
+    using AK::StringBuilder::string_view;
+    using AK::StringBuilder::trim;
 
 private:
     VM& m_vm;
