@@ -46,6 +46,9 @@ public:
 protected:
     explicit Slider(Orientation = Orientation::Vertical);
 
+    virtual Optional<UISize> calculated_min_size() const override;
+    virtual Optional<UISize> calculated_preferred_size() const override;
+
     virtual void paint_event(PaintEvent&) override;
     void start_drag(Gfx::IntPoint);
     virtual void mousedown_event(MouseEvent&) override;
