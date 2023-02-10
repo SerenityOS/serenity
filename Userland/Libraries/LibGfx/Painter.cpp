@@ -2575,4 +2575,9 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
     }
 }
 
+void Painter::set_clip_rect(IntRect const& rect)
+{
+    state().clip_rect = rect.intersected(m_target->rect());
+}
+
 }

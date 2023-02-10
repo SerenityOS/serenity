@@ -177,7 +177,7 @@ public:
     }
 
     IntRect clip_rect() const { return state().clip_rect; }
-    void set_clip_rect(IntRect const& rect) { state().clip_rect = rect; }
+    void set_clip_rect(IntRect const&);
 
     int scale() const { return state().scale; }
 
