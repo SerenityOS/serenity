@@ -5,13 +5,13 @@
     }
 
     @GUI::GroupBox {
-        fixed_height: 129
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
         }
 
         @GUI::GroupBox {
-            max_height: 30
+            preferred_height: "fit"
             layout: @GUI::HorizontalBoxLayout {
                 margins: [8]
             }
@@ -37,9 +37,8 @@
         @GUI::Frame {
             shape: "Panel"
             shadow: "Sunken"
+            preferred_height: "fit"
             thickness: 1
-            max_width: 394
-            max_height: 79
             layout: @GUI::VerticalBoxLayout {
                 margins: [1]
             }
@@ -51,12 +50,10 @@
     }
 
     @GUI::Widget {
-        fixed_height: 88
+        preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [0, 8]
         }
-
-        @GUI::Layout::Spacer {}
 
         @GUI::Scrollbar {
             name: "enabled_scrollbar"
@@ -66,11 +63,7 @@
             value: 50
         }
 
-        @GUI::Layout::Spacer {}
-
         @GUI::HorizontalSeparator {}
-
-        @GUI::Layout::Spacer {}
 
         @GUI::Scrollbar {
             name: "disabled_scrollbar"
@@ -84,6 +77,9 @@
         layout: @GUI::HorizontalBoxLayout {
             margins: [6]
         }
+        preferred_height: "opportunistic_grow"
+
+        @GUI::Layout::Spacer {}
 
         @GUI::VerticalProgressbar {
             name: "vertical_progressbar_left"
@@ -99,6 +95,8 @@
             tooltip: "Fixed"
         }
 
+        @GUI::Layout::Spacer {}
+
         @GUI::VerticalSeparator {}
 
         @GUI::VerticalSlider {
@@ -110,6 +108,8 @@
         }
 
         @GUI::VerticalSeparator {}
+
+        @GUI::Layout::Spacer {}
 
         @GUI::VerticalProgressbar {
             name: "vertical_progressbar_right"
@@ -124,15 +124,19 @@
             value: 0
             tooltip: "Proportional"
         }
+
+        @GUI::Layout::Spacer {}
     }
 
     @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
             margins: [6]
         }
+        preferred_height: "fit"
 
         @GUI::Widget {
             layout: @GUI::HorizontalBoxLayout {}
+            preferred_height: "fit"
 
             @GUI::HorizontalSlider {
                 name: "horizontal_slider_left"
