@@ -12,6 +12,9 @@
 #include <LibJS/MarkupGenerator.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ObjectEnvironment.h>
+#include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -129,19 +132,21 @@ void WebContentConsoleClient::clear()
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
+    auto& vm = m_console.realm().vm();
+
     auto styling = escape_html_entities(m_current_message_style.string_view());
     m_current_message_style.clear();
 
     if (log_level == JS::Console::LogLevel::Trace) {
         auto trace = arguments.get<JS::Console::Trace>();
-        StringBuilder html;
+        JS::ThrowableStringBuilder html(vm);
         if (!trace.label.is_empty())
-            html.appendff("<span class='title' style='{}'>{}</span><br>", styling, escape_html_entities(trace.label));
+            MUST_OR_THROW_OOM(html.appendff("<span class='title' style='{}'>{}</span><br>", styling, escape_html_entities(trace.label)));
 
-        html.append("<span class='trace'>"sv);
+        MUST_OR_THROW_OOM(html.append("<span class='trace'>"sv));
         for (auto& function_name : trace.stack)
-            html.appendff("-> {}<br>", escape_html_entities(function_name));
-        html.append("</span>"sv);
+            MUST_OR_THROW_OOM(html.appendff("-> {}<br>", escape_html_entities(function_name)));
+        MUST_OR_THROW_OOM(html.append("</span>"sv));
 
         print_html(html.string_view());
         return JS::js_undefined();
@@ -153,35 +158,36 @@ JS::ThrowCompletionOr<JS::Value> WebContentConsoleClient::printer(JS::Console::L
         return JS::js_undefined();
     }
 
-    auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+    auto output = TRY_OR_THROW_OOM(vm, String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>()));
     m_console.output_debug_message(log_level, output);
 
-    StringBuilder html;
+    JS::ThrowableStringBuilder html(vm);
     switch (log_level) {
     case JS::Console::LogLevel::Debug:
-        html.appendff("<span class=\"debug\" style=\"{}\">(d) "sv, styling);
+        MUST_OR_THROW_OOM(html.appendff("<span class=\"debug\" style=\"{}\">(d) "sv, styling));
         break;
     case JS::Console::LogLevel::Error:
-        html.appendff("<span class=\"error\" style=\"{}\">(e) "sv, styling);
+        MUST_OR_THROW_OOM(html.appendff("<span class=\"error\" style=\"{}\">(e) "sv, styling));
         break;
     case JS::Console::LogLevel::Info:
-        html.appendff("<span class=\"info\" style=\"{}\">(i) "sv, styling);
+        MUST_OR_THROW_OOM(html.appendff("<span class=\"info\" style=\"{}\">(i) "sv, styling));
         break;
     case JS::Console::LogLevel::Log:
-        html.appendff("<span class=\"log\" style=\"{}\"> "sv, styling);
+        MUST_OR_THROW_OOM(html.appendff("<span class=\"log\" style=\"{}\"> "sv, styling));
         break;
     case JS::Console::LogLevel::Warn:
     case JS::Console::LogLevel::CountReset:
-        html.appendff("<span class=\"warn\" style=\"{}\">(w) "sv, styling);
+        MUST_OR_THROW_OOM(html.appendff("<span class=\"warn\" style=\"{}\">(w) "sv, styling));
         break;
     default:
-        html.appendff("<span style=\"{}\">"sv, styling);
+        MUST_OR_THROW_OOM(html.appendff("<span style=\"{}\">"sv, styling));
         break;
     }
 
-    html.append(escape_html_entities(output));
-    html.append("</span>"sv);
+    MUST_OR_THROW_OOM(html.append(escape_html_entities(output)));
+    MUST_OR_THROW_OOM(html.append("</span>"sv));
     print_html(html.string_view());
+
     return JS::js_undefined();
 }
 }
