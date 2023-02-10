@@ -79,7 +79,10 @@ public:
     {
         return m_code != 0;
     }
-    bool is_syscall() const { return m_syscall; }
+    bool is_syscall() const
+    {
+        return m_syscall;
+    }
     StringView string_literal() const
     {
         return m_string_literal;
