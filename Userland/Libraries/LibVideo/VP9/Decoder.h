@@ -102,7 +102,7 @@ private:
     inline void hadamard_rotation(Span<S> source, Span<D> destination, size_t index_a, size_t index_b);
 
     template<typename T>
-    inline i32 round_2(T value, u8 bits);
+    inline i32 rounded_right_shift(T value, u8 bits);
 
     // (8.7.1.10) This process does an in-place Walsh-Hadamard transform of the array T (of length 4).
     inline DecoderErrorOr<void> inverse_walsh_hadamard_transform(Span<Intermediate> data, u8 log2_of_block_size, u8 shift);
