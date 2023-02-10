@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/ByteBuffer.h>
+#include <AK/Vector.h>
 
 TEST_CASE(equality_operator)
 {
@@ -31,6 +32,18 @@ TEST_CASE(equality_operator)
     EXPECT_EQ(d == b, false);
     EXPECT_EQ(d == c, false);
     EXPECT_EQ(d == d, true);
+}
+
+TEST_CASE(byte_buffer_vector_contains_slow_bytes)
+{
+    Vector<ByteBuffer> vector;
+    ByteBuffer a = ByteBuffer::copy("Hello, friend", 13).release_value();
+    vector.append(a);
+
+    ReadonlyBytes b = "Hello, friend"sv.bytes();
+    Bytes c = a.bytes();
+    EXPECT_EQ(vector.contains_slow(b), true);
+    EXPECT_EQ(vector.contains_slow(c), true);
 }
 
 BENCHMARK_CASE(append)
