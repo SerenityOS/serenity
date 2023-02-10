@@ -22,6 +22,7 @@ protected:
 
 private:
     virtual void paint_event(PaintEvent&) override;
+    virtual Optional<UISize> calculated_preferred_size() const override;
 
     const Gfx::Orientation m_orientation;
 };
