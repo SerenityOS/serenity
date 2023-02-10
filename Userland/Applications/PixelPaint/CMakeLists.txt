@@ -2,7 +2,7 @@ serenity_component(
     PixelPaint
     RECOMMENDED
     TARGETS PixelPaint
-    DEPENDS ImageDecoder FileSystemAccessServer
+    DEPENDS ImageDecoder FileSystemAccessServer ContentAccessServer
 )
 
 compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
@@ -86,4 +86,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(PixelPaint ICON app-pixel-paint)
-target_link_libraries(PixelPaint PRIVATE LibCore LibImageDecoderClient LibGUI LibGfx LibFileSystemAccessClient LibConfig LibMain LibThreading)
+target_link_libraries(PixelPaint PRIVATE LibCore LibImageDecoderClient LibGUI LibGfx LibContentAccessClient LibFileSystemAccessClient LibConfig LibMain LibThreading)

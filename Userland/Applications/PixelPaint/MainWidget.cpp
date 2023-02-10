@@ -18,8 +18,10 @@
 #include <AK/String.h>
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
+#include <LibContentAccessClient/Client.h>
 #include <LibCore/Debounce.h>
 #include <LibCore/MimeData.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
@@ -1095,7 +1097,7 @@ void MainWidget::set_actions_enabled(bool enabled)
     m_zoom_combobox->set_enabled(enabled);
 }
 
-void MainWidget::open_image(FileSystemAccessClient::File file)
+void MainWidget::open_image(ContentAccessClient::File file)
 {
     auto try_load = m_loader.load_from_file(file.release_stream());
     if (try_load.is_error()) {

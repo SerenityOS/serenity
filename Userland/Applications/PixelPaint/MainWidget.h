@@ -20,7 +20,7 @@
 #include "ToolboxWidget.h"
 #include "Tools/Tool.h"
 #include "VectorscopeWidget.h"
-#include <LibFileSystemAccessClient/Client.h>
+#include <LibContentAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Forward.h>
@@ -41,7 +41,7 @@ public:
 
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
-    void open_image(FileSystemAccessClient::File);
+    void open_image(ContentAccessClient::File);
     ErrorOr<void> create_default_image();
 
     bool request_close();

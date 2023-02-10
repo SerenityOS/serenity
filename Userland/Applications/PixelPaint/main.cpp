@@ -7,9 +7,9 @@
 
 #include "MainWidget.h"
 #include <LibConfig/Client.h>
+#include <LibContentAccessClient/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
-#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -26,13 +26,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("PixelPaint");
 
-    char const* image_file = nullptr;
+    StringView image_file;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/contentaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
@@ -72,8 +73,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    if (image_file) {
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, image_file);
+    if (!image_file.is_empty()) {
+        auto response = ContentAccessClient::Client::the().request_url_read_only_approve_local(window, URL::create_with_url_or_path(image_file));
         if (response.is_error())
             return 1;
         main_widget->open_image(response.release_value());
