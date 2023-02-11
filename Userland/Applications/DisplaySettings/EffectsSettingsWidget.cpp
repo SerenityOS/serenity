@@ -16,9 +16,16 @@ namespace GUI {
 
 namespace DisplaySettings {
 
-EffectsSettingsWidget::EffectsSettingsWidget()
+ErrorOr<NonnullRefPtr<EffectsSettingsWidget>> EffectsSettingsWidget::try_create()
 {
-    load_from_gml(effects_settings_gml).release_value_but_fixme_should_propagate_errors();
+    auto effects_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) EffectsSettingsWidget()));
+    TRY(effects_settings_widget->setup_interface());
+    return effects_settings_widget;
+}
+
+ErrorOr<void> EffectsSettingsWidget::setup_interface()
+{
+    TRY(load_from_gml(effects_settings_gml));
 
     m_geometry_combobox = find_descendant_of_type_named<ComboBox>("geometry_combobox");
     m_geometry_combobox->set_only_allow_values_from_model(true);
@@ -29,7 +36,7 @@ EffectsSettingsWidget::EffectsSettingsWidget()
 
     if (auto result = load_settings(); result.is_error()) {
         warnln("Failed to load [Effects] from WindowServer.ini");
-        return;
+        return {};
     }
 
     auto& animate_menus = *find_descendant_of_type_named<GUI::CheckBox>("animate_menus_checkbox");
@@ -92,6 +99,8 @@ EffectsSettingsWidget::EffectsSettingsWidget()
         m_system_effects.effects().at(Effects::TooltipShadow) = checked;
         set_modified(true);
     };
+
+    return {};
 }
 
 ErrorOr<void> EffectsSettingsWidget::load_settings()
