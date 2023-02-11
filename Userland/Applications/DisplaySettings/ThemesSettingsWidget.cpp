@@ -24,15 +24,20 @@ static DeprecatedString get_color_scheme_name_from_pathname(DeprecatedString con
     return color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly);
 };
 
-ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
-    : m_background_settings_changed { background_settings_changed }
-{
-    load_from_gml(themes_settings_gml).release_value_but_fixme_should_propagate_errors();
-    m_themes = MUST(Gfx::list_installed_system_themes());
+ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed) {
+    auto theme_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemesSettingsWidget(background_settings_changed)));
+    TRY(theme_settings_widget->load_from_gml(themes_settings_gml));
+    TRY(theme_settings_widget->setup_interface());
+
+    return theme_settings_widget;
+}
+
+ErrorOr<void> ThemesSettingsWidget::setup_interface() {
+    m_themes = TRY(Gfx::list_installed_system_themes());
 
     size_t current_theme_index;
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
-    m_theme_names.ensure_capacity(m_themes.size());
+    TRY(m_theme_names.try_ensure_capacity(m_themes.size()));
     for (auto& theme_meta : m_themes) {
         m_theme_names.append(theme_meta.name);
         if (current_theme_name == theme_meta.name) {
@@ -40,6 +45,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
             current_theme_index = m_theme_names.size() - 1;
         }
     }
+
     m_theme_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<ThemePreviewWidget>(palette());
     m_themes_combo = *find_descendant_of_type_named<GUI::ComboBox>("themes_combo");
     m_themes_combo->set_only_allow_values_from_model(true);
@@ -54,7 +60,7 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
     };
     m_themes_combo->set_selected_index(current_theme_index, GUI::AllowCallback::No);
 
-    auto mouse_settings_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mouse.png"sv).release_value_but_fixme_should_propagate_errors();
+    auto mouse_settings_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-mouse.png"sv));
 
     m_color_scheme_names.clear();
     Core::DirIterator iterator("/res/color-schemes", Core::DirIterator::SkipParentAndBaseDir);
@@ -125,26 +131,44 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
             ++index;
         }
     };
+
+    return {};
+}
+
+ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
+    : m_background_settings_changed {background_settings_changed }
+{
 }
 
 void ThemesSettingsWidget::apply_settings()
 {
+    m_background_settings_changed = false;
     Optional<DeprecatedString> color_scheme_path = DeprecatedString::formatted("/res/color-schemes/{}.ini", m_selected_color_scheme_name);
 
-    if (!m_color_scheme_is_file_based && find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked())
-        VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, "Custom"sv));
-    else if (find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked())
-        VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path));
-    else {
-        VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, OptionalNone()));
+    if (!m_color_scheme_is_file_based && find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, "Custom"sv);
+        if(!set_theme_result)
+            GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
+    } else if (find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path);
+        if(!set_theme_result)
+            GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
+    } else {
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, OptionalNone());
+        if (!set_theme_result) {
+            GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
+            return;
+        }
         // Update the color scheme combobox to match the new theme.
-        auto const theme_config = Core::ConfigFile::open(m_selected_theme->path).release_value_but_fixme_should_propagate_errors();
-        auto const color_scheme_index = m_color_scheme_names.find_first_index(get_color_scheme_name_from_pathname(theme_config->read_entry("Paths", "ColorScheme")));
+        auto theme_config = Core::ConfigFile::open(m_selected_theme->path);
+        if (theme_config.is_error()) {
+            GUI::MessageBox::show_error(window(), "Failed to open theme config file"sv);
+            return;
+        }
+        auto const color_scheme_index = m_color_scheme_names.find_first_index(get_color_scheme_name_from_pathname(theme_config.release_value()->read_entry("Paths", "ColorScheme")));
         if (color_scheme_index.has_value())
             find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo")->set_selected_index(color_scheme_index.value());
     }
-
-    m_background_settings_changed = false;
 }
 
 }
