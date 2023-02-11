@@ -19,13 +19,14 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, uintptr_t arg)
     // NOTE: The FD flags are not shared between OpenFileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
+    case F_DUPFD_CLOEXEC:
     case F_DUPFD: {
         int arg_fd = (int)arg;
         if (arg_fd < 0)
             return EINVAL;
         return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
             auto fd_allocation = TRY(fds.allocate(arg_fd));
-            fds[fd_allocation.fd].set(*description);
+            fds[fd_allocation.fd].set(*description, (cmd == F_DUPFD_CLOEXEC) ? FD_CLOEXEC : 0);
             return fd_allocation.fd;
         });
     }
