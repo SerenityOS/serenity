@@ -25,7 +25,7 @@ public:
     virtual void on_mousemove(Layer*, MouseEvent& event) override;
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
-    virtual GUI::Widget* get_properties_widget() override;
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
 
 private:
     virtual StringView tool_name() const override { return "Lasso Select Tool"sv; }

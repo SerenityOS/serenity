@@ -181,46 +181,47 @@ void GradientTool::on_tool_activation()
     reset();
 }
 
-GUI::Widget* GradientTool::get_properties_widget()
+ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& size_container = m_properties_widget->add<GUI::Widget>();
-        size_container.set_fixed_height(20);
-        size_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
+        size_container->set_fixed_height(20);
+        (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& size_label = size_container.add<GUI::Label>("Opacity:");
-        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label.set_fixed_size(80, 20);
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Opacity:"));
+        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label->set_fixed_size(80, 20);
 
-        auto& opacity_slider = size_container.add<GUI::HorizontalOpacitySlider>();
-        opacity_slider.set_range(1, 100);
-        opacity_slider.set_value(100);
+        auto opacity_slider = TRY(size_container->try_add<GUI::HorizontalOpacitySlider>());
+        opacity_slider->set_range(1, 100);
+        opacity_slider->set_value(100);
 
-        opacity_slider.on_change = [&](int value) {
+        opacity_slider->on_change = [this](int value) {
             m_opacity = value;
             m_editor->update();
         };
 
-        set_primary_slider(&opacity_slider);
+        set_primary_slider(opacity_slider);
 
-        auto& use_secondary_color_checkbox = m_properties_widget->add<GUI::CheckBox>(String::from_utf8("Use secondary color"sv).release_value_but_fixme_should_propagate_errors());
-        use_secondary_color_checkbox.on_checked = [this](bool checked) {
+        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Use secondary color"sv))));
+        use_secondary_color_checkbox->on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
             m_editor->update();
         };
 
-        auto& button_container = m_properties_widget->add<GUI::Widget>();
-        button_container.set_fixed_height(22);
-        auto& button_container_layout = button_container.set_layout<GUI::HorizontalBoxLayout>();
-        button_container_layout.add_spacer();
+        auto button_container = TRY(properties_widget->try_add<GUI::Widget>());
+        button_container->set_fixed_height(22);
+        auto button_container_layout = TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        button_container_layout->add_spacer();
 
-        auto& apply_button = button_container.add<GUI::DialogButton>(String::from_utf8_short_string("Apply"sv));
-        apply_button.on_click = [this](auto) {
+        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>(String::from_utf8_short_string("Apply"sv)));
+        apply_button->on_click = [this](auto) {
             rasterize_gradient();
         };
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();

@@ -97,21 +97,21 @@ void TextTool::on_mousedown(Layer*, MouseEvent& event)
     }
 }
 
-GUI::Widget* TextTool::get_properties_widget()
+ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
 {
     if (m_properties_widget)
         return m_properties_widget.ptr();
 
-    m_properties_widget = GUI::Widget::construct();
-    m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+    auto properties_widget = TRY(GUI::Widget::try_create());
+    (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-    auto& font_header = m_properties_widget->add<GUI::Label>("Current Font:");
-    font_header.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto font_header = TRY(properties_widget->try_add<GUI::Label>("Current Font:"));
+    font_header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_font_label = m_properties_widget->add<GUI::Label>(m_selected_font->human_readable_name());
+    m_font_label = TRY(properties_widget->try_add<GUI::Label>(m_selected_font->human_readable_name()));
 
-    auto& change_font_button = m_properties_widget->add<GUI::Button>(String::from_utf8("Change Font..."sv).release_value_but_fixme_should_propagate_errors());
-    change_font_button.on_click = [&](auto) {
+    auto change_font_button = TRY(properties_widget->try_add<GUI::Button>(TRY(String::from_utf8("Change Font..."sv))));
+    change_font_button->on_click = [this](auto) {
         auto picker = GUI::FontPicker::construct(nullptr, m_selected_font, false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_font_label->set_text(picker->font()->human_readable_name());
@@ -120,6 +120,8 @@ GUI::Widget* TextTool::get_properties_widget()
             m_editor->set_focus(true);
         }
     };
+
+    m_properties_widget = properties_widget;
     return m_properties_widget.ptr();
 }
 

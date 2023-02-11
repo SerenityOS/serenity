@@ -289,33 +289,34 @@ Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
     return Gfx::StandardCursor::Move;
 }
 
-GUI::Widget* MoveTool::get_properties_widget()
+ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& selection_mode_container = m_properties_widget->add<GUI::Widget>();
-        selection_mode_container.set_layout<GUI::HorizontalBoxLayout>();
-        selection_mode_container.set_fixed_height(46);
-        auto& selection_mode_label = selection_mode_container.add<GUI::Label>("Selection Mode:");
-        selection_mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        selection_mode_label.set_fixed_size(80, 40);
+        auto selection_mode_container = TRY(properties_widget->try_add<GUI::Widget>());
+        (void)TRY(selection_mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        selection_mode_container->set_fixed_height(46);
+        auto selection_mode_label = TRY(selection_mode_container->try_add<GUI::Label>("Selection Mode:"));
+        selection_mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        selection_mode_label->set_fixed_size(80, 40);
 
-        auto& mode_radio_container = selection_mode_container.add<GUI::Widget>();
-        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
-        m_selection_mode_foreground = mode_radio_container.add<GUI::RadioButton>(String::from_utf8("Foreground"sv).release_value_but_fixme_should_propagate_errors());
+        auto mode_radio_container = TRY(selection_mode_container->try_add<GUI::Widget>());
+        (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
+        m_selection_mode_foreground = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Foreground"sv))));
 
-        m_selection_mode_active = mode_radio_container.add<GUI::RadioButton>(String::from_utf8("Active Layer"sv).release_value_but_fixme_should_propagate_errors());
+        m_selection_mode_active = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Active Layer"sv))));
 
-        m_selection_mode_foreground->on_checked = [&](bool) {
+        m_selection_mode_foreground->on_checked = [this](bool) {
             m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;
         };
-        m_selection_mode_active->on_checked = [&](bool) {
+        m_selection_mode_active->on_checked = [this](bool) {
             m_layer_selection_mode = LayerSelectionMode::ActiveLayer;
         };
 
         m_selection_mode_foreground->set_checked(true);
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();

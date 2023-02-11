@@ -17,7 +17,7 @@ public:
     virtual ~BucketTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
-    virtual GUI::Widget* get_properties_widget() override;
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return m_cursor; }
 
 private:

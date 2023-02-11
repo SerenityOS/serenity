@@ -40,7 +40,7 @@ public:
     virtual void on_primary_color_change(Color) override;
     virtual void on_tool_deactivation() override;
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
-    virtual GUI::Widget* get_properties_widget() override;
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
 
 private:
     virtual StringView tool_name() const override { return "Text Tool"sv; }
