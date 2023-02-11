@@ -13,15 +13,17 @@
 namespace DisplaySettings {
 
 class FontSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(FontSettingsWidget);
+    C_OBJECT_ABSTRACT(FontSettingsWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<FontSettingsWidget>> try_create();
     virtual ~FontSettingsWidget() override = default;
 
     virtual void apply_settings() override;
 
 private:
-    FontSettingsWidget();
+    FontSettingsWidget() = default;
+    ErrorOr<void> setup_interface();
 
     RefPtr<GUI::Label> m_default_font_label;
     RefPtr<GUI::Label> m_window_title_font_label;
