@@ -26,7 +26,7 @@ ErrorOr<NonnullOwnPtr<LinkedShader>> Linker::link(Vector<ObjectFile const*> cons
     };
     TRY(shader.instructions.try_append(instruction));
 
-    return adopt_own(*new LinkedShader(shader));
+    return try_make<LinkedShader>(shader);
 }
 
 }
