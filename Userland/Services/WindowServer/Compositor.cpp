@@ -933,6 +933,7 @@ void Compositor::change_cursor(Cursor const* cursor)
                     m_current_cursor_frame = 0;
                 invalidate_cursor(true);
             });
+        m_cursor_timer->start();
     }
 }
 
