@@ -390,38 +390,74 @@ ErrorOr<void> Image::merge_layers(LayerMergeMode layer_merge_mode)
     return {};
 }
 
-void Image::merge_active_layer_up(Layer& layer)
+ErrorOr<void> Image::merge_active_layer_up(Layer& layer)
 {
-    if (m_layers.size() < 2)
-        return;
-    size_t layer_index = this->index_of(layer);
-    if ((layer_index + 1) == m_layers.size()) {
-        dbgln("Cannot merge layer up: layer is already at the top");
-        return; // FIXME: Notify user of error properly.
-    }
-
-    auto& layer_above = m_layers.at(layer_index + 1);
-    GUI::Painter painter(layer_above.content_bitmap());
-    painter.draw_scaled_bitmap(rect(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
-    remove_layer(layer);
-    select_layer(&layer_above);
+    return merge_active_layer(layer, LayerMergeDirection::Up);
 }
 
-void Image::merge_active_layer_down(Layer& layer)
+ErrorOr<void> Image::merge_active_layer_down(Layer& layer)
+{
+    return merge_active_layer(layer, LayerMergeDirection::Down);
+}
+
+ErrorOr<void> Image::merge_active_layer(NonnullRefPtr<Layer> const& layer, LayerMergeDirection layer_merge_direction)
 {
     if (m_layers.size() < 2)
-        return;
-    int layer_index = this->index_of(layer);
-    if (layer_index == 0) {
-        dbgln("Cannot merge layer down: layer is already at the bottom");
-        return; // FIXME: Notify user of error properly.
+        return {};
+
+    if (!layer->is_visible())
+        return Error::from_string_literal("Layer must be visible");
+
+    auto layer_index = index_of(layer);
+    auto direction = layer_merge_direction == LayerMergeDirection::Up ? 1 : -1;
+    ssize_t layer_to_merge_index = layer_index + direction;
+    ssize_t layer_count = m_layers.size();
+
+    if (layer_to_merge_index < 0)
+        return Error::from_string_literal("Layer is already at the bottom");
+    if (layer_to_merge_index >= layer_count)
+        return Error::from_string_literal("Layer is already at the top");
+
+    Optional<NonnullRefPtr<Layer>> maybe_adjacent_layer;
+    while (layer_to_merge_index >= 0 && layer_to_merge_index < layer_count) {
+        auto& layer = m_layers.at(layer_to_merge_index);
+        if (layer.is_visible()) {
+            maybe_adjacent_layer = layer;
+            break;
+        }
+        layer_to_merge_index += direction;
     }
 
-    auto& layer_below = m_layers.at(layer_index - 1);
-    GUI::Painter painter(layer_below.content_bitmap());
-    painter.draw_scaled_bitmap(rect(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
-    remove_layer(layer);
-    select_layer(&layer_below);
+    if (!maybe_adjacent_layer.has_value()) {
+        auto error_message = layer_merge_direction == LayerMergeDirection::Up ? "No visible layers above this layer"sv : "No visible layers below this layer"sv;
+        return Error::from_string_view(error_message);
+    }
+
+    auto adjacent_layer = maybe_adjacent_layer.value();
+    auto bottom_layer = layer_merge_direction == LayerMergeDirection::Down ? adjacent_layer : layer;
+    auto top_layer = layer_merge_direction == LayerMergeDirection::Down ? layer : adjacent_layer;
+    auto merged_layer_bounding_rect = bottom_layer->relative_rect().united(top_layer->relative_rect());
+    auto merged_layer = bottom_layer;
+    if (!bottom_layer->relative_rect().contains(top_layer->relative_rect())) {
+        merged_layer = TRY(Layer::create_with_size(*this, merged_layer_bounding_rect.size(), adjacent_layer->name()));
+        merged_layer->set_location(merged_layer_bounding_rect.location());
+    } else if (merged_layer.ptr() != adjacent_layer.ptr()) {
+        merged_layer->set_name(adjacent_layer->name());
+    }
+
+    GUI::Painter painter(merged_layer->content_bitmap());
+    if (merged_layer.ptr() != bottom_layer.ptr())
+        painter.blit(bottom_layer->location() - merged_layer->location(), bottom_layer->display_bitmap(), bottom_layer->rect(), static_cast<float>(bottom_layer->opacity_percent()) / 100.0f);
+    painter.blit(top_layer->location() - merged_layer->location(), top_layer->display_bitmap(), top_layer->rect(), static_cast<float>(top_layer->opacity_percent()) / 100.0f);
+
+    auto top_layer_index = max(layer_index, layer_to_merge_index);
+    auto bottom_layer_index = min(layer_index, layer_to_merge_index);
+    m_layers.remove(top_layer_index);
+    m_layers.remove(bottom_layer_index);
+    m_layers.insert(top_layer_index - 1, merged_layer);
+    select_layer(merged_layer);
+    did_modify_layer_stack();
+    return {};
 }
 
 void Image::select_layer(Layer* layer)
