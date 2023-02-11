@@ -312,7 +312,9 @@ void TextEditor::mousemove_event(MouseEvent& event)
         return;
     }
 
-    if (m_ruler_visible && (ruler_rect_in_inner_coordinates().contains(event.position()))) {
+    if (m_ruler_visible && ruler_rect_in_inner_coordinates().contains(event.position())) {
+        set_override_cursor(Gfx::StandardCursor::None);
+    } else if (m_gutter_visible && gutter_rect_in_inner_coordinates().contains(event.position())) {
         set_override_cursor(Gfx::StandardCursor::None);
     } else {
         set_editing_cursor();
