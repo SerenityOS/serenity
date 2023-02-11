@@ -205,7 +205,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         m_bookmarks.append(button);
 
         button.set_button_style(Gfx::ButtonStyle::Coolbar);
-        button.set_text_deprecated(title);
+        button.set_text(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
         button.set_icon(g_icon_bag.filetype_html);
         button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);

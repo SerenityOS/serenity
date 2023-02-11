@@ -100,7 +100,7 @@ GUI::Widget* EraseTool::get_properties_widget()
 
         auto& use_secondary_color_checkbox = secondary_color_container.add<GUI::CheckBox>();
         use_secondary_color_checkbox.set_checked(m_use_secondary_color);
-        use_secondary_color_checkbox.set_text_deprecated("Use secondary color");
+        use_secondary_color_checkbox.set_text(String::from_utf8("Use secondary color"sv).release_value_but_fixme_should_propagate_errors());
         use_secondary_color_checkbox.on_checked = [&](bool checked) {
             m_use_secondary_color = checked;
         };
@@ -114,8 +114,8 @@ GUI::Widget* EraseTool::get_properties_widget()
 
         auto& mode_radio_container = mode_container.add<GUI::Widget>();
         mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
-        auto& pencil_mode_radio = mode_radio_container.add<GUI::RadioButton>("Pencil");
-        auto& brush_mode_radio = mode_radio_container.add<GUI::RadioButton>("Brush");
+        auto& pencil_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Pencil"sv));
+        auto& brush_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Brush"sv));
 
         pencil_mode_radio.on_checked = [&](bool) {
             m_draw_mode = DrawMode::Pencil;

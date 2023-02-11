@@ -49,13 +49,13 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize suggested_size, GUI::Win
     auto& button_container = main_widget->add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& ok_button = button_container.add<GUI::Button>("OK");
+    auto& ok_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
 
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    auto& cancel_button = button_container.add<GUI::Button>(String::from_utf8_short_string("Cancel"sv));
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

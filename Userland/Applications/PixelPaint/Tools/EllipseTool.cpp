@@ -157,9 +157,9 @@ GUI::Widget* EllipseTool::get_properties_widget()
 
         auto& mode_radio_container = mode_container.add<GUI::Widget>();
         mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
-        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline");
-        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
-        auto& aa_enable_checkbox = mode_radio_container.add<GUI::CheckBox>("Anti-alias");
+        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Outline"sv));
+        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Fill"sv));
+        auto& aa_enable_checkbox = mode_radio_container.add<GUI::CheckBox>(String::from_utf8("Anti-alias"sv).release_value_but_fixme_should_propagate_errors());
 
         aa_enable_checkbox.on_checked = [&](bool checked) {
             m_antialias_enabled = checked;

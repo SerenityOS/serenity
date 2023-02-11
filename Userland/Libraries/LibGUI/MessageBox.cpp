@@ -49,9 +49,12 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
     if (parent_window)
         box->set_icon(parent_window->icon());
 
-    box->m_yes_button->set_text_deprecated(path.is_empty() ? "Save As..." : "Save");
-    box->m_no_button->set_text_deprecated("Discard");
-    box->m_cancel_button->set_text_deprecated("Cancel");
+    if (path.is_empty())
+        box->m_yes_button->set_text(String::from_utf8("Save As..."sv).release_value_but_fixme_should_propagate_errors());
+    else
+        box->m_yes_button->set_text(String::from_utf8_short_string("Save"sv));
+    box->m_no_button->set_text(String::from_utf8_short_string("Discard"sv));
+    box->m_cancel_button->set_text(String::from_utf8_short_string("Cancel"sv));
 
     return box->exec();
 }
@@ -151,11 +154,11 @@ void MessageBox::build()
     constexpr int button_width = 80;
     int button_count = 0;
 
-    auto add_button = [&](DeprecatedString label, ExecResult result) -> GUI::Button& {
+    auto add_button = [&](String label, ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
-        button.set_text_deprecated(label);
-        button.on_click = [this, label, result](auto) {
+        button.set_text(move(label));
+        button.on_click = [this, result](auto) {
             done(result);
         };
         ++button_count;
@@ -164,13 +167,13 @@ void MessageBox::build()
 
     button_container.layout()->add_spacer();
     if (should_include_ok_button())
-        m_ok_button = add_button("OK", ExecResult::OK);
+        m_ok_button = add_button(String::from_utf8_short_string("OK"sv), ExecResult::OK);
     if (should_include_yes_button())
-        m_yes_button = add_button("Yes", ExecResult::Yes);
+        m_yes_button = add_button(String::from_utf8_short_string("Yes"sv), ExecResult::Yes);
     if (should_include_no_button())
-        m_no_button = add_button("No", ExecResult::No);
+        m_no_button = add_button(String::from_utf8_short_string("No"sv), ExecResult::No);
     if (should_include_cancel_button())
-        m_cancel_button = add_button("Cancel", ExecResult::Cancel);
+        m_cancel_button = add_button(String::from_utf8_short_string("Cancel"sv), ExecResult::Cancel);
     button_container.layout()->add_spacer();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;

@@ -203,8 +203,8 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
         find_forwards->click();
     };
 
-    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>("Case sensitive"));
-    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>("Wrap around"));
+    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Case sensitive"sv))));
+    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Wrap around"sv))));
 
     find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
         auto needle = find_textbox->text();

@@ -93,7 +93,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     button_container.set_fixed_height(20);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->add_spacer();
-    auto& ok_button = button_container.add<GUI::Button>("OK");
+    auto& ok_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     ok_button.set_fixed_size(80, 20);
     ok_button.on_click = [this](auto) {
         dbgln("TODO: Add event icon on specific tile");

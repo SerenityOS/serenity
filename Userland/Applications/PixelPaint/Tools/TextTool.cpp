@@ -112,7 +112,7 @@ GUI::Widget* TextTool::get_properties_widget()
 
     m_font_label = m_properties_widget->add<GUI::Label>(m_selected_font->human_readable_name());
 
-    auto& change_font_button = m_properties_widget->add<GUI::Button>("Change Font...");
+    auto& change_font_button = m_properties_widget->add<GUI::Button>(String::from_utf8("Change Font..."sv).release_value_but_fixme_should_propagate_errors());
     change_font_button.on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(nullptr, m_selected_font, false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {

@@ -256,7 +256,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& result = app_state.results[i];
             auto& match = results_container.add<Assistant::ResultRow>();
             match.set_icon(result.bitmap());
-            match.set_text_deprecated(move(result.title()));
+            match.set_text(String::from_deprecated_string(result.title()).release_value_but_fixme_should_propagate_errors());
             match.set_tooltip(move(result.tooltip()));
             match.on_click = [&result](auto) {
                 result.activate();

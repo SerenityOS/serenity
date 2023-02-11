@@ -217,14 +217,14 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     };
 
     auto& ok_button = *widget->find_descendant_of_type_named<GUI::Button>("ok_button");
-    ok_button.set_text_deprecated(ok_button_name(m_mode));
+    ok_button.set_text(ok_button_name(m_mode));
     ok_button.on_click = [this](auto) {
         on_file_return();
     };
     ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
 
     auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
-    cancel_button.set_text_deprecated("Cancel");
+    cancel_button.set_text(String::from_utf8_short_string("Cancel"sv));
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

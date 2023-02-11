@@ -78,7 +78,7 @@ Game::Game()
     m_players[3].name = "Lisa";
     m_players[3].taken_cards_target = { width, height / 2 - Card::height / 2 };
 
-    m_passing_button = add<GUI::Button>("Pass Left");
+    m_passing_button = add<GUI::Button>(String::from_utf8("Pass Left"sv).release_value_but_fixme_should_propagate_errors());
     constexpr int button_width = 120;
     constexpr int button_height = 30;
     m_passing_button->set_relative_rect(width / 2 - button_width / 2, height - 3 * outer_border_size - Card::height - button_height, button_width, button_height);
@@ -135,7 +135,7 @@ void Game::show_score_card(bool game_over)
     button_container.set_shrink_to_fit(true);
     button_container.set_layout<GUI::VerticalBoxLayout>();
 
-    auto& close_button = button_container.add<GUI::Button>("OK");
+    auto& close_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     close_button.on_click = [&score_dialog](auto) {
         score_dialog->done(GUI::Dialog::ExecResult::OK);
     };
@@ -180,13 +180,13 @@ void Game::setup(DeprecatedString player_name, int hand_number)
         m_human_can_play = true;
         switch (passing_direction()) {
         case PassingDirection::Left:
-            m_passing_button->set_text_deprecated("Pass Left");
+            m_passing_button->set_text(String::from_utf8("Pass Left"sv).release_value_but_fixme_should_propagate_errors());
             break;
         case PassingDirection::Across:
-            m_passing_button->set_text_deprecated("Pass Across");
+            m_passing_button->set_text(String::from_utf8("Pass Across"sv).release_value_but_fixme_should_propagate_errors());
             break;
         case PassingDirection::Right:
-            m_passing_button->set_text_deprecated("Pass Right");
+            m_passing_button->set_text(String::from_utf8("Pass Right"sv).release_value_but_fixme_should_propagate_errors());
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -871,7 +871,7 @@ void Game::pass_cards()
     }
 
     m_state = State::PassingAccept;
-    m_passing_button->set_text_deprecated("OK");
+    m_passing_button->set_text(String::from_utf8_short_string("OK"sv));
     m_passing_button->set_enabled(true);
 }
 

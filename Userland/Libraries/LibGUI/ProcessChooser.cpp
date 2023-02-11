@@ -15,10 +15,10 @@
 
 namespace GUI {
 
-ProcessChooser::ProcessChooser(StringView window_title, StringView button_label, Gfx::Bitmap const* window_icon, GUI::Window* parent_window)
+ProcessChooser::ProcessChooser(StringView window_title, String button_label, Gfx::Bitmap const* window_icon, GUI::Window* parent_window)
     : Dialog(parent_window)
     , m_window_title(window_title)
-    , m_button_label(button_label)
+    , m_button_label(move(button_label))
     , m_window_icon(window_icon)
 {
     set_title(m_window_title);
@@ -62,7 +62,7 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
         auto index = m_table_view->selection().first();
         set_pid_from_index_and_close(index);
     };
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    auto& cancel_button = button_container.add<GUI::Button>(String::from_utf8_short_string("Cancel"sv));
     cancel_button.set_fixed_width(80);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

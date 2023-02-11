@@ -52,7 +52,7 @@ void KeyboardMapperWidget::create_frame()
 
         auto& tmp_button = main_widget.add<KeyButton>();
         tmp_button.set_relative_rect(rect);
-        tmp_button.set_text_deprecated(keys[i].name);
+        tmp_button.set_text(String::from_deprecated_string(keys[i].name).release_value_but_fixme_should_propagate_errors());
         tmp_button.set_enabled(keys[i].enabled);
 
         tmp_button.on_click = [this, &tmp_button]() {
@@ -64,7 +64,7 @@ void KeyboardMapperWidget::create_frame()
                 auto index = keys[i].map_index;
                 VERIFY(index > 0);
 
-                tmp_button.set_text_deprecated(value);
+                tmp_button.set_text(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
                 u32* map = map_from_name(m_current_map_name);
 
                 if (value.length() == 0)
@@ -89,16 +89,16 @@ void KeyboardMapperWidget::create_frame()
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
     m_map_group->set_fixed_width(450);
 
-    add_map_radio_button("map"sv, "Default"sv);
-    add_map_radio_button("shift_map"sv, "Shift"sv);
-    add_map_radio_button("altgr_map"sv, "AltGr"sv);
-    add_map_radio_button("alt_map"sv, "Alt"sv);
-    add_map_radio_button("shift_altgr_map"sv, "Shift+AltGr"sv);
+    add_map_radio_button("map"sv, String::from_utf8_short_string("Default"sv));
+    add_map_radio_button("shift_map"sv, String::from_utf8_short_string("Shift"sv));
+    add_map_radio_button("altgr_map"sv, String::from_utf8_short_string("AltGr"sv));
+    add_map_radio_button("alt_map"sv, String::from_utf8_short_string("Alt"sv));
+    add_map_radio_button("shift_altgr_map"sv, String::from_utf8("Shift+AltGr"sv).release_value_but_fixme_should_propagate_errors());
 
     bottom_widget.layout()->add_spacer();
 }
 
-void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, const StringView button_text)
+void KeyboardMapperWidget::add_map_radio_button(const StringView map_name, String button_text)
 {
     auto& map_radio_button = m_map_group->add<GUI::RadioButton>(button_text);
     map_radio_button.set_name(map_name);
@@ -248,7 +248,7 @@ void KeyboardMapperWidget::set_current_map(const DeprecatedString current_map)
         StringBuilder sb;
         sb.append_code_point(map[index]);
 
-        m_keys.at(k)->set_text_deprecated(sb.to_deprecated_string());
+        m_keys.at(k)->set_text(sb.to_string().release_value_but_fixme_should_propagate_errors());
     }
 
     this->update();

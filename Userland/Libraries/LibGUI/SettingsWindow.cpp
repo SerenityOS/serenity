@@ -46,7 +46,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
     button_container->layout()->set_spacing(6);
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
-        window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>("Defaults"));
+        window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>(TRY(String::from_utf8("Defaults"sv))));
         window->m_reset_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
             window->reset_default_values();
         };
@@ -54,19 +54,19 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
 
     TRY(button_container->layout()->try_add_spacer());
 
-    window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>("OK"));
+    window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>(String::from_utf8_short_string("OK"sv)));
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();
         GUI::Application::the()->quit();
     };
 
-    window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>("Cancel"));
+    window->m_cancel_button = TRY(button_container->try_add<GUI::DialogButton>(String::from_utf8_short_string("Cancel"sv)));
     window->m_cancel_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->cancel_settings();
         GUI::Application::the()->quit();
     };
 
-    window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"));
+    window->m_apply_button = TRY(button_container->try_add<GUI::DialogButton>(String::from_utf8_short_string("Apply"sv)));
     window->m_apply_button->set_enabled(false);
     window->m_apply_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {
         window->apply_settings();

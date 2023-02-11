@@ -114,7 +114,7 @@ void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)
 {
     m_system_menu = move(system_menu);
 
-    m_start_button = GUI::Button::construct("Serenity");
+    m_start_button = GUI::Button::construct(String::from_utf8("Serenity"sv).release_value_but_fixme_should_propagate_errors());
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
     m_start_button->set_icon_spacing(0);
     auto app_icon = GUI::Icon::default_icon("ladyball"sv);
@@ -202,7 +202,7 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     auto* button = window.button();
     if (!button)
         return;
-    button->set_text_deprecated(window.title());
+    button->set_text(String::from_deprecated_string(window.title()).release_value_but_fixme_should_propagate_errors());
     button->set_tooltip(window.title());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));
