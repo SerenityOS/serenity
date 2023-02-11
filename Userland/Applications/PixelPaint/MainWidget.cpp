@@ -870,7 +870,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image().merge_active_layer_up(*active_layer);
+
+            if (auto maybe_error = editor->image().merge_active_layer_up(*active_layer); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge active layer up: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Merge Active Layer Up"sv);
         }));
 
@@ -881,7 +885,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image().merge_active_layer_down(*active_layer);
+
+            if (auto maybe_error = editor->image().merge_active_layer_down(*active_layer); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge active layer down: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Merge Active Layer Down"sv);
         }));
 

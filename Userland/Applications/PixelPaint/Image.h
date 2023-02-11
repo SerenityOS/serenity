@@ -85,8 +85,8 @@ public:
     void select_layer(Layer*);
     ErrorOr<void> flatten_all_layers();
     ErrorOr<void> merge_visible_layers();
-    void merge_active_layer_up(Layer& layer);
-    void merge_active_layer_down(Layer& layer);
+    ErrorOr<void> merge_active_layer_up(Layer& layer);
+    ErrorOr<void> merge_active_layer_down(Layer& layer);
 
     void add_client(ImageClient&);
     void remove_client(ImageClient&);
@@ -111,6 +111,11 @@ private:
         VisibleOnly
     };
 
+    enum class LayerMergeDirection {
+        Up,
+        Down
+    };
+
     explicit Image(Gfx::IntSize);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
@@ -118,6 +123,7 @@ private:
     void did_modify_layer_stack();
 
     ErrorOr<void> merge_layers(LayerMergeMode);
+    ErrorOr<void> merge_active_layer(NonnullRefPtr<Layer> const&, LayerMergeDirection);
 
     Gfx::IntSize m_size;
     NonnullRefPtrVector<Layer> m_layers;
