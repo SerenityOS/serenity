@@ -146,7 +146,7 @@ public:
     StringView bracket_mirror_string() const;
 
     DeprecatedString to_deprecated_string() const;
-    DeprecatedString to_debug_string() const;
+    ErrorOr<String> to_debug_string() const;
 
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
