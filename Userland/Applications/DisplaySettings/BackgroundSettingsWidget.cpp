@@ -30,20 +30,28 @@
 
 namespace DisplaySettings {
 
+ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_create(bool& background_settings_changed)
+{
+    auto background_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundSettingsWidget(background_settings_changed)));
+
+    TRY(background_settings_widget->m_modes.try_append("Tile"));
+    TRY(background_settings_widget->m_modes.try_append("Center"));
+    TRY(background_settings_widget->m_modes.try_append("Stretch"));
+
+    TRY(background_settings_widget->create_frame());
+    TRY(background_settings_widget->load_current_settings());
+
+    return background_settings_widget;
+}
+
 BackgroundSettingsWidget::BackgroundSettingsWidget(bool& background_settings_changed)
     : m_background_settings_changed { background_settings_changed }
 {
-    m_modes.append("Tile");
-    m_modes.append("Center");
-    m_modes.append("Stretch");
-
-    create_frame();
-    load_current_settings();
 }
 
-void BackgroundSettingsWidget::create_frame()
+ErrorOr<void> BackgroundSettingsWidget::create_frame()
 {
-    load_from_gml(background_settings_gml).release_value_but_fixme_should_propagate_errors();
+    TRY(load_from_gml(background_settings_gml));
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
@@ -64,13 +72,14 @@ void BackgroundSettingsWidget::create_frame()
     };
 
     m_context_menu = GUI::Menu::construct();
-    m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [this](GUI::Action const&) {
+    auto const file_manager_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv));
+    m_show_in_file_manager_action = GUI::Action::create("Show in File Manager", file_manager_icon, [this](GUI::Action const&) {
         LexicalPath path { m_monitor_widget->wallpaper() };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
     m_context_menu->add_action(*m_show_in_file_manager_action);
 
-    m_context_menu->add_separator();
+    TRY(m_context_menu->try_add_separator());
     m_copy_action = GUI::CommonActions::make_copy_action(
         [this](auto&) {
             auto url = URL::create_with_file_scheme(m_monitor_widget->wallpaper()).to_deprecated_string();
@@ -117,11 +126,13 @@ void BackgroundSettingsWidget::create_frame()
         first_color_change = false;
         set_modified(true);
     };
+
+    return {};
 }
 
-void BackgroundSettingsWidget::load_current_settings()
+ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
 {
-    auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini").release_value_but_fixme_should_propagate_errors();
+    auto ws_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
 
     auto selected_wallpaper = Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv);
     if (!selected_wallpaper.is_empty()) {
@@ -150,6 +161,8 @@ void BackgroundSettingsWidget::load_current_settings()
     m_color_input->set_color(palette_desktop_color, GUI::AllowCallback::No);
     m_monitor_widget->set_background_color(palette_desktop_color);
     m_background_settings_changed = false;
+
+    return {};
 }
 
 void BackgroundSettingsWidget::apply_settings()
