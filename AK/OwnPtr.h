@@ -192,15 +192,6 @@ inline OwnPtr<T> adopt_own_if_nonnull(T* object)
     return {};
 }
 
-template<typename T>
-inline ErrorOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
-{
-    auto result = adopt_own_if_nonnull(object);
-    if (!result)
-        return Error::from_errno(ENOMEM);
-    return result.release_nonnull();
-}
-
 template<typename T, class... Args>
 requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
 {
@@ -226,7 +217,6 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
 }
 
 #if USING_AK_GLOBALLY
-using AK::adopt_nonnull_own_or_enomem;
 using AK::adopt_own_if_nonnull;
 using AK::OwnPtr;
 using AK::try_make;
