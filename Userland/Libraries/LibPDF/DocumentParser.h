@@ -20,7 +20,7 @@ public:
         Linearized,
     };
 
-    [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
+    [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_xref_table->trailer(); }
 
     // Parses the header and initializes the xref table and trailer
     PDFErrorOr<void> initialize();
@@ -94,7 +94,6 @@ private:
     bool navigate_to_after_startxref();
 
     RefPtr<XRefTable> m_xref_table;
-    RefPtr<DictObject> m_trailer;
     Optional<LinearizationDictionary> m_linearization_dictionary;
 };
 

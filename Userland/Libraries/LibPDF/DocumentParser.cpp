@@ -186,14 +186,12 @@ PDFErrorOr<void> DocumentParser::initialize_linearized_xref_table()
     // The linearization parameter dictionary has just been parsed, and the xref table
     // comes immediately after it. We are in the correct spot.
     m_xref_table = TRY(parse_xref_table());
-    if (!m_trailer)
-        m_trailer = TRY(parse_file_trailer());
 
     // Also parse the main xref table and merge into the first-page xref table. Note
     // that we don't use the main xref table offset from the linearization dict because
     // for some reason, it specified the offset of the whitespace after the object
     // index start and length? So it's much easier to do it this way.
-    auto main_xref_table_offset = m_trailer->get_value(CommonNames::Prev).to_int();
+    auto main_xref_table_offset = m_xref_table->trailer()->get_value(CommonNames::Prev).to_int();
     m_reader.move_to(main_xref_table_offset);
     auto main_xref_table = TRY(parse_xref_table());
     TRY(m_xref_table->merge(move(*main_xref_table)));
@@ -267,15 +265,31 @@ PDFErrorOr<void> DocumentParser::initialize_non_linearized_xref_table()
         return error("No xref");
 
     m_reader.set_reading_forwards();
-    auto xref_offset_value = parse_number();
-    if (xref_offset_value.is_error() || !xref_offset_value.value().has<int>())
-        return error("Invalid xref offset");
-    auto xref_offset = xref_offset_value.value().get<int>();
-
+    auto xref_offset_value = TRY(parse_number());
+    auto xref_offset = TRY(m_document->resolve_to<int>(xref_offset_value));
     m_reader.move_to(xref_offset);
-    m_xref_table = TRY(parse_xref_table());
-    if (!m_trailer)
-        m_trailer = TRY(parse_file_trailer());
+
+    // As per 7.5.6 Incremental Updates:
+    // When a conforming reader reads the file, it shall build its cross-reference
+    // information in such a way that the most recent copy of each object shall be
+    // the one accessed from the file.
+    // NOTE: This means that we have to follow back the chain of XRef table sections
+    //       and only add objects that were not already specified in a previous
+    //       (and thus newer) XRef section.
+    while (1) {
+        auto xref_table = TRY(parse_xref_table());
+        if (!m_xref_table)
+            m_xref_table = xref_table;
+        else
+            TRY(m_xref_table->merge(move(*xref_table)));
+
+        if (!xref_table->trailer() || !xref_table->trailer()->contains(CommonNames::Prev))
+            break;
+
+        auto offset = TRY(m_document->resolve_to<int>(xref_table->trailer()->get_value(CommonNames::Prev)));
+        m_reader.move_to(offset);
+    }
+
     return validate_xref_table_and_fix_if_necessary();
 }
 
@@ -406,7 +420,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
         }
     }
 
-    m_trailer = dict;
+    table->set_trailer(dict);
 
     return table;
 }
@@ -424,10 +438,7 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
 
     auto table = adopt_ref(*new XRefTable());
 
-    do {
-        if (m_reader.matches("trailer"))
-            return table;
-
+    while (m_reader.matches_number()) {
         Vector<XRefEntry> entries;
 
         auto starting_index_value = TRY(parse_number());
@@ -470,7 +481,11 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_table()
         }
 
         table->add_section({ starting_index, object_count, entries });
-    } while (m_reader.matches_number());
+    }
+
+    m_reader.consume_whitespace();
+    if (m_reader.matches("trailer"))
+        table->set_trailer(TRY(parse_file_trailer()));
 
     return table;
 }
