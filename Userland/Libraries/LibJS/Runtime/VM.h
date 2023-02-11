@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -176,8 +176,8 @@ public:
 
     StackInfo const& stack_info() const { return m_stack_info; };
 
-    HashMap<DeprecatedString, NonnullGCPtr<Symbol>> const& global_symbol_registry() const { return m_global_symbol_registry; }
-    HashMap<DeprecatedString, NonnullGCPtr<Symbol>>& global_symbol_registry() { return m_global_symbol_registry; }
+    HashMap<String, NonnullGCPtr<Symbol>> const& global_symbol_registry() const { return m_global_symbol_registry; }
+    HashMap<String, NonnullGCPtr<Symbol>>& global_symbol_registry() { return m_global_symbol_registry; }
 
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
@@ -277,7 +277,7 @@ private:
     StackInfo m_stack_info;
 
     // GlobalSymbolRegistry, https://tc39.es/ecma262/#table-globalsymbolregistry-record-fields
-    HashMap<DeprecatedString, NonnullGCPtr<Symbol>> m_global_symbol_registry;
+    HashMap<String, NonnullGCPtr<Symbol>> m_global_symbol_registry;
 
     Vector<Function<ThrowCompletionOr<Value>()>> m_promise_jobs;
 

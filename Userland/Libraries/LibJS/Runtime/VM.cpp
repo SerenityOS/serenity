@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
 #include <LibJS/AST.h>
@@ -149,7 +150,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
     };
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    m_well_known_symbol_##snake_name = Symbol::create(*this, "Symbol." #SymbolName, false);
+    m_well_known_symbol_##snake_name = Symbol::create(*this, String::from_utf8("Symbol." #SymbolName##sv).release_value_but_fixme_should_propagate_errors(), false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 }

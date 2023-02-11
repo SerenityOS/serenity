@@ -7,8 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
-#include <AK/StringView.h>
+#include <AK/String.h>
 #include <LibJS/Heap/Cell.h>
 
 namespace JS {
@@ -17,19 +16,19 @@ class Symbol final : public Cell {
     JS_CELL(Symbol, Cell);
 
 public:
-    [[nodiscard]] static NonnullGCPtr<Symbol> create(VM&, Optional<DeprecatedString> description, bool is_global);
+    [[nodiscard]] static NonnullGCPtr<Symbol> create(VM&, Optional<String> description, bool is_global);
 
     virtual ~Symbol() = default;
 
-    Optional<DeprecatedString> const& description() const { return m_description; }
+    Optional<String> const& description() const { return m_description; }
     bool is_global() const { return m_is_global; }
 
-    DeprecatedString descriptive_string() const;
+    ErrorOr<String> descriptive_string() const;
 
 private:
-    Symbol(Optional<DeprecatedString>, bool);
+    Symbol(Optional<String>, bool);
 
-    Optional<DeprecatedString> m_description;
+    Optional<String> m_description;
     bool m_is_global;
 };
 
