@@ -47,7 +47,7 @@ ThrowCompletionOr<Value> StringConstructor::call()
     if (!vm.argument_count())
         return PrimitiveString::create(vm, String {});
     if (vm.argument(0).is_symbol())
-        return PrimitiveString::create(vm, vm.argument(0).as_symbol().to_deprecated_string());
+        return PrimitiveString::create(vm, vm.argument(0).as_symbol().descriptive_string());
     return TRY(vm.argument(0).to_primitive_string(vm));
 }
 

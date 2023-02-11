@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,7 +24,8 @@ public:
     DeprecatedString description() const { return m_description.value_or(""); }
     Optional<DeprecatedString> const& raw_description() const { return m_description; }
     bool is_global() const { return m_is_global; }
-    DeprecatedString to_deprecated_string() const { return DeprecatedString::formatted("Symbol({})", description()); }
+
+    DeprecatedString descriptive_string() const;
 
 private:
     Symbol(Optional<DeprecatedString>, bool);

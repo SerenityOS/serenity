@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +20,18 @@ Symbol::Symbol(Optional<DeprecatedString> description, bool is_global)
 NonnullGCPtr<Symbol> Symbol::create(VM& vm, Optional<DeprecatedString> description, bool is_global)
 {
     return vm.heap().allocate_without_realm<Symbol>(move(description), is_global);
+}
+
+// 20.4.3.3.1 SymbolDescriptiveString ( sym ), https://tc39.es/ecma262/#sec-symboldescriptivestring
+DeprecatedString Symbol::descriptive_string() const
+{
+    // 1. Let desc be sym's [[Description]] value.
+    // 2. If desc is undefined, set desc to the empty String.
+    // 3. Assert: desc is a String.
+    auto description = m_description.value_or("");
+
+    // 4. Return the string-concatenation of "Symbol(", desc, and ")".
+    return DeprecatedString::formatted("Symbol({})", description);
 }
 
 }

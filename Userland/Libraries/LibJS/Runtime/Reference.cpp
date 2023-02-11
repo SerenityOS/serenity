@@ -216,7 +216,7 @@ DeprecatedString Reference::to_deprecated_string() const
     if (!m_name.is_valid())
         builder.append("<invalid>"sv);
     else if (m_name.is_symbol())
-        builder.appendff("{}", m_name.as_symbol()->to_deprecated_string());
+        builder.appendff("{}", m_name.as_symbol()->descriptive_string());
     else
         builder.appendff("{}", m_name.to_string());
     builder.appendff(", Strict={}", m_strict);
