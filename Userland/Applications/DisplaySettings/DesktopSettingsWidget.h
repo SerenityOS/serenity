@@ -13,17 +13,18 @@
 namespace DisplaySettings {
 
 class DesktopSettingsWidget : public GUI::SettingsWindow::Tab {
-    C_OBJECT(DesktopSettingsWidget);
+    C_OBJECT_ABSTRACT(DesktopSettingsWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> try_create();
     virtual ~DesktopSettingsWidget() override = default;
 
     virtual void apply_settings() override;
 
 private:
-    DesktopSettingsWidget();
+    DesktopSettingsWidget() = default;
 
-    void create_frame();
+    ErrorOr<void> create_frame();
     void load_current_settings();
 
     RefPtr<GUI::SpinBox> m_workspace_rows_spinbox;
