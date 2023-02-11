@@ -87,8 +87,10 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
         return vm.throw_completion<TypeError>(ErrorType::NotASymbol, argument.to_string_without_side_effects());
 
     auto& symbol = argument.as_symbol();
-    if (symbol.is_global())
-        return PrimitiveString::create(vm, symbol.description());
+    if (symbol.is_global()) {
+        // NOTE: Global symbols should always have a description string
+        return PrimitiveString::create(vm, *symbol.description());
+    }
 
     return js_undefined();
 }

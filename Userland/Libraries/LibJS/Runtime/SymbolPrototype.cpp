@@ -53,7 +53,7 @@ static ThrowCompletionOr<Symbol*> this_symbol_value(VM& vm, Value value)
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 {
     auto* symbol = TRY(this_symbol_value(vm, vm.this_value()));
-    auto& description = symbol->raw_description();
+    auto& description = symbol->description();
     if (!description.has_value())
         return js_undefined();
     return PrimitiveString::create(vm, *description);
