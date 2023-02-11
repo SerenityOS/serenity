@@ -22,7 +22,6 @@ public:
     virtual Optional<UISize> calculated_min_size() const override;
 
 protected:
-    explicit RadioButton(DeprecatedString text);
     explicit RadioButton(String text = {});
     virtual void paint_event(PaintEvent&) override;
 

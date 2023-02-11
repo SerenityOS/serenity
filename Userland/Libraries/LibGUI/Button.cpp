@@ -20,11 +20,6 @@ REGISTER_WIDGET(GUI, DialogButton)
 
 namespace GUI {
 
-Button::Button(DeprecatedString deprecated_text)
-    : Button(String::from_deprecated_string(deprecated_text).release_value_but_fixme_should_propagate_errors())
-{
-}
-
 Button::Button(String text)
     : AbstractButton(move(text))
 {

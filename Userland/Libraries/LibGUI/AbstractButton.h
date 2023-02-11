@@ -21,8 +21,6 @@ public:
 
     Function<void(bool)> on_checked;
 
-    virtual void set_text_deprecated(DeprecatedString);
-    DeprecatedString text_deprecated() const { return m_text.to_deprecated_string(); }
     virtual void set_text(String);
     String const& text() const { return m_text; }
 
