@@ -19,34 +19,36 @@
 
 namespace DisplaySettings {
 
-MonitorSettingsWidget::MonitorSettingsWidget()
+ErrorOr<NonnullRefPtr<MonitorSettingsWidget>> MonitorSettingsWidget::try_create()
 {
-    create_resolution_list();
-    create_frame();
-    load_current_settings();
+    auto monitor_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MonitorSettingsWidget()));
+    TRY(monitor_settings_widget->create_resolution_list());
+    TRY(monitor_settings_widget->create_frame());
+    TRY(monitor_settings_widget->load_current_settings());
+    return monitor_settings_widget;
 }
 
-void MonitorSettingsWidget::create_resolution_list()
+ErrorOr<void> MonitorSettingsWidget::create_resolution_list()
 {
     // TODO: Find a better way to get the default resolution
-    m_resolutions.append({ 640, 480 });
-    m_resolutions.append({ 800, 600 });
-    m_resolutions.append({ 1024, 768 });
-    m_resolutions.append({ 1280, 720 });
-    m_resolutions.append({ 1280, 768 });
-    m_resolutions.append({ 1280, 960 });
-    m_resolutions.append({ 1280, 1024 });
-    m_resolutions.append({ 1360, 768 });
-    m_resolutions.append({ 1368, 768 });
-    m_resolutions.append({ 1440, 900 });
-    m_resolutions.append({ 1600, 900 });
-    m_resolutions.append({ 1600, 1200 });
-    m_resolutions.append({ 1920, 1080 });
-    m_resolutions.append({ 2048, 1152 });
-    m_resolutions.append({ 2256, 1504 });
-    m_resolutions.append({ 2560, 1080 });
-    m_resolutions.append({ 2560, 1440 });
-    m_resolutions.append({ 3440, 1440 });
+    TRY(m_resolutions.try_append({ 640, 480 }));
+    TRY(m_resolutions.try_append({ 800, 600 }));
+    TRY(m_resolutions.try_append({ 1024, 768 }));
+    TRY(m_resolutions.try_append({ 1280, 720 }));
+    TRY(m_resolutions.try_append({ 1280, 768 }));
+    TRY(m_resolutions.try_append({ 1280, 960 }));
+    TRY(m_resolutions.try_append({ 1280, 1024 }));
+    TRY(m_resolutions.try_append({ 1360, 768 }));
+    TRY(m_resolutions.try_append({ 1368, 768 }));
+    TRY(m_resolutions.try_append({ 1440, 900 }));
+    TRY(m_resolutions.try_append({ 1600, 900 }));
+    TRY(m_resolutions.try_append({ 1600, 1200 }));
+    TRY(m_resolutions.try_append({ 1920, 1080 }));
+    TRY(m_resolutions.try_append({ 2048, 1152 }));
+    TRY(m_resolutions.try_append({ 2256, 1504 }));
+    TRY(m_resolutions.try_append({ 2560, 1080 }));
+    TRY(m_resolutions.try_append({ 2560, 1440 }));
+    TRY(m_resolutions.try_append({ 3440, 1440 }));
 
     for (auto resolution : m_resolutions) {
         // Use Euclid's Algorithm to calculate greatest common factor
@@ -65,13 +67,15 @@ void MonitorSettingsWidget::create_resolution_list()
 
         i32 aspect_width = resolution.width() / gcf;
         i32 aspect_height = resolution.height() / gcf;
-        m_resolution_strings.append(DeprecatedString::formatted("{}x{} ({}:{})", resolution.width(), resolution.height(), aspect_width, aspect_height));
+        TRY(m_resolution_strings.try_append(DeprecatedString::formatted("{}x{} ({}:{})", resolution.width(), resolution.height(), aspect_width, aspect_height)));
     }
+
+    return {};
 }
 
-void MonitorSettingsWidget::create_frame()
+ErrorOr<void> MonitorSettingsWidget::create_frame()
 {
-    load_from_gml(monitor_settings_window_gml).release_value_but_fixme_should_propagate_errors();
+    TRY(load_from_gml(monitor_settings_window_gml));
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
@@ -121,6 +125,8 @@ void MonitorSettingsWidget::create_frame()
     };
 
     m_dpi_label = *find_descendant_of_type_named<GUI::Label>("display_dpi");
+
+    return {};
 }
 
 static DeprecatedString display_name_from_edid(EDID::Parser const& edid)
@@ -142,7 +148,7 @@ static DeprecatedString display_name_from_edid(EDID::Parser const& edid)
     return build_manufacturer_product_name();
 }
 
-void MonitorSettingsWidget::load_current_settings()
+ErrorOr<void> MonitorSettingsWidget::load_current_settings()
 {
     m_screen_layout = GUI::ConnectionToWindowServer::the().get_screen_layout();
 
@@ -155,25 +161,27 @@ void MonitorSettingsWidget::load_current_settings()
         if (m_screen_layout.screens[i].mode == WindowServer::ScreenLayout::Screen::Mode::Device) {
             if (auto edid = EDID::Parser::from_display_connector_device(m_screen_layout.screens[i].device.value()); !edid.is_error()) { // TODO: multihead
                 screen_display_name = display_name_from_edid(edid.value());
-                m_screen_edids.append(edid.release_value());
+                TRY(m_screen_edids.try_append(edid.release_value()));
             } else {
                 dbgln("Error getting EDID from device {}: {}", m_screen_layout.screens[i].device.value(), edid.error());
                 screen_display_name = m_screen_layout.screens[i].device.value();
-                m_screen_edids.append({});
+                TRY(m_screen_edids.try_append({}));
             }
         } else {
             dbgln("Frame buffer {} is virtual.", i);
             screen_display_name = DeprecatedString::formatted("Virtual screen {}", virtual_screen_count++);
-            m_screen_edids.append({});
+            TRY(m_screen_edids.try_append({}));
         }
         if (i == m_screen_layout.main_screen_index)
-            m_screens.append(DeprecatedString::formatted("{}: {} (main screen)", i + 1, screen_display_name));
+            TRY(m_screens.try_append(DeprecatedString::formatted("{}: {} (main screen)", i + 1, screen_display_name)));
         else
-            m_screens.append(DeprecatedString::formatted("{}: {}", i + 1, screen_display_name));
+            TRY(m_screens.try_append(DeprecatedString::formatted("{}: {}", i + 1, screen_display_name)));
     }
     m_selected_screen_index = m_screen_layout.main_screen_index;
     m_screen_combo->set_selected_index(m_selected_screen_index);
     selected_screen_index_or_resolution_changed();
+
+    return {};
 }
 
 void MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
@@ -229,9 +237,8 @@ void MonitorSettingsWidget::apply_settings()
     auto current_layout = GUI::ConnectionToWindowServer::the().get_screen_layout();
     if (m_screen_layout != current_layout) {
         auto result = GUI::ConnectionToWindowServer::the().set_screen_layout(m_screen_layout, false);
-        if (result.success()) {
-            load_current_settings(); // Refresh
-
+        // Run load_current_settings to refresh screen info.
+        if (result.success() && !load_current_settings().is_error()) {
             auto seconds_until_revert = 10;
 
             auto box_text = [&seconds_until_revert] {
@@ -262,11 +269,9 @@ void MonitorSettingsWidget::apply_settings()
                 }
             } else {
                 auto restore_result = GUI::ConnectionToWindowServer::the().set_screen_layout(current_layout, false);
-                if (!restore_result.success()) {
+                if (!restore_result.success() || load_current_settings().is_error()) {
                     GUI::MessageBox::show(window(), DeprecatedString::formatted("Error restoring settings: {}", restore_result.error_msg()),
                         "Unable to restore setting"sv, GUI::MessageBox::Type::Error);
-                } else {
-                    load_current_settings();
                 }
             }
         } else {
