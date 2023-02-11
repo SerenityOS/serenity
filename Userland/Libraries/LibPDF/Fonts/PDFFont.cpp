@@ -38,7 +38,8 @@ PDFErrorOr<void> PDFFont::CommonData::load_from_dict(Document* document, Nonnull
         auto replacement = replacement_for_standard_latin_font(base_font);
         float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
         font = Gfx::FontDatabase::the().get(replacement.get<0>(), replacement.get<1>(), point_size);
-        VERIFY(font);
+        if (!font)
+            return Error(Error::Type::Internal, DeprecatedString::formatted("Failed to load {} {} at {}pt", replacement.get<0>(), replacement.get<1>(), point_size));
     }
 
     if (dict->contains(CommonNames::Encoding)) {
