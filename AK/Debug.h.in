@@ -410,6 +410,10 @@
 #cmakedefine01 SHELL_JOB_DEBUG
 #endif
 
+#ifndef SHELL_POSIX_PARSER_DEBUG
+#cmakedefine01 SHELL_POSIX_PARSER_DEBUG
+#endif
+
 #ifndef SOLITAIRE_DEBUG
 #cmakedefine01 SOLITAIRE_DEBUG
 #endif

@@ -19,10 +19,11 @@ namespace Shell {
 
 class Formatter final : public AST::NodeVisitor {
 public:
-    Formatter(StringView source, ssize_t cursor = -1)
+    Formatter(StringView source, ssize_t cursor = -1, bool parse_as_posix = false)
         : m_builders({ StringBuilder { round_up_to_power_of_two(source.length(), 16) } })
         , m_source(source)
         , m_cursor(cursor)
+        , m_parse_as_posix(parse_as_posix)
     {
         if (m_source.is_empty())
             return;
@@ -124,6 +125,8 @@ private:
 
     StringView m_trivia;
     Vector<DeprecatedString> m_heredocs_to_append_after_sequence;
+
+    bool m_parse_as_posix { false };
 };
 
 }

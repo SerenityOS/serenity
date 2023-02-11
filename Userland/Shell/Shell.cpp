@@ -26,6 +26,7 @@
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibLine/Editor.h>
+#include <Shell/PosixParser.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -297,7 +298,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
             auto alias = resolve_alias(command.argv[0]);
             if (!alias.is_null()) {
                 auto argv0 = command.argv.take_first();
-                auto subcommand_ast = Parser { alias }.parse();
+                auto subcommand_ast = parse(alias, false);
                 if (subcommand_ast) {
                     while (subcommand_ast->is_execute()) {
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
@@ -477,7 +478,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
 DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
 {
-    Formatter formatter(source, cursor);
+    Formatter formatter(source, cursor, m_in_posix_mode);
     auto result = formatter.format();
     cursor = formatter.cursor();
 
@@ -580,7 +581,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     if (cmd.is_empty())
         return 0;
 
-    auto command = Parser(cmd, m_is_interactive).parse();
+    auto command = parse(cmd, m_is_interactive);
 
     if (!command)
         return 0;
@@ -1410,8 +1411,7 @@ void Shell::remove_entry_from_cache(StringView entry)
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
-    Parser parser(line, m_is_interactive);
-    auto ast = parser.parse();
+    auto ast = parse(line, m_is_interactive);
     if (!ast)
         return;
     ast->highlight_in_editor(editor, const_cast<Shell&>(*this));
@@ -1425,9 +1425,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
 
 Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
 {
-    Parser parser(line, m_is_interactive);
-
-    auto ast = parser.parse();
+    auto ast = parse(line, m_is_interactive);
 
     if (!ast)
         return {};
@@ -2177,8 +2175,9 @@ Shell::Shell()
     cache_path();
 }
 
-Shell::Shell(Line::Editor& editor, bool attempt_interactive)
-    : m_editor(editor)
+Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
+    : m_in_posix_mode(posix_mode)
+    , m_editor(editor)
 {
     uid = getuid();
     tcsetpgrp(0, getpgrp());
@@ -2224,8 +2223,8 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive)
         cache_path();
     }
 
-    m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
-        auto ast = Parser(editor.line()).parse();
+    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
+        auto ast = parse(editor.line(), false);
         if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
             return true;
 
@@ -2482,6 +2481,32 @@ void Shell::timer_event(Core::TimerEvent& event)
 
     if (m_editor && m_editor->is_history_dirty())
         m_editor->save_history(get_history_path());
+}
+
+RefPtr<AST::Node> Shell::parse(StringView input, bool interactive, bool as_command) const
+{
+    if (m_in_posix_mode) {
+        Posix::Parser parser(input);
+        if (as_command) {
+            auto node = parser.parse();
+            if constexpr (SHELL_POSIX_PARSER_DEBUG) {
+                dbgln("Parsed with the POSIX Parser:");
+                node->dump(0);
+            }
+            return node;
+        }
+
+        return parser.parse_word_list();
+    }
+
+    Parser parser { input, interactive };
+    if (as_command)
+        return parser.parse();
+
+    auto nodes = parser.parse_as_multiple_expressions();
+    return make_ref_counted<AST::ListConcatenate>(
+        nodes.is_empty() ? AST::Position { 0, 0, { 0, 0 }, { 0, 0 } } : nodes.first().position(),
+        move(nodes));
 }
 
 void FileDescriptionCollector::collect()
