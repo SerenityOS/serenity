@@ -14,7 +14,9 @@ namespace GUI {
 namespace DisplaySettings {
 
 class EffectsSettingsWidget final : public SettingsWindow::Tab {
-    C_OBJECT(EffectsSettingsWidget);
+    C_OBJECT_ABSTRACT(EffectsSettingsWidget);
+
+    static ErrorOr<NonnullRefPtr<EffectsSettingsWidget>> try_create();
 
 public:
     virtual ~EffectsSettingsWidget() override = default;
@@ -22,7 +24,8 @@ public:
     virtual void apply_settings() override;
 
 private:
-    EffectsSettingsWidget();
+    EffectsSettingsWidget() = default;
+    ErrorOr<void> setup_interface();
 
     ErrorOr<void> load_settings();
 
