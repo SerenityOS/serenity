@@ -845,7 +845,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "Fl&atten Image", { Mod_Ctrl, Key_F }, g_icon_bag.flatten_image, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().flatten_all_layers();
+            if (auto maybe_error = editor->image().flatten_all_layers(); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to flatten all layers: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Flatten Image"sv);
         }));
 
@@ -853,7 +856,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "&Merge Visible", { Mod_Ctrl, Key_M }, g_icon_bag.merge_visible, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().merge_visible_layers();
+            if (auto maybe_error = editor->image().merge_visible_layers(); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge visible layers: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Merge Visible"sv);
         }));
 

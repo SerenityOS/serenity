@@ -334,50 +334,60 @@ void Image::remove_layer(Layer& layer)
     did_modify_layer_stack();
 }
 
-void Image::flatten_all_layers()
+ErrorOr<void> Image::flatten_all_layers()
 {
-    if (m_layers.size() < 2)
-        return;
-
-    auto& bottom_layer = m_layers.at(0);
-
-    GUI::Painter painter(bottom_layer.content_bitmap());
-    paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
-
-    for (size_t index = m_layers.size() - 1; index > 0; index--) {
-        auto& layer = m_layers.at(index);
-        remove_layer(layer);
-    }
-    bottom_layer.set_name("Background");
-    select_layer(&bottom_layer);
+    return merge_layers(LayerMergeMode::All);
 }
 
-void Image::merge_visible_layers()
+ErrorOr<void> Image::merge_visible_layers()
+{
+    return merge_layers(LayerMergeMode::VisibleOnly);
+}
+
+ErrorOr<void> Image::merge_layers(LayerMergeMode layer_merge_mode)
 {
     if (m_layers.size() < 2)
-        return;
+        return {};
 
-    size_t index = 0;
+    NonnullRefPtrVector<Layer> new_layers;
+    Gfx::IntRect merged_layer_bounding_rect = {};
+    size_t bottom_layer_index = 0;
+    for (auto const& layer : m_layers) {
+        if (!layer.is_visible()) {
+            if (layer_merge_mode == LayerMergeMode::VisibleOnly)
+                TRY(new_layers.try_append(layer));
+            if (merged_layer_bounding_rect.is_empty())
+                bottom_layer_index++;
+            continue;
+        }
+        merged_layer_bounding_rect = merged_layer_bounding_rect.united(layer.relative_rect());
+    }
 
-    while (index < m_layers.size()) {
-        if (m_layers.at(index).is_visible()) {
-            auto& bottom_layer = m_layers.at(index);
-            GUI::Painter painter(bottom_layer.content_bitmap());
-            paint_into(painter, { 0, 0, m_size.width(), m_size.height() }, 1.0f);
-            select_layer(&bottom_layer);
-            index++;
-            break;
-        }
-        index++;
+    if (merged_layer_bounding_rect.is_empty())
+        return {};
+
+    NonnullRefPtr<Layer> bottom_layer = m_layers.at(bottom_layer_index);
+    NonnullRefPtr<Layer> merged_layer = bottom_layer;
+    if (!merged_layer->relative_rect().contains(merged_layer_bounding_rect)) {
+        merged_layer = TRY(Layer::create_with_size(*this, merged_layer_bounding_rect.size(), bottom_layer->name()));
+        merged_layer->set_location(merged_layer_bounding_rect.location());
     }
-    while (index < m_layers.size()) {
-        if (m_layers.at(index).is_visible()) {
-            auto& layer = m_layers.at(index);
-            remove_layer(layer);
-        } else {
-            index++;
-        }
+
+    GUI::Painter painter(merged_layer->content_bitmap());
+    if (merged_layer.ptr() != bottom_layer.ptr())
+        painter.blit(bottom_layer->location() - merged_layer->location(), bottom_layer->display_bitmap(), bottom_layer->rect(), static_cast<float>(bottom_layer->opacity_percent()) / 100.0f);
+    for (size_t index = bottom_layer_index + 1; index < m_layers.size(); index++) {
+        auto& layer = m_layers.at(index);
+        if (!layer.is_visible())
+            continue;
+        painter.blit(layer.location() - merged_layer->location(), layer.display_bitmap(), layer.rect(), static_cast<float>(layer.opacity_percent()) / 100.0f);
     }
+
+    TRY(new_layers.try_append(merged_layer));
+    m_layers = move(new_layers);
+    select_layer(merged_layer.ptr());
+    did_modify_layer_stack();
+    return {};
 }
 
 void Image::merge_active_layer_up(Layer& layer)
