@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -7,6 +7,7 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/StringBuilder.h>
+#include <AK/URLParser.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
@@ -239,10 +240,37 @@ DeprecatedString Location::hash() const
     return DeprecatedString::formatted("#{}", url.fragment());
 }
 
-JS::ThrowCompletionOr<void> Location::set_hash(DeprecatedString const&)
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-hash
+JS::ThrowCompletionOr<void> Location::set_hash(DeprecatedString const& value)
 {
-    auto& vm = this->vm();
-    return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.hash setter");
+    // The hash setter steps are:
+    // 1. If this's relevant Document is null, then return.
+    if (!relevant_document())
+        return {};
+
+    // FIXME: 2. If this's relevant Document's origin is not same origin-domain with the entry settings object's origin, then throw a "SecurityError" DOMException.
+
+    // 3. Let copyURL be a copy of this's url.
+    auto copy_url = this->url();
+
+    // 4. Let input be the given value with a single leading "#" removed, if any.
+    auto input = value.starts_with("#"sv) ? value.substring(1) : value;
+
+    // 5. Set copyURL's fragment to the empty string.
+    copy_url.set_fragment("");
+
+    // 6. Basic URL parse input, with copyURL as url and fragment state as state override.
+    auto result_url = URLParser::parse(input, nullptr, copy_url, URLParser::State::Fragment);
+
+    // 7. If copyURL's fragment is this's url's fragment, then return.
+    if (copy_url.fragment() == this->url().fragment())
+        return {};
+
+    // 8. Location-object navigate this to copyURL.
+    auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
+    window.did_set_location_href({}, copy_url);
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-location-reload
