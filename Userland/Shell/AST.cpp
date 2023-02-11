@@ -3004,6 +3004,24 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
     auto left = left_value->resolve_as_list(shell);
     auto right = right_value->resolve_as_list(shell);
 
+    if (m_mode == Mode::StringExpand) {
+        Vector<DeprecatedString> result;
+        result.ensure_capacity(left.size() + right.size());
+
+        for (auto& left_item : left)
+            result.append(left_item);
+
+        if (!result.is_empty() && !right.is_empty()) {
+            auto& last = result.last();
+            last = DeprecatedString::formatted("{}{}", last, right.first());
+            right.take_first();
+        }
+        for (auto& right_item : right)
+            result.append(right_item);
+
+        return make_ref_counted<ListValue>(move(result));
+    }
+
     if (left_value->is_string() && right_value->is_string()) {
 
         VERIFY(left.size() == 1);
@@ -3016,7 +3034,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         return make_ref_counted<StringValue>(builder.to_deprecated_string());
     }
 
-    // Otherwise, treat them as lists and create a list product.
+    // Otherwise, treat them as lists and create a list product (or just append).
     if (left.is_empty() || right.is_empty())
         return make_ref_counted<ListValue>({});
 
@@ -3114,10 +3132,11 @@ HitTestResult Juxtaposition::hit_test_position(size_t offset) const
     return result;
 }
 
-Juxtaposition::Juxtaposition(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
+Juxtaposition::Juxtaposition(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Juxtaposition::Mode mode)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
+    , m_mode(mode)
 {
     if (m_left->is_syntax_error())
         set_is_syntax_error(m_left->syntax_error_node());
