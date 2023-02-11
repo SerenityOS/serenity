@@ -147,7 +147,7 @@ ErrorOr<NonnullRefPtr<ChromaticityTagData>> ChromaticityTagData::from_bytes(Read
 
     // FIXME: Once I find files that have phosphor_or_colorant_type != Unknown, check that the values match the values in Table 31.
 
-    return adopt_ref(*new ChromaticityTagData(offset, size, phosphor_or_colorant_type, move(xy_coordinates)));
+    return try_make_ref_counted<ChromaticityTagData>(offset, size, phosphor_or_colorant_type, move(xy_coordinates));
 }
 
 ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -164,7 +164,7 @@ ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes,
     u8 matrix_coefficients = bytes[10];
     u8 video_full_range_flag = bytes[11];
 
-    return adopt_ref(*new CicpTagData(offset, size, color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag));
+    return try_make_ref_counted<CicpTagData>(offset, size, color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag);
 }
 
 ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -187,7 +187,7 @@ ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes byte
     for (u32 i = 0; i < count; ++i)
         values[i] = raw_values[i];
 
-    return adopt_ref(*new CurveTagData(offset, size, move(values)));
+    return try_make_ref_counted<CurveTagData>(offset, size, move(values));
 }
 
 ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -245,10 +245,10 @@ ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes byte
     for (u32 i = 0; i < output_tables_size; ++i)
         output_tables[i] = raw_table_data[input_tables_size + clut_values_size + i];
 
-    return adopt_ref(*new Lut16TagData(offset, size, e,
+    return try_make_ref_counted<Lut16TagData>(offset, size, e,
         header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
         number_of_input_table_entries, number_of_output_table_entries,
-        move(input_tables), move(clut_values), move(output_tables)));
+        move(input_tables), move(clut_values), move(output_tables));
 }
 
 ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -293,10 +293,10 @@ ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes,
     output_tables.resize(output_tables_size);
     memcpy(output_tables.data(), table_bytes.data() + input_tables_size + clut_values_size, output_tables_size);
 
-    return adopt_ref(*new Lut8TagData(offset, size, e,
+    return try_make_ref_counted<Lut8TagData>(offset, size, e,
         header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
         number_of_input_table_entries, number_of_output_table_entries,
-        move(input_tables), move(clut_values), move(output_tables)));
+        move(input_tables), move(clut_values), move(output_tables));
 }
 
 static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader const& header)
@@ -365,7 +365,7 @@ static ErrorOr<Vector<LutCurveType>> read_curves(ReadonlyBytes bytes, u32 offset
     (void)bytes;
     (void)offset;
     for (u32 i = 0; i < count; ++i)
-        TRY(curves.try_append(adopt_ref(*new CurveTagData(0, 0, {}))));
+        TRY(curves.try_append(TRY(try_make_ref_counted<CurveTagData>(0, 0, Vector<u16> {}))));
     return curves;
 }
 
@@ -438,8 +438,8 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
         return Error::from_string_literal("ICC::Profile: lutAToBType without B curves");
     Vector<LutCurveType> b_curves = TRY(read_curves(bytes, header.offset_to_b_curves, header.number_of_output_channels));
 
-    return adopt_ref(*new LutAToBTagData(offset, size, header.number_of_input_channels, header.number_of_output_channels,
-        move(a_curves), move(clut_data), move(m_curves), e, move(b_curves)));
+    return try_make_ref_counted<LutAToBTagData>(offset, size, header.number_of_input_channels, header.number_of_output_channels,
+        move(a_curves), move(clut_data), move(m_curves), e, move(b_curves));
 }
 
 ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -511,8 +511,8 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     if (header.offset_to_a_curves)
         a_curves = TRY(read_curves(bytes, header.offset_to_a_curves, header.number_of_output_channels));
 
-    return adopt_ref(*new LutBToATagData(offset, size, header.number_of_input_channels, header.number_of_output_channels,
-        move(b_curves), e, move(m_curves), move(clut_data), move(a_curves)));
+    return try_make_ref_counted<LutBToATagData>(offset, size, header.number_of_input_channels, header.number_of_output_channels,
+        move(b_curves), e, move(m_curves), move(clut_data), move(a_curves));
 }
 
 ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -540,8 +540,8 @@ ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(Readon
     TRY(validate_measurement_geometry(header.measurement_geometry));
     TRY(validate_standard_illuminant(header.standard_illuminant));
 
-    return adopt_ref(*new MeasurementTagData(offset, size, header.standard_observer, header.tristimulus_value_for_measurement_backing,
-        header.measurement_geometry, U16Fixed16::create_raw(header.measurement_flare), header.standard_illuminant));
+    return try_make_ref_counted<MeasurementTagData>(offset, size, header.standard_observer, header.tristimulus_value_for_measurement_backing,
+        header.measurement_geometry, U16Fixed16::create_raw(header.measurement_flare), header.standard_illuminant);
 }
 
 ErrorOr<void> MeasurementTagData::validate_standard_observer(StandardObserver standard_observer)
@@ -694,7 +694,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
         records[i].text = TRY(String::from_deprecated_string(utf_16be_decoder.to_utf8(utf_16be_data)));
     }
 
-    return adopt_ref(*new MultiLocalizedUnicodeTagData(offset, size, move(records)));
+    return try_make_ref_counted<MultiLocalizedUnicodeTagData>(offset, size, move(records));
 }
 
 unsigned ParametricCurveTagData::parameter_count(FunctionType function_type)
@@ -770,8 +770,8 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
             device_coordinates[i * header.number_of_device_coordinates_of_each_named_color + j] = components[3 + j];
     }
 
-    return adopt_ref(*new NamedColor2TagData(offset, size, header.vendor_specific_flag, header.number_of_device_coordinates_of_each_named_color,
-        move(prefix), move(suffix), move(root_names), move(pcs_coordinates), move(device_coordinates)));
+    return try_make_ref_counted<NamedColor2TagData>(offset, size, header.vendor_specific_flag, header.number_of_device_coordinates_of_each_named_color,
+        move(prefix), move(suffix), move(root_names), move(pcs_coordinates), move(device_coordinates));
 }
 
 ErrorOr<String> NamedColor2TagData::color_name(u32 index)
@@ -815,7 +815,7 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     for (size_t i = 0; i < count; ++i)
         parameters[i] = S15Fixed16::create_raw(raw_parameters[i]);
 
-    return adopt_ref(*new ParametricCurveTagData(offset, size, function_type, move(parameters)));
+    return try_make_ref_counted<ParametricCurveTagData>(offset, size, function_type, move(parameters));
 }
 
 ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -837,7 +837,7 @@ ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_byte
     for (size_t i = 0; i < count; ++i)
         values[i] = S15Fixed16::create_raw(raw_values[i]);
 
-    return adopt_ref(*new S15Fixed16ArrayTagData(offset, size, move(values)));
+    return try_make_ref_counted<S15Fixed16ArrayTagData>(offset, size, move(values));
 }
 
 ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -972,7 +972,7 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
         }
     }
 
-    return adopt_ref(*new TextDescriptionTagData(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description)));
+    return try_make_ref_counted<TextDescriptionTagData>(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description));
 }
 
 ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -986,7 +986,7 @@ ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBy
 
     u32 signature = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
 
-    return adopt_ref(*new SignatureTagData(offset, size, signature));
+    return try_make_ref_counted<SignatureTagData>(offset, size, signature);
 }
 
 Optional<StringView> SignatureTagData::colorimetric_intent_image_state_signature_name(u32 colorimetric_intent_image_state)
@@ -1131,7 +1131,7 @@ ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes,
     if (text_data[length - 1] != '\0')
         return Error::from_string_literal("ICC::Profile: textType data not \\0-terminated");
 
-    return adopt_ref(*new TextTagData(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1)))));
+    return try_make_ref_counted<TextTagData>(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1))));
 }
 
 ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -1155,8 +1155,8 @@ ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_
 
     TRY(MeasurementTagData::validate_standard_illuminant(header.illuminant_type));
 
-    return adopt_ref(*new ViewingConditionsTagData(offset, size, header.unnormalized_ciexyz_values_for_illuminant,
-        header.unnormalized_ciexyz_values_for_surround, header.illuminant_type));
+    return try_make_ref_counted<ViewingConditionsTagData>(offset, size, header.unnormalized_ciexyz_values_for_illuminant,
+        header.unnormalized_ciexyz_values_for_surround, header.illuminant_type);
 }
 
 ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -1178,7 +1178,7 @@ ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u
     for (size_t i = 0; i < xyz_count; ++i)
         xyzs[i] = (XYZ)raw_xyzs[i];
 
-    return adopt_ref(*new XYZTagData(offset, size, move(xyzs)));
+    return try_make_ref_counted<XYZTagData>(offset, size, move(xyzs));
 }
 
 }

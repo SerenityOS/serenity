@@ -608,7 +608,7 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
         return XYZTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     default:
         // FIXME: optionally ignore tags of unknown type
-        return adopt_ref(*new UnknownTagData(offset_to_beginning_of_tag_data_element, size_of_tag_data_element, type));
+        return try_make_ref_counted<UnknownTagData>(offset_to_beginning_of_tag_data_element, size_of_tag_data_element, type);
     }
 }
 
@@ -1314,7 +1314,7 @@ ErrorOr<void> Profile::check_tag_types()
 
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
-    auto profile = adopt_ref(*new Profile());
+    auto profile = TRY(try_make_ref_counted<Profile>());
     TRY(profile->read_header(bytes));
     bytes = bytes.trim(profile->on_disk_size());
     TRY(profile->read_tag_table(bytes));
