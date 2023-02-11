@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -142,8 +142,8 @@ public:
     }
 
     Type mirror_variant() const;
-    DeprecatedString bracket_string() const;
-    DeprecatedString bracket_mirror_string() const;
+    StringView bracket_string() const;
+    StringView bracket_mirror_string() const;
 
     DeprecatedString to_deprecated_string() const;
     DeprecatedString to_debug_string() const;

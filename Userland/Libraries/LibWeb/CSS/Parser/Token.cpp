@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -156,62 +156,62 @@ Token::Type Token::mirror_variant() const
     return Type::Invalid;
 }
 
-DeprecatedString Token::bracket_string() const
+StringView Token::bracket_string() const
 {
     if (is(Token::Type::OpenCurly)) {
-        return "{";
+        return "{"sv;
     }
 
     if (is(Token::Type::CloseCurly)) {
-        return "}";
+        return "}"sv;
     }
 
     if (is(Token::Type::OpenSquare)) {
-        return "[";
+        return "["sv;
     }
 
     if (is(Token::Type::CloseSquare)) {
-        return "]";
+        return "]"sv;
     }
 
     if (is(Token::Type::OpenParen)) {
-        return "(";
+        return "("sv;
     }
 
     if (is(Token::Type::CloseParen)) {
-        return ")";
+        return ")"sv;
     }
 
-    return "";
+    return ""sv;
 }
 
-DeprecatedString Token::bracket_mirror_string() const
+StringView Token::bracket_mirror_string() const
 {
     if (is(Token::Type::OpenCurly)) {
-        return "}";
+        return "}"sv;
     }
 
     if (is(Token::Type::CloseCurly)) {
-        return "{";
+        return "{"sv;
     }
 
     if (is(Token::Type::OpenSquare)) {
-        return "]";
+        return "]"sv;
     }
 
     if (is(Token::Type::CloseSquare)) {
-        return "[";
+        return "["sv;
     }
 
     if (is(Token::Type::OpenParen)) {
-        return ")";
+        return ")"sv;
     }
 
     if (is(Token::Type::CloseParen)) {
-        return "(";
+        return "("sv;
     }
 
-    return "";
+    return ""sv;
 }
 
 }
