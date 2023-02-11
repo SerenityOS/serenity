@@ -47,7 +47,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         name_label.set_fixed_height(10);
 
-        auto& asymmetric_checkbox = m_settings_widget->add<GUI::CheckBox>("Use Asymmetric Radii");
+        auto& asymmetric_checkbox = m_settings_widget->add<GUI::CheckBox>(String::from_utf8("Use Asymmetric Radii"sv).release_value_but_fixme_should_propagate_errors());
         asymmetric_checkbox.set_checked(false);
         asymmetric_checkbox.set_fixed_height(15);
         asymmetric_checkbox.on_checked = [&](bool checked) {
@@ -68,7 +68,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        m_vector_checkbox = m_settings_widget->add<GUI::CheckBox>("Use Direction and magnitude");
+        m_vector_checkbox = m_settings_widget->add<GUI::CheckBox>(String::from_utf8("Use Direction and magnitude"sv).release_value_but_fixme_should_propagate_errors());
         m_vector_checkbox->set_checked(false);
         m_vector_checkbox->set_visible(false);
         m_vector_checkbox->set_fixed_height(15);
@@ -182,7 +182,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         gaussian_container.set_layout<GUI::HorizontalBoxLayout>();
         gaussian_container.layout()->set_margins({ 4, 0, 4, 0 });
 
-        m_gaussian_checkbox = gaussian_container.add<GUI::CheckBox>("Approximate Gaussian Blur");
+        m_gaussian_checkbox = gaussian_container.add<GUI::CheckBox>(String::from_utf8("Approximate Gaussian Blur"sv).release_value_but_fixme_should_propagate_errors());
         m_gaussian_checkbox->set_checked(m_approximate_gauss);
         m_gaussian_checkbox->set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
         m_gaussian_checkbox->on_checked = [this](bool checked) {

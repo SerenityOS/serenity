@@ -78,7 +78,7 @@ ShutdownDialog::ShutdownDialog()
         auto action = options[i];
         auto& radio = right_container.add<GUI::RadioButton>();
         radio.set_enabled(action.enabled);
-        radio.set_text_deprecated(action.title);
+        radio.set_text(String::from_deprecated_string(action.title).release_value_but_fixme_should_propagate_errors());
 
         radio.on_checked = [this, i](auto) {
             m_selected_option = i;
@@ -97,13 +97,13 @@ ShutdownDialog::ShutdownDialog()
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->set_spacing(5);
     button_container.layout()->add_spacer();
-    auto& ok_button = button_container.add<GUI::Button>("OK");
+    auto& ok_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     ok_button.set_fixed_size(80, 23);
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    auto& cancel_button = button_container.add<GUI::Button>(String::from_utf8_short_string("Cancel"sv));
     cancel_button.set_fixed_size(80, 23);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

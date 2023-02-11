@@ -187,12 +187,12 @@ GUI::Widget* RectangleTool::get_properties_widget()
 
         auto& mode_radio_container = mode_container.add<GUI::Widget>();
         mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
-        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>("Outline");
-        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>("Fill");
-        auto& gradient_mode_radio = mode_radio_container.add<GUI::RadioButton>("Gradient");
+        auto& outline_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Outline"sv));
+        auto& fill_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Fill"sv));
+        auto& gradient_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8("Gradient"sv).release_value_but_fixme_should_propagate_errors());
         mode_radio_container.set_fixed_width(70);
 
-        auto& rounded_corners_mode_radio = mode_radio_container.add<GUI::RadioButton>("Rounded");
+        auto& rounded_corners_mode_radio = mode_radio_container.add<GUI::RadioButton>(String::from_utf8_short_string("Rounded"sv));
 
         outline_mode_radio.on_checked = [&, update_slider](bool) {
             m_fill_mode = FillMode::Outline;
@@ -215,7 +215,7 @@ GUI::Widget* RectangleTool::get_properties_widget()
         auto& mode_extras_container = mode_container.add<GUI::Widget>();
         mode_extras_container.set_layout<GUI::VerticalBoxLayout>();
 
-        auto& aa_enable_checkbox = mode_extras_container.add<GUI::CheckBox>("Anti-alias");
+        auto& aa_enable_checkbox = mode_extras_container.add<GUI::CheckBox>(String::from_utf8("Anti-alias"sv).release_value_but_fixme_should_propagate_errors());
         aa_enable_checkbox.on_checked = [&](bool checked) {
             m_antialias_enabled = checked;
         };

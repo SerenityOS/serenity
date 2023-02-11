@@ -304,9 +304,9 @@ GUI::Widget* MoveTool::get_properties_widget()
 
         auto& mode_radio_container = selection_mode_container.add<GUI::Widget>();
         mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
-        m_selection_mode_foreground = mode_radio_container.add<GUI::RadioButton>("Foreground");
+        m_selection_mode_foreground = mode_radio_container.add<GUI::RadioButton>(String::from_utf8("Foreground"sv).release_value_but_fixme_should_propagate_errors());
 
-        m_selection_mode_active = mode_radio_container.add<GUI::RadioButton>("Active Layer");
+        m_selection_mode_active = mode_radio_container.add<GUI::RadioButton>(String::from_utf8("Active Layer"sv).release_value_but_fixme_should_propagate_errors());
 
         m_selection_mode_foreground->on_checked = [&](bool) {
             m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;

@@ -93,20 +93,20 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
 
     Gfx::StylePainter::paint_button(painter, rect(), palette(), button_style(), is_being_pressed(), is_hovered(), is_checked(), is_enabled());
 
-    if (text_deprecated().is_empty())
+    if (text().is_empty())
         return;
 
     auto content_rect = rect().shrunken(8, 2);
     auto icon_location = content_rect.center().translated(-(icon.width() / 2), -(icon.height() / 2));
-    if (!text_deprecated().is_empty())
+    if (!text().is_empty())
         icon_location.set_x(content_rect.x());
 
-    if (!text_deprecated().is_empty()) {
+    if (!text().is_empty()) {
         content_rect.translate_by(icon.width() + 4, 0);
         content_rect.set_width(content_rect.width() - icon.width() - 4);
     }
 
-    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text_deprecated()))), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text()))), font.glyph_height() };
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());
@@ -123,7 +123,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
             adjusted_rect.set_width(adjusted_rect.width() + 1);
             adjusted_rect.set_height(adjusted_rect.height() + 1);
         }
-        paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress().value(), text_deprecated(), font, text_alignment());
+        paint_custom_progressbar(painter, adjusted_rect, text_rect, palette(), 0, 100, window.progress().value(), text(), font, text_alignment());
     }
 
     if (is_enabled()) {

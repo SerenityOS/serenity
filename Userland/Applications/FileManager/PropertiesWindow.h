@@ -79,7 +79,7 @@ private:
         return "Unknown";
     }
 
-    static ErrorOr<NonnullRefPtr<GUI::Button>> make_button(DeprecatedString, GUI::Widget& parent);
+    static ErrorOr<NonnullRefPtr<GUI::Button>> make_button(String, GUI::Widget& parent);
     ErrorOr<void> setup_permission_checkboxes(GUI::CheckBox& box_read, GUI::CheckBox& box_write, GUI::CheckBox& box_execute, PermissionMasks masks, mode_t mode);
     void permission_changed(mode_t mask, bool set);
     bool apply_changes();

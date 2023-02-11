@@ -150,7 +150,7 @@ GUI::Widget* LineTool::get_properties_widget()
         mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label.set_fixed_size(80, 20);
 
-        auto& aa_enable_checkbox = mode_container.add<GUI::CheckBox>("Anti-alias");
+        auto& aa_enable_checkbox = mode_container.add<GUI::CheckBox>(String::from_utf8("Anti-alias"sv).release_value_but_fixme_should_propagate_errors());
         aa_enable_checkbox.on_checked = [&](bool checked) {
             m_antialias_enabled = checked;
         };

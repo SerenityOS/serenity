@@ -203,7 +203,7 @@ GUI::Widget* GradientTool::get_properties_widget()
         auto& button_container_layout = button_container.set_layout<GUI::HorizontalBoxLayout>();
         button_container_layout.add_spacer();
 
-        auto& apply_button = button_container.add<GUI::DialogButton>("Apply");
+        auto& apply_button = button_container.add<GUI::DialogButton>(String::from_utf8_short_string("Apply"sv));
         apply_button.on_click = [this](auto) {
             rasterize_gradient();
         };

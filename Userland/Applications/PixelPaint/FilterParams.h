@@ -81,13 +81,13 @@ private:
             }
         }
 
-        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize");
+        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>(String::from_utf8("Normalize"sv).release_value_but_fixme_should_propagate_errors());
         norm_checkbox.set_checked(false);
 
-        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap");
+        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>(String::from_utf8_short_string("Wrap"sv));
         wrap_checkbox.set_checked(m_should_wrap);
 
-        auto& button = main_widget->template add<GUI::Button>("Done");
+        auto& button = main_widget->template add<GUI::Button>(String::from_utf8_short_string("Done"sv));
         button.on_click = [&](auto) {
             m_should_wrap = wrap_checkbox.is_checked();
             if (norm_checkbox.is_checked())
