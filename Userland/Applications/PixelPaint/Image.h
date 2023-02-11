@@ -83,8 +83,8 @@ public:
     void change_layer_index(size_t old_index, size_t new_index);
     void remove_layer(Layer&);
     void select_layer(Layer*);
-    void flatten_all_layers();
-    void merge_visible_layers();
+    ErrorOr<void> flatten_all_layers();
+    ErrorOr<void> merge_visible_layers();
     void merge_active_layer_up(Layer& layer);
     void merge_active_layer_down(Layer& layer);
 
@@ -106,11 +106,18 @@ public:
     Color color_at(Gfx::IntPoint point) const;
 
 private:
+    enum class LayerMergeMode {
+        All,
+        VisibleOnly
+    };
+
     explicit Image(Gfx::IntSize);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
     void did_change_rect(Gfx::IntRect const& modified_rect = {});
     void did_modify_layer_stack();
+
+    ErrorOr<void> merge_layers(LayerMergeMode);
 
     Gfx::IntSize m_size;
     NonnullRefPtrVector<Layer> m_layers;
