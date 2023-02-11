@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -174,6 +174,9 @@ ThrowCompletionOr<ZonedDateTime*> to_temporal_zoned_date_time(VM& vm, Value item
         if (offset_string_value.is_undefined()) {
             // i. Set offsetBehaviour to wall.
             offset_behavior = OffsetBehavior::Wall;
+        } else {
+            // NOTE: Not in the spec, since it directly assigns to offsetString in step i, but we can't do it there as it's a type mismatch.
+            offset_string = TRY(offset_string_value.as_string().utf8_string());
         }
 
         // l. Let result be ? InterpretTemporalDateTimeFields(calendar, fields, options).
