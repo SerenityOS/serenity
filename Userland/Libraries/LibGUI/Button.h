@@ -68,7 +68,6 @@ public:
     virtual Optional<UISize> calculated_min_size() const override;
 
 protected:
-    explicit Button(DeprecatedString text);
     explicit Button(String text = {});
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
@@ -92,10 +91,6 @@ class DialogButton final : public Button {
 
 public:
     virtual ~DialogButton() override {};
-    explicit DialogButton(DeprecatedString deprecated_text)
-        : DialogButton(String::from_deprecated_string(deprecated_text).release_value_but_fixme_should_propagate_errors())
-    {
-    }
     explicit DialogButton(String text = {})
         : Button(move(text))
     {
