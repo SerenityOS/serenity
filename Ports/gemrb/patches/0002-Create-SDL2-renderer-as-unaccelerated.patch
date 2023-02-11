@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Julian=20Offenh=C3=A4user?= <offenhaeuser@protonmail.com>
+Date: Sat, 11 Feb 2023 00:34:13 +0100
+Subject: [PATCH] Create SDL2 renderer as unaccelerated
+
+---
+ gemrb/plugins/SDLVideo/SDL20Video.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gemrb/plugins/SDLVideo/SDL20Video.cpp b/gemrb/plugins/SDLVideo/SDL20Video.cpp
+index 36dc17caffc89bed2610d26d19e97290905bcf20..158ee2fe5eb1b396c1a63b1e7bc898bd1ae224fc 100644
+--- a/gemrb/plugins/SDLVideo/SDL20Video.cpp
++++ b/gemrb/plugins/SDLVideo/SDL20Video.cpp
+@@ -139,7 +139,7 @@ int SDL20VideoDriver::CreateSDLDisplay(const char* title)
+ 	SetWindowIcon(window);
+ #endif
+ 
+-	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE | SDL_RENDERER_ACCELERATED);
++	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
+ 	SDL_RendererInfo info;
+ 	SDL_GetRendererInfo(renderer, &info);
+ 	Log(DEBUG, "SDL20Video", "Renderer: {}", info.name);
