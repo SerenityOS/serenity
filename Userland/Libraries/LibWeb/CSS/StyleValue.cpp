@@ -299,15 +299,8 @@ BackgroundStyleValue::BackgroundStyleValue(
     NonnullRefPtr<StyleValue> attachment,
     NonnullRefPtr<StyleValue> origin,
     NonnullRefPtr<StyleValue> clip)
-    : StyleValue(Type::Background)
-    , m_color(color)
-    , m_image(image)
-    , m_position(position)
-    , m_size(size)
-    , m_repeat(repeat)
-    , m_attachment(attachment)
-    , m_origin(origin)
-    , m_clip(clip)
+    : StyleValueWithDefaultOperators(Type::Background)
+    , m_properties { .color = color, .image = image, .position = position, .size = size, .repeat = repeat, .attachment = attachment, .origin = origin, .clip = clip, .layer_count = 0 }
 {
     auto layer_count = [](auto style_value) -> size_t {
         if (style_value->is_value_list())
@@ -316,20 +309,20 @@ BackgroundStyleValue::BackgroundStyleValue(
             return 1;
     };
 
-    m_layer_count = max(layer_count(m_image), layer_count(m_position));
-    m_layer_count = max(m_layer_count, layer_count(m_size));
-    m_layer_count = max(m_layer_count, layer_count(m_repeat));
-    m_layer_count = max(m_layer_count, layer_count(m_attachment));
-    m_layer_count = max(m_layer_count, layer_count(m_origin));
-    m_layer_count = max(m_layer_count, layer_count(m_clip));
+    m_properties.layer_count = max(layer_count(m_properties.image), layer_count(m_properties.position));
+    m_properties.layer_count = max(m_properties.layer_count, layer_count(m_properties.size));
+    m_properties.layer_count = max(m_properties.layer_count, layer_count(m_properties.repeat));
+    m_properties.layer_count = max(m_properties.layer_count, layer_count(m_properties.attachment));
+    m_properties.layer_count = max(m_properties.layer_count, layer_count(m_properties.origin));
+    m_properties.layer_count = max(m_properties.layer_count, layer_count(m_properties.clip));
 
-    VERIFY(!m_color->is_value_list());
+    VERIFY(!m_properties.color->is_value_list());
 }
 
 ErrorOr<String> BackgroundStyleValue::to_string() const
 {
-    if (m_layer_count == 1) {
-        return String::formatted("{} {} {} {} {} {} {} {}", TRY(m_color->to_string()), TRY(m_image->to_string()), TRY(m_position->to_string()), TRY(m_size->to_string()), TRY(m_repeat->to_string()), TRY(m_attachment->to_string()), TRY(m_origin->to_string()), TRY(m_clip->to_string()));
+    if (m_properties.layer_count == 1) {
+        return String::formatted("{} {} {} {} {} {} {} {}", TRY(m_properties.color->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.position->to_string()), TRY(m_properties.size->to_string()), TRY(m_properties.repeat->to_string()), TRY(m_properties.attachment->to_string()), TRY(m_properties.origin->to_string()), TRY(m_properties.clip->to_string()));
     }
 
     auto get_layer_value_string = [](NonnullRefPtr<StyleValue> const& style_value, size_t index) {
@@ -339,104 +332,42 @@ ErrorOr<String> BackgroundStyleValue::to_string() const
     };
 
     StringBuilder builder;
-    for (size_t i = 0; i < m_layer_count; i++) {
+    for (size_t i = 0; i < m_properties.layer_count; i++) {
         if (i)
             TRY(builder.try_append(", "sv));
-        if (i == m_layer_count - 1)
-            TRY(builder.try_appendff("{} ", TRY(m_color->to_string())));
-        TRY(builder.try_appendff("{} {} {} {} {} {} {}", TRY(get_layer_value_string(m_image, i)), TRY(get_layer_value_string(m_position, i)), TRY(get_layer_value_string(m_size, i)), TRY(get_layer_value_string(m_repeat, i)), TRY(get_layer_value_string(m_attachment, i)), TRY(get_layer_value_string(m_origin, i)), TRY(get_layer_value_string(m_clip, i))));
+        if (i == m_properties.layer_count - 1)
+            TRY(builder.try_appendff("{} ", TRY(m_properties.color->to_string())));
+        TRY(builder.try_appendff("{} {} {} {} {} {} {}", TRY(get_layer_value_string(m_properties.image, i)), TRY(get_layer_value_string(m_properties.position, i)), TRY(get_layer_value_string(m_properties.size, i)), TRY(get_layer_value_string(m_properties.repeat, i)), TRY(get_layer_value_string(m_properties.attachment, i)), TRY(get_layer_value_string(m_properties.origin, i)), TRY(get_layer_value_string(m_properties.clip, i))));
     }
 
     return builder.to_string();
 }
 
-bool BackgroundStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_background();
-    return m_color->equals(typed_other.m_color)
-        && m_image->equals(typed_other.m_image)
-        && m_position->equals(typed_other.m_position)
-        && m_size->equals(typed_other.m_size)
-        && m_repeat->equals(typed_other.m_repeat)
-        && m_attachment->equals(typed_other.m_attachment)
-        && m_origin->equals(typed_other.m_origin)
-        && m_clip->equals(typed_other.m_clip);
-}
-
 ErrorOr<String> BackgroundRepeatStyleValue::to_string() const
 {
-    return String::formatted("{} {}", CSS::to_string(m_repeat_x), CSS::to_string(m_repeat_y));
-}
-
-bool BackgroundRepeatStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_background_repeat();
-    return m_repeat_x == typed_other.m_repeat_x && m_repeat_y == typed_other.m_repeat_y;
+    return String::formatted("{} {}", CSS::to_string(m_properties.repeat_x), CSS::to_string(m_properties.repeat_y));
 }
 
 ErrorOr<String> BackgroundSizeStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_size_x.to_string()), TRY(m_size_y.to_string()));
-}
-
-bool BackgroundSizeStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_background_size();
-    return m_size_x == typed_other.m_size_x && m_size_y == typed_other.m_size_y;
+    return String::formatted("{} {}", TRY(m_properties.size_x.to_string()), TRY(m_properties.size_y.to_string()));
 }
 
 ErrorOr<String> BorderStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", TRY(m_border_width->to_string()), TRY(m_border_style->to_string()), TRY(m_border_color->to_string()));
-}
-
-bool BorderStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_border();
-    return m_border_width->equals(typed_other.m_border_width)
-        && m_border_style->equals(typed_other.m_border_style)
-        && m_border_color->equals(typed_other.m_border_color);
+    return String::formatted("{} {} {}", TRY(m_properties.border_width->to_string()), TRY(m_properties.border_style->to_string()), TRY(m_properties.border_color->to_string()));
 }
 
 ErrorOr<String> BorderRadiusStyleValue::to_string() const
 {
-    if (m_horizontal_radius == m_vertical_radius)
-        return m_horizontal_radius.to_string();
-    return String::formatted("{} / {}", TRY(m_horizontal_radius.to_string()), TRY(m_vertical_radius.to_string()));
-}
-
-bool BorderRadiusStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_border_radius();
-    return m_is_elliptical == typed_other.m_is_elliptical
-        && m_horizontal_radius == typed_other.m_horizontal_radius
-        && m_vertical_radius == typed_other.m_vertical_radius;
+    if (m_properties.horizontal_radius == m_properties.vertical_radius)
+        return m_properties.horizontal_radius.to_string();
+    return String::formatted("{} / {}", TRY(m_properties.horizontal_radius.to_string()), TRY(m_properties.vertical_radius.to_string()));
 }
 
 ErrorOr<String> BorderRadiusShorthandStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} {} / {} {} {} {}", TRY(m_top_left->horizontal_radius().to_string()), TRY(m_top_right->horizontal_radius().to_string()), TRY(m_bottom_right->horizontal_radius().to_string()), TRY(m_bottom_left->horizontal_radius().to_string()), TRY(m_top_left->vertical_radius().to_string()), TRY(m_top_right->vertical_radius().to_string()), TRY(m_bottom_right->vertical_radius().to_string()), TRY(m_bottom_left->vertical_radius().to_string()));
-}
-
-bool BorderRadiusShorthandStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_border_radius_shorthand();
-    return m_top_left->equals(typed_other.m_top_left)
-        && m_top_right->equals(typed_other.m_top_right)
-        && m_bottom_right->equals(typed_other.m_bottom_right)
-        && m_bottom_left->equals(typed_other.m_bottom_left);
+    return String::formatted("{} {} {} {} / {} {} {} {}", TRY(m_properties.top_left->horizontal_radius().to_string()), TRY(m_properties.top_right->horizontal_radius().to_string()), TRY(m_properties.bottom_right->horizontal_radius().to_string()), TRY(m_properties.bottom_left->horizontal_radius().to_string()), TRY(m_properties.top_left->vertical_radius().to_string()), TRY(m_properties.top_right->vertical_radius().to_string()), TRY(m_properties.bottom_right->vertical_radius().to_string()), TRY(m_properties.bottom_left->vertical_radius().to_string()));
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
@@ -633,7 +564,7 @@ ErrorOr<String> CalculatedStyleValue::to_string() const
     return String::formatted("calc({})", TRY(m_expression->to_string()));
 }
 
-bool CalculatedStyleValue::equals(StyleValue const& other) const
+bool CalculatedStyleValue::operator==(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -1167,32 +1098,11 @@ ErrorOr<String> ColorStyleValue::to_string() const
     return serialize_a_srgb_value(m_color);
 }
 
-bool ColorStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_color == other.as_color().m_color;
-}
-
 ErrorOr<String> ContentStyleValue::to_string() const
 {
     if (has_alt_text())
-        return String::formatted("{} / {}", TRY(m_content->to_string()), TRY(m_alt_text->to_string()));
-    return m_content->to_string();
-}
-
-bool ContentStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_content();
-    if (!m_content->equals(typed_other.m_content))
-        return false;
-    if (m_alt_text.is_null() != typed_other.m_alt_text.is_null())
-        return false;
-    if (!m_alt_text.is_null())
-        return m_alt_text->equals(*typed_other.m_alt_text);
-    return true;
+        return String::formatted("{} / {}", TRY(m_properties.content->to_string()), TRY(m_properties.alt_text->to_string()));
+    return m_properties.content->to_string();
 }
 
 float Filter::Blur::resolved_radius(Layout::Node const& node) const
@@ -1306,125 +1216,45 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
     return builder.to_string();
 }
 
-bool FilterValueListStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_filter_value_list();
-    if (m_filter_value_list.size() != typed_other.m_filter_value_list.size())
-        return false;
-    for (size_t i = 0; i < m_filter_value_list.size(); i++) {
-        if (m_filter_value_list[i] != typed_other.m_filter_value_list[i])
-            return false;
-    }
-    return true;
-}
-
 ErrorOr<String> FlexStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", TRY(m_grow->to_string()), TRY(m_shrink->to_string()), TRY(m_basis->to_string()));
-}
-
-bool FlexStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_flex();
-    return m_grow->equals(typed_other.m_grow)
-        && m_shrink->equals(typed_other.m_shrink)
-        && m_basis->equals(typed_other.m_basis);
+    return String::formatted("{} {} {}", TRY(m_properties.grow->to_string()), TRY(m_properties.shrink->to_string()), TRY(m_properties.basis->to_string()));
 }
 
 ErrorOr<String> FlexFlowStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_flex_direction->to_string()), TRY(m_flex_wrap->to_string()));
-}
-
-bool FlexFlowStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_flex_flow();
-    return m_flex_direction->equals(typed_other.m_flex_direction)
-        && m_flex_wrap->equals(typed_other.m_flex_wrap);
+    return String::formatted("{} {}", TRY(m_properties.flex_direction->to_string()), TRY(m_properties.flex_wrap->to_string()));
 }
 
 ErrorOr<String> FontStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} / {} {}", TRY(m_font_style->to_string()), TRY(m_font_weight->to_string()), TRY(m_font_size->to_string()), TRY(m_line_height->to_string()), TRY(m_font_families->to_string()));
-}
-
-bool FontStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_font();
-    return m_font_style->equals(typed_other.m_font_style)
-        && m_font_weight->equals(typed_other.m_font_weight)
-        && m_font_size->equals(typed_other.m_font_size)
-        && m_line_height->equals(typed_other.m_line_height)
-        && m_font_families->equals(typed_other.m_font_families);
-}
-
-bool FrequencyStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_frequency == other.as_frequency().m_frequency;
+    return String::formatted("{} {} {} / {} {}", TRY(m_properties.font_style->to_string()), TRY(m_properties.font_weight->to_string()), TRY(m_properties.font_size->to_string()), TRY(m_properties.line_height->to_string()), TRY(m_properties.font_families->to_string()));
 }
 
 ErrorOr<String> GridTrackPlacementShorthandStyleValue::to_string() const
 {
-    if (m_end->grid_track_placement().is_auto())
-        return String::formatted("{}", TRY(m_start->grid_track_placement().to_string()));
-    return String::formatted("{} / {}", TRY(m_start->grid_track_placement().to_string()), TRY(m_end->grid_track_placement().to_string()));
-}
-
-bool GridTrackPlacementShorthandStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_grid_track_placement_shorthand();
-    return m_start->equals(typed_other.m_start)
-        && m_end->equals(typed_other.m_end);
+    if (m_properties.end->grid_track_placement().is_auto())
+        return String::formatted("{}", TRY(m_properties.start->grid_track_placement().to_string()));
+    return String::formatted("{} / {}", TRY(m_properties.start->grid_track_placement().to_string()), TRY(m_properties.end->grid_track_placement().to_string()));
 }
 
 ErrorOr<String> GridAreaShorthandStyleValue::to_string() const
 {
     StringBuilder builder;
-    if (!m_row_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff("{}", TRY(m_row_start->as_grid_track_placement().grid_track_placement().to_string())));
-    if (!m_column_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_column_start->as_grid_track_placement().grid_track_placement().to_string())));
-    if (!m_row_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_row_end->as_grid_track_placement().grid_track_placement().to_string())));
-    if (!m_column_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_column_end->as_grid_track_placement().grid_track_placement().to_string())));
+    if (!m_properties.row_start->as_grid_track_placement().grid_track_placement().is_auto())
+        TRY(builder.try_appendff("{}", TRY(m_properties.row_start->as_grid_track_placement().grid_track_placement().to_string())));
+    if (!m_properties.column_start->as_grid_track_placement().grid_track_placement().is_auto())
+        TRY(builder.try_appendff(" / {}", TRY(m_properties.column_start->as_grid_track_placement().grid_track_placement().to_string())));
+    if (!m_properties.row_end->as_grid_track_placement().grid_track_placement().is_auto())
+        TRY(builder.try_appendff(" / {}", TRY(m_properties.row_end->as_grid_track_placement().grid_track_placement().to_string())));
+    if (!m_properties.column_end->as_grid_track_placement().grid_track_placement().is_auto())
+        TRY(builder.try_appendff(" / {}", TRY(m_properties.column_end->as_grid_track_placement().grid_track_placement().to_string())));
     return builder.to_string();
-}
-
-bool GridAreaShorthandStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_grid_area_shorthand();
-    return m_row_start->equals(typed_other.m_row_start)
-        && m_column_start->equals(typed_other.m_column_start)
-        && m_row_end->equals(typed_other.m_row_end)
-        && m_column_end->equals(typed_other.m_column_end);
 }
 
 ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
 {
     return m_grid_track_placement.to_string();
-}
-
-bool GridTrackPlacementStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_grid_track_placement();
-    return m_grid_track_placement == typed_other.grid_track_placement();
 }
 
 ErrorOr<String> GridTemplateAreaStyleValue::to_string() const
@@ -1442,37 +1272,14 @@ ErrorOr<String> GridTemplateAreaStyleValue::to_string() const
     return builder.to_string();
 }
 
-bool GridTemplateAreaStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_grid_template_area();
-    return m_grid_template_area == typed_other.grid_template_area();
-}
-
 ErrorOr<String> GridTrackSizeStyleValue::to_string() const
 {
     return m_grid_track_size_list.to_string();
 }
 
-bool GridTrackSizeStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_grid_track_size_list();
-    return m_grid_track_size_list == typed_other.grid_track_size_list();
-}
-
 ErrorOr<String> IdentifierStyleValue::to_string() const
 {
     return String::from_utf8(CSS::string_from_value_id(m_id));
-}
-
-bool IdentifierStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_id == other.as_identifier().m_id;
 }
 
 bool IdentifierStyleValue::has_color() const
@@ -1732,7 +1539,7 @@ ErrorOr<String> ImageStyleValue::to_string() const
     return serialize_a_url(m_url.to_deprecated_string());
 }
 
-bool ImageStyleValue::equals(StyleValue const& other) const
+bool ImageStyleValue::operator==(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -1805,33 +1612,30 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
         }
     };
 
-    if (m_gradient_type == GradientType::WebKit)
+    if (m_properties.gradient_type == GradientType::WebKit)
         TRY(builder.try_append("-webkit-"sv));
     if (is_repeating())
         TRY(builder.try_append("repeating-"sv));
     TRY(builder.try_append("linear-gradient("sv));
-    TRY(m_direction.visit(
+    TRY(m_properties.direction.visit(
         [&](SideOrCorner side_or_corner) -> ErrorOr<void> {
-            return builder.try_appendff("{}{}, "sv, m_gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
+            return builder.try_appendff("{}{}, "sv, m_properties.gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
         },
         [&](Angle const& angle) -> ErrorOr<void> {
             return builder.try_appendff("{}, "sv, TRY(angle.to_string()));
         }));
 
-    TRY(serialize_color_stop_list(builder, m_color_stop_list));
+    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
     TRY(builder.try_append(")"sv));
     return builder.to_string();
 }
 
-bool LinearGradientStyleValue::equals(StyleValue const& other_) const
+bool LinearGradientStyleValue::operator==(StyleValue const& other_) const
 {
     if (type() != other_.type())
         return false;
     auto& other = other_.as_linear_gradient();
-    return (m_gradient_type == other.m_gradient_type
-        && m_repeating == other.m_repeating
-        && m_direction == other.m_direction
-        && m_color_stop_list == other.m_color_stop_list);
+    return m_properties == other.m_properties;
 }
 
 float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
@@ -1839,7 +1643,7 @@ float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
     auto corner_angle_degrees = [&] {
         return static_cast<float>(atan2(gradient_size.height().value(), gradient_size.width().value())) * 180 / AK::Pi<float>;
     };
-    return m_direction.visit(
+    return m_properties.direction.visit(
         [&](SideOrCorner side_or_corner) {
             auto angle = [&] {
                 switch (side_or_corner) {
@@ -1864,7 +1668,7 @@ float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
                 }
             }();
             // Note: For unknowable reasons the angles are opposite on the -webkit- version
-            if (m_gradient_type == GradientType::WebKit)
+            if (m_properties.gradient_type == GradientType::WebKit)
                 return angle + 180.0f;
             return angle;
         },
@@ -1980,24 +1784,15 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
     return {};
 }
 
-bool PositionValue::operator==(PositionValue const& other) const
-{
-    return (
-        x_relative_to == other.x_relative_to
-        && y_relative_to == other.y_relative_to
-        && horizontal_position == other.horizontal_position
-        && vertical_position == other.vertical_position);
-}
-
 ErrorOr<String> RadialGradientStyleValue::to_string() const
 {
     StringBuilder builder;
     if (is_repeating())
         TRY(builder.try_append("repeating-"sv));
     TRY(builder.try_appendff("radial-gradient({} "sv,
-        m_ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv));
+        m_properties.ending_shape == EndingShape::Circle ? "circle"sv : "ellipse"sv));
 
-    TRY(m_size.visit(
+    TRY(m_properties.size.visit(
         [&](Extent extent) -> ErrorOr<void> {
             return builder.try_append([&] {
                 switch (extent) {
@@ -2021,13 +1816,13 @@ ErrorOr<String> RadialGradientStyleValue::to_string() const
             return builder.try_appendff("{} {}", TRY(ellipse_size.radius_a.to_string()), TRY(ellipse_size.radius_b.to_string()));
         }));
 
-    if (m_position != PositionValue::center()) {
+    if (m_properties.position != PositionValue::center()) {
         TRY(builder.try_appendff(" at "sv));
-        TRY(m_position.serialize(builder));
+        TRY(m_properties.position.serialize(builder));
     }
 
     TRY(builder.try_append(", "sv));
-    TRY(serialize_color_stop_list(builder, m_color_stop_list));
+    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
     TRY(builder.try_append(')'));
     return builder.to_string();
 }
@@ -2040,7 +1835,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
         };
         auto x_dist = distance_from(center.x(), size.left(), size.right(), distance_function);
         auto y_dist = distance_from(center.y(), size.top(), size.bottom(), distance_function);
-        if (m_ending_shape == EndingShape::Circle) {
+        if (m_properties.ending_shape == EndingShape::Circle) {
             auto dist = distance_function(x_dist, y_dist);
             return Gfx::FloatSize { dist, dist };
         } else {
@@ -2088,7 +1883,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     auto const corner_shape = [&](auto corner_distance, auto get_shape) {
         Gfx::FloatPoint corner {};
         auto distance = corner_distance(corner);
-        if (m_ending_shape == EndingShape::Ellipse) {
+        if (m_properties.ending_shape == EndingShape::Ellipse) {
             auto shape = get_shape();
             auto aspect_ratio = shape.width() / shape.height();
             auto p = corner - center;
@@ -2100,7 +1895,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     };
 
     // https://w3c.github.io/csswg-drafts/css-images/#radial-gradient-syntax
-    auto resolved_size = m_size.visit(
+    auto resolved_size = m_properties.size.visit(
         [&](Extent extent) {
             switch (extent) {
             case Extent::ClosestSide:
@@ -2139,7 +1934,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
     constexpr auto arbitrary_large_number = 1e10;
 
     // If the ending shape is a circle with zero radius:
-    if (m_ending_shape == EndingShape::Circle && resolved_size.is_empty()) {
+    if (m_properties.ending_shape == EndingShape::Circle && resolved_size.is_empty()) {
         // Render as if the ending shape was a circle whose radius was an arbitrary very small number greater than zero.
         // This will make the gradient continue to look like a circle.
         return Gfx::FloatSize { arbitrary_small_number, arbitrary_small_number };
@@ -2165,7 +1960,7 @@ Gfx::FloatSize RadialGradientStyleValue::resolve_size(Layout::Node const& node, 
 void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize paint_size) const
 {
     CSSPixelRect gradient_box { { 0, 0 }, paint_size };
-    auto center = m_position.resolved(node, gradient_box).to_type<float>();
+    auto center = m_properties.position.resolved(node, gradient_box).to_type<float>();
     auto gradient_size = resolve_size(node, center, gradient_box.to_type<float>());
     if (m_resolved.has_value() && m_resolved->gradient_size == gradient_size)
         return;
@@ -2176,15 +1971,12 @@ void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPix
     };
 }
 
-bool RadialGradientStyleValue::equals(StyleValue const& other) const
+bool RadialGradientStyleValue::operator==(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
     auto& other_gradient = other.as_radial_gradient();
-    return (m_ending_shape == other_gradient.m_ending_shape
-        && m_size == other_gradient.m_size
-        && m_position == other_gradient.m_position
-        && m_color_stop_list == other_gradient.m_color_stop_list);
+    return m_properties == other_gradient.m_properties;
 }
 
 void RadialGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
@@ -2203,17 +1995,17 @@ ErrorOr<String> ConicGradientStyleValue::to_string() const
     TRY(builder.try_append("conic-gradient("sv));
     bool has_from_angle = false;
     bool has_at_position = false;
-    if ((has_from_angle = m_from_angle.to_degrees() != 0))
-        TRY(builder.try_appendff("from {}", TRY(m_from_angle.to_string())));
-    if ((has_at_position = m_position != PositionValue::center())) {
+    if ((has_from_angle = m_properties.from_angle.to_degrees() != 0))
+        TRY(builder.try_appendff("from {}", TRY(m_properties.from_angle.to_string())));
+    if ((has_at_position = m_properties.position != PositionValue::center())) {
         if (has_from_angle)
             TRY(builder.try_append(' '));
         TRY(builder.try_appendff("at "sv));
-        TRY(m_position.serialize(builder));
+        TRY(m_properties.position.serialize(builder));
     }
     if (has_from_angle || has_at_position)
         TRY(builder.try_append(", "sv));
-    TRY(serialize_color_stop_list(builder, m_color_stop_list));
+    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
     TRY(builder.try_append(')'));
     return builder.to_string();
 }
@@ -2222,7 +2014,7 @@ void ConicGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixe
 {
     if (!m_resolved.has_value())
         m_resolved = ResolvedData { Painting::resolve_conic_gradient_data(node, *this), {} };
-    m_resolved->position = m_position.resolved(node, CSSPixelRect { { 0, 0 }, size });
+    m_resolved->position = m_properties.position.resolved(node, CSSPixelRect { { 0, 0 }, size });
 }
 
 void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
@@ -2231,100 +2023,40 @@ void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const
     Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, context.rounded_device_point(m_resolved->position));
 }
 
-bool ConicGradientStyleValue::equals(StyleValue const& other) const
+bool ConicGradientStyleValue::operator==(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
     auto& other_gradient = other.as_conic_gradient();
-    return (m_from_angle == other_gradient.m_from_angle
-        && m_position == other_gradient.m_position
-        && m_color_stop_list == other_gradient.m_color_stop_list
-        && m_repeating == other_gradient.m_repeating);
+    return m_properties == other_gradient.m_properties;
 }
 
 float ConicGradientStyleValue::angle_degrees() const
 {
-    return m_from_angle.to_degrees();
-}
-
-bool InheritStyleValue::equals(StyleValue const& other) const
-{
-    return type() == other.type();
-}
-
-bool InitialStyleValue::equals(StyleValue const& other) const
-{
-    return type() == other.type();
-}
-
-bool LengthStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_length == other.as_length().m_length;
+    return m_properties.from_angle.to_degrees();
 }
 
 ErrorOr<String> ListStyleStyleValue::to_string() const
 {
-    return String::formatted("{} {} {}", TRY(m_position->to_string()), TRY(m_image->to_string()), TRY(m_style_type->to_string()));
-}
-
-bool ListStyleStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_list_style();
-    return m_position->equals(typed_other.m_position)
-        && m_image->equals(typed_other.m_image)
-        && m_style_type->equals(typed_other.m_style_type);
+    return String::formatted("{} {} {}", TRY(m_properties.position->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.style_type->to_string()));
 }
 
 ErrorOr<String> NumericStyleValue::to_string() const
 {
     return m_value.visit(
-        [](float value) {
-            return String::formatted("{}", value);
-        },
-        [](i64 value) {
+        [](auto value) {
             return String::formatted("{}", value);
         });
 }
 
-bool NumericStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    if (has_integer() != other.has_integer())
-        return false;
-    if (has_integer())
-        return m_value.get<i64>() == other.as_numeric().m_value.get<i64>();
-    return m_value.get<float>() == other.as_numeric().m_value.get<float>();
-}
-
 ErrorOr<String> OverflowStyleValue::to_string() const
 {
-    return String::formatted("{} {}", TRY(m_overflow_x->to_string()), TRY(m_overflow_y->to_string()));
-}
-
-bool OverflowStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_overflow();
-    return m_overflow_x->equals(typed_other.m_overflow_x)
-        && m_overflow_y->equals(typed_other.m_overflow_y);
+    return String::formatted("{} {}", TRY(m_properties.overflow_x->to_string()), TRY(m_properties.overflow_y->to_string()));
 }
 
 ErrorOr<String> PercentageStyleValue::to_string() const
 {
     return m_percentage.to_string();
-}
-
-bool PercentageStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_percentage == other.as_percentage().m_percentage;
 }
 
 ErrorOr<String> PositionStyleValue::to_string() const
@@ -2343,18 +2075,7 @@ ErrorOr<String> PositionStyleValue::to_string() const
         VERIFY_NOT_REACHED();
     };
 
-    return String::formatted("{} {} {} {}", to_string(m_edge_x), TRY(m_offset_x.to_string()), to_string(m_edge_y), TRY(m_offset_y.to_string()));
-}
-
-bool PositionStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_position();
-    return m_edge_x == typed_other.m_edge_x
-        && m_offset_x == typed_other.m_offset_x
-        && m_edge_y == typed_other.m_edge_y
-        && m_offset_y == typed_other.m_offset_y;
+    return String::formatted("{} {} {} {}", to_string(m_properties.edge_x), TRY(m_properties.offset_x.to_string()), to_string(m_properties.edge_y), TRY(m_properties.offset_y.to_string()));
 }
 
 ErrorOr<String> RectStyleValue::to_string() const
@@ -2362,98 +2083,34 @@ ErrorOr<String> RectStyleValue::to_string() const
     return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
 }
 
-bool RectStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_rect();
-    return m_rect == typed_other.rect();
-}
-
-bool ResolutionStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_resolution == other.as_resolution().m_resolution;
-}
-
 ErrorOr<String> ShadowStyleValue::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_appendff("{} {} {} {} {}", m_color.to_deprecated_string(), TRY(m_offset_x.to_string()), TRY(m_offset_y.to_string()), TRY(m_blur_radius.to_string()), TRY(m_spread_distance.to_string())));
-    if (m_placement == ShadowPlacement::Inner)
+    TRY(builder.try_appendff("{} {} {} {} {}", m_properties.color.to_deprecated_string(), TRY(m_properties.offset_x.to_string()), TRY(m_properties.offset_y.to_string()), TRY(m_properties.blur_radius.to_string()), TRY(m_properties.spread_distance.to_string())));
+    if (m_properties.placement == ShadowPlacement::Inner)
         TRY(builder.try_append(" inset"sv));
     return builder.to_string();
 }
 
-bool ShadowStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_shadow();
-    return m_color == typed_other.m_color
-        && m_offset_x == typed_other.m_offset_x
-        && m_offset_y == typed_other.m_offset_y
-        && m_blur_radius == typed_other.m_blur_radius
-        && m_spread_distance == typed_other.m_spread_distance
-        && m_placement == typed_other.m_placement;
-}
-
-bool StringStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_string == other.as_string().m_string;
-}
-
 ErrorOr<String> TextDecorationStyleValue::to_string() const
 {
-    return String::formatted("{} {} {} {}", TRY(m_line->to_string()), TRY(m_thickness->to_string()), TRY(m_style->to_string()), TRY(m_color->to_string()));
-}
-
-bool TextDecorationStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_text_decoration();
-    return m_line->equals(typed_other.m_line)
-        && m_thickness->equals(typed_other.m_thickness)
-        && m_style->equals(typed_other.m_style)
-        && m_color->equals(typed_other.m_color);
-}
-
-bool TimeStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    return m_time == other.as_time().m_time;
+    return String::formatted("{} {} {} {}", TRY(m_properties.line->to_string()), TRY(m_properties.thickness->to_string()), TRY(m_properties.style->to_string()), TRY(m_properties.color->to_string()));
 }
 
 ErrorOr<String> TransformationStyleValue::to_string() const
 {
     StringBuilder builder;
-    TRY(builder.try_append(CSS::to_string(m_transform_function)));
+    TRY(builder.try_append(CSS::to_string(m_properties.transform_function)));
     TRY(builder.try_append('('));
-    TRY(builder.try_join(", "sv, m_values));
+    TRY(builder.try_join(", "sv, m_properties.values));
     TRY(builder.try_append(')'));
 
     return builder.to_string();
 }
 
-bool TransformationStyleValue::equals(StyleValue const& other) const
+bool TransformationStyleValue::Properties::operator==(Properties const& other) const
 {
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_transformation();
-    if (m_transform_function != typed_other.m_transform_function)
-        return false;
-    if (m_values.size() != typed_other.m_values.size())
-        return false;
-    for (size_t i = 0; i < m_values.size(); ++i) {
-        if (!m_values[i].equals(typed_other.m_values[i]))
-            return false;
-    }
-    return true;
+    return transform_function == other.transform_function && values.span() == other.values.span();
 }
 
 ErrorOr<String> UnresolvedStyleValue::to_string() const
@@ -2464,7 +2121,7 @@ ErrorOr<String> UnresolvedStyleValue::to_string() const
     return builder.to_string();
 }
 
-bool UnresolvedStyleValue::equals(StyleValue const& other) const
+bool UnresolvedStyleValue::operator==(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -2472,15 +2129,15 @@ bool UnresolvedStyleValue::equals(StyleValue const& other) const
     return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
-bool UnsetStyleValue::equals(StyleValue const& other) const
+bool StyleValueList::Properties::operator==(Properties const& other) const
 {
-    return type() == other.type();
+    return separator == other.separator && values.span() == other.values.span();
 }
 
 ErrorOr<String> StyleValueList::to_string() const
 {
     auto separator = ""sv;
-    switch (m_separator) {
+    switch (m_properties.separator) {
     case Separator::Space:
         separator = " "sv;
         break;
@@ -2491,23 +2148,7 @@ ErrorOr<String> StyleValueList::to_string() const
         VERIFY_NOT_REACHED();
     }
 
-    return String::from_deprecated_string(DeprecatedString::join(separator, m_values));
-}
-
-bool StyleValueList::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    auto const& typed_other = other.as_value_list();
-    if (m_separator != typed_other.m_separator)
-        return false;
-    if (m_values.size() != typed_other.m_values.size())
-        return false;
-    for (size_t i = 0; i < m_values.size(); ++i) {
-        if (!m_values[i].equals(typed_other.m_values[i]))
-            return false;
-    }
-    return true;
+    return String::from_deprecated_string(DeprecatedString::join(separator, m_properties.values));
 }
 
 NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
@@ -2599,23 +2240,23 @@ NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(CSSPixelRect const& view
 
 NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
-    auto absolutized_offset_x = absolutized_length(m_offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_x);
-    auto absolutized_offset_y = absolutized_length(m_offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_offset_y);
-    auto absolutized_blur_radius = absolutized_length(m_blur_radius, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_blur_radius);
-    auto absolutized_spread_distance = absolutized_length(m_spread_distance, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_spread_distance);
-    return ShadowStyleValue::create(m_color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_placement);
+    auto absolutized_offset_x = absolutized_length(m_properties.offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.offset_x);
+    auto absolutized_offset_y = absolutized_length(m_properties.offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.offset_y);
+    auto absolutized_blur_radius = absolutized_length(m_properties.blur_radius, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.blur_radius);
+    auto absolutized_spread_distance = absolutized_length(m_properties.spread_distance, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.spread_distance);
+    return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
 }
 
 NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
-    if (m_horizontal_radius.is_percentage() && m_vertical_radius.is_percentage())
+    if (m_properties.horizontal_radius.is_percentage() && m_properties.vertical_radius.is_percentage())
         return *this;
-    auto absolutized_horizontal_radius = m_horizontal_radius;
-    auto absolutized_vertical_radius = m_vertical_radius;
-    if (!m_horizontal_radius.is_percentage())
-        absolutized_horizontal_radius = absolutized_length(m_horizontal_radius.length(), viewport_rect, font_metrics, font_size, root_font_size).value_or(m_horizontal_radius.length());
-    if (!m_vertical_radius.is_percentage())
-        absolutized_vertical_radius = absolutized_length(m_vertical_radius.length(), viewport_rect, font_metrics, font_size, root_font_size).value_or(m_vertical_radius.length());
+    auto absolutized_horizontal_radius = m_properties.horizontal_radius;
+    auto absolutized_vertical_radius = m_properties.vertical_radius;
+    if (!m_properties.horizontal_radius.is_percentage())
+        absolutized_horizontal_radius = absolutized_length(m_properties.horizontal_radius.length(), viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.horizontal_radius.length());
+    if (!m_properties.vertical_radius.is_percentage())
+        absolutized_vertical_radius = absolutized_length(m_properties.vertical_radius.length(), viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.vertical_radius.length());
     return BorderRadiusStyleValue::create(absolutized_horizontal_radius, absolutized_vertical_radius);
 }
 
