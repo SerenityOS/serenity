@@ -29,7 +29,7 @@ ComponentValue::~ComponentValue() = default;
 DeprecatedString ComponentValue::to_deprecated_string() const
 {
     return m_value.visit(
-        [](Token const& token) { return token.to_deprecated_string(); },
+        [](Token const& token) { return token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string(); },
         [](NonnullRefPtr<Block> const& block) { return block->to_deprecated_string(); },
         [](NonnullRefPtr<Function> const& function) { return function->to_deprecated_string(); });
 }

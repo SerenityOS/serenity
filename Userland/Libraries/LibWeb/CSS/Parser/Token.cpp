@@ -11,68 +11,68 @@
 
 namespace Web::CSS::Parser {
 
-DeprecatedString Token::to_deprecated_string() const
+ErrorOr<String> Token::to_string() const
 {
     StringBuilder builder;
 
     switch (m_type) {
     case Type::EndOfFile:
-        return "";
+        return String {};
     case Type::Ident:
-        return serialize_an_identifier(ident());
+        return String::from_utf8(serialize_an_identifier(ident()));
     case Type::Function:
-        return DeprecatedString::formatted("{}(", serialize_an_identifier(function()));
+        return String::formatted("{}(", serialize_an_identifier(function()));
     case Type::AtKeyword:
-        return DeprecatedString::formatted("@{}", serialize_an_identifier(at_keyword()));
+        return String::formatted("@{}", serialize_an_identifier(at_keyword()));
     case Type::Hash: {
         switch (m_hash_type) {
         case HashType::Id:
-            return DeprecatedString::formatted("#{}", serialize_an_identifier(hash_value()));
+            return String::formatted("#{}", serialize_an_identifier(hash_value()));
         case HashType::Unrestricted:
-            return DeprecatedString::formatted("#{}", hash_value());
+            return String::formatted("#{}", hash_value());
         }
         VERIFY_NOT_REACHED();
     }
     case Type::String:
-        return serialize_a_string(string());
+        return String::from_utf8(serialize_a_string(string()));
     case Type::BadString:
-        return "";
+        return String {};
     case Type::Url:
-        return serialize_a_url(url());
+        return String::from_utf8(serialize_a_url(url()));
     case Type::BadUrl:
-        return "url()";
+        return String::from_utf8("url()"sv);
     case Type::Delim:
-        return DeprecatedString(m_value.bytes_as_string_view());
+        return String { m_value };
     case Type::Number:
-        return DeprecatedString::number(m_number_value.value());
+        return String::number(m_number_value.value());
     case Type::Percentage:
-        return DeprecatedString::formatted("{}%", m_number_value.value());
+        return String::formatted("{}%", m_number_value.value());
     case Type::Dimension:
-        return DeprecatedString::formatted("{}{}", m_number_value.value(), dimension_unit());
+        return String::formatted("{}{}", m_number_value.value(), dimension_unit());
     case Type::Whitespace:
-        return " ";
+        return String::from_utf8_short_string(" "sv);
     case Type::CDO:
-        return "<!--";
+        return String::from_utf8("<!--"sv);
     case Type::CDC:
-        return "-->";
+        return String::from_utf8_short_string("-->"sv);
     case Type::Colon:
-        return ":";
+        return String::from_utf8_short_string(":"sv);
     case Type::Semicolon:
-        return ";";
+        return String::from_utf8_short_string(";"sv);
     case Type::Comma:
-        return ",";
+        return String::from_utf8_short_string(","sv);
     case Type::OpenSquare:
-        return "[";
+        return String::from_utf8_short_string("["sv);
     case Type::CloseSquare:
-        return "]";
+        return String::from_utf8_short_string("]"sv);
     case Type::OpenParen:
-        return "(";
+        return String::from_utf8_short_string("("sv);
     case Type::CloseParen:
-        return ")";
+        return String::from_utf8_short_string(")"sv);
     case Type::OpenCurly:
-        return "{";
+        return String::from_utf8_short_string("{"sv);
     case Type::CloseCurly:
-        return "}";
+        return String::from_utf8_short_string("}"sv);
     case Type::Invalid:
     default:
         VERIFY_NOT_REACHED();
