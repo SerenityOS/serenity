@@ -34,17 +34,17 @@ DeprecatedString ComponentValue::to_deprecated_string() const
         [](NonnullRefPtr<Function> const& function) { return function->to_deprecated_string(); });
 }
 
-DeprecatedString ComponentValue::to_debug_string() const
+ErrorOr<String> ComponentValue::to_debug_string() const
 {
     return m_value.visit(
-        [](Token const& token) {
-            return DeprecatedString::formatted("Token: {}", token.to_debug_string());
+        [](Token const& token) -> ErrorOr<String> {
+            return String::formatted("Token: {}", TRY(token.to_debug_string()));
         },
-        [](NonnullRefPtr<Block> const& block) {
-            return DeprecatedString::formatted("Block: {}", block->to_deprecated_string());
+        [](NonnullRefPtr<Block> const& block) -> ErrorOr<String> {
+            return String::formatted("Block: {}", block->to_deprecated_string());
         },
-        [](NonnullRefPtr<Function> const& function) {
-            return DeprecatedString::formatted("Function: {}", function->to_deprecated_string());
+        [](NonnullRefPtr<Function> const& function) -> ErrorOr<String> {
+            return String::formatted("Function: {}", function->to_deprecated_string());
         });
 }
 

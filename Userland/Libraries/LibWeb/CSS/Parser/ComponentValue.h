@@ -34,7 +34,7 @@ public:
     operator Token() const { return m_value.get<Token>(); }
 
     DeprecatedString to_deprecated_string() const;
-    DeprecatedString to_debug_string() const;
+    ErrorOr<String> to_debug_string() const;
 
 private:
     Variant<Token, NonnullRefPtr<Function>, NonnullRefPtr<Block>> m_value;
