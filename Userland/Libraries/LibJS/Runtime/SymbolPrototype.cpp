@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto* symbol = TRY(this_symbol_value(vm, vm.this_value()));
-    return PrimitiveString::create(vm, symbol->to_deprecated_string());
+    return PrimitiveString::create(vm, symbol->descriptive_string());
 }
 
 // 20.4.3.4 Symbol.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-symbol.prototype.valueof

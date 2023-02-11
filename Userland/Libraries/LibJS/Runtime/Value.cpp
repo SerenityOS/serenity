@@ -372,7 +372,7 @@ DeprecatedString Value::to_string_without_side_effects() const
     case STRING_TAG:
         return MUST(as_string().deprecated_string());
     case SYMBOL_TAG:
-        return as_symbol().to_deprecated_string();
+        return as_symbol().descriptive_string();
     case BIGINT_TAG:
         return as_bigint().to_deprecated_string();
     case OBJECT_TAG:
