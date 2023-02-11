@@ -97,7 +97,7 @@ static void update_function_name(Value value, DeprecatedFlyString const& name)
 static ThrowCompletionOr<DeprecatedString> get_function_property_name(PropertyKey key)
 {
     if (key.is_symbol())
-        return DeprecatedString::formatted("[{}]", key.as_symbol()->description().value_or(""));
+        return DeprecatedString::formatted("[{}]", key.as_symbol()->description().value_or(String {}));
     return key.to_string();
 }
 
