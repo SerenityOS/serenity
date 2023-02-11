@@ -826,10 +826,10 @@ bool ISO8601Parser::parse_time_zone_identifier()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeZoneBracketedAnnotation
-bool ISO8601Parser::parse_time_zone_bracketed_annotation()
+// https://tc39.es/proposal-temporal/#prod-TimeZoneAnnotation
+bool ISO8601Parser::parse_time_zone_annotation()
 {
-    // TimeZoneBracketedAnnotation :
+    // TimeZoneAnnotation :
     //     [ AnnotationCriticalFlag[opt] TimeZoneIdentifier ]
     StateTransaction transaction { *this };
     if (!m_state.lexer.consume_specific('['))
@@ -839,48 +839,7 @@ bool ISO8601Parser::parse_time_zone_bracketed_annotation()
         return false;
     if (!m_state.lexer.consume_specific(']'))
         return false;
-    m_state.parse_result.time_zone_bracketed_annotation = transaction.parsed_string_view();
-    transaction.commit();
-    return true;
-}
-
-// https://tc39.es/proposal-temporal/#prod-TimeZoneOffsetRequired
-bool ISO8601Parser::parse_time_zone_offset_required()
-{
-    // TimeZoneOffsetRequired :
-    //     TimeZoneUTCOffset TimeZoneBracketedAnnotation[opt]
-    StateTransaction transaction { *this };
-    if (!parse_time_zone_utc_offset())
-        return false;
-    (void)parse_time_zone_bracketed_annotation();
-    transaction.commit();
-    return true;
-}
-
-// https://tc39.es/proposal-temporal/#prod-TimeZoneNameRequired
-bool ISO8601Parser::parse_time_zone_name_required()
-{
-    // TimeZoneNameRequired :
-    //     TimeZoneUTCOffset[opt] TimeZoneBracketedAnnotation
-    StateTransaction transaction { *this };
-    (void)parse_time_zone_utc_offset();
-    if (!parse_time_zone_bracketed_annotation())
-        return false;
-    transaction.commit();
-    return true;
-}
-
-// https://tc39.es/proposal-temporal/#prod-TimeZone
-bool ISO8601Parser::parse_time_zone()
-{
-    // TimeZone :
-    //     TimeZoneUTCOffset TimeZoneBracketedAnnotation[opt]
-    //     TimeZoneBracketedAnnotation
-    StateTransaction transaction { *this };
-    if (parse_time_zone_utc_offset())
-        (void)parse_time_zone_bracketed_annotation();
-    else if (!parse_time_zone_bracketed_annotation())
-        return false;
+    m_state.parse_result.time_zone_annotation = transaction.parsed_string_view();
     transaction.commit();
     return true;
 }
@@ -1073,11 +1032,11 @@ bool ISO8601Parser::parse_time_spec()
     return true;
 }
 
-// https://tc39.es/proposal-temporal/#prod-TimeSpecWithOptionalTimeZoneNotAmbiguous
-bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
+// https://tc39.es/proposal-temporal/#prod-TimeSpecWithOptionalOffsetNotAmbiguous
+bool ISO8601Parser::parse_time_spec_with_optional_offset_not_ambiguous()
 {
-    // TimeSpecWithOptionalTimeZoneNotAmbiguous :
-    //     TimeSpec TimeZone[opt] but not one of ValidMonthDay or DateSpecYearMonth
+    // TimeSpecWithOptionalOffsetNotAmbiguous :
+    //     TimeSpec TimeZoneUTCOffset[opt] but not one of ValidMonthDay or DateSpecYearMonth
     {
         StateTransaction transaction { *this };
         if (parse_valid_month_day() || parse_date_spec_year_month())
@@ -1086,21 +1045,7 @@ bool ISO8601Parser::parse_time_spec_with_optional_time_zone_not_ambiguous()
     StateTransaction transaction { *this };
     if (!parse_time_spec())
         return false;
-    (void)parse_time_zone();
-    transaction.commit();
-    return true;
-}
-
-// https://tc39.es/proposal-temporal/#prod-TimeSpecSeparator
-bool ISO8601Parser::parse_time_spec_separator()
-{
-    // TimeSpecSeparator :
-    //     DateTimeSeparator TimeSpec
-    StateTransaction transaction { *this };
-    if (!parse_date_time_separator())
-        return false;
-    if (!parse_time_spec())
-        return false;
+    (void)parse_time_zone_utc_offset();
     transaction.commit();
     return true;
 }
@@ -1109,11 +1054,17 @@ bool ISO8601Parser::parse_time_spec_separator()
 bool ISO8601Parser::parse_date_time()
 {
     // DateTime :
-    //     Date TimeSpecSeparator[opt] TimeZone[opt]
+    //     Date
+    //     Date DateTimeSeparator TimeSpec TimeZoneUTCOffset[opt]
+    StateTransaction transaction { *this };
     if (!parse_date())
         return false;
-    (void)parse_time_spec_separator();
-    (void)parse_time_zone();
+    if (parse_date_time_separator()) {
+        if (!parse_time_spec())
+            return false;
+        (void)parse_time_zone_utc_offset();
+    }
+    transaction.commit();
     return true;
 }
 
@@ -1121,20 +1072,22 @@ bool ISO8601Parser::parse_date_time()
 bool ISO8601Parser::parse_annotated_time()
 {
     // AnnotatedTime :
-    //     TimeDesignator TimeSpec TimeZone[opt] Annotations[opt]
-    //     TimeSpecWithOptionalTimeZoneNotAmbiguous Annotations[opt]
+    //     TimeDesignator TimeSpec TimeZoneUTCOffset[opt] TimeZoneAnnotation[opt] Annotations[opt]
+    //     TimeSpecWithOptionalOffsetNotAmbiguous TimeZoneAnnotation[opt] Annotations[opt]
     {
         StateTransaction transaction { *this };
         if (parse_time_designator() && parse_time_spec()) {
-            (void)parse_time_zone();
+            (void)parse_time_zone_utc_offset();
+            (void)parse_time_zone_annotation();
             (void)parse_annotations();
             transaction.commit();
             return true;
         }
     }
     StateTransaction transaction { *this };
-    if (!parse_time_spec_with_optional_time_zone_not_ambiguous())
+    if (!parse_time_spec_with_optional_offset_not_ambiguous())
         return false;
+    (void)parse_time_zone_annotation();
     (void)parse_annotations();
     transaction.commit();
     return true;
@@ -1144,9 +1097,10 @@ bool ISO8601Parser::parse_annotated_time()
 bool ISO8601Parser::parse_annotated_date_time()
 {
     // AnnotatedDateTime :
-    //     DateTime Annotations[opt]
+    //     DateTime TimeZoneAnnotation[opt] Annotations[opt]
     if (!parse_date_time())
         return false;
+    (void)parse_time_zone_annotation();
     (void)parse_annotations();
     return true;
 }
@@ -1155,15 +1109,42 @@ bool ISO8601Parser::parse_annotated_date_time()
 bool ISO8601Parser::parse_annotated_date_time_time_required()
 {
     // AnnotatedDateTimeTimeRequired :
-    //     Date TimeSpecSeparator TimeZone[opt] Annotations[opt]
+    //     Date DateTimeSeparator TimeSpec TimeZoneUTCOffset[opt] TimeZoneAnnotation[opt] Annotations[opt]
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
-    if (!parse_time_spec_separator())
+    if (!parse_date_time_separator())
         return false;
-    (void)parse_time_zone();
+    if (!parse_time_spec())
+        return false;
+    (void)parse_time_zone_utc_offset();
+    (void)parse_time_zone_annotation();
     (void)parse_annotations();
     transaction.commit();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-AnnotatedYearMonth
+bool ISO8601Parser::parse_annotated_year_month()
+{
+    // AnnotatedYearMonth :
+    //     DateSpecYearMonth TimeZoneAnnotation[opt] Annotations[opt]
+    if (!parse_date_spec_year_month())
+        return false;
+    (void)parse_time_zone_annotation();
+    (void)parse_annotations();
+    return true;
+}
+
+// https://tc39.es/proposal-temporal/#prod-AnnotatedMonthDay
+bool ISO8601Parser::parse_annotated_month_day()
+{
+    // AnnotatedMonthDay :
+    //     DateSpecMonthDay TimeZoneAnnotation[opt] Annotations[opt]
+    if (!parse_date_spec_month_day())
+        return false;
+    (void)parse_time_zone_annotation();
+    (void)parse_annotations();
     return true;
 }
 
@@ -1470,13 +1451,17 @@ bool ISO8601Parser::parse_duration()
 bool ISO8601Parser::parse_temporal_instant_string()
 {
     // TemporalInstantString :
-    //     Date TimeSpecSeparator[opt] TimeZoneOffsetRequired Annotations[opt]
+    //     Date DateTimeSeparator TimeSpec TimeZoneUTCOffset TimeZoneAnnotation[opt] Annotations[opt]
     StateTransaction transaction { *this };
     if (!parse_date())
         return false;
-    (void)parse_time_spec_separator();
-    if (!parse_time_zone_offset_required())
+    if (!parse_date_time_separator())
         return false;
+    if (!parse_time_spec())
+        return false;
+    if (!parse_time_zone_utc_offset())
+        return false;
+    (void)parse_time_zone_annotation();
     (void)parse_annotations();
     transaction.commit();
     return true;
@@ -1502,12 +1487,12 @@ bool ISO8601Parser::parse_temporal_duration_string()
 bool ISO8601Parser::parse_temporal_month_day_string()
 {
     // TemporalMonthDayString :
-    //     DateSpecMonthDay
+    //     AnnotatedMonthDay
     //     AnnotatedDateTime
-    // NOTE: Reverse order here because `DateSpecMonthDay` can be a subset of `AnnotatedDateTime`,
+    // NOTE: Reverse order here because `AnnotatedMonthDay` can be a subset of `AnnotatedDateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
     return parse_annotated_date_time()
-        || parse_date_spec_month_day();
+        || parse_annotated_month_day();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalTimeString
@@ -1526,24 +1511,23 @@ bool ISO8601Parser::parse_temporal_time_string()
 bool ISO8601Parser::parse_temporal_year_month_string()
 {
     // TemporalYearMonthString :
-    //     DateSpecYearMonth
+    //     AnnotatedYearMonth
     //     AnnotatedDateTime
-    // NOTE: Reverse order here because `DateSpecYearMonth` can be a subset of `AnnotatedDateTime`,
+    // NOTE: Reverse order here because `AnnotatedYearMonth` can be a subset of `AnnotatedDateTime`,
     // so we'd not attempt to parse that but may not exhaust the input string.
     return parse_annotated_date_time()
-        || parse_date_spec_year_month();
+        || parse_annotated_year_month();
 }
 
 // https://tc39.es/proposal-temporal/#prod-TemporalZonedDateTimeString
 bool ISO8601Parser::parse_temporal_zoned_date_time_string()
 {
     // TemporalZonedDateTimeString :
-    //     Date TimeSpecSeparator[opt] TimeZoneNameRequired Annotations[opt]
+    //     DateTime TimeZoneAnnotation Annotations[opt]
     StateTransaction transaction { *this };
-    if (!parse_date())
+    if (!parse_date_time())
         return false;
-    (void)parse_time_spec_separator();
-    if (!parse_time_zone_name_required())
+    if (!parse_time_zone_annotation())
         return false;
     (void)parse_annotations();
     transaction.commit();

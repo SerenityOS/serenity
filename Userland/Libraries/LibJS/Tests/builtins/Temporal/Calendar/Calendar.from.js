@@ -54,4 +54,20 @@ describe("errors", () => {
             "Got unexpected TimeZone object in conversion to Calendar"
         );
     });
+
+    test("yyyy-mm and mm-dd strings can only use the iso8601 calendar", () => {
+        // FIXME: The error message doesn't really indicate this is the case.
+        const values = [
+            "02-10[u-ca=iso8602]",
+            "02-10[u-ca=SerenityOS]",
+            "2023-02[u-ca=iso8602]",
+            "2023-02[u-ca=SerenityOS]",
+        ];
+
+        for (const value of values) {
+            expect(() => {
+                Temporal.Calendar.from(value);
+            }).toThrowWithMessage(RangeError, `Invalid calendar string '${value}'`);
+        }
+    });
 });
