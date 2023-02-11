@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -97,7 +97,7 @@ static void update_function_name(Value value, DeprecatedFlyString const& name)
 static ThrowCompletionOr<DeprecatedString> get_function_property_name(PropertyKey key)
 {
     if (key.is_symbol())
-        return DeprecatedString::formatted("[{}]", key.as_symbol()->description());
+        return DeprecatedString::formatted("[{}]", key.as_symbol()->description().value_or(""));
     return key.to_string();
 }
 
@@ -1686,9 +1686,9 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
             [&](PropertyKey const& property_key) -> DeprecatedString {
                 if (property_key.is_symbol()) {
                     auto description = property_key.as_symbol()->description();
-                    if (description.is_empty())
+                    if (!description.has_value() || description->is_empty())
                         return "";
-                    return DeprecatedString::formatted("[{}]", description);
+                    return DeprecatedString::formatted("[{}]", *description);
                 } else {
                     return property_key.to_string();
                 }
