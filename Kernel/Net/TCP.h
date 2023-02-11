@@ -57,7 +57,7 @@ public:
     u32 ack_number() const { return m_ack_number; }
     void set_ack_number(u32 number) { m_ack_number = number; }
 
-    u16 flags() const { return m_flags_and_data_offset & 0x1ff; }
+    NetworkOrdered<u16> flags() const { return m_flags_and_data_offset & 0xff01; }
     void set_flags(u16 flags) { m_flags_and_data_offset = (m_flags_and_data_offset & ~0x1ff) | (flags & 0x1ff); }
 
     bool has_syn() const { return flags() & TCPFlags::SYN; }
@@ -65,8 +65,8 @@ public:
     bool has_fin() const { return flags() & TCPFlags::FIN; }
     bool has_rst() const { return flags() & TCPFlags::RST; }
 
-    u8 data_offset() const { return (m_flags_and_data_offset & 0xf000) >> 12; }
-    void set_data_offset(u16 data_offset) { m_flags_and_data_offset = (m_flags_and_data_offset & ~0xf000) | data_offset << 12; }
+    u8 data_offset() const { return (__builtin_bswap16(m_flags_and_data_offset) & 0xf000) >> 12; }
+    void set_data_offset(u16 data_offset) { m_flags_and_data_offset = (__builtin_bswap16(m_flags_and_data_offset) & ~0xf000) | (data_offset << 12); }
 
     u16 window_size() const { return m_window_size; }
     void set_window_size(u16 window_size) { m_window_size = window_size; }
