@@ -24,7 +24,7 @@ ErrorOr<NonnullOwnPtr<ProjectConfig>> ProjectConfig::try_load_project_config(Dep
     if (!json.is_object())
         return Error::from_string_literal("The topmost JSON element is not an object");
 
-    return adopt_own(*new ProjectConfig(json.as_object()));
+    return try_make<ProjectConfig>(json.as_object());
 }
 
 NonnullOwnPtr<ProjectConfig> ProjectConfig::create_empty()

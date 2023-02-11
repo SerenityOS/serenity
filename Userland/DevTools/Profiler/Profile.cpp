@@ -334,13 +334,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 .executable = executable,
             };
 
-            auto sampled_process = adopt_own(*new Process {
+            auto sampled_process = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Process {
                 .pid = event.pid,
                 .executable = executable,
                 .basename = LexicalPath::basename(executable),
                 .start_valid = event.serial,
                 .end_valid = {},
-            });
+            }));
 
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
@@ -356,13 +356,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
             current_processes.remove(event.pid);
 
-            auto sampled_process = adopt_own(*new Process {
+            auto sampled_process = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Process {
                 .pid = event.pid,
                 .executable = executable,
                 .basename = LexicalPath::basename(executable),
                 .start_valid = event.serial,
                 .end_valid = {},
-            });
+            }));
 
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
