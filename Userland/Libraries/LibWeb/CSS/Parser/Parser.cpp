@@ -562,7 +562,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             }
             // FIXME: Support multiple, comma-separated, language ranges.
             Vector<DeprecatedFlyString> languages;
-            languages.append(pseudo_function.values().first().token().to_deprecated_string());
+            languages.append(pseudo_function.values().first().token().to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
                 .value = Selector::SimpleSelector::PseudoClass {
