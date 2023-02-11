@@ -45,7 +45,7 @@ public:
     unsigned view_year() const { return m_view_year; }
     unsigned view_month() const { return m_view_month; }
 
-    DeprecatedString formatted_date(Format format = LongMonthYear);
+    ErrorOr<String> formatted_date(Format format = LongMonthYear);
 
     Mode mode() const { return m_mode; }
     void toggle_mode();
