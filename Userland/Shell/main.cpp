@@ -5,6 +5,7 @@
  */
 
 #include "Shell.h"
+#include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
@@ -46,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     RefPtr<::Shell::Shell> shell;
     bool attempt_interactive = false;
 
-    auto initialize = [&] {
+    auto initialize = [&](bool posix_mode) {
         auto configuration = Line::Configuration::from_config();
         if (!attempt_interactive) {
             configuration.set(Line::Configuration::Flags::None);
@@ -58,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor = Line::Editor::construct(move(configuration));
         editor->initialize();
 
-        shell = Shell::Shell::construct(*editor, attempt_interactive);
+        shell = Shell::Shell::construct(*editor, attempt_interactive, posix_mode || LexicalPath::basename(arguments.strings[0]) == "sh"sv);
         s_shell = shell.ptr();
 
         s_shell->setup_signals();
@@ -169,6 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     char const* format = nullptr;
     bool should_format_live = false;
     bool keep_open = false;
+    bool posix_mode = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
@@ -176,6 +178,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_option(format, "Format the given file into stdout and exit", "format", 0, "file");
     parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
     parser.add_option(keep_open, "Keep the shell open after running the specified command or file", "keep-open", 0);
+    parser.add_option(posix_mode, "Behave like a POSIX-compatible shell", "posix", 0);
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
@@ -185,7 +188,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (format) {
         auto file = TRY(Core::DeprecatedFile::open(format, Core::OpenMode::ReadOnly));
 
-        initialize();
+        initialize(posix_mode);
 
         ssize_t cursor = -1;
         puts(shell->format(file->read_all(), cursor).characters());
@@ -214,7 +217,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    initialize();
+    initialize(posix_mode);
 
     shell->set_live_formatting(should_format_live);
     shell->current_script = arguments.strings[0];
