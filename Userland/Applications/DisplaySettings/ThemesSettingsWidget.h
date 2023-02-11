@@ -17,12 +17,14 @@
 namespace DisplaySettings {
 
 class ThemesSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(ThemesSettingsWidget);
+    C_OBJECT_ABSTRACT(ThemesSettingsWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> try_create(bool& background_settings_changed);
     virtual void apply_settings() override;
 
 private:
+    ErrorOr<void> setup_interface();
     Vector<Gfx::SystemThemeMetaData> m_themes;
     Vector<DeprecatedString> m_theme_names;
     Vector<DeprecatedString> m_color_scheme_names;
