@@ -495,8 +495,10 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
             if (decode_parms_object->is<ArrayObject>()) {
                 auto decode_parms_array = decode_parms_object->cast<ArrayObject>();
                 for (size_t i = 0; i < decode_parms_array->size(); ++i) {
-                    // FIXME: This entry may be the null object instead
-                    RefPtr<DictObject> decode_parms = decode_parms_array->at(i).get<NonnullRefPtr<Object>>()->cast<DictObject>();
+                    RefPtr<DictObject> decode_parms;
+                    auto entry = decode_parms_array->at(i);
+                    if (entry.has<NonnullRefPtr<Object>>())
+                        decode_parms = entry.get<NonnullRefPtr<Object>>()->cast<DictObject>();
                     decode_parms_vector.append(decode_parms);
                 }
             } else {
