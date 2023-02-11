@@ -22,9 +22,6 @@ public:
     Symbol& primitive_symbol() { return m_symbol; }
     Symbol const& primitive_symbol() const { return m_symbol; }
 
-    DeprecatedString description() const { return m_symbol.description(); }
-    bool is_global() const { return m_symbol.is_global(); }
-
 private:
     SymbolObject(Symbol&, Object& prototype);
 
