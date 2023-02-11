@@ -57,3 +57,6 @@ given `TCP_NODELAY` as an argument. This TCP socket option is used in
 many applications (like pip and requests) for optimization purposes.
 For now, it can be safely ignored until it's supported in the kernel.
 
+## `0007-Set-name-of-shared-libpython.patch`
+
+Set name of shared libpython
