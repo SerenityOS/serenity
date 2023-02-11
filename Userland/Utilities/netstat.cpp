@@ -48,7 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/services", "r"));
-    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    if (!flag_numeric)
+        TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool has_protocol_flag = (flag_tcp || flag_udp);
