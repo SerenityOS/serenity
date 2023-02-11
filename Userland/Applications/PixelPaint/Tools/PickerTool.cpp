@@ -40,17 +40,18 @@ void PickerTool::on_mousemove(Layer* layer, MouseEvent& event)
     m_editor->set_editor_color_to_color_at_mouse_position(layer_event, m_sample_all_layers);
 }
 
-GUI::Widget* PickerTool::get_properties_widget()
+ErrorOr<GUI::Widget*> PickerTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& sample_checkbox = m_properties_widget->add<GUI::CheckBox>(String::from_utf8("Sample all layers"sv).release_value_but_fixme_should_propagate_errors());
-        sample_checkbox.set_checked(m_sample_all_layers);
-        sample_checkbox.on_checked = [&](bool value) {
+        auto sample_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Sample all layers"sv))));
+        sample_checkbox->set_checked(m_sample_all_layers);
+        sample_checkbox->on_checked = [this](bool value) {
             m_sample_all_layers = value;
         };
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();

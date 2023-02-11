@@ -23,28 +23,29 @@ void ZoomTool::on_mousedown(Layer*, MouseEvent& event)
     m_editor->scale_centered(new_scale, raw_event.position());
 }
 
-GUI::Widget* ZoomTool::get_properties_widget()
+ErrorOr<GUI::Widget*> ZoomTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& sensitivity_container = m_properties_widget->add<GUI::Widget>();
-        sensitivity_container.set_fixed_height(20);
-        sensitivity_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto sensitivity_container = TRY(properties_widget->try_add<GUI::Widget>());
+        sensitivity_container->set_fixed_height(20);
+        (void)TRY(sensitivity_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& sensitivity_label = sensitivity_container.add<GUI::Label>("Sensitivity:");
-        sensitivity_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        sensitivity_label.set_fixed_size(80, 20);
+        auto sensitivity_label = TRY(sensitivity_container->try_add<GUI::Label>("Sensitivity:"));
+        sensitivity_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        sensitivity_label->set_fixed_size(80, 20);
 
-        auto& sensitivity_slider = sensitivity_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv));
-        sensitivity_slider.set_range(1, 100);
-        sensitivity_slider.set_value(100 * m_sensitivity);
+        auto sensitivity_slider = TRY(sensitivity_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv)));
+        sensitivity_slider->set_range(1, 100);
+        sensitivity_slider->set_value(100 * m_sensitivity);
 
-        sensitivity_slider.on_change = [&](int value) {
+        sensitivity_slider->on_change = [this](int value) {
             m_sensitivity = value / 100.0f;
         };
-        set_primary_slider(&sensitivity_slider);
+        set_primary_slider(sensitivity_slider);
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();
