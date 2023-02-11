@@ -226,6 +226,15 @@ inline NonnullRefPtr<T> adopt_ref(T& object)
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
 }
 
+// Use like `adopt_nonnull_own_or_enomem(new (nothrow) T(args...))`.
+template<typename T>
+inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
+{
+    if (!object)
+        return Error::from_errno(ENOMEM);
+    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *object);
+}
+
 template<Formattable T>
 struct Formatter<NonnullRefPtr<T>> : Formatter<T> {
     ErrorOr<void> format(FormatBuilder& builder, NonnullRefPtr<T> const& value)
@@ -274,6 +283,7 @@ struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
 }
 
 #if USING_AK_GLOBALLY
+using AK::adopt_nonnull_ref_or_enomem;
 using AK::adopt_ref;
 using AK::make_ref_counted;
 using AK::NonnullRefPtr;

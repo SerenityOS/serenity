@@ -341,19 +341,9 @@ inline ErrorOr<NonnullRefPtr<T>> try_make_ref_counted(Args&&... args)
     return adopt_nonnull_ref_or_enomem(new (nothrow) T { forward<Args>(args)... });
 }
 
-template<typename T>
-inline ErrorOr<NonnullRefPtr<T>> adopt_nonnull_ref_or_enomem(T* object)
-{
-    auto result = adopt_ref_if_nonnull(object);
-    if (!result)
-        return Error::from_errno(ENOMEM);
-    return result.release_nonnull();
-}
-
 }
 
 #if USING_AK_GLOBALLY
-using AK::adopt_nonnull_ref_or_enomem;
 using AK::adopt_ref_if_nonnull;
 using AK::RefPtr;
 using AK::static_ptr_cast;
