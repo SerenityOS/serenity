@@ -137,6 +137,7 @@ class CurveTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x63757276 }; // 'curv'
 
+    static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset);
     static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
     CurveTagData(u32 offset, u32 size, Vector<u16> values)
