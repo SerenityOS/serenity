@@ -9,12 +9,13 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>
 #include <LibWeb/CSS/Serialize.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
-CSSFontFaceRule* CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSFontFaceRule>> CSSFontFaceRule::create(JS::Realm& realm, FontFace&& font_face)
 {
-    return realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSFontFaceRule>(realm, realm, move(font_face)));
 }
 
 CSSFontFaceRule::CSSFontFaceRule(JS::Realm& realm, FontFace&& font_face)
