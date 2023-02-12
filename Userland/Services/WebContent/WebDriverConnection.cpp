@@ -1432,7 +1432,7 @@ Messages::WebDriverClient::GetSourceResponse WebDriverConnection::get_source()
 Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_script(JsonValue const& payload)
 {
     // 1. Let body and arguments be the result of trying to extract the script arguments from a request with argument parameters.
-    auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
+    auto [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
 
     // 2. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1441,7 +1441,7 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
     TRY(handle_any_user_prompts());
 
     // 4., 5.1-5.3.
-    auto result = Web::WebDriver::execute_script(m_page_client.page(), body, move(arguments), m_timeouts_configuration.script_timeout);
+    auto result = Web::WebDriver::execute_script(m_page_client.page(), move(body), move(arguments), m_timeouts_configuration.script_timeout);
     dbgln_if(WEBDRIVER_DEBUG, "Executing script returned: {}", result.value);
 
     switch (result.type) {
@@ -1464,7 +1464,7 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
 Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execute_async_script(JsonValue const& payload)
 {
     // 1. Let body and arguments by the result of trying to extract the script arguments from a request with argument parameters.
-    auto const& [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
+    auto [body, arguments] = TRY(extract_the_script_arguments_from_a_request(payload));
 
     // 2. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1473,7 +1473,7 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
     TRY(handle_any_user_prompts());
 
     // 4., 5.1-5.11.
-    auto result = Web::WebDriver::execute_async_script(m_page_client.page(), body, move(arguments), m_timeouts_configuration.script_timeout);
+    auto result = Web::WebDriver::execute_async_script(m_page_client.page(), move(body), move(arguments), m_timeouts_configuration.script_timeout);
     dbgln_if(WEBDRIVER_DEBUG, "Executing async script returned: {}", result.value);
 
     switch (result.type) {
