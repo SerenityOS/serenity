@@ -175,6 +175,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& a_to_b = static_cast<Gfx::ICC::LutAToBTagData&>(*tag_data);
             outln("    {} input channels, {} output channels", a_to_b.number_of_input_channels(), a_to_b.number_of_output_channels());
 
+            if (auto const& optional_a_curves = a_to_b.a_curves(); optional_a_curves.has_value()) {
+                outln("    a curves: {} curves", optional_a_curves->size()); // FIXME: Dump more
+            } else {
+                outln("    a curves: (not set)");
+            }
+
             if (auto const& optional_clut = a_to_b.clut(); optional_clut.has_value()) {
                 auto const& clut = optional_clut.value();
                 outln("    color lookup table: {} grid points, {}",
@@ -186,6 +192,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("    color lookup table: (not set)");
             }
 
+            if (auto const& optional_m_curves = a_to_b.m_curves(); optional_m_curves.has_value()) {
+                outln("    m curves: {} curves", optional_m_curves->size()); // FIXME: Dump more
+            } else {
+                outln("    m curves: (not set)");
+            }
+
             if (auto const& optional_e = a_to_b.e_matrix(); optional_e.has_value()) {
                 auto const& e = optional_e.value();
                 outln("    e = [ {}, {}, {}, {},", e[0], e[1], e[2], e[9]);
@@ -194,9 +206,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 outln("    e = (not set)");
             }
+
+            outln("    b curves: {} curves", a_to_b.b_curves().size()); // FIXME: Dump more
         } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
             auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
             outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
+
+            outln("    b curves: {} curves", b_to_a.b_curves().size()); // FIXME: Dump more
 
             if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
                 auto const& e = optional_e.value();
@@ -205,6 +221,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("          {}, {}, {}, {} ]", e[6], e[7], e[8], e[11]);
             } else {
                 outln("    e = (not set)");
+            }
+
+            if (auto const& optional_m_curves = b_to_a.m_curves(); optional_m_curves.has_value()) {
+                outln("    m curves: {} curves", optional_m_curves->size()); // FIXME: Dump more
+            } else {
+                outln("    m curves: (not set)");
             }
 
             if (auto const& optional_clut = b_to_a.clut(); optional_clut.has_value()) {
@@ -216,6 +238,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
             } else {
                 outln("    color lookup table: (not set)");
+            }
+
+            if (auto const& optional_a_curves = b_to_a.a_curves(); optional_a_curves.has_value()) {
+                outln("    a curves: {} curves", optional_a_curves->size()); // FIXME: Dump more
+            } else {
+                outln("    a curves: (not set)");
             }
         } else if (tag_data->type() == Gfx::ICC::MeasurementTagData::Type) {
             auto& measurement = static_cast<Gfx::ICC::MeasurementTagData&>(*tag_data);
