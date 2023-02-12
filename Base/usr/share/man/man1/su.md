@@ -6,6 +6,7 @@ su - switch to another user
 
 ```sh
 $ su [-] [user]
+$ su [-] [user] [-c command]
 ```
 
 ## Description
@@ -17,6 +18,8 @@ When called with no user-specified, `su` defaults to switch to the *root* user. 
 ## Options:
 
 * `-`, `-l`, `--login`: Start the shell as it was a real login
+
+* `-c`, `--command`: Execute a command using `/bin/sh` instead of starting an interactive shell
 
 ## Arguments
 
