@@ -805,10 +805,18 @@ ErrorOr<String> NamedColor2TagData::color_name(u32 index)
     return builder.to_string();
 }
 
-ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+namespace {
+
+struct ParametricCurveData {
+    u32 computed_size;
+    ParametricCurveTagData::FunctionType function_type;
+    Array<S15Fixed16, 7> parameters;
+};
+
+ErrorOr<ParametricCurveData> parametric_curve_data_from_bytes(ReadonlyBytes bytes)
 {
     // ICC v4, 10.18 parametricCurveType
-    VERIFY(tag_type(bytes) == Type);
+    VERIFY(tag_type(bytes) == ParametricCurveTagData::Type);
     TRY(check_reserved(bytes));
 
     // "The parametricCurveType describes a one-dimensional curve by specifying one of a predefined set of functions
@@ -825,10 +833,11 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     if (raw_function_type > 4)
         return Error::from_string_literal("ICC::Profile: parametricCurveType unknown function type");
 
-    FunctionType function_type = (FunctionType)raw_function_type;
-    unsigned count = parameter_count(function_type);
+    auto function_type = (ParametricCurveTagData::FunctionType)raw_function_type;
+    unsigned count = ParametricCurveTagData::parameter_count(function_type);
 
-    if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16) + count * sizeof(s15Fixed16Number))
+    u32 computed_size = 2 * sizeof(u32) + 2 * sizeof(u16) + count * sizeof(s15Fixed16Number);
+    if (bytes.size() < computed_size)
         return Error::from_string_literal("ICC::Profile: parametricCurveType has not enough data for parameters");
 
     auto* raw_parameters = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 12);
@@ -837,7 +846,21 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     for (size_t i = 0; i < count; ++i)
         parameters[i] = S15Fixed16::create_raw(raw_parameters[i]);
 
-    return try_make_ref_counted<ParametricCurveTagData>(offset, size, function_type, move(parameters));
+    return ParametricCurveData { computed_size, function_type, move(parameters) };
+}
+
+}
+
+ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset)
+{
+    auto curve_data = TRY(parametric_curve_data_from_bytes(bytes));
+    return try_make_ref_counted<ParametricCurveTagData>(offset, curve_data.computed_size, curve_data.function_type, move(curve_data.parameters));
+}
+
+ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    auto curve_data = TRY(parametric_curve_data_from_bytes(bytes));
+    return try_make_ref_counted<ParametricCurveTagData>(offset, size, curve_data.function_type, move(curve_data.parameters));
 }
 
 ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
