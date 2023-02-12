@@ -30,6 +30,14 @@ static void out_optional(char const* label, Optional<T> const& optional)
         outln("(not set)");
 }
 
+static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
+{
+    for (auto const& curve : curves) {
+        VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
+        outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
+    }
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -176,7 +184,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    {} input channels, {} output channels", a_to_b.number_of_input_channels(), a_to_b.number_of_output_channels());
 
             if (auto const& optional_a_curves = a_to_b.a_curves(); optional_a_curves.has_value()) {
-                outln("    a curves: {} curves", optional_a_curves->size()); // FIXME: Dump more
+                outln("    a curves: {} curves", optional_a_curves->size());
+                out_curves(optional_a_curves.value());
             } else {
                 outln("    a curves: (not set)");
             }
@@ -193,7 +202,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             if (auto const& optional_m_curves = a_to_b.m_curves(); optional_m_curves.has_value()) {
-                outln("    m curves: {} curves", optional_m_curves->size()); // FIXME: Dump more
+                outln("    m curves: {} curves", optional_m_curves->size());
+                out_curves(optional_m_curves.value());
             } else {
                 outln("    m curves: (not set)");
             }
@@ -207,12 +217,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("    e = (not set)");
             }
 
-            outln("    b curves: {} curves", a_to_b.b_curves().size()); // FIXME: Dump more
+            outln("    b curves: {} curves", a_to_b.b_curves().size());
+            out_curves(a_to_b.b_curves());
         } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
             auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
             outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
 
-            outln("    b curves: {} curves", b_to_a.b_curves().size()); // FIXME: Dump more
+            outln("    b curves: {} curves", b_to_a.b_curves().size());
+            out_curves(b_to_a.b_curves());
 
             if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
                 auto const& e = optional_e.value();
@@ -224,7 +236,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             if (auto const& optional_m_curves = b_to_a.m_curves(); optional_m_curves.has_value()) {
-                outln("    m curves: {} curves", optional_m_curves->size()); // FIXME: Dump more
+                outln("    m curves: {} curves", optional_m_curves->size());
+                out_curves(optional_m_curves.value());
             } else {
                 outln("    m curves: (not set)");
             }
@@ -241,7 +254,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             if (auto const& optional_a_curves = b_to_a.a_curves(); optional_a_curves.has_value()) {
-                outln("    a curves: {} curves", optional_a_curves->size()); // FIXME: Dump more
+                outln("    a curves: {} curves", optional_a_curves->size());
+                out_curves(optional_a_curves.value());
             } else {
                 outln("    a curves: (not set)");
             }
