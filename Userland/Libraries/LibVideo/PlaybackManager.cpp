@@ -313,6 +313,19 @@ private:
 
     ErrorOr<void> on_timer_callback() override
     {
+        auto set_presentation_timer = [&]() {
+            auto frame_time_ms = (manager().m_next_frame->timestamp() - current_time()).to_milliseconds();
+            VERIFY(frame_time_ms <= NumericLimits<int>::max());
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
+            manager().start_timer(max(static_cast<int>(frame_time_ms), 0));
+        };
+
+        if (manager().m_next_frame.has_value() && manager().m_next_frame->timestamp() < current_time()) {
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Current time {}ms is too early to present the next frame at {}ms, delaying", current_time().to_milliseconds(), manager().m_next_frame->timestamp().to_milliseconds());
+            set_presentation_timer();
+            return {};
+        }
+
         Optional<FrameQueueItem> future_frame_item;
         bool should_present_frame = false;
 
@@ -381,11 +394,7 @@ private:
 
         // The future frame item becomes the next one to present.
         manager().m_next_frame.emplace(future_frame_item.release_value());
-
-        auto frame_time_ms = (manager().m_next_frame->timestamp() - current_time()).to_milliseconds();
-        VERIFY(frame_time_ms <= NumericLimits<int>::max());
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
-        manager().start_timer(max(static_cast<int>(frame_time_ms), 0));
+        set_presentation_timer();
         return {};
     }
 
