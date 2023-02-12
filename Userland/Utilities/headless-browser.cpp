@@ -314,7 +314,7 @@ public:
                 request.set_method(HTTP::HttpRequest::POST);
             else
                 request.set_method(HTTP::HttpRequest::Invalid);
-            request.set_url(move(url));
+            request.set_url(url);
             request.set_headers(request_headers);
             request.set_body(TRY(ByteBuffer::copy(request_body)));
 
@@ -393,7 +393,7 @@ public:
                 request.set_method(HTTP::HttpRequest::POST);
             else
                 request.set_method(HTTP::HttpRequest::Invalid);
-            request.set_url(move(url));
+            request.set_url(url);
             request.set_headers(request_headers);
             request.set_body(TRY(ByteBuffer::copy(request_body)));
 
