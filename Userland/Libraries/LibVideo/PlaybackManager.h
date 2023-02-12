@@ -106,8 +106,6 @@ public:
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
-    void on_decoder_error(DecoderError error);
-
     Time current_playback_time();
     Time duration();
 
@@ -130,6 +128,8 @@ private:
 
     void dispatch_decoder_error(DecoderError error);
     void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
+    // Returns whether we changed playback states. If so, any PlaybackStateHandler processing must cease.
+    [[nodiscard]] bool dispatch_frame_queue_item(FrameQueueItem&&);
     void dispatch_fatal_error(Error);
 
     Core::Object& m_event_handler;
