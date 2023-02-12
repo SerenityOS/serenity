@@ -380,14 +380,58 @@ static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader c
     return CLUTData { move(number_of_grid_points_in_dimension), move(values) };
 }
 
+static ErrorOr<LutCurveType> read_curve(ReadonlyBytes bytes, u32 offset)
+{
+    // See read_curves() below.
+    if (offset + sizeof(u32) > bytes.size())
+        return Error::from_string_literal("ICC::Profile: not enough data for lut curve type");
+
+    ReadonlyBytes tag_bytes = bytes.slice(offset);
+    auto type = tag_type(tag_bytes);
+
+    if (type == CurveTagData::Type)
+        return CurveTagData::from_bytes(tag_bytes, offset);
+
+    if (type == ParametricCurveTagData::Type)
+        return ParametricCurveTagData::from_bytes(tag_bytes, offset);
+
+    return Error::from_string_literal("ICC::Profile: invalid tag type for lut curve");
+}
+
 static ErrorOr<Vector<LutCurveType>> read_curves(ReadonlyBytes bytes, u32 offset, u32 count)
 {
+    // Reads "A", "M", or "B" curves from lutAToBType or lutBToAType. They all have the same
+    // description (ICC v4 10.12.2, 10.12.4, 10.12.6, 10.13.2, 10.13.4, 10.13.6):
+    // "The curves are stored sequentially, with 00h bytes used for padding between them if needed.
+    //  Each [type] curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
+    //  is as indicated by the convention of the respective curve type. Note that the entire tag type, including the tag
+    //  type signature and reserved bytes, is included for each curve."
+
+    // Both types also say:
+    // "Curve data elements may be shared. For example, the offsets for A, B and M curves can be identical."
+    // FIXME: Implement sharing curve objects when that happens. (I haven't seen it happen in practice yet.)
+    //        Probably just pass in an offset->curve hashmap and look there first.
+
     Vector<LutCurveType> curves;
-    // FIXME: Implement.
-    (void)bytes;
-    (void)offset;
-    for (u32 i = 0; i < count; ++i)
-        TRY(curves.try_append(TRY(try_make_ref_counted<CurveTagData>(0, 0, Vector<u16> {}))));
+
+    for (u32 i = 0; i < count; ++i) {
+        // This can't call Profile::read_tag() because that requires tag size to be known in advance.
+        // Some tag types (e.g. textType) depend on this externally stored size.
+        // curveType and parametricCurveType don't.
+        //
+        // Commentary on the ICC spec: It still seems a bit awkward that the way curve tag types are stored here is
+        // different from how tag types are stored in the main container. Maybe that's so that the A, M, B curves
+        // can share data better?
+        // It's also weird that the A curves can't share data for their various curves -- in the main profile,
+        // redTRCTag, greenTRCTag, and blueTRCTag usually share the same curve, but here this isn't possible.
+        // Maybe it wouldn't usually happen for profiles that need lutAToBType or lutBToAType tags?
+        // I would've probably embedded a tag table in this tag and then have the A, M, B offsets store indices
+        // into that local table. Maybe there's a good reason why that wasn't done, and anyways, the spec is what it is.
+        auto curve = TRY(read_curve(bytes, offset));
+        offset += align_up_to(curve->size(), 4);
+        TRY(curves.try_append(move(curve)));
+    }
+
     return curves;
 }
 
@@ -403,9 +447,6 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
     auto& header = *bit_cast<AdvancedLUTHeader const*>(bytes.data() + 8);
     if (header.reserved_for_padding != 0)
         return Error::from_string_literal("ICC::Profile: lutAToBType reserved_for_padding not 0");
-
-    // "Curve data elements may be shared. For example, the offsets for A, B and M curves can be identical."
-    // FIXME: Implement sharing curve objects when that happens. (I haven't seen it happen in practice yet.)
 
     // 10.12.2 “A” curves
     // "There are the same number of “A” curves as there are input channels. The “A” curves may only be used when
@@ -476,9 +517,6 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     auto& header = *bit_cast<AdvancedLUTHeader const*>(bytes.data() + 8);
     if (header.reserved_for_padding != 0)
         return Error::from_string_literal("ICC::Profile: lutBToAType reserved_for_padding not 0");
-
-    // "Curve data elements may be shared. For example, the offsets for A, B and M curves may be identical."
-    // FIXME: Implement sharing curve objects when that happens. (I haven't seen it happen in practice yet.)
 
     // 10.13.2 “B” curves
     // "There are the same number of “B” curves as there are input channels. The curves are stored sequentially, with
