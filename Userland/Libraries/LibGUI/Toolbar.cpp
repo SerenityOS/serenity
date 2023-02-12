@@ -56,18 +56,18 @@ private:
         if (action.icon())
             set_icon(action.icon());
         else
-            set_text(action.text());
+            set_text_deprecated(action.text());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
 
-    virtual void set_text(DeprecatedString text) override
+    virtual void set_text_deprecated(DeprecatedString text) override
     {
         auto const* action = this->action();
         VERIFY(action);
 
         set_tooltip(tooltip(*action));
         if (!action->icon())
-            Button::set_text(move(text));
+            Button::set_text_deprecated(move(text));
     }
 
     DeprecatedString tooltip(Action const& action) const

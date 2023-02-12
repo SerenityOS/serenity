@@ -122,9 +122,9 @@ void WizardDialog::update_navigation()
     m_back_button->set_enabled(m_page_stack.size() > 1);
     if (has_pages()) {
         m_next_button->set_enabled(current_page().is_final_page() || current_page().can_go_next());
-        m_next_button->set_text(current_page().is_final_page() ? "Finish" : "Next >");
+        m_next_button->set_text_deprecated(current_page().is_final_page() ? "Finish" : "Next >");
     } else {
-        m_next_button->set_text("Next >");
+        m_next_button->set_text_deprecated("Next >");
         m_next_button->set_enabled(false);
     }
 }

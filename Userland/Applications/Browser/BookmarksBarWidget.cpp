@@ -205,7 +205,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         m_bookmarks.append(button);
 
         button.set_button_style(Gfx::ButtonStyle::Coolbar);
-        button.set_text(title);
+        button.set_text_deprecated(title);
         button.set_icon(g_icon_bag.filetype_html);
         button.set_fixed_size(font().width(title) + 32, 20);
         button.set_relative_rect(rect);
@@ -264,7 +264,7 @@ void BookmarksBarWidget::update_content_size()
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);
             bookmark.set_visible(false);
-            m_additional_menu->add_action(GUI::Action::create(bookmark.text(), g_icon_bag.filetype_html, [&](auto&) { bookmark.on_click(0); }));
+            m_additional_menu->add_action(GUI::Action::create(bookmark.text_deprecated(), g_icon_bag.filetype_html, [&](auto&) { bookmark.on_click(0); }));
         }
     }
 }

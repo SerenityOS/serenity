@@ -202,7 +202,7 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     auto* button = window.button();
     if (!button)
         return;
-    button->set_text(window.title());
+    button->set_text_deprecated(window.title());
     button->set_tooltip(window.title());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));
@@ -393,5 +393,5 @@ void TaskbarWindow::workspace_change_event(unsigned current_row, unsigned curren
 void TaskbarWindow::set_start_button_font(Gfx::Font const& font)
 {
     m_start_button->set_font(font);
-    m_start_button->set_fixed_size(font.width(m_start_button->text()) + 30, 21);
+    m_start_button->set_fixed_size(font.width(m_start_button->text_deprecated()) + 30, 21);
 }

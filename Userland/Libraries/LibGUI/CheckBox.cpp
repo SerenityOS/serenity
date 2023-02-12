@@ -42,7 +42,7 @@ void CheckBox::paint_event(PaintEvent& event)
     auto text_rect = rect();
     if (m_checkbox_position == CheckBoxPosition::Left)
         text_rect.set_left(s_box_width + s_horizontal_padding);
-    text_rect.set_width(font().width(text()));
+    text_rect.set_width(font().width(text_deprecated()));
     text_rect.set_top(height() / 2 - font().glyph_height() / 2);
     text_rect.set_height(font().glyph_height());
 
@@ -85,7 +85,7 @@ void CheckBox::set_autosize(bool autosize)
 
 void CheckBox::size_to_fit()
 {
-    set_fixed_width(s_box_width + font().width(text()) + s_horizontal_padding * 2);
+    set_fixed_width(s_box_width + font().width(text_deprecated()) + s_horizontal_padding * 2);
 }
 
 }

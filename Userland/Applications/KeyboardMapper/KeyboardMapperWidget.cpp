@@ -52,7 +52,7 @@ void KeyboardMapperWidget::create_frame()
 
         auto& tmp_button = main_widget.add<KeyButton>();
         tmp_button.set_relative_rect(rect);
-        tmp_button.set_text(keys[i].name);
+        tmp_button.set_text_deprecated(keys[i].name);
         tmp_button.set_enabled(keys[i].enabled);
 
         tmp_button.on_click = [this, &tmp_button]() {
@@ -64,7 +64,7 @@ void KeyboardMapperWidget::create_frame()
                 auto index = keys[i].map_index;
                 VERIFY(index > 0);
 
-                tmp_button.set_text(value);
+                tmp_button.set_text_deprecated(value);
                 u32* map = map_from_name(m_current_map_name);
 
                 if (value.length() == 0)
@@ -248,7 +248,7 @@ void KeyboardMapperWidget::set_current_map(const DeprecatedString current_map)
         StringBuilder sb;
         sb.append_code_point(map[index]);
 
-        m_keys.at(k)->set_text(sb.to_deprecated_string());
+        m_keys.at(k)->set_text_deprecated(sb.to_deprecated_string());
     }
 
     this->update();

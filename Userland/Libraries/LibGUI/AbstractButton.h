@@ -20,8 +20,8 @@ public:
 
     Function<void(bool)> on_checked;
 
-    virtual void set_text(DeprecatedString);
-    DeprecatedString const& text() const { return m_text; }
+    virtual void set_text_deprecated(DeprecatedString);
+    DeprecatedString const& text_deprecated() const { return m_text; }
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool b) { m_exclusive = b; }

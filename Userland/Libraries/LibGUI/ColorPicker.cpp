@@ -234,14 +234,14 @@ void ColorPicker::build_ui()
     button_container.layout()->add_spacer();
 
     auto& ok_button = button_container.add<DialogButton>();
-    ok_button.set_text("OK");
+    ok_button.set_text_deprecated("OK");
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<DialogButton>();
-    cancel_button.set_text("Cancel");
+    cancel_button.set_text_deprecated("Cancel");
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

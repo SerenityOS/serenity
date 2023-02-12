@@ -111,7 +111,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
 
     auto& set_defaults_checkbox = main_widget->add<GUI::CheckBox>();
-    set_defaults_checkbox.set_text("Use these settings as default");
+    set_defaults_checkbox.set_text_deprecated("Use these settings as default");
 
     auto& button_container = main_widget->add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();

@@ -100,7 +100,7 @@ GUI::Widget* EraseTool::get_properties_widget()
 
         auto& use_secondary_color_checkbox = secondary_color_container.add<GUI::CheckBox>();
         use_secondary_color_checkbox.set_checked(m_use_secondary_color);
-        use_secondary_color_checkbox.set_text("Use secondary color");
+        use_secondary_color_checkbox.set_text_deprecated("Use secondary color");
         use_secondary_color_checkbox.on_checked = [&](bool checked) {
             m_use_secondary_color = checked;
         };
