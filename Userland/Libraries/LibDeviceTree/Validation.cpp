@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/AllOf.h>
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
@@ -138,7 +140,44 @@ ErrorOr<void> dump(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_de
         next_block_offset += sizeof(FlattenedDeviceTreeReserveEntry);
     }
 
-    return {};
+    return dump_flattened_device_tree_structure(header, raw_device_tree);
 }
 
+ErrorOr<void> dump_flattened_device_tree_structure(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
+{
+    u8 indent = 0;
+    DeviceTreeCallbacks callbacks = {
+        .on_node_begin = [&](StringView token_name) -> ErrorOr<IterationDecision> {
+            outln("{: >{}}FDT_BEGIN_NODE: {}", ""sv, indent * 2, token_name);
+            ++indent;
+            return IterationDecision::Continue;
+        },
+        .on_node_end = [&](StringView) -> ErrorOr<IterationDecision> {
+            --indent;
+            outln("{: >{}}FDT_END_NODE", ""sv, indent * 2);
+            return IterationDecision::Continue;
+        },
+        .on_property = [&](StringView property_name, ReadonlyBytes property_value) -> ErrorOr<IterationDecision> {
+            StringView property_as_string { property_value };
+            // Note: We want to figure out if the value is a string, a stringlist, a number or something unprintable.
+            //     In reality, the entity retrieving the value needs to know if it's a u32, u64, string, stringlist, or "property-encoded-value" a priori
+            bool const is_print = (property_as_string.length() > 0) && all_of(property_as_string.begin(), --property_as_string.end(), [](char c) { return is_ascii_printable(c); });
+            if (is_print)
+                outln("{: >{}}FDT_PROP: {}: {}", ""sv, indent * 2, property_name, property_as_string);
+            else
+                outln("{: >{}}FDT_PROP: {}: {:hex-dump}", ""sv, indent * 2, property_name, property_as_string);
+            return IterationDecision::Continue;
+        },
+        .on_noop = [&]() -> ErrorOr<IterationDecision> {
+            outln("{: >{}}FDT_NOOP", ""sv, indent * 2);
+            return IterationDecision::Continue;
+        },
+        .on_end = []() -> ErrorOr<void> {
+            outln("FDT_END");
+            return {};
+        }
+    };
+
+    return walk_device_tree(header, raw_device_tree, move(callbacks));
+}
 } // namespace DeviceTree
