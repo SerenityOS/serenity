@@ -797,8 +797,8 @@ DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator,
         return {};
     }
 
-    while (index < cue_points.size()) {
-        auto const& cue_point = cue_points[++index];
+    while (++index < cue_points.size()) {
+        auto const& cue_point = cue_points[index];
         dbgln_if(MATROSKA_DEBUG, "Checking future cue point {}ms", cue_point.timestamp().to_milliseconds());
         if (cue_point.timestamp() > timestamp)
             break;
