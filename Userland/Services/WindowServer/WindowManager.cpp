@@ -2077,9 +2077,9 @@ void WindowManager::invalidate_after_theme_or_font_change()
     Compositor::the().invalidate_after_theme_or_font_change();
 }
 
-bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background)
+bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path)
 {
-    auto error_or_new_theme = Gfx::load_system_theme(theme_path);
+    auto error_or_new_theme = Gfx::load_system_theme(theme_path, color_scheme_path);
     if (error_or_new_theme.is_error()) {
         dbgln("WindowManager: Updating theme failed, error {}", error_or_new_theme.error());
         return false;
@@ -2089,6 +2089,15 @@ bool WindowManager::update_theme(DeprecatedString theme_path, DeprecatedString t
     Gfx::set_system_theme(new_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     g_config->write_entry("Theme", "Name", theme_name);
+    if (color_scheme_path.has_value() && color_scheme_path.value() != "Custom"sv) {
+        g_config->write_bool_entry("Theme", "LoadCustomColorScheme", true);
+        g_config->write_entry("Theme", "CustomColorSchemePath", color_scheme_path.value());
+        m_preferred_color_scheme = color_scheme_path.value();
+    } else if (!color_scheme_path.has_value()) {
+        g_config->write_bool_entry("Theme", "LoadCustomColorScheme", false);
+        g_config->remove_entry("Theme", "CustomColorSchemePath");
+        m_preferred_color_scheme = OptionalNone();
+    }
     if (!keep_desktop_background)
         g_config->remove_entry("Background", "Color");
     if (!sync_config_to_disk())
@@ -2119,7 +2128,7 @@ void WindowManager::clear_theme_override()
 {
     m_theme_overridden = false;
     auto previous_theme_name = g_config->read_entry("Theme", "Name");
-    auto previous_theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name)));
+    auto previous_theme = MUST(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", previous_theme_name), m_preferred_color_scheme));
     Gfx::set_system_theme(previous_theme);
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(previous_theme);
     invalidate_after_theme_or_font_change();

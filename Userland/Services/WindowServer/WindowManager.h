@@ -201,13 +201,14 @@ public:
         return nullptr;
     }
 
-    bool update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background);
+    bool update_theme(DeprecatedString theme_path, DeprecatedString theme_name, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path);
     void invalidate_after_theme_or_font_change();
 
     bool set_theme_override(Core::AnonymousBuffer const& theme_override);
     Optional<Core::AnonymousBuffer> get_theme_override() const;
     void clear_theme_override();
     bool is_theme_overridden() { return m_theme_overridden; }
+    Optional<DeprecatedString> get_preferred_color_scheme() { return m_preferred_color_scheme; }
 
     bool set_hovered_window(Window*);
     void deliver_mouse_event(Window&, MouseEvent const&);
@@ -439,6 +440,7 @@ private:
     bool m_mouse_buttons_switched { false };
     bool m_natural_scroll { false };
     bool m_theme_overridden { false };
+    Optional<DeprecatedString> m_preferred_color_scheme { OptionalNone() };
 
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_highlight_window;

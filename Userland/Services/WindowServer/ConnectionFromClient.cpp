@@ -865,9 +865,9 @@ void ConnectionFromClient::set_accepts_drag(bool accepts)
     wm.set_accepts_drag(accepts);
 }
 
-Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(DeprecatedString const& theme_path, DeprecatedString const& theme_name, bool keep_desktop_background)
+Messages::WindowServer::SetSystemThemeResponse ConnectionFromClient::set_system_theme(DeprecatedString const& theme_path, DeprecatedString const& theme_name, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path)
 {
-    bool success = WindowManager::the().update_theme(theme_path, theme_name, keep_desktop_background);
+    bool success = WindowManager::the().update_theme(theme_path, theme_name, keep_desktop_background, color_scheme_path);
     return success;
 }
 
@@ -895,6 +895,11 @@ void ConnectionFromClient::clear_system_theme_override()
 Messages::WindowServer::IsSystemThemeOverriddenResponse ConnectionFromClient::is_system_theme_overridden()
 {
     return WindowManager::the().is_theme_overridden();
+}
+
+Messages::WindowServer::GetPreferredColorSchemeResponse ConnectionFromClient::get_preferred_color_scheme()
+{
+    return WindowManager::the().get_preferred_color_scheme();
 }
 
 void ConnectionFromClient::apply_cursor_theme(DeprecatedString const& name)

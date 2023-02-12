@@ -25,6 +25,7 @@
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Process.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
@@ -229,11 +230,13 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     {
         int theme_identifier = 0;
         for (auto& theme : g_themes) {
-            auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
+            auto action = GUI::Action::create_checkable(theme.name, [theme_identifier, &window](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
-                auto success = GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false);
-                VERIFY(success);
+                if (window.main_widget()->palette().color_scheme_path() != ""sv)
+                    VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false, GUI::ConnectionToWindowServer::the().get_preferred_color_scheme()));
+                else
+                    VERIFY(GUI::ConnectionToWindowServer::the().set_system_theme(theme.path, theme.name, false, "Custom"sv));
             });
             if (theme.name == current_theme_name)
                 action->set_checked(true);

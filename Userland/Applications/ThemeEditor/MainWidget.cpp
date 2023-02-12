@@ -414,6 +414,8 @@ void MainWidget::build_override_controls()
         auto encoded = encode();
         if (encoded.is_error())
             return;
+        // Empty the color scheme path to signal that it exists only in memory.
+        m_current_palette.path(Gfx::PathRole::ColorScheme) = "";
         GUI::ConnectionToWindowServer::the().async_set_system_theme_override(encoded.value());
     };
 

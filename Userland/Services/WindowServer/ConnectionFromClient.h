@@ -145,12 +145,13 @@ private:
     virtual void set_window_icon_bitmap(i32, Gfx::ShareableBitmap const&) override;
     virtual Messages::WindowServer::StartDragResponse start_drag(DeprecatedString const&, HashMap<DeprecatedString, ByteBuffer> const&, Gfx::ShareableBitmap const&) override;
     virtual void set_accepts_drag(bool) override;
-    virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(DeprecatedString const&, DeprecatedString const&, bool keep_desktop_background) override;
+    virtual Messages::WindowServer::SetSystemThemeResponse set_system_theme(DeprecatedString const&, DeprecatedString const&, bool keep_desktop_background, Optional<DeprecatedString> const& color_scheme_path) override;
     virtual Messages::WindowServer::GetSystemThemeResponse get_system_theme() override;
     virtual Messages::WindowServer::SetSystemThemeOverrideResponse set_system_theme_override(Core::AnonymousBuffer const&) override;
     virtual Messages::WindowServer::GetSystemThemeOverrideResponse get_system_theme_override() override;
     virtual void clear_system_theme_override() override;
     virtual Messages::WindowServer::IsSystemThemeOverriddenResponse is_system_theme_overridden() override;
+    virtual Messages::WindowServer::GetPreferredColorSchemeResponse get_preferred_color_scheme() override;
     virtual void apply_cursor_theme(DeprecatedString const&) override;
     virtual void set_cursor_highlight_radius(int radius) override;
     virtual Messages::WindowServer::GetCursorHighlightRadiusResponse get_cursor_highlight_radius() override;
