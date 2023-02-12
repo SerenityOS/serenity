@@ -26,7 +26,7 @@ Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const option
     , m_worker_vm(JS::VM::create(adopt_own(m_custom_data)))
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_worker_vm))
     , m_interpreter_scope(*m_interpreter)
-    , m_implicit_port(MessagePort::create(document.realm()))
+    , m_implicit_port(MessagePort::create(document.realm()).release_value_but_fixme_should_propagate_errors())
 {
 }
 
@@ -80,7 +80,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString
     auto worker = MUST_OR_THROW_OOM(document.heap().allocate<Worker>(document.realm(), script_url, options, document));
 
     // 7. Let outside port be a new MessagePort in outside settings's Realm.
-    auto outside_port = MessagePort::create(outside_settings.realm());
+    auto outside_port = TRY(MessagePort::create(outside_settings.realm()));
 
     // 8. Associate the outside port with worker
     worker->m_outside_port = outside_port;
@@ -263,7 +263,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
             // FIXME: Global scope association
 
             // 16. Let inside port be a new MessagePort object in inside settings's Realm.
-            auto inside_port = MessagePort::create(m_inner_settings->realm());
+            auto inside_port = MessagePort::create(m_inner_settings->realm()).release_value_but_fixme_should_propagate_errors();
 
             // 17. Associate inside port with worker global scope.
             // FIXME: Global scope association

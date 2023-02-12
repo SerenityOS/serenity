@@ -20,10 +20,10 @@ MessageChannel::MessageChannel(JS::Realm& realm)
     : PlatformObject(realm)
 {
     // 1. Set this's port 1 to a new MessagePort in this's relevant Realm.
-    m_port1 = MessagePort::create(realm);
+    m_port1 = MessagePort::create(realm).release_value_but_fixme_should_propagate_errors();
 
     // 2. Set this's port 2 to a new MessagePort in this's relevant Realm.
-    m_port2 = MessagePort::create(realm);
+    m_port2 = MessagePort::create(realm).release_value_but_fixme_should_propagate_errors();
 
     // 3. Entangle this's port 1 and this's port 2.
     m_port1->entangle_with(*m_port2);
