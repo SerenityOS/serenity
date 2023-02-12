@@ -104,7 +104,7 @@ void Slider::mousedown_event(MouseEvent& event)
             start_drag(event.position());
             // Delay the callback to make it aware that a drag has started.
             if (on_change)
-                on_change(new_value);
+                on_change(value());
             return;
         }
 
