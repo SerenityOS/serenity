@@ -1306,31 +1306,6 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
     return builder.to_string();
 }
 
-static bool operator==(Filter::Blur const& a, Filter::Blur const& b)
-{
-    return a.radius == b.radius;
-}
-
-static bool operator==(Filter::DropShadow const& a, Filter::DropShadow const& b)
-{
-    return a.offset_x == b.offset_x && a.offset_y == b.offset_y && a.radius == b.radius && a.color == b.color;
-}
-
-static bool operator==(Filter::HueRotate::Zero const&, Filter::HueRotate::Zero const&)
-{
-    return true;
-}
-
-static bool operator==(Filter::Color const& a, Filter::Color const& b)
-{
-    return a.operation == b.operation && a.amount == b.amount;
-}
-
-static bool operator==(Filter::HueRotate const& a, Filter::HueRotate const& b)
-{
-    return a.angle == b.angle;
-}
-
 bool FilterValueListStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
@@ -1846,11 +1821,6 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
     TRY(serialize_color_stop_list(builder, m_color_stop_list));
     TRY(builder.try_append(")"sv));
     return builder.to_string();
-}
-
-static bool operator==(EdgeRect const& a, EdgeRect const& b)
-{
-    return a.top_edge == b.top_edge && a.right_edge == b.right_edge && a.bottom_edge == b.bottom_edge && a.left_edge == b.left_edge;
 }
 
 bool LinearGradientStyleValue::equals(StyleValue const& other_) const
