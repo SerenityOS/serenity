@@ -282,7 +282,7 @@ void HackStudioWidget::open_project(DeprecatedString const& root_path)
     if (recent_projects.size() > recent_projects_history_size)
         recent_projects.shrink(recent_projects_history_size);
 
-    Config::write_string("HackStudio"sv, "Global"sv, "RecentProjects"sv, JsonArray(recent_projects).to_deprecated_string());
+    Config::write_string("HackStudio"sv, "Global"sv, "RecentProjects"sv, JsonArray(move(recent_projects)).to_deprecated_string());
     update_recent_projects_submenu();
 }
 

@@ -32,8 +32,10 @@ public:
     {
     }
 
+    JsonArray(Vector<JsonValue> source) { m_values = move(source); }
+
     template<IterableContainer ContainerT>
-    JsonArray(ContainerT const& source)
+    JsonArray(ContainerT source)
     {
         for (auto& value : source)
             m_values.append(move(value));
