@@ -26,7 +26,7 @@ WebSocketLadybird::WebSocketLadybird(NonnullRefPtr<WebSocket::WebSocket> underly
         if (auto strong_this = weak_this.strong_ref()) {
             if (strong_this->on_message) {
                 strong_this->on_message(Web::WebSockets::WebSocketClientSocket::Message {
-                    .data = move(message.data()),
+                    .data = message.release_data(),
                     .is_text = message.is_text(),
                 });
             }
