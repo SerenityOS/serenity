@@ -142,7 +142,7 @@ TEST_CASE(test_write_to_file)
 
     char path[] = "/tmp/new.font.XXXXXX";
     EXPECT(mkstemp(path) != -1);
-    EXPECT(!font->write_to_file(path).is_error());
+    EXPECT(!font->write_to_file(StringView { path, strlen(path) }).is_error());
     unlink(path);
 }
 
