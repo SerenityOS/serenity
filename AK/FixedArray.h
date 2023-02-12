@@ -22,6 +22,17 @@ class FixedArray {
 public:
     FixedArray() = default;
 
+    static ErrorOr<FixedArray<T>> create_uninitialized(size_t size)
+    {
+        if (size == 0)
+            return FixedArray<T>();
+        auto* new_storage = static_cast<Storage*>(kmalloc(storage_allocation_size(size)));
+        if (!new_storage)
+            return Error::from_errno(ENOMEM);
+        new_storage->size = size;
+        return FixedArray { new_storage };
+    }
+
     static ErrorOr<FixedArray<T>> create(std::initializer_list<T> initializer)
     {
         auto array = TRY(create(initializer.size()));
@@ -35,15 +46,10 @@ public:
 
     static ErrorOr<FixedArray<T>> create(size_t size)
     {
-        if (size == 0)
-            return FixedArray<T>();
-        auto* new_storage = static_cast<Storage*>(kmalloc(storage_allocation_size(size)));
-        if (!new_storage)
-            return Error::from_errno(ENOMEM);
-        new_storage->size = size;
+        auto array = TRY(create_uninitialized(size));
         for (size_t i = 0; i < size; ++i)
-            new (&new_storage->elements[i]) T();
-        return FixedArray<T>(new_storage);
+            new (&array[i]) T();
+        return array;
     }
 
     static FixedArray<T> must_create_but_fixme_should_propagate_errors(size_t size)
