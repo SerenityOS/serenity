@@ -5,7 +5,7 @@ su - switch to another user
 ## Synopsis
 
 ```sh
-$ su [-] <user>
+$ su [-] [user]
 ```
 
 ## Description
