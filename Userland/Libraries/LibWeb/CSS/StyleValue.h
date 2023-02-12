@@ -143,6 +143,7 @@ struct EdgeRect {
     Length bottom_edge;
     Length left_edge;
     Gfx::FloatRect resolved(Layout::Node const&, Gfx::FloatRect) const;
+    bool operator==(EdgeRect const&) const = default;
 };
 
 namespace Filter {
@@ -150,6 +151,7 @@ namespace Filter {
 struct Blur {
     Optional<Length> radius {};
     float resolved_radius(Layout::Node const&) const;
+    bool operator==(Blur const&) const = default;
 };
 
 struct DropShadow {
@@ -164,13 +166,17 @@ struct DropShadow {
         Color color;
     };
     Resolved resolved(Layout::Node const&) const;
+    bool operator==(DropShadow const&) const = default;
 };
 
 struct HueRotate {
-    struct Zero { };
+    struct Zero {
+        bool operator==(Zero const&) const = default;
+    };
     using AngleOrZero = Variant<Angle, Zero>;
     Optional<AngleOrZero> angle {};
     float angle_degrees() const;
+    bool operator==(HueRotate const&) const = default;
 };
 
 struct Color {
@@ -185,6 +191,7 @@ struct Color {
     } operation;
     Optional<NumberPercentage> amount {};
     float resolved_amount() const;
+    bool operator==(Color const&) const = default;
 };
 
 };
