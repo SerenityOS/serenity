@@ -167,17 +167,25 @@ ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes,
     return try_make_ref_counted<CicpTagData>(offset, size, color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag);
 }
 
-ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+namespace {
+
+struct CurveData {
+    u32 computed_size;
+    Vector<u16> values;
+};
+
+ErrorOr<CurveData> curve_data_from_bytes(ReadonlyBytes bytes)
 {
     // ICC v4, 10.6 curveType
-    VERIFY(tag_type(bytes) == Type);
+    VERIFY(tag_type(bytes) == CurveTagData::Type);
     TRY(check_reserved(bytes));
 
     if (bytes.size() < 3 * sizeof(u32))
         return Error::from_string_literal("ICC::Profile: curveType has not enough data for count");
     u32 count = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
 
-    if (bytes.size() < 3 * sizeof(u32) + count * sizeof(u16))
+    u32 computed_size = 3 * sizeof(u32) + count * sizeof(u16);
+    if (bytes.size() < computed_size)
         return Error::from_string_literal("ICC::Profile: curveType has not enough data for curve points");
 
     auto* raw_values = bit_cast<BigEndian<u16> const*>(bytes.data() + 12);
@@ -187,7 +195,21 @@ ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes byte
     for (u32 i = 0; i < count; ++i)
         values[i] = raw_values[i];
 
-    return try_make_ref_counted<CurveTagData>(offset, size, move(values));
+    return CurveData { computed_size, move(values) };
+}
+
+}
+
+ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset)
+{
+    auto curve_data = TRY(curve_data_from_bytes(bytes));
+    return try_make_ref_counted<CurveTagData>(offset, curve_data.computed_size, move(curve_data.values));
+}
+
+ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    auto curve_data = TRY(curve_data_from_bytes(bytes));
+    return try_make_ref_counted<CurveTagData>(offset, size, move(curve_data.values));
 }
 
 ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
