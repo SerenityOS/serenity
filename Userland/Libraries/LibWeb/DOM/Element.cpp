@@ -611,7 +611,7 @@ void Element::set_shadow_root(JS::GCPtr<ShadowRoot> shadow_root)
 CSS::CSSStyleDeclaration* Element::style_for_bindings()
 {
     if (!m_inline_style)
-        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {});
+        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {}).release_value_but_fixme_should_propagate_errors();
     return m_inline_style;
 }
 

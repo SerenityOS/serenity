@@ -19,9 +19,9 @@ CSSStyleDeclaration::CSSStyleDeclaration(JS::Realm& realm)
 {
 }
 
-PropertyOwningCSSStyleDeclaration* PropertyOwningCSSStyleDeclaration::create(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration>> PropertyOwningCSSStyleDeclaration::create(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
 {
-    return realm.heap().allocate<PropertyOwningCSSStyleDeclaration>(realm, realm, move(properties), move(custom_properties)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<PropertyOwningCSSStyleDeclaration>(realm, realm, move(properties), move(custom_properties)));
 }
 
 PropertyOwningCSSStyleDeclaration::PropertyOwningCSSStyleDeclaration(JS::Realm& realm, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
@@ -38,10 +38,10 @@ DeprecatedString PropertyOwningCSSStyleDeclaration::item(size_t index) const
     return CSS::string_from_property_id(m_properties[index].property_id);
 }
 
-ElementInlineCSSStyleDeclaration* ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration>> ElementInlineCSSStyleDeclaration::create(DOM::Element& element, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)
 {
     auto& realm = element.realm();
-    return realm.heap().allocate<ElementInlineCSSStyleDeclaration>(realm, element, move(properties), move(custom_properties)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<ElementInlineCSSStyleDeclaration>(realm, element, move(properties), move(custom_properties)));
 }
 
 ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties)

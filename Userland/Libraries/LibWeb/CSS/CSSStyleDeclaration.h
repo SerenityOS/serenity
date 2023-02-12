@@ -63,7 +63,7 @@ class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
     friend class ElementInlineCSSStyleDeclaration;
 
 public:
-    static PropertyOwningCSSStyleDeclaration* create(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration>> create(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
@@ -102,7 +102,7 @@ class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDecl
     WEB_PLATFORM_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
 
 public:
-    static ElementInlineCSSStyleDeclaration* create(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration>> create(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 
