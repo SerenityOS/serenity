@@ -114,6 +114,7 @@ public:
 
 private:
     class PlaybackStateHandler;
+    class StartingStateHandler;
     class PlayingStateHandler;
     class PausedStateHandler;
     class BufferingStateHandler;

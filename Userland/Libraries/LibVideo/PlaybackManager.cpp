@@ -277,6 +277,61 @@ PlaybackManager& PlaybackManager::PlaybackStateHandler::manager() const
     return m_manager;
 }
 
+class PlaybackManager::StartingStateHandler : public PlaybackManager::PlaybackStateHandler {
+public:
+    StartingStateHandler(PlaybackManager& manager, bool playing)
+        : PlaybackStateHandler(manager)
+        , m_playing(playing)
+    {
+    }
+    ~StartingStateHandler() override = default;
+
+private:
+    ErrorOr<void> on_enter() override
+    {
+        return on_timer_callback();
+    }
+
+    StringView name() override { return "Starting"sv; }
+
+    ErrorOr<void> on_timer_callback() override
+    {
+        // Once we're threaded, instead of checking for the count here we can just mutex
+        // in the queue until we display the first and then again for the second to store it.
+        if (manager().m_frame_queue->size() < 3) {
+            manager().m_decode_timer->start(0);
+            manager().start_timer(0);
+            return {};
+        }
+
+        auto frame_to_display = manager().m_frame_queue->dequeue();
+        manager().m_last_present_in_media_time = frame_to_display.timestamp();
+        if (manager().dispatch_frame_queue_item(move(frame_to_display)))
+            return {};
+
+        manager().m_next_frame.emplace(manager().m_frame_queue->dequeue());
+        manager().m_decode_timer->start(0);
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Displayed frame at {}ms, emplaced second frame at {}ms, finishing start now", manager().m_last_present_in_media_time.to_milliseconds(), manager().m_next_frame->timestamp().to_milliseconds());
+        if (!m_playing)
+            return replace_handler_and_delete_this<PausedStateHandler>();
+        return replace_handler_and_delete_this<PlayingStateHandler>();
+    }
+
+    ErrorOr<void> play() override
+    {
+        m_playing = true;
+        return {};
+    }
+    bool is_playing() override { return m_playing; };
+    ErrorOr<void> pause() override
+    {
+        m_playing = false;
+        return {};
+    }
+
+    bool m_playing;
+};
+
 class PlaybackManager::PlayingStateHandler : public PlaybackManager::PlaybackStateHandler {
 public:
     PlayingStateHandler(PlaybackManager& manager)
@@ -320,7 +375,7 @@ private:
             manager().start_timer(max(static_cast<int>(frame_time_ms), 0));
         };
 
-        if (manager().m_next_frame.has_value() && manager().m_next_frame->timestamp() < current_time()) {
+        if (manager().m_next_frame.has_value() && current_time() < manager().m_next_frame->timestamp()) {
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Current time {}ms is too early to present the next frame at {}ms, delaying", current_time().to_milliseconds(), manager().m_next_frame->timestamp().to_milliseconds());
             set_presentation_timer();
             return {};
@@ -600,7 +655,7 @@ private:
         auto start_timestamp = manager().seek_demuxer_to_most_recent_keyframe(Time::zero());
         VERIFY(start_timestamp.has_value());
         manager().m_last_present_in_media_time = start_timestamp.release_value();
-        return replace_handler_and_delete_this<PlayingStateHandler>();
+        return replace_handler_and_delete_this<StartingStateHandler>(true);
     }
     bool is_playing() override { return false; };
 };
