@@ -184,7 +184,7 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
         auto button = EmojiButton::construct(move(code_points));
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
-        button->on_click = [this, text](auto) {
+        button->on_click = [this, text](auto) mutable {
             m_selected_emoji_text = move(text);
             done(ExecResult::OK);
         };
