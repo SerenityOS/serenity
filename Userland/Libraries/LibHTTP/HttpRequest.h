@@ -48,7 +48,7 @@ public:
     Vector<Header> const& headers() const { return m_headers; }
 
     URL const& url() const { return m_url; }
-    void set_url(URL const& url) { m_url = url; }
+    void set_url(URL url) { m_url = move(url); }
 
     Method method() const { return m_method; }
     void set_method(Method method) { m_method = method; }
