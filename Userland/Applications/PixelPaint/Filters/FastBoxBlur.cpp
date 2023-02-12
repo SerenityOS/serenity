@@ -36,21 +36,21 @@ void FastBoxBlur::apply(Gfx::Bitmap& target_bitmap) const
         filter.apply_single_pass(m_radius);
 }
 
-RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
+ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
 {
     if (!m_settings_widget) {
-        m_settings_widget = GUI::Widget::construct();
-        m_settings_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto settings_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& name_label = m_settings_widget->add<GUI::Label>("Fast Box Blur Filter");
-        name_label.set_font_weight(Gfx::FontWeight::Bold);
-        name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        name_label.set_fixed_height(10);
+        auto name_label = TRY(settings_widget->try_add<GUI::Label>("Fast Box Blur Filter"));
+        name_label->set_font_weight(Gfx::FontWeight::Bold);
+        name_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        name_label->set_fixed_height(10);
 
-        auto& asymmetric_checkbox = m_settings_widget->add<GUI::CheckBox>(String::from_utf8("Use Asymmetric Radii"sv).release_value_but_fixme_should_propagate_errors());
-        asymmetric_checkbox.set_checked(false);
-        asymmetric_checkbox.set_fixed_height(15);
-        asymmetric_checkbox.on_checked = [&](bool checked) {
+        auto asymmetric_checkbox = TRY(settings_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Use Asymmetric Radii"sv))));
+        asymmetric_checkbox->set_checked(false);
+        asymmetric_checkbox->set_fixed_height(15);
+        asymmetric_checkbox->on_checked = [this](bool checked) {
             m_use_asymmetric_radii = checked;
             if (m_use_asymmetric_radii) {
                 m_vector_checkbox->set_visible(true);
@@ -68,7 +68,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        m_vector_checkbox = m_settings_widget->add<GUI::CheckBox>(String::from_utf8("Use Direction and magnitude"sv).release_value_but_fixme_should_propagate_errors());
+        m_vector_checkbox = TRY(settings_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Use Direction and magnitude"sv))));
         m_vector_checkbox->set_checked(false);
         m_vector_checkbox->set_visible(false);
         m_vector_checkbox->set_fixed_height(15);
@@ -84,38 +84,38 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        m_radius_container = m_settings_widget->add<GUI::Widget>();
+        m_radius_container = TRY(settings_widget->try_add<GUI::Widget>());
         m_radius_container->set_fixed_height(20);
-        m_radius_container->set_layout<GUI::HorizontalBoxLayout>();
-        m_radius_container->layout()->set_margins({ 4, 0, 4, 0 });
+        auto radius_container_layout = TRY(m_radius_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        radius_container_layout->set_margins({ 4, 0, 4, 0 });
 
-        auto& radius_label = m_radius_container->add<GUI::Label>("Radius:");
-        radius_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        radius_label.set_fixed_size(50, 20);
+        auto radius_label = TRY(m_radius_container->try_add<GUI::Label>("Radius:"));
+        radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        radius_label->set_fixed_size(50, 20);
 
-        auto& radius_slider = m_radius_container->add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
-        radius_slider.set_range(0, 25);
-        radius_slider.set_value(m_radius);
-        radius_slider.on_change = [&](int value) {
+        auto radius_slider = TRY(m_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
+        radius_slider->set_range(0, 25);
+        radius_slider->set_value(m_radius);
+        radius_slider->on_change = [&](int value) {
             m_radius = value;
             update_preview();
         };
 
-        m_asymmetric_radius_container = m_settings_widget->add<GUI::Widget>();
+        m_asymmetric_radius_container = TRY(settings_widget->try_add<GUI::Widget>());
         m_asymmetric_radius_container->set_visible(false);
         m_asymmetric_radius_container->set_fixed_height(50);
-        m_asymmetric_radius_container->set_layout<GUI::VerticalBoxLayout>();
-        m_asymmetric_radius_container->layout()->set_margins({ 4, 0, 4, 0 });
+        auto asymmetric_radius_container_label = TRY(m_asymmetric_radius_container->try_set_layout<GUI::VerticalBoxLayout>());
+        asymmetric_radius_container_label->set_margins({ 4, 0, 4, 0 });
 
-        auto& radius_x_container = m_asymmetric_radius_container->add<GUI::Widget>();
-        radius_x_container.set_fixed_height(20);
-        radius_x_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto radius_x_container = TRY(m_asymmetric_radius_container->try_add<GUI::Widget>());
+        radius_x_container->set_fixed_height(20);
+        radius_x_container->set_layout<GUI::HorizontalBoxLayout>();
 
-        auto& radius_x_label = radius_x_container.add<GUI::Label>("Radius X:");
-        radius_x_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        radius_x_label.set_fixed_size(50, 20);
+        auto radius_x_label = TRY(radius_x_container->try_add<GUI::Label>("Radius X:"));
+        radius_x_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        radius_x_label->set_fixed_size(50, 20);
 
-        m_radius_x_slider = radius_x_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
+        m_radius_x_slider = TRY(radius_x_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
         m_radius_x_slider->set_range(0, 50);
         m_radius_x_slider->set_value(m_radius_x);
         m_radius_x_slider->on_change = [&](int value) {
@@ -123,15 +123,15 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        auto& radius_y_container = m_asymmetric_radius_container->add<GUI::Widget>();
-        radius_y_container.set_fixed_height(20);
-        radius_y_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto radius_y_container = TRY(m_asymmetric_radius_container->try_add<GUI::Widget>());
+        radius_y_container->set_fixed_height(20);
+        (void)TRY(radius_y_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& radius_y_label = radius_y_container.add<GUI::Label>("Radius Y:");
-        radius_y_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        radius_y_label.set_fixed_size(50, 20);
+        auto radius_y_label = TRY(radius_y_container->try_add<GUI::Label>("Radius Y:"));
+        radius_y_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        radius_y_label->set_fixed_size(50, 20);
 
-        m_radius_y_slider = radius_y_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
+        m_radius_y_slider = TRY(radius_y_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
         m_radius_y_slider->set_range(0, 50);
         m_radius_y_slider->set_value(m_radius_y);
         m_radius_y_slider->on_change = [&](int value) {
@@ -139,21 +139,21 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        m_vector_container = m_settings_widget->add<GUI::Widget>();
+        m_vector_container = TRY(settings_widget->try_add<GUI::Widget>());
         m_vector_container->set_visible(false);
         m_vector_container->set_fixed_height(50);
-        m_vector_container->set_layout<GUI::VerticalBoxLayout>();
-        m_vector_container->layout()->set_margins({ 4, 0, 4, 0 });
+        auto vector_container_layout = TRY(m_vector_container->try_set_layout<GUI::VerticalBoxLayout>());
+        vector_container_layout->set_margins({ 4, 0, 4, 0 });
 
-        auto& angle_container = m_vector_container->add<GUI::Widget>();
-        angle_container.set_fixed_height(20);
-        angle_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto angle_container = TRY(m_vector_container->try_add<GUI::Widget>());
+        angle_container->set_fixed_height(20);
+        (void)TRY(angle_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& angle_label = angle_container.add<GUI::Label>("Angle:");
-        angle_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        angle_label.set_fixed_size(60, 20);
+        auto angle_label = TRY(angle_container->try_add<GUI::Label>("Angle:"));
+        angle_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        angle_label->set_fixed_size(60, 20);
 
-        m_angle_slider = angle_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("°"sv));
+        m_angle_slider = TRY(angle_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("°"sv)));
         m_angle_slider->set_range(0, 360);
         m_angle_slider->set_value(m_angle);
         m_angle_slider->on_change = [&](int value) {
@@ -161,15 +161,15 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        auto& magnitude_container = m_vector_container->add<GUI::Widget>();
-        magnitude_container.set_fixed_height(20);
-        magnitude_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto magnitude_container = TRY(m_vector_container->try_add<GUI::Widget>());
+        magnitude_container->set_fixed_height(20);
+        (void)TRY(magnitude_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& magnitude_label = magnitude_container.add<GUI::Label>("Magnitude:");
-        magnitude_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        magnitude_label.set_fixed_size(60, 20);
+        auto magnitude_label = TRY(magnitude_container->try_add<GUI::Label>("Magnitude:"));
+        magnitude_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        magnitude_label->set_fixed_size(60, 20);
 
-        m_magnitude_slider = magnitude_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
+        m_magnitude_slider = TRY(magnitude_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
         m_magnitude_slider->set_range(0, 50);
         m_magnitude_slider->set_value(m_radius);
         m_magnitude_slider->on_change = [&](int value) {
@@ -177,18 +177,19 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
             update_preview();
         };
 
-        auto& gaussian_container = m_settings_widget->add<GUI::Widget>();
-        gaussian_container.set_fixed_height(20);
-        gaussian_container.set_layout<GUI::HorizontalBoxLayout>();
-        gaussian_container.layout()->set_margins({ 4, 0, 4, 0 });
+        auto gaussian_container = TRY(settings_widget->try_add<GUI::Widget>());
+        gaussian_container->set_fixed_height(20);
+        auto gaussian_container_layout = TRY(gaussian_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        gaussian_container_layout->set_margins({ 4, 0, 4, 0 });
 
-        m_gaussian_checkbox = gaussian_container.add<GUI::CheckBox>(String::from_utf8("Approximate Gaussian Blur"sv).release_value_but_fixme_should_propagate_errors());
+        m_gaussian_checkbox = TRY(gaussian_container->try_add<GUI::CheckBox>(TRY(String::from_utf8("Approximate Gaussian Blur"sv))));
         m_gaussian_checkbox->set_checked(m_approximate_gauss);
         m_gaussian_checkbox->set_tooltip("A real gaussian blur can be approximated by running the box blur multiple times with different weights.");
         m_gaussian_checkbox->on_checked = [this](bool checked) {
             m_approximate_gauss = checked;
             update_preview();
         };
+        m_settings_widget = settings_widget;
     }
 
     return m_settings_widget;

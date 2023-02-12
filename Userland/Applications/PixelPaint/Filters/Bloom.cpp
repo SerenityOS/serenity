@@ -34,50 +34,51 @@ void Bloom::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) 
     mixer.mix_with(intermediate_bitmap, Gfx::BitmapMixer::MixingMethod::Lightest);
 }
 
-RefPtr<GUI::Widget> Bloom::get_settings_widget()
+ErrorOr<RefPtr<GUI::Widget>> Bloom::get_settings_widget()
 {
     if (!m_settings_widget) {
-        m_settings_widget = GUI::Widget::construct();
-        m_settings_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto settings_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& name_label = m_settings_widget->add<GUI::Label>("Bloom Filter");
-        name_label.set_font_weight(Gfx::FontWeight::Bold);
-        name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        name_label.set_fixed_height(20);
+        auto name_label = TRY(settings_widget->try_add<GUI::Label>("Bloom Filter"));
+        name_label->set_font_weight(Gfx::FontWeight::Bold);
+        name_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        name_label->set_fixed_height(20);
 
-        auto& luma_lower_container = m_settings_widget->add<GUI::Widget>();
-        luma_lower_container.set_fixed_height(50);
-        luma_lower_container.set_layout<GUI::VerticalBoxLayout>();
-        luma_lower_container.layout()->set_margins({ 4, 0, 4, 0 });
+        auto luma_lower_container = TRY(settings_widget->try_add<GUI::Widget>());
+        luma_lower_container->set_fixed_height(50);
+        auto luma_lower_container_layout = TRY(luma_lower_container->try_set_layout<GUI::VerticalBoxLayout>());
+        luma_lower_container_layout->set_margins({ 4, 0, 4, 0 });
 
-        auto& luma_lower_label = luma_lower_container.add<GUI::Label>("Luma lower bound:");
-        luma_lower_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        luma_lower_label.set_fixed_height(20);
+        auto luma_lower_label = TRY(luma_lower_container->try_add<GUI::Label>("Luma lower bound:"));
+        luma_lower_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        luma_lower_label->set_fixed_height(20);
 
-        auto& luma_lower_slider = luma_lower_container.add<GUI::ValueSlider>(Orientation::Horizontal);
-        luma_lower_slider.set_range(0, 255);
-        luma_lower_slider.set_value(m_luma_lower);
-        luma_lower_slider.on_change = [&](int value) {
+        auto luma_lower_slider = TRY(luma_lower_container->try_add<GUI::ValueSlider>(Orientation::Horizontal));
+        luma_lower_slider->set_range(0, 255);
+        luma_lower_slider->set_value(m_luma_lower);
+        luma_lower_slider->on_change = [&](int value) {
             m_luma_lower = value;
             update_preview();
         };
 
-        auto& radius_container = m_settings_widget->add<GUI::Widget>();
-        radius_container.set_fixed_height(50);
-        radius_container.set_layout<GUI::VerticalBoxLayout>();
-        radius_container.layout()->set_margins({ 4, 0, 4, 0 });
+        auto radius_container = TRY(settings_widget->try_add<GUI::Widget>());
+        radius_container->set_fixed_height(50);
+        auto radius_container_layout = TRY(radius_container->try_set_layout<GUI::VerticalBoxLayout>());
+        radius_container_layout->set_margins({ 4, 0, 4, 0 });
 
-        auto& radius_label = radius_container.add<GUI::Label>("Blur Radius:");
-        radius_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        radius_label.set_fixed_height(20);
+        auto radius_label = TRY(radius_container->try_add<GUI::Label>("Blur Radius:"));
+        radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        radius_label->set_fixed_height(20);
 
-        auto& radius_slider = radius_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
-        radius_slider.set_range(0, 50);
-        radius_slider.set_value(m_blur_radius);
-        radius_slider.on_change = [&](int value) {
+        auto radius_slider = TRY(radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
+        radius_slider->set_range(0, 50);
+        radius_slider->set_value(m_blur_radius);
+        radius_slider->on_change = [&](int value) {
             m_blur_radius = value;
             update_preview();
         };
+        m_settings_widget = settings_widget;
     }
 
     return m_settings_widget;
