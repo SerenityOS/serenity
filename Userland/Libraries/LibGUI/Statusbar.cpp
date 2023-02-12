@@ -104,7 +104,7 @@ void Statusbar::update_segment(size_t index)
 
 DeprecatedString Statusbar::text(size_t index) const
 {
-    return m_segments.at(index).text_deprecated();
+    return m_segments.at(index).text().to_deprecated_string();
 }
 
 void Statusbar::set_text(DeprecatedString text)
@@ -157,8 +157,8 @@ void Statusbar::Segment::paint_event(PaintEvent& event)
 
     if (is_clickable())
         Button::paint_event(event);
-    else if (!text_deprecated().is_empty())
-        painter.draw_text(rect().shrunken(font().max_glyph_width(), 0), text_deprecated(), text_alignment(), palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
+    else if (!text().is_empty())
+        painter.draw_text(rect().shrunken(font().max_glyph_width(), 0), text(), text_alignment(), palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
 }
 
 void Statusbar::Segment::mousedown_event(MouseEvent& event)

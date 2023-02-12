@@ -51,7 +51,7 @@ void RadioButton::paint_event(PaintEvent& event)
 
     Gfx::StylePainter::paint_radio_button(painter, circle_rect, palette(), is_checked(), is_being_pressed());
 
-    Gfx::IntRect text_rect { circle_rect.right() + 7, 0, static_cast<int>(ceilf(font().width(text_deprecated()))), font().glyph_height() };
+    Gfx::IntRect text_rect { circle_rect.right() + 7, 0, static_cast<int>(ceilf(font().width(text()))), font().glyph_height() };
     text_rect.center_vertically_within(rect());
     paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
 
@@ -71,7 +71,7 @@ Optional<UISize> RadioButton::calculated_min_size() const
     int horizontal = 2 + 7, vertical = 0;
     auto& font = this->font();
     vertical = max(font.glyph_height(), circle_size().height());
-    horizontal += font.width(text_deprecated());
+    horizontal += font.width(text());
     return UISize(horizontal, vertical);
 }
 

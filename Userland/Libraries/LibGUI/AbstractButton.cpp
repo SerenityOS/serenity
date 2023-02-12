@@ -243,14 +243,14 @@ void AbstractButton::paint_text(Painter& painter, Gfx::IntRect const& rect, Gfx:
     auto clipped_rect = rect.intersected(this->rect());
 
     if (!is_enabled()) {
-        painter.draw_text(clipped_rect.translated(1, 1), text_deprecated(), font, text_alignment, palette().disabled_text_back(), Gfx::TextElision::Right, text_wrapping);
-        painter.draw_text(clipped_rect, text_deprecated(), font, text_alignment, palette().disabled_text_front(), Gfx::TextElision::Right, text_wrapping);
+        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, palette().disabled_text_back(), Gfx::TextElision::Right, text_wrapping);
+        painter.draw_text(clipped_rect, text(), font, text_alignment, palette().disabled_text_front(), Gfx::TextElision::Right, text_wrapping);
         return;
     }
 
-    if (text_deprecated().is_empty())
+    if (text().is_empty())
         return;
-    painter.draw_text(clipped_rect, text_deprecated(), font, text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right, text_wrapping);
+    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right, text_wrapping);
 }
 
 void AbstractButton::change_event(Event& event)
