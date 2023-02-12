@@ -16,7 +16,7 @@ class Crypto : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Crypto, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Crypto> create(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto>> create(JS::Realm&);
 
     virtual ~Crypto() override;
 
