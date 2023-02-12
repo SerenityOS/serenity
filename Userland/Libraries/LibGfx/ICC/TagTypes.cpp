@@ -382,6 +382,10 @@ static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader c
 
 static ErrorOr<LutCurveType> read_curve(ReadonlyBytes bytes, u32 offset)
 {
+    // "All tag data elements shall start on a 4-byte boundary (relative to the start of the profile data stream)"
+    if (offset % 4 != 0)
+        return Error::from_string_literal("ICC::Profile: lut curve data not aligned");
+
     // See read_curves() below.
     if (offset + sizeof(u32) > bytes.size())
         return Error::from_string_literal("ICC::Profile: not enough data for lut curve type");

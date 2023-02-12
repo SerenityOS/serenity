@@ -558,6 +558,10 @@ ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
 
 ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
 {
+    // "All tag data elements shall start on a 4-byte boundary (relative to the start of the profile data stream)"
+    if (offset_to_beginning_of_tag_data_element % 4 != 0)
+        return Error::from_string_literal("ICC::Profile: Tag data not aligned");
+
     if (offset_to_beginning_of_tag_data_element + size_of_tag_data_element > bytes.size())
         return Error::from_string_literal("ICC::Profile: Tag data out of bounds");
 
