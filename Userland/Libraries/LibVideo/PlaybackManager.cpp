@@ -75,7 +75,7 @@ Time PlaybackManager::duration()
 {
     auto duration_result = m_demuxer->duration();
     if (duration_result.is_error())
-        on_decoder_error(duration_result.release_error());
+        dispatch_decoder_error(duration_result.release_error());
     return duration_result.release_value();
 }
 
@@ -89,7 +89,7 @@ void PlaybackManager::dispatch_fatal_error(Error error)
     m_event_handler.dispatch_event(event);
 }
 
-void PlaybackManager::on_decoder_error(DecoderError error)
+void PlaybackManager::dispatch_decoder_error(DecoderError error)
 {
     switch (error.category()) {
     case DecoderErrorCategory::EndOfStream:
@@ -102,6 +102,23 @@ void PlaybackManager::on_decoder_error(DecoderError error)
         m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(move(error)));
         break;
     }
+}
+
+void PlaybackManager::dispatch_new_frame(RefPtr<Gfx::Bitmap> frame)
+{
+    m_main_loop.post_event(m_event_handler, make<VideoFramePresentEvent>(frame));
+}
+
+bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
+{
+    if (item.is_error()) {
+        dispatch_decoder_error(item.release_error());
+        return true;
+    }
+
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation");
+    dispatch_new_frame(item.bitmap());
+    return false;
 }
 
 void PlaybackManager::timer_callback()
@@ -120,23 +137,13 @@ Optional<Time> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timest
     //        mutex so that seeking can't happen while that thread is getting a sample.
     auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp, move(earliest_available_sample));
     if (result.is_error())
-        on_decoder_error(result.release_error());
+        dispatch_decoder_error(result.release_error());
     return result.release_value();
 }
 
 void PlaybackManager::restart_playback()
 {
     seek_to_timestamp(Time::zero());
-}
-
-void PlaybackManager::dispatch_decoder_error(DecoderError error)
-{
-    m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(error));
-}
-
-void PlaybackManager::dispatch_new_frame(RefPtr<Gfx::Bitmap> frame)
-{
-    m_main_loop.post_event(m_event_handler, make<VideoFramePresentEvent>(frame));
 }
 
 void PlaybackManager::start_timer(int milliseconds)
@@ -341,7 +348,7 @@ private:
 #endif
             if (future_frame_item.has_value()) {
                 if (future_frame_item->is_error()) {
-                    manager().on_decoder_error(future_frame_item.release_value().release_error());
+                    manager().dispatch_decoder_error(future_frame_item.release_value().release_error());
                     return {};
                 }
                 manager().m_next_frame.emplace(future_frame_item.release_value());
@@ -355,15 +362,16 @@ private:
             auto now = Time::now_monotonic();
             manager().m_last_present_in_media_time += now - m_last_present_in_real_time;
             m_last_present_in_real_time = now;
-            manager().dispatch_new_frame(manager().m_next_frame.value().bitmap());
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation");
+
+            if (manager().dispatch_frame_queue_item(manager().m_next_frame.release_value()))
+                return {};
         }
 
         // Now that we've presented the current frame, we can throw whatever error is next in queue.
         // This way, we always display a frame before the stream ends, and should also show any frames
         // we already had when a real error occurs.
         if (future_frame_item->is_error()) {
-            manager().on_decoder_error(future_frame_item.release_value().release_error());
+            manager().dispatch_decoder_error(future_frame_item.release_value().release_error());
             return {};
         }
 
@@ -498,7 +506,7 @@ private:
 
             if (item.is_error()) {
                 dbgln_if(PLAYBACK_MANAGER_DEBUG, "Encountered error while seeking: {}", item.error().description());
-                manager().on_decoder_error(item.release_error());
+                manager().dispatch_decoder_error(item.release_error());
                 return {};
             }
 
