@@ -8,12 +8,13 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
-CSSStyleRule* CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleRule>> CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
 {
-    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration));
 }
 
 CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
