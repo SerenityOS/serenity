@@ -226,12 +226,12 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::load_from_memory(u8 const* data)
     return adopt_nonnull_ref_or_enomem(new (nothrow) BitmapFont(DeprecatedString(header.name), DeprecatedString(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, header.range_mask_size, range_mask, header.baseline, header.mean_line, header.presentation_size, header.weight, header.slope));
 }
 
-RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)
+RefPtr<BitmapFont> BitmapFont::load_from_file(StringView path)
 {
-    return MUST(try_load_from_file(move(path)));
+    return MUST(try_load_from_file(path));
 }
 
-ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedString const& path)
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(StringView path)
 {
     auto file = TRY(Core::MappedFile::map(path));
     auto font = TRY(load_from_memory((u8 const*)file->data()));
@@ -239,7 +239,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedStri
     return font;
 }
 
-ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
+ErrorOr<void> BitmapFont::write_to_file(StringView path)
 {
     FontFileHeader header;
     memset(&header, 0, sizeof(FontFileHeader));

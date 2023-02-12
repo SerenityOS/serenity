@@ -30,9 +30,9 @@ public:
     ErrorOr<NonnullRefPtr<BitmapFont>> masked_character_set() const;
     ErrorOr<NonnullRefPtr<BitmapFont>> unmasked_character_set() const;
 
-    static RefPtr<BitmapFont> load_from_file(DeprecatedString const& path);
-    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(DeprecatedString const& path);
-    ErrorOr<void> write_to_file(DeprecatedString const& path);
+    static RefPtr<BitmapFont> load_from_file(StringView path);
+    static ErrorOr<NonnullRefPtr<BitmapFont>> try_load_from_file(StringView path);
+    ErrorOr<void> write_to_file(StringView path);
 
     ~BitmapFont();
 
