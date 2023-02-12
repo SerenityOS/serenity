@@ -20,10 +20,10 @@ REGISTER_WIDGET(GUI, Calendar);
 
 namespace GUI {
 
-static auto const extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font");
-static auto const large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
-static auto const medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font");
-static auto const small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font");
+static auto const extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font"sv);
+static auto const large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font"sv);
+static auto const medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font"sv);
+static auto const small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font"sv);
 
 Calendar::Calendar(Core::DateTime date_time, Mode mode)
     : m_selected_date(date_time)

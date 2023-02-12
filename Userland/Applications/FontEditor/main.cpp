@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (path) {
         TRY(font_editor->open_file(path));
     } else {
-        auto mutable_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/KaticaRegular10.font"))->unmasked_character_set());
+        auto mutable_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/KaticaRegular10.font"sv))->unmasked_character_set());
         TRY(font_editor->initialize({}, move(mutable_font)));
     }
 
