@@ -28,9 +28,6 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty inet unix"));
-    TRY(Core::System::unveil("/sys/kernel/net/arp", "r"));
-    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     static bool flag_set;
     static bool flag_delete;
@@ -46,6 +43,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(value_ipv4_address, "IPv4 protocol address", "address", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(value_hw_address, "Hardware address", "hwaddress", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    TRY(Core::System::unveil("/sys/kernel/net/arp", "r"));
+    if (!flag_numeric)
+        TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     enum class Alignment {
         Left,
