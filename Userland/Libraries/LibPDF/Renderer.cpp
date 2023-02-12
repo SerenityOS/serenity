@@ -726,6 +726,9 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
 
 PDFErrorOr<void> Renderer::show_text(DeprecatedString const& string)
 {
+    if (!text_state().font)
+        return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
+
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size;
