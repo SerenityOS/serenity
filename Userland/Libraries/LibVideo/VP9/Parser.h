@@ -14,7 +14,6 @@
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 #include <LibVideo/DecoderError.h>
 
-#include "BitStream.h"
 #include "ContextStorage.h"
 #include "LookupTables.h"
 #include "MotionVector.h"
@@ -45,48 +44,48 @@ private:
      * See also section 5.26. */
     Vector<size_t> parse_superframe_sizes(ReadonlyBytes);
 
-    DecoderErrorOr<VideoFullRangeFlag> read_video_full_range_flag();
+    DecoderErrorOr<VideoFullRangeFlag> read_video_full_range_flag(BigEndianInputBitStream&);
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
     DecoderErrorOr<void> refresh_probs(FrameContext const&);
 
     /* (6.2) Uncompressed Header Syntax */
-    DecoderErrorOr<FrameContext> uncompressed_header();
-    DecoderErrorOr<void> frame_sync_code();
-    DecoderErrorOr<ColorConfig> parse_color_config(FrameContext const&);
-    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size();
-    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs(Array<u8, 3> const& reference_indices);
-    DecoderErrorOr<Gfx::Size<u32>> parse_render_size(Gfx::Size<u32> frame_size);
+    DecoderErrorOr<void> uncompressed_header(FrameContext& frame_context);
+    DecoderErrorOr<void> frame_sync_code(BigEndianInputBitStream&);
+    DecoderErrorOr<ColorConfig> parse_color_config(BigEndianInputBitStream&, u8 profile);
+    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size(BigEndianInputBitStream&);
+    DecoderErrorOr<Gfx::Size<u32>> parse_frame_size_with_refs(BigEndianInputBitStream&, Array<u8, 3> const& reference_indices);
+    DecoderErrorOr<Gfx::Size<u32>> parse_render_size(BigEndianInputBitStream&, Gfx::Size<u32> frame_size);
     DecoderErrorOr<void> compute_image_size(FrameContext&);
-    DecoderErrorOr<InterpolationFilter> read_interpolation_filter();
+    DecoderErrorOr<InterpolationFilter> read_interpolation_filter(BigEndianInputBitStream&);
     DecoderErrorOr<void> loop_filter_params(FrameContext&);
     DecoderErrorOr<void> quantization_params(FrameContext&);
-    DecoderErrorOr<i8> read_delta_q();
+    DecoderErrorOr<i8> read_delta_q(BigEndianInputBitStream&);
     DecoderErrorOr<void> segmentation_params(FrameContext&);
-    DecoderErrorOr<u8> read_prob();
+    DecoderErrorOr<u8> read_prob(BigEndianInputBitStream&);
     DecoderErrorOr<void> parse_tile_counts(FrameContext&);
     void setup_past_independence();
 
     /* (6.3) Compressed Header Syntax */
     DecoderErrorOr<void> compressed_header(FrameContext&);
-    DecoderErrorOr<TransformMode> read_tx_mode(FrameContext const&);
-    DecoderErrorOr<void> tx_mode_probs();
-    DecoderErrorOr<u8> diff_update_prob(u8 prob);
-    DecoderErrorOr<u8> decode_term_subexp();
+    DecoderErrorOr<TransformMode> read_tx_mode(BooleanDecoder&, FrameContext const&);
+    DecoderErrorOr<void> tx_mode_probs(BooleanDecoder&);
+    DecoderErrorOr<u8> diff_update_prob(BooleanDecoder&, u8 prob);
+    DecoderErrorOr<u8> decode_term_subexp(BooleanDecoder&);
     u8 inv_remap_prob(u8 delta_prob, u8 prob);
     u8 inv_recenter_nonneg(u8 v, u8 m);
-    DecoderErrorOr<void> read_coef_probs(TransformMode);
-    DecoderErrorOr<void> read_skip_prob();
-    DecoderErrorOr<void> read_inter_mode_probs();
-    DecoderErrorOr<void> read_interp_filter_probs();
-    DecoderErrorOr<void> read_is_inter_probs();
-    DecoderErrorOr<void> frame_reference_mode(FrameContext&);
-    DecoderErrorOr<void> frame_reference_mode_probs(FrameContext const&);
-    DecoderErrorOr<void> read_y_mode_probs();
-    DecoderErrorOr<void> read_partition_probs();
-    DecoderErrorOr<void> mv_probs(FrameContext const&);
-    DecoderErrorOr<u8> update_mv_prob(u8 prob);
+    DecoderErrorOr<void> read_coef_probs(BooleanDecoder&, TransformMode);
+    DecoderErrorOr<void> read_skip_prob(BooleanDecoder&);
+    DecoderErrorOr<void> read_inter_mode_probs(BooleanDecoder&);
+    DecoderErrorOr<void> read_interp_filter_probs(BooleanDecoder&);
+    DecoderErrorOr<void> read_is_inter_probs(BooleanDecoder&);
+    DecoderErrorOr<void> frame_reference_mode(FrameContext&, BooleanDecoder&);
+    DecoderErrorOr<void> frame_reference_mode_probs(BooleanDecoder&, FrameContext const&);
+    DecoderErrorOr<void> read_y_mode_probs(BooleanDecoder&);
+    DecoderErrorOr<void> read_partition_probs(BooleanDecoder&);
+    DecoderErrorOr<void> mv_probs(BooleanDecoder&, FrameContext const&);
+    DecoderErrorOr<u8> update_mv_prob(BooleanDecoder&, u8 prob);
 
     /* (6.4) Decode Tiles Syntax */
     DecoderErrorOr<void> decode_tiles(FrameContext&);
@@ -109,10 +108,10 @@ private:
     DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<MotionVectorPair> get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
     DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
-    DecoderErrorOr<i32> read_single_motion_vector_component(u8 component, bool use_high_precision);
+    DecoderErrorOr<i32> read_single_motion_vector_component(BooleanDecoder&, u8 component, bool use_high_precision);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize, TransformSet, Array<u8, 1024> token_cache);
-    DecoderErrorOr<i32> read_coef(u8 bit_depth, Token token);
+    DecoderErrorOr<i32> read_coef(BooleanDecoder&, u8 bit_depth, Token token);
 
     /* (6.5) Motion Vector Prediction */
     MotionVectorPair find_reference_motion_vectors(BlockContext&, ReferenceFrameType, i32 block);
@@ -140,7 +139,6 @@ private:
     Vector2D<FrameBlockContext> m_reusable_frame_block_contexts;
     Vector2D<PersistentBlockContext> m_previous_block_contexts;
 
-    OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;
     OwnPtr<SyntaxElementCounter> m_syntax_element_counter;
     Decoder& m_decoder;

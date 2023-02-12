@@ -51,7 +51,7 @@ private:
 };
 
 template<typename OutputType>
-inline ErrorOr<OutputType> parse_tree(BitStream& bit_stream, TreeSelection tree_selection, Function<u8(u8)> const& probability_getter)
+inline ErrorOr<OutputType> parse_tree(BooleanDecoder& decoder, TreeSelection tree_selection, Function<u8(u8)> const& probability_getter)
 {
     // 9.3.3: The tree decoding function.
     if (tree_selection.is_single_value())
@@ -61,13 +61,13 @@ inline ErrorOr<OutputType> parse_tree(BitStream& bit_stream, TreeSelection tree_
     int n = 0;
     do {
         u8 node = n >> 1;
-        n = tree[n + TRY(bit_stream.read_bool(probability_getter(node)))];
+        n = tree[n + TRY(decoder.read_bool(probability_getter(node)))];
     } while (n > 0);
 
     return static_cast<OutputType>(-n);
 }
 
-ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, PartitionContextView above_partition_context, PartitionContextView left_partition_context, u32 row, u32 column, bool frame_is_intra)
+ErrorOr<Partition> TreeParser::parse_partition(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, bool has_rows, bool has_columns, BlockSubsize block_subsize, u8 num_8x8, PartitionContextView above_partition_context, PartitionContextView left_partition_context, u32 row, u32 column, bool frame_is_intra)
 {
     // Tree array
     TreeSelection tree = { PartitionSplit };
@@ -100,12 +100,12 @@ ErrorOr<Partition> TreeParser::parse_partition(BitStream& bit_stream, Probabilit
         return probabilities[2];
     };
 
-    auto value = TRY(parse_tree<Partition>(bit_stream, tree, probability_getter));
+    auto value = TRY(parse_tree<Partition>(decoder, tree, probability_getter));
     counter.m_counts_partition[context][value]++;
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, BlockSubsize mi_size, FrameBlockContext above, FrameBlockContext left, Array<PredictionMode, 4> const& block_sub_modes, u8 index_x, u8 index_y)
+ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, BlockSubsize mi_size, FrameBlockContext above, FrameBlockContext left, Array<PredictionMode, 4> const& block_sub_modes, u8 index_x, u8 index_y)
 {
     // FIXME: This should use a struct for the above and left contexts.
 
@@ -130,12 +130,12 @@ ErrorOr<PredictionMode> TreeParser::parse_default_intra_mode(BitStream& bit_stre
     }
     u8 const* probabilities = probability_table.kf_y_mode_probs()[to_underlying(above_mode)][to_underlying(left_mode)];
 
-    auto value = TRY(parse_tree<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<PredictionMode>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     // Default intra mode is not counted.
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, PredictionMode y_mode)
+ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, PredictionMode y_mode)
 {
     // Tree
     TreeSelection tree = { intra_mode_tree };
@@ -143,12 +143,12 @@ ErrorOr<PredictionMode> TreeParser::parse_default_uv_mode(BitStream& bit_stream,
     // Probabilities
     u8 const* probabilities = probability_table.kf_uv_mode_prob()[to_underlying(y_mode)];
 
-    auto value = TRY(parse_tree<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<PredictionMode>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     // Default UV mode is not counted.
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, BlockSubsize mi_size)
+ErrorOr<PredictionMode> TreeParser::parse_intra_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, BlockSubsize mi_size)
 {
     // Tree
     TreeSelection tree = { intra_mode_tree };
@@ -157,12 +157,12 @@ ErrorOr<PredictionMode> TreeParser::parse_intra_mode(BitStream& bit_stream, Prob
     auto context = size_group_lookup[mi_size];
     u8 const* probabilities = probability_table.y_mode_probs()[context];
 
-    auto value = TRY(parse_tree<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<PredictionMode>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     counter.m_counts_intra_mode[context][to_underlying(value)]++;
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
+ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
 {
     // Tree
     TreeSelection tree = { intra_mode_tree };
@@ -170,12 +170,12 @@ ErrorOr<PredictionMode> TreeParser::parse_sub_intra_mode(BitStream& bit_stream, 
     // Probabilities
     u8 const* probabilities = probability_table.y_mode_probs()[0];
 
-    auto value = TRY(parse_tree<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<PredictionMode>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     counter.m_counts_intra_mode[0][to_underlying(value)]++;
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, PredictionMode y_mode)
+ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, PredictionMode y_mode)
 {
     // Tree
     TreeSelection tree = { intra_mode_tree };
@@ -183,27 +183,27 @@ ErrorOr<PredictionMode> TreeParser::parse_uv_mode(BitStream& bit_stream, Probabi
     // Probabilities
     u8 const* probabilities = probability_table.uv_mode_probs()[to_underlying(y_mode)];
 
-    auto value = TRY(parse_tree<PredictionMode>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<PredictionMode>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     counter.m_counts_uv_mode[to_underlying(y_mode)][to_underlying(value)]++;
     return value;
 }
 
-ErrorOr<u8> TreeParser::parse_segment_id(BitStream& bit_stream, Array<u8, 7> const& probabilities)
+ErrorOr<u8> TreeParser::parse_segment_id(BooleanDecoder& decoder, Array<u8, 7> const& probabilities)
 {
-    auto value = TRY(parse_tree<u8>(bit_stream, { segment_tree }, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<u8>(decoder, { segment_tree }, [&](u8 node) { return probabilities[node]; }));
     // Segment ID is not counted.
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_segment_id_predicted(BitStream& bit_stream, Array<u8, 3> const& probabilities, u8 above_seg_pred_context, u8 left_seg_pred_context)
+ErrorOr<bool> TreeParser::parse_segment_id_predicted(BooleanDecoder& decoder, Array<u8, 3> const& probabilities, u8 above_seg_pred_context, u8 left_seg_pred_context)
 {
     auto context = left_seg_pred_context + above_seg_pred_context;
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probabilities[context]; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probabilities[context]; }));
     // Segment ID prediction is not counted.
     return value;
 }
 
-ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 mode_context_for_ref_frame_0)
+ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 mode_context_for_ref_frame_0)
 {
     // Tree
     TreeSelection tree = { inter_mode_tree };
@@ -211,12 +211,12 @@ ErrorOr<PredictionMode> TreeParser::parse_inter_mode(BitStream& bit_stream, Prob
     // Probabilities
     u8 const* probabilities = probability_table.inter_mode_probs()[mode_context_for_ref_frame_0];
 
-    auto value = TRY(parse_tree<u8>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<u8>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     counter.m_counts_inter_mode[mode_context_for_ref_frame_0][value]++;
     return static_cast<PredictionMode>(value + to_underlying(PredictionMode::NearestMv));
 }
 
-ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left context should be provided by a struct.
 
@@ -236,12 +236,12 @@ ErrorOr<InterpolationFilter> TreeParser::parse_interpolation_filter(BitStream& b
         context = above_interp;
     u8 const* probabilities = probability_table.interp_filter_probs()[context];
 
-    auto value = TRY(parse_tree<InterpolationFilter>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<InterpolationFilter>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     counter.m_counts_interp_filter[context][to_underlying(value)]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_skip(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<bool> TreeParser::parse_skip(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
 {
     // Probabilities
     u8 context = 0;
@@ -249,12 +249,12 @@ ErrorOr<bool> TreeParser::parse_skip(BitStream& bit_stream, ProbabilityTables co
     context += static_cast<u8>(left.skip_coefficients);
     u8 probability = probability_table.skip_prob()[context];
 
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_skip[context][value]++;
     return value;
 }
 
-ErrorOr<TransformSize> TreeParser::parse_tx_size(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TransformSize max_tx_size, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<TransformSize> TreeParser::parse_tx_size(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TransformSize max_tx_size, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -280,12 +280,12 @@ ErrorOr<TransformSize> TreeParser::parse_tx_size(BitStream& bit_stream, Probabil
 
     u8 const* probabilities = probability_table.tx_probs()[max_tx_size][context];
 
-    auto value = TRY(parse_tree<TransformSize>(bit_stream, tree, [&](u8 node) { return probabilities[node]; }));
+    auto value = TRY(parse_tree<TransformSize>(decoder, tree, [&](u8 node) { return probabilities[node]; }));
     counter.m_counts_tx_size[max_tx_size][context][value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_block_is_inter_predicted(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<bool> TreeParser::parse_block_is_inter_predicted(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -297,12 +297,12 @@ ErrorOr<bool> TreeParser::parse_block_is_inter_predicted(BitStream& bit_stream, 
         context = 2 * static_cast<u8>(above.is_available ? above.is_intra_predicted() : left.is_intra_predicted());
     u8 probability = probability_table.is_inter_prob()[context];
 
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_is_inter[context][value]++;
     return value;
 }
 
-ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -337,12 +337,12 @@ ErrorOr<ReferenceMode> TreeParser::parse_comp_mode(BitStream& bit_stream, Probab
     }
     u8 probability = probability_table.comp_mode_prob()[context];
 
-    auto value = TRY(parse_tree<ReferenceMode>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<ReferenceMode>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_comp_mode[context][value]++;
     return value;
 }
 
-ErrorOr<ReferenceIndex> TreeParser::parse_comp_ref(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, ReferenceIndex variable_reference_index, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<ReferenceIndex> TreeParser::parse_comp_ref(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, ReferenceFrameType comp_fixed_ref, ReferenceFramePair comp_var_ref, ReferenceIndex variable_reference_index, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -420,12 +420,12 @@ ErrorOr<ReferenceIndex> TreeParser::parse_comp_ref(BitStream& bit_stream, Probab
 
     u8 probability = probability_table.comp_ref_prob()[context];
 
-    auto value = TRY(parse_tree<ReferenceIndex>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<ReferenceIndex>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_comp_ref[context][to_underlying(value)]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<bool> TreeParser::parse_single_ref_part_1(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -487,12 +487,12 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_1(BitStream& bit_stream, Probabi
     }
     u8 probability = probability_table.single_ref_prob()[context][0];
 
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_single_ref[context][0][value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
+ErrorOr<bool> TreeParser::parse_single_ref_part_2(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, FrameBlockContext above, FrameBlockContext left)
 {
     // FIXME: Above and left contexts should be in structs.
 
@@ -573,78 +573,78 @@ ErrorOr<bool> TreeParser::parse_single_ref_part_2(BitStream& bit_stream, Probabi
     }
     u8 probability = probability_table.single_ref_prob()[context][1];
 
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_single_ref[context][1][value]++;
     return value;
 }
 
-ErrorOr<MvJoint> TreeParser::parse_motion_vector_joint(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
+ErrorOr<MvJoint> TreeParser::parse_motion_vector_joint(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter)
 {
-    auto value = TRY(parse_tree<MvJoint>(bit_stream, { mv_joint_tree }, [&](u8 node) { return probability_table.mv_joint_probs()[node]; }));
+    auto value = TRY(parse_tree<MvJoint>(decoder, { mv_joint_tree }, [&](u8 node) { return probability_table.mv_joint_probs()[node]; }));
     counter.m_counts_mv_joint[value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_motion_vector_sign(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+ErrorOr<bool> TreeParser::parse_motion_vector_sign(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
 {
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability_table.mv_sign_prob()[component]; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability_table.mv_sign_prob()[component]; }));
     counter.m_counts_mv_sign[component][value]++;
     return value;
 }
 
-ErrorOr<MvClass> TreeParser::parse_motion_vector_class(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+ErrorOr<MvClass> TreeParser::parse_motion_vector_class(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
 {
     // Spec doesn't mention node, but the probabilities table has an extra dimension
     // so we will use node for that.
-    auto value = TRY(parse_tree<MvClass>(bit_stream, { mv_class_tree }, [&](u8 node) { return probability_table.mv_class_probs()[component][node]; }));
+    auto value = TRY(parse_tree<MvClass>(decoder, { mv_class_tree }, [&](u8 node) { return probability_table.mv_class_probs()[component][node]; }));
     counter.m_counts_mv_class[component][value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_motion_vector_class0_bit(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+ErrorOr<bool> TreeParser::parse_motion_vector_class0_bit(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
 {
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability_table.mv_class0_bit_prob()[component]; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability_table.mv_class0_bit_prob()[component]; }));
     counter.m_counts_mv_class0_bit[component][value]++;
     return value;
 }
 
-ErrorOr<u8> TreeParser::parse_motion_vector_class0_fr(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool class_0_bit)
+ErrorOr<u8> TreeParser::parse_motion_vector_class0_fr(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool class_0_bit)
 {
-    auto value = TRY(parse_tree<u8>(bit_stream, { mv_fr_tree }, [&](u8 node) { return probability_table.mv_class0_fr_probs()[component][class_0_bit][node]; }));
+    auto value = TRY(parse_tree<u8>(decoder, { mv_fr_tree }, [&](u8 node) { return probability_table.mv_class0_fr_probs()[component][class_0_bit][node]; }));
     counter.m_counts_mv_class0_fr[component][class_0_bit][value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_motion_vector_class0_hp(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
+ErrorOr<bool> TreeParser::parse_motion_vector_class0_hp(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
 {
     TreeSelection tree { 1 };
     if (use_hp)
         tree = { binary_tree };
-    auto value = TRY(parse_tree<bool>(bit_stream, tree, [&](u8) { return probability_table.mv_class0_hp_prob()[component]; }));
+    auto value = TRY(parse_tree<bool>(decoder, tree, [&](u8) { return probability_table.mv_class0_hp_prob()[component]; }));
     counter.m_counts_mv_class0_hp[component][value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_motion_vector_bit(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, u8 bit_index)
+ErrorOr<bool> TreeParser::parse_motion_vector_bit(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, u8 bit_index)
 {
-    auto value = TRY(parse_tree<bool>(bit_stream, { binary_tree }, [&](u8) { return probability_table.mv_bits_prob()[component][bit_index]; }));
+    auto value = TRY(parse_tree<bool>(decoder, { binary_tree }, [&](u8) { return probability_table.mv_bits_prob()[component][bit_index]; }));
     counter.m_counts_mv_bits[component][bit_index][value]++;
     return value;
 }
 
-ErrorOr<u8> TreeParser::parse_motion_vector_fr(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
+ErrorOr<u8> TreeParser::parse_motion_vector_fr(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component)
 {
-    auto value = TRY(parse_tree<u8>(bit_stream, { mv_fr_tree }, [&](u8 node) { return probability_table.mv_fr_probs()[component][node]; }));
+    auto value = TRY(parse_tree<u8>(decoder, { mv_fr_tree }, [&](u8 node) { return probability_table.mv_fr_probs()[component][node]; }));
     counter.m_counts_mv_fr[component][value]++;
     return value;
 }
 
-ErrorOr<bool> TreeParser::parse_motion_vector_hp(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
+ErrorOr<bool> TreeParser::parse_motion_vector_hp(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, u8 component, bool use_hp)
 {
     TreeSelection tree { 1 };
     if (use_hp)
         tree = { binary_tree };
-    auto value = TRY(parse_tree<u8>(bit_stream, tree, [&](u8) { return probability_table.mv_hp_prob()[component]; }));
+    auto value = TRY(parse_tree<u8>(decoder, tree, [&](u8) { return probability_table.mv_hp_prob()[component]; }));
     counter.m_counts_mv_hp[component][value]++;
     return value;
 }
@@ -704,15 +704,15 @@ TokensContext TreeParser::get_context_for_other_tokens(Array<u8, 1024> token_cac
     return TokensContext { transform_size, plane > 0, is_inter, band, context };
 }
 
-ErrorOr<bool> TreeParser::parse_more_coefficients(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)
+ErrorOr<bool> TreeParser::parse_more_coefficients(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)
 {
     auto probability = probability_table.coef_probs()[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][0];
-    auto value = TRY(parse_tree<u8>(bit_stream, { binary_tree }, [&](u8) { return probability; }));
+    auto value = TRY(parse_tree<u8>(decoder, { binary_tree }, [&](u8) { return probability; }));
     counter.m_counts_more_coefs[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][value]++;
     return value;
 }
 
-ErrorOr<Token> TreeParser::parse_token(BitStream& bit_stream, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)
+ErrorOr<Token> TreeParser::parse_token(BooleanDecoder& decoder, ProbabilityTables const& probability_table, SyntaxElementCounter& counter, TokensContext const& context)
 {
     Function<u8(u8)> probability_getter = [&](u8 node) -> u8 {
         auto prob = probability_table.coef_probs()[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][min(2, 1 + node)];
@@ -725,7 +725,7 @@ ErrorOr<Token> TreeParser::parse_token(BitStream& bit_stream, ProbabilityTables 
         return (pareto_table[x][node - 2] + pareto_table[x + 1][node - 2]) >> 1;
     };
 
-    auto value = TRY(parse_tree<Token>(bit_stream, { token_tree }, probability_getter));
+    auto value = TRY(parse_tree<Token>(decoder, { token_tree }, probability_getter));
     counter.m_counts_token[context.m_tx_size][context.m_is_uv_plane][context.m_is_inter][context.m_band][context.m_context_index][min(2, value)]++;
     return value;
 }
