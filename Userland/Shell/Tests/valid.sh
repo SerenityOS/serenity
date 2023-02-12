@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/Shell
 
 echo "Not running Shell-valid as it has a high failure rate on target #7336"
 echo PASS
