@@ -35,10 +35,10 @@ public:
 
     static ErrorOr<FixedArray<T>> create(std::initializer_list<T> initializer)
     {
-        auto array = TRY(create(initializer.size()));
+        auto array = TRY(create_uninitialized(initializer.size()));
         auto it = initializer.begin();
         for (size_t i = 0; i < array.size(); ++i) {
-            array[i] = move(*it);
+            new (&array[i]) T(move(const_cast<T&>(*it)));
             ++it;
         }
         return array;
