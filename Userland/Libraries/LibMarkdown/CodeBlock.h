@@ -17,10 +17,10 @@ namespace Markdown {
 
 class CodeBlock final : public Block {
 public:
-    CodeBlock(DeprecatedString const& language, DeprecatedString const& style, DeprecatedString const& code, Heading* current_section)
+    CodeBlock(DeprecatedString language, DeprecatedString style, DeprecatedString code, Heading* current_section)
         : m_code(move(code))
-        , m_language(language)
-        , m_style(style)
+        , m_language(move(language))
+        , m_style(move(style))
         , m_current_section(current_section)
     {
     }
