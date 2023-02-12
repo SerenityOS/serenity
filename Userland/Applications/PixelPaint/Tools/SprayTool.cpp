@@ -104,7 +104,7 @@ GUI::Widget* SprayTool::get_properties_widget()
         size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label.set_fixed_size(80, 20);
 
-        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         size_slider.set_range(1, 20);
         size_slider.set_value(m_thickness);
 
@@ -121,7 +121,7 @@ GUI::Widget* SprayTool::get_properties_widget()
         density_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         density_label.set_fixed_size(80, 20);
 
-        auto& density_slider = density_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
+        auto& density_slider = density_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv));
         density_slider.set_range(1, 100);
         density_slider.set_value(m_density);
 

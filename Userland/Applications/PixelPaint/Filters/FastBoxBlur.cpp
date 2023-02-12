@@ -93,7 +93,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         radius_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_label.set_fixed_size(50, 20);
 
-        auto& radius_slider = m_radius_container->add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        auto& radius_slider = m_radius_container->add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         radius_slider.set_range(0, 25);
         radius_slider.set_value(m_radius);
         radius_slider.on_change = [&](int value) {
@@ -115,7 +115,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         radius_x_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_x_label.set_fixed_size(50, 20);
 
-        m_radius_x_slider = radius_x_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        m_radius_x_slider = radius_x_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         m_radius_x_slider->set_range(0, 50);
         m_radius_x_slider->set_value(m_radius_x);
         m_radius_x_slider->on_change = [&](int value) {
@@ -131,7 +131,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         radius_y_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_y_label.set_fixed_size(50, 20);
 
-        m_radius_y_slider = radius_y_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        m_radius_y_slider = radius_y_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         m_radius_y_slider->set_range(0, 50);
         m_radius_y_slider->set_value(m_radius_y);
         m_radius_y_slider->on_change = [&](int value) {
@@ -153,7 +153,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         angle_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         angle_label.set_fixed_size(60, 20);
 
-        m_angle_slider = angle_container.add<GUI::ValueSlider>(Orientation::Horizontal, "°");
+        m_angle_slider = angle_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("°"sv));
         m_angle_slider->set_range(0, 360);
         m_angle_slider->set_value(m_angle);
         m_angle_slider->on_change = [&](int value) {
@@ -169,7 +169,7 @@ RefPtr<GUI::Widget> FastBoxBlur::get_settings_widget()
         magnitude_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         magnitude_label.set_fixed_size(60, 20);
 
-        m_magnitude_slider = magnitude_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        m_magnitude_slider = magnitude_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         m_magnitude_slider->set_range(0, 50);
         m_magnitude_slider->set_value(m_radius);
         m_magnitude_slider->on_change = [&](int value) {

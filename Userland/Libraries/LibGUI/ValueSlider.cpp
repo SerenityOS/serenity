@@ -17,7 +17,7 @@ REGISTER_WIDGET(GUI, ValueSlider)
 
 namespace GUI {
 
-ValueSlider::ValueSlider(Gfx::Orientation orientation, DeprecatedString suffix)
+ValueSlider::ValueSlider(Gfx::Orientation orientation, String suffix)
     : AbstractSlider(orientation)
     , m_suffix(move(suffix))
 {
@@ -34,7 +34,7 @@ ValueSlider::ValueSlider(Gfx::Orientation orientation, DeprecatedString suffix)
     m_textbox->on_change = [&]() {
         DeprecatedString value = m_textbox->text();
         if (value.ends_with(m_suffix, AK::CaseSensitivity::CaseInsensitive))
-            value = value.substring_view(0, value.length() - m_suffix.length());
+            value = value.substring_view(0, value.length() - m_suffix.bytes_as_string_view().length());
         auto integer_value = value.to_int();
         if (integer_value.has_value())
             AbstractSlider::set_value(integer_value.value());

@@ -71,7 +71,7 @@ RefPtr<GUI::Widget> Bloom::get_settings_widget()
         radius_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         radius_label.set_fixed_height(20);
 
-        auto& radius_slider = radius_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        auto& radius_slider = radius_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         radius_slider.set_range(0, 50);
         radius_slider.set_value(m_blur_radius);
         radius_slider.on_change = [&](int value) {

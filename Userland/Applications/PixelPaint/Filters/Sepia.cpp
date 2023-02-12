@@ -37,7 +37,7 @@ RefPtr<GUI::Widget> Sepia::get_settings_widget()
         amount_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         amount_label.set_fixed_size(50, 20);
 
-        auto& amount_slider = amount_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
+        auto& amount_slider = amount_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv));
         amount_slider.set_range(0, 100);
         amount_slider.set_value(m_amount * 100);
         amount_slider.on_change = [&](int value) {

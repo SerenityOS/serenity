@@ -140,7 +140,7 @@ GUI::Widget* EllipseTool::get_properties_widget()
         thickness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label.set_fixed_size(80, 20);
 
-        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        auto& thickness_slider = thickness_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         thickness_slider.set_range(1, 10);
         thickness_slider.set_value(m_thickness);
 
