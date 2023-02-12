@@ -60,4 +60,12 @@ struct DeviceTreeCallbacks {
 
 ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree, DeviceTreeCallbacks);
 
+template<typename T>
+ErrorOr<T> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
+
+extern template ErrorOr<void> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+extern template ErrorOr<u32> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+extern template ErrorOr<u64> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+extern template ErrorOr<StringView> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+
 } // namespace DeviceTree

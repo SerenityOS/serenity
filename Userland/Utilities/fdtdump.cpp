@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
+#include <LibDeviceTree/FlattenedDeviceTree.h>
 #include <LibDeviceTree/Validation.h>
 #include <LibMain/Main.h>
 
@@ -33,6 +34,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto bytes = ReadonlyBytes { file->data(), file->size() };
 
     TRY(DeviceTree::dump(*fdt_header, bytes));
+
+    auto compatible = TRY(DeviceTree::slow_get_property<StringView>("/compatible"sv, *fdt_header, bytes));
+    auto compatible_strings = compatible.split_view('\0');
+    dbgln("compatible with: {}", compatible_strings);
+
+    auto bootargs = TRY(DeviceTree::slow_get_property<StringView>("/chosen/bootargs"sv, *fdt_header, bytes));
+    dbgln("bootargs: {}", bootargs);
+
+    auto cpu_compatible = TRY(DeviceTree::slow_get_property<StringView>("/cpus/cpu@0/compatible"sv, *fdt_header, bytes));
+    dbgln("cpu0 compatible: {}", cpu_compatible);
 
     return 0;
 }

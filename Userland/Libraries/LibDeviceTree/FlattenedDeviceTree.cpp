@@ -108,4 +108,80 @@ ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const& header, Readonly
     return Error::from_string_view_or_print_error_and_return_errno("Unexpected end of stream"sv, EINVAL);
 }
 
+static ErrorOr<ReadonlyBytes> slow_get_property_raw(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
+{
+    // Name is a path like /path/to/node/property
+    Vector<StringView, 16> path;
+    TRY(name.for_each_split_view('/', SplitBehavior::Nothing, [&path](StringView view) -> ErrorOr<void> {
+        if (path.size() == path.capacity()) {
+            return Error::from_errno(ENAMETOOLONG);
+        }
+        MUST(path.try_append(view));
+        return {};
+    }));
+
+    bool check_property_name = path.size() == 1; // Properties on root node should be checked immediately
+    ssize_t current_path_idx = -1;               // Start "before" the root FDT_BEGIN_NODE tag
+    ReadonlyBytes found_property_value;
+
+    DeviceTreeCallbacks callbacks = {
+        .on_node_begin = [&](StringView token_name) -> ErrorOr<IterationDecision> {
+            if (current_path_idx < 0) {
+                ++current_path_idx; // Root node
+                return IterationDecision::Continue;
+            }
+            if (token_name == path[current_path_idx]) {
+                ++current_path_idx;
+                if (current_path_idx == static_cast<ssize_t>(path.size() - 1)) {
+                    check_property_name = true;
+                }
+            }
+            return IterationDecision::Continue;
+        },
+        .on_node_end = [&](StringView) -> ErrorOr<IterationDecision> {
+            if (check_property_name) {
+                // Not found, but we were looking for the property
+                return Error::from_errno(EINVAL);
+            }
+            return IterationDecision::Continue;
+        },
+        .on_property = [&](StringView property_name, ReadonlyBytes property_value) -> ErrorOr<IterationDecision> {
+            if (check_property_name && property_name == path[current_path_idx]) {
+                found_property_value = property_value;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        },
+        .on_noop = nullptr,
+        .on_end = [&]() -> ErrorOr<void> {
+            return Error::from_string_view_or_print_error_and_return_errno("Property not found"sv, EINVAL);
+        }
+    };
+
+    TRY(walk_device_tree(header, raw_device_tree, move(callbacks)));
+    return found_property_value;
+}
+
+template<typename T>
+ErrorOr<T> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
+{
+    [[maybe_unused]] auto bytes = TRY(slow_get_property_raw(name, header, raw_device_tree));
+    if constexpr (IsVoid<T>) {
+        return {};
+    } else if constexpr (IsArithmetic<T>) {
+        if (bytes.size() != sizeof(T)) {
+            return Error::from_errno(EINVAL);
+        }
+        return *bit_cast<T*>(bytes.data());
+    } else {
+        static_assert(IsSame<T, StringView>);
+        return T(bytes);
+    }
+}
+
+template ErrorOr<void> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+template ErrorOr<u32> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+template ErrorOr<u64> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+template ErrorOr<StringView> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+
 } // namespace DeviceTree
