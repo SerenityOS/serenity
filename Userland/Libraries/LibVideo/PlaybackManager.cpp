@@ -283,16 +283,43 @@ PlaybackManager& PlaybackManager::PlaybackStateHandler::manager() const
     return m_manager;
 }
 
-class PlaybackManager::StartingStateHandler : public PlaybackManager::PlaybackStateHandler {
+class PlaybackManager::ResumingStateHandler : public PlaybackManager::PlaybackStateHandler {
 public:
-    StartingStateHandler(PlaybackManager& manager, bool playing)
+    ResumingStateHandler(PlaybackManager& manager, bool playing)
         : PlaybackStateHandler(manager)
         , m_playing(playing)
     {
     }
-    ~StartingStateHandler() override = default;
+    ~ResumingStateHandler() override = default;
 
-private:
+protected:
+    ErrorOr<void> assume_next_state()
+    {
+        if (!m_playing)
+            return replace_handler_and_delete_this<PausedStateHandler>();
+        return replace_handler_and_delete_this<PlayingStateHandler>();
+    }
+
+    ErrorOr<void> play() override
+    {
+        m_playing = true;
+        manager().dispatch_state_change();
+        return {};
+    }
+    bool is_playing() override { return m_playing; }
+    ErrorOr<void> pause() override
+    {
+        m_playing = false;
+        manager().dispatch_state_change();
+        return {};
+    }
+
+    bool m_playing;
+};
+
+class PlaybackManager::StartingStateHandler : public PlaybackManager::ResumingStateHandler {
+    using PlaybackManager::ResumingStateHandler::ResumingStateHandler;
+
     ErrorOr<void> on_enter() override
     {
         return on_timer_callback();
@@ -480,16 +507,9 @@ private:
     bool is_playing() override { return false; };
 };
 
-class PlaybackManager::BufferingStateHandler : public PlaybackManager::PlaybackStateHandler {
-public:
-    BufferingStateHandler(PlaybackManager& manager, bool playing)
-        : PlaybackStateHandler(manager)
-        , m_playing(playing)
-    {
-    }
-    ~BufferingStateHandler() override = default;
+class PlaybackManager::BufferingStateHandler : public PlaybackManager::ResumingStateHandler {
+    using PlaybackManager::ResumingStateHandler::ResumingStateHandler;
 
-private:
     ErrorOr<void> on_enter() override
     {
         manager().m_decode_timer->start(0);
@@ -498,33 +518,16 @@ private:
 
     StringView name() override { return "Buffering"sv; }
 
-    ErrorOr<void> play() override
-    {
-        m_playing = true;
-        return {};
-    }
-    bool is_playing() override { return m_playing; };
-    ErrorOr<void> pause() override
-    {
-        m_playing = false;
-        return {};
-    }
-
     ErrorOr<void> on_buffer_filled() override
     {
-        if (m_playing)
-            return replace_handler_and_delete_this<PlayingStateHandler>();
-        return replace_handler_and_delete_this<PausedStateHandler>();
+        return assume_next_state();
     }
-
-    bool m_playing { false };
 };
 
-class PlaybackManager::SeekingStateHandler : public PlaybackManager::PlaybackStateHandler {
+class PlaybackManager::SeekingStateHandler : public PlaybackManager::ResumingStateHandler {
 public:
     SeekingStateHandler(PlaybackManager& manager, bool playing, Time target_timestamp, SeekMode seek_mode)
-        : PlaybackStateHandler(manager)
-        , m_playing(playing)
+        : ResumingStateHandler(manager, playing)
         , m_target_timestamp(target_timestamp)
         , m_seek_mode(seek_mode)
     {
@@ -532,13 +535,6 @@ public:
     ~SeekingStateHandler() override = default;
 
 private:
-    ErrorOr<void> exit_seek()
-    {
-        if (m_playing)
-            return replace_handler_and_delete_this<PlayingStateHandler>();
-        return replace_handler_and_delete_this<PausedStateHandler>();
-    }
-
     ErrorOr<void> on_enter() override
     {
         auto earliest_available_sample = manager().m_last_present_in_media_time;
@@ -566,7 +562,7 @@ private:
             manager().m_next_frame.clear();
         } else if (m_target_timestamp >= manager().m_last_present_in_media_time && manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
             manager().m_last_present_in_media_time = m_target_timestamp;
-            return exit_seek();
+            return assume_next_state();
         }
 
         return skip_samples_until_timestamp();
@@ -591,7 +587,7 @@ private:
                 manager().m_next_frame.emplace(item);
 
                 dbgln_if(PLAYBACK_MANAGER_DEBUG, "Exiting seek to {} state at {}ms", m_playing ? "Playing" : "Paused", manager().m_last_present_in_media_time.to_milliseconds());
-                return exit_seek();
+                return assume_next_state();
             }
             manager().m_next_frame.emplace(item);
         }
@@ -603,17 +599,6 @@ private:
 
     StringView name() override { return "Seeking"sv; }
 
-    ErrorOr<void> play() override
-    {
-        m_playing = true;
-        return {};
-    }
-    bool is_playing() override { return m_playing; };
-    ErrorOr<void> pause() override
-    {
-        m_playing = false;
-        return {};
-    }
     ErrorOr<void> seek(Time target_timestamp, SeekMode seek_mode) override
     {
         m_target_timestamp = target_timestamp;
