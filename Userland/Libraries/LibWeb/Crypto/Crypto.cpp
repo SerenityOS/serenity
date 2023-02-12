@@ -14,9 +14,9 @@
 
 namespace Web::Crypto {
 
-JS::NonnullGCPtr<Crypto> Crypto::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto>> Crypto::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Crypto>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Crypto>(realm, realm));
 }
 
 Crypto::Crypto(JS::Realm& realm)

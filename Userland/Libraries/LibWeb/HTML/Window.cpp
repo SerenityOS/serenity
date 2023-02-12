@@ -1067,7 +1067,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    m_crypto = Crypto::Crypto::create(realm);
+    m_crypto = Crypto::Crypto::create(realm).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
