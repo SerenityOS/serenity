@@ -289,7 +289,7 @@ void Action::set_text(DeprecatedString text)
         return;
     m_text = move(text);
     for_each_toolbar_button([&](auto& button) {
-        button.set_text(m_text);
+        button.set_text_deprecated(m_text);
     });
     for_each_menu_item([&](auto& menu_item) {
         menu_item.update_from_action({});

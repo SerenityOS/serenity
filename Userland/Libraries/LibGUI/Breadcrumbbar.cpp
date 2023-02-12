@@ -75,7 +75,7 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
 {
     auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::Coolbar);
-    button.set_text(text);
+    button.set_text_deprecated(text);
     button.set_icon(icon);
     button.set_tooltip(move(tooltip));
     button.set_focus_policy(FocusPolicy::TabFocus);

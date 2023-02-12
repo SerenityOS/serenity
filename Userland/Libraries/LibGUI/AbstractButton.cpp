@@ -17,7 +17,7 @@ namespace GUI {
 
 AbstractButton::AbstractButton(DeprecatedString text)
 {
-    set_text(move(text));
+    set_text_deprecated(move(text));
 
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_background_role(Gfx::ColorRole::Button);
@@ -28,13 +28,13 @@ AbstractButton::AbstractButton(DeprecatedString text)
         click();
     };
 
-    REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_STRING_PROPERTY("text", text_deprecated, set_text_deprecated);
     REGISTER_BOOL_PROPERTY("checked", is_checked, set_checked);
     REGISTER_BOOL_PROPERTY("checkable", is_checkable, set_checkable);
     REGISTER_BOOL_PROPERTY("exclusive", is_exclusive, set_exclusive);
 }
 
-void AbstractButton::set_text(DeprecatedString text)
+void AbstractButton::set_text_deprecated(DeprecatedString text)
 {
     if (m_text == text)
         return;
@@ -238,14 +238,14 @@ void AbstractButton::paint_text(Painter& painter, Gfx::IntRect const& rect, Gfx:
     auto clipped_rect = rect.intersected(this->rect());
 
     if (!is_enabled()) {
-        painter.draw_text(clipped_rect.translated(1, 1), text(), font, text_alignment, palette().disabled_text_back(), Gfx::TextElision::Right, text_wrapping);
-        painter.draw_text(clipped_rect, text(), font, text_alignment, palette().disabled_text_front(), Gfx::TextElision::Right, text_wrapping);
+        painter.draw_text(clipped_rect.translated(1, 1), text_deprecated(), font, text_alignment, palette().disabled_text_back(), Gfx::TextElision::Right, text_wrapping);
+        painter.draw_text(clipped_rect, text_deprecated(), font, text_alignment, palette().disabled_text_front(), Gfx::TextElision::Right, text_wrapping);
         return;
     }
 
-    if (text().is_empty())
+    if (text_deprecated().is_empty())
         return;
-    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right, text_wrapping);
+    painter.draw_text(clipped_rect, text_deprecated(), font, text_alignment, palette().color(foreground_role()), Gfx::TextElision::Right, text_wrapping);
 }
 
 void AbstractButton::change_event(Event& event)

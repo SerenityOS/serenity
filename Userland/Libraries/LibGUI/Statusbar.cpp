@@ -86,7 +86,7 @@ void Statusbar::update_segment(size_t index)
             if (!text(i).is_empty())
                 m_segments[i].set_visible(true);
         }
-        segment.set_text(segment.restored_text());
+        segment.set_text_deprecated(segment.restored_text());
         segment.set_frame_shape(Gfx::FrameShape::Panel);
         if (segment.mode() != Segment::Mode::Proportional)
             segment.set_fixed_width(segment.restored_width());
@@ -95,7 +95,7 @@ void Statusbar::update_segment(size_t index)
             if (!m_segments[i].is_clickable())
                 m_segments[i].set_visible(false);
         }
-        segment.set_text(segment.override_text());
+        segment.set_text_deprecated(segment.override_text());
         segment.set_frame_shape(Gfx::FrameShape::NoFrame);
         if (segment.mode() != Segment::Mode::Proportional)
             segment.set_fixed_width(SpecialDimension::Grow);
@@ -104,7 +104,7 @@ void Statusbar::update_segment(size_t index)
 
 DeprecatedString Statusbar::text(size_t index) const
 {
-    return m_segments.at(index).text();
+    return m_segments.at(index).text_deprecated();
 }
 
 void Statusbar::set_text(DeprecatedString text)
@@ -157,8 +157,8 @@ void Statusbar::Segment::paint_event(PaintEvent& event)
 
     if (is_clickable())
         Button::paint_event(event);
-    else if (!text().is_empty())
-        painter.draw_text(rect().shrunken(font().max_glyph_width(), 0), text(), text_alignment(), palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
+    else if (!text_deprecated().is_empty())
+        painter.draw_text(rect().shrunken(font().max_glyph_width(), 0), text_deprecated(), text_alignment(), palette().color(foreground_role()), Gfx::TextElision::Right, Gfx::TextWrapping::DontWrap);
 }
 
 void Statusbar::Segment::mousedown_event(MouseEvent& event)

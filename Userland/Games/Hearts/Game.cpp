@@ -180,13 +180,13 @@ void Game::setup(DeprecatedString player_name, int hand_number)
         m_human_can_play = true;
         switch (passing_direction()) {
         case PassingDirection::Left:
-            m_passing_button->set_text("Pass Left");
+            m_passing_button->set_text_deprecated("Pass Left");
             break;
         case PassingDirection::Across:
-            m_passing_button->set_text("Pass Across");
+            m_passing_button->set_text_deprecated("Pass Across");
             break;
         case PassingDirection::Right:
-            m_passing_button->set_text("Pass Right");
+            m_passing_button->set_text_deprecated("Pass Right");
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -871,7 +871,7 @@ void Game::pass_cards()
     }
 
     m_state = State::PassingAccept;
-    m_passing_button->set_text("OK");
+    m_passing_button->set_text_deprecated("OK");
     m_passing_button->set_enabled(true);
 }
 

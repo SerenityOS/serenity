@@ -112,7 +112,7 @@ FindDialog::FindDialog()
         auto action = options[i];
         auto& radio = radio_container.add<GUI::RadioButton>();
         radio.set_enabled(action.enabled);
-        radio.set_text(action.title);
+        radio.set_text_deprecated(action.title);
 
         radio.on_checked = [this, i](auto) {
             m_selected_option = options[i].opt;

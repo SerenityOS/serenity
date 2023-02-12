@@ -49,9 +49,9 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
     if (parent_window)
         box->set_icon(parent_window->icon());
 
-    box->m_yes_button->set_text(path.is_empty() ? "Save As..." : "Save");
-    box->m_no_button->set_text("Discard");
-    box->m_cancel_button->set_text("Cancel");
+    box->m_yes_button->set_text_deprecated(path.is_empty() ? "Save As..." : "Save");
+    box->m_no_button->set_text_deprecated("Discard");
+    box->m_cancel_button->set_text_deprecated("Cancel");
 
     return box->exec();
 }
@@ -154,7 +154,7 @@ void MessageBox::build()
     auto add_button = [&](DeprecatedString label, ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
-        button.set_text(label);
+        button.set_text_deprecated(label);
         button.on_click = [this, label, result](auto) {
             done(result);
         };

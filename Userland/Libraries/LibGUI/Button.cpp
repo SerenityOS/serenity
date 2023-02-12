@@ -61,12 +61,12 @@ void Button::paint_event(PaintEvent& event)
 
     Gfx::StylePainter::paint_button(painter, rect(), palette(), m_button_style, paint_pressed, is_hovered(), is_checked(), is_enabled(), is_focused(), is_default() && !another_button_has_focus());
 
-    if (text().is_empty() && !m_icon)
+    if (text_deprecated().is_empty() && !m_icon)
         return;
 
     auto content_rect = rect().shrunken(8, 2);
     auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Gfx::IntPoint();
-    if (m_icon && !text().is_empty())
+    if (m_icon && !text_deprecated().is_empty())
         icon_location.set_x(content_rect.x());
 
     if (paint_pressed || is_checked()) {
@@ -103,12 +103,12 @@ void Button::paint_event(PaintEvent& event)
             m_icon->invert();
     }
     auto& font = is_checked() ? this->font().bold_variant() : this->font();
-    if (m_icon && !text().is_empty()) {
+    if (m_icon && !text_deprecated().is_empty()) {
         content_rect.translate_by(m_icon->width() + icon_spacing(), 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - icon_spacing());
     }
 
-    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text()))), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text_deprecated()))), font.glyph_height() };
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());
@@ -116,7 +116,7 @@ void Button::paint_event(PaintEvent& event)
 
     if (is_focused()) {
         Gfx::IntRect focus_rect;
-        if (m_icon && !text().is_empty())
+        if (m_icon && !text_deprecated().is_empty())
             focus_rect = text_rect.inflated(4, 4);
         else
             focus_rect = rect().shrunken(8, 8);
@@ -274,9 +274,9 @@ Optional<UISize> Button::calculated_min_size() const
 {
     int horizontal = 0, vertical = 0;
 
-    if (!text().is_empty()) {
+    if (!text_deprecated().is_empty()) {
         auto& font = this->font();
-        horizontal = font.width(text()) + 2;
+        horizontal = font.width(text_deprecated()) + 2;
         vertical = font.glyph_height() + 4; // FIXME: Use actual maximum total height
     }
 

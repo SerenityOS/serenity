@@ -107,7 +107,7 @@ void InputBox::build()
     button_container_inner.layout()->add_spacer();
 
     m_ok_button = button_container_inner.add<DialogButton>();
-    m_ok_button->set_text("OK");
+    m_ok_button->set_text_deprecated("OK");
     m_ok_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: OK button clicked");
         done(ExecResult::OK);
@@ -115,7 +115,7 @@ void InputBox::build()
     m_ok_button->set_default(true);
 
     m_cancel_button = button_container_inner.add<DialogButton>();
-    m_cancel_button->set_text("Cancel");
+    m_cancel_button->set_text_deprecated("Cancel");
     m_cancel_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: Cancel button clicked");
         done(ExecResult::Cancel);
