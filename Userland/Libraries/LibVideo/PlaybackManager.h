@@ -132,6 +132,7 @@ private:
     void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
     // Returns whether we changed playback states. If so, any PlaybackStateHandler processing must cease.
     [[nodiscard]] bool dispatch_frame_queue_item(FrameQueueItem&&);
+    void dispatch_state_change();
     void dispatch_fatal_error(Error);
 
     Core::Object& m_event_handler;
