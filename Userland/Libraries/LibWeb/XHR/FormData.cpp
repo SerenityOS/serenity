@@ -42,10 +42,17 @@ FormData::FormData(JS::Realm& realm, HashMap<DeprecatedString, Vector<FormDataEn
     : PlatformObject(realm)
     , m_entry_list(move(entry_list))
 {
-    set_prototype(&Bindings::ensure_web_prototype<Bindings::FormDataPrototype>(realm, "FormData"));
 }
 
 FormData::~FormData() = default;
+
+JS::ThrowCompletionOr<void> FormData::initialize(JS::Realm& realm)
+{
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+    set_prototype(&Bindings::ensure_web_prototype<Bindings::FormDataPrototype>(realm, "FormData"));
+
+    return {};
+}
 
 void FormData::visit_edges(Cell::Visitor& visitor)
 {
