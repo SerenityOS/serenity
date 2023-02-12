@@ -45,7 +45,7 @@ PlaybackManager::PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demu
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
     , m_frame_queue(make<VideoFrameQueue>())
-    , m_playback_handler(make<StoppedStateHandler>(*this))
+    , m_playback_handler(make<StartingStateHandler>(*this, false))
 {
     m_present_timer = Core::Timer::create_single_shot(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
     m_decode_timer = Core::Timer::create_single_shot(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
