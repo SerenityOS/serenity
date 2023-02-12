@@ -49,7 +49,7 @@ GUI::Widget* PenTool::get_properties_widget()
         size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label.set_fixed_size(80, 20);
 
-        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
+        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv));
         size_slider.set_range(1, 20);
         size_slider.set_value(size());
 
