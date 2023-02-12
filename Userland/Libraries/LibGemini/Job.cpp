@@ -267,9 +267,8 @@ void Job::finish_up()
         return;
     }
 
-    auto response = GeminiResponse::create(m_status, m_meta);
-    deferred_invoke([this, response] {
-        did_finish(move(response));
+    deferred_invoke([this] {
+        did_finish(GeminiResponse::create(m_status, m_meta));
     });
 }
 
