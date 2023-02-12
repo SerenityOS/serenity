@@ -129,7 +129,6 @@ void VideoPlayerWidget::resume_playback()
     if (!m_playback_manager || m_seek_slider->knob_dragging())
         return;
     m_playback_manager->resume_playback();
-    update_play_pause_icon();
 }
 
 void VideoPlayerWidget::pause_playback()
@@ -137,7 +136,6 @@ void VideoPlayerWidget::pause_playback()
     if (!m_playback_manager || m_seek_slider->knob_dragging())
         return;
     m_playback_manager->pause_playback();
-    update_play_pause_icon();
 }
 
 void VideoPlayerWidget::toggle_pause()

@@ -121,6 +121,11 @@ bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
     return false;
 }
 
+void PlaybackManager::dispatch_state_change()
+{
+    m_main_loop.post_event(m_event_handler, TRY_OR_FATAL_ERROR(try_make<PlaybackStateChangeEvent>()));
+}
+
 void PlaybackManager::timer_callback()
 {
     TRY_OR_FATAL_ERROR(m_playback_handler->on_timer_callback());
@@ -265,6 +270,7 @@ ErrorOr<void> PlaybackManager::PlaybackStateHandler::replace_handler_and_delete_
     m_has_exited = true;
     dbgln("Changing state from {} to {}", temp_handler->name(), m_manager.m_playback_handler->name());
 #endif
+    m_manager.dispatch_state_change();
     TRY(m_manager.m_playback_handler->on_enter());
     return {};
 }
