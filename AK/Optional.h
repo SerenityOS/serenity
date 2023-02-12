@@ -247,7 +247,7 @@ public:
     {
         if (m_has_value)
             return move(value());
-        return move(fallback);
+        return fallback;
     }
 
     template<typename Callback>
