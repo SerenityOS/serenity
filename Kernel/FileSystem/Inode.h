@@ -131,7 +131,7 @@ private:
     FileSystem& m_file_system;
     InodeIndex m_index { 0 };
     LockWeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
-    LockRefPtr<LocalSocket> m_bound_socket;
+    LockWeakPtr<LocalSocket> m_bound_socket;
     SpinlockProtected<HashTable<InodeWatcher*>, LockRank::None> m_watchers {};
     bool m_metadata_dirty { false };
     LockRefPtr<FIFO> m_fifo;
