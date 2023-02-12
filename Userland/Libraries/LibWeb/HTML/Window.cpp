@@ -498,7 +498,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     // 8. Assert: initiating script is not null, since this algorithm is always called from some script.
 
     // 9. Let task be a task that runs the following substeps:
-    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id] {
+    JS::SafeFunction<void()> task = [this, handler = move(handler), timeout, arguments = move(arguments), repeat, id]() mutable {
         // 1. If id does not exist in global's map of active timers, then abort these steps.
         if (!m_timers.contains(id))
             return;

@@ -38,7 +38,7 @@ void request_did_finish(URL const& url, Core::Socket const* socket)
 
         auto& connection = *connection_it;
         if (connection->request_queue.is_empty()) {
-            Core::deferred_invoke([&connection, &cache_entry = *it->value, key = it->key, &cache] {
+            Core::deferred_invoke([&connection, &cache_entry = *it->value, key = it->key, &cache]() mutable {
                 connection->socket->set_notifications_enabled(false);
                 connection->has_started = false;
                 connection->current_url = {};
