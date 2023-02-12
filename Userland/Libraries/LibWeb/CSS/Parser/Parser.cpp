@@ -127,8 +127,8 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
             rules.append(rule);
     }
 
-    auto* rule_list = CSSRuleList::create(m_context.realm(), rules);
-    return CSSStyleSheet::create(m_context.realm(), *rule_list, *MediaList::create(m_context.realm(), {}), move(location));
+    auto rule_list = CSSRuleList::create(m_context.realm(), rules).release_value_but_fixme_should_propagate_errors();
+    return CSSStyleSheet::create(m_context.realm(), rule_list, *MediaList::create(m_context.realm(), {}), move(location));
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -3057,8 +3057,8 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 if (auto* child_rule = convert_to_rule(raw_rule))
                     child_rules.append(child_rule);
             }
-            auto* rule_list = CSSRuleList::create(m_context.realm(), child_rules);
-            return CSSMediaRule::create(m_context.realm(), *MediaList::create(m_context.realm(), move(media_query_list)), *rule_list).release_value_but_fixme_should_propagate_errors();
+            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
+            return CSSMediaRule::create(m_context.realm(), *MediaList::create(m_context.realm(), move(media_query_list)), rule_list).release_value_but_fixme_should_propagate_errors();
         }
         if (rule->at_rule_name().equals_ignoring_case("supports"sv)) {
             auto supports_tokens = TokenStream { rule->prelude() };
@@ -3081,8 +3081,8 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                     child_rules.append(child_rule);
             }
 
-            auto* rule_list = CSSRuleList::create(m_context.realm(), child_rules);
-            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), *rule_list);
+            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
+            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), rule_list);
         }
 
         // FIXME: More at rules!
@@ -7396,8 +7396,10 @@ namespace Web {
 
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
-    if (css.is_empty())
-        return CSS::CSSStyleSheet::create(context.realm(), *CSS::CSSRuleList::create_empty(context.realm()), *CSS::MediaList::create(context.realm(), {}), location);
+    if (css.is_empty()) {
+        auto rule_list = CSS::CSSRuleList::create_empty(context.realm()).release_value_but_fixme_should_propagate_errors();
+        return CSS::CSSStyleSheet::create(context.realm(), rule_list, *CSS::MediaList::create(context.realm(), {}), location);
+    }
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }
