@@ -30,6 +30,19 @@ static void out_optional(char const* label, Optional<T> const& optional)
         outln("(not set)");
 }
 
+static void out_curve(Gfx::ICC::CurveTagData const& curve, int indent_amount)
+{
+    auto indent = MUST(String::repeated(' ', indent_amount));
+    if (curve.values().is_empty()) {
+        outln("{}identity curve", indent);
+    } else if (curve.values().size() == 1) {
+        outln("{}gamma: {}", indent, FixedPoint<8, u16>::create_raw(curve.values()[0]));
+    } else {
+        // FIXME: Maybe print the actual points if -v is passed?
+        outln("{}curve with {} points", indent, curve.values().size());
+    }
+}
+
 static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& parametric_curve, int indent_amount)
 {
     auto indent = MUST(String::repeated(' ', indent_amount));
@@ -65,6 +78,8 @@ static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
     for (auto const& curve : curves) {
         VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
         outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
+        if (curve->type() == Gfx::ICC::CurveTagData::Type)
+            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*curve), /*indent=*/12);
         if (curve->type() == Gfx::ICC::ParametricCurveTagData::Type)
             out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*curve), /*indent=*/12);
     }
@@ -182,15 +197,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    video full range flag: {} - {}", cicp.video_full_range_flag(),
                 Video::video_full_range_flag_to_string((Video::VideoFullRangeFlag)cicp.video_full_range_flag()));
         } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
-            auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
-            if (curve.values().is_empty()) {
-                outln("    identity curve");
-            } else if (curve.values().size() == 1) {
-                outln("    gamma: {}", FixedPoint<8, u16>::create_raw(curve.values()[0]));
-            } else {
-                // FIXME: Maybe print the actual points if -v is passed?
-                outln("    curve with {} points", curve.values().size());
-            }
+            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*tag_data), /*indent=*/4);
         } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
             auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
             outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
