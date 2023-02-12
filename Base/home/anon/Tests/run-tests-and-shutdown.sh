@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/Shell
 
 echo
 echo "==== Running Tests on SerenityOS ===="

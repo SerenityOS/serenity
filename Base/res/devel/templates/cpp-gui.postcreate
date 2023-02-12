@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/Shell
 
 echo > $2/Makefile <<-EOF
 PROGRAM = $1
