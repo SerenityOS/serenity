@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<Entry> create_entry(JS::Realm& realm, String const& name, Va
     auto& vm = realm.vm();
 
     // 1. Set name to the result of converting name into a scalar value string.
-    auto entry_name = TRY_OR_THROW_OOM(realm.vm(), Infra::convert_to_scalar_value_string(name));
+    auto entry_name = TRY_OR_THROW_OOM(vm, Infra::convert_to_scalar_value_string(name));
 
     auto entry_value = TRY(value.visit(
         // 2. If value is a string, then set value to the result of converting value into a scalar value string.
@@ -50,6 +50,8 @@ WebIDL::ExceptionOr<Entry> create_entry(JS::Realm& realm, String const& name, Va
 // FIXME: Add missing parameters optional submitter, and optional encoding
 WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_entry_list(JS::Realm& realm, HTMLFormElement& form)
 {
+    auto& vm = realm.vm();
+
     // 1. If form's constructing entry list is true, then return null.
     if (form.constructing_entry_list())
         return Optional<HashMapWithVectorOfFormDataEntryValue> {};
@@ -58,7 +60,7 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
     form.set_constructing_entry_list(true);
 
     // 3. Let controls be a list of all the submittable elements whose form owner is form, in tree order.
-    auto controls = TRY_OR_THROW_OOM(realm.vm(), form.get_submittable_elements());
+    auto controls = TRY_OR_THROW_OOM(vm, form.get_submittable_elements());
 
     // 4. Let entry list be a new empty entry list.
     HashMapWithVectorOfFormDataEntryValue entry_list;
@@ -109,9 +111,9 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
         if (auto* select_element = dynamic_cast<HTML::HTMLSelectElement*>(control.ptr())) {
             for (auto const& option_element : select_element->list_of_options()) {
                 if (option_element->selected() && !option_element->disabled())
-                    TRY_OR_THROW_OOM(realm.vm(), form_data_entries.try_append(option_element->value()));
+                    TRY_OR_THROW_OOM(vm, form_data_entries.try_append(option_element->value()));
             }
-            TRY_OR_THROW_OOM(realm.vm(), entry_list.try_set(name, form_data_entries));
+            TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
         }
         // 7. Otherwise, if the field element is an input element whose type attribute is in the Checkbox state or the Radio Button state, then:
         else if (auto* checkbox_or_radio_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); checkbox_or_radio_element && (checkbox_or_radio_element->type() == "checkbox" || checkbox_or_radio_element->type() == "radio") && checkbox_or_radio_element->checked()) {
@@ -121,8 +123,8 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
                 value = "on";
 
             // 2. Create an entry with name and value, and append it to entry list.
-            TRY_OR_THROW_OOM(realm.vm(), form_data_entries.try_append(value));
-            TRY_OR_THROW_OOM(realm.vm(), entry_list.try_set(name, form_data_entries));
+            TRY_OR_THROW_OOM(vm, form_data_entries.try_append(value));
+            TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:
         else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type() == "file") {
@@ -131,16 +133,16 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
                 FileAPI::FilePropertyBag options {};
                 options.type = "application/octet-stream";
                 auto file = TRY(FileAPI::File::create(realm, {}, "", options));
-                TRY_OR_THROW_OOM(realm.vm(), form_data_entries.try_append(file));
-                TRY_OR_THROW_OOM(realm.vm(), entry_list.try_set(name, form_data_entries));
+                TRY_OR_THROW_OOM(vm, form_data_entries.try_append(file));
+                TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
             }
             // 2. Otherwise, for each file in selected files, create an entry with name and a File object representing the file, and append it to entry list.
             else {
                 for (size_t i = 0; i < file_element->files()->length(); i++) {
                     auto file = JS::NonnullGCPtr { *file_element->files()->item(i) };
-                    TRY_OR_THROW_OOM(realm.vm(), form_data_entries.try_append(file));
+                    TRY_OR_THROW_OOM(vm, form_data_entries.try_append(file));
                 }
-                TRY_OR_THROW_OOM(realm.vm(), entry_list.try_set(name, form_data_entries));
+                TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
             }
         }
         // FIXME: 9. Otherwise, if the field element is an input element whose type attribute is in the Hidden state and name is an ASCII case-insensitive match for "_charset_":
@@ -150,8 +152,8 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
         else {
             auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr());
             VERIFY(input_element);
-            TRY_OR_THROW_OOM(realm.vm(), form_data_entries.try_append(input_element->value()));
-            TRY_OR_THROW_OOM(realm.vm(), entry_list.try_set(name, form_data_entries));
+            TRY_OR_THROW_OOM(vm, form_data_entries.try_append(input_element->value()));
+            TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
         }
 
         // FIXME: 11. If the element has a dirname attribute, and that attribute's value is not the empty string, then:
@@ -173,7 +175,7 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
     form.set_constructing_entry_list(false);
 
     // 9. Return a clone of entry list.
-    return TRY_OR_THROW_OOM(realm.vm(), entry_list.clone());
+    return TRY_OR_THROW_OOM(vm, entry_list.clone());
 }
 
 }
