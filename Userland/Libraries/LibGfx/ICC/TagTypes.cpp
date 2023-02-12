@@ -471,6 +471,10 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
         return Error::from_string_literal("ICC::Profile: lutAToBType no CLUT despite different number of input and output channels");
     }
 
+    // Follows from the "Only the following combinations are permitted" list in 10.12.1.
+    if (a_curves.has_value() != clut_data.has_value())
+        return Error::from_string_literal("ICC::Profile: lutAToBType must have 'A' curves exactly if it has a CLUT");
+
     // 10.12.4 “M” curves
     // "There are the same number of “M” curves as there are output channels. The curves are stored sequentially,
     //  with 00h bytes used for padding between them if needed. Each “M” curve is stored as an embedded curveType
@@ -494,6 +498,10 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
         for (int i = 0; i < 12; ++i)
             e->e[i] = S15Fixed16::create_raw(raw_e[i]);
     }
+
+    // Follows from the "Only the following combinations are permitted" list in 10.12.1.
+    if (m_curves.has_value() != e.has_value())
+        return Error::from_string_literal("ICC::Profile: lutAToBType must have 'M' curves exactly if it has a matrix");
 
     // 10.12.6 “B” curves
     // "There are the same number of “B” curves as there are output channels. The curves are stored sequentially, with
@@ -556,6 +564,10 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     if (header.offset_to_m_curves)
         m_curves = TRY(read_curves(bytes, header.offset_to_m_curves, header.number_of_input_channels));
 
+    // Follows from the "Only the following combinations are permitted" list in 10.13.1.
+    if (e.has_value() != m_curves.has_value())
+        return Error::from_string_literal("ICC::Profile: lutBToAType must have matrix exactly if it has 'M' curves");
+
     // 10.13.5 CLUT
     Optional<CLUTData> clut_data;
     if (header.offset_to_clut) {
@@ -574,6 +586,10 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     Optional<Vector<LutCurveType>> a_curves;
     if (header.offset_to_a_curves)
         a_curves = TRY(read_curves(bytes, header.offset_to_a_curves, header.number_of_output_channels));
+
+    // Follows from the "Only the following combinations are permitted" list in 10.13.1.
+    if (clut_data.has_value() != a_curves.has_value())
+        return Error::from_string_literal("ICC::Profile: lutBToAType must have A clut exactly if it has 'A' curves");
 
     return try_make_ref_counted<LutBToATagData>(offset, size, header.number_of_input_channels, header.number_of_output_channels,
         move(b_curves), e, move(m_curves), move(clut_data), move(a_curves));
