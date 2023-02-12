@@ -12,7 +12,7 @@
 
 namespace PDF {
 
-ErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
+PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
 {
     int predictor = 1;
     int columns = 1;
@@ -51,13 +51,13 @@ ErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString cons
     if (encoding_type == CommonNames::Crypt)
         return decode_crypt(bytes);
 
-    return AK::Error::from_string_literal("Unrecognized filter encoding");
+    return Error::malformed_error("Unrecognized filter encoding {}", encoding_type);
 }
 
-ErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
+PDFErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
 {
     if (bytes.size() % 2 == 0)
-        return decode_hex(bytes);
+        return TRY(decode_hex(bytes));
 
     // FIXME: Integrate this padding into AK/Hex?
 
@@ -81,7 +81,7 @@ ErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
     return { move(output) };
 };
 
-ErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
+PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
 {
     Vector<u8> buff;
     buff.ensure_capacity(bytes.size());
@@ -133,10 +133,10 @@ ErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
             buff.append(reinterpret_cast<u8*>(&number)[3 - i]);
     }
 
-    return ByteBuffer::copy(buff.span());
+    return TRY(ByteBuffer::copy(buff.span()));
 };
 
-ErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_row)
+PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_row)
 {
     int number_of_rows = bytes.size() / bytes_per_row;
 
@@ -201,13 +201,12 @@ ErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, int bytes_per_row
     return decoded;
 }
 
-ErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes)
 {
-    dbgln("LZW decoding is not supported");
-    VERIFY_NOT_REACHED();
+    return Error::rendering_unsupported_error("LZW Filter is not supported");
 };
 
-ErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
+PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int columns, int colors, int bits_per_component)
 {
     auto buff = Compress::DeflateDecompressor::decompress_all(bytes.slice(2)).value();
     if (predictor == 1)
@@ -227,7 +226,7 @@ ErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, int predictor, int
     return decode_png_prediction(buff, bytes_per_row);
 };
 
-ErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
+PDFErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
 {
     constexpr size_t END_OF_DECODING = 128;
     ByteBuffer buffer {};
@@ -255,40 +254,36 @@ ErrorOr<ByteBuffer> Filter::decode_run_length(ReadonlyBytes bytes)
     return buffer;
 };
 
-ErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes)
 {
-    // FIXME: Support CCITT decoding
-    TODO();
+    return Error::rendering_unsupported_error("CCITTFaxDecode Filter is unsupported");
 };
 
-ErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 {
-    // FIXME: Support JBIG2 decoding
-    TODO();
+    return Error::rendering_unsupported_error("JBIG2 Filter is unsupported");
 };
 
-ErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
+PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
     if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
         auto decoder = Gfx::JPEGImageDecoderPlugin::create({ bytes.data(), bytes.size() }).release_value_but_fixme_should_propagate_errors();
         if (decoder->initialize()) {
             auto frame = TRY(decoder->frame(0));
-            return frame.image->serialize_to_byte_buffer();
+            return TRY(frame.image->serialize_to_byte_buffer());
         }
     }
     return AK::Error::from_string_literal("Not a JPEG image!");
 };
 
-ErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes)
 {
-    // FIXME: Support JPX decoding
-    TODO();
+    return Error::rendering_unsupported_error("JPX Filter is not supported");
 };
 
-ErrorOr<ByteBuffer> Filter::decode_crypt(ReadonlyBytes)
+PDFErrorOr<ByteBuffer> Filter::decode_crypt(ReadonlyBytes)
 {
-    // FIXME: Support Crypt decoding
-    TODO();
+    return Error::rendering_unsupported_error("Crypt Filter is not supported");
 };
 
 }
