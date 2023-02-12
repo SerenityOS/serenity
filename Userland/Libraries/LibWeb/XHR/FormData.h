@@ -39,6 +39,7 @@ public:
 private:
     explicit FormData(JS::Realm&, HashMap<DeprecatedString, Vector<FormDataEntryValue>> entry_list = {});
 
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     WebIDL::ExceptionOr<void> append_impl(String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename = {});
