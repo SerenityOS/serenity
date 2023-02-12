@@ -161,23 +161,27 @@ bool PlaybackManager::decode_and_queue_one_sample()
     auto start_time = Time::now_monotonic();
 #endif
 
-#define TRY_OR_ENQUEUE_ERROR(expression)                                                                                \
-    ({                                                                                                                  \
-        auto&& _temporary_result = ((expression));                                                                      \
-        if (_temporary_result.is_error()) {                                                                             \
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Enqueued decoder error: {}", _temporary_result.error().string_literal()); \
-            m_frame_queue->enqueue(FrameQueueItem::error_marker(_temporary_result.release_error()));                    \
-            return false;                                                                                               \
-        }                                                                                                               \
-        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>,                    \
-            "Do not return a reference from a fallible expression");                                                    \
-        _temporary_result.release_value();                                                                              \
+    auto enqueue_error = [&](DecoderError&& error, Time timestamp) {
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Enqueued decoder error: {}", error.string_literal());
+        m_frame_queue->enqueue(FrameQueueItem::error_marker(move(error), timestamp));
+    };
+
+#define TRY_OR_ENQUEUE_ERROR(expression, timestamp)                                                  \
+    ({                                                                                               \
+        auto&& _temporary_result = (expression);                                                     \
+        if (_temporary_result.is_error()) {                                                          \
+            enqueue_error(_temporary_result.release_error(), (timestamp));                           \
+            return false;                                                                            \
+        }                                                                                            \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        _temporary_result.release_value();                                                           \
     })
 
-    auto frame_sample = TRY_OR_ENQUEUE_ERROR(m_demuxer->get_next_video_sample_for_track(m_selected_video_track));
+    auto frame_sample = TRY_OR_ENQUEUE_ERROR(m_demuxer->get_next_video_sample_for_track(m_selected_video_track), Time::min());
     OwnPtr<VideoFrame> decoded_frame = nullptr;
     while (!decoded_frame) {
-        TRY_OR_ENQUEUE_ERROR(m_decoder->receive_sample(frame_sample->data()));
+        TRY_OR_ENQUEUE_ERROR(m_decoder->receive_sample(frame_sample->data()), frame_sample->timestamp());
 
         while (true) {
             auto frame_result = m_decoder->get_decoded_frame();
@@ -186,7 +190,7 @@ bool PlaybackManager::decode_and_queue_one_sample()
                 if (frame_result.error().category() == DecoderErrorCategory::NeedsMoreInput)
                     break;
 
-                dispatch_decoder_error(frame_result.release_error());
+                enqueue_error(frame_result.release_error(), frame_sample->timestamp());
                 return false;
             }
 
@@ -214,7 +218,7 @@ bool PlaybackManager::decode_and_queue_one_sample()
         break;
     }
 
-    auto bitmap = TRY_OR_ENQUEUE_ERROR(decoded_frame->to_bitmap());
+    auto bitmap = TRY_OR_ENQUEUE_ERROR(decoded_frame->to_bitmap(), frame_sample->timestamp());
     m_frame_queue->enqueue(FrameQueueItem::frame(bitmap, frame_sample->timestamp()));
 
 #if PLAYBACK_MANAGER_DEBUG
@@ -317,7 +321,7 @@ private:
             future_frame_item.emplace(manager().m_frame_queue->dequeue());
             manager().m_decode_timer->start(0);
 
-            if (future_frame_item->is_error() || future_frame_item->timestamp() >= current_time()) {
+            if (future_frame_item->timestamp() >= current_time() || future_frame_item->timestamp() == FrameQueueItem::no_timestamp) {
                 dbgln_if(PLAYBACK_MANAGER_DEBUG, "Should present frame, future {} is error or after {}ms", future_frame_item->debug_string(), current_time().to_milliseconds());
                 should_present_frame = true;
                 break;
@@ -468,7 +472,7 @@ private:
     ErrorOr<void> on_enter() override
     {
         auto earliest_available_sample = manager().m_last_present_in_media_time;
-        if (manager().m_next_frame.has_value() && manager().m_next_frame->is_frame()) {
+        if (manager().m_next_frame.has_value() && manager().m_next_frame->timestamp() != FrameQueueItem::no_timestamp) {
             earliest_available_sample = min(earliest_available_sample, manager().m_next_frame->timestamp());
         }
         auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp, earliest_available_sample);
@@ -504,31 +508,22 @@ private:
             auto item = manager().m_frame_queue->dequeue();
             manager().m_decode_timer->start(0);
 
-            if (item.is_error()) {
-                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Encountered error while seeking: {}", item.error().description());
-                manager().dispatch_decoder_error(item.release_error());
-                return {};
-            }
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Dequeuing frame at {}ms and comparing to seek target {}ms", item.timestamp().to_milliseconds(), m_target_timestamp.to_milliseconds());
+            if (item.timestamp() > m_target_timestamp || item.timestamp() == FrameQueueItem::no_timestamp) {
+                // Fast seeking will result in an equal timestamp, so we can exit as soon as we see the next frame.
+                if (manager().m_next_frame.has_value()) {
+                    manager().m_last_present_in_media_time = m_target_timestamp;
 
-            if (item.is_frame()) {
-                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Dequeuing frame at {}ms and comparing to seek target {}ms", item.timestamp().to_milliseconds(), m_target_timestamp.to_milliseconds());
-                if (item.timestamp() > m_target_timestamp) {
-                    // Fast seeking will result in an equal timestamp, so we can exit as soon as we see the next frame.
-                    if (manager().m_next_frame.has_value()) {
-                        manager().dispatch_new_frame(manager().m_next_frame.release_value().bitmap());
-                        manager().m_last_present_in_media_time = m_target_timestamp;
-                    }
-
-                    manager().m_next_frame.emplace(item);
-
-                    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Exiting seek to {} state at {}ms", m_playing ? "Playing" : "Paused", manager().m_last_present_in_media_time.to_milliseconds());
-                    return exit_seek();
+                    if (manager().dispatch_frame_queue_item(manager().m_next_frame.release_value()))
+                        return {};
                 }
-                manager().m_next_frame.emplace(item);
-                continue;
-            }
 
-            VERIFY_NOT_REACHED();
+                manager().m_next_frame.emplace(item);
+
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Exiting seek to {} state at {}ms", m_playing ? "Playing" : "Paused", manager().m_last_present_in_media_time.to_milliseconds());
+                return exit_seek();
+            }
+            manager().m_next_frame.emplace(item);
         }
 
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Frame queue is empty while seeking, waiting for buffer fill.");
