@@ -21,7 +21,7 @@ class CSSImportRule final
     WEB_PLATFORM_OBJECT(CSSImportRule, CSSRule);
 
 public:
-    static CSSImportRule* create(AK::URL, DOM::Document&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSImportRule>> create(AK::URL, DOM::Document&);
 
     virtual ~CSSImportRule() = default;
 

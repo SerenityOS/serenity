@@ -3040,7 +3040,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             }
 
             if (url.has_value())
-                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
+                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document())).release_value_but_fixme_should_propagate_errors();
             dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
             return {};
         }
