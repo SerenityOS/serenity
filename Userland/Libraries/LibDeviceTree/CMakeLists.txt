@@ -1,5 +1,6 @@
 
 set(SOURCES
+  FlattenedDeviceTree.cpp
   Validation.cpp
 )
 

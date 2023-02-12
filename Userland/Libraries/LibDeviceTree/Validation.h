@@ -18,5 +18,6 @@ enum class Verbose {
 bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree, Verbose = Verbose::No);
 
 ErrorOr<void> dump(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+ErrorOr<void> dump_flattened_device_tree_structure(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
 
 }
