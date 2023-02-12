@@ -12,9 +12,9 @@
 
 namespace Web::CSS {
 
-CSSMediaRule* CSSMediaRule::create(JS::Realm& realm, MediaList& media_queries, CSSRuleList& rules)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSMediaRule>> CSSMediaRule::create(JS::Realm& realm, MediaList& media_queries, CSSRuleList& rules)
 {
-    return realm.heap().allocate<CSSMediaRule>(realm, realm, media_queries, rules).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSMediaRule>(realm, realm, media_queries, rules));
 }
 
 CSSMediaRule::CSSMediaRule(JS::Realm& realm, MediaList& media, CSSRuleList& rules)
