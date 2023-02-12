@@ -57,7 +57,7 @@ class ResultRow final : public GUI::Button {
             if (!m_context_menu) {
                 m_context_menu = GUI::Menu::construct();
 
-                if (LexicalPath path { text_deprecated() }; path.is_absolute()) {
+                if (LexicalPath path { text().to_deprecated_string() }; path.is_absolute()) {
                     m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
                         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
                     }));
@@ -65,7 +65,7 @@ class ResultRow final : public GUI::Button {
                 }
 
                 m_context_menu->add_action(GUI::Action::create("&Copy as Text", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv)), [&](auto&) {
-                    GUI::Clipboard::the().set_plain_text(text_deprecated());
+                    GUI::Clipboard::the().set_plain_text(text());
                 }));
             }
             m_context_menu->popup(event.screen_position());
