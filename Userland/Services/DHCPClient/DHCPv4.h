@@ -113,7 +113,7 @@ struct AK::Traits<DHCPOption> : public GenericTraits<DHCPOption> {
 
 struct ParsedDHCPv4Options {
     template<typename T>
-    Optional<T const> get(DHCPOption option_name) const
+    Optional<T> get(DHCPOption option_name) const
     requires(IsTriviallyCopyable<T>)
     {
         auto option = options.get(option_name);

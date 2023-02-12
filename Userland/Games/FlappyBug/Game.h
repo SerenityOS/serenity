@@ -128,7 +128,7 @@ public:
         int bitmap_id {};
 
     private:
-        Cloud(Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps_value)
+        Cloud(Vector<NonnullRefPtr<Gfx::Bitmap>> cloud_bitmaps_value)
             : cloud_bitmaps(move(cloud_bitmaps_value))
         {
             reset();
@@ -138,7 +138,7 @@ public:
     public:
         static ErrorOr<Cloud> construct()
         {
-            Vector<NonnullRefPtr<Gfx::Bitmap>> const cloud_bitmaps {
+            Vector<NonnullRefPtr<Gfx::Bitmap>> cloud_bitmaps {
                 TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_0.png"sv)),
                 TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_1.png"sv)),
                 TRY(Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_2.png"sv)),

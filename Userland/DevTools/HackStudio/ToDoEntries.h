@@ -20,7 +20,7 @@ class ToDoEntries {
 public:
     static ToDoEntries& the();
 
-    void set_entries(DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry> const&& entries);
+    void set_entries(DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry> entries);
 
     Vector<CodeComprehension::TodoEntry> get_entries();
 

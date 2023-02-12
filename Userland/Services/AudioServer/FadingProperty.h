@@ -17,11 +17,11 @@ constexpr int DEFAULT_FADE_TIME = 10;
 template<typename T>
 class FadingProperty {
 public:
-    FadingProperty(T const value)
+    FadingProperty(T value)
         : FadingProperty(value, DEFAULT_FADE_TIME)
     {
     }
-    FadingProperty(T const value, int const fade_time)
+    FadingProperty(T value, int fade_time)
         : m_old_value(value)
         , m_new_value(move(value))
         , m_fade_time(fade_time)

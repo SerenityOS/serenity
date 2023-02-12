@@ -31,7 +31,7 @@ public:
         __Count
     };
 
-    explicit SearchResultsModel(Vector<Match> const&& matches)
+    explicit SearchResultsModel(Vector<Match>&& matches)
         : m_matches(move(matches))
     {
     }

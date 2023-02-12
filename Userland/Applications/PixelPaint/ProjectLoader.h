@@ -22,7 +22,7 @@ public:
 
     bool is_raw_image() const { return m_is_raw_image; }
     bool has_image() const { return !m_image.is_null(); }
-    RefPtr<Image> release_image() const { return move(m_image); }
+    RefPtr<Image> release_image() { return move(m_image); }
     JsonArray const& json_metadata() const { return m_json_metadata; }
 
 private:
