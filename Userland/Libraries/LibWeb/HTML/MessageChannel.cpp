@@ -11,9 +11,9 @@
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<MessageChannel> MessageChannel::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageChannel>> MessageChannel::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<MessageChannel>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<MessageChannel>(realm, realm));
 }
 
 MessageChannel::MessageChannel(JS::Realm& realm)
