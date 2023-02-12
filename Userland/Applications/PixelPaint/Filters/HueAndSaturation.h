@@ -13,7 +13,7 @@ namespace PixelPaint::Filters {
 class HueAndSaturation final : public InplaceFilter {
 public:
     virtual void apply(Gfx::Bitmap& target_bitmap) const override;
-    virtual RefPtr<GUI::Widget> get_settings_widget() override;
+    virtual ErrorOr<RefPtr<GUI::Widget>> get_settings_widget() override;
 
     virtual StringView filter_name() const override { return "Hue/Saturation"sv; }
 

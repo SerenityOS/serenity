@@ -22,16 +22,17 @@ Filter::Filter(ImageEditor* editor)
     m_update_timer->set_active(false);
 }
 
-RefPtr<GUI::Widget> Filter::get_settings_widget()
+ErrorOr<RefPtr<GUI::Widget>> Filter::get_settings_widget()
 {
     if (!m_settings_widget) {
-        m_settings_widget = GUI::Widget::construct();
-        m_settings_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto settings_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(settings_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& name_label = m_settings_widget->add<GUI::Label>(filter_name());
-        name_label.set_text_alignment(Gfx::TextAlignment::TopLeft);
+        auto name_label = TRY(settings_widget->try_add<GUI::Label>(filter_name()));
+        name_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
 
-        m_settings_widget->add<GUI::Widget>();
+        (void)TRY(settings_widget->try_add<GUI::Widget>());
+        m_settings_widget = settings_widget;
     }
 
     return m_settings_widget.ptr();
