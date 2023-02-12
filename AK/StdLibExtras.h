@@ -65,6 +65,17 @@ constexpr T&& move(T& arg)
     return static_cast<T&&>(arg);
 }
 
+#ifndef NO_STRICT_MOVE
+
+template<typename T>
+constexpr T&& move(T const& arg)
+{
+    // This should raise an error, because you cannot move from constant references,
+    // The normal move usually just copies the value instead
+    return static_cast<T&&>(arg);
+}
+#endif
+
 }
 
 namespace AK {
