@@ -260,9 +260,8 @@ void LocalSocket::detach(OpenFileDescription& description)
         m_accept_side_fd_open = false;
 
         if (m_bound) {
-            auto inode = m_inode.strong_ref();
-            if (inode)
-                inode->unbind_socket();
+            if (m_inode)
+                m_inode->unbind_socket();
         }
     }
 
