@@ -619,8 +619,8 @@ RENDERER_HANDLER(paint_xobject)
     VERIFY(args.size() > 0);
     auto resources = extra_resources.value_or(m_page.resources);
     auto xobject_name = args[0].get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
-    auto xobjects_dict = MUST(resources->get_dict(m_document, CommonNames::XObject));
-    auto xobject = MUST(xobjects_dict->get_stream(m_document, xobject_name));
+    auto xobjects_dict = TRY(resources->get_dict(m_document, CommonNames::XObject));
+    auto xobject = TRY(xobjects_dict->get_stream(m_document, xobject_name));
 
     Optional<NonnullRefPtr<DictObject>> xobject_resources {};
     if (xobject->dict()->contains(CommonNames::Resources)) {
