@@ -128,7 +128,7 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
     }
 
     auto rule_list = CSSRuleList::create(m_context.realm(), rules).release_value_but_fixme_should_propagate_errors();
-    return CSSStyleSheet::create(m_context.realm(), rule_list, *MediaList::create(m_context.realm(), {}), move(location));
+    return CSSStyleSheet::create(m_context.realm(), rule_list, *MediaList::create(m_context.realm(), {}), move(location)).release_value_but_fixme_should_propagate_errors();
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -7398,7 +7398,7 @@ CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& cont
 {
     if (css.is_empty()) {
         auto rule_list = CSS::CSSRuleList::create_empty(context.realm()).release_value_but_fixme_should_propagate_errors();
-        return CSS::CSSStyleSheet::create(context.realm(), rule_list, *CSS::MediaList::create(context.realm(), {}), location);
+        return CSS::CSSStyleSheet::create(context.realm(), rule_list, *CSS::MediaList::create(context.realm(), {}), location).release_value_but_fixme_should_propagate_errors();
     }
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
