@@ -30,11 +30,43 @@ static void out_optional(char const* label, Optional<T> const& optional)
         outln("(not set)");
 }
 
+static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& parametric_curve, int indent_amount)
+{
+    auto indent = MUST(String::repeated(' ', indent_amount));
+    switch (parametric_curve.function_type()) {
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
+        outln("{}Y = X**{}", indent, parametric_curve.g());
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
+        outln("{}Y = ({}*X + {})**{}   if X >= -{}/{}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
+        outln("{}Y = 0                                else", indent);
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
+        outln("{}Y = ({}*X + {})**{} + {}   if X >= -{}/{}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
+        outln("{}Y =  {}                                    else", indent, parametric_curve.c());
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
+        outln("{}Y = ({}*X + {})**{}   if X >= {}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
+        outln("{}Y =  {}*X                         else", indent, parametric_curve.c());
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
+        outln("{}Y = ({}*X + {})**{} + {}   if X >= {}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
+        outln("{}Y =  {}*X + {}                             else", indent, parametric_curve.c(), parametric_curve.f());
+        break;
+    }
+}
+
 static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
 {
     for (auto const& curve : curves) {
         VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
         outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
+        if (curve->type() == Gfx::ICC::ParametricCurveTagData::Type)
+            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*curve), /*indent=*/12);
     }
 }
 
@@ -295,32 +327,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (named_colors.size() > 5u)
                 outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
-            auto& parametric_curve = static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data);
-            switch (parametric_curve.function_type()) {
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
-                outln("    Y = X**{}", parametric_curve.g());
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
-                outln("    Y = ({}*X + {})**{}   if X >= -{}/{}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
-                outln("    Y = 0                                else");
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
-                outln("    Y = ({}*X + {})**{} + {}   if X >= -{}/{}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
-                outln("    Y =  {}                                    else", parametric_curve.c());
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
-                outln("    Y = ({}*X + {})**{}   if X >= {}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
-                outln("    Y =  {}*X                         else", parametric_curve.c());
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
-                outln("    Y = ({}*X + {})**{} + {}   if X >= {}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
-                outln("    Y =  {}*X + {}                             else", parametric_curve.c(), parametric_curve.f());
-                break;
-            }
+            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data), /*indent=*/4);
         } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
             // This tag can contain arbitrarily many fixed-point numbers, but in practice it's
             // exclusively used for the 'chad' tag, where it always contains 9 values that
