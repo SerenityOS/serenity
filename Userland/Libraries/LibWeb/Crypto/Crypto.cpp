@@ -8,6 +8,7 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
@@ -30,7 +31,9 @@ JS::ThrowCompletionOr<void> Crypto::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CryptoPrototype>(realm, "Crypto"));
-    m_subtle = SubtleCrypto::create(realm);
+    m_subtle = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return SubtleCrypto::create(realm);
+    }));
 
     return {};
 }

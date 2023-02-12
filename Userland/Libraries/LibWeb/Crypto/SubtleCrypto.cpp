@@ -10,13 +10,13 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
-#include <LibWeb/WebIDL/DOMException.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Crypto {
 
-JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<SubtleCrypto>> SubtleCrypto::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<SubtleCrypto>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<SubtleCrypto>(realm, realm));
 }
 
 SubtleCrypto::SubtleCrypto(JS::Realm& realm)
