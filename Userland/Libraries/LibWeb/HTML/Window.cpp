@@ -913,7 +913,7 @@ WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, Deprecate
         HTML::MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        dispatch_event(*HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
+        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
     });
     return {};
 }
