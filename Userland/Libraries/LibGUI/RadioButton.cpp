@@ -17,6 +17,11 @@ REGISTER_WIDGET(GUI, RadioButton)
 namespace GUI {
 
 RadioButton::RadioButton(DeprecatedString text)
+    : RadioButton(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors())
+{
+}
+
+RadioButton::RadioButton(String text)
     : AbstractButton(move(text))
 {
     set_exclusive(true);

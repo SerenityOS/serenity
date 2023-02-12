@@ -15,9 +15,9 @@
 
 namespace GUI {
 
-AbstractButton::AbstractButton(DeprecatedString text)
+AbstractButton::AbstractButton(String text)
 {
-    set_text_deprecated(move(text));
+    set_text(move(text));
 
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_background_role(Gfx::ColorRole::Button);
@@ -34,7 +34,12 @@ AbstractButton::AbstractButton(DeprecatedString text)
     REGISTER_BOOL_PROPERTY("exclusive", is_exclusive, set_exclusive);
 }
 
-void AbstractButton::set_text_deprecated(DeprecatedString text)
+void AbstractButton::set_text_deprecated(DeprecatedString deprecated_text)
+{
+    set_text(String::from_deprecated_string(deprecated_text).release_value_but_fixme_should_propagate_errors());
+}
+
+void AbstractButton::set_text(String text)
 {
     if (m_text == text)
         return;

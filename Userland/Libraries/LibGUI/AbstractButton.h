@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/TextWrapping.h>
 
@@ -21,7 +22,9 @@ public:
     Function<void(bool)> on_checked;
 
     virtual void set_text_deprecated(DeprecatedString);
-    DeprecatedString const& text_deprecated() const { return m_text; }
+    DeprecatedString text_deprecated() const { return m_text.to_deprecated_string(); }
+    virtual void set_text(String);
+    String const& text() const { return m_text; }
 
     bool is_exclusive() const { return m_exclusive; }
     void set_exclusive(bool b) { m_exclusive = b; }
@@ -47,7 +50,7 @@ public:
     void set_auto_repeat_interval(int interval) { m_auto_repeat_interval = interval; }
 
 protected:
-    explicit AbstractButton(DeprecatedString = {});
+    explicit AbstractButton(String = {});
 
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
@@ -62,7 +65,7 @@ protected:
     void paint_text(Painter&, Gfx::IntRect const&, Gfx::Font const&, Gfx::TextAlignment, Gfx::TextWrapping = Gfx::TextWrapping::DontWrap);
 
 private:
-    DeprecatedString m_text;
+    String m_text;
     bool m_checked { false };
     bool m_checkable { false };
     bool m_hovered { false };
