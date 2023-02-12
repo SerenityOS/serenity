@@ -1294,7 +1294,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
     } else if (interface_lowercase == "keyboardevent") {
         event = UIEvents::KeyboardEvent::create(realm, "");
     } else if (interface_lowercase == "messageevent") {
-        event = HTML::MessageEvent::create(realm, "");
+        event = TRY(HTML::MessageEvent::create(realm, ""));
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
         event = UIEvents::MouseEvent::create(realm, "");
     } else if (interface_lowercase == "storageevent") {

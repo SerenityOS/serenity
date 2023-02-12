@@ -21,8 +21,8 @@ class MessageEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(MessageEvent, DOM::Event);
 
 public:
-    static MessageEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, MessageEventInit const& event_init = {});
-    static MessageEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, MessageEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, MessageEventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, MessageEventInit const& event_init);
 
     MessageEvent(JS::Realm&, DeprecatedFlyString const& event_name, MessageEventInit const& event_init);
     virtual ~MessageEvent() override;
