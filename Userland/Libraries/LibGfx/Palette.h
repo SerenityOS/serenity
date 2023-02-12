@@ -181,6 +181,7 @@ public:
     DeprecatedString menu_shadow_path() const { return path(PathRole::MenuShadow); }
     DeprecatedString taskbar_shadow_path() const { return path(PathRole::TaskbarShadow); }
     DeprecatedString tooltip_shadow_path() const { return path(PathRole::TooltipShadow); }
+    DeprecatedString color_scheme_path() const { return path(PathRole::ColorScheme); }
 
     Color color(ColorRole role) const { return m_impl->color(role); }
     Gfx::TextAlignment alignment(AlignmentRole role) const { return m_impl->alignment(role); }

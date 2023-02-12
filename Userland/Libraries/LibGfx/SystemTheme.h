@@ -291,8 +291,8 @@ struct SystemTheme {
 
 Core::AnonymousBuffer& current_system_theme_buffer();
 void set_system_theme(Core::AnonymousBuffer);
-ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const&);
-ErrorOr<Core::AnonymousBuffer> load_system_theme(DeprecatedString const& path);
+ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const&, Optional<DeprecatedString> const& color_scheme = OptionalNone());
+ErrorOr<Core::AnonymousBuffer> load_system_theme(DeprecatedString const& path, Optional<DeprecatedString> const& color_scheme = OptionalNone());
 
 struct SystemThemeMetaData {
     DeprecatedString name;

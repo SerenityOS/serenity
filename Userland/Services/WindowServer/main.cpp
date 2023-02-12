@@ -47,7 +47,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
     WindowServer::g_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes));
     auto theme_name = WindowServer::g_config->read_entry("Theme", "Name", "Default");
 
-    auto theme = TRY(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", theme_name)));
+    Optional<DeprecatedString> custom_color_scheme_path = OptionalNone();
+    if (WindowServer::g_config->read_bool_entry("Theme", "LoadCustomColorScheme", false))
+        custom_color_scheme_path = WindowServer::g_config->read_entry("Theme", "CustomColorSchemePath");
+
+    auto theme = TRY(Gfx::load_system_theme(DeprecatedString::formatted("/res/themes/{}.ini", theme_name), custom_color_scheme_path));
     Gfx::set_system_theme(theme);
     auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
 

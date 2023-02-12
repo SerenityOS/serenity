@@ -39,6 +39,24 @@
     }
 
     @GUI::GroupBox {
+        title: "Color Scheme"
+        preferred_height: "fit"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [14, 14, 14]
+        }
+
+        @GUI::CheckBox {
+            name: "custom_color_scheme_checkbox"
+            text: "Use a custom color scheme"
+        }
+
+        @GUI::ComboBox {
+            name: "color_scheme_combo"
+            enabled: "false"
+        }
+    }
+
+    @GUI::GroupBox {
         layout: @GUI::VerticalBoxLayout {
             margins: [14, 14, 4]
         }

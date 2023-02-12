@@ -130,7 +130,7 @@ endpoint WindowServer
     start_drag([UTF8] DeprecatedString text, HashMap<DeprecatedString,ByteBuffer> mime_data, Gfx::ShareableBitmap drag_bitmap) => (bool started)
     set_accepts_drag(bool accepts) =|
 
-    set_system_theme(DeprecatedString theme_path, [UTF8] DeprecatedString theme_name, bool keep_desktop_background) => (bool success)
+    set_system_theme(DeprecatedString theme_path, [UTF8] DeprecatedString theme_name, bool keep_desktop_background, Optional<DeprecatedString> color_scheme_path) => (bool success)
     get_system_theme() => ([UTF8] DeprecatedString theme_name)
     refresh_system_theme() =|
 
@@ -138,6 +138,8 @@ endpoint WindowServer
     get_system_theme_override() => (Optional<Core::AnonymousBuffer> buffer)
     clear_system_theme_override() =|
     is_system_theme_overridden() => (bool overridden)
+
+    get_preferred_color_scheme() => (Optional<DeprecatedString> path)
 
     apply_cursor_theme(DeprecatedString name) =|
     get_cursor_theme() => (DeprecatedString name)
