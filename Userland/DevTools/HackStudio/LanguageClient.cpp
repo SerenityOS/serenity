@@ -127,7 +127,7 @@ void ConnectionToServer::declarations_in_document(DeprecatedString const& filena
 
 void ConnectionToServer::todo_entries_in_document(DeprecatedString const& filename, Vector<CodeComprehension::TodoEntry> const& todo_entries)
 {
-    ToDoEntries::the().set_entries(filename, move(todo_entries));
+    ToDoEntries::the().set_entries(filename, move(const_cast<Vector<CodeComprehension::TodoEntry>&>(todo_entries)));
 }
 
 void LanguageClient::search_declaration(DeprecatedString const& path, size_t line, size_t column)

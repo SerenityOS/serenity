@@ -41,8 +41,8 @@ ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, M
     return info_ptr;
 }
 
-Backtrace::Backtrace(Reader const& coredump, const ELF::Core::ThreadInfo& thread_info, Function<void(size_t, size_t)> on_progress)
-    : m_thread_info(move(thread_info))
+Backtrace::Backtrace(Reader const& coredump, ELF::Core::ThreadInfo const& thread_info, Function<void(size_t, size_t)> on_progress)
+    : m_thread_info(thread_info)
 {
 #if ARCH(X86_64)
     auto start_bp = m_thread_info.regs.rbp;
