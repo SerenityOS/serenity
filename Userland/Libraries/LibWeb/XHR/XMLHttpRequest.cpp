@@ -524,7 +524,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
         //        See: https://github.com/whatwg/fetch/issues/1142
         ResourceLoader::the().load(
             request,
-            [weak_this = make_weak_ptr<XMLHttpRequest>()](auto data, auto& response_headers, auto status_code) {
+            [weak_this = make_weak_ptr<XMLHttpRequest>()](auto data, auto response_headers, auto status_code) {
                 JS::GCPtr<XMLHttpRequest> strong_this = weak_this.ptr();
                 if (!strong_this)
                     return;

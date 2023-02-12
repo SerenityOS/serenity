@@ -109,7 +109,7 @@ RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest&
 
     load(
         request,
-        [=](auto data, auto& headers, auto status_code) {
+        [=](auto data, auto headers, auto status_code) {
             const_cast<Resource&>(*resource).did_load({}, data, headers, status_code);
         },
         [=](auto& error, auto status_code) {
@@ -155,7 +155,7 @@ static void store_response_cookies(Page& page, AK::URL const& url, DeprecatedStr
 
 static size_t resource_id = 0;
 
-void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
+void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     auto& url = request.url();
     request.start_timer();
@@ -196,8 +196,8 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
         response_headers.set("Content-Type", "text/html; charset=UTF-8");
 
-        Platform::EventLoopPlugin::the().deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)] {
-            success_callback(DeprecatedString::empty().to_byte_buffer(), response_headers, {});
+        Platform::EventLoopPlugin::the().deferred_invoke([success_callback = move(success_callback), response_headers = move(response_headers)]() mutable {
+            success_callback(DeprecatedString::empty().to_byte_buffer(), move(response_headers), {});
         });
         return;
     }
@@ -312,7 +312,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
         m_active_requests.set(*protocol_request);
 
-        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) mutable {
+        protocol_request->on_buffered_request_finish = [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request, &protocol_request = *protocol_request](bool success, auto, auto response_headers, auto status_code, ReadonlyBytes payload) mutable {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -334,7 +334,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                 return;
             }
             log_success(request);
-            success_callback(payload, response_headers, status_code);
+            success_callback(payload, move(response_headers), status_code);
             Platform::EventLoopPlugin::the().deferred_invoke([this, &protocol_request] {
                 m_active_requests.remove(protocol_request);
             });
@@ -355,7 +355,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         error_callback(not_implemented_error, {});
 }
 
-void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
+void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers, Optional<u32> status_code)> success_callback, Function<void(DeprecatedString const&, Optional<u32> status_code)> error_callback, Optional<u32> timeout, Function<void()> timeout_callback)
 {
     LoadRequest request;
     request.set_url(url);

@@ -97,7 +97,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
     //    response consume body is processResponseConsumeBody, process response end-of-body is processResponseEndOfBody,
     //    task destination is taskDestination, and cross-origin isolated capability is crossOriginIsolatedCapability.
     auto fetch_params = Infrastructure::FetchParams::create(vm, request, timing_info);
-    fetch_params->set_algorithms(move(algorithms));
+    fetch_params->set_algorithms(algorithms);
     if (task_destination)
         fetch_params->set_task_destination({ *task_destination });
     fetch_params->set_cross_origin_isolated_capability(cross_origin_isolated_capability);
@@ -1644,7 +1644,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
 
     ResourceLoader::the().load(
         load_request,
-        [&realm, &vm, request, pending_response](auto data, auto& response_headers, auto status_code) {
+        [&realm, &vm, request, pending_response](auto data, auto response_headers, auto status_code) {
             dbgln_if(WEB_FETCH_DEBUG, "Fetch: ResourceLoader load for '{}' complete", request->url());
             if constexpr (WEB_FETCH_DEBUG)
                 log_response(status_code, response_headers, data);

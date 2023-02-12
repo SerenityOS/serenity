@@ -208,7 +208,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
 
     ResourceLoader::the().load(
         url,
-        [this, is_shared, is_top_level, url, &outside_port](auto data, auto&, auto) {
+        [this, is_shared, is_top_level, url, &outside_port](auto data, auto, auto) {
             // In both cases, to perform the fetch given request, perform the following steps if the is top-level flag is set:
             if (is_top_level) {
                 // 1. Set request's reserved client to inside settings.

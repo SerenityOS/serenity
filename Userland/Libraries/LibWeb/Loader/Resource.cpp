@@ -86,16 +86,16 @@ static bool is_valid_encoding(StringView encoding)
     return TextCodec::decoder_for(encoding).has_value();
 }
 
-void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code)
+void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
     // FIXME: Handle OOM failure.
     m_encoded_data = ByteBuffer::copy(data).release_value_but_fixme_should_propagate_errors();
-    m_response_headers = headers;
+    m_response_headers = move(headers);
     m_status_code = move(status_code);
     m_loaded = true;
 
-    auto content_type = headers.get("Content-Type");
+    auto content_type = m_response_headers.get("Content-Type");
 
     if (content_type.has_value()) {
         dbgln_if(RESOURCE_DEBUG, "Content-Type header: '{}'", content_type.value());
@@ -109,7 +109,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<Depre
         dbgln_if(RESOURCE_DEBUG, "This is a data URL with mime-type _{}_", url().data_mime_type());
         m_mime_type = url().data_mime_type();
     } else {
-        auto content_type_options = headers.get("X-Content-Type-Options");
+        auto content_type_options = m_response_headers.get("X-Content-Type-Options");
         if (content_type_options.value_or("").equals_ignoring_case("nosniff"sv)) {
             m_mime_type = "text/plain";
         } else {

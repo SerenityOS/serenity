@@ -384,7 +384,7 @@ void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, 
 
     ResourceLoader::the().load(
         request,
-        [url, module_type, &module_map_settings_object, on_complete = move(on_complete), &module_map](StringView data, auto& response_headers, auto) {
+        [url, module_type, &module_map_settings_object, on_complete = move(on_complete), &module_map](StringView data, auto response_headers, auto) {
             if (data.is_null()) {
                 dbgln("Failed to load module {}", url);
                 module_map.set(url, module_type, { ModuleMap::EntryType::Failed, nullptr });

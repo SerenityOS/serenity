@@ -250,7 +250,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
         ResourceLoader::the().load(
             favicon_url,
-            [this, favicon_url](auto data, auto&, auto) {
+            [this, favicon_url](auto data, auto, auto) {
                 // Always fetch the current document
                 auto* document = this->browsing_context().active_document();
                 if (document && document->has_active_favicon())
@@ -336,7 +336,7 @@ void FrameLoader::load_error_page(const AK::URL& failed_url, DeprecatedString co
 
     ResourceLoader::the().load(
         request,
-        [this, failed_url, error](auto data, auto&, auto) {
+        [this, failed_url, error](auto data, auto, auto) {
             VERIFY(!data.is_null());
             StringBuilder builder;
             SourceGenerator generator { builder };

@@ -60,7 +60,7 @@ public:
 
     void for_each_client(Function<void(ResourceClient&)>);
 
-    void did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code);
+    void did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> headers, Optional<u32> status_code);
     void did_fail(Badge<ResourceLoader>, DeprecatedString const& error, Optional<u32> status_code);
 
 protected:
