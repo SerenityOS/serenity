@@ -21,6 +21,7 @@ public:
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
     virtual void on_primary_color_change(Color) override;
+    virtual void on_secondary_color_change(Color) override;
     virtual void on_tool_activation() override;
     virtual GUI::Widget* get_properties_widget() override;
 
@@ -45,6 +46,7 @@ private:
     bool m_hover_over_start_handle = false;
     bool m_hover_over_end_handle = false;
     int m_opacity = 100;
+    bool m_use_secondary_color { false };
     Gfx::FloatLine m_gradient_begin_line;
     Gfx::FloatLine m_gradient_center_line;
     Gfx::FloatLine m_gradient_end_line;

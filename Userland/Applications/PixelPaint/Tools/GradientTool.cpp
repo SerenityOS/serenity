@@ -12,6 +12,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/Painter.h>
@@ -169,6 +170,12 @@ void GradientTool::on_primary_color_change(Color)
         m_editor->update();
 }
 
+void GradientTool::on_secondary_color_change(Color)
+{
+    if (m_gradient_end.has_value())
+        m_editor->update();
+}
+
 void GradientTool::on_tool_activation()
 {
     reset();
@@ -198,6 +205,12 @@ GUI::Widget* GradientTool::get_properties_widget()
         };
 
         set_primary_slider(&opacity_slider);
+
+        auto& use_secondary_color_checkbox = m_properties_widget->add<GUI::CheckBox>(String::from_utf8("Use secondary color"sv).release_value_but_fixme_should_propagate_errors());
+        use_secondary_color_checkbox.on_checked = [this](bool checked) {
+            m_use_secondary_color = checked;
+            m_editor->update();
+        };
 
         auto& button_container = m_properties_widget->add<GUI::Widget>();
         button_container.set_fixed_height(22);
@@ -285,7 +298,14 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
     auto gradient_half_width_percentage_offset = (m_gradient_half_length * scale) / overall_gradient_length_in_rect;
     auto start_color = m_editor->color_for(GUI::MouseButton::Primary);
     start_color.set_alpha(start_color.alpha() * m_opacity / 100);
-    auto end_color = start_color.with_alpha(0);
+
+    auto end_color = [&] {
+        if (m_use_secondary_color) {
+            auto color = m_editor->color_for(GUI::MouseButton::Secondary);
+            return color.with_alpha(color.alpha() * m_opacity / 100);
+        }
+        return start_color.with_alpha(0);
+    }();
 
     {
         Gfx::PainterStateSaver saver(painter);
