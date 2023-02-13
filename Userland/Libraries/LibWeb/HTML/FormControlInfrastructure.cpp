@@ -150,9 +150,9 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
         // FIXME:    2. Create an entry with name and charset, and append it to entry list.
         // 10. Otherwise, create an entry with name and the value of the field element, and append it to entry list.
         else {
-            auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr());
-            VERIFY(input_element);
-            TRY_OR_THROW_OOM(vm, form_data_entries.try_append(input_element->value()));
+            auto* element = dynamic_cast<HTML::HTMLElement*>(control.ptr());
+            VERIFY(element);
+            TRY_OR_THROW_OOM(vm, form_data_entries.try_append(element->attribute("value"sv)));
             TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
         }
 
