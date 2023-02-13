@@ -88,7 +88,7 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, Deprec
 
         // 4. If ! IsCallable(X) is false, then set completion to a new Completion{[[Type]]: throw, [[Value]]: a newly created TypeError object, [[Target]]: empty}, and jump to the step labeled return.
         if (!get_result.value().is_function()) {
-            completion = realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, get_result.value().to_string_without_side_effects());
+            completion = realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, get_result.value().to_deprecated_string_without_side_effects());
             return clean_up_on_return(stored_settings, relevant_settings, completion);
         }
 

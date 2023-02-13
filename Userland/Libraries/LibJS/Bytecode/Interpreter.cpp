@@ -149,7 +149,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             if (registers()[i].is_empty())
                 value_string = "(empty)";
             else
-                value_string = registers()[i].to_string_without_side_effects();
+                value_string = registers()[i].to_deprecated_string_without_side_effects();
             dbgln("[{:3}] {}", i, value_string);
         }
     }

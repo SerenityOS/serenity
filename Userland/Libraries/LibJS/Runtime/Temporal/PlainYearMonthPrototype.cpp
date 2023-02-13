@@ -208,7 +208,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainYearMonthPrototype::with)
     // 3. If Type(temporalYearMonthLike) is not Object, then
     if (!temporal_year_month_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_year_month_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_year_month_like.to_deprecated_string_without_side_effects());
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalYearMonthLike).

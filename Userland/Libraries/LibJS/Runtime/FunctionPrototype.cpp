@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 
     // 2. If IsCallable(func) is false, throw a TypeError exception.
     if (!function_value.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function_value.to_deprecated_string_without_side_effects());
 
     auto& function = static_cast<FunctionObject&>(function_value.as_object());
 
@@ -93,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 
     // 2. If IsCallable(Target) is false, throw a TypeError exception.
     if (!target_value.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, target_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, target_value.to_deprecated_string_without_side_effects());
 
     auto& target = static_cast<FunctionObject&>(target_value.as_object());
 
@@ -124,7 +124,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 
     // 2. If IsCallable(func) is false, throw a TypeError exception.
     if (!function_value.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function_value.to_deprecated_string_without_side_effects());
 
     auto& function = static_cast<FunctionObject&>(function_value.as_object());
 

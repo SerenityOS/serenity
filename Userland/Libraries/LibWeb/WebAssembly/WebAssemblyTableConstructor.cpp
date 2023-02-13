@@ -34,7 +34,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
     auto descriptor = TRY(vm.argument(0).to_object(vm));
     auto element_value = TRY(descriptor->get("element"));
     if (!element_value.is_string())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidHint, element_value.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidHint, element_value.to_deprecated_string_without_side_effects());
     auto element = TRY(element_value.as_string().deprecated_string());
 
     Optional<Wasm::ValueType> reference_type;

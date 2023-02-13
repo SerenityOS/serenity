@@ -51,7 +51,7 @@ struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
     {
         Vector<DeprecatedString> parts;
         if (property_descriptor.value.has_value())
-            parts.append(DeprecatedString::formatted("[[Value]]: {}", property_descriptor.value->to_string_without_side_effects()));
+            parts.append(DeprecatedString::formatted("[[Value]]: {}", property_descriptor.value->to_deprecated_string_without_side_effects()));
         if (property_descriptor.get.has_value())
             parts.append(DeprecatedString::formatted("[[Get]]: JS::Function* @ {:p}", *property_descriptor.get));
         if (property_descriptor.set.has_value())

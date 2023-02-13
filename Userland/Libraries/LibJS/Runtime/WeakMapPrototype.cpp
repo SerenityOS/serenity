@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
     auto* weak_map = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
     if (!can_be_held_weakly(value))
-        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, value.to_deprecated_string_without_side_effects());
     weak_map->values().set(&value.as_cell(), vm.argument(1));
     return weak_map;
 }
