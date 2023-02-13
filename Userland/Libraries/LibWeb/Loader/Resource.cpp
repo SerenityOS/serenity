@@ -81,7 +81,7 @@ static DeprecatedString mime_type_from_content_type(DeprecatedString const& cont
     return content_type;
 }
 
-static bool is_valid_encoding(DeprecatedString const& encoding)
+static bool is_valid_encoding(StringView encoding)
 {
     return TextCodec::decoder_for(encoding);
 }

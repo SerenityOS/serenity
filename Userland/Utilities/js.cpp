@@ -877,7 +877,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (Utf8View { file_contents }.validate()) {
                     builder.append(source);
                 } else {
-                    auto* decoder = TextCodec::decoder_for("windows-1252");
+                    auto* decoder = TextCodec::decoder_for("windows-1252"sv);
                     VERIFY(decoder);
 
                     auto utf8_source = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, source);
