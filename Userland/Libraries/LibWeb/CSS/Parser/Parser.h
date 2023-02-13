@@ -59,7 +59,7 @@ private:
 
 class Parser {
 public:
-    Parser(ParsingContext const&, StringView input, DeprecatedString const& encoding = "utf-8");
+    Parser(ParsingContext const&, StringView input, StringView encoding = "utf-8"sv);
     ~Parser() = default;
 
     CSSStyleSheet* parse_as_css_stylesheet(Optional<AK::URL> location);

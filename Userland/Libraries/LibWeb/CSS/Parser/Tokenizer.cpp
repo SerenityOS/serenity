@@ -195,10 +195,10 @@ static inline bool is_E(u32 code_point)
     return code_point == 0x45;
 }
 
-Tokenizer::Tokenizer(StringView input, DeprecatedString const& encoding)
+Tokenizer::Tokenizer(StringView input, StringView encoding)
 {
     // https://www.w3.org/TR/css-syntax-3/#css-filter-code-points
-    auto filter_code_points = [](StringView input, auto const& encoding) -> DeprecatedString {
+    auto filter_code_points = [](StringView input, auto encoding) -> DeprecatedString {
         auto* decoder = TextCodec::decoder_for(encoding);
         VERIFY(decoder);
 
