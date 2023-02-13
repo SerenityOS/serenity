@@ -683,7 +683,9 @@ template<>
 struct Formatter<JS::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::Value value)
     {
-        return Formatter<StringView>::format(builder, value.is_empty() ? "<empty>" : value.to_deprecated_string_without_side_effects());
+        if (value.is_empty())
+            return Formatter<StringView>::format(builder, "<empty>"sv);
+        return Formatter<StringView>::format(builder, TRY(value.to_string_without_side_effects()));
     }
 };
 
