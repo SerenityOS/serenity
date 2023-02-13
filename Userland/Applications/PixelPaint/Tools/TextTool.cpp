@@ -41,11 +41,9 @@ TextTool::TextTool()
     }).release_value_but_fixme_should_propagate_errors();
 }
 
-void TextTool::on_tool_activation()
+void TextTool::on_primary_color_change(Color color)
 {
-    m_editor->on_primary_color_change = [this](auto color) {
-        m_text_color = color;
-    };
+    m_text_color = color;
 }
 
 void TextTool::on_tool_deactivation()

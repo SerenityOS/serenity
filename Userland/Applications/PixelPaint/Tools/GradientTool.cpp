@@ -163,13 +163,14 @@ void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     draw_gradient(painter, true, m_editor->content_to_frame_position(Gfx::IntPoint(0, 0)), m_editor->scale(), m_editor->content_rect());
 }
 
+void GradientTool::on_primary_color_change(Color)
+{
+    if (m_gradient_end.has_value())
+        m_editor->update();
+}
+
 void GradientTool::on_tool_activation()
 {
-    m_editor->on_primary_color_change = [this](Color) {
-        if (m_gradient_end.has_value())
-            m_editor->update();
-    };
-
     reset();
 }
 
