@@ -43,7 +43,7 @@ public:
 
     bool in_quirks_mode() const;
     DOM::Document const* document() const { return m_document; }
-    AK::URL complete_url(DeprecatedString const&) const;
+    AK::URL complete_url(StringView) const;
 
     PropertyID current_property_id() const { return m_current_property_id; }
     void set_current_property_id(PropertyID property_id) { m_current_property_id = property_id; }

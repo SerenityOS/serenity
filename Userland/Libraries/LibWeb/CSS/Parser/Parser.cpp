@@ -77,9 +77,9 @@ bool ParsingContext::in_quirks_mode() const
 }
 
 // https://www.w3.org/TR/css-values-4/#relative-urls
-AK::URL ParsingContext::complete_url(DeprecatedString const& addr) const
+AK::URL ParsingContext::complete_url(StringView relative_url) const
 {
-    return m_url.complete_url(addr);
+    return m_url.complete_url(relative_url);
 }
 
 Parser::Parser(ParsingContext const& context, StringView input, StringView encoding)

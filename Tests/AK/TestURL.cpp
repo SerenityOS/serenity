@@ -403,7 +403,7 @@ TEST_CASE(complete_file_url_with_base)
     EXPECT_EQ(url.paths()[0], "home");
     EXPECT_EQ(url.paths()[1], "index.html");
 
-    auto sub_url = url.complete_url("js/app.js");
+    auto sub_url = url.complete_url("js/app.js"sv);
     EXPECT(sub_url.is_valid());
     EXPECT_EQ(sub_url.path(), "/home/js/app.js");
 }
