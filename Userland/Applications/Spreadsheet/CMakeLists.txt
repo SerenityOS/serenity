@@ -1,7 +1,7 @@
 serenity_component(
     Spreadsheet
     TARGETS Spreadsheet
-    DEPENDS WebContent
+    DEPENDS WebContent ContentAccessServer
 )
 
 compile_gml(CondFormatting.gml CondFormattingGML.h cond_fmt_gml)
@@ -42,7 +42,7 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Spreadsheet ICON app-spreadsheet)
-target_link_libraries(Spreadsheet PRIVATE LibCore LibFileSystemAccessClient LibGfx LibGUI LibJS LibMain LibMarkdown LibSyntax LibWebView LibWeb)
+target_link_libraries(Spreadsheet PRIVATE LibCore LibContentAccessClient LibFileSystemAccessClient LibGfx LibGUI LibJS LibMain LibMarkdown LibSyntax LibWebView LibWeb)
 
 serenity_test(Writers/Test/TestXSVWriter.cpp Spreadsheet)
 

@@ -9,9 +9,9 @@
 #include "SpreadsheetWidget.h"
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
+#include <LibContentAccessClient/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
-#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     if (filename) {
-        auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename));
+        auto file = TRY(ContentAccessClient::Client::the().request_url_read_only_approve_local(window, URL::create_with_url_or_path(filename)));
         spreadsheet_widget->load_file(file.filename(), file.stream());
     }
 
