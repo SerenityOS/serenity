@@ -93,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 {
     auto* set = TRY(typed_this_object(vm));
     if (!vm.argument(0).is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, vm.argument(0).to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, vm.argument(0).to_string_without_side_effects()));
     auto this_value = vm.this_value();
     for (auto& entry : *set)
         TRY(call(vm, vm.argument(0).as_function(), vm.argument(1), entry.key, entry.key, this_value));
@@ -137,7 +137,7 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
 {
     // 1. If obj is not an Object, throw a TypeError exception.
     if (!value.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
     auto const& object = value.as_object();
 
     // 2. Let rawSize be ? Get(obj, "size").
@@ -159,14 +159,14 @@ static ThrowCompletionOr<SetRecord> get_set_record(VM& vm, Value value)
 
     // 8. If IsCallable(has) is false, throw a TypeError exception.
     if (!has.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, has.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, has.to_string_without_side_effects()));
 
     // 9. Let keys be ? Get(obj, "keys").
     auto keys = TRY(object.get(vm.names.keys));
 
     // 10. If IsCallable(keys) is false, throw a TypeError exception.
     if (!keys.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, keys.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, keys.to_string_without_side_effects()));
 
     // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
     return SetRecord { .set = object, .size = integer_size, .has = has.as_function(), .keys = keys.as_function() };
@@ -180,14 +180,14 @@ static ThrowCompletionOr<Iterator> get_keys_iterator(VM& vm, SetRecord const& se
 
     // 2. If keysIter is not an Object, throw a TypeError exception.
     if (!keys_iterator.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, keys_iterator.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, keys_iterator.to_string_without_side_effects()));
 
     // 3. Let nextMethod be ? Get(keysIter, "next").
     auto next_method = TRY(keys_iterator.as_object().get(vm.names.next));
 
     // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
     if (!next_method.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, next_method.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, next_method.to_string_without_side_effects()));
 
     // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
     return Iterator { .iterator = &keys_iterator.as_object(), .next_method = next_method, .done = false };

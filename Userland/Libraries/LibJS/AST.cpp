@@ -436,9 +436,9 @@ Completion CallExpression::throw_type_error_for_callee(Interpreter& interpreter,
     auto& vm = interpreter.vm();
 
     if (auto expression_string = this->expression_string(); expression_string.has_value())
-        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee_value.to_deprecated_string_without_side_effects(), call_type, expression_string.release_value());
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, TRY_OR_THROW_OOM(vm, callee_value.to_string_without_side_effects()), call_type, expression_string.release_value());
 
-    return vm.throw_completion<TypeError>(ErrorType::IsNotA, callee_value.to_deprecated_string_without_side_effects(), call_type);
+    return vm.throw_completion<TypeError>(ErrorType::IsNotA, TRY_OR_THROW_OOM(vm, callee_value.to_string_without_side_effects()), call_type);
 }
 
 // 13.3.6.1 Runtime Semantics: Evaluation, https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation
@@ -1970,11 +1970,11 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         if (super_class.is_null()) {
             proto_parent = nullptr;
         } else if (!super_class.is_constructor()) {
-            return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueNotAConstructorOrNull, super_class.to_deprecated_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueNotAConstructorOrNull, TRY_OR_THROW_OOM(vm, super_class.to_string_without_side_effects()));
         } else {
             auto super_class_prototype = TRY(super_class.get(vm, vm.names.prototype));
             if (!super_class_prototype.is_null() && !super_class_prototype.is_object())
-                return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueInvalidPrototype, super_class_prototype.to_deprecated_string_without_side_effects());
+                return vm.throw_completion<TypeError>(ErrorType::ClassExtendsValueInvalidPrototype, TRY_OR_THROW_OOM(vm, super_class_prototype.to_string_without_side_effects()));
 
             if (super_class_prototype.is_null())
                 proto_parent = nullptr;
