@@ -703,7 +703,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
                 if (!attr_value.is_null()) {
                     // FIXME: attr() should also accept an optional type argument, not just strings.
-                    dest.empend(Parser::Token::of_string(attr_value));
+                    dest.empend(Parser::Token::of_string(FlyString::from_utf8(attr_value).release_value_but_fixme_should_propagate_errors()));
                     continue;
                 }
 
