@@ -48,14 +48,14 @@ ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint,
 
     // NOTE: Additional type check to produce a better error message than Call().
     if (!method->is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotIterable, value.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
 
     // 3. Let iterator be ? Call(method, obj).
     auto iterator = TRY(call(vm, *method, value));
 
     // 4. If Type(iterator) is not Object, throw a TypeError exception.
     if (!iterator.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotIterable, value.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
 
     // 5. Let nextMethod be ? GetV(iterator, "next").
     auto next_method = TRY(iterator.get(vm, vm.names.next));

@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);
     if (!argument.is_symbol())
-        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, argument.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, TRY_OR_THROW_OOM(vm, argument.to_string_without_side_effects()));
 
     auto& symbol = argument.as_symbol();
     if (symbol.is_global()) {

@@ -44,7 +44,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> WeakRefConstructor::construct(FunctionOb
 
     auto target = vm.argument(0);
     if (!can_be_held_weakly(target))
-        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, target.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, TRY_OR_THROW_OOM(vm, target.to_string_without_side_effects()));
 
     if (target.is_object())
         return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_object()));

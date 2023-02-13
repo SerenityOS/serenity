@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 
     auto getter = vm.argument(1);
     if (!getter.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, getter.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, getter.to_string_without_side_effects()));
 
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
 
@@ -205,7 +205,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 
     auto setter = vm.argument(1);
     if (!setter.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, setter.to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, setter.to_string_without_side_effects()));
 
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
 

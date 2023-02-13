@@ -74,7 +74,7 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
     case PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_deprecated_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
         break;
     }
     case PropertyKind::Spread:
@@ -614,11 +614,13 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
 
 Completion Call::throw_type_error_for_callee(Bytecode::Interpreter& interpreter, StringView callee_type) const
 {
+    auto& vm = interpreter.vm();
     auto callee = interpreter.reg(m_callee);
-    if (m_expression_string.has_value())
-        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_deprecated_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
 
-    return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_deprecated_string_without_side_effects(), callee_type);
+    if (m_expression_string.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
+
+    return vm.throw_completion<TypeError>(ErrorType::IsNotA, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type);
 }
 
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -747,7 +749,7 @@ ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& in
 {
     auto& vm = interpreter.vm();
     if (!interpreter.accumulator().is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_deprecated_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
     return {};
 }
 
