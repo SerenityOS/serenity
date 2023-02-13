@@ -194,42 +194,6 @@ ThrowCompletionOr<bool> Reference::delete_(VM& vm)
     return m_base_environment->delete_binding(vm, m_name.as_string());
 }
 
-DeprecatedString Reference::to_deprecated_string() const
-{
-    StringBuilder builder;
-    builder.append("Reference { Base="sv);
-    switch (m_base_type) {
-    case BaseType::Unresolvable:
-        builder.append("Unresolvable"sv);
-        break;
-    case BaseType::Environment:
-        builder.appendff("{}", base_environment().class_name());
-        break;
-    case BaseType::Value:
-        if (m_base_value.is_empty())
-            builder.append("<empty>"sv);
-        else
-            builder.appendff("{}", m_base_value.to_deprecated_string_without_side_effects());
-        break;
-    }
-    builder.append(", ReferencedName="sv);
-    if (!m_name.is_valid())
-        builder.append("<invalid>"sv);
-    else if (m_name.is_symbol())
-        builder.appendff("{}", m_name.as_symbol()->descriptive_string().release_value_but_fixme_should_propagate_errors());
-    else
-        builder.appendff("{}", m_name.to_string());
-    builder.appendff(", Strict={}", m_strict);
-    builder.appendff(", ThisValue=");
-    if (m_this_value.is_empty())
-        builder.append("<empty>"sv);
-    else
-        builder.appendff("{}", m_this_value.to_deprecated_string_without_side_effects());
-
-    builder.append(" }"sv);
-    return builder.to_deprecated_string();
-}
-
 // 6.2.4.8 InitializeReferencedBinding ( V, W ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
 // 1.2.1.1 InitializeReferencedBinding ( V, W, hint ), https://tc39.es/proposal-explicit-resource-management/#sec-initializereferencedbinding
 ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value value, Environment::InitializeBindingHint hint) const
