@@ -60,7 +60,7 @@ public:
 class Tokenizer {
 
 public:
-    explicit Tokenizer(StringView input, DeprecatedString const& encoding);
+    explicit Tokenizer(StringView input, StringView encoding);
 
     [[nodiscard]] Vector<Token> parse();
 

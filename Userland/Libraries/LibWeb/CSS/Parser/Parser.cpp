@@ -82,7 +82,7 @@ AK::URL ParsingContext::complete_url(DeprecatedString const& addr) const
     return m_url.complete_url(addr);
 }
 
-Parser::Parser(ParsingContext const& context, StringView input, DeprecatedString const& encoding)
+Parser::Parser(ParsingContext const& context, StringView input, StringView encoding)
     : m_context(context)
     , m_tokenizer(input, encoding)
     , m_tokens(m_tokenizer.parse())

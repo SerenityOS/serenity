@@ -43,7 +43,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
             false);
     };
 
-    CSS::Parser::Tokenizer tokenizer { text, "utf-8" };
+    CSS::Parser::Tokenizer tokenizer { text, "utf-8"sv };
     auto tokens = tokenizer.parse();
     for (auto const& token : tokens) {
         if (token.is(Parser::Token::Type::EndOfFile))
