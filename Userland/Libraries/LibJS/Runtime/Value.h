@@ -394,7 +394,7 @@ public:
     ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
     ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
 
-    DeprecatedString to_string_without_side_effects() const;
+    DeprecatedString to_deprecated_string_without_side_effects() const;
 
     Value value_or(Value fallback) const
     {
@@ -682,7 +682,7 @@ template<>
 struct Formatter<JS::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::Value value)
     {
-        return Formatter<StringView>::format(builder, value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
+        return Formatter<StringView>::format(builder, value.is_empty() ? "<empty>" : value.to_deprecated_string_without_side_effects());
     }
 };
 

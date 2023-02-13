@@ -57,13 +57,13 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 {
     auto constructor = vm.this_value();
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_deprecated_string_without_side_effects());
 
     FunctionObject* map_fn = nullptr;
     if (!vm.argument(1).is_undefined()) {
         auto callback = vm.argument(1);
         if (!callback.is_function())
-            return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NotAFunction, callback.to_deprecated_string_without_side_effects());
         map_fn = &callback.as_function();
     }
 
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::of)
     auto length = vm.argument_count();
     auto constructor = vm.this_value();
     if (!constructor.is_constructor())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_deprecated_string_without_side_effects());
     MarkedVector<Value> arguments(vm.heap());
     arguments.append(Value(length));
     auto new_object = TRY(typed_array_create(vm, constructor.as_function(), move(arguments)));

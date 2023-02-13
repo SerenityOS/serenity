@@ -74,7 +74,7 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
     case PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_deprecated_string_without_side_effects());
         break;
     }
     case PropertyKind::Spread:
@@ -593,7 +593,7 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     auto arguments = interpreter.accumulator();
 
     if (!(arguments.is_object() && is<Array>(arguments.as_object()))) {
-        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), arguments.to_string_without_side_effects());
+        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), arguments.to_deprecated_string_without_side_effects());
         interpreter.current_executable().dump();
         VERIFY_NOT_REACHED();
     }
@@ -616,9 +616,9 @@ Completion Call::throw_type_error_for_callee(Bytecode::Interpreter& interpreter,
 {
     auto callee = interpreter.reg(m_callee);
     if (m_expression_string.has_value())
-        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
+        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_deprecated_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
 
-    return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
+    return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_deprecated_string_without_side_effects(), callee_type);
 }
 
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -747,7 +747,7 @@ ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& in
 {
     auto& vm = interpreter.vm();
     if (!interpreter.accumulator().is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_deprecated_string_without_side_effects());
     return {};
 }
 
@@ -1343,7 +1343,7 @@ DeprecatedString GetObjectPropertyIterator::to_deprecated_string_impl(Bytecode::
 
 DeprecatedString IteratorClose::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), m_completion_value.has_value() ? m_completion_value.value().to_string_without_side_effects() : "<empty>");
+    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), m_completion_value.has_value() ? m_completion_value.value().to_deprecated_string_without_side_effects() : "<empty>");
 }
 
 DeprecatedString IteratorNext::to_deprecated_string_impl(Executable const&) const

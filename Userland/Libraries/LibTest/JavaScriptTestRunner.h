@@ -409,7 +409,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     auto& arr = user_output.as_array();
     for (auto& entry : arr.indexed_properties()) {
         auto message = MUST(arr.get(entry.index()));
-        file_result.logged_messages.append(message.to_string_without_side_effects());
+        file_result.logged_messages.append(message.to_deprecated_string_without_side_effects());
     }
 
     test_json.value().as_object().for_each_member([&](DeprecatedString const& suite_name, JsonValue const& suite_value) {
@@ -475,11 +475,11 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
             auto message = error_object.get_without_side_effects(g_vm->names.message).value_or(JS::js_undefined());
 
             if (name.is_accessor() || message.is_accessor()) {
-                detail_builder.append(error.to_string_without_side_effects());
+                detail_builder.append(error.to_deprecated_string_without_side_effects());
             } else {
-                detail_builder.append(name.to_string_without_side_effects());
+                detail_builder.append(name.to_deprecated_string_without_side_effects());
                 detail_builder.append(": "sv);
-                detail_builder.append(message.to_string_without_side_effects());
+                detail_builder.append(message.to_deprecated_string_without_side_effects());
             }
 
             if (is<JS::Error>(error_object)) {
@@ -490,7 +490,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
 
             test_case.details = detail_builder.to_deprecated_string();
         } else {
-            test_case.details = error.to_string_without_side_effects();
+            test_case.details = error.to_deprecated_string_without_side_effects();
         }
 
         suite.tests.append(move(test_case));

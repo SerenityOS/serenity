@@ -172,10 +172,10 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                             break;
                         auto next_item1 = TRY(JS::iterator_value(vm, *next1));
                         if (!next_item1.is_object())
-                            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, next_item1.to_string_without_side_effects());
+                            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, next_item1.to_deprecated_string_without_side_effects());
                         auto* iterator_method1 = TRY(next_item1.get_method(vm, *vm.well_known_symbol_iterator()));
                         if (!iterator_method1)
-                            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, next_item1.to_string_without_side_effects());
+                            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, next_item1.to_deprecated_string_without_side_effects());
                         auto iterator2 = TRY(JS::get_iterator(vm, next_item1, JS::IteratorHint::Sync, iterator_method1));
                         Vector<DeprecatedString> sequence_item1;
                         for (;;) {

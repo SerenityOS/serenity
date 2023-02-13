@@ -105,7 +105,7 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Nonn
     if (!result.is_number()) {
         calculation = "0";
     } else {
-        calculation = result.to_string_without_side_effects();
+        calculation = result.to_deprecated_string_without_side_effects();
     }
 
     NonnullRefPtrVector<Result> results;
