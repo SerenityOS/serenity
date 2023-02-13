@@ -395,11 +395,6 @@ ErrorOr<String> Value::to_string_without_side_effects() const
     }
 }
 
-DeprecatedString Value::to_deprecated_string_without_side_effects() const
-{
-    return MUST(to_string_without_side_effects()).to_deprecated_string();
-}
-
 ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 {
     if (is_string())
