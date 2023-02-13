@@ -20,6 +20,7 @@ public:
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
+    virtual void on_primary_color_change(Color) override;
     virtual void on_tool_activation() override;
     virtual GUI::Widget* get_properties_widget() override;
 

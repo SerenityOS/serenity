@@ -150,14 +150,6 @@ void PaletteWidget::set_image_editor(ImageEditor* editor)
 
     set_primary_color(editor->primary_color());
     set_secondary_color(editor->secondary_color());
-
-    editor->on_primary_color_change = [this](Color color) {
-        set_primary_color(color);
-    };
-
-    editor->on_secondary_color_change = [this](Color color) {
-        set_secondary_color(color);
-    };
 }
 
 void PaletteWidget::set_primary_color(Color color)

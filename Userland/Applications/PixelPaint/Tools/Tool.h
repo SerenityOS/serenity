@@ -63,6 +63,8 @@ public:
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) { }
     virtual bool on_keydown(GUI::KeyEvent&);
     virtual void on_keyup(GUI::KeyEvent&) { }
+    virtual void on_primary_color_change(Color) { }
+    virtual void on_secondary_color_change(Color) { }
     virtual void on_tool_activation() { }
     virtual void on_tool_deactivation() { }
     virtual GUI::Widget* get_properties_widget() { return nullptr; }

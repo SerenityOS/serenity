@@ -1229,6 +1229,17 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     },
         100);
 
+    image_editor.on_primary_color_change = [&](Color color) {
+        m_palette_widget->set_primary_color(color);
+        if (image_editor.active_tool())
+            image_editor.active_tool()->on_primary_color_change(color);
+    };
+    image_editor.on_secondary_color_change = [&](Color color) {
+        m_palette_widget->set_secondary_color(color);
+        if (image_editor.active_tool())
+            image_editor.active_tool()->on_secondary_color_change(color);
+    };
+
     if (image->layer_count())
         image_editor.set_active_layer(&image->layer(0));
 
