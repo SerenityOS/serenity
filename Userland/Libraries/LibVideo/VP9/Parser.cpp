@@ -23,8 +23,7 @@ namespace Video::VP9 {
 #define TRY_READ(expression) DECODER_TRY(DecoderErrorCategory::Corrupted, expression)
 
 Parser::Parser(Decoder& decoder)
-    : m_probability_tables(make<ProbabilityTables>())
-    , m_decoder(decoder)
+    : m_decoder(decoder)
 {
 }
 
@@ -82,6 +81,8 @@ Vector<size_t> Parser::parse_superframe_sizes(ReadonlyBytes frame_data)
 /* (6.1) */
 DecoderErrorOr<FrameContext> Parser::parse_frame(ReadonlyBytes frame_data)
 {
+    if (!m_probability_tables)
+        m_probability_tables = DECODER_TRY_ALLOC(try_make<ProbabilityTables>());
     m_syntax_element_counter = make<SyntaxElementCounter>();
 
     // NOTE: m_reusable_frame_block_contexts does not need to retain any data between frame decodes.
