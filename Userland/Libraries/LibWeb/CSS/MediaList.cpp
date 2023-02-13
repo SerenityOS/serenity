@@ -9,12 +9,13 @@
 #include <LibWeb/Bindings/MediaListPrototype.h>
 #include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
-MediaList* MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return realm.heap().allocate<MediaList>(realm, realm, move(media)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<MediaList>(realm, realm, move(media)));
 }
 
 MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)

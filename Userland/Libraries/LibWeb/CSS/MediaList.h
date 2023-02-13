@@ -20,7 +20,7 @@ class MediaList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(MediaList, Bindings::LegacyPlatformObject);
 
 public:
-    static MediaList* create(JS::Realm&, NonnullRefPtrVector<MediaQuery>&& media);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> create(JS::Realm&, NonnullRefPtrVector<MediaQuery>&& media);
     ~MediaList() = default;
 
     DeprecatedString media_text() const;
