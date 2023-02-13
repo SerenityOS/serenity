@@ -84,7 +84,7 @@ public:
     virtual void process(StringView, Function<void(u32)> on_code_point) override;
 };
 
-Decoder* decoder_for(DeprecatedString const& encoding);
+Decoder* decoder_for(StringView encoding);
 Optional<StringView> get_standardized_encoding(StringView encoding);
 
 // This returns the appropriate Unicode decoder for the sniffed BOM or nullptr if there is no appropriate decoder.

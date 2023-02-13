@@ -1419,7 +1419,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 
     // The bytes object might contain bytes greater than 128, encode them in UTF8
     // NOTE: Any 8-bit encoding -> utf-8 decoder will work for this
-    auto text_decoder = TextCodec::decoder_for("windows-1252");
+    auto text_decoder = TextCodec::decoder_for("windows-1252"sv);
     VERIFY(text_decoder);
     auto text = text_decoder->to_utf8(decoded.release_value());
 

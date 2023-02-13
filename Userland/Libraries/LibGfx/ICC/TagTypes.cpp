@@ -747,7 +747,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     // "For the definition of language codes and country codes, see respectively
     //  ISO 639-1 and ISO 3166-1. The Unicode strings in storage should be encoded as 16-bit big-endian, UTF-16BE,
     //  and should not be NULL terminated."
-    auto& utf_16be_decoder = *TextCodec::decoder_for("utf-16be");
+    auto& utf_16be_decoder = *TextCodec::decoder_for("utf-16be"sv);
 
     struct RawRecord {
         BigEndian<u16> language_code;
@@ -1023,7 +1023,7 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
             return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description not \\0-terminated");
 
         StringView utf_16be_data { unicode_description_data, byte_size_without_nul };
-        unicode_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("utf-16be")->to_utf8(utf_16be_data)));
+        unicode_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("utf-16be"sv)->to_utf8(utf_16be_data)));
     }
 
     // ScriptCode
@@ -1069,7 +1069,7 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
             if (macintosh_description_data[macintosh_description_length - 1] != '\0')
                 return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode not \\0-terminated");
 
-            macintosh_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("x-mac-roman")->to_utf8({ macintosh_description_data, (size_t)macintosh_description_length - 1 })));
+            macintosh_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("x-mac-roman"sv)->to_utf8({ macintosh_description_data, (size_t)macintosh_description_length - 1 })));
         } else {
             dbgln("TODO: ICCProfile textDescriptionType ScriptCode {}, length {}", scriptcode_code, macintosh_description_length);
         }

@@ -321,7 +321,7 @@ DeprecatedString Name::string_for_id(NameId id) const
     auto const offset = name_record.string_offset;
 
     if (platform_id == to_underlying(Platform::Windows)) {
-        static auto& decoder = *TextCodec::decoder_for("utf-16be");
+        static auto& decoder = *TextCodec::decoder_for("utf-16be"sv);
         return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length });
     }
 
