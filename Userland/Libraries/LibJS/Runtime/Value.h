@@ -394,6 +394,7 @@ public:
     ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
     ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
 
+    ErrorOr<String> to_string_without_side_effects() const;
     DeprecatedString to_deprecated_string_without_side_effects() const;
 
     Value value_or(Value fallback) const

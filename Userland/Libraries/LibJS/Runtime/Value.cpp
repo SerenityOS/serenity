@@ -355,33 +355,49 @@ StringView Value::typeof() const
     }
 }
 
-DeprecatedString Value::to_deprecated_string_without_side_effects() const
+ErrorOr<String> Value::to_string_without_side_effects() const
 {
     if (is_double())
-        return number_to_deprecated_string(m_value.as_double);
+        return number_to_string(m_value.as_double);
 
     switch (m_value.tag) {
     case UNDEFINED_TAG:
-        return "undefined";
+        return String::from_utf8("undefined"sv);
     case NULL_TAG:
-        return "null";
+        return String::from_utf8("null"sv);
     case BOOLEAN_TAG:
-        return as_bool() ? "true" : "false";
+        return String::from_utf8(as_bool() ? "true"sv : "false"sv);
     case INT32_TAG:
-        return DeprecatedString::number(as_i32());
+        return String::number(as_i32());
     case STRING_TAG:
-        return MUST(as_string().deprecated_string());
+        if (auto string = as_string().utf8_string(); string.is_throw_completion()) {
+            auto completion = string.release_error();
+
+            // We can't explicitly check for OOM because InternalError does not store the ErrorType
+            VERIFY(completion.value().has_value());
+            VERIFY(completion.value()->is_object());
+            VERIFY(is<InternalError>(completion.value()->as_object()));
+
+            return AK::Error::from_errno(ENOMEM);
+        } else {
+            return string.release_value();
+        }
     case SYMBOL_TAG:
-        return as_symbol().descriptive_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+        return as_symbol().descriptive_string();
     case BIGINT_TAG:
-        return as_bigint().to_deprecated_string();
+        return as_bigint().to_string();
     case OBJECT_TAG:
-        return DeprecatedString::formatted("[object {}]", as_object().class_name());
+        return String::formatted("[object {}]", as_object().class_name());
     case ACCESSOR_TAG:
-        return "<accessor>";
+        return String::from_utf8("<accessor>"sv);
     default:
         VERIFY_NOT_REACHED();
     }
+}
+
+DeprecatedString Value::to_deprecated_string_without_side_effects() const
+{
+    return MUST(to_string_without_side_effects()).to_deprecated_string();
 }
 
 ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
