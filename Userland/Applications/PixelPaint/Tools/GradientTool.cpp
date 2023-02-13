@@ -283,17 +283,15 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
         return;
 
     auto gradient_half_width_percentage_offset = (m_gradient_half_length * scale) / overall_gradient_length_in_rect;
-    auto color_to_use = m_editor->color_for(GUI::MouseButton::Primary);
-    int base_opacity = color_to_use.alpha() * m_opacity / 100;
-    color_to_use.set_alpha(base_opacity);
-    auto gradient_start_color = color_to_use;
-    gradient_start_color.set_alpha(0);
+    auto start_color = m_editor->color_for(GUI::MouseButton::Primary);
+    start_color.set_alpha(start_color.alpha() * m_opacity / 100);
+    auto end_color = start_color.with_alpha(0);
 
     {
         Gfx::PainterStateSaver saver(painter);
         if (gradient_clip.has_value())
             painter.add_clip_rect(*gradient_clip);
-        painter.fill_rect_with_linear_gradient(gradient_rect, Array { Gfx::ColorStop { gradient_start_color, 0.5f - gradient_half_width_percentage_offset }, Gfx::ColorStop { color_to_use, 0.5f + gradient_half_width_percentage_offset } }, rotation_degrees);
+        painter.fill_rect_with_linear_gradient(gradient_rect, Array { Gfx::ColorStop { start_color, 0.5f - gradient_half_width_percentage_offset }, Gfx::ColorStop { end_color, 0.5f + gradient_half_width_percentage_offset } }, rotation_degrees);
     }
 
     if (with_guidelines) {
