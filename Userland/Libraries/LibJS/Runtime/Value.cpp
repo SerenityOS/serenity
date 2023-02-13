@@ -206,11 +206,11 @@ static ErrorOr<void> number_to_string_impl(StringBuilder& builder, double d, Num
     return {};
 }
 
-ThrowCompletionOr<String> number_to_string(VM& vm, double d, NumberToStringMode mode)
+ErrorOr<String> number_to_string(double d, NumberToStringMode mode)
 {
     StringBuilder builder;
-    TRY_OR_THROW_OOM(vm, number_to_string_impl(builder, d, mode));
-    return TRY_OR_THROW_OOM(vm, builder.to_string());
+    TRY(number_to_string_impl(builder, d, mode));
+    return builder.to_string();
 }
 
 DeprecatedString number_to_deprecated_string(double d, NumberToStringMode mode)
@@ -396,7 +396,7 @@ ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
 ThrowCompletionOr<String> Value::to_string(VM& vm) const
 {
     if (is_double())
-        return number_to_string(vm, m_value.as_double);
+        return TRY_OR_THROW_OOM(vm, number_to_string(m_value.as_double));
 
     switch (m_value.tag) {
     // 1. If argument is a String, return argument.
