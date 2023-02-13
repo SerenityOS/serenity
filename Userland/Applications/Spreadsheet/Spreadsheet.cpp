@@ -64,7 +64,7 @@ Sheet::Sheet(Workbook& workbook)
             if (result.is_error()) {
                 warnln("Spreadsheet: Failed to run runtime code:");
                 auto thrown_value = *result.throw_completion().value();
-                warn("Threw: {}", thrown_value.to_deprecated_string_without_side_effects());
+                warn("Threw: {}", MUST(thrown_value.to_string_without_side_effects()));
                 if (thrown_value.is_object() && is<JS::Error>(thrown_value.as_object())) {
                     auto& error = static_cast<JS::Error const&>(thrown_value.as_object());
                     warnln(" with message '{}'", error.get_without_side_effects(interpreter().vm().names.message));
@@ -562,7 +562,7 @@ JsonObject Sheet::to_json() const
             auto json = interpreter().realm().global_object().get_without_side_effects("JSON");
             auto stringified_or_error = JS::call(vm, json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
-            data.set("value", stringified_or_error.release_value().to_deprecated_string_without_side_effects());
+            data.set("value", stringified_or_error.release_value().to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
         } else {
             data.set("value", it.value->data());
         }
@@ -693,7 +693,7 @@ JsonObject Sheet::gather_documentation() const
         if (!doc.is_string())
             return;
 
-        JsonParser parser(doc.to_deprecated_string_without_side_effects());
+        JsonParser parser(doc.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
         auto doc_object = parser.parse();
 
         if (!doc_object.is_error())
