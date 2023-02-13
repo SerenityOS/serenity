@@ -561,7 +561,7 @@ enum class NumberToStringMode {
     WithExponent,
     WithoutExponent,
 };
-ThrowCompletionOr<String> number_to_string(VM& vm, double, NumberToStringMode = NumberToStringMode::WithExponent);
+ErrorOr<String> number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 Optional<Value> string_to_number(StringView);
 
