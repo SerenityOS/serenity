@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -356,7 +356,7 @@ Token Tokenizer::create_value_token(Token::Type type, DeprecatedString value)
 {
     Token token;
     token.m_type = type;
-    token.m_value = move(value);
+    token.m_value = FlyString::from_utf8(value.view()).release_value_but_fixme_should_propagate_errors();
     return token;
 }
 
@@ -364,10 +364,7 @@ Token Tokenizer::create_value_token(Token::Type type, u32 value)
 {
     Token token = {};
     token.m_type = type;
-    // FIXME: Avoid temporary StringBuilder here
-    StringBuilder builder;
-    builder.append_code_point(value);
-    token.m_value = builder.to_deprecated_string();
+    token.m_value = FlyString(String::from_code_point(value));
     return token;
 }
 
@@ -640,7 +637,7 @@ Token Tokenizer::consume_a_url_token()
     consume_as_much_whitespace_as_possible();
 
     auto make_token = [&]() {
-        token.m_value = builder.to_deprecated_string();
+        token.m_value = FlyString::from_utf8(builder.string_view()).release_value_but_fixme_should_propagate_errors();
         return token;
     };
 
@@ -784,7 +781,7 @@ Token Tokenizer::consume_a_numeric_token()
         auto unit = consume_an_ident_sequence();
         VERIFY(!unit.is_empty());
         // NOTE: We intentionally store this in the `value`, to save space.
-        token.m_value = move(unit);
+        token.m_value = FlyString::from_utf8(unit.view()).release_value_but_fixme_should_propagate_errors();
 
         // 3. Return the <dimension-token>.
         return token;
@@ -931,7 +928,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
     StringBuilder builder;
 
     auto make_token = [&]() {
-        token.m_value = builder.to_deprecated_string();
+        token.m_value = FlyString::from_utf8(builder.string_view()).release_value_but_fixme_should_propagate_errors();
         return token;
     };
 
@@ -1069,7 +1066,7 @@ Token Tokenizer::consume_a_token()
 
             // 3. Consume an ident sequence, and set the <hash-token>’s value to the returned string.
             auto name = consume_an_ident_sequence();
-            token.m_value = move(name);
+            token.m_value = FlyString::from_utf8(name.view()).release_value_but_fixme_should_propagate_errors();
 
             // 4. Return the <hash-token>.
             return token;

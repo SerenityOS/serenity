@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/Number.h>
 
@@ -63,37 +63,37 @@ public:
     StringView ident() const
     {
         VERIFY(m_type == Type::Ident);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
 
     StringView function() const
     {
         VERIFY(m_type == Type::Function);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
 
     u32 delim() const
     {
         VERIFY(m_type == Type::Delim);
-        return *Utf8View(m_value.view()).begin();
+        return *Utf8View(m_value.bytes_as_string_view()).begin();
     }
 
     StringView string() const
     {
         VERIFY(m_type == Type::String);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
 
     StringView url() const
     {
         VERIFY(m_type == Type::Url);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
 
     StringView at_keyword() const
     {
         VERIFY(m_type == Type::AtKeyword);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
 
     HashType hash_type() const
@@ -104,7 +104,7 @@ public:
     StringView hash_value() const
     {
         VERIFY(m_type == Type::Hash);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
 
     Number const& number() const
@@ -126,7 +126,7 @@ public:
     StringView dimension_unit() const
     {
         VERIFY(m_type == Type::Dimension);
-        return m_value.view();
+        return m_value.bytes_as_string_view();
     }
     float dimension_value() const
     {
@@ -151,7 +151,7 @@ public:
     Position const& start_position() const { return m_start_position; }
     Position const& end_position() const { return m_end_position; }
 
-    static Token of_string(DeprecatedFlyString str)
+    static Token of_string(FlyString str)
     {
         Token token;
         token.m_type = Type::String;
@@ -178,7 +178,7 @@ public:
 private:
     Type m_type { Type::Invalid };
 
-    DeprecatedFlyString m_value;
+    FlyString m_value;
     Number m_number_value;
     HashType m_hash_type { HashType::Unrestricted };
 

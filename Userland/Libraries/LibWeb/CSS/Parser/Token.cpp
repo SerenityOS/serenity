@@ -42,7 +42,7 @@ DeprecatedString Token::to_deprecated_string() const
     case Type::BadUrl:
         return "url()";
     case Type::Delim:
-        return m_value;
+        return DeprecatedString(m_value.bytes_as_string_view());
     case Type::Number:
         return DeprecatedString::number(m_number_value.value());
     case Type::Percentage:
