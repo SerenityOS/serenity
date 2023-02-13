@@ -520,6 +520,26 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDesc
     return queue.take_first();
 }
 
+ErrorOr<NonnullLockRefPtrVector<OpenFileDescription>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
+{
+    MutexLocker locker(mutex());
+    NonnullLockRefPtrVector<OpenFileDescription> fds;
+
+    auto role = this->role(socket_description);
+    if (role != Role::Connected && role != Role::Accepted)
+        return set_so_error(EINVAL);
+    auto& queue = recvfd_queue_for(socket_description);
+
+    for (int i = 0; i < n; ++i) {
+        if (queue.is_empty())
+            break;
+
+        fds.append(queue.take_first());
+    }
+
+    return fds;
+}
+
 ErrorOr<void> LocalSocket::try_set_path(StringView path)
 {
     m_path = TRY(KString::try_create(path));
