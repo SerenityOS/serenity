@@ -55,7 +55,7 @@ The simplest way to build and run ladybird is via the serenity.sh script:
 ```
 # From /path/to/serenity
 ./Meta/serenity.sh run lagom ladybird
-./Meta/serenity.sh debug lagom ladybird
+./Meta/serenity.sh gdb lagom ladybird
 ```
 
 Note that running ladybird from the script will change the CMake cache in your Build/lagom build
