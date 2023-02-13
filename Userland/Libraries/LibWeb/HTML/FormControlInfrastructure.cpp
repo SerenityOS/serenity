@@ -83,7 +83,7 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
         }
 
         // 2. If the field element is an input element whose type attribute is in the Image Button state, then:
-        if (auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); input_element->type() == "image") {
+        if (auto* input_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); input_element && input_element->type() == "image") {
             // FIXME: 1. If the field element has a name attribute specified and its value is not the empty string, let name be that value followed by a single U+002E FULL STOP character (.). Otherwise, let name be the empty string.
             // FIXME: 2. Let namex be the string consisting of the concatenation of name and a single U0078 LATIN SMALL LETTER X character (x).
             // FIXME: 3. Let namey be the string consisting of the concatenation of name and a single U+0079 LATIN SMALL LETTER Y character (y).
