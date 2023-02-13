@@ -39,12 +39,12 @@ DeprecatedString URL::path() const
     return builder.to_deprecated_string();
 }
 
-URL URL::complete_url(DeprecatedString const& string) const
+URL URL::complete_url(StringView relative_url) const
 {
     if (!is_valid())
         return {};
 
-    return URLParser::parse(string, this);
+    return URLParser::parse(relative_url, this);
 }
 
 void URL::set_scheme(DeprecatedString scheme)
