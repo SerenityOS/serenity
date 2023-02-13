@@ -21,6 +21,7 @@
 #include "Enums.h"
 #include "LookupTables.h"
 #include "MotionVector.h"
+#include "SyntaxElementCounter.h"
 #include "Utilities.h"
 
 namespace Video::VP9 {
@@ -33,19 +34,22 @@ enum class FrameShowMode {
 
 struct FrameContext {
 public:
-    FrameContext(ReadonlyBytes data,
+    static ErrorOr<FrameContext> create(ReadonlyBytes data,
         Vector2D<FrameBlockContext>& contexts)
-        : stream(data)
-        , bit_stream(MaybeOwned<Stream>(stream))
-        , m_block_contexts(contexts)
     {
+        return FrameContext(
+            TRY(try_make<FixedMemoryStream>(data)),
+            TRY(try_make<SyntaxElementCounter>()),
+            contexts);
     }
 
     FrameContext(FrameContext const&) = delete;
     FrameContext(FrameContext&&) = default;
 
-    FixedMemoryStream stream;
+    NonnullOwnPtr<FixedMemoryStream> stream;
     BigEndianInputBitStream bit_stream;
+
+    NonnullOwnPtr<SyntaxElementCounter> counter;
 
     u8 profile { 0 };
 
@@ -139,6 +143,16 @@ public:
 private:
     friend struct TileContext;
 
+    FrameContext(NonnullOwnPtr<FixedMemoryStream> stream,
+        NonnullOwnPtr<SyntaxElementCounter> counter,
+        Vector2D<FrameBlockContext>& contexts)
+        : stream(move(stream))
+        , bit_stream(MaybeOwned<Stream>(*this->stream))
+        , counter(move(counter))
+        , m_block_contexts(contexts)
+    {
+    }
+
     FrameShowMode m_frame_show_mode { FrameShowMode::CreateAndShowNewFrame };
     u8 m_existing_frame_index { 0 };
 
@@ -194,12 +208,13 @@ public:
         auto height = rows_end - rows_start;
         auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, height, width);
 
-        auto bit_stream = DECODER_TRY_ALLOC(try_make<BigEndianInputBitStream>(DECODER_TRY_ALLOC(try_make<FixedMemoryStream>(frame_context.stream))));
+        auto bit_stream = DECODER_TRY_ALLOC(try_make<BigEndianInputBitStream>(DECODER_TRY_ALLOC(try_make<FixedMemoryStream>(*frame_context.stream))));
         auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize(move(bit_stream), tile_size));
 
         return TileContext {
             frame_context,
             move(decoder),
+            DECODER_TRY_ALLOC(try_make<SyntaxElementCounter>()),
             rows_start,
             rows_end,
             columns_start,
@@ -218,6 +233,7 @@ public:
 
     FrameContext const& frame_context;
     BooleanDecoder decoder;
+    NonnullOwnPtr<SyntaxElementCounter> counter;
     u32 rows_start { 0 };
     u32 rows_end { 0 };
     u32 columns_start { 0 };
@@ -250,6 +266,7 @@ struct BlockContext {
             .frame_context = tile_context.frame_context,
             .tile_context = tile_context,
             .decoder = tile_context.decoder,
+            .counter = *tile_context.counter,
             .row = row,
             .column = column,
             .size = size,
@@ -266,6 +283,7 @@ struct BlockContext {
     FrameContext const& frame_context;
     TileContext const& tile_context;
     BooleanDecoder& decoder;
+    SyntaxElementCounter& counter;
     u32 row { 0 };
     u32 column { 0 };
     BlockSubsize size;

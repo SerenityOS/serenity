@@ -13,6 +13,8 @@ namespace Video::VP9 {
 
 class SyntaxElementCounter final {
 public:
+    SyntaxElementCounter();
+
     /* (8.3) Clear Counts Process */
     void clear_counts();
 
@@ -38,6 +40,9 @@ public:
     u32 m_counts_mv_hp[2][2];
     u32 m_counts_token[TX_SIZES][BLOCK_TYPES][REF_TYPES][COEF_BANDS][PREV_COEF_CONTEXTS][UNCONSTRAINED_NODES];
     u32 m_counts_more_coefs[TX_SIZES][BLOCK_TYPES][REF_TYPES][COEF_BANDS][PREV_COEF_CONTEXTS][2];
+
+    SyntaxElementCounter operator+(SyntaxElementCounter const&) const;
+    SyntaxElementCounter& operator+=(SyntaxElementCounter const&);
 };
 
 }

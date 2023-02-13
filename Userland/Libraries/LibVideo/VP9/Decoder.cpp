@@ -239,10 +239,10 @@ u32 Decoder::merge_probs(int const* tree, int index, u8* probs, u32* counts, u8 
     return left_count + right_count;
 }
 
-DecoderErrorOr<void> Decoder::adapt_coef_probs(bool is_inter_predicted_frame)
+DecoderErrorOr<void> Decoder::adapt_coef_probs(FrameContext const& frame_context)
 {
     u8 update_factor;
-    if (!is_inter_predicted_frame || m_parser->m_previous_frame_type != FrameType::KeyFrame)
+    if (!frame_context.is_inter_predicted() || m_parser->m_previous_frame_type != FrameType::KeyFrame)
         update_factor = 112;
     else
         update_factor = 128;
@@ -255,10 +255,10 @@ DecoderErrorOr<void> Decoder::adapt_coef_probs(bool is_inter_predicted_frame)
                     for (size_t l = 0; l < max_l; l++) {
                         auto& coef_probs = m_parser->m_probability_tables->coef_probs()[t][i][j][k][l];
                         merge_probs(small_token_tree, 2, coef_probs,
-                            m_parser->m_syntax_element_counter->m_counts_token[t][i][j][k][l],
+                            frame_context.counter->m_counts_token[t][i][j][k][l],
                             24, update_factor);
                         merge_probs(binary_tree, 0, coef_probs,
-                            m_parser->m_syntax_element_counter->m_counts_more_coefs[t][i][j][k][l],
+                            frame_context.counter->m_counts_more_coefs[t][i][j][k][l],
                             24, update_factor);
                     }
                 }
@@ -287,7 +287,7 @@ DecoderErrorOr<void> Decoder::adapt_coef_probs(bool is_inter_predicted_frame)
 DecoderErrorOr<void> Decoder::adapt_non_coef_probs(FrameContext const& frame_context)
 {
     auto& probs = *m_parser->m_probability_tables;
-    auto& counter = *m_parser->m_syntax_element_counter;
+    auto& counter = *frame_context.counter;
     ADAPT_PROB_TABLE(is_inter, IS_INTER_CONTEXTS);
     ADAPT_PROB_TABLE(comp_mode, COMP_MODE_CONTEXTS);
     ADAPT_PROB_TABLE(comp_ref, REF_CONTEXTS);

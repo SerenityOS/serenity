@@ -50,7 +50,7 @@ private:
     /* (8.4) Probability Adaptation Process */
     u8 merge_prob(u8 pre_prob, u32 count_0, u32 count_1, u8 count_sat, u8 max_update_factor);
     u32 merge_probs(int const* tree, int index, u8* probs, u32* counts, u8 count_sat, u8 max_update_factor);
-    DecoderErrorOr<void> adapt_coef_probs(bool is_inter_predicted_frame);
+    DecoderErrorOr<void> adapt_coef_probs(FrameContext const&);
     DecoderErrorOr<void> adapt_non_coef_probs(FrameContext const&);
     void adapt_probs(int const* tree, u8* probs, u32* counts);
     u8 adapt_prob(u8 prob, u32 counts[2]);

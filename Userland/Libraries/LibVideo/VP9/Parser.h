@@ -108,7 +108,7 @@ private:
     DecoderErrorOr<void> read_ref_frames(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<MotionVectorPair> get_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&);
     DecoderErrorOr<MotionVector> read_motion_vector(BlockContext const&, BlockMotionVectorCandidates const&, ReferenceIndex);
-    DecoderErrorOr<i32> read_single_motion_vector_component(BooleanDecoder&, u8 component, bool use_high_precision);
+    DecoderErrorOr<i32> read_single_motion_vector_component(BooleanDecoder&, SyntaxElementCounter&, u8 component, bool use_high_precision);
     DecoderErrorOr<bool> residual(BlockContext&, bool has_block_above, bool has_block_left);
     DecoderErrorOr<bool> tokens(BlockContext&, size_t plane, u32 x, u32 y, TransformSize, TransformSet, Array<u8, 1024> token_cache);
     DecoderErrorOr<i32> read_coef(BooleanDecoder&, u8 bit_depth, Token token);
@@ -140,7 +140,6 @@ private:
     Vector2D<PersistentBlockContext> m_previous_block_contexts;
 
     OwnPtr<ProbabilityTables> m_probability_tables;
-    OwnPtr<SyntaxElementCounter> m_syntax_element_counter;
     Decoder& m_decoder;
 };
 
