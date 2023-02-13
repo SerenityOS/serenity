@@ -22,6 +22,11 @@ BigInt::BigInt(Crypto::SignedBigInteger big_integer)
     VERIFY(!m_big_integer.is_invalid());
 }
 
+ErrorOr<String> BigInt::to_string() const
+{
+    return String::formatted("{}n", TRY(m_big_integer.to_base(10)));
+}
+
 // 21.2.1.1.1 NumberToBigInt ( number ), https://tc39.es/ecma262/#sec-numbertobigint
 ThrowCompletionOr<BigInt*> number_to_bigint(VM& vm, Value number)
 {
