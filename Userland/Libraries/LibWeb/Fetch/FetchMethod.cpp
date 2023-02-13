@@ -151,13 +151,13 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
 }
 
 // https://fetch.spec.whatwg.org/#abort-fetch
-void abort_fetch(JS::VM& vm, JS::PromiseCapability const& promise_capability, JS::NonnullGCPtr<Infrastructure::Request> request, JS::GCPtr<Response> response_object, JS::Value error)
+void abort_fetch(JS::VM& vm, WebIDL::Promise const& promise, JS::NonnullGCPtr<Infrastructure::Request> request, JS::GCPtr<Response> response_object, JS::Value error)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Aborting fetch with: request @ {}, error = {}", request.ptr(), error);
 
     // 1. Reject promise with error.
     // NOTE: This is a no-op if promise has already fulfilled.
-    WebIDL::reject_promise(vm, promise_capability, error);
+    WebIDL::reject_promise(vm, promise, error);
 
     // 2. If request’s body is non-null and is readable, then cancel request’s body with error.
     if (auto* body = request->body().get_pointer<Infrastructure::Body>(); body != nullptr && body->stream()->is_readable()) {

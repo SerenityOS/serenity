@@ -41,7 +41,7 @@ WebIDL::ExceptionOr<Body> Body::clone() const
 }
 
 // https://fetch.spec.whatwg.org/#fully-reading-body-as-promise
-JS::NonnullGCPtr<JS::PromiseCapability> Body::fully_read_as_promise() const
+JS::NonnullGCPtr<WebIDL::Promise> Body::fully_read_as_promise() const
 {
     auto& vm = Bindings::main_thread_vm();
     auto& realm = *vm.current_realm();
