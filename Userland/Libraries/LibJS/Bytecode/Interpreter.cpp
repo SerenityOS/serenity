@@ -145,11 +145,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     if constexpr (JS_BYTECODE_DEBUG) {
         for (size_t i = 0; i < registers().size(); ++i) {
-            DeprecatedString value_string;
+            String value_string;
             if (registers()[i].is_empty())
-                value_string = "(empty)";
+                value_string = MUST(String::from_utf8("(empty)"sv));
             else
-                value_string = registers()[i].to_deprecated_string_without_side_effects();
+                value_string = MUST(registers()[i].to_string_without_side_effects());
             dbgln("[{:3}] {}", i, value_string);
         }
     }

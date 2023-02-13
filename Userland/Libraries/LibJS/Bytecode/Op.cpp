@@ -593,7 +593,7 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     auto arguments = interpreter.accumulator();
 
     if (!(arguments.is_object() && is<Array>(arguments.as_object()))) {
-        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), arguments.to_deprecated_string_without_side_effects());
+        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), MUST(arguments.to_string_without_side_effects()));
         interpreter.current_executable().dump();
         VERIFY_NOT_REACHED();
     }
@@ -1345,7 +1345,11 @@ DeprecatedString GetObjectPropertyIterator::to_deprecated_string_impl(Bytecode::
 
 DeprecatedString IteratorClose::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), m_completion_value.has_value() ? m_completion_value.value().to_deprecated_string_without_side_effects() : "<empty>");
+    if (!m_completion_value.has_value())
+        return DeprecatedString::formatted("IteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
+
+    auto completion_value_string = m_completion_value->to_string_without_side_effects().release_value_but_fixme_should_propagate_errors();
+    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
 }
 
 DeprecatedString IteratorNext::to_deprecated_string_impl(Executable const&) const
