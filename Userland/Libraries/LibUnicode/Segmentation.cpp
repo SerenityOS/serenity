@@ -6,6 +6,7 @@
  */
 
 #include <AK/Utf16View.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Segmentation.h>
@@ -16,14 +17,41 @@
 
 namespace Unicode {
 
-Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+template<typename ViewType>
+static size_t code_unit_length(ViewType const& view)
+{
+    if constexpr (IsSame<ViewType, Utf8View>)
+        return view.byte_length();
+    else if constexpr (IsSame<ViewType, Utf16View>)
+        return view.length_in_code_units();
+    else if constexpr (IsSame<ViewType, Utf32View>)
+        return view.length();
+    else
+        static_assert(DependentFalse<ViewType>);
+}
+
+template<typename ViewType, typename CodeUnitIterator>
+static size_t code_unit_offset_of(ViewType const& view, CodeUnitIterator const& it)
+{
+    if constexpr (IsSame<ViewType, Utf8View>)
+        return view.byte_offset_of(it);
+    else if constexpr (IsSame<ViewType, Utf16View>)
+        return view.code_unit_offset_of(it);
+    else if constexpr (IsSame<ViewType, Utf32View>)
+        return view.iterator_offset(it);
+    else
+        static_assert(DependentFalse<ViewType>);
+}
+
+template<typename ViewType>
+static Vector<size_t> find_grapheme_segmentation_boundaries_impl([[maybe_unused]] ViewType const& view)
 {
 #if ENABLE_UNICODE_DATA
     using GBP = GraphemeBreakProperty;
     Vector<size_t> boundaries;
 
     // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
-    if (view.length_in_code_points() == 0)
+    if (view.is_empty())
         return boundaries;
 
     auto has_any_gbp = [](u32 code_point, auto&&... properties) {
@@ -33,7 +61,7 @@ Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View 
     // GB1
     boundaries.append(0);
 
-    if (view.length_in_code_points() > 1) {
+    if (code_unit_length(view) > 1) {
         auto it = view.begin();
         auto code_point = *it;
         u32 next_code_point;
@@ -51,7 +79,7 @@ Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View 
                 continue;
             // GB4, GB5
             if (code_point_is_cr || next_code_point_is_lf || has_any_gbp(next_code_point, GBP::CR, GBP::Control) || has_any_gbp(code_point, GBP::LF, GBP::Control)) {
-                boundaries.append(view.code_unit_offset_of(it));
+                boundaries.append(code_unit_offset_of(view, it));
                 continue;
             }
 
@@ -96,16 +124,31 @@ Vector<size_t> find_grapheme_segmentation_boundaries([[maybe_unused]] Utf16View 
                 continue;
 
             // GB999
-            boundaries.append(view.code_unit_offset_of(it));
+            boundaries.append(code_unit_offset_of(view, it));
         }
     }
 
     // GB2
-    boundaries.append(view.length_in_code_units());
+    boundaries.append(code_unit_length(view));
     return boundaries;
 #else
     return {};
 #endif
+}
+
+Vector<size_t> find_grapheme_segmentation_boundaries(Utf8View const& view)
+{
+    return find_grapheme_segmentation_boundaries_impl(view);
+}
+
+Vector<size_t> find_grapheme_segmentation_boundaries(Utf16View const& view)
+{
+    return find_grapheme_segmentation_boundaries_impl(view);
+}
+
+Vector<size_t> find_grapheme_segmentation_boundaries(Utf32View const& view)
+{
+    return find_grapheme_segmentation_boundaries_impl(view);
 }
 
 template<typename ViewType>
@@ -123,31 +166,10 @@ static Vector<size_t> find_word_segmentation_boundaries_impl([[maybe_unused]] Vi
         return (code_point_has_word_break_property(code_point, properties) || ...);
     };
 
-    size_t code_unit_length = 0;
-    size_t code_point_length = 0;
-
-    if constexpr (requires { view.byte_length(); }) {
-        code_unit_length = view.byte_length();
-        code_point_length = view.length();
-    } else if constexpr (requires { view.length_in_code_units(); }) {
-        code_unit_length = view.length_in_code_units();
-        code_point_length = view.length_in_code_points();
-    } else {
-        static_assert(DependentFalse<ViewType>);
-    }
-
-    auto code_unit_offset_of = [&](auto it) {
-        if constexpr (requires { view.byte_offset_of(it); })
-            return view.byte_offset_of(it);
-        else if constexpr (requires { view.code_unit_offset_of(it); })
-            return view.code_unit_offset_of(it);
-        VERIFY_NOT_REACHED();
-    };
-
     // WB1
     boundaries.append(0);
 
-    if (code_point_length > 1) {
+    if (code_unit_length(view) > 1) {
         auto it = view.begin();
         auto code_point = *it;
         u32 next_code_point;
@@ -165,7 +187,7 @@ static Vector<size_t> find_word_segmentation_boundaries_impl([[maybe_unused]] Vi
                 continue;
             // WB3a, WB3b
             if (code_point_is_cr || next_code_point_is_lf || has_any_wbp(next_code_point, WBP::CR, WBP::Newline) || has_any_wbp(code_point, WBP::LF, WBP::Newline)) {
-                boundaries.append(code_unit_offset_of(it));
+                boundaries.append(code_unit_offset_of(view, it));
                 continue;
             }
             // WB3c
@@ -270,12 +292,12 @@ static Vector<size_t> find_word_segmentation_boundaries_impl([[maybe_unused]] Vi
                 continue;
 
             // WB999
-            boundaries.append(code_unit_offset_of(it));
+            boundaries.append(code_unit_offset_of(view, it));
         }
     }
 
     // WB2
-    boundaries.append(code_unit_length);
+    boundaries.append(code_unit_length(view));
     return boundaries;
 #else
     return {};
@@ -292,14 +314,20 @@ Vector<size_t> find_word_segmentation_boundaries(Utf16View const& view)
     return find_word_segmentation_boundaries_impl(view);
 }
 
-Vector<size_t> find_sentence_segmentation_boundaries([[maybe_unused]] Utf16View const& view)
+Vector<size_t> find_word_segmentation_boundaries(Utf32View const& view)
+{
+    return find_word_segmentation_boundaries_impl(view);
+}
+
+template<typename ViewType>
+static Vector<size_t> find_sentence_segmentation_boundaries_impl([[maybe_unused]] ViewType const& view)
 {
 #if ENABLE_UNICODE_DATA
     using SBP = SentenceBreakProperty;
     Vector<size_t> boundaries;
 
     // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
-    if (view.length_in_code_points() == 0)
+    if (view.is_empty())
         return boundaries;
 
     auto has_any_sbp = [](u32 code_point, auto&&... properties) {
@@ -309,7 +337,7 @@ Vector<size_t> find_sentence_segmentation_boundaries([[maybe_unused]] Utf16View 
     // SB1
     boundaries.append(0);
 
-    if (view.length_in_code_points() > 1) {
+    if (code_unit_length(view) > 1) {
         auto it = view.begin();
         auto code_point = *it;
         u32 next_code_point;
@@ -336,7 +364,7 @@ Vector<size_t> find_sentence_segmentation_boundaries([[maybe_unused]] Utf16View 
 
             // SB4
             if (code_point_is_para_sep) {
-                boundaries.append(view.code_unit_offset_of(it));
+                boundaries.append(code_unit_offset_of(view, it));
                 continue;
             }
 
@@ -394,18 +422,33 @@ Vector<size_t> find_sentence_segmentation_boundaries([[maybe_unused]] Utf16View 
 
             // SB11
             if (terminator_sequence_state >= TerminatorSequenceState::Term)
-                boundaries.append(view.code_unit_offset_of(it));
+                boundaries.append(code_unit_offset_of(view, it));
 
             // SB998
         }
     }
 
     // SB2
-    boundaries.append(view.length_in_code_units());
+    boundaries.append(code_unit_length(view));
     return boundaries;
 #else
     return {};
 #endif
+}
+
+Vector<size_t> find_sentence_segmentation_boundaries(Utf8View const& view)
+{
+    return find_sentence_segmentation_boundaries_impl(view);
+}
+
+Vector<size_t> find_sentence_segmentation_boundaries(Utf16View const& view)
+{
+    return find_sentence_segmentation_boundaries_impl(view);
+}
+
+Vector<size_t> find_sentence_segmentation_boundaries(Utf32View const& view)
+{
+    return find_sentence_segmentation_boundaries_impl(view);
 }
 
 }
