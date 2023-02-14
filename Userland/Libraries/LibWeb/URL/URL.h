@@ -19,7 +19,7 @@ class URL : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URL, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<URL> create(JS::Realm&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> create(JS::Realm&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, DeprecatedString const& url, DeprecatedString const& base);
 
     virtual ~URL() override;

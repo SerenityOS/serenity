@@ -13,9 +13,9 @@
 
 namespace Web::URL {
 
-JS::NonnullGCPtr<URL> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create(JS::Realm& realm, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query)
 {
-    return realm.heap().allocate<URL>(realm, realm, move(url), move(query)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<URL>(realm, realm, move(url), move(query)));
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, DeprecatedString const& url, DeprecatedString const& base)
@@ -45,7 +45,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
     // 7. Set this’s query object to a new URLSearchParams object.
     auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
     // 8. Initialize this’s query object with query.
-    auto result_url = URL::create(realm, move(parsed_url), move(query_object));
+    auto result_url = TRY(URL::create(realm, move(parsed_url), move(query_object)));
     // 9. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;
 
