@@ -494,7 +494,7 @@ CSS::ContentData StyleProperties::content() const
             }
         }
         content_data.type = ContentData::Type::String;
-        content_data.data = builder.to_deprecated_string();
+        content_data.data = builder.to_string().release_value_but_fixme_should_propagate_errors();
 
         if (content_style_value.has_alt_text()) {
             StringBuilder alt_text_builder;
@@ -505,7 +505,7 @@ CSS::ContentData StyleProperties::content() const
                     // TODO: Implement counters
                 }
             }
-            content_data.alt_text = alt_text_builder.to_deprecated_string();
+            content_data.alt_text = alt_text_builder.to_string().release_value_but_fixme_should_propagate_errors();
         }
 
         return content_data;
