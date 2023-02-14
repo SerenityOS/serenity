@@ -12,6 +12,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Stream.h>
+#include <LibCore/Forward.h>
 #include <LibIPC/Forward.h>
 
 namespace Core {
@@ -67,7 +68,8 @@ public:
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode) override;
     virtual ErrorOr<void> truncate(size_t length) override;
 
-    int leak_fd(Badge<::IPC::File>)
+    template<OneOf<::IPC::File, ::Core::MappedFile> VIP>
+    int leak_fd(Badge<VIP>)
     {
         m_should_close_file_descriptor = ShouldCloseFileDescriptor::No;
         return m_fd;
