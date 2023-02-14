@@ -114,7 +114,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedStr
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(DeprecatedString const& qualified_name, DeprecatedString const& public_id, DeprecatedString const& system_id)
 {
     TRY(Document::validate_qualified_name(realm(), qualified_name));
-    auto document_type = DocumentType::create(document());
+    auto document_type = TRY(DocumentType::create(document()));
     document_type->set_name(qualified_name);
     document_type->set_public_id(public_id);
     document_type->set_system_id(system_id);
