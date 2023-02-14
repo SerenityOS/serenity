@@ -3084,7 +3084,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             }
 
             auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
-            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), rule_list);
+            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), rule_list).release_value_but_fixme_should_propagate_errors();
         }
 
         // FIXME: More at rules!
