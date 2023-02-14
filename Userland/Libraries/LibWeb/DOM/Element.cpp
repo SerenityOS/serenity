@@ -586,7 +586,7 @@ JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedF
                 return false;
         }
         return true;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#element-shadow-host
