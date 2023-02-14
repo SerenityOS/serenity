@@ -17,10 +17,10 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMImplementation>> DOMImplementation::create(Document& document)
 {
     auto& realm = document.realm();
-    return realm.heap().allocate<DOMImplementation>(realm, document).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMImplementation>(realm, document));
 }
 
 DOMImplementation::DOMImplementation(Document& document)
