@@ -473,6 +473,53 @@ StringView data_color_space_name(ColorSpace color_space)
     VERIFY_NOT_REACHED();
 }
 
+static int number_of_components_in_color_space(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::Gray:
+        return 1;
+    case ColorSpace::TwoColor:
+        return 2;
+    case ColorSpace::nCIEXYZ:
+    case ColorSpace::CIELAB:
+    case ColorSpace::CIELUV:
+    case ColorSpace::YCbCr:
+    case ColorSpace::CIEYxy:
+    case ColorSpace::RGB:
+    case ColorSpace::HSV:
+    case ColorSpace::HLS:
+    case ColorSpace::CMY:
+    case ColorSpace::ThreeColor:
+        return 3;
+    case ColorSpace::CMYK:
+    case ColorSpace::FourColor:
+        return 4;
+    case ColorSpace::FiveColor:
+        return 5;
+    case ColorSpace::SixColor:
+        return 6;
+    case ColorSpace::SevenColor:
+        return 7;
+    case ColorSpace::EightColor:
+        return 8;
+    case ColorSpace::NineColor:
+        return 9;
+    case ColorSpace::TenColor:
+        return 10;
+    case ColorSpace::ElevenColor:
+        return 11;
+    case ColorSpace::TwelveColor:
+        return 12;
+    case ColorSpace::ThirteenColor:
+        return 13;
+    case ColorSpace::FourteenColor:
+        return 14;
+    case ColorSpace::FifteenColor:
+        return 15;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 StringView profile_connection_space_name(ColorSpace color_space)
 {
     switch (color_space) {
@@ -1186,8 +1233,12 @@ ErrorOr<void> Profile::check_tag_types()
             return Error::from_string_literal("ICC::Profile: namedColor2Tag has unexpected type");
         // ICC v4, 10.17 namedColor2Type
         // "The device representation corresponds to the header’s “data colour space” field.
-        //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type."
-        // FIXME: check that
+        //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type.
+        //  If this field is 0, device coordinates are not provided."
+        if (int number_of_device_coordinates = static_cast<NamedColor2TagData const&>(*type.value()).number_of_device_coordinates();
+            number_of_device_coordinates != 0 && number_of_device_coordinates != number_of_components_in_color_space(data_color_space())) {
+            return Error::from_string_literal("ICC::Profile: namedColor2Tag number of device coordinates inconsistent with data color space");
+        }
     }
 
     // ICC v4, 9.2.38 outputResponseTag
