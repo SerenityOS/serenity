@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,8 +9,6 @@
 
 #include <AK/Concepts.h>
 #include <AK/Error.h>
-#include <AK/Forward.h>
-#include <AK/HashFunctions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
@@ -20,37 +19,22 @@ namespace AK {
 enum class HashSetResult {
     InsertedNewEntry,
     ReplacedExistingEntry,
-    KeptExistingEntry
+    KeptExistingEntry,
 };
 
 enum class HashSetExistingEntryBehavior {
     Keep,
-    Replace
+    Replace,
 };
 
-// Upper nibble determines state class:
-// - 0: unused bucket
-// - 1: used bucket
-// - F: end bucket
-// Lower nibble determines state within a class.
+// BucketState doubles as both an enum and a probe length value.
+// - Free: empty bucket
+// - Used (implicit, values 1..254): value-1 represents probe length
+// - CalculateLength: same as Used but probe length > 253, so we calculate the actual probe length
 enum class BucketState : u8 {
-    Free = 0x00,
-    Used = 0x10,
-    Deleted = 0x01,
-    Rehashed = 0x12,
-    End = 0xFF,
+    Free = 0,
+    CalculateLength = 255,
 };
-
-// Note that because there's the end state, used and free are not 100% opposites!
-constexpr bool is_used_bucket(BucketState state)
-{
-    return (static_cast<u8>(state) & 0xf0) == 0x10;
-}
-
-constexpr bool is_free_bucket(BucketState state)
-{
-    return (static_cast<u8>(state) & 0xf0) == 0x00;
-}
 
 template<typename HashTableType, typename T, typename BucketType>
 class HashTableIterator {
@@ -70,19 +54,21 @@ private:
             return;
         do {
             ++m_bucket;
-            if (m_bucket->state == BucketState::Used)
+            if (m_bucket == m_end_bucket) {
+                m_bucket = nullptr;
                 return;
-        } while (m_bucket->state != BucketState::End);
-        if (m_bucket->state == BucketState::End)
-            m_bucket = nullptr;
+            }
+        } while (m_bucket->state == BucketState::Free);
     }
 
-    explicit HashTableIterator(BucketType* bucket)
+    HashTableIterator(BucketType* bucket, BucketType* end_bucket)
         : m_bucket(bucket)
+        , m_end_bucket(end_bucket)
     {
     }
 
     BucketType* m_bucket { nullptr };
+    BucketType* m_end_bucket { nullptr };
 };
 
 template<typename OrderedHashTableType, typename T, typename BucketType>
@@ -98,7 +84,7 @@ public:
     void operator--() { m_bucket = m_bucket->previous; }
 
 private:
-    explicit OrderedHashTableIterator(BucketType* bucket)
+    OrderedHashTableIterator(BucketType* bucket, BucketType*)
         : m_bucket(bucket)
     {
     }
@@ -108,12 +94,13 @@ private:
 
 template<typename T, typename TraitsForT, bool IsOrdered>
 class HashTable {
-    static constexpr size_t load_factor_in_percent = 60;
+    static constexpr size_t grow_capacity_at_least = 8;
+    static constexpr size_t grow_at_load_factor_percent = 80;
+    static constexpr size_t grow_capacity_increase_percent = 60;
 
     struct Bucket {
         BucketState state;
         alignas(T) u8 storage[sizeof(T)];
-
         T* slot() { return reinterpret_cast<T*>(storage); }
         T const* slot() const { return reinterpret_cast<T const*>(storage); }
     };
@@ -148,9 +135,11 @@ public:
         if (!m_buckets)
             return;
 
-        for (size_t i = 0; i < m_capacity; ++i) {
-            if (is_used_bucket(m_buckets[i].state))
-                m_buckets[i].slot()->~T();
+        if constexpr (!IsTriviallyDestructible<T>) {
+            for (size_t i = 0; i < m_capacity; ++i) {
+                if (m_buckets[i].state != BucketState::Free)
+                    m_buckets[i].slot()->~T();
+            }
         }
 
         kfree_sized(m_buckets, size_in_bytes(m_capacity));
@@ -175,11 +164,9 @@ public:
         , m_collection_data(other.m_collection_data)
         , m_size(other.m_size)
         , m_capacity(other.m_capacity)
-        , m_deleted_count(other.m_deleted_count)
     {
         other.m_size = 0;
         other.m_capacity = 0;
-        other.m_deleted_count = 0;
         other.m_buckets = nullptr;
         if constexpr (IsOrdered)
             other.m_collection_data = { nullptr, nullptr };
@@ -197,7 +184,6 @@ public:
         swap(a.m_buckets, b.m_buckets);
         swap(a.m_size, b.m_size);
         swap(a.m_capacity, b.m_capacity);
-        swap(a.m_deleted_count, b.m_deleted_count);
 
         if constexpr (IsOrdered)
             swap(a.m_collection_data, b.m_collection_data);
@@ -220,16 +206,20 @@ public:
         MUST(try_set_from(from_array));
     }
 
-    void ensure_capacity(size_t capacity)
-    {
-        VERIFY(capacity >= size());
-        rehash(capacity * 2);
-    }
-
     ErrorOr<void> try_ensure_capacity(size_t capacity)
     {
-        VERIFY(capacity >= size());
-        return try_rehash(capacity * 2);
+        // The user usually expects "capacity" to mean the number of values that can be stored in a
+        // container without it needing to reallocate. Our definition of "capacity" is the number of
+        // buckets we can store, but we reallocate earlier because of `grow_at_load_factor_percent`.
+        // This calculates the required internal capacity to store `capacity` number of values.
+        size_t required_capacity = capacity * 100 / grow_at_load_factor_percent + 1;
+        if (required_capacity <= m_capacity)
+            return {};
+        return try_rehash(required_capacity);
+    }
+    void ensure_capacity(size_t capacity)
+    {
+        MUST(try_ensure_capacity(capacity));
     }
 
     [[nodiscard]] bool contains(T const& value) const
@@ -250,18 +240,18 @@ public:
     [[nodiscard]] Iterator begin()
     {
         if constexpr (IsOrdered)
-            return Iterator(m_collection_data.head);
+            return Iterator(m_collection_data.head, end_bucket());
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (is_used_bucket(m_buckets[i].state))
-                return Iterator(&m_buckets[i]);
+            if (m_buckets[i].state != BucketState::Free)
+                return Iterator(&m_buckets[i], end_bucket());
         }
         return end();
     }
 
     [[nodiscard]] Iterator end()
     {
-        return Iterator(nullptr);
+        return Iterator(nullptr, nullptr);
     }
 
     using ConstIterator = Conditional<IsOrdered,
@@ -271,24 +261,25 @@ public:
     [[nodiscard]] ConstIterator begin() const
     {
         if constexpr (IsOrdered)
-            return ConstIterator(m_collection_data.head);
+            return ConstIterator(m_collection_data.head, end_bucket());
 
         for (size_t i = 0; i < m_capacity; ++i) {
-            if (is_used_bucket(m_buckets[i].state))
-                return ConstIterator(&m_buckets[i]);
+            if (m_buckets[i].state != BucketState::Free)
+                return ConstIterator(&m_buckets[i], end_bucket());
         }
         return end();
     }
 
     [[nodiscard]] ConstIterator end() const
     {
-        return ConstIterator(nullptr);
+        return ConstIterator(nullptr, nullptr);
     }
 
     void clear()
     {
         *this = HashTable();
     }
+
     void clear_with_capacity()
     {
         if (m_capacity == 0)
@@ -297,44 +288,20 @@ public:
             for (auto* bucket : *this)
                 bucket->~T();
         }
-        __builtin_memset(m_buckets, 0, size_in_bytes(capacity()));
+        __builtin_memset(m_buckets, 0, size_in_bytes(m_capacity));
         m_size = 0;
-        m_deleted_count = 0;
 
         if constexpr (IsOrdered)
             m_collection_data = { nullptr, nullptr };
-        else
-            m_buckets[m_capacity].state = BucketState::End;
     }
 
     template<typename U = T>
     ErrorOr<HashSetResult> try_set(U&& value, HashSetExistingEntryBehavior existing_entry_behavior = HashSetExistingEntryBehavior::Replace)
     {
-        auto* bucket = TRY(try_lookup_for_writing(value));
-        if (is_used_bucket(bucket->state)) {
-            if (existing_entry_behavior == HashSetExistingEntryBehavior::Keep)
-                return HashSetResult::KeptExistingEntry;
-            (*bucket->slot()) = forward<U>(value);
-            return HashSetResult::ReplacedExistingEntry;
-        }
+        if (should_grow())
+            TRY(try_rehash(m_capacity * (100 + grow_capacity_increase_percent) / 100));
 
-        new (bucket->slot()) T(forward<U>(value));
-        if (bucket->state == BucketState::Deleted)
-            --m_deleted_count;
-        bucket->state = BucketState::Used;
-
-        if constexpr (IsOrdered) {
-            if (!m_collection_data.head) [[unlikely]] {
-                m_collection_data.head = bucket;
-            } else {
-                bucket->previous = m_collection_data.tail;
-                m_collection_data.tail->next = bucket;
-            }
-            m_collection_data.tail = bucket;
-        }
-
-        ++m_size;
-        return HashSetResult::InsertedNewEntry;
+        return write_value(forward<U>(value), existing_entry_behavior);
     }
     template<typename U = T>
     HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behaviour = HashSetExistingEntryBehavior::Replace)
@@ -345,7 +312,7 @@ public:
     template<typename TUnaryPredicate>
     [[nodiscard]] Iterator find(unsigned hash, TUnaryPredicate predicate)
     {
-        return Iterator(lookup_with_hash(hash, move(predicate)));
+        return Iterator(lookup_with_hash(hash, move(predicate)), end_bucket());
     }
 
     [[nodiscard]] Iterator find(T const& value)
@@ -356,7 +323,7 @@ public:
     template<typename TUnaryPredicate>
     [[nodiscard]] ConstIterator find(unsigned hash, TUnaryPredicate predicate) const
     {
-        return ConstIterator(lookup_with_hash(hash, move(predicate)));
+        return ConstIterator(lookup_with_hash(hash, move(predicate)), end_bucket());
     }
 
     [[nodiscard]] ConstIterator find(T const& value) const
@@ -410,255 +377,94 @@ public:
         return false;
     }
 
-    void remove(Iterator iterator)
+    // This invalidates the iterator
+    void remove(Iterator& iterator)
     {
-        VERIFY(iterator.m_bucket);
-        auto& bucket = *iterator.m_bucket;
-        VERIFY(is_used_bucket(bucket.state));
-
-        delete_bucket(bucket);
-        --m_size;
-        ++m_deleted_count;
-
-        rehash_in_place_if_needed();
+        auto* bucket = iterator.m_bucket;
+        VERIFY(bucket);
+        delete_bucket(*bucket);
+        iterator.m_bucket = nullptr;
     }
 
     template<typename TUnaryPredicate>
     bool remove_all_matching(TUnaryPredicate const& predicate)
     {
-        size_t removed_count = 0;
+        bool has_removed_anything = false;
         for (size_t i = 0; i < m_capacity; ++i) {
             auto& bucket = m_buckets[i];
-            if (is_used_bucket(bucket.state) && predicate(*bucket.slot())) {
-                delete_bucket(bucket);
-                ++removed_count;
-            }
+            if (bucket.state == BucketState::Free || !predicate(*bucket.slot()))
+                continue;
+
+            delete_bucket(bucket);
+            has_removed_anything = true;
+
+            // If a bucket was shifted up, reevaluate this bucket index
+            if (bucket.state != BucketState::Free)
+                --i;
         }
-        if (removed_count) {
-            m_deleted_count += removed_count;
-            m_size -= removed_count;
-        }
-        rehash_in_place_if_needed();
-        return removed_count;
+        return has_removed_anything;
     }
 
     T pop()
+    requires(IsOrdered)
     {
         VERIFY(!is_empty());
-        T element;
-        if constexpr (IsOrdered) {
-            element = *m_collection_data.tail->slot();
-        } else {
-            for (size_t i = 0; i < m_capacity; ++i) {
-                if (is_used_bucket(m_buckets[i].state)) {
-                    element = *m_buckets[i].slot();
-                    break;
-                }
-            }
-        }
+        T element = *m_collection_data.tail->slot();
         remove(element);
         return element;
     }
 
 private:
-    void insert_during_rehash(T&& value)
-    {
-        auto& bucket = lookup_for_writing(value);
-        new (bucket.slot()) T(move(value));
-        bucket.state = BucketState::Used;
+    bool should_grow() const { return ((m_size + 1) * 100) >= (m_capacity * grow_at_load_factor_percent); }
+    static constexpr size_t size_in_bytes(size_t capacity) { return sizeof(BucketType) * capacity; }
 
-        if constexpr (IsOrdered) {
-            if (!m_collection_data.head) [[unlikely]] {
-                m_collection_data.head = &bucket;
-            } else {
-                bucket.previous = m_collection_data.tail;
-                m_collection_data.tail->next = &bucket;
-            }
-            m_collection_data.tail = &bucket;
-        }
+    BucketType* end_bucket()
+    {
+        if constexpr (IsOrdered)
+            return m_collection_data.tail;
+        else
+            return &m_buckets[m_capacity];
     }
-
-    [[nodiscard]] static constexpr size_t size_in_bytes(size_t capacity)
+    BucketType const* end_bucket() const
     {
-        if constexpr (IsOrdered) {
-            return sizeof(BucketType) * capacity;
-        } else {
-            return sizeof(BucketType) * (capacity + 1);
-        }
+        return const_cast<HashTable*>(this)->end_bucket();
     }
 
     ErrorOr<void> try_rehash(size_t new_capacity)
     {
-        if (new_capacity == m_capacity && new_capacity >= 4) {
-            rehash_in_place();
-            return {};
-        }
-
-        new_capacity = max(new_capacity, static_cast<size_t>(4));
-        new_capacity = kmalloc_good_size(new_capacity * sizeof(BucketType)) / sizeof(BucketType);
+        new_capacity = max(new_capacity, m_capacity + grow_capacity_at_least);
+        new_capacity = kmalloc_good_size(size_in_bytes(new_capacity)) / sizeof(BucketType);
+        VERIFY(new_capacity >= size());
 
         auto* old_buckets = m_buckets;
-        auto old_capacity = m_capacity;
+        auto old_buckets_size = size_in_bytes(m_capacity);
         Iterator old_iter = begin();
 
         auto* new_buckets = kcalloc(1, size_in_bytes(new_capacity));
         if (!new_buckets)
             return Error::from_errno(ENOMEM);
 
-        m_buckets = (BucketType*)new_buckets;
-
+        m_buckets = static_cast<BucketType*>(new_buckets);
         m_capacity = new_capacity;
-        m_deleted_count = 0;
 
         if constexpr (IsOrdered)
             m_collection_data = { nullptr, nullptr };
-        else
-            m_buckets[m_capacity].state = BucketState::End;
 
         if (!old_buckets)
             return {};
 
+        m_size = 0;
         for (auto it = move(old_iter); it != end(); ++it) {
-            insert_during_rehash(move(*it));
+            write_value(move(*it), HashSetExistingEntryBehavior::Keep);
             it->~T();
         }
 
-        kfree_sized(old_buckets, size_in_bytes(old_capacity));
+        kfree_sized(old_buckets, old_buckets_size);
         return {};
     }
     void rehash(size_t new_capacity)
     {
         MUST(try_rehash(new_capacity));
-    }
-
-    void rehash_in_place()
-    {
-        // FIXME: This implementation takes two loops over the entire bucket array, but avoids re-allocation.
-        //        Please benchmark your new implementation before you replace this.
-        //        The reason is that because of collisions, we use the special "rehashed" bucket state to mark already-rehashed used buckets.
-        //        Because we of course want to write into old used buckets, but already rehashed data shall not be touched.
-
-        // FIXME: Find a way to reduce the cognitive complexity of this function.
-
-        for (size_t i = 0; i < m_capacity; ++i) {
-            auto& bucket = m_buckets[i];
-
-            // FIXME: Bail out when we have handled every filled bucket.
-
-            if (bucket.state == BucketState::Rehashed || bucket.state == BucketState::End || bucket.state == BucketState::Free)
-                continue;
-            if (bucket.state == BucketState::Deleted) {
-                bucket.state = BucketState::Free;
-                continue;
-            }
-
-            auto const new_hash = TraitsForT::hash(*bucket.slot());
-            if (new_hash % m_capacity == i) {
-                bucket.state = BucketState::Rehashed;
-                continue;
-            }
-
-            auto target_hash = new_hash;
-            auto const to_move_hash = i;
-            BucketType* target_bucket = &m_buckets[target_hash % m_capacity];
-            BucketType* bucket_to_move = &m_buckets[i];
-
-            // Try to move the bucket to move into its correct spot.
-            // During the procedure, we might re-hash or actually change the bucket to move.
-            while (!is_free_bucket(bucket_to_move->state)) {
-
-                // If we're targeting ourselves, there's nothing to do.
-                if (to_move_hash == target_hash % m_capacity) {
-                    bucket_to_move->state = BucketState::Rehashed;
-                    break;
-                }
-
-                if (is_free_bucket(target_bucket->state)) {
-                    // We can just overwrite the target bucket and bail out.
-                    new (target_bucket->slot()) T(move(*bucket_to_move->slot()));
-                    target_bucket->state = BucketState::Rehashed;
-                    bucket_to_move->state = BucketState::Free;
-
-                    if constexpr (IsOrdered) {
-                        swap(bucket_to_move->previous, target_bucket->previous);
-                        swap(bucket_to_move->next, target_bucket->next);
-
-                        if (target_bucket->previous)
-                            target_bucket->previous->next = target_bucket;
-                        else
-                            m_collection_data.head = target_bucket;
-                        if (target_bucket->next)
-                            target_bucket->next->previous = target_bucket;
-                        else
-                            m_collection_data.tail = target_bucket;
-                    }
-                } else if (target_bucket->state == BucketState::Rehashed) {
-                    // If the target bucket is already re-hashed, we do normal probing.
-                    target_hash = rehash_for_collision(target_hash);
-                    target_bucket = &m_buckets[target_hash % m_capacity];
-                } else {
-                    VERIFY(target_bucket->state != BucketState::End);
-                    // The target bucket is a used bucket that hasn't been re-hashed.
-                    // Swap the data into the target; now the target's data resides in the bucket to move again.
-                    // (That's of course what we want, how neat!)
-                    swap(*bucket_to_move->slot(), *target_bucket->slot());
-                    bucket_to_move->state = target_bucket->state;
-                    target_bucket->state = BucketState::Rehashed;
-
-                    if constexpr (IsOrdered) {
-                        // Update state for the target bucket, we'll do the bucket to move later.
-                        swap(bucket_to_move->previous, target_bucket->previous);
-                        swap(bucket_to_move->next, target_bucket->next);
-
-                        if (target_bucket->previous)
-                            target_bucket->previous->next = target_bucket;
-                        else
-                            m_collection_data.head = target_bucket;
-                        if (target_bucket->next)
-                            target_bucket->next->previous = target_bucket;
-                        else
-                            m_collection_data.tail = target_bucket;
-                    }
-
-                    target_hash = TraitsForT::hash(*bucket_to_move->slot());
-                    target_bucket = &m_buckets[target_hash % m_capacity];
-
-                    // The data is already in the correct location: Adjust the pointers
-                    if (target_hash % m_capacity == to_move_hash) {
-                        bucket_to_move->state = BucketState::Rehashed;
-                        if constexpr (IsOrdered) {
-                            // Update state for the bucket to move as it's not actually moved anymore.
-                            if (bucket_to_move->previous)
-                                bucket_to_move->previous->next = bucket_to_move;
-                            else
-                                m_collection_data.head = bucket_to_move;
-                            if (bucket_to_move->next)
-                                bucket_to_move->next->previous = bucket_to_move;
-                            else
-                                m_collection_data.tail = bucket_to_move;
-                        }
-                        break;
-                    }
-                }
-            }
-            // After this, the bucket_to_move either contains data that rehashes to itself, or it contains nothing as we were able to move the last thing.
-            if (bucket_to_move->state == BucketState::Deleted)
-                bucket_to_move->state = BucketState::Free;
-        }
-
-        for (size_t i = 0; i < m_capacity; ++i) {
-            if (m_buckets[i].state == BucketState::Rehashed)
-                m_buckets[i].state = BucketState::Used;
-        }
-
-        m_deleted_count = 0;
-    }
-
-    void rehash_in_place_if_needed()
-    {
-        // This signals a "thrashed" hash table with many deleted slots.
-        if (m_deleted_count >= m_size && should_grow())
-            rehash_in_place();
     }
 
     template<typename TUnaryPredicate>
@@ -667,58 +473,165 @@ private:
         if (is_empty())
             return nullptr;
 
+        hash %= m_capacity;
         for (;;) {
-            auto& bucket = m_buckets[hash % m_capacity];
-
-            if (is_used_bucket(bucket.state) && predicate(*bucket.slot()))
-                return &bucket;
-
-            if (bucket.state != BucketState::Used && bucket.state != BucketState::Deleted)
+            auto* bucket = &m_buckets[hash];
+            if (bucket->state == BucketState::Free)
                 return nullptr;
-
-            hash = rehash_for_collision(hash);
+            if (predicate(*bucket->slot()))
+                return bucket;
+            if (++hash == m_capacity) [[unlikely]]
+                hash = 0;
         }
     }
 
-    ErrorOr<BucketType*> try_lookup_for_writing(T const& value)
+    size_t used_bucket_probe_length(BucketType const& bucket) const
     {
-        // FIXME: Maybe overrun the "allowed" load factor to avoid OOM
-        //        If we are allowed to do that, separate that logic from
-        //        the normal lookup_for_writing
-        if (should_grow())
-            TRY(try_rehash(capacity() * 2));
-        auto hash = TraitsForT::hash(value);
-        BucketType* first_empty_bucket = nullptr;
+        VERIFY(bucket.state != BucketState::Free);
+
+        if (bucket.state == BucketState::CalculateLength) {
+            size_t ideal_bucket_index = TraitsForT::hash(*bucket.slot()) % m_capacity;
+
+            VERIFY(&bucket >= m_buckets);
+            size_t actual_bucket_index = &bucket - m_buckets;
+
+            if (actual_bucket_index < ideal_bucket_index)
+                return m_capacity + actual_bucket_index - ideal_bucket_index;
+            return actual_bucket_index - ideal_bucket_index;
+        }
+
+        return static_cast<u8>(bucket.state) - 1;
+    }
+
+    ALWAYS_INLINE constexpr BucketState bucket_state_for_probe_length(size_t probe_length)
+    {
+        if (probe_length > 253)
+            return BucketState::CalculateLength;
+        return static_cast<BucketState>(probe_length + 1);
+    }
+
+    template<typename U = T>
+    HashSetResult write_value(U&& value, HashSetExistingEntryBehavior existing_entry_behavior)
+    {
+        auto update_collection_for_new_bucket = [&](BucketType& bucket) {
+            if constexpr (IsOrdered) {
+                if (!m_collection_data.head) [[unlikely]] {
+                    m_collection_data.head = &bucket;
+                } else {
+                    bucket.previous = m_collection_data.tail;
+                    m_collection_data.tail->next = &bucket;
+                }
+                m_collection_data.tail = &bucket;
+            }
+        };
+        auto update_collection_for_swapped_buckets = [&](BucketType* left_bucket, BucketType* right_bucket) {
+            if constexpr (IsOrdered) {
+                if (m_collection_data.head == left_bucket)
+                    m_collection_data.head = right_bucket;
+                else if (m_collection_data.head == right_bucket)
+                    m_collection_data.head = left_bucket;
+                if (m_collection_data.tail == left_bucket)
+                    m_collection_data.tail = right_bucket;
+                else if (m_collection_data.tail == right_bucket)
+                    m_collection_data.tail = left_bucket;
+
+                if (left_bucket->previous) {
+                    if (left_bucket->previous == left_bucket)
+                        left_bucket->previous = right_bucket;
+                    left_bucket->previous->next = left_bucket;
+                }
+                if (left_bucket->next) {
+                    if (left_bucket->next == left_bucket)
+                        left_bucket->next = right_bucket;
+                    left_bucket->next->previous = left_bucket;
+                }
+
+                if (right_bucket->previous && right_bucket->previous != left_bucket)
+                    right_bucket->previous->next = right_bucket;
+                if (right_bucket->next && right_bucket->next != left_bucket)
+                    right_bucket->next->previous = right_bucket;
+            }
+        };
+
+        auto bucket_index = TraitsForT::hash(value) % m_capacity;
+        size_t probe_length = 0;
         for (;;) {
-            auto& bucket = m_buckets[hash % m_capacity];
+            auto* bucket = &m_buckets[bucket_index];
 
-            if (is_used_bucket(bucket.state) && TraitsForT::equals(*bucket.slot(), value))
-                return &bucket;
-
-            if (!is_used_bucket(bucket.state)) {
-                if (!first_empty_bucket)
-                    first_empty_bucket = &bucket;
-
-                if (bucket.state != BucketState::Deleted)
-                    return const_cast<BucketType*>(first_empty_bucket);
+            // We found a free bucket, write to it and stop
+            if (bucket->state == BucketState::Free) {
+                new (bucket->slot()) T(forward<U>(value));
+                bucket->state = bucket_state_for_probe_length(probe_length);
+                update_collection_for_new_bucket(*bucket);
+                ++m_size;
+                return HashSetResult::InsertedNewEntry;
             }
 
-            hash = rehash_for_collision(hash);
+            // The bucket is already used, does it have an identical value?
+            if (TraitsForT::equals(*bucket->slot(), static_cast<T const&>(value))) {
+                if (existing_entry_behavior == HashSetExistingEntryBehavior::Replace) {
+                    (*bucket->slot()) = forward<U>(value);
+                    return HashSetResult::ReplacedExistingEntry;
+                }
+                return HashSetResult::KeptExistingEntry;
+            }
+
+            // Robin hood: if our probe length is larger (poor) than this bucket's (rich), steal its position!
+            // This ensures that we will always traverse buckets in order of probe length.
+            auto target_probe_length = used_bucket_probe_length(*bucket);
+            if (probe_length > target_probe_length) {
+                // Copy out bucket
+                BucketType bucket_to_move = move(*bucket);
+                update_collection_for_swapped_buckets(bucket, &bucket_to_move);
+
+                // Write new bucket
+                new (bucket->slot()) T(forward<U>(value));
+                bucket->state = bucket_state_for_probe_length(probe_length);
+                probe_length = target_probe_length;
+                if constexpr (IsOrdered)
+                    bucket->next = nullptr;
+                update_collection_for_new_bucket(*bucket);
+                ++m_size;
+
+                // Find a free bucket, swapping with smaller probe length buckets along the way
+                for (;;) {
+                    if (++bucket_index == m_capacity) [[unlikely]]
+                        bucket_index = 0;
+                    bucket = &m_buckets[bucket_index];
+                    ++probe_length;
+
+                    if (bucket->state == BucketState::Free) {
+                        *bucket = move(bucket_to_move);
+                        bucket->state = bucket_state_for_probe_length(probe_length);
+                        update_collection_for_swapped_buckets(&bucket_to_move, bucket);
+                        break;
+                    }
+
+                    target_probe_length = used_bucket_probe_length(*bucket);
+                    if (probe_length > target_probe_length) {
+                        swap(bucket_to_move, *bucket);
+                        bucket->state = bucket_state_for_probe_length(probe_length);
+                        probe_length = target_probe_length;
+                        update_collection_for_swapped_buckets(&bucket_to_move, bucket);
+                    }
+                }
+
+                return HashSetResult::InsertedNewEntry;
+            }
+
+            // Try next bucket
+            if (++bucket_index == m_capacity) [[unlikely]]
+                bucket_index = 0;
+            ++probe_length;
         }
     }
-    [[nodiscard]] BucketType& lookup_for_writing(T const& value)
-    {
-        return *MUST(try_lookup_for_writing(value));
-    }
-
-    [[nodiscard]] size_t used_bucket_count() const { return m_size + m_deleted_count; }
-    [[nodiscard]] bool should_grow() const { return ((used_bucket_count() + 1) * 100) >= (m_capacity * load_factor_in_percent); }
 
     void delete_bucket(auto& bucket)
     {
-        bucket.slot()->~T();
-        bucket.state = BucketState::Deleted;
+        VERIFY(bucket.state != BucketState::Free);
 
+        // Delete the bucket
+        bucket.slot()->~T();
         if constexpr (IsOrdered) {
             if (bucket.previous)
                 bucket.previous->next = bucket.next;
@@ -731,6 +644,48 @@ private:
             bucket.previous = nullptr;
             bucket.next = nullptr;
         }
+        --m_size;
+
+        // If we deleted a bucket, we need to make sure to shift up all buckets after it to ensure
+        // that we can still probe for buckets with collisions, and we automatically optimize the
+        // probe lengths. To do so, we shift the following buckets up until we reach a free bucket,
+        // or a bucket with a probe length of 0 (the ideal index for that bucket).
+        auto update_bucket_neighbours = [&](BucketType* bucket) {
+            if constexpr (IsOrdered) {
+                if (bucket->previous)
+                    bucket->previous->next = bucket;
+                if (bucket->next)
+                    bucket->next->previous = bucket;
+            }
+        };
+
+        VERIFY(&bucket >= m_buckets);
+        size_t shift_to_index = &bucket - m_buckets;
+        VERIFY(shift_to_index < m_capacity);
+        size_t shift_from_index = shift_to_index;
+        for (;;) {
+            if (++shift_from_index == m_capacity) [[unlikely]]
+                shift_from_index = 0;
+
+            auto* shift_from_bucket = &m_buckets[shift_from_index];
+            if (shift_from_bucket->state == BucketState::Free)
+                break;
+
+            auto shift_from_probe_length = used_bucket_probe_length(*shift_from_bucket);
+            if (shift_from_probe_length == 0)
+                break;
+
+            auto* shift_to_bucket = &m_buckets[shift_to_index];
+            *shift_to_bucket = move(*shift_from_bucket);
+            shift_to_bucket->state = bucket_state_for_probe_length(shift_from_probe_length - 1);
+            update_bucket_neighbours(shift_to_bucket);
+
+            if (++shift_to_index == m_capacity) [[unlikely]]
+                shift_to_index = 0;
+        }
+
+        // Mark last bucket as free
+        m_buckets[shift_to_index].state = BucketState::Free;
     }
 
     BucketType* m_buckets { nullptr };
@@ -738,7 +693,6 @@ private:
     [[no_unique_address]] CollectionDataType m_collection_data;
     size_t m_size { 0 };
     size_t m_capacity { 0 };
-    size_t m_deleted_count { 0 };
 };
 }
 
