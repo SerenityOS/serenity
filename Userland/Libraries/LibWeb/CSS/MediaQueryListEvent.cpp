@@ -10,9 +10,9 @@
 
 namespace Web::CSS {
 
-MediaQueryListEvent* MediaQueryListEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryListEvent>> MediaQueryListEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init)
 {
-    return realm.heap().allocate<MediaQueryListEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<MediaQueryListEvent>(realm, realm, event_name, event_init));
 }
 
 MediaQueryListEvent::MediaQueryListEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, MediaQueryListEventInit const& event_init)
