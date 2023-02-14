@@ -888,7 +888,7 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto above_non_zero_tokens_view = create_non_zero_tokens_view(above_non_zero_tokens, blocks_to_sub_blocks(columns_start), blocks_to_sub_blocks(columns_end - columns_start), frame_context.color_config.subsampling_x);
             auto above_segmentation_ids_for_tile = safe_slice(above_segmentation_ids.span(), columns_start, columns_end - columns_start);
 
-            auto tile_context = DECODER_TRY_ALLOC(TileContext::try_create(frame_context, tile_size, rows_start, rows_end, columns_start, columns_end, above_partition_context_for_tile, above_non_zero_tokens_view, above_segmentation_ids_for_tile));
+            auto tile_context = TRY(TileContext::try_create(frame_context, tile_size, rows_start, rows_end, columns_start, columns_end, above_partition_context_for_tile, above_non_zero_tokens_view, above_segmentation_ids_for_tile));
             TRY(decode_tile(tile_context));
             TRY_READ(frame_context.bit_stream.discard(tile_size));
         }
