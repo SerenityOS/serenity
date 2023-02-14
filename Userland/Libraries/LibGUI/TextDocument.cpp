@@ -16,6 +16,7 @@
 #include <LibGUI/TextDocument.h>
 #include <LibRegex/Regex.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Segmentation.h>
 
 namespace GUI {
 
@@ -683,6 +684,26 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(TextPosi
     return {};
 }
 
+static bool should_continue_beyond_word(Utf32View const& view)
+{
+    static auto punctuation = Unicode::general_category_from_string("Punctuation"sv);
+    static auto separator = Unicode::general_category_from_string("Separator"sv);
+
+    if (!punctuation.has_value() || !separator.has_value())
+        return false;
+
+    auto has_any_gc = [&](auto code_point, auto&&... categories) {
+        return (Unicode::code_point_has_general_category(code_point, *categories) || ...);
+    };
+
+    for (auto code_point : view) {
+        if (!has_any_gc(code_point, punctuation, separator))
+            return false;
+    }
+
+    return true;
+}
+
 TextPosition TextDocument::first_word_break_before(TextPosition const& position, bool start_at_column_before) const
 {
     if (position.column() == 0) {
@@ -694,20 +715,26 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
     }
 
     auto target = position;
-    auto line = this->line(target.line());
+    auto const& line = this->line(target.line());
+
     auto modifier = start_at_column_before ? 1 : 0;
     if (target.column() == line.length())
         modifier = 1;
 
-    while (target.column() > 0 && is_ascii_blank(line.code_points()[target.column() - modifier]))
-        target.set_column(target.column() - 1);
-    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column() - modifier]);
+    target.set_column(target.column() - modifier);
 
-    while (target.column() > 0) {
-        auto prev_code_point = line.code_points()[target.column() - 1];
-        if ((is_start_alphanumeric && !is_ascii_alphanumeric(prev_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(prev_code_point)))
+    while (target.column() < line.length()) {
+        if (auto index = Unicode::previous_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
+            auto view_between_target_and_index = line.view().substring_view(*index, target.column() - *index);
+
+            if (should_continue_beyond_word(view_between_target_and_index)) {
+                target.set_column(*index - 1);
+                continue;
+            }
+
+            target.set_column(*index);
             break;
-        target.set_column(target.column() - 1);
+        }
     }
 
     return target;
@@ -716,7 +743,7 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
 TextPosition TextDocument::first_word_break_after(TextPosition const& position) const
 {
     auto target = position;
-    auto line = this->line(target.line());
+    auto const& line = this->line(target.line());
 
     if (position.column() >= line.length()) {
         if (position.line() >= this->line_count() - 1) {
@@ -725,15 +752,18 @@ TextPosition TextDocument::first_word_break_after(TextPosition const& position) 
         return TextPosition(position.line() + 1, 0);
     }
 
-    while (target.column() < line.length() && is_ascii_space(line.code_points()[target.column()]))
-        target.set_column(target.column() + 1);
-    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column()]);
-
     while (target.column() < line.length()) {
-        auto next_code_point = line.code_points()[target.column()];
-        if ((is_start_alphanumeric && !is_ascii_alphanumeric(next_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(next_code_point)))
+        if (auto index = Unicode::next_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
+            auto view_between_target_and_index = line.view().substring_view(target.column(), *index - target.column());
+
+            if (should_continue_beyond_word(view_between_target_and_index)) {
+                target.set_column(*index + 1);
+                continue;
+            }
+
+            target.set_column(*index);
             break;
-        target.set_column(target.column() + 1);
+        }
     }
 
     return target;
