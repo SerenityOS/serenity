@@ -313,10 +313,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
         .reserved_environment = {},
         .browsing_context = browsing_context(),
     };
-    auto document = DOM::Document::create_and_initialize(
-        DOM::Document::Type::HTML,
-        "text/html",
-        move(navigation_params));
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", move(navigation_params)).release_value_but_fixme_should_propagate_errors();
     browsing_context().set_active_document(document);
 
     auto parser = HTML::HTMLParser::create(document, html, "utf-8");
@@ -413,11 +410,7 @@ void FrameLoader::resource_did_load()
         .reserved_environment = {},
         .browsing_context = browsing_context(),
     };
-    auto document = DOM::Document::create_and_initialize(
-        DOM::Document::Type::HTML,
-        "text/html",
-        move(navigation_params));
-
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", move(navigation_params)).release_value_but_fixme_should_propagate_errors();
     document->set_url(url);
     document->set_encoding(resource()->encoding());
     document->set_content_type(resource()->mime_type());

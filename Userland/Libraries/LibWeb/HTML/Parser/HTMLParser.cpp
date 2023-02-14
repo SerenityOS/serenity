@@ -3448,7 +3448,7 @@ DOM::Document& HTMLParser::document()
 Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
     // 1. Create a new Document node, and mark it as being an HTML document.
-    auto temp_document = DOM::Document::create(context_element.realm());
+    auto temp_document = DOM::Document::create(context_element.realm()).release_value_but_fixme_should_propagate_errors();
     temp_document->set_document_type(DOM::Document::Type::HTML);
 
     // 2. If the node document of the context element is in quirks mode, then let the Document be in quirks mode.
