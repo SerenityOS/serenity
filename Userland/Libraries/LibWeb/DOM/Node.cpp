@@ -1428,7 +1428,7 @@ void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedStri
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto record = MutationRecord::create(realm(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
+        auto record = MutationRecord::create(realm(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value).release_value_but_fixme_should_propagate_errors();
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));
