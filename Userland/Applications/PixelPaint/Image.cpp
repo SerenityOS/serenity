@@ -237,6 +237,7 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
             select_layer(layer.ptr());
             layer_selected = true;
         }
+        layer->did_modify_bitmap({}, Layer::NotifyClients::No);
         add_layer(*layer);
     }
 

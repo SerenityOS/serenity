@@ -41,6 +41,10 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::create_snapshot(Image& image, Layer const& 
 {
     auto bitmap = TRY(layer.content_bitmap().clone());
     auto snapshot = TRY(create_with_bitmap(image, move(bitmap), layer.name()));
+    if (layer.is_masked()) {
+        snapshot->m_mask_bitmap = TRY(layer.mask_bitmap()->clone());
+        snapshot->m_edit_mode = layer.m_edit_mode;
+    }
 
     /*
         We set these properties directly because calling the setters might
