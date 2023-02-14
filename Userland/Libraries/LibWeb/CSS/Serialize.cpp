@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -131,7 +131,7 @@ void serialize_a_local(StringBuilder& builder, StringView path)
 void serialize_unicode_ranges(StringBuilder& builder, Vector<UnicodeRange> const& unicode_ranges)
 {
     serialize_a_comma_separated_list(builder, unicode_ranges, [&](UnicodeRange unicode_range) {
-        serialize_a_string(builder, unicode_range.to_deprecated_string());
+        serialize_a_string(builder, unicode_range.to_string().release_value_but_fixme_should_propagate_errors());
     });
 }
 
