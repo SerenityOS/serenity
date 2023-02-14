@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 
 namespace Web::CSS {
 
@@ -29,11 +29,11 @@ public:
         return m_min_code_point <= code_point && code_point <= m_max_code_point;
     }
 
-    DeprecatedString to_deprecated_string() const
+    ErrorOr<String> to_string() const
     {
         if (m_min_code_point == m_max_code_point)
-            return DeprecatedString::formatted("U+{:x}", m_min_code_point);
-        return DeprecatedString::formatted("U+{:x}-{:x}", m_min_code_point, m_max_code_point);
+            return String::formatted("U+{:x}", m_min_code_point);
+        return String::formatted("U+{:x}-{:x}", m_min_code_point, m_max_code_point);
     }
 
 private:
