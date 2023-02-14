@@ -24,7 +24,7 @@ class StaticRange final : public AbstractRange {
     WEB_PLATFORM_OBJECT(StaticRange, AbstractRange);
 
 public:
-    static WebIDL::ExceptionOr<StaticRange*> construct_impl(JS::Realm&, StaticRangeInit& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<StaticRange>> construct_impl(JS::Realm&, StaticRangeInit& init);
 
     StaticRange(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
     virtual ~StaticRange() override;
