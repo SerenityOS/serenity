@@ -16,10 +16,10 @@ Comment::Comment(Document& document, DeprecatedString const& data)
 }
 
 // https://dom.spec.whatwg.org/#dom-comment-comment
-JS::NonnullGCPtr<Comment> Comment::construct_impl(JS::Realm& realm, DeprecatedString const& data)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> Comment::construct_impl(JS::Realm& realm, DeprecatedString const& data)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return realm.heap().allocate<Comment>(realm, window.associated_document(), data).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Comment>(realm, window.associated_document(), data));
 }
 
 }
