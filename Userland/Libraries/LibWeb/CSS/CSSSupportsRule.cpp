@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +32,7 @@ JS::ThrowCompletionOr<void> CSSSupportsRule::initialize(JS::Realm& realm)
 
 DeprecatedString CSSSupportsRule::condition_text() const
 {
-    return m_supports->to_deprecated_string();
+    return m_supports->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 void CSSSupportsRule::set_condition_text(DeprecatedString text)
