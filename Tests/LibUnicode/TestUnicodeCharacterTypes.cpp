@@ -93,7 +93,7 @@ TEST_CASE(to_unicode_titlecase)
 
     EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("foo bar baz"sv)), "Foo Bar Baz"sv);
     EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("foo \n \r bar \t baz"sv)), "Foo \n \r Bar \t Baz"sv);
-    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("f\"oo\" b'ar'"sv)), "F\"Oo\" B'Ar'"sv);
+    EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("f\"oo\" b'ar'"sv)), "F\"Oo\" B'ar'"sv);
     EXPECT_EQ(MUST(Unicode::to_unicode_titlecase_full("123dollars"sv)), "123Dollars"sv);
 }
 

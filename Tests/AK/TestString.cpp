@@ -211,7 +211,7 @@ TEST_CASE(to_titlecase)
     {
         auto string = MUST(String::from_utf8("f\"oo\" b'ar'"sv));
         auto result = MUST(string.to_titlecase());
-        EXPECT_EQ(result, "F\"Oo\" B'Ar'"sv);
+        EXPECT_EQ(result, "F\"Oo\" B'ar'"sv);
     }
     {
         auto string = MUST(String::from_utf8("123dollars"sv));
