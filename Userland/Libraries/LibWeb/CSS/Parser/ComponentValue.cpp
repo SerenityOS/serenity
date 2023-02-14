@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,12 +26,12 @@ ComponentValue::ComponentValue(NonnullRefPtr<Block> block)
 
 ComponentValue::~ComponentValue() = default;
 
-DeprecatedString ComponentValue::to_deprecated_string() const
+ErrorOr<String> ComponentValue::to_string() const
 {
     return m_value.visit(
-        [](Token const& token) { return token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string(); },
-        [](NonnullRefPtr<Block> const& block) { return block->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string(); },
-        [](NonnullRefPtr<Function> const& function) { return function->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string(); });
+        [](Token const& token) { return token.to_string(); },
+        [](NonnullRefPtr<Block> const& block) { return block->to_string(); },
+        [](NonnullRefPtr<Function> const& function) { return function->to_string(); });
 }
 
 ErrorOr<String> ComponentValue::to_debug_string() const

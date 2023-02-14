@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +33,7 @@ public:
     Token const& token() const { return m_value.get<Token>(); }
     operator Token() const { return m_value.get<Token>(); }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
     ErrorOr<String> to_debug_string() const;
 
 private:
@@ -45,6 +45,6 @@ template<>
 struct AK::Formatter<Web::CSS::Parser::ComponentValue> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Parser::ComponentValue const& component_value)
     {
-        return Formatter<StringView>::format(builder, component_value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, TRY(component_value.to_string()));
     }
 };

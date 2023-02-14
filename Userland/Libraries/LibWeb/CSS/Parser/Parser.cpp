@@ -1405,7 +1405,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
-            builder.append(item.to_deprecated_string());
+            builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
         transaction.commit();
         return Supports::Feature {
             Supports::Selector { builder.to_deprecated_string() }
@@ -1425,13 +1425,13 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
     // `[ <function-token> <any-value>? ) ]`
     if (first_token.is_function()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_deprecated_string() };
+        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() };
     }
 
     // `( <any-value>? )`
     if (first_token.is_block() && first_token.block().is_paren()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_deprecated_string() };
+        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() };
     }
 
     return {};
@@ -3385,7 +3385,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
             return DeprecatedString::formatted("{:+}", int_value);
         }
 
-        return component_value.to_deprecated_string();
+        return component_value.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     };
 
     auto create_unicode_range = [&](StringView text, auto& local_transaction) -> Optional<UnicodeRange> {
