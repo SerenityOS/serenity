@@ -14,6 +14,7 @@
 #include <AK/MemoryStream.h>
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
+#include <LibVideo/DecoderError.h>
 
 #include "BooleanDecoder.h"
 #include "ContextStorage.h"
@@ -187,14 +188,14 @@ static NonZeroTokensView create_non_zero_tokens_view(NonZeroTokens& non_zero_tok
 
 struct TileContext {
 public:
-    static ErrorOr<TileContext> try_create(FrameContext& frame_context, u32 tile_size, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end, PartitionContextView above_partition_context, NonZeroTokensView above_non_zero_tokens, SegmentationPredictionContextView above_segmentation_ids)
+    static DecoderErrorOr<TileContext> try_create(FrameContext& frame_context, u32 tile_size, u32 rows_start, u32 rows_end, u32 columns_start, u32 columns_end, PartitionContextView above_partition_context, NonZeroTokensView above_non_zero_tokens, SegmentationPredictionContextView above_segmentation_ids)
     {
         auto width = columns_end - columns_start;
         auto height = rows_end - rows_start;
         auto context_view = frame_context.m_block_contexts.view(rows_start, columns_start, height, width);
 
-        auto bit_stream = TRY(try_make<BigEndianInputBitStream>(TRY(try_make<FixedMemoryStream>(frame_context.stream))));
-        auto decoder = TRY(BooleanDecoder::initialize(move(bit_stream), tile_size));
+        auto bit_stream = DECODER_TRY_ALLOC(try_make<BigEndianInputBitStream>(DECODER_TRY_ALLOC(try_make<FixedMemoryStream>(frame_context.stream))));
+        auto decoder = DECODER_TRY(DecoderErrorCategory::Corrupted, BooleanDecoder::initialize(move(bit_stream), tile_size));
 
         return TileContext {
             frame_context,
@@ -207,9 +208,9 @@ public:
             above_partition_context,
             above_non_zero_tokens,
             above_segmentation_ids,
-            TRY(PartitionContext::create(superblocks_to_blocks(blocks_ceiled_to_superblocks(height)))),
-            TRY(create_non_zero_tokens(blocks_to_sub_blocks(height), frame_context.color_config.subsampling_y)),
-            TRY(SegmentationPredictionContext::create(height)),
+            DECODER_TRY_ALLOC(PartitionContext::create(superblocks_to_blocks(blocks_ceiled_to_superblocks(height)))),
+            DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(height), frame_context.color_config.subsampling_y)),
+            DECODER_TRY_ALLOC(SegmentationPredictionContext::create(height)),
         };
     }
 
