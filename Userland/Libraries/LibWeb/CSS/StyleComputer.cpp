@@ -628,7 +628,7 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
             Parser::TokenStream source_function_contents { source_function.values() };
             if (!expand_variables(element, property_name, dependencies, source_function_contents, function_values))
                 return false;
-            NonnullRefPtr<Parser::Function> function = Parser::Function::create(source_function.name(), move(function_values));
+            NonnullRefPtr<Parser::Function> function = Parser::Function::create(FlyString::from_utf8(source_function.name()).release_value_but_fixme_should_propagate_errors(), move(function_values));
             dest.empend(function);
             continue;
         }
@@ -750,7 +750,8 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             Parser::TokenStream source_function_contents { source_function.values() };
             if (!expand_unresolved_values(element, property_name, source_function_contents, function_values))
                 return false;
-            NonnullRefPtr<Parser::Function> function = Parser::Function::create(source_function.name(), move(function_values));
+            // FIXME: This would be much nicer if we could access the source_function's FlyString value directly.
+            NonnullRefPtr<Parser::Function> function = Parser::Function::create(FlyString::from_utf8(source_function.name()).release_value_but_fixme_should_propagate_errors(), move(function_values));
             dest.empend(function);
             continue;
         }

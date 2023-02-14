@@ -1801,7 +1801,7 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
     // NOTE: We create the Function fully initialized when we return it instead.
-    DeprecatedFlyString function_name = ((Token)name_ident).function();
+    auto function_name = FlyString::from_utf8(((Token)name_ident).function()).release_value_but_fixme_should_propagate_errors();
     Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
