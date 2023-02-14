@@ -1395,7 +1395,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() }
+                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors() }
             };
         }
     }
@@ -1408,7 +1408,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
             builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
         transaction.commit();
         return Supports::Feature {
-            Supports::Selector { builder.to_deprecated_string() }
+            Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors() }
         };
     }
 
