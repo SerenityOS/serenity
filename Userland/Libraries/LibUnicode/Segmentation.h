@@ -8,21 +8,64 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Function.h>
+#include <AK/IterationDecision.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
 namespace Unicode {
 
-Vector<size_t> find_grapheme_segmentation_boundaries(Utf8View const&);
-Vector<size_t> find_grapheme_segmentation_boundaries(Utf16View const&);
-Vector<size_t> find_grapheme_segmentation_boundaries(Utf32View const&);
+using SegmentationCallback = Function<IterationDecision(size_t)>;
 
-Vector<size_t> find_word_segmentation_boundaries(Utf8View const&);
-Vector<size_t> find_word_segmentation_boundaries(Utf16View const&);
-Vector<size_t> find_word_segmentation_boundaries(Utf32View const&);
+void for_each_grapheme_segmentation_boundary(Utf8View const&, SegmentationCallback);
+void for_each_grapheme_segmentation_boundary(Utf16View const&, SegmentationCallback);
+void for_each_grapheme_segmentation_boundary(Utf32View const&, SegmentationCallback);
 
-Vector<size_t> find_sentence_segmentation_boundaries(Utf8View const&);
-Vector<size_t> find_sentence_segmentation_boundaries(Utf16View const&);
-Vector<size_t> find_sentence_segmentation_boundaries(Utf32View const&);
+template<typename ViewType>
+Vector<size_t> find_grapheme_segmentation_boundaries(ViewType const& view)
+{
+    Vector<size_t> boundaries;
+
+    for_each_grapheme_segmentation_boundary(view, [&](auto boundary) {
+        boundaries.append(boundary);
+        return IterationDecision::Continue;
+    });
+
+    return boundaries;
+}
+
+void for_each_word_segmentation_boundary(Utf8View const&, SegmentationCallback);
+void for_each_word_segmentation_boundary(Utf16View const&, SegmentationCallback);
+void for_each_word_segmentation_boundary(Utf32View const&, SegmentationCallback);
+
+template<typename ViewType>
+Vector<size_t> find_word_segmentation_boundaries(ViewType const& view)
+{
+    Vector<size_t> boundaries;
+
+    for_each_word_segmentation_boundary(view, [&](auto boundary) {
+        boundaries.append(boundary);
+        return IterationDecision::Continue;
+    });
+
+    return boundaries;
+}
+
+void for_each_sentence_segmentation_boundary(Utf8View const&, SegmentationCallback);
+void for_each_sentence_segmentation_boundary(Utf16View const&, SegmentationCallback);
+void for_each_sentence_segmentation_boundary(Utf32View const&, SegmentationCallback);
+
+template<typename ViewType>
+Vector<size_t> find_sentence_segmentation_boundaries(ViewType const& view)
+{
+    Vector<size_t> boundaries;
+
+    for_each_sentence_segmentation_boundary(view, [&](auto boundary) {
+        boundaries.append(boundary);
+        return IterationDecision::Continue;
+    });
+
+    return boundaries;
+}
 
 }
