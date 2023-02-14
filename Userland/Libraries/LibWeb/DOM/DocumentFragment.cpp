@@ -34,10 +34,10 @@ void DocumentFragment::set_host(Web::DOM::Element* element)
 }
 
 // https://dom.spec.whatwg.org/#dom-documentfragment-documentfragment
-JS::NonnullGCPtr<DocumentFragment> DocumentFragment::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> DocumentFragment::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
-    return realm.heap().allocate<DocumentFragment>(realm, window.associated_document()).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<DocumentFragment>(realm, window.associated_document()));
 }
 
 }
