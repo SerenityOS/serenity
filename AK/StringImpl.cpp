@@ -6,7 +6,6 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/DeprecatedFlyString.h>
-#include <AK/HashTable.h>
 #include <AK/StringHash.h>
 #include <AK/StringImpl.h>
 #include <AK/kmalloc.h>
