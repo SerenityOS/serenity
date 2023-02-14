@@ -34,7 +34,7 @@ JS::ThrowCompletionOr<void> MediaList::initialize(JS::Realm& realm)
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
 DeprecatedString MediaList::media_text() const
 {
-    return serialize_a_media_query_list(m_media);
+    return serialize_a_media_query_list(m_media).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext

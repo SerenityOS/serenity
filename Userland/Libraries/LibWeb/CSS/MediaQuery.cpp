@@ -379,17 +379,15 @@ bool MediaQuery::evaluate(HTML::Window const& window)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-media-query-list
-DeprecatedString serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const& media_queries)
+ErrorOr<String> serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const& media_queries)
 {
     // 1. If the media query list is empty, then return the empty string.
     if (media_queries.is_empty())
-        return "";
+        return String {};
 
     // 2. Serialize each media query in the list of media queries, in the same order as they
     // appear in the media query list, and then serialize the list.
-    StringBuilder builder;
-    builder.join(", "sv, media_queries);
-    return builder.to_deprecated_string();
+    return String::join(", "sv, media_queries);
 }
 
 bool is_media_feature_name(StringView name)
