@@ -1377,10 +1377,11 @@ ErrorOr<void> Profile::check_tag_types()
 
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
-    auto profile = TRY(try_make_ref_counted<Profile>());
-    profile->m_header = TRY(read_header(bytes));
-    bytes = bytes.trim(profile->on_disk_size());
-    profile->m_tag_table = TRY(read_tag_table(bytes));
+    auto header = TRY(read_header(bytes));
+    bytes = bytes.trim(header.on_disk_size);
+    auto tag_table = TRY(read_tag_table(bytes));
+
+    auto profile = TRY(try_make_ref_counted<Profile>(header, move(tag_table)));
 
     TRY(profile->check_required_tags());
     TRY(profile->check_tag_types());

@@ -210,6 +210,12 @@ class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
 
+    Profile(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
+        : m_header(header)
+        , m_tag_table(move(tag_table))
+    {
+    }
+
     Optional<PreferredCMMType> preferred_cmm_type() const { return m_header.preferred_cmm_type; }
     Version version() const { return m_header.version; }
     DeviceClass device_class() const { return m_header.device_class; }
