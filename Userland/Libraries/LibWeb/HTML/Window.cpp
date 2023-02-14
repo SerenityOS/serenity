@@ -644,7 +644,7 @@ Page const* Window::page() const
 
 CSS::CSSStyleDeclaration* Window::get_computed_style_impl(DOM::Element& element) const
 {
-    return CSS::ResolvedCSSStyleDeclaration::create(element);
+    return CSS::ResolvedCSSStyleDeclaration::create(element).release_value_but_fixme_should_propagate_errors().ptr();
 }
 
 JS::NonnullGCPtr<CSS::MediaQueryList> Window::match_media_impl(DeprecatedString media)
