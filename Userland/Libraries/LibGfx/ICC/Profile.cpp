@@ -1294,6 +1294,8 @@ ErrorOr<void> Profile::check_tag_types()
     //   "Tag Type: deviceSettingsType"
     // - ICC v2, 6.4.24 mediaBlackPointTag
     //   "Tag Type: XYZType"
+    // - ICC v2, 6.4.26 namedColorTag
+    //   "Tag Type: namedColorType"
     // - ICC v2, 6.4.34 ps2CRD0Tag
     //   "Tag Type: dataType"
     // - ICC v2, 6.4.35 ps2CRD1Tag
@@ -1312,6 +1314,9 @@ ErrorOr<void> Profile::check_tag_types()
     //   "Tag Type: screeningType"
     // - ICC v2, 6.4.45 ucrbgTag
     //   "Tag Type: ucrbgType"
+    // https://www.color.org/v2profiles.xalter says about these tags:
+    // "it is also recommended that optional tags in the v2 specification that have subsequently become
+    //  obsolete are not included in future profiles made to the v2 specification."
 
     return {};
 }
