@@ -603,7 +603,7 @@ ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
+static ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
 {
     // "All tag data elements shall start on a 4-byte boundary (relative to the start of the profile data stream)"
     if (offset_to_beginning_of_tag_data_element % 4 != 0)
@@ -709,7 +709,7 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
         // FIXME: optionally ignore tags with unknown signature
 
         // Dedupe identical offset/sizes.
-        NonnullRefPtr<TagData> tag_data = TRY(offset_to_tag_data.try_ensure(tag_table_entries[i].offset_to_beginning_of_tag_data_element, [=, this]() {
+        NonnullRefPtr<TagData> tag_data = TRY(offset_to_tag_data.try_ensure(tag_table_entries[i].offset_to_beginning_of_tag_data_element, [&]() {
             return read_tag(bytes, tag_table_entries[i].offset_to_beginning_of_tag_data_element, tag_table_entries[i].size_of_tag_data_element);
         }));
 
