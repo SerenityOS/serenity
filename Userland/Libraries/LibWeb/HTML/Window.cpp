@@ -649,7 +649,7 @@ CSS::CSSStyleDeclaration* Window::get_computed_style_impl(DOM::Element& element)
 
 JS::NonnullGCPtr<CSS::MediaQueryList> Window::match_media_impl(DeprecatedString media)
 {
-    auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), media));
+    auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), media)).release_value_but_fixme_should_propagate_errors();
     associated_document().add_media_query_list(*media_query_list);
     return media_query_list;
 }

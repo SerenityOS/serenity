@@ -15,9 +15,9 @@
 
 namespace Web::CSS {
 
-JS::NonnullGCPtr<MediaQueryList> MediaQueryList::create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryList>> MediaQueryList::create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return document.heap().allocate<MediaQueryList>(document.realm(), document, move(media)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(document.heap().allocate<MediaQueryList>(document.realm(), document, move(media)));
 }
 
 MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
