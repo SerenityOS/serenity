@@ -8,7 +8,7 @@
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
-#include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Segmentation.h>
 
 namespace JS::Intl {
 

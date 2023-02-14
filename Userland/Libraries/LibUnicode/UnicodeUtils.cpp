@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Segmentation.h>
 #include <LibUnicode/UnicodeUtils.h>
 
 #if ENABLE_UNICODE_DATA
