@@ -1276,7 +1276,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
     } else if (interface_lowercase == "compositionevent") {
         event = Event::create(realm, ""); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "customevent") {
-        event = CustomEvent::create(realm, "");
+        event = TRY(CustomEvent::create(realm, ""));
     } else if (interface_lowercase == "devicemotionevent") {
         event = Event::create(realm, ""); // FIXME: Create DeviceMotionEvent
     } else if (interface_lowercase == "deviceorientationevent") {

@@ -20,8 +20,8 @@ class CustomEvent : public Event {
     WEB_PLATFORM_OBJECT(CustomEvent, Event);
 
 public:
-    static CustomEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init = {});
-    static CustomEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, CustomEventInit const& event_init);
 
     virtual ~CustomEvent() override;
 
