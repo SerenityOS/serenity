@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/CSS/Serialize.h>
 

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/FlyString.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/CSS/Number.h>
