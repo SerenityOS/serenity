@@ -890,7 +890,7 @@ JS::NonnullGCPtr<NodeList> Node::child_nodes()
     if (!m_child_nodes) {
         m_child_nodes = LiveNodeList::create(realm(), *this, [this](auto& node) {
             return is_parent_of(node);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_child_nodes;
 }
