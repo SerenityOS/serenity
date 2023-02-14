@@ -2350,7 +2350,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
 DeprecatedString Document::dump_accessibility_tree_as_json()
 {
     StringBuilder builder;
-    auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr);
+    auto accessibility_tree = AccessibilityTreeNode::create(this, nullptr).release_value_but_fixme_should_propagate_errors();
     build_accessibility_tree(*&accessibility_tree);
     auto json = MUST(JsonObjectSerializer<>::try_create(builder));
 

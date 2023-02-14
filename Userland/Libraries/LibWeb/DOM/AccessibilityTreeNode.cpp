@@ -13,9 +13,9 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<AccessibilityTreeNode> AccessibilityTreeNode::create(Document* document, DOM::Node const* value)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AccessibilityTreeNode>> AccessibilityTreeNode::create(Document* document, DOM::Node const* value)
 {
-    return *document->heap().allocate<AccessibilityTreeNode>(document->realm(), value).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(document->heap().allocate<AccessibilityTreeNode>(document->realm(), value));
 }
 
 AccessibilityTreeNode::AccessibilityTreeNode(JS::GCPtr<DOM::Node> value)
