@@ -574,33 +574,34 @@ DeviceAttributes::DeviceAttributes(u64 bits)
 {
 }
 
-ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
+static ErrorOr<ProfileHeader> read_header(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(ICCHeader))
         return Error::from_string_literal("ICC::Profile: Not enough data for header");
 
-    auto header = *bit_cast<ICCHeader const*>(bytes.data());
+    ProfileHeader header;
+    auto raw_header = *bit_cast<ICCHeader const*>(bytes.data());
 
-    TRY(parse_file_signature(header));
-    m_on_disk_size = TRY(parse_size(header, bytes));
-    m_preferred_cmm_type = parse_preferred_cmm_type(header);
-    m_version = TRY(parse_version(header));
-    m_device_class = TRY(parse_device_class(header));
-    m_data_color_space = TRY(parse_data_color_space(header));
-    m_connection_space = TRY(parse_connection_space(header));
-    m_creation_timestamp = TRY(parse_creation_date_time(header));
-    m_primary_platform = TRY(parse_primary_platform(header));
-    m_flags = Flags { header.profile_flags };
-    m_device_manufacturer = parse_device_manufacturer(header);
-    m_device_model = parse_device_model(header);
-    m_device_attributes = TRY(parse_device_attributes(header));
-    m_rendering_intent = TRY(parse_rendering_intent(header));
-    m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
-    m_creator = parse_profile_creator(header);
-    m_id = TRY(parse_profile_id(header, bytes));
-    TRY(parse_reserved(header));
+    TRY(parse_file_signature(raw_header));
+    header.on_disk_size = TRY(parse_size(raw_header, bytes));
+    header.preferred_cmm_type = parse_preferred_cmm_type(raw_header);
+    header.version = TRY(parse_version(raw_header));
+    header.device_class = TRY(parse_device_class(raw_header));
+    header.data_color_space = TRY(parse_data_color_space(raw_header));
+    header.connection_space = TRY(parse_connection_space(raw_header));
+    header.creation_timestamp = TRY(parse_creation_date_time(raw_header));
+    header.primary_platform = TRY(parse_primary_platform(raw_header));
+    header.flags = Flags { raw_header.profile_flags };
+    header.device_manufacturer = parse_device_manufacturer(raw_header);
+    header.device_model = parse_device_model(raw_header);
+    header.device_attributes = TRY(parse_device_attributes(raw_header));
+    header.rendering_intent = TRY(parse_rendering_intent(raw_header));
+    header.pcs_illuminant = TRY(parse_pcs_illuminant(raw_header));
+    header.creator = parse_profile_creator(raw_header);
+    header.id = TRY(parse_profile_id(raw_header, bytes));
+    TRY(parse_reserved(raw_header));
 
-    return {};
+    return header;
 }
 
 static ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
@@ -1377,7 +1378,7 @@ ErrorOr<void> Profile::check_tag_types()
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
     auto profile = TRY(try_make_ref_counted<Profile>());
-    TRY(profile->read_header(bytes));
+    profile->m_header = TRY(read_header(bytes));
     bytes = bytes.trim(profile->on_disk_size());
     profile->m_tag_table = TRY(read_tag_table(bytes));
 
