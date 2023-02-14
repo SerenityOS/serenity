@@ -19,20 +19,6 @@ constexpr unsigned int_hash(u32 key)
     return key;
 }
 
-constexpr unsigned rehash_for_collision(u32 key)
-{
-    unsigned const magic = 0xBA5EDB01;
-    if (key == magic)
-        return 0u;
-    if (key == 0u)
-        key = magic;
-
-    key ^= key << 13;
-    key ^= key >> 17;
-    key ^= key << 5;
-    return key;
-}
-
 constexpr unsigned pair_int_hash(u32 key1, u32 key2)
 {
     return int_hash((int_hash(key1) * 209) ^ (int_hash(key2 * 413)));
