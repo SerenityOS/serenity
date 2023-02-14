@@ -226,7 +226,6 @@ public:
 
 private:
     ErrorOr<void> read_header(ReadonlyBytes);
-    ErrorOr<void> read_tag_table(ReadonlyBytes);
     ErrorOr<void> check_required_tags();
     ErrorOr<void> check_tag_types();
 

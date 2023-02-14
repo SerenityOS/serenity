@@ -663,8 +663,10 @@ static ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_
     }
 }
 
-ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
+static ErrorOr<OrderedHashMap<TagSignature, NonnullRefPtr<TagData>>> read_tag_table(ReadonlyBytes bytes)
 {
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table;
+
     // ICC v4, 7.3 Tag table
     // ICC v4, 7.3.1 Overview
     // "The tag table acts as a table of contents for the tags and an index into the tag data element in the profiles. It
@@ -718,11 +720,11 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
             return Error::from_string_literal("ICC::Profile: two tags have same offset but different sizes");
 
         // "Duplicate tag signatures shall not be included in the tag table."
-        if (TRY(m_tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
+        if (TRY(tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("ICC::Profile: duplicate tag signature");
     }
 
-    return {};
+    return tag_table;
 }
 
 static bool is_xCLR(ColorSpace color_space)
@@ -1377,7 +1379,7 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     auto profile = TRY(try_make_ref_counted<Profile>());
     TRY(profile->read_header(bytes));
     bytes = bytes.trim(profile->on_disk_size());
-    TRY(profile->read_tag_table(bytes));
+    profile->m_tag_table = TRY(read_tag_table(bytes));
 
     TRY(profile->check_required_tags());
     TRY(profile->check_tag_types());
