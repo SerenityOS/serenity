@@ -17,7 +17,7 @@ namespace Web::DOM {
 class AccessibilityTreeNode final : public JS::Cell {
     JS_CELL(AccessibilityTreeNode, JS::Cell)
 public:
-    static JS::NonnullGCPtr<AccessibilityTreeNode> create(Document*, DOM::Node const*);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AccessibilityTreeNode>> create(Document*, DOM::Node const*);
     virtual ~AccessibilityTreeNode() override = default;
 
     JS::GCPtr<DOM::Node> value() const { return m_value; }

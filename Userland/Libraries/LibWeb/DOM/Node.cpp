@@ -1565,7 +1565,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
             return;
 
         if (element->include_in_accessibility_tree()) {
-            auto current_node = AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this);
+            auto current_node = AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this).release_value_but_fixme_should_propagate_errors();
             parent.append_child(current_node);
             if (has_child_nodes()) {
                 for_each_child([&current_node](DOM::Node& child) {
@@ -1578,7 +1578,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
             });
         }
     } else if (is_text()) {
-        parent.append_child(AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this));
+        parent.append_child(AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this).release_value_but_fixme_should_propagate_errors());
         if (has_child_nodes()) {
             for_each_child([&parent](DOM::Node& child) {
                 child.build_accessibility_tree(parent);
