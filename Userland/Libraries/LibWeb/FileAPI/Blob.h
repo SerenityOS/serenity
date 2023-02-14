@@ -33,7 +33,7 @@ class Blob : public Bindings::PlatformObject {
 public:
     virtual ~Blob() override;
 
-    static JS::NonnullGCPtr<Blob> create(JS::Realm&, ByteBuffer, DeprecatedString type);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> create(JS::Realm&, ByteBuffer, DeprecatedString type);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> create(JS::Realm&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> construct_impl(JS::Realm&, Optional<Vector<BlobPart>> const& blob_parts = {}, Optional<BlobPropertyBag> const& options = {});
 

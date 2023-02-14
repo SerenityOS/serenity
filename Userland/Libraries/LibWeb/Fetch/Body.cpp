@@ -109,7 +109,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         // Return a Blob whose contents are bytes and type attribute is mimeType.
         // NOTE: If extracting the mime type returns failure, other browsers set it to an empty string - not sure if that's spec'd.
         auto mime_type_string = mime_type.has_value() ? mime_type->serialized() : DeprecatedString::empty();
-        return FileAPI::Blob::create(realm, move(bytes), move(mime_type_string));
+        return TRY(FileAPI::Blob::create(realm, move(bytes), move(mime_type_string)));
     }
     case PackageDataType::FormData:
         // If mimeType’s essence is "multipart/form-data", then:
