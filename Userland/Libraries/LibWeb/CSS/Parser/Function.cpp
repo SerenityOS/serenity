@@ -22,7 +22,7 @@ ErrorOr<String> Function::to_string() const
 {
     StringBuilder builder;
 
-    serialize_an_identifier(builder, m_name);
+    TRY(serialize_an_identifier(builder, m_name));
     TRY(builder.try_append('('));
     TRY(builder.try_join(' ', m_values));
     TRY(builder.try_append(')'));

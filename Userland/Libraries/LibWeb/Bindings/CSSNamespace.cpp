@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,8 +34,8 @@ JS_DEFINE_NATIVE_FUNCTION(CSSNamespace::escape)
     if (!vm.argument_count())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "CSS.escape");
 
-    auto identifier = TRY(vm.argument(0).to_deprecated_string(vm));
-    return JS::PrimitiveString::create(vm, Web::CSS::serialize_an_identifier(identifier));
+    auto identifier = TRY(vm.argument(0).to_string(vm));
+    return JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, Web::CSS::serialize_an_identifier(identifier)));
 }
 
 // https://www.w3.org/TR/css-conditional-3/#dom-css-supports

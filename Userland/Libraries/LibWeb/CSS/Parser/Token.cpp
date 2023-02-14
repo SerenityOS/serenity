@@ -18,26 +18,26 @@ ErrorOr<String> Token::to_string() const
     case Type::EndOfFile:
         return String {};
     case Type::Ident:
-        return String::from_utf8(serialize_an_identifier(ident()));
+        return serialize_an_identifier(ident());
     case Type::Function:
-        return String::formatted("{}(", serialize_an_identifier(function()));
+        return String::formatted("{}(", TRY(serialize_an_identifier(function())));
     case Type::AtKeyword:
-        return String::formatted("@{}", serialize_an_identifier(at_keyword()));
+        return String::formatted("@{}", TRY(serialize_an_identifier(at_keyword())));
     case Type::Hash: {
         switch (m_hash_type) {
         case HashType::Id:
-            return String::formatted("#{}", serialize_an_identifier(hash_value()));
+            return String::formatted("#{}", TRY(serialize_an_identifier(hash_value())));
         case HashType::Unrestricted:
             return String::formatted("#{}", hash_value());
         }
         VERIFY_NOT_REACHED();
     }
     case Type::String:
-        return String::from_utf8(serialize_a_string(string()));
+        return serialize_a_string(string());
     case Type::BadString:
         return String {};
     case Type::Url:
-        return String::from_utf8(serialize_a_url(url()));
+        return serialize_a_url(url());
     case Type::BadUrl:
         return String::from_utf8("url()"sv);
     case Type::Delim:
