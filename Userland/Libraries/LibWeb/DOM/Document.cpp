@@ -126,7 +126,7 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#initialise-the-document-object
-JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, DeprecatedString content_type, HTML::NavigationParams navigation_params)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, DeprecatedString content_type, HTML::NavigationParams navigation_params)
 {
     // 1. Let browsingContext be the result of the obtaining a browsing context to use for a navigation response
     //    given navigationParams's browsing context, navigationParams's final sandboxing flag set,
@@ -230,7 +230,7 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, Deprecated
     //    FIXME: and cross-origin opener policy is navigationParams's cross-origin opener policy,
     //    FIXME: load timing info is loadTimingInfo,
     //    and navigation id is navigationParams's id.
-    auto document = Document::create(window->realm());
+    auto document = TRY(Document::create(window->realm()));
     document->m_type = type;
     document->m_content_type = move(content_type);
     document->set_origin(navigation_params.origin);
@@ -283,14 +283,14 @@ JS::NonnullGCPtr<Document> Document::create_and_initialize(Type type, Deprecated
     return document;
 }
 
-JS::NonnullGCPtr<Document> Document::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::construct_impl(JS::Realm& realm)
 {
     return Document::create(realm);
 }
 
-JS::NonnullGCPtr<Document> Document::create(JS::Realm& realm, AK::URL const& url)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create(JS::Realm& realm, AK::URL const& url)
 {
-    return realm.heap().allocate<Document>(realm, realm, url).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Document>(realm, realm, url));
 }
 
 Document::Document(JS::Realm& realm, const AK::URL& url)
@@ -2330,7 +2330,7 @@ JS::NonnullGCPtr<DOM::Document> Document::appropriate_template_contents_owner_do
         // 1. If doc does not yet have an associated inert template document, then:
         if (!m_associated_inert_template_document) {
             // 1. Let new doc be a new Document (whose browsing context is null). This is "a Document created by this algorithm" for the purposes of the step above.
-            auto new_document = DOM::Document::create(realm());
+            auto new_document = DOM::Document::create(realm()).release_value_but_fixme_should_propagate_errors();
             new_document->m_created_for_appropriate_template_contents = true;
 
             // 2. If doc is an HTML document, mark new doc as an HTML document also.

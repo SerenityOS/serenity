@@ -49,7 +49,7 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
     // FIXME: This should specifically be an XML document.
-    auto xml_document = Document::create(realm());
+    auto xml_document = TRY(Document::create(realm()));
 
     xml_document->set_ready_for_post_load_tasks(true);
 
@@ -79,7 +79,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
 JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedString const& title) const
 {
-    auto html_document = Document::create(realm());
+    auto html_document = Document::create(realm()).release_value_but_fixme_should_propagate_errors();
 
     html_document->set_content_type("text/html");
     html_document->set_ready_for_post_load_tasks(true);

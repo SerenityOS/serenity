@@ -168,7 +168,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = DOM::Document::create(window->realm());
+    auto document = DOM::Document::create(window->realm()).release_value_but_fixme_should_propagate_errors();
 
     // Non-standard
     document->set_window({}, *window);

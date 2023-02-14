@@ -730,7 +730,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     else if (is<Document>(this)) {
         // Document
         auto document_ = verify_cast<Document>(this);
-        auto document_copy = Document::create(this->realm(), document_->url());
+        auto document_copy = Document::create(this->realm(), document_->url()).release_value_but_fixme_should_propagate_errors();
 
         // Set copy’s encoding, content type, URL, origin, type, and mode to those of node.
         document_copy->set_encoding(document_->encoding());
