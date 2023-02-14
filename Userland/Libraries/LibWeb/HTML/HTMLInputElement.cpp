@@ -110,7 +110,7 @@ JS::GCPtr<FileAPI::FileList> HTMLInputElement::files()
         return nullptr;
 
     if (!m_selected_files)
-        m_selected_files = FileAPI::FileList::create(realm(), {});
+        m_selected_files = FileAPI::FileList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
     return m_selected_files;
 }
 
@@ -756,7 +756,7 @@ void HTMLInputElement::reset_algorithm()
     m_checked = has_attribute(AttributeNames::checked);
 
     // empty the list of selected files,
-    m_selected_files = FileAPI::FileList::create(realm(), {});
+    m_selected_files = FileAPI::FileList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
 
     // and then invoke the value sanitization algorithm, if the type attribute's current state defines one.
     m_value = value_sanitization_algorithm(m_value);
