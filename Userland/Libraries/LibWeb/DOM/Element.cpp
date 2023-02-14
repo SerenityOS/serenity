@@ -438,7 +438,7 @@ Element::NeedsRelayout Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 {
-    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
+    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this).release_value_but_fixme_should_propagate_errors();
     auto properties = CSS::StyleProperties::create();
 
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
