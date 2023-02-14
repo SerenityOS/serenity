@@ -10,10 +10,10 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<AbortController> AbortController::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortController>> AbortController::construct_impl(JS::Realm& realm)
 {
     auto signal = AbortSignal::construct_impl(realm);
-    return realm.heap().allocate<AbortController>(realm, realm, move(signal)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<AbortController>(realm, realm, move(signal)));
 }
 
 // https://dom.spec.whatwg.org/#dom-abortcontroller-abortcontroller
