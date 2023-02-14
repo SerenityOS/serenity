@@ -1007,12 +1007,13 @@ static Optional<Object::IntrinsicAccessor> find_intrinsic_accessor(Object const*
     if (intrinsics == s_intrinsics.end())
         return {};
 
-    auto accessor = intrinsics->value.find(property_key.as_string());
-    if (accessor == intrinsics->value.end())
+    auto accessor_iterator = intrinsics->value.find(property_key.as_string());
+    if (accessor_iterator == intrinsics->value.end())
         return {};
 
-    intrinsics->value.remove(accessor);
-    return move(accessor->value);
+    auto accessor = accessor_iterator->value;
+    intrinsics->value.remove(accessor_iterator);
+    return accessor;
 }
 
 Optional<ValueAndAttributes> Object::storage_get(PropertyKey const& property_key) const
