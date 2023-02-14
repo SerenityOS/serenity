@@ -455,7 +455,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 DOMTokenList* Element::class_list()
 {
     if (!m_class_list)
-        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
+        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_).release_value_but_fixme_should_propagate_errors();
     return m_class_list;
 }
 
