@@ -32,7 +32,7 @@ DeprecatedString Rule::to_deprecated_string() const
     builder.join(' ', m_prelude);
 
     if (m_block)
-        builder.append(m_block->to_deprecated_string());
+        builder.append(m_block->to_string().release_value_but_fixme_should_propagate_errors());
     else
         builder.append(';');
 

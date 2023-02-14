@@ -30,7 +30,7 @@ DeprecatedString ComponentValue::to_deprecated_string() const
 {
     return m_value.visit(
         [](Token const& token) { return token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string(); },
-        [](NonnullRefPtr<Block> const& block) { return block->to_deprecated_string(); },
+        [](NonnullRefPtr<Block> const& block) { return block->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string(); },
         [](NonnullRefPtr<Function> const& function) { return function->to_deprecated_string(); });
 }
 
@@ -41,7 +41,7 @@ ErrorOr<String> ComponentValue::to_debug_string() const
             return String::formatted("Token: {}", TRY(token.to_debug_string()));
         },
         [](NonnullRefPtr<Block> const& block) -> ErrorOr<String> {
-            return String::formatted("Block: {}", block->to_deprecated_string());
+            return String::formatted("Block: {}", TRY(block->to_string()));
         },
         [](NonnullRefPtr<Function> const& function) -> ErrorOr<String> {
             return String::formatted("Function: {}", function->to_deprecated_string());
