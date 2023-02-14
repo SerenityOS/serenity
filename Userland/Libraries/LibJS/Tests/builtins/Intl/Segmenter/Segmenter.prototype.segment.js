@@ -82,7 +82,6 @@ describe("correct behavior", () => {
         ];
         index = 0;
         for (const segment of wordSegments) {
-            console.log(JSON.stringify(segment));
             expect(segment.segment).toBe(expectedSegments[index].segment);
             expect(segment.index).toBe(expectedSegments[index].index);
             expect(segment.input).toBe(string);
@@ -102,5 +101,46 @@ describe("correct behavior", () => {
             index++;
         }
         expect(index).toBe(1);
+    });
+
+    test("word segmentation of string with mid-word punctuation", () => {
+        const string = "The quick (“brown”) fox can’t jump 32.3 feet, right?";
+
+        const segmenter = new Intl.Segmenter([], { granularity: "word" });
+        const segments = segmenter.segment(string);
+
+        const expectedSegments = [
+            { segment: "The", index: 0, isWordLike: true },
+            { segment: " ", index: 3, isWordLike: false },
+            { segment: "quick", index: 4, isWordLike: true },
+            { segment: " ", index: 9, isWordLike: false },
+            { segment: "(", index: 10, isWordLike: false },
+            { segment: "“", index: 11, isWordLike: false },
+            { segment: "brown", index: 12, isWordLike: true },
+            { segment: "”", index: 17, isWordLike: false },
+            { segment: ")", index: 18, isWordLike: false },
+            { segment: " ", index: 19, isWordLike: false },
+            { segment: "fox", index: 20, isWordLike: true },
+            { segment: " ", index: 23, isWordLike: false },
+            { segment: "can’t", index: 24, isWordLike: true },
+            { segment: " ", index: 29, isWordLike: false },
+            { segment: "jump", index: 30, isWordLike: true },
+            { segment: " ", index: 34, isWordLike: false },
+            { segment: "32.3", index: 35, isWordLike: true },
+            { segment: " ", index: 39, isWordLike: false },
+            { segment: "feet", index: 40, isWordLike: true },
+            { segment: ",", index: 44, isWordLike: false },
+            { segment: " ", index: 45, isWordLike: false },
+            { segment: "right", index: 46, isWordLike: true },
+            { segment: "?", index: 51, isWordLike: false },
+        ];
+
+        let index = 0;
+        for (const segment of segments) {
+            expect(segment.segment).toBe(expectedSegments[index].segment);
+            expect(segment.index).toBe(expectedSegments[index].index);
+            expect(segment.input).toBe(string);
+            index++;
+        }
     });
 });

@@ -215,7 +215,7 @@ static void for_each_word_segmentation_boundary_impl([[maybe_unused]] ViewType c
                 auto it_copy = it;
                 ++it_copy;
                 if (it_copy != view.end())
-                    next_next_code_point = *it;
+                    next_next_code_point = *it_copy;
             }
             bool next_next_code_point_is_hebrew_letter = next_next_code_point.has_value() && has_any_wbp(*next_next_code_point, WBP::Hebrew_Letter);
             bool next_next_code_point_is_ah_letter = next_next_code_point_is_hebrew_letter || (next_next_code_point.has_value() && has_any_wbp(*next_next_code_point, WBP::ALetter));
@@ -256,7 +256,7 @@ static void for_each_word_segmentation_boundary_impl([[maybe_unused]] ViewType c
             if (code_point_is_numeric && next_code_point_is_ah_letter)
                 continue;
 
-            auto previous_code_point_is_numeric = previous_code_point.has_value() && has_any_wbp(code_point, WBP::Numeric);
+            auto previous_code_point_is_numeric = previous_code_point.has_value() && has_any_wbp(*previous_code_point, WBP::Numeric);
 
             // WB11
             if (previous_code_point_is_numeric && next_code_point_is_numeric && (code_point_is_mid_num_let_q || has_any_wbp(code_point, WBP::MidNum)))
