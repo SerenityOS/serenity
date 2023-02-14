@@ -2046,7 +2046,7 @@ void Document::set_window(Badge<HTML::BrowsingContext>, HTML::Window& window)
 CSS::StyleSheetList& Document::style_sheets()
 {
     if (!m_style_sheets)
-        m_style_sheets = CSS::StyleSheetList::create(*this);
+        m_style_sheets = CSS::StyleSheetList::create(*this).release_value_but_fixme_should_propagate_errors();
     return *m_style_sheets;
 }
 
