@@ -1824,7 +1824,7 @@ void Document::evaluate_media_rules()
 DOMImplementation* Document::implementation()
 {
     if (!m_implementation)
-        m_implementation = DOMImplementation::create(*this);
+        m_implementation = DOMImplementation::create(*this).release_value_but_fixme_should_propagate_errors();
     return m_implementation;
 }
 
