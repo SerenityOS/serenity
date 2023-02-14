@@ -226,7 +226,6 @@ public:
 
 private:
     ErrorOr<void> read_header(ReadonlyBytes);
-    ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element);
     ErrorOr<void> read_tag_table(ReadonlyBytes);
     ErrorOr<void> check_required_tags();
     ErrorOr<void> check_tag_types();
