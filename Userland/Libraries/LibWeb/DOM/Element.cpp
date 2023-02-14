@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -66,7 +67,9 @@ JS::ThrowCompletionOr<void> Element::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
 
-    m_attributes = NamedNodeMap::create(*this);
+    m_attributes = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return NamedNodeMap::create(*this);
+    }));
 
     return {};
 }
