@@ -13,11 +13,16 @@
 
 namespace Unicode {
 
+Vector<size_t> find_grapheme_segmentation_boundaries(Utf8View const&);
 Vector<size_t> find_grapheme_segmentation_boundaries(Utf16View const&);
+Vector<size_t> find_grapheme_segmentation_boundaries(Utf32View const&);
 
 Vector<size_t> find_word_segmentation_boundaries(Utf8View const&);
 Vector<size_t> find_word_segmentation_boundaries(Utf16View const&);
+Vector<size_t> find_word_segmentation_boundaries(Utf32View const&);
 
+Vector<size_t> find_sentence_segmentation_boundaries(Utf8View const&);
 Vector<size_t> find_sentence_segmentation_boundaries(Utf16View const&);
+Vector<size_t> find_sentence_segmentation_boundaries(Utf32View const&);
 
 }
