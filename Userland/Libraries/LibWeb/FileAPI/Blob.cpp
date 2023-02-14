@@ -15,9 +15,9 @@
 
 namespace Web::FileAPI {
 
-JS::NonnullGCPtr<Blob> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
 {
-    return realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)));
 }
 
 // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
