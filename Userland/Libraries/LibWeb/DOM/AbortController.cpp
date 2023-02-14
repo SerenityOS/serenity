@@ -12,7 +12,7 @@ namespace Web::DOM {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortController>> AbortController::construct_impl(JS::Realm& realm)
 {
-    auto signal = AbortSignal::construct_impl(realm);
+    auto signal = TRY(AbortSignal::construct_impl(realm));
     return MUST_OR_THROW_OOM(realm.heap().allocate<AbortController>(realm, realm, move(signal)));
 }
 

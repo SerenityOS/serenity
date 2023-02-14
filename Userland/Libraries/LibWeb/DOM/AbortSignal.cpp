@@ -12,9 +12,9 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<AbortSignal> AbortSignal::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> AbortSignal::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<AbortSignal>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<AbortSignal>(realm, realm));
 }
 
 AbortSignal::AbortSignal(JS::Realm& realm)
