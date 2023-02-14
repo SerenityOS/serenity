@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
@@ -255,7 +254,7 @@ private:
     bool m_matches { false };
 };
 
-DeprecatedString serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
+ErrorOr<String> serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
 
 bool is_media_feature_name(StringView name);
 
