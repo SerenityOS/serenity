@@ -44,22 +44,22 @@ static size_t code_unit_offset_of(ViewType const& view, CodeUnitIterator const& 
 }
 
 template<typename ViewType>
-static Vector<size_t> find_grapheme_segmentation_boundaries_impl([[maybe_unused]] ViewType const& view)
+static void for_each_grapheme_segmentation_boundary_impl([[maybe_unused]] ViewType const& view, [[maybe_unused]] SegmentationCallback callback)
 {
 #if ENABLE_UNICODE_DATA
     using GBP = GraphemeBreakProperty;
-    Vector<size_t> boundaries;
 
     // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
     if (view.is_empty())
-        return boundaries;
+        return;
 
     auto has_any_gbp = [](u32 code_point, auto&&... properties) {
         return (code_point_has_grapheme_break_property(code_point, properties) || ...);
     };
 
     // GB1
-    boundaries.append(0);
+    if (callback(0) == IterationDecision::Break)
+        return;
 
     if (code_unit_length(view) > 1) {
         auto it = view.begin();
@@ -79,7 +79,8 @@ static Vector<size_t> find_grapheme_segmentation_boundaries_impl([[maybe_unused]
                 continue;
             // GB4, GB5
             if (code_point_is_cr || next_code_point_is_lf || has_any_gbp(next_code_point, GBP::CR, GBP::Control) || has_any_gbp(code_point, GBP::LF, GBP::Control)) {
-                boundaries.append(code_unit_offset_of(view, it));
+                if (callback(code_unit_offset_of(view, it)) == IterationDecision::Break)
+                    return;
                 continue;
             }
 
@@ -124,50 +125,48 @@ static Vector<size_t> find_grapheme_segmentation_boundaries_impl([[maybe_unused]
                 continue;
 
             // GB999
-            boundaries.append(code_unit_offset_of(view, it));
+            if (callback(code_unit_offset_of(view, it)) == IterationDecision::Break)
+                return;
         }
     }
 
     // GB2
-    boundaries.append(code_unit_length(view));
-    return boundaries;
-#else
-    return {};
+    callback(code_unit_length(view));
 #endif
 }
 
-Vector<size_t> find_grapheme_segmentation_boundaries(Utf8View const& view)
+void for_each_grapheme_segmentation_boundary(Utf8View const& view, SegmentationCallback callback)
 {
-    return find_grapheme_segmentation_boundaries_impl(view);
+    for_each_grapheme_segmentation_boundary_impl(view, move(callback));
 }
 
-Vector<size_t> find_grapheme_segmentation_boundaries(Utf16View const& view)
+void for_each_grapheme_segmentation_boundary(Utf16View const& view, SegmentationCallback callback)
 {
-    return find_grapheme_segmentation_boundaries_impl(view);
+    for_each_grapheme_segmentation_boundary_impl(view, move(callback));
 }
 
-Vector<size_t> find_grapheme_segmentation_boundaries(Utf32View const& view)
+void for_each_grapheme_segmentation_boundary(Utf32View const& view, SegmentationCallback callback)
 {
-    return find_grapheme_segmentation_boundaries_impl(view);
+    for_each_grapheme_segmentation_boundary_impl(view, move(callback));
 }
 
 template<typename ViewType>
-static Vector<size_t> find_word_segmentation_boundaries_impl([[maybe_unused]] ViewType const& view)
+static void for_each_word_segmentation_boundary_impl([[maybe_unused]] ViewType const& view, [[maybe_unused]] SegmentationCallback callback)
 {
 #if ENABLE_UNICODE_DATA
     using WBP = WordBreakProperty;
-    Vector<size_t> boundaries;
 
     // https://www.unicode.org/reports/tr29/#Word_Boundary_Rules
     if (view.is_empty())
-        return boundaries;
+        return;
 
     auto has_any_wbp = [](u32 code_point, auto&&... properties) {
         return (code_point_has_word_break_property(code_point, properties) || ...);
     };
 
     // WB1
-    boundaries.append(0);
+    if (callback(0) == IterationDecision::Break)
+        return;
 
     if (code_unit_length(view) > 1) {
         auto it = view.begin();
@@ -187,7 +186,8 @@ static Vector<size_t> find_word_segmentation_boundaries_impl([[maybe_unused]] Vi
                 continue;
             // WB3a, WB3b
             if (code_point_is_cr || next_code_point_is_lf || has_any_wbp(next_code_point, WBP::CR, WBP::Newline) || has_any_wbp(code_point, WBP::LF, WBP::Newline)) {
-                boundaries.append(code_unit_offset_of(view, it));
+                if (callback(code_unit_offset_of(view, it)) == IterationDecision::Break)
+                    return;
                 continue;
             }
             // WB3c
@@ -292,50 +292,48 @@ static Vector<size_t> find_word_segmentation_boundaries_impl([[maybe_unused]] Vi
                 continue;
 
             // WB999
-            boundaries.append(code_unit_offset_of(view, it));
+            if (callback(code_unit_offset_of(view, it)) == IterationDecision::Break)
+                return;
         }
     }
 
     // WB2
-    boundaries.append(code_unit_length(view));
-    return boundaries;
-#else
-    return {};
+    callback(code_unit_length(view));
 #endif
 }
 
-Vector<size_t> find_word_segmentation_boundaries(Utf8View const& view)
+void for_each_word_segmentation_boundary(Utf8View const& view, SegmentationCallback callback)
 {
-    return find_word_segmentation_boundaries_impl(view);
+    for_each_word_segmentation_boundary_impl(view, move(callback));
 }
 
-Vector<size_t> find_word_segmentation_boundaries(Utf16View const& view)
+void for_each_word_segmentation_boundary(Utf16View const& view, SegmentationCallback callback)
 {
-    return find_word_segmentation_boundaries_impl(view);
+    for_each_word_segmentation_boundary_impl(view, move(callback));
 }
 
-Vector<size_t> find_word_segmentation_boundaries(Utf32View const& view)
+void for_each_word_segmentation_boundary(Utf32View const& view, SegmentationCallback callback)
 {
-    return find_word_segmentation_boundaries_impl(view);
+    for_each_word_segmentation_boundary_impl(view, move(callback));
 }
 
 template<typename ViewType>
-static Vector<size_t> find_sentence_segmentation_boundaries_impl([[maybe_unused]] ViewType const& view)
+static void for_each_sentence_segmentation_boundary_impl([[maybe_unused]] ViewType const& view, [[maybe_unused]] SegmentationCallback callback)
 {
 #if ENABLE_UNICODE_DATA
     using SBP = SentenceBreakProperty;
-    Vector<size_t> boundaries;
 
     // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
     if (view.is_empty())
-        return boundaries;
+        return;
 
     auto has_any_sbp = [](u32 code_point, auto&&... properties) {
         return (code_point_has_sentence_break_property(code_point, properties) || ...);
     };
 
     // SB1
-    boundaries.append(0);
+    if (callback(0) == IterationDecision::Break)
+        return;
 
     if (code_unit_length(view) > 1) {
         auto it = view.begin();
@@ -364,7 +362,8 @@ static Vector<size_t> find_sentence_segmentation_boundaries_impl([[maybe_unused]
 
             // SB4
             if (code_point_is_para_sep) {
-                boundaries.append(code_unit_offset_of(view, it));
+                if (callback(code_unit_offset_of(view, it)) == IterationDecision::Break)
+                    return;
                 continue;
             }
 
@@ -422,33 +421,31 @@ static Vector<size_t> find_sentence_segmentation_boundaries_impl([[maybe_unused]
 
             // SB11
             if (terminator_sequence_state >= TerminatorSequenceState::Term)
-                boundaries.append(code_unit_offset_of(view, it));
+                if (callback(code_unit_offset_of(view, it)) == IterationDecision::Break)
+                    return;
 
             // SB998
         }
     }
 
     // SB2
-    boundaries.append(code_unit_length(view));
-    return boundaries;
-#else
-    return {};
+    callback(code_unit_length(view));
 #endif
 }
 
-Vector<size_t> find_sentence_segmentation_boundaries(Utf8View const& view)
+void for_each_sentence_segmentation_boundary(Utf8View const& view, SegmentationCallback callback)
 {
-    return find_sentence_segmentation_boundaries_impl(view);
+    for_each_sentence_segmentation_boundary_impl(view, move(callback));
 }
 
-Vector<size_t> find_sentence_segmentation_boundaries(Utf16View const& view)
+void for_each_sentence_segmentation_boundary(Utf16View const& view, SegmentationCallback callback)
 {
-    return find_sentence_segmentation_boundaries_impl(view);
+    for_each_sentence_segmentation_boundary_impl(view, move(callback));
 }
 
-Vector<size_t> find_sentence_segmentation_boundaries(Utf32View const& view)
+void for_each_sentence_segmentation_boundary(Utf32View const& view, SegmentationCallback callback)
 {
-    return find_sentence_segmentation_boundaries_impl(view);
+    for_each_sentence_segmentation_boundary_impl(view, move(callback));
 }
 
 }
