@@ -27,7 +27,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(*DOM::Event::create(this->realm(), EventNames::load));
+            dispatch_event(DOM::Event::create(this->realm(), EventNames::load).release_value_but_fixme_should_propagate_errors());
         });
     };
 
@@ -36,7 +36,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         set_needs_style_update(true);
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-            dispatch_event(*DOM::Event::create(this->realm(), EventNames::error));
+            dispatch_event(DOM::Event::create(this->realm(), EventNames::error).release_value_but_fixme_should_propagate_errors());
         });
     };
 

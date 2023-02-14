@@ -149,11 +149,11 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
 void HTMLFormElement::reset_form()
 {
     // 1. Let reset be the result of firing an event named reset at form, with the bubbles and cancelable attributes initialized to true.
-    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset);
+    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset).release_value_but_fixme_should_propagate_errors();
     reset_event->set_bubbles(true);
     reset_event->set_cancelable(true);
 
-    bool reset = dispatch_event(*reset_event);
+    bool reset = dispatch_event(reset_event);
 
     // 2. If reset is true, then invoke the reset algorithm of each resettable element whose form owner is form.
     if (reset) {

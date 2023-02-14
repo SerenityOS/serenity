@@ -419,7 +419,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(DeprecatedString const& method_st
         m_state = State::Opened;
 
         // 2. Fire an event named readystatechange at this.
-        dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange));
+        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange)));
     }
 
     return {};
@@ -463,8 +463,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same_origin(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         m_state = State::Done;
-        dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange));
-        dispatch_event(*DOM::Event::create(realm, HTML::EventNames::error));
+        dispatch_event(TRY(DOM::Event::create(realm, EventNames::readystatechange)));
+        dispatch_event(TRY(DOM::Event::create(realm, HTML::EventNames::error)));
         return {};
     }
 
@@ -544,7 +544,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 xhr.m_status = status_code.value_or(0);
                 xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::readystatechange));
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
@@ -556,8 +556,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
                 xhr.m_state = State::Done;
                 xhr.set_status(status_code.value_or(0));
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::readystatechange));
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), HTML::EventNames::error));
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
             },
             m_timeout,
             [weak_this = make_weak_ptr<XMLHttpRequest>()] {
@@ -565,7 +565,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::timeout));
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), EventNames::timeout).release_value_but_fixme_should_propagate_errors());
             });
     } else {
         TODO();

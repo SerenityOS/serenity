@@ -314,8 +314,8 @@ static bool fire_an_event(DeprecatedString name, Optional<Web::DOM::Element&> ta
     if (!target.has_value())
         return false;
 
-    auto event = T::create(target->realm(), name);
-    return target->dispatch_event(*event);
+    auto event = T::create(target->realm(), name).release_value_but_fixme_should_propagate_errors();
+    return target->dispatch_event(event);
 }
 
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
