@@ -10,6 +10,7 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/IterationDecision.h>
+#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -34,6 +35,40 @@ Vector<size_t> find_grapheme_segmentation_boundaries(ViewType const& view)
     return boundaries;
 }
 
+template<typename ViewType>
+Optional<size_t> next_grapheme_segmentation_boundary(ViewType const& view, size_t index)
+{
+    Optional<size_t> result;
+
+    for_each_grapheme_segmentation_boundary(view, [&](auto boundary) {
+        if (boundary > index) {
+            result = boundary;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return result;
+}
+
+template<typename ViewType>
+Optional<size_t> previous_grapheme_segmentation_boundary(ViewType const& view, size_t index)
+{
+    Optional<size_t> result;
+
+    for_each_grapheme_segmentation_boundary(view, [&](auto boundary) {
+        if (boundary < index) {
+            result = boundary;
+            return IterationDecision::Continue;
+        }
+
+        return IterationDecision::Break;
+    });
+
+    return result;
+}
+
 void for_each_word_segmentation_boundary(Utf8View const&, SegmentationCallback);
 void for_each_word_segmentation_boundary(Utf16View const&, SegmentationCallback);
 void for_each_word_segmentation_boundary(Utf32View const&, SegmentationCallback);
@@ -51,6 +86,40 @@ Vector<size_t> find_word_segmentation_boundaries(ViewType const& view)
     return boundaries;
 }
 
+template<typename ViewType>
+Optional<size_t> next_word_segmentation_boundary(ViewType const& view, size_t index)
+{
+    Optional<size_t> result;
+
+    for_each_word_segmentation_boundary(view, [&](auto boundary) {
+        if (boundary > index) {
+            result = boundary;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return result;
+}
+
+template<typename ViewType>
+Optional<size_t> previous_word_segmentation_boundary(ViewType const& view, size_t index)
+{
+    Optional<size_t> result;
+
+    for_each_word_segmentation_boundary(view, [&](auto boundary) {
+        if (boundary < index) {
+            result = boundary;
+            return IterationDecision::Continue;
+        }
+
+        return IterationDecision::Break;
+    });
+
+    return result;
+}
+
 void for_each_sentence_segmentation_boundary(Utf8View const&, SegmentationCallback);
 void for_each_sentence_segmentation_boundary(Utf16View const&, SegmentationCallback);
 void for_each_sentence_segmentation_boundary(Utf32View const&, SegmentationCallback);
@@ -66,6 +135,40 @@ Vector<size_t> find_sentence_segmentation_boundaries(ViewType const& view)
     });
 
     return boundaries;
+}
+
+template<typename ViewType>
+Optional<size_t> next_sentence_segmentation_boundary(ViewType const& view, size_t index)
+{
+    Optional<size_t> result;
+
+    for_each_sentence_segmentation_boundary(view, [&](auto boundary) {
+        if (boundary > index) {
+            result = boundary;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return result;
+}
+
+template<typename ViewType>
+Optional<size_t> previous_sentence_segmentation_boundary(ViewType const& view, size_t index)
+{
+    Optional<size_t> result;
+
+    for_each_sentence_segmentation_boundary(view, [&](auto boundary) {
+        if (boundary < index) {
+            result = boundary;
+            return IterationDecision::Continue;
+        }
+
+        return IterationDecision::Break;
+    });
+
+    return result;
 }
 
 }
