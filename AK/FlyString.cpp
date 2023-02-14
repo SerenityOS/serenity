@@ -53,6 +53,12 @@ FlyString::FlyString(String const& string)
     String::ref_fly_string_data({}, m_data);
 }
 
+FlyString& FlyString::operator=(String const& string)
+{
+    *this = FlyString { string };
+    return *this;
+}
+
 FlyString::FlyString(FlyString const& other)
     : m_data(other.m_data)
 {
