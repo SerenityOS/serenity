@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, thislooksfun <tlf@thislooks.fun>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -151,8 +152,7 @@ TEST_CASE(many_collisions)
         EXPECT_EQ(strings.remove(DeprecatedString::number(i)), true);
     }
 
-    // FIXME: Doing this with an "EXPECT_NOT_EQ" would be cleaner.
-    EXPECT_EQ(strings.find("foo") == strings.end(), false);
+    EXPECT(strings.find("foo") != strings.end());
 }
 
 TEST_CASE(space_reuse)
@@ -280,24 +280,6 @@ TEST_CASE(doubles)
     EXPECT(table.contains(2.0));
 }
 
-// Inserting and removing a bunch of elements will "thrash" the table, leading to a lot of "deleted" markers.
-BENCHMARK_CASE(benchmark_thrashing)
-{
-    HashTable<int> table;
-    // Ensure that there needs to be some copying when rehashing.
-    table.set(3);
-    table.set(7);
-    table.set(11);
-    table.set(13);
-    for (int i = 0; i < 10'000; ++i) {
-        table.set(-i);
-    }
-    for (int i = 0; i < 10'000'000; ++i) {
-        table.set(i);
-        table.remove(i);
-    }
-}
-
 TEST_CASE(reinsertion)
 {
     OrderedHashTable<DeprecatedString> map;
@@ -314,4 +296,89 @@ TEST_CASE(clear_with_capacity_when_empty)
     map.set(0);
     map.set(1);
     VERIFY(map.size() == 2);
+}
+
+TEST_CASE(iterator_removal)
+{
+    HashTable<int> map;
+    map.set(0);
+    map.set(1);
+
+    auto it = map.begin();
+    map.remove(it);
+    EXPECT_EQ(it, map.end());
+    EXPECT_EQ(map.size(), 1u);
+}
+
+TEST_CASE(ordered_insertion_and_deletion)
+{
+    OrderedHashTable<int> table;
+    EXPECT_EQ(table.set(0), HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(table.set(1), HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(table.set(2), HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(table.set(3), HashSetResult::InsertedNewEntry);
+    EXPECT_EQ(table.size(), 4u);
+
+    auto expect_table = [](OrderedHashTable<int>& table, Span<int> values) {
+        auto index = 0u;
+        for (auto it = table.begin(); it != table.end(); ++it, ++index) {
+            EXPECT_EQ(*it, values[index]);
+            EXPECT(table.contains(values[index]));
+        }
+    };
+
+    expect_table(table, Array<int, 4> { 0, 1, 2, 3 });
+
+    EXPECT(table.remove(0));
+    EXPECT(table.remove(2));
+    EXPECT(!table.remove(4));
+    EXPECT_EQ(table.size(), 2u);
+
+    expect_table(table, Array<int, 2> { 1, 3 });
+}
+
+TEST_CASE(ordered_deletion_and_reinsertion)
+{
+    OrderedHashTable<int> table;
+    table.set(1);
+    table.set(3);
+    table.remove(1);
+    EXPECT_EQ(table.size(), 1u);
+
+    // By adding 1 again but this time in a different position, we
+    // test whether the bucket's neighbours are reset properly.
+    table.set(1);
+    EXPECT_EQ(table.size(), 2u);
+
+    auto it = table.begin();
+    EXPECT_EQ(*it, 3);
+    ++it;
+    EXPECT_EQ(*it, 1);
+    ++it;
+    EXPECT_EQ(it, table.end());
+}
+
+TEST_CASE(ordered_pop)
+{
+    OrderedHashTable<int> table;
+    table.set(1);
+    table.set(2);
+    table.set(3);
+
+    EXPECT_EQ(table.pop(), 3);
+    EXPECT_EQ(table.pop(), 2);
+    EXPECT_EQ(table.pop(), 1);
+    EXPECT(table.is_empty());
+}
+
+TEST_CASE(ordered_iterator_removal)
+{
+    OrderedHashTable<int> map;
+    map.set(0);
+    map.set(1);
+
+    auto it = map.begin();
+    map.remove(it);
+    EXPECT_EQ(it, map.end());
+    EXPECT_EQ(map.size(), 1u);
 }
