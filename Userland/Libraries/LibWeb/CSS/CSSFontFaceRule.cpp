@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -50,7 +50,7 @@ DeprecatedString CSSFontFaceRule::serialized() const
     builder.append("font-family: "sv);
 
     // 3. The result of performing serialize a string on the rule’s font family name.
-    serialize_a_string(builder, m_font_face.font_family());
+    serialize_a_string(builder, m_font_face.font_family()).release_value_but_fixme_should_propagate_errors();
 
     // 4. The string ";", i.e., SEMICOLON (U+003B).
     builder.append(';');
@@ -61,20 +61,21 @@ DeprecatedString CSSFontFaceRule::serialized() const
         builder.append(" src: "sv);
 
         // 2. The result of invoking serialize a comma-separated list on performing serialize a URL or serialize a LOCAL for each source on the source list.
-        serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](FontFace::Source source) {
+        serialize_a_comma_separated_list(builder, m_font_face.sources(), [&](StringBuilder& builder, FontFace::Source source) -> ErrorOr<void> {
             if (source.url.cannot_be_a_base_url()) {
-                serialize_a_url(builder, source.url.to_deprecated_string());
+                TRY(serialize_a_url(builder, source.url.to_deprecated_string()));
             } else {
-                serialize_a_local(builder, source.url.to_deprecated_string());
+                TRY(serialize_a_local(builder, source.url.to_deprecated_string()));
             }
 
             // NOTE: No spec currently exists for format()
             if (source.format.has_value()) {
-                builder.append("format(\""sv);
-                serialize_a_string(builder, source.format.value());
-                builder.append("\")"sv);
+                TRY(builder.try_append("format(\""sv));
+                TRY(serialize_a_string(builder, source.format.value()));
+                TRY(builder.try_append("\")"sv));
             }
-        });
+            return {};
+        }).release_value_but_fixme_should_propagate_errors();
 
         // 3. The string ";", i.e., SEMICOLON (U+003B).
         builder.append(';');
@@ -82,7 +83,7 @@ DeprecatedString CSSFontFaceRule::serialized() const
 
     // 6. If rule’s associated unicode-range descriptor is present, a single SPACE (U+0020), followed by the string "unicode-range:", followed by a single SPACE (U+0020), followed by the result of performing serialize a <'unicode-range'>, followed by the string ";", i.e., SEMICOLON (U+003B).
     builder.append(" unicode-range: "sv);
-    serialize_unicode_ranges(builder, m_font_face.unicode_ranges());
+    serialize_unicode_ranges(builder, m_font_face.unicode_ranges()).release_value_but_fixme_should_propagate_errors();
     builder.append(';');
 
     // FIXME: 7. If rule’s associated font-variant descriptor is present, a single SPACE (U+0020),

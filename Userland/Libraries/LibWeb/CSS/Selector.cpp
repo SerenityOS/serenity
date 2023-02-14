@@ -129,7 +129,7 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         // FIXME: 2. If the namespace prefix maps to a namespace that is the null namespace (not in a namespace) append "|" (U+007C) to s.
         // 3. If this is a type selector append the serialization of the element name as an identifier to s.
         if (type == Selector::SimpleSelector::Type::TagName) {
-            serialize_an_identifier(s, name());
+            serialize_an_identifier(s, name()).release_value_but_fixme_should_propagate_errors();
         }
         // 4. If this is a universal selector append "*" (U+002A) to s.
         if (type == Selector::SimpleSelector::Type::Universal)
@@ -144,7 +144,7 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         // FIXME: 2. If the namespace prefix maps to a namespace that is not the null namespace (not in a namespace) append the serialization of the namespace prefix as an identifier, followed by a "|" (U+007C) to s.
 
         // 3. Append the serialization of the attribute name as an identifier to s.
-        serialize_an_identifier(s, attribute.name);
+        serialize_an_identifier(s, attribute.name).release_value_but_fixme_should_propagate_errors();
 
         // 4. If there is an attribute value specified, append "=", "~=", "|=", "^=", "$=", or "*=" as appropriate (depending on the type of attribute selector),
         //    followed by the serialization of the attribute value as a string, to s.
@@ -172,7 +172,7 @@ DeprecatedString Selector::SimpleSelector::serialize() const
                 break;
             }
 
-            serialize_a_string(s, attribute.value);
+            serialize_a_string(s, attribute.value).release_value_but_fixme_should_propagate_errors();
         }
 
         // 5. If the attribute selector has the case-insensitivity flag present, append " i" (U+0020 U+0069) to s.
@@ -197,13 +197,13 @@ DeprecatedString Selector::SimpleSelector::serialize() const
     case Selector::SimpleSelector::Type::Class:
         // Append a "." (U+002E), followed by the serialization of the class name as an identifier to s.
         s.append('.');
-        serialize_an_identifier(s, name());
+        serialize_an_identifier(s, name()).release_value_but_fixme_should_propagate_errors();
         break;
 
     case Selector::SimpleSelector::Type::Id:
         // Append a "#" (U+0023), followed by the serialization of the ID as an identifier to s.
         s.append('#');
-        serialize_an_identifier(s, name());
+        serialize_an_identifier(s, name()).release_value_but_fixme_should_propagate_errors();
         break;
 
     case Selector::SimpleSelector::Type::PseudoClass: {

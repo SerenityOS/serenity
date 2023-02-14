@@ -1257,7 +1257,7 @@ ErrorOr<String> FilterValueListStyleValue::to_string() const
                     TRY(builder.try_appendff(" {}", TRY(drop_shadow.radius->to_string())));
                 if (drop_shadow.color.has_value()) {
                     TRY(builder.try_append(' '));
-                    serialize_a_srgb_value(builder, *drop_shadow.color);
+                    TRY(serialize_a_srgb_value(builder, *drop_shadow.color));
                 }
                 return {};
             },
@@ -1773,7 +1773,7 @@ Gfx::Bitmap const* ImageStyleValue::bitmap(size_t frame_index) const
 
 ErrorOr<String> ImageStyleValue::to_string() const
 {
-    return String::from_deprecated_string(serialize_a_url(m_url.to_deprecated_string()));
+    return serialize_a_url(m_url.to_deprecated_string());
 }
 
 bool ImageStyleValue::equals(StyleValue const& other) const
@@ -1813,7 +1813,7 @@ static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto cons
         if (element.transition_hint.has_value())
             TRY(builder.try_appendff("{}, "sv, TRY(element.transition_hint->value.to_string())));
 
-        serialize_a_srgb_value(builder, element.color_stop.color);
+        TRY(serialize_a_srgb_value(builder, element.color_stop.color));
         for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
             if (position->has_value())
                 TRY(builder.try_appendff(" {}"sv, TRY((*position)->to_string())));
