@@ -15,7 +15,7 @@ class Comment final : public CharacterData {
     WEB_PLATFORM_OBJECT(Comment, CharacterData);
 
 public:
-    static JS::NonnullGCPtr<Comment> construct_impl(JS::Realm&, DeprecatedString const& data);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Comment>> construct_impl(JS::Realm&, DeprecatedString const& data);
     virtual ~Comment() override = default;
 
     virtual DeprecatedFlyString node_name() const override { return "#comment"; }
