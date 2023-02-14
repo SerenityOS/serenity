@@ -1006,7 +1006,7 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = old_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(*UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave));
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave).release_value_but_fixme_should_propagate_errors());
         }
     }
 
@@ -1015,7 +1015,7 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = m_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(*UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter));
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter).release_value_but_fixme_should_propagate_errors());
         }
     }
 }
@@ -1272,39 +1272,39 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
     //      then set constructor to the interface in the second column on the same row as the matching string:
     auto interface_lowercase = interface.to_lowercase();
     if (interface_lowercase == "beforeunloadevent") {
-        event = Event::create(realm, ""); // FIXME: Create BeforeUnloadEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create BeforeUnloadEvent
     } else if (interface_lowercase == "compositionevent") {
-        event = Event::create(realm, ""); // FIXME: Create CompositionEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "customevent") {
         event = TRY(CustomEvent::create(realm, ""));
     } else if (interface_lowercase == "devicemotionevent") {
-        event = Event::create(realm, ""); // FIXME: Create DeviceMotionEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create DeviceMotionEvent
     } else if (interface_lowercase == "deviceorientationevent") {
-        event = Event::create(realm, ""); // FIXME: Create DeviceOrientationEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create DeviceOrientationEvent
     } else if (interface_lowercase == "dragevent") {
-        event = Event::create(realm, ""); // FIXME: Create DragEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create DragEvent
     } else if (interface_lowercase.is_one_of("event", "events")) {
-        event = Event::create(realm, "");
+        event = TRY(Event::create(realm, ""));
     } else if (interface_lowercase == "focusevent") {
         event = UIEvents::FocusEvent::create(realm, "");
     } else if (interface_lowercase == "hashchangeevent") {
-        event = Event::create(realm, ""); // FIXME: Create HashChangeEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create HashChangeEvent
     } else if (interface_lowercase == "htmlevents") {
-        event = Event::create(realm, "");
+        event = TRY(Event::create(realm, ""));
     } else if (interface_lowercase == "keyboardevent") {
         event = UIEvents::KeyboardEvent::create(realm, "");
     } else if (interface_lowercase == "messageevent") {
         event = TRY(HTML::MessageEvent::create(realm, ""));
     } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
-        event = UIEvents::MouseEvent::create(realm, "");
+        event = TRY(UIEvents::MouseEvent::create(realm, ""));
     } else if (interface_lowercase == "storageevent") {
-        event = Event::create(realm, ""); // FIXME: Create StorageEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create StorageEvent
     } else if (interface_lowercase == "svgevents") {
-        event = Event::create(realm, "");
+        event = TRY(Event::create(realm, ""));
     } else if (interface_lowercase == "textevent") {
-        event = Event::create(realm, ""); // FIXME: Create CompositionEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create CompositionEvent
     } else if (interface_lowercase == "touchevent") {
-        event = Event::create(realm, ""); // FIXME: Create TouchEvent
+        event = TRY(Event::create(realm, "")); // FIXME: Create TouchEvent
     } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
         event = UIEvents::UIEvent::create(realm, "");
     }
@@ -1539,7 +1539,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     }
 
     // 4. Fire an event named readystatechange at document.
-    dispatch_event(*Event::create(realm(), HTML::EventNames::readystatechange));
+    dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
 }
 
 Page* Document::page()
@@ -1587,7 +1587,7 @@ void Document::completely_finish_loading()
     // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
-            container->dispatch_event(*DOM::Event::create(container->realm(), HTML::EventNames::load));
+            container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
         });
     }
 }
@@ -1717,7 +1717,7 @@ void Document::update_the_visibility_state(HTML::VisibilityState visibility_stat
     // FIXME: 3. Run any page visibility change steps which may be defined in other specifications, with visibility state and document.
 
     // 4. Fire an event named visibilitychange at document, with its bubbles attribute initialized to true.
-    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange);
+    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange).release_value_but_fixme_should_propagate_errors();
     event->set_bubbles(true);
     dispatch_event(event);
 }
@@ -1738,7 +1738,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(*DOM::Event::create(realm(), UIEvents::EventNames::resize));
+    window().dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize).release_value_but_fixme_should_propagate_errors());
 
     schedule_layout_update();
 }
@@ -1750,15 +1750,15 @@ void Document::run_the_scroll_steps()
     for (auto& target : m_pending_scroll_event_targets) {
         // 1. If target is a Document, fire an event named scroll that bubbles at target and fire an event named scroll at the VisualViewport that is associated with target.
         if (is<Document>(*target)) {
-            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll);
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll).release_value_but_fixme_should_propagate_errors();
             event->set_bubbles(true);
-            target->dispatch_event(*event);
+            target->dispatch_event(event);
             // FIXME: Fire at the associated VisualViewport
         }
         // 2. Otherwise, fire an event named scroll at target.
         else {
-            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll);
-            target->dispatch_event(*event);
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll).release_value_but_fixme_should_propagate_errors();
+            target->dispatch_event(event);
         }
     }
 
@@ -1797,7 +1797,7 @@ void Document::evaluate_media_queries_and_report_changes()
             CSS::MediaQueryListEventInit init;
             init.media = media_query_list->media();
             init.matches = now_matches;
-            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init);
+            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init).release_value_but_fixme_should_propagate_errors();
             event->set_is_trusted(true);
             media_query_list->dispatch_event(*event);
         }
@@ -2259,7 +2259,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         // then fire an event named unload at document's relevant global object, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        auto event = DOM::Event::create(realm(), HTML::EventNames::unload);
+        auto event = DOM::Event::create(realm(), HTML::EventNames::unload).release_value_but_fixme_should_propagate_errors();
         global_object().dispatch_event(event);
     }
 
