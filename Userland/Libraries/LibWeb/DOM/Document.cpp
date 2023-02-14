@@ -1953,7 +1953,7 @@ JS::NonnullGCPtr<NodeIterator> Document::create_node_iterator(Node& root, unsign
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
 JS::NonnullGCPtr<TreeWalker> Document::create_tree_walker(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
-    return TreeWalker::create(root, what_to_show, filter);
+    return TreeWalker::create(root, what_to_show, filter).release_value_but_fixme_should_propagate_errors();
 }
 
 void Document::register_node_iterator(Badge<NodeIterator>, NodeIterator& node_iterator)
