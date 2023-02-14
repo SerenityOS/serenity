@@ -45,7 +45,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLTableRowElement::cells() const
         m_cells = DOM::HTMLCollection::create(const_cast<HTMLTableRowElement&>(*this), [this](Element const& element) {
             return element.parent() == this
                 && is<HTMLTableCellElement>(element);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_cells;
 }

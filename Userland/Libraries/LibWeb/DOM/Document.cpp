@@ -1024,7 +1024,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_name(DeprecatedString
 {
     return HTMLCollection::create(*this, [name](Element const& element) {
         return element.name() == name;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(DeprecatedFlyString const& class_names)
@@ -1039,14 +1039,14 @@ JS::NonnullGCPtr<HTMLCollection> Document::get_elements_by_class_name(Deprecated
                 return false;
         }
         return true;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-applets
 JS::NonnullGCPtr<HTMLCollection> Document::applets()
 {
     if (!m_applets)
-        m_applets = HTMLCollection::create(*this, [](auto&) { return false; });
+        m_applets = HTMLCollection::create(*this, [](auto&) { return false; }).release_value_but_fixme_should_propagate_errors();
     return *m_applets;
 }
 
@@ -1056,7 +1056,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::anchors()
     if (!m_anchors) {
         m_anchors = HTMLCollection::create(*this, [](Element const& element) {
             return is<HTML::HTMLAnchorElement>(element) && element.has_attribute(HTML::AttributeNames::name);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_anchors;
 }
@@ -1067,7 +1067,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::images()
     if (!m_images) {
         m_images = HTMLCollection::create(*this, [](Element const& element) {
             return is<HTML::HTMLImageElement>(element);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_images;
 }
@@ -1078,7 +1078,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::embeds()
     if (!m_embeds) {
         m_embeds = HTMLCollection::create(*this, [](Element const& element) {
             return is<HTML::HTMLEmbedElement>(element);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_embeds;
 }
@@ -1095,7 +1095,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::links()
     if (!m_links) {
         m_links = HTMLCollection::create(*this, [](Element const& element) {
             return (is<HTML::HTMLAnchorElement>(element) || is<HTML::HTMLAreaElement>(element)) && element.has_attribute(HTML::AttributeNames::href);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_links;
 }
@@ -1106,7 +1106,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::forms()
     if (!m_forms) {
         m_forms = HTMLCollection::create(*this, [](Element const& element) {
             return is<HTML::HTMLFormElement>(element);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_forms;
 }
@@ -1117,7 +1117,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::scripts()
     if (!m_scripts) {
         m_scripts = HTMLCollection::create(*this, [](Element const& element) {
             return is<HTML::HTMLScriptElement>(element);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_scripts;
 }
@@ -1128,7 +1128,7 @@ JS::NonnullGCPtr<HTMLCollection> Document::all()
     if (!m_all) {
         m_all = HTMLCollection::create(*this, [](Element const&) {
             return true;
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_all;
 }
@@ -2004,7 +2004,7 @@ void Document::check_favicon_after_loading_link_resource()
             return false;
 
         return static_cast<HTML::HTMLLinkElement const&>(element).has_loaded_icon();
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 
     if (favicon_link_elements->length() == 0) {
         dbgln_if(SPAM_DEBUG, "No favicon found to be used");

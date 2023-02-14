@@ -29,7 +29,7 @@ class HTMLCollection : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(HTMLCollection, Bindings::LegacyPlatformObject);
 
 public:
-    static JS::NonnullGCPtr<HTMLCollection> create(ParentNode& root, Function<bool(Element const&)> filter);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLCollection>> create(ParentNode& root, Function<bool(Element const&)> filter);
 
     virtual ~HTMLCollection() override;
 
