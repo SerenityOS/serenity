@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -45,7 +46,9 @@ JS::ThrowCompletionOr<void> HTMLElement::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
 
-    m_dataset = DOMStringMap::create(*this);
+    m_dataset = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return DOMStringMap::create(*this);
+    }));
 
     return {};
 }

@@ -17,7 +17,7 @@ class DOMStringMap final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMStringMap, Bindings::LegacyPlatformObject);
 
 public:
-    static JS::NonnullGCPtr<DOMStringMap> create(DOM::Element&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMStringMap>> create(DOM::Element&);
 
     virtual ~DOMStringMap() override;
 
