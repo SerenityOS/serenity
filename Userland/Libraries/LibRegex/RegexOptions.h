@@ -19,29 +19,32 @@ namespace regex {
 using FlagsUnderlyingType = u32;
 
 enum class AllFlags {
-    Global = __Regex_Global,                                     // All matches (don't return after first match)
-    Insensitive = __Regex_Insensitive,                           // Case insensitive match (ignores case of [a-zA-Z])
-    Ungreedy = __Regex_Ungreedy,                                 // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
-    Unicode = __Regex_Unicode,                                   // Enable all unicode features and interpret all unicode escape sequences as such
-    Extended = __Regex_Extended,                                 // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
-    Extra = __Regex_Extra,                                       // Disallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
-    MatchNotBeginOfLine = __Regex_MatchNotBeginOfLine,           // Pattern is not forced to ^ -> search in whole string!
-    MatchNotEndOfLine = __Regex_MatchNotEndOfLine,               // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
-    SkipSubExprResults = __Regex_SkipSubExprResults,             // Do not return sub expressions in the result
-    StringCopyMatches = __Regex_StringCopyMatches,               // Do explicitly copy results into new allocated string instead of StringView to original string.
-    SingleLine = __Regex_SingleLine,                             // Dot matches newline characters
-    Sticky = __Regex_Sticky,                                     // Force the pattern to only match consecutive matches from where the previous match ended.
-    Multiline = __Regex_Multiline,                               // Handle newline characters. Match each line, one by one.
-    SkipTrimEmptyMatches = __Regex_SkipTrimEmptyMatches,         // Do not remove empty capture group results.
-    SingleMatch = __Regex_SingleMatch,                           // Stop after acquiring a single match.
-    UnicodeSets = __Regex_UnicodeSets,                           // Only for ECMA262, Allow set operations in character classes.
-    Internal_Stateful = __Regex_Internal_Stateful,               // Make global matches match one result at a time, and further match() calls on the same instance continue where the previous one left off.
-    Internal_BrowserExtended = __Regex_Internal_BrowserExtended, // Only for ECMA262, Enable the behaviors defined in section B.1.4. of the ECMA262 spec.
-    Internal_ConsiderNewline = __Regex_Internal_ConsiderNewline, // Only for ECMA262, Allow multiline matches to consider newlines as line boundaries.
+    Default = 0,
+    Global = __Regex_Global,                                             // All matches (don't return after first match)
+    Insensitive = __Regex_Insensitive,                                   // Case insensitive match (ignores case of [a-zA-Z])
+    Ungreedy = __Regex_Ungreedy,                                         // The match becomes lazy by default. Now a ? following a quantifier makes it greedy
+    Unicode = __Regex_Unicode,                                           // Enable all unicode features and interpret all unicode escape sequences as such
+    Extended = __Regex_Extended,                                         // Ignore whitespaces. Spaces and text after a # in the pattern are ignored
+    Extra = __Regex_Extra,                                               // Disallow meaningless escapes. A \ followed by a letter with no special meaning is faulted
+    MatchNotBeginOfLine = __Regex_MatchNotBeginOfLine,                   // Pattern is not forced to ^ -> search in whole string!
+    MatchNotEndOfLine = __Regex_MatchNotEndOfLine,                       // Don't Force the dollar sign, $, to always match end of the string, instead of end of the line. This option is ignored if the Multiline-flag is set
+    SkipSubExprResults = __Regex_SkipSubExprResults,                     // Do not return sub expressions in the result
+    StringCopyMatches = __Regex_StringCopyMatches,                       // Do explicitly copy results into new allocated string instead of StringView to original string.
+    SingleLine = __Regex_SingleLine,                                     // Dot matches newline characters
+    Sticky = __Regex_Sticky,                                             // Force the pattern to only match consecutive matches from where the previous match ended.
+    Multiline = __Regex_Multiline,                                       // Handle newline characters. Match each line, one by one.
+    SkipTrimEmptyMatches = __Regex_SkipTrimEmptyMatches,                 // Do not remove empty capture group results.
+    SingleMatch = __Regex_SingleMatch,                                   // Stop after acquiring a single match.
+    UnicodeSets = __Regex_UnicodeSets,                                   // Only for ECMA262, Allow set operations in character classes.
+    Internal_Stateful = __Regex_Internal_Stateful,                       // Make global matches match one result at a time, and further match() calls on the same instance continue where the previous one left off.
+    Internal_BrowserExtended = __Regex_Internal_BrowserExtended,         // Only for ECMA262, Enable the behaviors defined in section B.1.4. of the ECMA262 spec.
+    Internal_ConsiderNewline = __Regex_Internal_ConsiderNewline,         // Only for ECMA262, Allow multiline matches to consider newlines as line boundaries.
+    Internal_ECMA262DotSemantics = __Regex_Internal_ECMA262DotSemantics, // Use ECMA262 dot semantics: disallow matching CR/LF/LS/PS instead of just CR.
     Last = Internal_BrowserExtended,
 };
 
 enum class PosixFlags : FlagsUnderlyingType {
+    Default = 0,
     Global = (FlagsUnderlyingType)AllFlags::Global,
     Insensitive = (FlagsUnderlyingType)AllFlags::Insensitive,
     Ungreedy = (FlagsUnderlyingType)AllFlags::Ungreedy,
@@ -58,6 +61,7 @@ enum class PosixFlags : FlagsUnderlyingType {
 };
 
 enum class ECMAScriptFlags : FlagsUnderlyingType {
+    Default = (FlagsUnderlyingType)AllFlags::Internal_ECMA262DotSemantics,
     Global = (FlagsUnderlyingType)AllFlags::Global | (FlagsUnderlyingType)AllFlags::Internal_Stateful, // Note: ECMAScript "Global" creates a stateful regex.
     Insensitive = (FlagsUnderlyingType)AllFlags::Insensitive,
     Ungreedy = (FlagsUnderlyingType)AllFlags::Ungreedy,
@@ -80,13 +84,13 @@ public:
     RegexOptions() = default;
 
     constexpr RegexOptions(T flags)
-        : m_flags(flags)
+        : m_flags(static_cast<T>(to_underlying(flags) | to_underlying(T::Default)))
     {
     }
 
     template<class U>
     constexpr RegexOptions(RegexOptions<U> other)
-        : m_flags((T) static_cast<FlagsUnderlyingType>(other.value()))
+        : RegexOptions(static_cast<T>(to_underlying(other.value())))
     {
     }
 
@@ -115,7 +119,7 @@ public:
     T value() const { return m_flags; }
 
 private:
-    T m_flags { 0 };
+    T m_flags { T::Default };
 };
 
 template<class T>
