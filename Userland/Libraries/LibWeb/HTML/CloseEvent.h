@@ -21,8 +21,8 @@ class CloseEvent : public DOM::Event {
     WEB_PLATFORM_OBJECT(CloseEvent, DOM::Event);
 
 public:
-    static CloseEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, CloseEventInit const& event_init = {});
-    static CloseEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, CloseEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CloseEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, CloseEventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CloseEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, CloseEventInit const& event_init);
 
     virtual ~CloseEvent() override;
 
