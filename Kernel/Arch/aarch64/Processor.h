@@ -279,6 +279,8 @@ public:
 
     static StringView platform_string();
 
+    static void set_thread_specific_data(VirtualAddress thread_specific_data);
+
 private:
     Processor(Processor const&) = delete;
 

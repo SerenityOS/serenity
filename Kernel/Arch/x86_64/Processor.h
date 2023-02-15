@@ -419,6 +419,8 @@ public:
     static ErrorOr<Vector<FlatPtr, 32>> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
     static StringView platform_string();
+
+    static void set_thread_specific_data(VirtualAddress thread_specific_data);
 };
 
 }
