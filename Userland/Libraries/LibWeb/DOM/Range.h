@@ -26,10 +26,10 @@ class Range final : public AbstractRange {
     WEB_PLATFORM_OBJECT(Range, AbstractRange);
 
 public:
-    static JS::NonnullGCPtr<Range> create(Document&);
-    static JS::NonnullGCPtr<Range> create(HTML::Window&);
-    static JS::NonnullGCPtr<Range> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
-    static JS::NonnullGCPtr<Range> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> create(Document&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> create(HTML::Window&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> construct_impl(JS::Realm&);
 
     virtual ~Range() override;
 

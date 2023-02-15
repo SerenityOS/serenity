@@ -1256,7 +1256,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> Document::create_pr
 
 JS::NonnullGCPtr<Range> Document::create_range()
 {
-    return Range::create(*this);
+    return Range::create(*this).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createevent
