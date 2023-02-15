@@ -30,17 +30,17 @@ JS::ThrowCompletionOr<void> SVGForeignObjectElement::initialize(JS::Realm& realm
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGForeignObjectElementPrototype>(realm, "SVGForeignObjectElement"));
 
     // FIXME: These never actually get updated!
-    m_x = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
-        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_x = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
+        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
     }));
-    m_y = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
-        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_y = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
+        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
     }));
-    m_width = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
-        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_width = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
+        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
     }));
-    m_height = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
-        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_height = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> {
+        return SVGAnimatedLength::create(realm, TRY(SVGLength::create(realm, 0, 0)), TRY(SVGLength::create(realm, 0, 0)));
     }));
 
     return {};
