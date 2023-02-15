@@ -961,6 +961,9 @@ void TextEditor::keydown_event(KeyEvent& event)
             if (event.modifiers() == Mod_Ctrl) {
                 auto word_break_pos = document().first_word_break_after(m_cursor);
                 erase_count = word_break_pos.column() - m_cursor.column();
+            } else {
+                auto grapheme_break_position = document().get_next_grapheme_cluster_boundary(m_cursor);
+                erase_count = grapheme_break_position - m_cursor.column();
             }
             TextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + erase_count });
             execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
@@ -1001,6 +1004,9 @@ void TextEditor::keydown_event(KeyEvent& event)
                 else
                     new_column = (m_cursor.column() / m_soft_tab_width) * m_soft_tab_width;
                 erase_count = m_cursor.column() - new_column;
+            } else {
+                auto grapheme_break_position = document().get_previous_grapheme_cluster_boundary(m_cursor);
+                erase_count = m_cursor.column() - grapheme_break_position;
             }
 
             // Backspace within line
