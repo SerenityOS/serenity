@@ -33,7 +33,7 @@ DeprecatedString DeclarationOrAtRule::to_deprecated_string() const
         builder.append(m_at->to_deprecated_string());
         break;
     case DeclarationType::Declaration:
-        builder.append(m_declaration->to_deprecated_string());
+        builder.append(m_declaration->to_string().release_value_but_fixme_should_propagate_errors());
         break;
     }
 
