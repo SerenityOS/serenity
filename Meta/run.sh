@@ -263,9 +263,10 @@ if [ -z "$SERENITY_HOST_SSH_PORT" ]; then
     SERENITY_HOST_WEBDRIVER_PORT="2222"
 fi
 
-# Could not find a service that uses this port by default
-if [ -z "$SERENITY_HOST_8888_PORT" ]; then 
-    SERENITY_HOST_8888_PORT="8888"
+# Generic port that isn't used by any service by default. 
+# Can be used to map custom user services to Serenity's 8888 port.
+if [ -z "$SERENITY_HOST_GENERIC_PORT" ]; then 
+    SERENITY_HOST_GENERIC_PORT="8888"
 fi
 
 if [ "$SERENITY_ARCH" = "aarch64" ]; then
