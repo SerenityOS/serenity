@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -23,14 +24,24 @@ SVGForeignObjectElement::~SVGForeignObjectElement() = default;
 
 JS::ThrowCompletionOr<void> SVGForeignObjectElement::initialize(JS::Realm& realm)
 {
+    auto& vm = realm.vm();
+
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::SVGForeignObjectElementPrototype>(realm, "SVGForeignObjectElement"));
 
     // FIXME: These never actually get updated!
-    m_x = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
-    m_y = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
-    m_width = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
-    m_height = SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    m_x = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
+        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    }));
+    m_y = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
+        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    }));
+    m_width = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
+        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    }));
+    m_height = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() {
+        return SVGAnimatedLength::create(realm, SVGLength::create(realm, 0, 0), SVGLength::create(realm, 0, 0));
+    }));
 
     return {};
 }
