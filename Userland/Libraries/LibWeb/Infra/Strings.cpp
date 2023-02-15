@@ -2,10 +2,12 @@
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
@@ -13,6 +15,30 @@
 #include <LibWeb/Infra/Strings.h>
 
 namespace Web::Infra {
+
+// https://infra.spec.whatwg.org/#ascii-case-insensitive
+bool is_ascii_case_insensitive_match(StringView a, StringView b)
+{
+    // A string A is an ASCII case-insensitive match for a string B,
+    // if the ASCII lowercase of A is the ASCII lowercase of B.
+
+    Utf8View a_view { a };
+    Utf8View b_view { b };
+
+    if (a_view.length() != b_view.length())
+        return false;
+
+    auto b_iterator = b_view.begin();
+    for (auto a_char : a_view) {
+        auto b_char = *b_iterator;
+        ++b_iterator;
+
+        if (to_ascii_lowercase(a_char) != to_ascii_lowercase(b_char))
+            return false;
+    }
+
+    return true;
+}
 
 // https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
 DeprecatedString strip_and_collapse_whitespace(StringView string)
