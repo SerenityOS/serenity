@@ -986,6 +986,8 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "a+"sv, ""sv, false },
         // 'y' and [^x] have an overlap ('y'), the loop should not be rewritten here.
         Tuple { "[^x]+y"sv, "ay"sv, true },
+        // .+ should not be rewritten here, as it's followed by something that would be matched by `.`.
+        Tuple { ".+(a|b|c)"sv, "xxa"sv, true },
     };
 
     for (auto& test : tests) {

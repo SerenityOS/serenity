@@ -303,10 +303,12 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
     Vector<Vector<CompareTypeAndValuePair>> repeated_values;
     HashTable<size_t> active_capture_groups;
     MatchState state;
+    auto has_seen_actionable_opcode = false;
     for (state.instruction_position = repeated_block.start; state.instruction_position < repeated_block.end;) {
         auto& opcode = bytecode.get_opcode(state);
         switch (opcode.opcode_id()) {
         case OpCodeId::Compare: {
+            has_seen_actionable_opcode = true;
             auto compares = static_cast<OpCode_Compare const&>(opcode).flat_compares();
             if (repeated_values.is_empty() && any_of(compares, [](auto& compare) { return compare.type == CharacterCompareType::AnyChar; }))
                 return AtomicRewritePreconditionResult::NotSatisfied;
@@ -315,6 +317,7 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
         }
         case OpCodeId::CheckBegin:
         case OpCodeId::CheckEnd:
+            has_seen_actionable_opcode = true;
             if (repeated_values.is_empty())
                 return AtomicRewritePreconditionResult::SatisfiedWithProperHeader;
             break;
@@ -329,6 +332,13 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
             break;
         case OpCodeId::SaveLeftCaptureGroup:
             active_capture_groups.set(static_cast<OpCode_SaveLeftCaptureGroup const&>(opcode).id());
+            break;
+        case OpCodeId::ForkJump:
+        case OpCodeId::ForkReplaceJump:
+        case OpCodeId::JumpNonEmpty:
+            // We could attempt to recursively resolve the follow set, but pretending that this just goes nowhere is faster.
+            if (!has_seen_actionable_opcode)
+                return AtomicRewritePreconditionResult::NotSatisfied;
             break;
         default:
             break;
@@ -375,6 +385,13 @@ static AtomicRewritePreconditionResult block_satisfies_atomic_rewrite_preconditi
         case OpCodeId::CheckBoundary:
             // FIXME: What should we do with these? For now, consider them a failure.
             return AtomicRewritePreconditionResult::NotSatisfied;
+        case OpCodeId::ForkJump:
+        case OpCodeId::ForkReplaceJump:
+        case OpCodeId::JumpNonEmpty:
+            // See note in the previous switch, same cases.
+            if (!following_block_has_at_least_one_compare)
+                return AtomicRewritePreconditionResult::NotSatisfied;
+            break;
         default:
             break;
         }
@@ -484,7 +501,8 @@ void Regex<Parser>::attempt_rewrite_loops_as_atomic_groups(BasicBlockList const&
             if (is_an_eligible_jump(opcode, state.instruction_position, forking_block.start, AlternateForm::DirectLoopWithoutHeader)) {
                 // We've found RE0 (and RE1 is just the following block, if any), let's see if the precondition applies.
                 // if RE1 is empty, there's no first(RE1), so this is an automatic pass.
-                if (!fork_fallback_block.has_value() || fork_fallback_block->end == fork_fallback_block->start) {
+                if (!fork_fallback_block.has_value()
+                    || (fork_fallback_block->end == fork_fallback_block->start && block_satisfies_atomic_rewrite_precondition(bytecode, forking_block, *fork_fallback_block) != AtomicRewritePreconditionResult::NotSatisfied)) {
                     candidate_blocks.append({ forking_block, fork_fallback_block, AlternateForm::DirectLoopWithoutHeader });
                     break;
                 }
