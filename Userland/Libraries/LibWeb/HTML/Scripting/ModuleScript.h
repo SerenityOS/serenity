@@ -29,7 +29,7 @@ class JavaScriptModuleScript final : public ModuleScript {
 public:
     virtual ~JavaScriptModuleScript() override;
 
-    static JS::GCPtr<JavaScriptModuleScript> create(DeprecatedString const& filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url);
+    static WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> create(DeprecatedString const& filename, StringView source, EnvironmentSettingsObject&, AK::URL base_url);
 
     enum class PreventErrorReporting {
         Yes,
