@@ -178,7 +178,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
             Bindings::main_thread_vm(),
             [&](JS::Realm& realm) -> JS::Object* {
                 // - For the global object, create a new Window object.
-                window = HTML::Window::create(realm);
+                window = HTML::Window::create(realm).release_value_but_fixme_should_propagate_errors();
                 return window;
             },
             [&](JS::Realm&) -> JS::Object* {

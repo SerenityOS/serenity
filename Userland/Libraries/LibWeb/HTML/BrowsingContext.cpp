@@ -118,7 +118,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
             browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
             // - For the global object, create a new Window object.
-            window = HTML::Window::create(realm);
+            window = HTML::Window::create(realm).release_value_but_fixme_should_propagate_errors();
             return window.ptr();
         },
         [&](JS::Realm&) -> JS::Object* {
