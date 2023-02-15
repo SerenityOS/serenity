@@ -864,7 +864,7 @@ JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> local_storage_per_origin;
     auto storage = local_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(realm());
+        return *HTML::Storage::create(realm()).release_value_but_fixme_should_propagate_errors();
     });
     return *storage;
 }
@@ -876,7 +876,7 @@ JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> session_storage_per_origin;
     auto storage = session_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(realm());
+        return *HTML::Storage::create(realm()).release_value_but_fixme_should_propagate_errors();
     });
     return *storage;
 }
