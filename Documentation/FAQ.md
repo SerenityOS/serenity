@@ -2,7 +2,7 @@
 
 ## Will SerenityOS support `$THING`?
 
-Maybe. Maybe not. There is no plan.
+Maybe. Maybe not. There is no plan. Hopefully.
 
 ## When will you implement `$THING`?
 
