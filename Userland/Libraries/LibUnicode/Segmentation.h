@@ -12,7 +12,6 @@
 #include <AK/IterationDecision.h>
 #include <AK/Optional.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 
 namespace Unicode {
 
@@ -21,19 +20,6 @@ using SegmentationCallback = Function<IterationDecision(size_t)>;
 void for_each_grapheme_segmentation_boundary(Utf8View const&, SegmentationCallback);
 void for_each_grapheme_segmentation_boundary(Utf16View const&, SegmentationCallback);
 void for_each_grapheme_segmentation_boundary(Utf32View const&, SegmentationCallback);
-
-template<typename ViewType>
-Vector<size_t> find_grapheme_segmentation_boundaries(ViewType const& view)
-{
-    Vector<size_t> boundaries;
-
-    for_each_grapheme_segmentation_boundary(view, [&](auto boundary) {
-        boundaries.append(boundary);
-        return IterationDecision::Continue;
-    });
-
-    return boundaries;
-}
 
 template<typename ViewType>
 Optional<size_t> next_grapheme_segmentation_boundary(ViewType const& view, size_t index)
@@ -74,19 +60,6 @@ void for_each_word_segmentation_boundary(Utf16View const&, SegmentationCallback)
 void for_each_word_segmentation_boundary(Utf32View const&, SegmentationCallback);
 
 template<typename ViewType>
-Vector<size_t> find_word_segmentation_boundaries(ViewType const& view)
-{
-    Vector<size_t> boundaries;
-
-    for_each_word_segmentation_boundary(view, [&](auto boundary) {
-        boundaries.append(boundary);
-        return IterationDecision::Continue;
-    });
-
-    return boundaries;
-}
-
-template<typename ViewType>
 Optional<size_t> next_word_segmentation_boundary(ViewType const& view, size_t index)
 {
     Optional<size_t> result;
@@ -123,19 +96,6 @@ Optional<size_t> previous_word_segmentation_boundary(ViewType const& view, size_
 void for_each_sentence_segmentation_boundary(Utf8View const&, SegmentationCallback);
 void for_each_sentence_segmentation_boundary(Utf16View const&, SegmentationCallback);
 void for_each_sentence_segmentation_boundary(Utf32View const&, SegmentationCallback);
-
-template<typename ViewType>
-Vector<size_t> find_sentence_segmentation_boundaries(ViewType const& view)
-{
-    Vector<size_t> boundaries;
-
-    for_each_sentence_segmentation_boundary(view, [&](auto boundary) {
-        boundaries.append(boundary);
-        return IterationDecision::Continue;
-    });
-
-    return boundaries;
-}
 
 template<typename ViewType>
 Optional<size_t> next_sentence_segmentation_boundary(ViewType const& view, size_t index)
