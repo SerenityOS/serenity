@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -33,7 +34,9 @@ WorkerGlobalScope::~WorkerGlobalScope() = default;
 JS::ThrowCompletionOr<void> WorkerGlobalScope::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));
-    m_navigator = WorkerNavigator::create(*this);
+    m_navigator = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return WorkerNavigator::create(*this);
+    }));
 
     return {};
 }
