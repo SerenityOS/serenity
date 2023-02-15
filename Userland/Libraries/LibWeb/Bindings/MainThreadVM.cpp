@@ -138,8 +138,8 @@ JS::VM& main_thread_vm()
                         /* .promise = */ promise,
                         /* .reason = */ promise.result(),
                     };
-                    auto promise_rejection_event = HTML::PromiseRejectionEvent::create(HTML::relevant_realm(global), HTML::EventNames::rejectionhandled, event_init);
-                    window.dispatch_event(*promise_rejection_event);
+                    auto promise_rejection_event = HTML::PromiseRejectionEvent::create(HTML::relevant_realm(global), HTML::EventNames::rejectionhandled, event_init).release_value_but_fixme_should_propagate_errors();
+                    window.dispatch_event(promise_rejection_event);
                 });
                 break;
             }
