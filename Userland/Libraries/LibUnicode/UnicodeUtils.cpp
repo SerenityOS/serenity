@@ -274,10 +274,6 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
     // the word boundary. If F exists, map F to Titlecase_Mapping(F); then map all characters C between
     // F and the following word boundary to Lowercase_Mapping(C).
 
-    auto boundaries = find_word_segmentation_boundaries(code_points);
-    if (boundaries.is_empty())
-        return {};
-
     auto first_cased_code_point_after_boundary = [&](auto boundary, auto next_boundary) -> Optional<Utf8CodePointIterator> {
         auto it = code_points.iterator_at_byte_offset_without_validation(boundary);
         auto end = code_points.iterator_at_byte_offset_without_validation(next_boundary);
@@ -302,11 +298,14 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
         return {};
     };
 
-    for (size_t i = 0; i < boundaries.size() - 1; ++i) {
-        auto boundary = boundaries[i];
-        auto next_boundary = boundaries[i + 1];
+    size_t boundary = 0;
 
-        if (auto it = first_cased_code_point_after_boundary(boundary, next_boundary); it.has_value()) {
+    while (true) {
+        auto next_boundary = next_word_segmentation_boundary(code_points, boundary);
+        if (!next_boundary.has_value())
+            break;
+
+        if (auto it = first_cased_code_point_after_boundary(boundary, *next_boundary); it.has_value()) {
             auto code_point = *it.value();
             auto code_point_offset = code_points.byte_offset_of(*it);
             auto code_point_length = it->underlying_code_point_length_in_bytes();
@@ -318,8 +317,10 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
             boundary = code_point_offset + code_point_length;
         }
 
-        auto substring_to_lowercase = code_points.substring_view(boundary, next_boundary - boundary);
+        auto substring_to_lowercase = code_points.substring_view(boundary, *next_boundary - boundary);
         TRY(build_lowercase_string(substring_to_lowercase, builder, locale));
+
+        boundary = *next_boundary;
     }
 
     return {};
