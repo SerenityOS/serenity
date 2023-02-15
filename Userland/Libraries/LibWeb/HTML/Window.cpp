@@ -789,7 +789,7 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     // with the persisted attribute initialized to persisted,
     HTML::PageTransitionEventInit event_init {};
     event_init.persisted = persisted;
-    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), event_name, event_init);
+    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), event_name, event_init).release_value_but_fixme_should_propagate_errors();
 
     // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
@@ -798,7 +798,7 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     event->set_bubbles(true);
 
     // and legacy target override flag set.
-    dispatch_event(*event);
+    dispatch_event(event);
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
