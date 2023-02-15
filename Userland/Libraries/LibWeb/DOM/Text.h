@@ -18,7 +18,7 @@ class Text : public CharacterData {
 public:
     virtual ~Text() override = default;
 
-    static JS::NonnullGCPtr<Text> construct_impl(JS::Realm& realm, DeprecatedString const& data);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Text>> construct_impl(JS::Realm& realm, DeprecatedString const& data);
 
     // ^Node
     virtual DeprecatedFlyString node_name() const override { return "#text"; }
