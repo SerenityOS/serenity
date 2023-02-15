@@ -36,33 +36,33 @@ TEST_CASE(regex_options_ecmascript)
     ECMAScriptOptions eo;
     eo |= ECMAScriptFlags::Global;
 
-    EXPECT(eo & ECMAScriptFlags::Global);
-    EXPECT(!(eo & ECMAScriptFlags::Insensitive));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Global));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Insensitive));
 
     eo = match_test_api_options(ECMAScriptFlags::Global | ECMAScriptFlags::Insensitive | ECMAScriptFlags::Sticky);
-    EXPECT(eo & ECMAScriptFlags::Global);
-    EXPECT(eo & ECMAScriptFlags::Insensitive);
-    EXPECT(eo & ECMAScriptFlags::Sticky);
-    EXPECT(!(eo & ECMAScriptFlags::Unicode));
-    EXPECT(!(eo & ECMAScriptFlags::Multiline));
-    EXPECT(!(eo & ECMAScriptFlags::SingleLine));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Global));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Insensitive));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Sticky));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Unicode));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Multiline));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::SingleLine));
 
     eo &= ECMAScriptFlags::Insensitive;
-    EXPECT(!(eo & ECMAScriptFlags::Global));
-    EXPECT(eo & ECMAScriptFlags::Insensitive);
-    EXPECT(!(eo & ECMAScriptFlags::Multiline));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Global));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Insensitive));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Multiline));
 
     eo &= ECMAScriptFlags::Sticky;
-    EXPECT(!(eo & ECMAScriptFlags::Global));
-    EXPECT(!(eo & ECMAScriptFlags::Insensitive));
-    EXPECT(!(eo & ECMAScriptFlags::Multiline));
-    EXPECT(!(eo & ECMAScriptFlags::Sticky));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Global));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Insensitive));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Multiline));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Sticky));
 
     eo = ~ECMAScriptFlags::Insensitive;
-    EXPECT(eo & ECMAScriptFlags::Global);
-    EXPECT(!(eo & ECMAScriptFlags::Insensitive));
-    EXPECT(eo & ECMAScriptFlags::Multiline);
-    EXPECT(eo & ECMAScriptFlags::Sticky);
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Global));
+    EXPECT(!eo.has_flag_set(ECMAScriptFlags::Insensitive));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Multiline));
+    EXPECT(eo.has_flag_set(ECMAScriptFlags::Sticky));
 }
 
 TEST_CASE(regex_options_posix)
@@ -70,30 +70,30 @@ TEST_CASE(regex_options_posix)
     PosixOptions eo;
     eo |= PosixFlags::Global;
 
-    EXPECT(eo & PosixFlags::Global);
-    EXPECT(!(eo & PosixFlags::Insensitive));
+    EXPECT(eo.has_flag_set(PosixFlags::Global));
+    EXPECT(!eo.has_flag_set(PosixFlags::Insensitive));
 
     eo = match_test_api_options(PosixFlags::Global | PosixFlags::Insensitive | PosixFlags::MatchNotBeginOfLine);
-    EXPECT(eo & PosixFlags::Global);
-    EXPECT(eo & PosixFlags::Insensitive);
-    EXPECT(eo & PosixFlags::MatchNotBeginOfLine);
-    EXPECT(!(eo & PosixFlags::Unicode));
-    EXPECT(!(eo & PosixFlags::Multiline));
+    EXPECT(eo.has_flag_set(PosixFlags::Global));
+    EXPECT(eo.has_flag_set(PosixFlags::Insensitive));
+    EXPECT(eo.has_flag_set(PosixFlags::MatchNotBeginOfLine));
+    EXPECT(!eo.has_flag_set(PosixFlags::Unicode));
+    EXPECT(!eo.has_flag_set(PosixFlags::Multiline));
 
     eo &= PosixFlags::Insensitive;
-    EXPECT(!(eo & PosixFlags::Global));
-    EXPECT(eo & PosixFlags::Insensitive);
-    EXPECT(!(eo & PosixFlags::Multiline));
+    EXPECT(!eo.has_flag_set(PosixFlags::Global));
+    EXPECT(eo.has_flag_set(PosixFlags::Insensitive));
+    EXPECT(!eo.has_flag_set(PosixFlags::Multiline));
 
     eo &= PosixFlags::MatchNotBeginOfLine;
-    EXPECT(!(eo & PosixFlags::Global));
-    EXPECT(!(eo & PosixFlags::Insensitive));
-    EXPECT(!(eo & PosixFlags::Multiline));
+    EXPECT(!eo.has_flag_set(PosixFlags::Global));
+    EXPECT(!eo.has_flag_set(PosixFlags::Insensitive));
+    EXPECT(!eo.has_flag_set(PosixFlags::Multiline));
 
     eo = ~PosixFlags::Insensitive;
-    EXPECT(eo & PosixFlags::Global);
-    EXPECT(!(eo & PosixFlags::Insensitive));
-    EXPECT(eo & PosixFlags::Multiline);
+    EXPECT(eo.has_flag_set(PosixFlags::Global));
+    EXPECT(!eo.has_flag_set(PosixFlags::Insensitive));
+    EXPECT(eo.has_flag_set(PosixFlags::Multiline));
 }
 
 TEST_CASE(regex_lexer)
