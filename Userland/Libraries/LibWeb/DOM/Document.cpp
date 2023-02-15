@@ -1947,7 +1947,7 @@ WebIDL::ExceptionOr<Document::PrefixAndTagName> Document::validate_qualified_nam
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
 JS::NonnullGCPtr<NodeIterator> Document::create_node_iterator(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
-    return NodeIterator::create(root, what_to_show, filter);
+    return NodeIterator::create(root, what_to_show, filter).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createtreewalker
