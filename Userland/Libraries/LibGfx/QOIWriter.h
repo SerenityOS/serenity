@@ -11,18 +11,8 @@
 
 namespace Gfx {
 
-static constexpr Array<u8, 4> qoi_magic_bytes = { 'q', 'o', 'i', 'f' };
-static constexpr Array<u8, 8> qoi_end_marker = { 0, 0, 0, 0, 0, 0, 0, 1 };
-
-enum class Colorspace {
-    sRGB,
-    Linear,
-};
-
-enum class Channels {
-    RGB,
-    RGBA,
-};
+enum class Colorspace;
+enum class Channels;
 
 class QOIWriter {
 public:
