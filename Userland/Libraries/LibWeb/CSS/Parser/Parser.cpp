@@ -1518,7 +1518,7 @@ NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     // NOTE: We create the Rule fully initialized when we return it instead.
-    DeprecatedFlyString at_rule_name = ((Token)name_ident).at_keyword();
+    auto at_rule_name = FlyString::from_utf8(((Token)name_ident).at_keyword()).release_value_but_fixme_should_propagate_errors();
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
 

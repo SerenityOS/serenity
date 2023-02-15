@@ -1,13 +1,13 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Parser/Block.h>
@@ -22,7 +22,7 @@ public:
         Qualified,
     };
 
-    static NonnullRefPtr<Rule> make_at_rule(DeprecatedFlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
+    static NonnullRefPtr<Rule> make_at_rule(FlyString name, Vector<ComponentValue> prelude, RefPtr<Block> block)
     {
         return adopt_ref(*new Rule(Type::At, move(name), move(prelude), move(block)));
     }
@@ -41,13 +41,11 @@ public:
     RefPtr<Block const> block() const { return m_block; }
     StringView at_rule_name() const { return m_at_rule_name; }
 
-    DeprecatedString to_deprecated_string() const;
-
 private:
-    Rule(Type, DeprecatedFlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);
+    Rule(Type, FlyString name, Vector<ComponentValue> prelude, RefPtr<Block>);
 
     Type const m_type;
-    DeprecatedFlyString m_at_rule_name;
+    FlyString m_at_rule_name;
     Vector<ComponentValue> m_prelude;
     RefPtr<Block> m_block;
 };

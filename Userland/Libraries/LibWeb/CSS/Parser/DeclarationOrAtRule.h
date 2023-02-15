@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,8 +37,6 @@ public:
         VERIFY(is_declaration());
         return *m_declaration;
     }
-
-    DeprecatedString to_deprecated_string() const;
 
 private:
     DeclarationType m_type;
