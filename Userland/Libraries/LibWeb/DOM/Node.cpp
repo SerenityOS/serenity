@@ -391,7 +391,9 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
         // 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
-        node->queue_tree_mutation_record(StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), nodes), nullptr, nullptr);
+        auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), nodes).release_value_but_fixme_should_propagate_errors();
+        node->queue_tree_mutation_record(added_node_list, removed_node_list, nullptr, nullptr);
     }
 
     // 5. If child is non-null, then:
@@ -452,8 +454,11 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
     }
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
-    if (!suppress_observers)
-        queue_tree_mutation_record(StaticNodeList::create(realm(), move(nodes)), StaticNodeList::create(realm(), {}), previous_sibling.ptr(), child.ptr());
+    if (!suppress_observers) {
+        auto added_node_list = StaticNodeList::create(realm(), move(nodes)).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        queue_tree_mutation_record(added_node_list, removed_node_list, previous_sibling.ptr(), child.ptr());
+    }
 
     // 9. Run the children changed steps for parent.
     children_changed();
@@ -605,7 +610,9 @@ void Node::remove(bool suppress_observers)
     if (!suppress_observers) {
         Vector<JS::Handle<Node>> removed_nodes;
         removed_nodes.append(JS::make_handle(*this));
-        parent->queue_tree_mutation_record(StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
+        auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
+        parent->queue_tree_mutation_record(added_node_list, removed_node_list, old_previous_sibling.ptr(), old_next_sibling.ptr());
     }
 
     // 21. Run the children changed steps for parent.
@@ -697,7 +704,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
     insert_before(node, reference_child, true);
 
     // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
-    queue_tree_mutation_record(StaticNodeList::create(realm(), move(nodes)), StaticNodeList::create(realm(), move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
+    auto added_node_list = TRY(StaticNodeList::create(realm(), move(nodes)));
+    auto removed_node_list = TRY(StaticNodeList::create(realm(), move(removed_nodes)));
+    queue_tree_mutation_record(added_node_list, removed_node_list, previous_sibling.ptr(), reference_child.ptr());
 
     // 15. Return child.
     return child;
@@ -1167,8 +1176,11 @@ void Node::replace_all(JS::GCPtr<Node> node)
         insert_before(*node, nullptr, true);
 
     // 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
-    if (!added_nodes.is_empty() || !removed_nodes.is_empty())
-        queue_tree_mutation_record(StaticNodeList::create(realm(), move(added_nodes)), StaticNodeList::create(realm(), move(removed_nodes)), nullptr, nullptr);
+    if (!added_nodes.is_empty() || !removed_nodes.is_empty()) {
+        auto added_node_list = StaticNodeList::create(realm(), move(added_nodes)).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
+        queue_tree_mutation_record(added_node_list, removed_node_list, nullptr, nullptr);
+    }
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all

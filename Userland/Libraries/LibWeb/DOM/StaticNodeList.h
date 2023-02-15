@@ -16,7 +16,7 @@ class StaticNodeList final : public NodeList {
     WEB_PLATFORM_OBJECT(StaticNodeList, NodeList);
 
 public:
-    static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Vector<JS::Handle<Node>>);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> create(JS::Realm&, Vector<JS::Handle<Node>>);
 
     virtual ~StaticNodeList() override;
 

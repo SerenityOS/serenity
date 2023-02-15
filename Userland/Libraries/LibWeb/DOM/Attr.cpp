@@ -82,7 +82,9 @@ void Attr::set_value(DeprecatedString value)
 void Attr::handle_attribute_changes(Element& element, DeprecatedString const& old_value, [[maybe_unused]] DeprecatedString const& new_value)
 {
     // 1. Queue a mutation record of "attributes" for element with attribute’s local name, attribute’s namespace, oldValue, « », « », null, and null.
-    element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), {}), nullptr, nullptr);
+    auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+    auto removed_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+    element.queue_mutation_record(MutationType::attributes, local_name(), namespace_uri(), old_value, added_node_list, removed_node_list, nullptr, nullptr);
 
     // FIXME: 2. If element is custom, then enqueue a custom element callback reaction with element, callback name "attributeChangedCallback", and an argument list containing attribute’s local name, oldValue, newValue, and attribute’s namespace.
 
