@@ -8,98 +8,98 @@
 
 namespace Web::CSS {
 
-DeprecatedString Display::to_deprecated_string() const
+ErrorOr<String> Display::to_string() const
 {
     StringBuilder builder;
     switch (m_type) {
     case Type::OutsideAndInside:
         switch (m_value.outside_inside.outside) {
         case Outside::Block:
-            builder.append("block"sv);
+            TRY(builder.try_append("block"sv));
             break;
         case Outside::Inline:
-            builder.append("inline"sv);
+            TRY(builder.try_append("inline"sv));
             break;
         case Outside::RunIn:
-            builder.append("run-in"sv);
+            TRY(builder.try_append("run-in"sv));
             break;
         }
-        builder.append(' ');
+        TRY(builder.try_append(' '));
         switch (m_value.outside_inside.inside) {
         case Inside::Flow:
-            builder.append("flow"sv);
+            TRY(builder.try_append("flow"sv));
             break;
         case Inside::FlowRoot:
-            builder.append("flow-root"sv);
+            TRY(builder.try_append("flow-root"sv));
             break;
         case Inside::Table:
-            builder.append("table"sv);
+            TRY(builder.try_append("table"sv));
             break;
         case Inside::Flex:
-            builder.append("flex"sv);
+            TRY(builder.try_append("flex"sv));
             break;
         case Inside::Grid:
-            builder.append("grid"sv);
+            TRY(builder.try_append("grid"sv));
             break;
         case Inside::Ruby:
-            builder.append("ruby"sv);
+            TRY(builder.try_append("ruby"sv));
             break;
         }
         if (m_value.outside_inside.list_item == ListItem::Yes)
-            builder.append(" list-item"sv);
+            TRY(builder.try_append(" list-item"sv));
         break;
     case Type::Internal:
         switch (m_value.internal) {
         case Internal::TableRowGroup:
-            builder.append("table-row-group"sv);
+            TRY(builder.try_append("table-row-group"sv));
             break;
         case Internal::TableHeaderGroup:
-            builder.append("table-header-group"sv);
+            TRY(builder.try_append("table-header-group"sv));
             break;
         case Internal::TableFooterGroup:
-            builder.append("table-footer-group"sv);
+            TRY(builder.try_append("table-footer-group"sv));
             break;
         case Internal::TableRow:
-            builder.append("table-row"sv);
+            TRY(builder.try_append("table-row"sv));
             break;
         case Internal::TableCell:
-            builder.append("table-cell"sv);
+            TRY(builder.try_append("table-cell"sv));
             break;
         case Internal::TableColumnGroup:
-            builder.append("table-column-group"sv);
+            TRY(builder.try_append("table-column-group"sv));
             break;
         case Internal::TableColumn:
-            builder.append("table-column"sv);
+            TRY(builder.try_append("table-column"sv));
             break;
         case Internal::TableCaption:
-            builder.append("table-caption"sv);
+            TRY(builder.try_append("table-caption"sv));
             break;
         case Internal::RubyBase:
-            builder.append("ruby-base"sv);
+            TRY(builder.try_append("ruby-base"sv));
             break;
         case Internal::RubyText:
-            builder.append("ruby-text"sv);
+            TRY(builder.try_append("ruby-text"sv));
             break;
         case Internal::RubyBaseContainer:
-            builder.append("ruby-base-container"sv);
+            TRY(builder.try_append("ruby-base-container"sv));
             break;
         case Internal::RubyTextContainer:
-            builder.append("ruby-text-container"sv);
+            TRY(builder.try_append("ruby-text-container"sv));
             break;
         }
         break;
     case Type::Box:
         switch (m_value.box) {
         case Box::Contents:
-            builder.append("contents"sv);
+            TRY(builder.try_append("contents"sv));
             break;
         case Box::None:
-            builder.append("none"sv);
+            TRY(builder.try_append("none"sv));
             break;
         }
         break;
     };
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 }
