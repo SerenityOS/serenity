@@ -697,6 +697,7 @@ TEST_CASE(ECMA262_match)
         { "^[a-sy-z]$"sv, "b"sv, true, ECMAScriptFlags::Insensitive },
         { "^[a-sy-z]$"sv, "y"sv, true, ECMAScriptFlags::Insensitive },
         { "^[a-sy-z]$"sv, "u"sv, false, ECMAScriptFlags::Insensitive },
+        { "."sv, "\n\r\u2028\u2029"sv, false }, // Dot should not match any of CR/LF/LS/PS in ECMA262 mode without DotAll.
     };
     // clang-format on
 
