@@ -249,7 +249,7 @@ DeprecatedString RegExpObject::escape_regexp_pattern() const
     if (m_pattern.is_empty())
         return "(?:)";
     // FIXME: Check the 'u' and 'v' flags and escape accordingly
-    return m_pattern.replace("\n"sv, "\\n"sv, ReplaceMode::All).replace("\r"sv, "\\r"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\\u2028"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029"sv, ReplaceMode::All).replace("/"sv, "\\/"sv, ReplaceMode::All);
+    return m_pattern.replace("\n"sv, "\\n"sv, ReplaceMode::All).replace("\r"sv, "\\r"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\\u2028"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029"sv, ReplaceMode::All);
 }
 
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
