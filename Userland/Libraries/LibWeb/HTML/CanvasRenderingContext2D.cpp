@@ -24,9 +24,9 @@
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<CanvasRenderingContext2D> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasRenderingContext2D>> CanvasRenderingContext2D::create(JS::Realm& realm, HTMLCanvasElement& element)
 {
-    return realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CanvasRenderingContext2D>(realm, realm, element));
 }
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(JS::Realm& realm, HTMLCanvasElement& element)
