@@ -251,7 +251,7 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
                 return true;
             break;
         case CharacterCompareType::Char:
-            if (!current_lhs_inversion_state() && range_contains(pair.value))
+            if (current_lhs_inversion_state() ^ range_contains(pair.value))
                 return true;
             break;
         case CharacterCompareType::String:
@@ -259,12 +259,12 @@ static bool has_overlap(Vector<CompareTypeAndValuePair> const& lhs, Vector<Compa
             //        Just bail out to avoid false positives.
             return true;
         case CharacterCompareType::CharClass:
-            if (!current_lhs_inversion_state() && char_class_contains(static_cast<CharClass>(pair.value)))
+            if (current_lhs_inversion_state() ^ char_class_contains(static_cast<CharClass>(pair.value)))
                 return true;
             break;
         case CharacterCompareType::CharRange: {
             auto range = CharRange(pair.value);
-            if (!current_lhs_inversion_state() && range_contains(range))
+            if (current_lhs_inversion_state() ^ range_contains(range))
                 return true;
             break;
         }

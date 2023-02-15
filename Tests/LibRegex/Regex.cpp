@@ -984,6 +984,8 @@ TEST_CASE(optimizer_atomic_groups)
         Tuple { "(1+)0"sv, "10"sv, true },
         // Rewrite should not skip over first required iteration of <x>+.
         Tuple { "a+"sv, ""sv, false },
+        // 'y' and [^x] have an overlap ('y'), the loop should not be rewritten here.
+        Tuple { "[^x]+y"sv, "ay"sv, true },
     };
 
     for (auto& test : tests) {
