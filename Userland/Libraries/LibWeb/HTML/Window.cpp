@@ -86,9 +86,9 @@ private:
     u32 m_handle { 0 };
 };
 
-JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Window>> Window::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Window>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Window>(realm, realm));
 }
 
 Window::Window(JS::Realm& realm)
