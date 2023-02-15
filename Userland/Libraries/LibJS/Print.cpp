@@ -66,6 +66,38 @@
 
 namespace {
 
+static ErrorOr<String> escape_for_string_literal(StringView string)
+{
+    StringBuilder builder;
+    for (auto byte : string.bytes()) {
+        switch (byte) {
+        case '\r':
+            TRY(builder.try_append("\\r"sv));
+            continue;
+        case '\v':
+            TRY(builder.try_append("\\v"sv));
+            continue;
+        case '\f':
+            TRY(builder.try_append("\\f"sv));
+            continue;
+        case '\b':
+            TRY(builder.try_append("\\b"sv));
+            continue;
+        case '\n':
+            TRY(builder.try_append("\\n"sv));
+            continue;
+        case '\\':
+            TRY(builder.try_append("\\\\"sv));
+            continue;
+        default:
+            TRY(builder.try_append(byte));
+            continue;
+        }
+    }
+
+    return builder.to_string();
+}
+
 ErrorOr<void> print_value(JS::PrintContext&, JS::Value value, HashTable<JS::Object*>& seen_objects);
 
 template<typename T>
@@ -1014,11 +1046,18 @@ ErrorOr<void> print_value(JS::PrintContext& print_context, JS::Value value, Hash
         TRY(js_out(print_context, "\033[33;1m"));
     else if (value.is_undefined())
         TRY(js_out(print_context, "\033[34;1m"));
+
     if (value.is_string())
         TRY(js_out(print_context, "\""));
     else if (value.is_negative_zero())
         TRY(js_out(print_context, "-"));
-    TRY(js_out(print_context, "{}", TRY(value.to_string_without_side_effects())));
+
+    auto contents = TRY(value.to_string_without_side_effects());
+    if (value.is_string())
+        TRY(js_out(print_context, "{}", TRY(escape_for_string_literal(contents))));
+    else
+        TRY(js_out(print_context, "{}", contents));
+
     if (value.is_string())
         TRY(js_out(print_context, "\""));
     TRY(js_out(print_context, "\033[0m"));
