@@ -21,7 +21,7 @@ class Path2D final
     WEB_PLATFORM_OBJECT(Path2D, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Path2D> construct_impl(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Path2D>> construct_impl(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path);
 
     virtual ~Path2D() override;
 
