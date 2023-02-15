@@ -384,6 +384,34 @@ DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
     return builder.to_deprecated_string();
 }
 
+// This function will return the position of the previous grapheme cluster
+// break, relative to the cursor, for "correct looking" parsing of unicode based
+// on grapheme cluster boundary algorithm.
+size_t TextDocument::get_previous_grapheme_cluster_boundary(TextPosition const& cursor) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto const& line = this->line(cursor.line());
+
+    auto index = Unicode::previous_grapheme_segmentation_boundary(line.view(), cursor.column());
+    return index.value_or(cursor.column() - 1);
+}
+
+// This function will return the position of the next grapheme cluster break,
+// relative to the cursor, for "correct looking" parsing of unicode based on
+// grapheme cluster boundary algorithm.
+size_t TextDocument::get_next_grapheme_cluster_boundary(TextPosition const& cursor) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto const& line = this->line(cursor.line());
+
+    auto index = Unicode::next_grapheme_segmentation_boundary(line.view(), cursor.column());
+    return index.value_or(cursor.column() + 1);
+}
+
 u32 TextDocument::code_point_at(TextPosition const& position) const
 {
     VERIFY(position.line() < line_count());
