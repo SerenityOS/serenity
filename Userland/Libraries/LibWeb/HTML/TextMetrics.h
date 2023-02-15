@@ -14,7 +14,7 @@ class TextMetrics : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextMetrics, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<TextMetrics> create(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextMetrics>> create(JS::Realm&);
 
     virtual ~TextMetrics() override;
 

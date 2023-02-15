@@ -377,7 +377,7 @@ JS::NonnullGCPtr<TextMetrics> CanvasRenderingContext2D::measure_text(DeprecatedS
     // TextMetrics object with members behaving as described in the following
     // list:
     auto prepared_text = prepare_text(text);
-    auto metrics = TextMetrics::create(realm());
+    auto metrics = TextMetrics::create(realm()).release_value_but_fixme_should_propagate_errors();
     // FIXME: Use the font that was used to create the glyphs in prepared_text.
     auto& font = Platform::FontPlugin::the().default_font();
 
