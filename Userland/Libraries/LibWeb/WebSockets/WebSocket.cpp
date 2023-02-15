@@ -222,7 +222,7 @@ void WebSocket::on_close(u16 code, DeprecatedString reason, bool was_clean)
     event_init.was_clean = was_clean;
     event_init.code = code;
     event_init.reason = move(reason);
-    dispatch_event(*HTML::CloseEvent::create(realm(), HTML::EventNames::close, event_init));
+    dispatch_event(HTML::CloseEvent::create(realm(), HTML::EventNames::close, event_init).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
