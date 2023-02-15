@@ -2058,7 +2058,7 @@ CSS::StyleSheetList const& Document::style_sheets() const
 JS::NonnullGCPtr<HTML::History> Document::history()
 {
     if (!m_history)
-        m_history = HTML::History::create(realm(), *this);
+        m_history = HTML::History::create(realm(), *this).release_value_but_fixme_should_propagate_errors();
     return *m_history;
 }
 
