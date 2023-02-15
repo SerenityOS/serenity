@@ -685,7 +685,7 @@ struct elfcore_procinfo {
 };
 
 /*
- * XXX - these _KERNEL items aren't part of the ABI!
+ * FIXME - these _KERNEL items aren't part of the ABI!
  */
 #if defined(_KERNEL) || defined(_DYN_LOADER)
 
