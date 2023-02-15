@@ -27,24 +27,24 @@ HashTable<Range*>& Range::live_ranges()
     return ranges;
 }
 
-JS::NonnullGCPtr<Range> Range::create(HTML::Window& window)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> Range::create(HTML::Window& window)
 {
     return Range::create(window.associated_document());
 }
 
-JS::NonnullGCPtr<Range> Range::create(Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> Range::create(Document& document)
 {
     auto& realm = document.realm();
-    return realm.heap().allocate<Range>(realm, document).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Range>(realm, document));
 }
 
-JS::NonnullGCPtr<Range> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> Range::create(Node& start_container, u32 start_offset, Node& end_container, u32 end_offset)
 {
     auto& realm = start_container.realm();
-    return realm.heap().allocate<Range>(realm, start_container, start_offset, end_container, end_offset).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Range>(realm, start_container, start_offset, end_container, end_offset));
 }
 
-JS::NonnullGCPtr<Range> Range::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Range>> Range::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     return Range::create(window);
@@ -715,7 +715,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (original start node, original start offset) and whose end is (first partially contained child, first partially contained child’s length).
-        auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
+        auto subrange = TRY(Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length()));
 
         // 4. Let subfragment be the result of extracting subrange.
         auto subfragment = TRY(subrange->extract());
@@ -753,7 +753,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
         TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (last partially contained child, 0) and whose end is (original end node, original end offset).
-        auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
+        auto subrange = TRY(Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset));
 
         // 4. Let subfragment be the result of extracting subrange.
         auto subfragment = TRY(subrange->extract());
@@ -1016,7 +1016,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (original start node, original start offset) and whose end is (first partially contained child, first partially contained child’s length).
-        auto subrange = Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length());
+        auto subrange = TRY(Range::create(original_start_node, original_start_offset, *first_partially_contained_child, first_partially_contained_child->length()));
 
         // 4. Let subfragment be the result of cloning the contents of subrange.
         auto subfragment = TRY(subrange->clone_the_contents());
@@ -1055,7 +1055,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
         TRY(fragment->append_child(clone));
 
         // 3. Let subrange be a new live range whose start is (last partially contained child, 0) and whose end is (original end node, original end offset).
-        auto subrange = Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset);
+        auto subrange = TRY(Range::create(*last_partially_contained_child, 0, original_end_node, original_end_offset));
 
         // 4. Let subfragment be the result of cloning the contents of subrange.
         auto subfragment = TRY(subrange->clone_the_contents());
