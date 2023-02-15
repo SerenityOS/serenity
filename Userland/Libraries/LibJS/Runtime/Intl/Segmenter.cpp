@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/BinarySearch.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Segmenter.h>
@@ -92,35 +92,45 @@ ThrowCompletionOr<NonnullGCPtr<Object>> create_segment_data_object(VM& vm, Segme
     return result;
 }
 
+static Optional<size_t> find_previous_boundary_index(Utf16View const& string, size_t index, Segmenter::SegmenterGranularity granularity)
+{
+    switch (granularity) {
+    case Segmenter::SegmenterGranularity::Grapheme:
+        return Unicode::previous_grapheme_segmentation_boundary(string, index);
+    case Segmenter::SegmenterGranularity::Word:
+        return Unicode::previous_word_segmentation_boundary(string, index);
+    case Segmenter::SegmenterGranularity::Sentence:
+        return Unicode::previous_sentence_segmentation_boundary(string, index);
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+static Optional<size_t> find_next_boundary_index(Utf16View const& string, size_t index, Segmenter::SegmenterGranularity granularity)
+{
+    switch (granularity) {
+    case Segmenter::SegmenterGranularity::Grapheme:
+        return Unicode::next_grapheme_segmentation_boundary(string, index);
+    case Segmenter::SegmenterGranularity::Word:
+        return Unicode::next_word_segmentation_boundary(string, index);
+    case Segmenter::SegmenterGranularity::Sentence:
+        return Unicode::next_sentence_segmentation_boundary(string, index);
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 // 18.8.1 FindBoundary ( segmenter, string, startIndex, direction ), https://tc39.es/ecma402/#sec-findboundary
-double find_boundary(Segmenter const& segmenter, Utf16View const& string, double start_index, Direction direction, Optional<Vector<size_t>>& boundaries_cache)
+double find_boundary(Segmenter const& segmenter, Utf16View const& string, double start_index, Direction direction)
 {
     // 1. Let locale be segmenter.[[Locale]].
-    auto const& locale = segmenter.locale();
+    // FIXME: Support locale-sensitive boundaries
 
     // 2. Let granularity be segmenter.[[SegmenterGranularity]].
     auto granularity = segmenter.segmenter_granularity();
 
     // 3. Let len be the length of string.
     auto length = string.length_in_code_units();
-
-    // Non-standard, populate boundaries cache
-    if (!boundaries_cache.has_value()) {
-        switch (granularity) {
-        case Segmenter::SegmenterGranularity::Grapheme:
-            boundaries_cache = Unicode::find_grapheme_segmentation_boundaries(string);
-            break;
-        case Segmenter::SegmenterGranularity::Word:
-            boundaries_cache = Unicode::find_word_segmentation_boundaries(string);
-            break;
-        case Segmenter::SegmenterGranularity::Sentence:
-            boundaries_cache = Unicode::find_sentence_segmentation_boundaries(string);
-            break;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    }
-    (void)locale; // TODO: Support locale-sensitive boundaries
 
     // 4. If direction is before, then
     if (direction == Direction::Before) {
@@ -130,12 +140,11 @@ double find_boundary(Segmenter const& segmenter, Utf16View const& string, double
         VERIFY(start_index < length);
 
         // c. Search string for the last segmentation boundary that is preceded by at most startIndex code units from the beginning, using locale locale and text element granularity granularity.
-        size_t boundary_index;
-        binary_search(*boundaries_cache, start_index, &boundary_index);
+        auto boundary_index = find_previous_boundary_index(string, static_cast<size_t>(start_index) + 1, granularity);
 
         // d. If a boundary is found, return the count of code units in string preceding it.
-        if (boundary_index < boundaries_cache->size())
-            return boundaries_cache->at(boundary_index);
+        if (boundary_index.has_value())
+            return static_cast<double>(*boundary_index);
 
         // e. Return 0.
         return 0;
@@ -149,13 +158,11 @@ double find_boundary(Segmenter const& segmenter, Utf16View const& string, double
         return INFINITY;
 
     // 7. Search string for the first segmentation boundary that follows the code unit at index startIndex, using locale locale and text element granularity granularity.
-    size_t boundary_index;
-    binary_search(*boundaries_cache, start_index, &boundary_index);
-    ++boundary_index;
+    auto boundary_index = find_next_boundary_index(string, static_cast<size_t>(start_index), granularity);
 
     // 8. If a boundary is found, return the count of code units in string preceding it.
-    if (boundary_index < boundaries_cache->size())
-        return boundaries_cache->at(boundary_index);
+    if (boundary_index.has_value())
+        return static_cast<double>(*boundary_index);
 
     // 9. Return len.
     return length;
