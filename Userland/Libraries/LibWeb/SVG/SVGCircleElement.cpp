@@ -84,8 +84,8 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::cx() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_center_x.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_center_x.value_or(0));
+    auto base_length = SVGLength::create(realm(), 0, m_center_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_center_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
     return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
@@ -94,8 +94,8 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::cy() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_center_y.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_center_y.value_or(0));
+    auto base_length = SVGLength::create(realm(), 0, m_center_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_center_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
     return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
@@ -104,8 +104,8 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGCircleElement::r() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_radius.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_radius.value_or(0));
+    auto base_length = SVGLength::create(realm(), 0, m_radius.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_radius.value_or(0)).release_value_but_fixme_should_propagate_errors();
     return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
