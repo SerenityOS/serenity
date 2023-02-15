@@ -566,10 +566,7 @@ ErrorOr<FlatPtr> Process::sys$allocate_tls(Userspace<char const*> initial_data, 
 
         TRY(main_thread->make_thread_specific_region({}));
 
-#if ARCH(X86_64)
-        MSR fs_base_msr(MSR_FS_BASE);
-        fs_base_msr.set(main_thread->thread_specific_data().get());
-#endif
+        Processor::set_thread_specific_data(main_thread->thread_specific_data());
 
         return m_master_tls_region.unsafe_ptr()->vaddr().get();
     });

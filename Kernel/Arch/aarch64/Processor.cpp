@@ -454,6 +454,8 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     to_thread->set_cpu(Processor::current().id());
 
+    Processor::set_thread_specific_data(to_thread->thread_specific_data());
+
     auto in_critical = to_thread->saved_critical();
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
@@ -464,6 +466,11 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 StringView Processor::platform_string()
 {
     return "aarch64"sv;
+}
+
+void Processor::set_thread_specific_data(VirtualAddress thread_specific_data)
+{
+    Aarch64::Asm::set_tpidr_el0(thread_specific_data.get());
 }
 
 }
