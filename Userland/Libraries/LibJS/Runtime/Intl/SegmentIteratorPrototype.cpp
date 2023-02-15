@@ -50,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentIteratorPrototype::next)
     auto start_index = iterator->iterated_string_next_segment_code_unit_index();
 
     // 6. Let endIndex be ! FindBoundary(segmenter, string, startIndex, after).
-    auto end_index = find_boundary(segmenter, string, start_index, Direction::After, iterator->segments().boundaries_cache());
+    auto end_index = find_boundary(segmenter, string, start_index, Direction::After);
 
     // 7. If endIndex is not finite, then
     if (!Value(end_index).is_finite_number()) {
