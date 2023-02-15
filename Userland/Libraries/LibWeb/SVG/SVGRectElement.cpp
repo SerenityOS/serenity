@@ -168,7 +168,7 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::x() const
     // FIXME: Create a proper animated value when animations are supported.
     auto base_length = SVGLength::create(realm(), 0, m_x.value_or(0));
     auto anim_length = SVGLength::create(realm(), 0, m_x.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementYAttribute
@@ -178,7 +178,7 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::y() const
     // FIXME: Create a proper animated value when animations are supported.
     auto base_length = SVGLength::create(realm(), 0, m_y.value_or(0));
     auto anim_length = SVGLength::create(realm(), 0, m_y.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementWidthAttribute
@@ -188,7 +188,7 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::width() const
     // FIXME: Create a proper animated value when animations are supported.
     auto base_length = SVGLength::create(realm(), 0, m_width.value_or(0));
     auto anim_length = SVGLength::create(realm(), 0, m_width.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementHeightAttribute
@@ -198,7 +198,7 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::height() const
     // FIXME: Create a proper animated value when animations are supported.
     auto base_length = SVGLength::create(realm(), 0, m_height.value_or(0));
     auto anim_length = SVGLength::create(realm(), 0, m_height.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementRXAttribute
@@ -208,7 +208,7 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::rx() const
     // FIXME: Create a proper animated value when animations are supported.
     auto base_length = SVGLength::create(realm(), 0, m_radius_x.value_or(0));
     auto anim_length = SVGLength::create(realm(), 0, m_radius_x.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#RectElementRYAttribute
@@ -218,7 +218,7 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGRectElement::ry() const
     // FIXME: Create a proper animated value when animations are supported.
     auto base_length = SVGLength::create(realm(), 0, m_radius_y.value_or(0));
     auto anim_length = SVGLength::create(realm(), 0, m_radius_y.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 }
