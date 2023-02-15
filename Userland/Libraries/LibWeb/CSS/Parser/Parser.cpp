@@ -1395,7 +1395,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_deprecated_string() }
+                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() }
             };
         }
     }
@@ -1856,7 +1856,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
     // NOTE: We create a fully-initialized Declaration just before returning it instead.
-    DeprecatedFlyString declaration_name = ((Token)token).ident();
+    auto declaration_name = FlyString::from_utf8(((Token)token).ident()).release_value_but_fixme_should_propagate_errors();
     Vector<ComponentValue> declaration_values;
     Important declaration_important = Important::No;
 
