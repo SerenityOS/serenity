@@ -16,7 +16,7 @@ class NodeIterator final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(NodeIterator, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<NodeIterator> create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeIterator>> create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter>);
 
     virtual ~NodeIterator() override;
 
