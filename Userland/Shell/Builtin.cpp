@@ -6,6 +6,7 @@
 
 #include "AST.h"
 #include "Formatter.h"
+#include "PosixParser.h"
 #include "Shell.h"
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
@@ -32,10 +33,17 @@ int Shell::builtin_noop(int, char const**)
 
 int Shell::builtin_dump(int argc, char const** argv)
 {
-    if (argc != 2)
+    bool posix = false;
+    StringView source;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(source, "Shell code to parse and dump", "source");
+    parser.add_option(posix, "Use the POSIX parser", "posix", 'p');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    Parser { StringView { argv[1], strlen(argv[1]) } }.parse()->dump(0);
+    (posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0);
     return 0;
 }
 
