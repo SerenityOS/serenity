@@ -403,9 +403,9 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
             auto c = get_pixel(i, j + 1);
             auto d = get_pixel(i + 1, j + 1);
 
-            auto e = a.interpolate(b, u);
-            auto f = c.interpolate(d, u);
-            auto color = e.interpolate(f, v);
+            auto e = a.mixed_with(b, u);
+            auto f = c.mixed_with(d, u);
+            auto color = e.mixed_with(f, v);
             new_bitmap->set_pixel(x, y, color);
         }
     }
@@ -421,7 +421,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
 
         auto a = get_pixel(i, old_bottom_y);
         auto b = get_pixel(i + 1, old_bottom_y);
-        auto color = a.interpolate(b, u);
+        auto color = a.mixed_with(b, u);
         new_bitmap->set_pixel(x, new_bottom_y, color);
     }
 
@@ -437,7 +437,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(float sx, float sy) const
         auto c = get_pixel(old_right_x, j);
         auto d = get_pixel(old_right_x, j + 1);
 
-        auto color = c.interpolate(d, v);
+        auto color = c.mixed_with(d, v);
         new_bitmap->set_pixel(new_right_x, y, color);
     }
 
