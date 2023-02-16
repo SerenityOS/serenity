@@ -16,7 +16,7 @@ ErrorOr<NonnullRefPtr<ProgressWindow>> ProgressWindow::try_create(StringView tit
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
     auto label = TRY(main_widget->try_add<GUI::Label>("Analyzing storage space..."));
     label->set_fixed_height(22);
