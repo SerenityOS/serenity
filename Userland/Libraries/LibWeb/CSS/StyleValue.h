@@ -480,7 +480,7 @@ public:
         NonnullRefPtr<StyleValue> origin,
         NonnullRefPtr<StyleValue> clip)
     {
-        return adopt_ref(*new BackgroundStyleValue(color, image, position, size, repeat, attachment, origin, clip));
+        return adopt_ref(*new BackgroundStyleValue(move(color), move(image), move(position), move(size), move(repeat), move(attachment), move(origin), move(clip)));
     }
     virtual ~BackgroundStyleValue() override = default;
 
@@ -590,7 +590,7 @@ public:
         NonnullRefPtr<StyleValue> border_style,
         NonnullRefPtr<StyleValue> border_color)
     {
-        return adopt_ref(*new BorderStyleValue(border_width, border_style, border_color));
+        return adopt_ref(*new BorderStyleValue(move(border_width), move(border_style), move(border_color)));
     }
     virtual ~BorderStyleValue() override = default;
 
@@ -608,7 +608,7 @@ private:
         NonnullRefPtr<StyleValue> border_style,
         NonnullRefPtr<StyleValue> border_color)
         : StyleValueWithDefaultOperators(Type::Border)
-        , m_properties { .border_width = border_width, .border_style = border_style, .border_color = border_color }
+        , m_properties { .border_width = move(border_width), .border_style = move(border_style), .border_color = move(border_color) }
     {
     }
 
@@ -657,7 +657,7 @@ class BorderRadiusShorthandStyleValue final : public StyleValueWithDefaultOperat
 public:
     static NonnullRefPtr<BorderRadiusShorthandStyleValue> create(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
     {
-        return adopt_ref(*new BorderRadiusShorthandStyleValue(top_left, top_right, bottom_right, bottom_left));
+        return adopt_ref(*new BorderRadiusShorthandStyleValue(move(top_left), move(top_right), move(bottom_right), move(bottom_left)));
     }
     virtual ~BorderRadiusShorthandStyleValue() override = default;
 
@@ -673,7 +673,7 @@ public:
 private:
     BorderRadiusShorthandStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
         : StyleValueWithDefaultOperators(Type::BorderRadiusShorthand)
-        , m_properties { .top_left = top_left, .top_right = top_right, .bottom_right = bottom_right, .bottom_left = bottom_left }
+        , m_properties { .top_left = move(top_left), .top_right = move(top_right), .bottom_right = move(bottom_right), .bottom_left = move(bottom_left) }
     {
     }
 
@@ -981,7 +981,7 @@ public:
         NonnullRefPtr<StyleValue> shrink,
         NonnullRefPtr<StyleValue> basis)
     {
-        return adopt_ref(*new FlexStyleValue(grow, shrink, basis));
+        return adopt_ref(*new FlexStyleValue(move(grow), move(shrink), move(basis)));
     }
     virtual ~FlexStyleValue() override = default;
 
@@ -999,7 +999,7 @@ private:
         NonnullRefPtr<StyleValue> shrink,
         NonnullRefPtr<StyleValue> basis)
         : StyleValueWithDefaultOperators(Type::Flex)
-        , m_properties { .grow = grow, .shrink = shrink, .basis = basis }
+        , m_properties { .grow = move(grow), .shrink = move(shrink), .basis = move(basis) }
     {
     }
 
@@ -1015,7 +1015,7 @@ class FlexFlowStyleValue final : public StyleValueWithDefaultOperators<FlexFlowS
 public:
     static NonnullRefPtr<FlexFlowStyleValue> create(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
     {
-        return adopt_ref(*new FlexFlowStyleValue(flex_direction, flex_wrap));
+        return adopt_ref(*new FlexFlowStyleValue(move(flex_direction), move(flex_wrap)));
     }
     virtual ~FlexFlowStyleValue() override = default;
 
@@ -1029,7 +1029,7 @@ public:
 private:
     FlexFlowStyleValue(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
         : StyleValueWithDefaultOperators(Type::FlexFlow)
-        , m_properties { .flex_direction = flex_direction, .flex_wrap = flex_wrap }
+        , m_properties { .flex_direction = move(flex_direction), .flex_wrap = move(flex_wrap) }
     {
     }
 
@@ -1042,7 +1042,10 @@ private:
 
 class FontStyleValue final : public StyleValueWithDefaultOperators<FontStyleValue> {
 public:
-    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families) { return adopt_ref(*new FontStyleValue(font_stretch, font_style, font_weight, font_size, line_height, font_families)); }
+    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
+    {
+        return adopt_ref(*new FontStyleValue(move(font_stretch), move(font_style), move(font_weight), move(font_size), move(line_height), move(font_families)));
+    }
     virtual ~FontStyleValue() override = default;
 
     NonnullRefPtr<StyleValue> font_stretch() const { return m_properties.font_stretch; }
@@ -1059,7 +1062,7 @@ public:
 private:
     FontStyleValue(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
         : StyleValueWithDefaultOperators(Type::Font)
-        , m_properties { .font_stretch = font_stretch, .font_style = font_style, .font_weight = font_weight, .font_size = font_size, .line_height = line_height, .font_families = font_families }
+        , m_properties { .font_stretch = move(font_stretch), .font_style = move(font_style), .font_weight = move(font_weight), .font_size = move(font_size), .line_height = move(line_height), .font_families = move(font_families) }
     {
     }
 
@@ -1143,7 +1146,7 @@ class GridTrackPlacementShorthandStyleValue final : public StyleValueWithDefault
 public:
     static NonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(NonnullRefPtr<GridTrackPlacementStyleValue> start, NonnullRefPtr<GridTrackPlacementStyleValue> end)
     {
-        return adopt_ref(*new GridTrackPlacementShorthandStyleValue(start, end));
+        return adopt_ref(*new GridTrackPlacementShorthandStyleValue(move(start), move(end)));
     }
     static NonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(GridTrackPlacement start)
     {
@@ -1161,7 +1164,7 @@ public:
 private:
     GridTrackPlacementShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> start, NonnullRefPtr<GridTrackPlacementStyleValue> end)
         : StyleValueWithDefaultOperators(Type::GridTrackPlacementShorthand)
-        , m_properties { .start = start, .end = end }
+        , m_properties { .start = move(start), .end = move(end) }
     {
     }
 
@@ -1196,7 +1199,7 @@ public:
 private:
     GridAreaShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
         : StyleValueWithDefaultOperators(Type::GridAreaShorthand)
-        , m_properties { .row_start = row_start, .column_start = column_start, .row_end = row_end, .column_end = column_end }
+        , m_properties { .row_start = move(row_start), .column_start = move(column_start), .row_end = move(row_end), .column_end = move(column_end) }
     {
     }
 
@@ -1579,7 +1582,7 @@ public:
         NonnullRefPtr<StyleValue> image,
         NonnullRefPtr<StyleValue> style_type)
     {
-        return adopt_ref(*new ListStyleStyleValue(position, image, style_type));
+        return adopt_ref(*new ListStyleStyleValue(move(position), move(image), move(style_type)));
     }
     virtual ~ListStyleStyleValue() override = default;
 
@@ -1597,7 +1600,7 @@ private:
         NonnullRefPtr<StyleValue> image,
         NonnullRefPtr<StyleValue> style_type)
         : StyleValueWithDefaultOperators(Type::ListStyle)
-        , m_properties { .position = position, .image = image, .style_type = style_type }
+        , m_properties { .position = move(position), .image = move(image), .style_type = move(style_type) }
     {
     }
 
@@ -1653,7 +1656,7 @@ class OverflowStyleValue final : public StyleValueWithDefaultOperators<OverflowS
 public:
     static NonnullRefPtr<OverflowStyleValue> create(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
     {
-        return adopt_ref(*new OverflowStyleValue(overflow_x, overflow_y));
+        return adopt_ref(*new OverflowStyleValue(move(overflow_x), move(overflow_y)));
     }
     virtual ~OverflowStyleValue() override = default;
 
@@ -1667,7 +1670,7 @@ public:
 private:
     OverflowStyleValue(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
         : StyleValueWithDefaultOperators(Type::Overflow)
-        , m_properties { .overflow_x = overflow_x, .overflow_y = overflow_y }
+        , m_properties { .overflow_x = move(overflow_x), .overflow_y = move(overflow_y) }
     {
     }
 
@@ -1830,7 +1833,7 @@ public:
         NonnullRefPtr<StyleValue> style,
         NonnullRefPtr<StyleValue> color)
     {
-        return adopt_ref(*new TextDecorationStyleValue(line, thickness, style, color));
+        return adopt_ref(*new TextDecorationStyleValue(move(line), move(thickness), move(style), move(color)));
     }
     virtual ~TextDecorationStyleValue() override = default;
 
@@ -1850,7 +1853,7 @@ private:
         NonnullRefPtr<StyleValue> style,
         NonnullRefPtr<StyleValue> color)
         : StyleValueWithDefaultOperators(Type::TextDecoration)
-        , m_properties { .line = line, .thickness = thickness, .style = style, .color = color }
+        , m_properties { .line = move(line), .thickness = move(thickness), .style = move(style), .color = move(color) }
     {
     }
 

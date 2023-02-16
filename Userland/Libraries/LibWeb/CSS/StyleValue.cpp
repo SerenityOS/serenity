@@ -300,7 +300,17 @@ BackgroundStyleValue::BackgroundStyleValue(
     NonnullRefPtr<StyleValue> origin,
     NonnullRefPtr<StyleValue> clip)
     : StyleValueWithDefaultOperators(Type::Background)
-    , m_properties { .color = color, .image = image, .position = position, .size = size, .repeat = repeat, .attachment = attachment, .origin = origin, .clip = clip, .layer_count = 0 }
+    , m_properties {
+        .color = move(color),
+        .image = move(image),
+        .position = move(position),
+        .size = move(size),
+        .repeat = move(repeat),
+        .attachment = move(attachment),
+        .origin = move(origin),
+        .clip = move(clip),
+        .layer_count = 0
+    }
 {
     auto layer_count = [](auto style_value) -> size_t {
         if (style_value->is_value_list())
