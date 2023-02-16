@@ -53,7 +53,7 @@ PropertiesWindow::PropertiesWindow(DeprecatedString const& path, Window* parent_
 ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 {
     auto main_widget = TRY(set_main_widget<GUI::Widget>());
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4, 6));
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4, 6));
     main_widget->set_fill_with_background_color(true);
 
     auto tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
@@ -149,7 +149,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     TRY(setup_permission_checkboxes(*others_read, *others_write, *others_execute, { S_IROTH, S_IWOTH, S_IXOTH }, m_mode));
 
     auto button_widget = TRY(main_widget->try_add<GUI::Widget>());
-    (void)TRY(button_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5));
+    TRY(button_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5));
     button_widget->set_fixed_height(22);
 
     TRY(button_widget->add_spacer());

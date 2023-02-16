@@ -34,13 +34,13 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4, 6));
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4, 6));
 
     window->m_tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
 
     auto button_container = TRY(main_widget->try_add<GUI::Widget>());
     button_container->set_preferred_size({ SpecialDimension::Grow, SpecialDimension::Fit });
-    (void)TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 6));
+    TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 6));
 
     if (show_defaults_button == ShowDefaultsButton::Yes) {
         window->m_reset_button = TRY(button_container->try_add<GUI::DialogButton>(TRY(String::from_utf8("Defaults"sv))));

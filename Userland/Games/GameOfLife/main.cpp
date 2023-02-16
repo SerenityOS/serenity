@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     main_toolbar.layout()->set_margins({ 0, 6 });
 
     auto& board_widget_container = *main_widget->find_descendant_of_type_named<GUI::Widget>("board_widget_container");
-    (void)TRY(board_widget_container.try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0));
+    TRY(board_widget_container.try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0));
     auto board_widget = TRY(board_widget_container.try_add<BoardWidget>(board_rows, board_columns));
     board_widget->randomize_cells();
 

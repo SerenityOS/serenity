@@ -358,7 +358,7 @@ ErrorOr<int> run_in_desktop_mode()
     window->set_has_alpha_channel(true);
 
     auto desktop_widget = TRY(window->set_main_widget<FileManager::DesktopWidget>());
-    (void)TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
     auto directory_view = TRY(desktop_widget->try_add<DirectoryView>(DirectoryView::Mode::Desktop));
     directory_view->set_name("directory_view");

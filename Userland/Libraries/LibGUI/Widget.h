@@ -83,19 +83,18 @@ public:
     void set_layout(NonnullRefPtr<Layout>);
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> try_set_layout(Args&&... args)
+    ErrorOr<void> try_set_layout(Args&&... args)
     {
         auto layout = TRY(T::try_create(forward<Args>(args)...));
         set_layout(*layout);
-        return layout;
+        return {};
     }
 
     template<class T, class... Args>
-    inline T& set_layout(Args&&... args)
+    inline void set_layout(Args&&... args)
     {
         auto layout = T::construct(forward<Args>(args)...);
         set_layout(*layout);
-        return layout;
     }
 
     UISize min_size() const { return m_min_size; }
