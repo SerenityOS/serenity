@@ -20,6 +20,7 @@ const u8 bmp_header_size = 14;
 const u32 color_palette_limit = 1024;
 
 // Compression flags
+// https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/4e588f70-bd92-4a6f-b77f-35d0feaf7a57
 struct Compression {
     enum : u32 {
         RGB = 0,
@@ -89,6 +90,33 @@ struct Formatter<Gfx::Endpoint<T>> : Formatter<StringView> {
 
 namespace Gfx {
 
+// CALIBRATED_RGB, sRGB, WINDOWS_COLOR_SPACE values are from
+// https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/eb4bbd50-b3ce-4917-895c-be31f214797f
+// PROFILE_LINKED, PROFILE_EMBEDDED values are from
+// https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/3c289fe1-c42e-42f6-b125-4b5fc49a2b20
+struct ColorSpace {
+    enum : u32 {
+        // "This value implies that endpoints and gamma values are given in the appropriate fields" in DIBV4.
+        // The only valid value in v4 bmps.
+        CALIBRATED_RGB = 0,
+
+        // "Specifies that the bitmap is in sRGB color space."
+        sRGB = 0x73524742, // 'sRGB'
+
+        // "This value indicates that the bitmap is in the system default color space, sRGB."
+        WINDOWS_COLOR_SPACE = 0x57696E20, // 'Win '
+
+        // "This value indicates that bV5ProfileData points to the file name of the profile to use
+        //  (gamma and endpoints values are ignored)."
+        LINKED = 0x4C494E4B, // 'LINK'
+
+        // "This value indicates that bV5ProfileData points to a memory buffer that contains the profile to be used
+        //  (gamma and endpoints values are ignored)."
+        EMBEDDED = 0x4D424544, // 'MBED'
+    };
+};
+
+// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapv4header
 struct DIBV4 {
     u32 color_space { 0 };
     Endpoint<i32> red_endpoint { 0, 0, 0 };
@@ -97,6 +125,44 @@ struct DIBV4 {
     Endpoint<u32> gamma_endpoint { 0, 0, 0 };
 };
 
+// https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-wmf/9fec0834-607d-427d-abd5-ab240fb0db38
+struct GamutMappingIntent {
+    enum : u32 {
+        // "Specifies that the white point SHOULD be maintained.
+        //  Typically used when logical colors MUST be matched to their nearest physical color in the destination color gamut.
+        //
+        //  Intent: Match
+        //
+        //  ICC name: Absolute Colorimetric"
+        ABS_COLORIMETRIC = 8,
+
+        // "Specifies that saturation SHOULD be maintained.
+        //  Typically used for business charts and other situations in which dithering is not required.
+        //
+        //  Intent: Graphic
+        //
+        //  ICC name: Saturation"
+        BUSINESS = 1,
+
+        // "Specifies that a colorimetric match SHOULD be maintained.
+        //  Typically used for graphic designs and named colors.
+        //
+        //  Intent: Proof
+        //
+        //  ICC name: Relative Colorimetric"
+        GRAPHICS = 2,
+
+        // "Specifies that contrast SHOULD be maintained.
+        //  Typically used for photographs and natural images.
+        //
+        //  Intent: Picture
+        //
+        //  ICC name: Perceptual"
+        IMAGES = 4,
+    };
+};
+
+// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapv5header
 struct DIBV5 {
     u32 intent { 0 };
     u32 profile_data { 0 };
@@ -119,7 +185,7 @@ enum class DIBType {
     V2,
     V3,
     V4,
-    V5
+    V5,
 };
 
 struct BMPLoadingContext {
@@ -696,9 +762,12 @@ static bool decode_bmp_v3_dib(BMPLoadingContext& context, InputStreamer& streame
         if ((context.dib.core.bpp == 32 && mask != 0) || context.dib.core.bpp == 16) {
             context.dib.info.masks.append(mask);
             dbgln_if(BMP_DEBUG, "BMP alpha mask: {:#08x}", mask);
+        } else {
+            dbgln_if(BMP_DEBUG, "BMP alpha mask (ignored): {:#08x}", mask);
         }
     } else {
         streamer.drop_bytes(4);
+        dbgln_if(BMP_DEBUG, "BMP alpha mask skipped");
     }
 
     return true;
@@ -1494,7 +1563,28 @@ ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index)
 
 ErrorOr<Optional<ReadonlyBytes>> BMPImageDecoderPlugin::icc_data()
 {
-    return OptionalNone {};
+    TRY(decode_bmp_dib(*m_context));
+
+    if (m_context->dib_type != DIBType::V5)
+        return OptionalNone {};
+
+    // FIXME: For LINKED, return data from the linked file?
+    // FIXME: For sRGB and WINDOWS_COLOR_SPACE, return an sRGB profile somehow.
+    // FIXME: For CALIBRATED_RGB, do something with v4.{red_endpoint,green_endpoint,blue_endpoint,gamma_endpoint}
+    if (m_context->dib.v4.color_space != ColorSpace::EMBEDDED)
+        return OptionalNone {};
+
+    auto const& v5 = m_context->dib.v5;
+    if (!v5.profile_data || !v5.profile_size)
+        return OptionalNone {};
+
+    // FIXME: Do something with v5.intent (which has a GamutMappingIntent value).
+
+    u8 header_size = m_context->is_included_in_ico ? 0 : bmp_header_size;
+    if (v5.profile_data + header_size + v5.profile_size > m_context->file_size)
+        return Error::from_string_literal("BMPImageDecoderPlugin: ICC profile data out of bounds");
+
+    return ReadonlyBytes { m_context->file_bytes + header_size + v5.profile_data, v5.profile_size };
 }
 
 }
