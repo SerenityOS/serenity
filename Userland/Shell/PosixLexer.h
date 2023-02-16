@@ -8,6 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
+#include <AK/Queue.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <Shell/AST.h>
@@ -29,6 +30,9 @@ enum class Reduction {
     ParameterExpansion,
     CommandOrArithmeticSubstitutionExpansion,
     ExtendedParameterExpansion,
+
+    // Separate rule, not used by the main flow.
+    HeredocContents,
 };
 
 struct ExpansionRange {
@@ -177,6 +181,12 @@ struct ResolvedCommandExpansion {
 
 using ResolvedExpansion = Variant<ResolvedParameterExpansion, ResolvedCommandExpansion>;
 
+struct HeredocEntry {
+    DeprecatedString key;
+    bool allow_interpolation;
+    bool dedent;
+};
+
 struct State {
     StringBuilder buffer {};
     Reduction previous_reduction { Reduction::Start };
@@ -194,6 +204,8 @@ struct State {
         },
     };
     Vector<Expansion> expansions {};
+    Queue<HeredocEntry> heredoc_entries {};
+    bool on_new_line { true };
 };
 
 struct Token {
@@ -219,6 +231,7 @@ struct Token {
         DoubleLessDash,
         Clobber,
         Semicolon,
+        HeredocContents,
 
         // Not produced by this lexer, but generated in later stages.
         AssignmentWord,
@@ -249,6 +262,7 @@ struct Token {
     Vector<Expansion> expansions;
     Vector<ResolvedExpansion> resolved_expansions {};
     StringView original_text;
+    Optional<DeprecatedString> relevant_heredoc_key {};
     bool could_be_start_of_a_simple_command { false };
 
     static Vector<Token> maybe_from_state(State const& state)
@@ -378,7 +392,14 @@ public:
     {
     }
 
-    Vector<Token> batch_next();
+    Vector<Token> batch_next(Optional<Reduction> starting_reduction = {});
+
+    struct HeredocKeyResult {
+        DeprecatedString key;
+        bool allow_interpolation;
+    };
+
+    static HeredocKeyResult process_heredoc_key(Token const&);
 
 private:
     struct ReductionResult {
@@ -400,9 +421,11 @@ private:
     ReductionResult reduce_parameter_expansion();
     ReductionResult reduce_command_or_arithmetic_substitution_expansion();
     ReductionResult reduce_extended_parameter_expansion();
+    ReductionResult reduce_heredoc_contents();
 
     char consume();
     bool consume_specific(char);
+    void reconsume(StringView);
     ExpansionRange range(ssize_t offset = 0) const;
 
     GenericLexer m_lexer;
