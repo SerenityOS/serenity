@@ -572,7 +572,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     if (length == 0)
                         return;
                     auto text = visual_line_text.substring_view(start, length);
-                    span_rect.set_width(font->width(text));
+                    span_rect.set_width(font->width(text) + font->glyph_spacing());
                     if (text_attributes.background_color.has_value()) {
                         painter.fill_rect(span_rect, text_attributes.background_color.value());
                     }
