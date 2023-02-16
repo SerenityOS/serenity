@@ -266,10 +266,26 @@ DeprecatedString RegExpObject::escape_regexp_pattern() const
             continue;
         }
 
-        if (code_point == '\r' || code_point == LINE_SEPARATOR || code_point == PARAGRAPH_SEPARATOR || code_point == '/') {
-            builder.append_code_point('\\');
+        switch (code_point) {
+        case '/':
+            builder.append("\\/"sv);
+            break;
+        case '\n':
+            builder.append("\\n"sv);
+            break;
+        case '\r':
+            builder.append("\\r"sv);
+            break;
+        case LINE_SEPARATOR:
+            builder.append("\\u2028"sv);
+            break;
+        case PARAGRAPH_SEPARATOR:
+            builder.append("\\u2029"sv);
+            break;
+        default:
+            builder.append_code_point(code_point);
+            break;
         }
-        builder.append_code_point(code_point);
     }
 
     return builder.to_deprecated_string();
