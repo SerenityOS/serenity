@@ -1266,4 +1266,10 @@ bool Widget::is_visible_for_timer_purposes() const
     return is_visible() && Object::is_visible_for_timer_purposes();
 }
 
+ErrorOr<void> Widget::add_spacer()
+{
+    VERIFY(layout());
+    return layout()->try_add_spacer();
+}
+
 }

@@ -366,6 +366,8 @@ public:
     // In order for others to be able to call this, it needs to be public.
     virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler);
 
+    ErrorOr<void> add_spacer();
+
 protected:
     Widget();
 
