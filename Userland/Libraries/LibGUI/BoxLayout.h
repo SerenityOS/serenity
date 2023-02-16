@@ -26,7 +26,7 @@ public:
     virtual UISize min_size() const override;
 
 protected:
-    explicit BoxLayout(Gfx::Orientation);
+    explicit BoxLayout(Gfx::Orientation, Margins = {}, int spacing = Layout::default_spacing);
 
 private:
     Gfx::Orientation m_orientation;
@@ -36,8 +36,8 @@ class VerticalBoxLayout final : public BoxLayout {
     C_OBJECT(VerticalBoxLayout);
 
 private:
-    explicit VerticalBoxLayout()
-        : BoxLayout(Gfx::Orientation::Vertical)
+    explicit VerticalBoxLayout(Margins margins = {}, int spacing = Layout::default_spacing)
+        : BoxLayout(Gfx::Orientation::Vertical, margins, spacing)
     {
     }
     virtual ~VerticalBoxLayout() override = default;
@@ -47,8 +47,8 @@ class HorizontalBoxLayout final : public BoxLayout {
     C_OBJECT(HorizontalBoxLayout);
 
 private:
-    explicit HorizontalBoxLayout()
-        : BoxLayout(Gfx::Orientation::Horizontal)
+    explicit HorizontalBoxLayout(Margins margins = {}, int spacing = Layout::default_spacing)
+        : BoxLayout(Gfx::Orientation::Horizontal, margins, spacing)
     {
     }
     virtual ~HorizontalBoxLayout() override = default;
