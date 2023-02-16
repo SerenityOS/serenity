@@ -1366,6 +1366,10 @@ void Heredoc::dump(int level) const
     print_indented(m_end, level + 2);
     print_indented("(Allows Interpolation)"sv, level + 1);
     print_indented(DeprecatedString::formatted("{}", m_allows_interpolation), level + 2);
+    if (!evaluates_to_string()) {
+        print_indented("(Target FD)"sv, level + 1);
+        print_indented(DeprecatedString::number(*m_target_fd), level + 2);
+    }
     print_indented("(Contents)"sv, level + 1);
     if (m_contents)
         m_contents->dump(level + 2);
@@ -1375,29 +1379,75 @@ void Heredoc::dump(int level) const
 
 RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
 {
-    if (!m_deindent)
-        return m_contents->run(shell);
-
-    // To deindent, first split to lines...
-    auto value = m_contents->run(shell);
-    if (shell && shell->has_any_error())
-        return make_ref_counted<ListValue>({});
-
-    if (!value)
-        return value;
-    auto list = value->resolve_as_list(shell);
-    // The list better have one entry, otherwise we've put the wrong kind of node inside this heredoc
-    VERIFY(list.size() == 1);
-    auto lines = list.first().split_view('\n');
-
-    // Now just trim each line and put them back in a string
-    StringBuilder builder { list.first().length() };
-    for (auto& line : lines) {
-        builder.append(line.trim_whitespace(TrimMode::Left));
-        builder.append('\n');
+    if (!m_contents) {
+        if (shell)
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Attempt to evaluate an unresolved heredoc"sv, position());
+        return nullptr;
     }
 
-    return make_ref_counted<StringValue>(builder.to_deprecated_string());
+    auto value = [&]() -> RefPtr<Value> {
+        if (!m_deindent)
+            return m_contents->run(shell);
+
+        // To deindent, first split to lines...
+        auto value = m_contents->run(shell);
+        if (shell && shell->has_any_error())
+            return make_ref_counted<ListValue>({});
+
+        if (!value)
+            return value;
+        auto list = value->resolve_as_list(shell);
+        // The list better have one entry, otherwise we've put the wrong kind of node inside this heredoc
+        VERIFY(list.size() == 1);
+        auto lines = list.first().split_view('\n');
+
+        // Now just trim each line and put them back in a string
+        StringBuilder builder { list.first().length() };
+        for (auto& line : lines) {
+            builder.append(line.trim_whitespace(TrimMode::Left));
+            builder.append('\n');
+        }
+
+        return make_ref_counted<StringValue>(builder.to_deprecated_string());
+    }();
+
+    if (evaluates_to_string())
+        return value;
+
+    int fds[2];
+    auto rc = pipe(fds);
+    if (rc != 0) {
+        // pipe() failed for {}
+        if (shell)
+            shell->raise_error(Shell::ShellError::PipeFailure, DeprecatedString::formatted("heredoc: {}", strerror(errno)), position());
+        return nullptr;
+    }
+
+    auto read_end = fds[0];
+    auto write_end = fds[1];
+
+    // Dump all of 'value' into the pipe.
+    auto* file = fdopen(write_end, "wb");
+    if (!file) {
+        if (shell)
+            shell->raise_error(Shell::ShellError::OpenFailure, "heredoc"sv, position());
+        return nullptr;
+    }
+
+    auto text = value->resolve_as_string(shell);
+
+    auto written = fwrite(text.characters(), 1, text.length(), file);
+    fflush(file);
+    if (written != text.length()) {
+        if (shell)
+            shell->raise_error(Shell::ShellError::WriteFailure, "heredoc"sv, position());
+    }
+    fclose(file);
+
+    Command command;
+    command.position = position();
+    command.redirections.append(FdRedirection::create(read_end, *target_fd(), Rewiring::Close::None));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 void Heredoc::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1422,11 +1472,12 @@ HitTestResult Heredoc::hit_test_position(size_t offset) const
     return m_contents->hit_test_position(offset);
 }
 
-Heredoc::Heredoc(Position position, DeprecatedString end, bool allow_interpolation, bool deindent)
+Heredoc::Heredoc(Position position, DeprecatedString end, bool allow_interpolation, bool deindent, Optional<int> target_fd)
     : Node(move(position))
     , m_end(move(end))
     , m_allows_interpolation(allow_interpolation)
     , m_deindent(deindent)
+    , m_target_fd(target_fd)
 {
 }
 
