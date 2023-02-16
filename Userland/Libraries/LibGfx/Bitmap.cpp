@@ -116,9 +116,9 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
             TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));
 
             auto highdpi_icon_string = highdpi_icon_path.string_view();
-            auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
+            auto file = TRY(Core::File::open(highdpi_icon_string, Core::File::OpenMode::Read));
 
-            auto bitmap = TRY(load_from_fd_and_close(fd, highdpi_icon_string));
+            auto bitmap = TRY(load_from_file(move(file), highdpi_icon_string));
             if (bitmap->width() % scale_factor != 0 || bitmap->height() % scale_factor != 0)
                 return Error::from_string_literal("Bitmap::load_from_file: HighDPI image size should be divisible by scale factor");
             bitmap->m_size.set_width(bitmap->width() / scale_factor);
@@ -138,8 +138,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
         }
     }
 
-    auto fd = TRY(Core::System::open(path, O_RDONLY));
-    return load_from_fd_and_close(fd, path);
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    return load_from_file(move(file), path);
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> file, StringView path)
@@ -153,19 +153,6 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> 
     }
 
     return Error::from_string_literal("Gfx::Bitmap unable to load from file");
-}
-
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_fd_and_close(int fd, StringView path)
-{
-    auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
-    auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(file->bytes(), mime_type)) {
-        auto frame = TRY(decoder->frame(0));
-        if (auto& bitmap = frame.image)
-            return bitmap.release_nonnull();
-    }
-
-    return Error::from_string_literal("Gfx::Bitmap unable to load from fd");
 }
 
 Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data)
