@@ -124,9 +124,7 @@ void Game::show_score_card(bool game_over)
 
     auto score_widget = score_dialog->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     score_widget->set_fill_with_background_color(true);
-    auto& layout = score_widget->set_layout<GUI::HorizontalBoxLayout>();
-    layout.set_margins(10);
-    layout.set_spacing(15);
+    score_widget->set_layout<GUI::HorizontalBoxLayout>(10, 15);
 
     auto& card_container = score_widget->add<GUI::Widget>();
     auto& score_card = card_container.add<ScoreCard>(m_players, game_over);

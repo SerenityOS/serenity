@@ -31,7 +31,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     : m_workbook(make<Workbook>(move(sheets), parent_window))
 {
     set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>().set_margins(2);
+    set_layout<GUI::VerticalBoxLayout>(2);
 
     auto& toolbar_container = add<GUI::ToolbarContainer>();
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
@@ -39,7 +39,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     auto& container = add<GUI::VerticalSplitter>();
 
     auto& top_bar = container.add<GUI::Frame>();
-    top_bar.set_layout<GUI::HorizontalBoxLayout>().set_spacing(1);
+    top_bar.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 1);
     top_bar.set_preferred_height(26);
     auto& current_cell_label = top_bar.add<GUI::Label>("");
     current_cell_label.set_fixed_width(50);
@@ -83,7 +83,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_inline_documentation_window->set_resizable(false);
     auto inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
     inline_widget->set_fill_with_background_color(true);
-    inline_widget->set_layout<GUI::VerticalBoxLayout>().set_margins(4);
+    inline_widget->set_layout<GUI::VerticalBoxLayout>(4);
     inline_widget->set_frame_shape(Gfx::FrameShape::Box);
     m_inline_documentation_label = inline_widget->add<GUI::Label>();
     m_inline_documentation_label->set_fill_with_background_color(true);

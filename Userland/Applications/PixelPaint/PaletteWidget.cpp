@@ -118,18 +118,15 @@ PaletteWidget::PaletteWidget()
 
     m_color_container = add<GUI::Widget>();
     m_color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 33);
-    m_color_container->set_layout<GUI::VerticalBoxLayout>();
-    m_color_container->layout()->set_spacing(1);
+    m_color_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 1);
 
     auto& top_color_container = m_color_container->add<GUI::Widget>();
     top_color_container.set_name("top_color_container");
-    top_color_container.set_layout<GUI::HorizontalBoxLayout>();
-    top_color_container.layout()->set_spacing(1);
+    top_color_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 1);
 
     auto& bottom_color_container = m_color_container->add<GUI::Widget>();
     bottom_color_container.set_name("bottom_color_container");
-    bottom_color_container.set_layout<GUI::HorizontalBoxLayout>();
-    bottom_color_container.layout()->set_spacing(1);
+    bottom_color_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 1);
 
     auto result = load_palette_path("/res/color-palettes/default.palette");
     if (result.is_error()) {

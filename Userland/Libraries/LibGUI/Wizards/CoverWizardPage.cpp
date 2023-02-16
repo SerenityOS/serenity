@@ -24,8 +24,7 @@ CoverWizardPage::CoverWizardPage()
     m_banner_image_widget->load_from_file("/res/graphics/wizard-banner-simple.png"sv);
 
     m_content_widget = add<Widget>();
-    m_content_widget->set_layout<VerticalBoxLayout>();
-    m_content_widget->layout()->set_margins(20);
+    m_content_widget->set_layout<VerticalBoxLayout>(20);
 
     m_header_label = m_content_widget->add<Label>();
     m_header_label->set_font(Gfx::FontDatabase::the().get("Pebbleton", 14, 700, Gfx::FontWidth::Normal, 0));

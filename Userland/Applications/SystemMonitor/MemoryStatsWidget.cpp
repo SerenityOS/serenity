@@ -43,9 +43,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
 
     set_fixed_height(110);
 
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 8, 0, 0 });
-    layout()->set_spacing(3);
+    set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 0, 0 }, 3);
 
     auto build_widgets_for_label = [this](DeprecatedString const& description) -> RefPtr<GUI::Label> {
         auto& container = add<GUI::Widget>();

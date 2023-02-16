@@ -132,8 +132,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto tab_widget = TRY(main_splitter->try_add<GUI::TabWidget>());
 
     auto tree_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Call Tree"));
-    tree_tab->set_layout<GUI::VerticalBoxLayout>();
-    tree_tab->layout()->set_margins(4);
+    (void)TRY(tree_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
     auto bottom_splitter = TRY(tree_tab->try_add<GUI::VerticalSplitter>());
 
     auto tree_view = TRY(bottom_splitter->try_add<GUI::TreeView>());
@@ -182,8 +181,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto samples_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Samples"));
-    samples_tab->set_layout<GUI::VerticalBoxLayout>();
-    samples_tab->layout()->set_margins(4);
+    (void)TRY(samples_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto samples_splitter = TRY(samples_tab->try_add<GUI::HorizontalSplitter>());
     auto samples_table_view = TRY(samples_splitter->try_add<GUI::TableView>());
@@ -197,8 +195,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto signposts_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Signposts"));
-    signposts_tab->set_layout<GUI::VerticalBoxLayout>();
-    signposts_tab->layout()->set_margins(4);
+    (void)TRY(signposts_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto signposts_splitter = TRY(signposts_tab->try_add<GUI::HorizontalSplitter>());
     auto signposts_table_view = TRY(signposts_splitter->try_add<GUI::TableView>());
@@ -212,8 +209,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     auto flamegraph_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Flame Graph"));
-    flamegraph_tab->set_layout<GUI::VerticalBoxLayout>();
-    flamegraph_tab->layout()->set_margins({ 4, 4, 4, 4 });
+    (void)TRY(flamegraph_tab->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 4, 4, 4 }));
 
     auto flamegraph_view = TRY(flamegraph_tab->try_add<FlameGraphView>(profile->model(), ProfileModel::Column::StackFrame, ProfileModel::Column::SampleCount));
 
@@ -261,8 +257,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     flamegraph_view->on_hover_change = [&] { statusbar_update(); };
 
     auto filesystem_events_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("Filesystem events"));
-    filesystem_events_tab->set_layout<GUI::VerticalBoxLayout>();
-    filesystem_events_tab->layout()->set_margins(4);
+    (void)TRY(filesystem_events_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto filesystem_events_tree_view = TRY(filesystem_events_tab->try_add<GUI::TreeView>());
     filesystem_events_tree_view->set_should_fill_selected_rows(true);
@@ -320,8 +315,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
 
     auto widget = window->set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     widget->set_fill_with_background_color(true);
-    auto& layout = widget->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 0, 0, 16 });
+    widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 0, 0, 16 });
 
     auto& timer_label = widget->add<GUI::Label>("...");
     Core::ElapsedTimer clock;

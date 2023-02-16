@@ -60,8 +60,7 @@ private:
 
 Breadcrumbbar::Breadcrumbbar()
 {
-    auto& layout = set_layout<HorizontalBoxLayout>();
-    layout.set_spacing(0);
+    set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 }
 
 void Breadcrumbbar::clear_segments()

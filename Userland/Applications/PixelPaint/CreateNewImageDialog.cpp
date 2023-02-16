@@ -30,8 +30,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(4);
+    main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto& name_label = main_widget->add<GUI::Label>("Name:");
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);

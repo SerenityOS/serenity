@@ -219,9 +219,7 @@ void EmojiInputDialog::update_displayed_emoji()
     for (size_t row = 0; row < rows && index < m_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
         horizontal_container.set_preferred_height(SpecialDimension::Fit);
-
-        auto& horizontal_layout = horizontal_container.set_layout<HorizontalBoxLayout>();
-        horizontal_layout.set_spacing(0);
+        horizontal_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 
         for (size_t column = 0; column < columns; ++column) {
             bool found_match = false;

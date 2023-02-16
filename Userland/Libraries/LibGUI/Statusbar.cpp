@@ -20,9 +20,7 @@ namespace GUI {
 Statusbar::Statusbar(int count)
 {
     set_fixed_height(18);
-    set_layout<HorizontalBoxLayout>();
-    layout()->set_margins(0);
-    layout()->set_spacing(2);
+    set_layout<HorizontalBoxLayout>(0, 2);
 
     m_corner = add<ResizeCorner>();
     set_segment_count(count);

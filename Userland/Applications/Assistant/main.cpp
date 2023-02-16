@@ -182,12 +182,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto container = TRY(window->set_main_widget<GUI::Frame>());
     container->set_fill_with_background_color(true);
     container->set_frame_shape(Gfx::FrameShape::Window);
-    auto& layout = container->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 8 });
+    container->set_layout<GUI::VerticalBoxLayout>(8);
 
     auto& text_box = container->add<GUI::TextBox>();
     auto& results_container = container->add<GUI::Widget>();
-    auto& results_layout = results_container.set_layout<GUI::VerticalBoxLayout>();
+    results_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto mark_selected_item = [&]() {
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
@@ -250,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto update_ui_timer = TRY(Core::Timer::create_single_shot(10, [&] {
         results_container.remove_all_children();
-        results_layout.set_margins(app_state.visible_result_count ? GUI::Margins { 4, 0, 0, 0 } : GUI::Margins { 0 });
+        results_container.layout()->set_margins(app_state.visible_result_count ? GUI::Margins { 4, 0, 0, 0 } : GUI::Margins { 0 });
 
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
             auto& result = app_state.results[i];

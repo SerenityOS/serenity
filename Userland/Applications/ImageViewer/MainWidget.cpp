@@ -11,8 +11,7 @@ namespace ImageViewer {
 MainWidget::MainWidget()
 {
     set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_spacing(2);
+    set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);
 }
 
 void MainWidget::keydown_event(GUI::KeyEvent& event)

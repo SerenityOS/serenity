@@ -121,15 +121,11 @@ void MessageBox::build()
     int total_text_height = number_of_lines * padded_text_height;
     int icon_width = 0;
 
-    widget->set_layout<VerticalBoxLayout>();
+    widget->set_layout<VerticalBoxLayout>(8, 6);
     widget->set_fill_with_background_color(true);
 
-    widget->layout()->set_margins(8);
-    widget->layout()->set_spacing(6);
-
     auto& message_container = widget->add<Widget>();
-    message_container.set_layout<HorizontalBoxLayout>();
-    message_container.layout()->set_spacing(8);
+    message_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 8);
 
     if (m_type != Type::None) {
         auto& icon_image = message_container.add<ImageWidget>();
@@ -147,9 +143,8 @@ void MessageBox::build()
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& button_container = widget->add<Widget>();
-    button_container.set_layout<HorizontalBoxLayout>();
+    button_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 8);
     button_container.set_fixed_height(24);
-    button_container.layout()->set_spacing(8);
 
     constexpr int button_width = 80;
     int button_count = 0;

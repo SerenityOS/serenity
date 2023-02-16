@@ -207,31 +207,25 @@ void ColorPicker::set_color_has_alpha_channel(bool has_alpha)
 void ColorPicker::build_ui()
 {
     auto root_container = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
-    root_container->set_layout<VerticalBoxLayout>();
-    root_container->layout()->set_margins(4);
+    root_container->set_layout<VerticalBoxLayout>(4);
     root_container->set_fill_with_background_color(true);
 
     auto& tab_widget = root_container->add<GUI::TabWidget>();
 
     auto& tab_palette = tab_widget.add_tab<Widget>("Palette");
-    tab_palette.set_layout<VerticalBoxLayout>();
-    tab_palette.layout()->set_margins(4);
-    tab_palette.layout()->set_spacing(4);
+    tab_palette.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_palette(tab_palette);
 
     auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color");
-    tab_custom_color.set_layout<VerticalBoxLayout>();
-    tab_custom_color.layout()->set_margins(4);
-    tab_custom_color.layout()->set_spacing(4);
+    tab_custom_color.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_custom(tab_custom_color);
 
     auto& button_container = root_container->add<Widget>();
     button_container.set_preferred_height(GUI::SpecialDimension::Fit);
-    button_container.set_layout<HorizontalBoxLayout>();
-    button_container.layout()->set_spacing(4);
-    button_container.layout()->add_spacer();
+    button_container.set_layout<HorizontalBoxLayout>(4);
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& ok_button = button_container.add<DialogButton>();
     ok_button.set_text(String::from_utf8_short_string("OK"sv));
@@ -315,14 +309,11 @@ void ColorPicker::build_ui_custom(Widget& root_container)
 
     // Right Side
     auto& vertical_container = horizontal_container.add<Widget>();
-    vertical_container.set_layout<VerticalBoxLayout>();
-    vertical_container.layout()->set_margins({ 0, 0, 0, 8 });
+    vertical_container.set_layout<VerticalBoxLayout>(GUI::Margins { 0, 0, 0, 8 });
     vertical_container.set_min_width(120);
 
     auto& preview_container = vertical_container.add<Frame>();
-    preview_container.set_layout<VerticalBoxLayout>();
-    preview_container.layout()->set_margins(2);
-    preview_container.layout()->set_spacing(0);
+    preview_container.set_layout<VerticalBoxLayout>(2, 0);
     preview_container.set_fixed_height(100);
 
     // Current color

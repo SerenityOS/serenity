@@ -34,9 +34,7 @@ MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
 
 ErrorOr<void> MainWidget::initialize()
 {
-    (void)TRY(try_set_layout<GUI::VerticalBoxLayout>());
-    layout()->set_spacing(2);
-    layout()->set_margins(2);
+    (void)TRY(try_set_layout<GUI::VerticalBoxLayout>(2, 2));
     set_fill_with_background_color(true);
 
     m_wave_widget = TRY(try_add<WaveWidget>(m_track_manager));
@@ -51,8 +49,7 @@ ErrorOr<void> MainWidget::initialize()
     m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, m_audio_loop));
 
     m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
-    (void)TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>());
-    m_keys_and_knobs_container->layout()->set_spacing(2);
+    (void)TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 2));
     m_keys_and_knobs_container->set_fixed_height(130);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 

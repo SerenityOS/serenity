@@ -22,12 +22,10 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(4);
+    main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto& name_box = main_widget->add<GUI::Widget>();
-    auto& input_layout = name_box.set_layout<GUI::HorizontalBoxLayout>();
-    input_layout.set_spacing(4);
+    name_box.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 4);
 
     auto& name_label = name_box.add<GUI::Label>("Name:");
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -39,8 +37,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     };
 
     auto& button_box = main_widget->add<GUI::Widget>();
-    auto& button_layout = button_box.set_layout<GUI::HorizontalBoxLayout>();
-    button_layout.set_spacing(10);
+    button_box.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 12);
 
     button_box.add<GUI::Button>(String::from_utf8_short_string("Cancel"sv)).on_click = [this](auto) {
         done(ExecResult::Cancel);

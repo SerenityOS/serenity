@@ -24,9 +24,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
     set_layout<GUI::VerticalBoxLayout>();
 
     auto& group_box = add<GUI::GroupBox>("Layer properties"sv);
-    auto& layout = group_box.set_layout<GUI::VerticalBoxLayout>();
-
-    layout.set_margins({ 8 });
+    group_box.set_layout<GUI::VerticalBoxLayout>(8);
 
     auto& name_container = group_box.add<GUI::Widget>();
     name_container.set_fixed_height(20);
