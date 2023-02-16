@@ -12,6 +12,13 @@
 
 namespace JS {
 
+ErrorOr<String> ParserError::to_string() const
+{
+    if (!position.has_value())
+        return String::from_deprecated_string(message);
+    return String::formatted("{} (line: {}, column: {})", message, position.value().line, position.value().column);
+}
+
 DeprecatedString ParserError::to_deprecated_string() const
 {
     if (!position.has_value())
