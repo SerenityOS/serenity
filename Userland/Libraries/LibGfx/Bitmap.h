@@ -99,7 +99,6 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(StringView path, int scale_factor = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_fd_and_close(int fd, StringView path);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale, Vector<ARGB32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_bytes(ReadonlyBytes);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_byte_buffer(ByteBuffer&&);
