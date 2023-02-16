@@ -34,6 +34,13 @@ public:
         return {};
     }
 
+    template<class SeparatorType, class CollectionType>
+    ThrowCompletionOr<void> join(SeparatorType const& separator, CollectionType const& collection, StringView fmtstr = "{}"sv)
+    {
+        TRY_OR_THROW_OOM(m_vm, try_join(separator, collection, fmtstr));
+        return {};
+    }
+
     using AK::StringBuilder::is_empty;
     using AK::StringBuilder::string_view;
     using AK::StringBuilder::trim;
