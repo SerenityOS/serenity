@@ -751,7 +751,9 @@ Lexer::ReductionResult Lexer::reduce_special_parameter_expansion()
         .parameter = StringBuilder {},
         .range = range(-1),
     };
-    m_state.expansions.last().get<ParameterExpansion>().parameter.append(ch);
+    auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
+    expansion.parameter.append(ch);
+    expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
     return {
         .tokens = {},
