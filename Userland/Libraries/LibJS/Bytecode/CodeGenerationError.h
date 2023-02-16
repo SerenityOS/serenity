@@ -18,7 +18,6 @@ struct CodeGenerationError {
     StringView reason_literal;
 
     ErrorOr<String> to_string() const;
-    DeprecatedString to_deprecated_string();
 };
 
 template<typename T>
