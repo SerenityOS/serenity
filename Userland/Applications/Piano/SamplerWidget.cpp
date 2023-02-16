@@ -40,14 +40,11 @@ void WaveEditor::paint_event(GUI::PaintEvent& event)
 SamplerWidget::SamplerWidget(TrackManager& track_manager)
     : m_track_manager(track_manager)
 {
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins(10);
-    layout()->set_spacing(10);
+    set_layout<GUI::VerticalBoxLayout>(10, 10);
     set_fill_with_background_color(true);
 
     m_open_button_and_recorded_sample_name_container = add<GUI::Widget>();
-    m_open_button_and_recorded_sample_name_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_open_button_and_recorded_sample_name_container->layout()->set_spacing(10);
+    m_open_button_and_recorded_sample_name_container->set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 10);
     m_open_button_and_recorded_sample_name_container->set_fixed_height(24);
 
     m_open_button = m_open_button_and_recorded_sample_name_container->add<GUI::Button>();

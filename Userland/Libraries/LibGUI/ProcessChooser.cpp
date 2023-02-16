@@ -48,8 +48,7 @@ ProcessChooser::ProcessChooser(StringView window_title, String button_label, Gfx
 
     auto& button_container = widget->add<GUI::Widget>();
     button_container.set_fixed_height(30);
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.layout()->set_margins({ 0, 4, 0 });
+    button_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 0, 4, 0 });
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& select_button = button_container.add<GUI::Button>(m_button_label);

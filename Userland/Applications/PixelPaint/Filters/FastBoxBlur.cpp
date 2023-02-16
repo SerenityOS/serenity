@@ -86,8 +86,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
 
         m_radius_container = TRY(settings_widget->try_add<GUI::Widget>());
         m_radius_container->set_fixed_height(20);
-        auto radius_container_layout = TRY(m_radius_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        radius_container_layout->set_margins({ 4, 0, 4, 0 });
+        (void)TRY(m_radius_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
 
         auto radius_label = TRY(m_radius_container->try_add<GUI::Label>("Radius:"));
         radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -104,8 +103,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         m_asymmetric_radius_container = TRY(settings_widget->try_add<GUI::Widget>());
         m_asymmetric_radius_container->set_visible(false);
         m_asymmetric_radius_container->set_fixed_height(50);
-        auto asymmetric_radius_container_label = TRY(m_asymmetric_radius_container->try_set_layout<GUI::VerticalBoxLayout>());
-        asymmetric_radius_container_label->set_margins({ 4, 0, 4, 0 });
+        (void)TRY(m_asymmetric_radius_container->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
 
         auto radius_x_container = TRY(m_asymmetric_radius_container->try_add<GUI::Widget>());
         radius_x_container->set_fixed_height(20);
@@ -142,8 +140,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
         m_vector_container = TRY(settings_widget->try_add<GUI::Widget>());
         m_vector_container->set_visible(false);
         m_vector_container->set_fixed_height(50);
-        auto vector_container_layout = TRY(m_vector_container->try_set_layout<GUI::VerticalBoxLayout>());
-        vector_container_layout->set_margins({ 4, 0, 4, 0 });
+        (void)TRY(m_vector_container->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
 
         auto angle_container = TRY(m_vector_container->try_add<GUI::Widget>());
         angle_container->set_fixed_height(20);
@@ -179,8 +176,7 @@ ErrorOr<RefPtr<GUI::Widget>> FastBoxBlur::get_settings_widget()
 
         auto gaussian_container = TRY(settings_widget->try_add<GUI::Widget>());
         gaussian_container->set_fixed_height(20);
-        auto gaussian_container_layout = TRY(gaussian_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        gaussian_container_layout->set_margins({ 4, 0, 4, 0 });
+        (void)TRY(gaussian_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 4, 0, 4, 0 }));
 
         m_gaussian_checkbox = TRY(gaussian_container->try_add<GUI::CheckBox>(TRY(String::from_utf8("Approximate Gaussian Blur"sv))));
         m_gaussian_checkbox->set_checked(m_approximate_gauss);

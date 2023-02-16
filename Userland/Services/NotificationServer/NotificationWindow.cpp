@@ -70,9 +70,7 @@ NotificationWindow::NotificationWindow(i32 client_id, DeprecatedString const& te
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
 
     widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::HorizontalBoxLayout>();
-    widget->layout()->set_margins(8);
-    widget->layout()->set_spacing(6);
+    widget->set_layout<GUI::HorizontalBoxLayout>(8, 6);
 
     m_image = &widget->add<GUI::ImageWidget>();
     m_image->set_visible(icon.is_valid());

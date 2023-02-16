@@ -216,8 +216,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Backtrace"));
-    (void)TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>());
-    backtrace_tab->layout()->set_margins(4);
+    (void)TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"));
     backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -227,8 +226,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     backtrace_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto cpu_registers_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("CPU Registers"));
-    cpu_registers_tab->set_layout<GUI::VerticalBoxLayout>();
-    cpu_registers_tab->layout()->set_margins(4);
+    cpu_registers_tab->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"));
     cpu_registers_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -238,8 +236,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cpu_registers_tab_widget->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto environment_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Environment"));
-    (void)TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>());
-    environment_tab->layout()->set_margins(4);
+    (void)TRY(environment_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto environment_text_editor = TRY(environment_tab->try_add<GUI::TextEditor>());
     environment_text_editor->set_text(DeprecatedString::join('\n', environment));
@@ -248,8 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     environment_text_editor->set_should_hide_unnecessary_scrollbars(true);
 
     auto memory_regions_tab = TRY(tab_widget.try_add_tab<GUI::Widget>("Memory Regions"));
-    (void)TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>());
-    memory_regions_tab->layout()->set_margins(4);
+    (void)TRY(memory_regions_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto memory_regions_text_editor = TRY(memory_regions_tab->try_add<GUI::TextEditor>());
     memory_regions_text_editor->set_text(DeprecatedString::join('\n', memory_regions));
@@ -307,8 +303,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         [&](auto results) -> ErrorOr<void> {
             for (auto& backtrace : results.thread_backtraces) {
                 auto container = TRY(backtrace_tab_widget->try_add_tab<GUI::Widget>(backtrace.title));
-                (void)TRY(container->template try_set_layout<GUI::VerticalBoxLayout>());
-                container->layout()->set_margins(4);
+                (void)TRY(container->template try_set_layout<GUI::VerticalBoxLayout>(4));
                 auto backtrace_text_editor = TRY(container->template try_add<GUI::TextEditor>());
                 backtrace_text_editor->set_text(backtrace.text);
                 backtrace_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);
@@ -319,8 +314,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             for (auto& cpu_registers : results.thread_cpu_registers) {
                 auto container = TRY(cpu_registers_tab_widget->try_add_tab<GUI::Widget>(cpu_registers.title));
-                (void)TRY(container->template try_set_layout<GUI::VerticalBoxLayout>());
-                container->layout()->set_margins(4);
+                (void)TRY(container->template try_set_layout<GUI::VerticalBoxLayout>(4));
                 auto cpu_registers_text_editor = TRY(container->template try_add<GUI::TextEditor>());
                 cpu_registers_text_editor->set_text(cpu_registers.text);
                 cpu_registers_text_editor->set_mode(GUI::TextEditor::Mode::ReadOnly);

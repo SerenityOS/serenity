@@ -67,12 +67,9 @@ void InputBox::build()
     int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
     int max_width = max(text_width, title_width);
 
-    widget->set_layout<VerticalBoxLayout>();
+    widget->set_layout<VerticalBoxLayout>(6, 6);
     widget->set_fill_with_background_color(true);
     widget->set_preferred_height(SpecialDimension::Fit);
-
-    widget->layout()->set_margins(6);
-    widget->layout()->set_spacing(6);
 
     auto& label_editor_container = widget->add<Widget>();
     label_editor_container.set_layout<HorizontalBoxLayout>();
@@ -101,9 +98,8 @@ void InputBox::build()
     button_container_outer.set_layout<VerticalBoxLayout>();
 
     auto& button_container_inner = button_container_outer.add<Widget>();
-    button_container_inner.set_layout<HorizontalBoxLayout>();
+    button_container_inner.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 6);
     button_container_inner.set_preferred_height(SpecialDimension::Fit);
-    button_container_inner.layout()->set_spacing(6);
     button_container_inner.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_ok_button = button_container_inner.add<DialogButton>();

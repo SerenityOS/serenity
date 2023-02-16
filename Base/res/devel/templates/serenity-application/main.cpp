@@ -23,8 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
 
-    auto layout = TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
-    layout->set_margins(16);
+    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(16));
 
     auto button = TRY(main_widget->try_add<GUI::Button>("Click me!"));
     button->on_click = [&](auto) {

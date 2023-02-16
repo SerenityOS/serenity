@@ -85,8 +85,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
 
     widget->m_editor_font = widget->read_editor_font_from_config();
     widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_spacing(2);
+    widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);
 
     auto& toolbar_container = widget->add<GUI::ToolbarContainer>();
 
@@ -1363,15 +1362,13 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     m_project_tab->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
     auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files");
-    tree_view_container.set_layout<GUI::VerticalBoxLayout>();
-    tree_view_container.layout()->set_margins(2);
+    tree_view_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);
 
     m_project_tree_view = tree_view_container.add<GUI::TreeView>();
     configure_project_tree_view();
 
     auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes");
-    class_view_container.set_layout<GUI::VerticalBoxLayout>();
-    class_view_container.layout()->set_margins(2);
+    class_view_container.set_layout<GUI::VerticalBoxLayout>(2);
 
     m_class_view = class_view_container.add<ClassViewWidget>();
 

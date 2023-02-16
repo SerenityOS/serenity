@@ -34,9 +34,7 @@ Toolbar::Toolbar(Orientation orientation, int button_size)
     else
         set_fixed_width(button_size);
 
-    set_layout<BoxLayout>(orientation);
-    layout()->set_spacing(0);
-    layout()->set_margins({ 2, 2, 2, 2 });
+    set_layout<BoxLayout>(orientation, GUI::Margins { 2, 2, 2, 2 }, 0);
 }
 
 class ToolbarButton final : public Button {

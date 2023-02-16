@@ -103,9 +103,7 @@ BookmarksBarWidget& BookmarksBarWidget::the()
 BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, bool enabled)
 {
     s_the = this;
-    set_layout<GUI::HorizontalBoxLayout>();
-    layout()->set_spacing(0);
-    layout()->set_margins(2);
+    set_layout<GUI::HorizontalBoxLayout>(2, 0);
 
     set_fixed_height(20);
 

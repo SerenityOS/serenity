@@ -29,8 +29,7 @@ WizardDialog::WizardDialog(Window* parent_window)
 
     auto main_widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout<VerticalBoxLayout>();
-    main_widget->layout()->set_spacing(0);
+    main_widget->set_layout<VerticalBoxLayout>(GUI::Margins {}, 0);
 
     m_page_container_widget = main_widget->add<Widget>();
     m_page_container_widget->set_fixed_size(500, 315);
@@ -40,10 +39,8 @@ WizardDialog::WizardDialog(Window* parent_window)
     separator.set_fixed_height(2);
 
     auto& nav_container_widget = main_widget->add<Widget>();
-    nav_container_widget.set_layout<HorizontalBoxLayout>();
+    nav_container_widget.set_layout<HorizontalBoxLayout>(GUI::Margins { 0, 10 }, 0);
     nav_container_widget.set_fixed_height(42);
-    nav_container_widget.layout()->set_margins({ 0, 10 });
-    nav_container_widget.layout()->set_spacing(0);
     nav_container_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_back_button = nav_container_widget.add<DialogButton>(String::from_utf8_short_string("< Back"sv));

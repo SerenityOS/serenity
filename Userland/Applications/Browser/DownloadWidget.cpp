@@ -59,8 +59,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_download->stream_into(*m_output_file_stream);
 
     set_fill_with_background_color(true);
-    auto& layout = set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(4);
+    set_layout<GUI::VerticalBoxLayout>(4);
 
     auto& animation_container = add<GUI::Widget>();
     animation_container.set_fixed_height(32);

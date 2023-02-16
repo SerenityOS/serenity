@@ -561,8 +561,7 @@ void build_performance_tab(GUI::Widget& graphs_container)
     Vector<SystemMonitor::GraphWidget&> cpu_graphs;
     for (auto row = 0u; row < cpu_graph_rows; ++row) {
         auto& cpu_graph_row = cpu_graph_group_box.add<GUI::Widget>();
-        cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>();
-        cpu_graph_row.layout()->set_margins(6);
+        cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>(6);
         cpu_graph_row.set_fixed_height(108);
         for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
             auto& cpu_graph = cpu_graph_row.add<SystemMonitor::GraphWidget>();
