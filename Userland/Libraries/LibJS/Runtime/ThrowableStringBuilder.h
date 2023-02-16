@@ -30,12 +30,7 @@ public:
     ThrowCompletionOr<void> appendff(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
-
-        if (vformat(*this, fmtstr.view(), variadic_format_params).is_error()) {
-            // The size returned here is a bit of an estimate, as we don't know what the final formatted string length would be.
-            return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length() + fmtstr.view().length());
-        }
-
+        TRY_OR_THROW_OOM(m_vm, vformat(*this, fmtstr.view(), variadic_format_params));
         return {};
     }
 

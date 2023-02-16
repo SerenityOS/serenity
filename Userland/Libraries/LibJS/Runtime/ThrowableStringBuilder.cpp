@@ -16,39 +16,31 @@ ThrowableStringBuilder::ThrowableStringBuilder(VM& vm)
 
 ThrowCompletionOr<void> ThrowableStringBuilder::append(char ch)
 {
-    if (try_append(ch).is_error())
-        return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length() + 1);
+    TRY_OR_THROW_OOM(m_vm, try_append(ch));
     return {};
 }
 
 ThrowCompletionOr<void> ThrowableStringBuilder::append(StringView string)
 {
-    if (try_append(string).is_error())
-        return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length() + string.length());
+    TRY_OR_THROW_OOM(m_vm, try_append(string));
     return {};
 }
 
 ThrowCompletionOr<void> ThrowableStringBuilder::append(Utf16View const& string)
 {
-    if (try_append(string).is_error())
-        return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length() + (string.length_in_code_units() * 2));
+    TRY_OR_THROW_OOM(m_vm, try_append(string));
     return {};
 }
 
 ThrowCompletionOr<void> ThrowableStringBuilder::append_code_point(u32 value)
 {
-    if (auto result = try_append_code_point(value); result.is_error())
-        return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length() + sizeof(value));
+    TRY_OR_THROW_OOM(m_vm, try_append_code_point(value));
     return {};
 }
 
 ThrowCompletionOr<String> ThrowableStringBuilder::to_string() const
 {
-    auto result = StringBuilder::to_string();
-    if (result.is_error())
-        return m_vm.throw_completion<InternalError>(ErrorType::NotEnoughMemoryToAllocate, length());
-
-    return result.release_value();
+    return TRY_OR_THROW_OOM(m_vm, StringBuilder::to_string());
 }
 
 }

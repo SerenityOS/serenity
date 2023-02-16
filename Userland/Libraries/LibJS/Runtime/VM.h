@@ -91,6 +91,17 @@ public:
         return *m_single_ascii_character_strings[character];
     }
 
+    // This represents the list of errors from ErrorTypes.h whose messages are used in contexts which
+    // must not fail to allocate when they are used. For example, we cannot allocate when we raise an
+    // out-of-memory error, thus we pre-allocate that error string at VM creation time.
+    enum class ErrorMessage {
+        OutOfMemory,
+
+        // Keep this last:
+        __Count,
+    };
+    DeprecatedString const& error_message(ErrorMessage) const;
+
     bool did_reach_stack_space_limit() const
     {
         // Address sanitizer (ASAN) used to check for more space but
@@ -285,6 +296,7 @@ private:
 
     PrimitiveString* m_empty_string { nullptr };
     PrimitiveString* m_single_ascii_character_strings[128] {};
+    AK::Array<DeprecatedString, to_underlying(ErrorMessage::__Count)> m_error_messages;
 
     struct StoredModule {
         ScriptOrModule referencing_script_or_module;

@@ -153,6 +153,18 @@ VM::VM(OwnPtr<CustomData> custom_data)
     m_well_known_symbol_##snake_name = Symbol::create(*this, String::from_utf8("Symbol." #SymbolName##sv).release_value_but_fixme_should_propagate_errors(), false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
+
+    m_error_messages[to_underlying(ErrorMessage::OutOfMemory)] = ErrorType::OutOfMemory.message();
+}
+
+DeprecatedString const& VM::error_message(ErrorMessage type) const
+{
+    VERIFY(type < ErrorMessage::__Count);
+
+    auto const& message = m_error_messages[to_underlying(type)];
+    VERIFY(!message.is_empty());
+
+    return message;
 }
 
 void VM::enable_default_host_import_module_dynamically_hook()
