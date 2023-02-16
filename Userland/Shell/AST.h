@@ -1338,20 +1338,22 @@ private:
 
 class Heredoc final : public Node {
 public:
-    Heredoc(Position, DeprecatedString end, bool allow_interpolation, bool deindent);
+    Heredoc(Position, DeprecatedString end, bool allow_interpolation, bool deindent, Optional<int> target_fd = {});
     virtual ~Heredoc();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     DeprecatedString const& end() const { return m_end; }
     bool allow_interpolation() const { return m_allows_interpolation; }
     bool deindent() const { return m_deindent; }
+    Optional<int> target_fd() const { return m_target_fd; }
+    bool evaluates_to_string() const { return !m_target_fd.has_value(); }
     RefPtr<AST::Node> const& contents() const { return m_contents; }
     void set_contents(RefPtr<AST::Node> contents)
     {
         m_contents = move(contents);
         if (m_contents->is_syntax_error())
             set_is_syntax_error(m_contents->syntax_error_node());
-        else
+        else if (is_syntax_error())
             clear_syntax_error();
     }
 
@@ -1366,6 +1368,7 @@ private:
     DeprecatedString m_end;
     bool m_allows_interpolation { false };
     bool m_deindent { false };
+    Optional<int> m_target_fd;
     RefPtr<AST::Node> m_contents;
 };
 

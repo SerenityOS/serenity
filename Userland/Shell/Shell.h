@@ -343,6 +343,8 @@ public:
         OpenFailure,
         OutOfMemory,
         LaunchError,
+        PipeFailure,
+        WriteFailure,
     };
 
     void raise_error(ShellError kind, DeprecatedString description, Optional<AST::Position> position = {})

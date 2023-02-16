@@ -2352,6 +2352,12 @@ void Shell::possibly_print_error() const
     case ShellError::LaunchError:
         warnln("Shell: {}", m_error_description);
         break;
+    case ShellError::PipeFailure:
+        warnln("Shell: pipe() failed for {}", m_error_description);
+        break;
+    case ShellError::WriteFailure:
+        warnln("Shell: write() failed for {}", m_error_description);
+        break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
     case ShellError::InternalControlFlowInterrupted:
