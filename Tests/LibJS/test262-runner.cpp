@@ -91,9 +91,15 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
                 return visitor->parse_node();
             });
 
-        auto unit_result = JS::Bytecode::Generator::generate(program_node);
-        if (unit_result.is_error()) {
-            result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), DeprecatedString::formatted("TODO({})", unit_result.error().to_deprecated_string())));
+        auto& vm = interpreter.vm();
+
+        if (auto unit_result = JS::Bytecode::Generator::generate(program_node); unit_result.is_error()) {
+            if (auto error_string = unit_result.error().to_string(); error_string.is_error())
+                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
+            else if (error_string = String::formatted("TODO({})", error_string.value()); error_string.is_error())
+                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
+            else
+                result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), error_string.release_value()));
         } else {
             auto unit = unit_result.release_value();
             auto optimization_level = s_enable_bytecode_optimizations ? JS::Bytecode::Interpreter::OptimizationLevel::Optimize : JS::Bytecode::Interpreter::OptimizationLevel::Default;

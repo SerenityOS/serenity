@@ -1216,7 +1216,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 19. Throw a TypeError.
             // FIXME: Replace the error message with something more descriptive.
             union_generator.append(R"~~~(
-        return vm.throw_completion<JS::TypeError>("No union types matched");
+        return vm.throw_completion<JS::TypeError>("No union types matched"sv);
 )~~~");
         }
 

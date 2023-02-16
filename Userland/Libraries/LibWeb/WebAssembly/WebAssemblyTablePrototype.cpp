@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::grow)
     auto& reference = reference_value.value().get<Wasm::Reference>();
 
     if (!table->grow(delta, reference))
-        return vm.throw_completion<JS::RangeError>("Failed to grow table");
+        return vm.throw_completion<JS::RangeError>("Failed to grow table"sv);
 
     return JS::Value(static_cast<u32>(initial_size));
 }
@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::get)
         return JS::js_undefined();
 
     if (table->elements().size() <= index)
-        return vm.throw_completion<JS::RangeError>("Table element index out of range");
+        return vm.throw_completion<JS::RangeError>("Table element index out of range"sv);
 
     auto& ref = table->elements()[index];
     if (!ref.has_value())
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyTablePrototype::set)
         return JS::js_undefined();
 
     if (table->elements().size() <= index)
-        return vm.throw_completion<JS::RangeError>("Table element index out of range");
+        return vm.throw_completion<JS::RangeError>("Table element index out of range"sv);
 
     auto value_value = vm.argument(1);
     auto reference_value = TRY([&]() -> JS::ThrowCompletionOr<Wasm::Value> {

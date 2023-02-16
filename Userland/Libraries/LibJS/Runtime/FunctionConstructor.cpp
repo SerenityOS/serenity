@@ -178,7 +178,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 17. If parameters is a List of errors, throw a SyntaxError exception.
     if (parameters_parser.has_errors()) {
         auto error = parameters_parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
+        return vm.throw_completion<SyntaxError>(TRY_OR_THROW_OOM(vm, error.to_string()));
     }
 
     // 18. Let body be ParseText(StringToCodePoints(bodyString), bodySym).
@@ -195,7 +195,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 19. If body is a List of errors, throw a SyntaxError exception.
     if (body_parser.has_errors()) {
         auto error = body_parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
+        return vm.throw_completion<SyntaxError>(TRY_OR_THROW_OOM(vm, error.to_string()));
     }
 
     // 20. NOTE: The parameters and body are parsed separately to ensure that each is valid alone. For example, new Function("/*", "*/ ) {") is not legal.
@@ -209,7 +209,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
     // 23. If expr is a List of errors, throw a SyntaxError exception.
     if (source_parser.has_errors()) {
         auto error = source_parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
+        return vm.throw_completion<SyntaxError>(TRY_OR_THROW_OOM(vm, error.to_string()));
     }
 
     // 24. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).

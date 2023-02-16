@@ -1725,7 +1725,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
         if (!behavior_string_value.is_undefined())
             behavior_string = TRY(behavior_string_value.to_deprecated_string(vm));
         if (behavior_string != "smooth" && behavior_string != "auto")
-            return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
+            return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
 
     } else if (vm.argument_count() >= 2) {
         // We ignore arguments 2+ in line with behavior of Chrome and Firefox
@@ -1788,7 +1788,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     auto behavior_string_value = TRY(options->get("behavior"));
     auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_deprecated_string(vm));
     if (behavior_string != "smooth" && behavior_string != "auto")
-        return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
+        return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
 
     // FIXME: Spec wants us to call scroll(options) here.

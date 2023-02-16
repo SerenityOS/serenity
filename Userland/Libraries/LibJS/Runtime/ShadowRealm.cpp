@@ -107,7 +107,7 @@ ThrowCompletionOr<Value> perform_shadow_realm_eval(VM& vm, StringView source_tex
     // b. If script is a List of errors, throw a SyntaxError exception.
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
+        return vm.throw_completion<SyntaxError>(TRY_OR_THROW_OOM(vm, error.to_string()));
     }
 
     // c. If script Contains ScriptBody is false, return undefined.
@@ -272,7 +272,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, DeprecatedString spec
     // NOTE: Even though the spec tells us to use %ThrowTypeError%, it's not observable if we actually do.
     // Throw a nicer TypeError forwarding the import error message instead (we know the argument is an Error object).
     auto throw_type_error = NativeFunction::create(realm, {}, [](auto& vm) -> ThrowCompletionOr<Value> {
-        return vm.template throw_completion<TypeError>(TRY(vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().deprecated_string()));
+        return vm.template throw_completion<TypeError>(TRY(vm.argument(0).as_object().get_without_side_effects(vm.names.message).as_string().utf8_string()));
     });
 
     // 13. Return PerformPromiseThen(innerCapability.[[Promise]], onFulfilled, callerRealm.[[Intrinsics]].[[%ThrowTypeError%]], promiseCapability).

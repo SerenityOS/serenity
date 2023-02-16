@@ -207,14 +207,14 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
     JS::ThrowCompletionOr<JS::Value> result { JS::js_undefined() };
 
-    auto run_script_or_module = [&](auto& script_or_module) {
+    auto run_script_or_module = [&](auto& script_or_module) -> ErrorOr<ReturnEarly> {
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_deprecated_string());
+                result = g_vm->throw_completion<JS::InternalError>(TRY(executable_result.error().to_string()));
                 return ReturnEarly::No;
             }
 
@@ -253,10 +253,12 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln("{}", error.to_deprecated_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
+
+            auto error_string = TRY(error.to_string());
+            outln("{}", error_string);
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
         } else {
-            auto return_early = run_script_or_module(script_or_error.value());
+            auto return_early = TRY(run_script_or_module(script_or_error.value()));
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -267,10 +269,12 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln(error.to_deprecated_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
+
+            auto error_string = TRY(error.to_string());
+            outln("{}", error_string);
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
         } else {
-            auto return_early = run_script_or_module(module_or_error.value());
+            auto return_early = TRY(run_script_or_module(module_or_error.value()));
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -335,7 +339,7 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
     auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
     auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+        return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to open '{}': {}", filename, file_or_error.error())));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file_or_error.release_value()));
     auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
@@ -355,11 +359,11 @@ static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
     auto filename = TRY(vm.argument(0).to_string(vm));
     auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+        return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to open '{}': {}", filename, file_or_error.error())));
 
     auto file_contents_or_error = file_or_error.value()->read_until_eof();
     if (file_contents_or_error.is_error())
-        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error()));
+        return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error())));
 
     auto json = JsonValue::from_string(file_contents_or_error.value());
     if (json.is_error())
@@ -448,7 +452,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(TRY_OR_THROW_OOM(*g_vm, String::formatted("Failed to print value: {}", result.error())));
 
     outln();
 
@@ -482,7 +486,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(TRY_OR_THROW_OOM(*g_vm, String::formatted("Failed to print value: {}", result.error())));
 
     outln();
 

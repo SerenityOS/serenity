@@ -602,7 +602,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     //     b. If script is a List of errors, throw a SyntaxError exception.
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
+        return vm.throw_completion<SyntaxError>(TRY_OR_THROW_OOM(vm, error.to_string()));
     }
 
     bool strict_eval = false;
@@ -704,7 +704,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable_result = Bytecode::Generator::generate(program);
         if (executable_result.is_error())
-            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_deprecated_string());
+            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
         auto executable = executable_result.release_value();
         executable->name = "eval"sv;

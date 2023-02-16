@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/AbstractMachine/Validator.h>
@@ -119,7 +120,7 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
         auto& buffer = static_cast<JS::DataView&>(*buffer_object);
         data = buffer.viewed_array_buffer()->buffer().span().slice(buffer.byte_offset(), buffer.byte_length());
     } else {
-        return vm.throw_completion<JS::TypeError>("Not a BufferSource");
+        return vm.throw_completion<JS::TypeError>("Not a BufferSource"sv);
     }
     FixedMemoryStream stream { data };
     auto module_result = Wasm::Module::parse(stream);
@@ -233,11 +234,11 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                     if (import_.is_number() || import_.is_bigint()) {
                         if (import_.is_number() && type.type().kind() == Wasm::ValueType::I64) {
                             // FIXME: Throw a LinkError instead.
-                            return vm.throw_completion<JS::TypeError>("LinkError: Import resolution attempted to cast a Number to a BigInteger");
+                            return vm.throw_completion<JS::TypeError>("LinkError: Import resolution attempted to cast a Number to a BigInteger"sv);
                         }
                         if (import_.is_bigint() && type.type().kind() != Wasm::ValueType::I64) {
                             // FIXME: Throw a LinkError instead.
-                            return vm.throw_completion<JS::TypeError>("LinkError: Import resolution attempted to cast a BigInteger to a Number");
+                            return vm.throw_completion<JS::TypeError>("LinkError: Import resolution attempted to cast a BigInteger to a Number"sv);
                         }
                         auto cast_value = TRY(to_webassembly_value(vm, import_, type.type()));
                         address = s_abstract_machine.store().allocate({ type.type(), false }, cast_value);
@@ -247,7 +248,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                         //            let globaladdr be v.[[Global]]
 
                         // FIXME: Throw a LinkError instead
-                        return vm.throw_completion<JS::TypeError>("LinkError: Invalid value for global type");
+                        return vm.throw_completion<JS::TypeError>("LinkError: Invalid value for global type"sv);
                     }
 
                     resolved_imports.set(import_name, Wasm::ExternValue { *address });
@@ -256,7 +257,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                 [&](Wasm::MemoryType const&) -> JS::ThrowCompletionOr<void> {
                     if (!import_.is_object() || !is<WebAssemblyMemoryObject>(import_.as_object())) {
                         // FIXME: Throw a LinkError instead
-                        return vm.throw_completion<JS::TypeError>("LinkError: Expected an instance of WebAssembly.Memory for a memory import");
+                        return vm.throw_completion<JS::TypeError>("LinkError: Expected an instance of WebAssembly.Memory for a memory import"sv);
                     }
                     auto address = static_cast<WebAssemblyMemoryObject const&>(import_.as_object()).address();
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
@@ -265,7 +266,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                 [&](Wasm::TableType const&) -> JS::ThrowCompletionOr<void> {
                     if (!import_.is_object() || !is<WebAssemblyTableObject>(import_.as_object())) {
                         // FIXME: Throw a LinkError instead
-                        return vm.throw_completion<JS::TypeError>("LinkError: Expected an instance of WebAssembly.Table for a table import");
+                        return vm.throw_completion<JS::TypeError>("LinkError: Expected an instance of WebAssembly.Table for a table import"sv);
                     }
                     auto address = static_cast<WebAssemblyTableObject const&>(import_.as_object()).address();
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
@@ -274,7 +275,7 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                 [&](auto const&) -> JS::ThrowCompletionOr<void> {
                     // FIXME: Implement these.
                     dbgln("Unimplemented import of non-function attempted");
-                    return vm.throw_completion<JS::TypeError>("LinkError: Not Implemented");
+                    return vm.throw_completion<JS::TypeError>("LinkError: Not Implemented"sv);
                 }));
         }
     }
@@ -283,10 +284,10 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
     auto link_result = linker.finish();
     if (link_result.is_error()) {
         // FIXME: Throw a LinkError.
-        StringBuilder builder;
-        builder.append("LinkError: Missing "sv);
-        builder.join(' ', link_result.error().missing_imports);
-        return vm.throw_completion<JS::TypeError>(builder.to_deprecated_string());
+        JS::ThrowableStringBuilder builder(vm);
+        MUST_OR_THROW_OOM(builder.append("LinkError: Missing "sv));
+        MUST_OR_THROW_OOM(builder.join(' ', link_result.error().missing_imports));
+        return vm.throw_completion<JS::TypeError>(MUST_OR_THROW_OOM(builder.to_string()));
     }
 
     auto instance_result = s_abstract_machine.instantiate(module, link_result.release_value());
@@ -327,7 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     } else if (is<WebAssemblyModuleObject>(buffer)) {
         module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();
     } else {
-        auto error = JS::TypeError::create(realm, DeprecatedString::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name()));
+        auto error = JS::TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name())));
         promise->reject(error);
         return promise;
     }
@@ -447,7 +448,7 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
             auto result = WebAssemblyObject::s_abstract_machine.invoke(address, move(values));
             // FIXME: Use the convoluted mapping of errors defined in the spec.
             if (result.is_trap())
-                return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Wasm execution trapped (WIP): {}", result.trap().reason));
+                return vm.throw_completion<JS::TypeError>(TRY_OR_THROW_OOM(vm, String::formatted("Wasm execution trapped (WIP): {}", result.trap().reason)));
 
             if (result.values().is_empty())
                 return JS::js_undefined();
