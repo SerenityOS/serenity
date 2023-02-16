@@ -47,27 +47,27 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 
     // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
     auto name = name_property.is_undefined()
-        ? DeprecatedString { "Error"sv }
-        : TRY(name_property.to_deprecated_string(vm));
+        ? TRY_OR_THROW_OOM(vm, String::from_utf8("Error"sv))
+        : TRY(name_property.to_string(vm));
 
     // 5. Let msg be ? Get(O, "message").
     auto message_property = TRY(this_object->get(vm.names.message));
 
     // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
     auto message = message_property.is_undefined()
-        ? DeprecatedString::empty()
-        : TRY(message_property.to_deprecated_string(vm));
+        ? String {}
+        : TRY(message_property.to_string(vm));
 
     // 7. If name is the empty String, return msg.
     if (name.is_empty())
-        return PrimitiveString::create(vm, message);
+        return PrimitiveString::create(vm, move(message));
 
     // 8. If msg is the empty String, return name.
     if (message.is_empty())
-        return PrimitiveString::create(vm, name);
+        return PrimitiveString::create(vm, move(name));
 
     // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-    return PrimitiveString::create(vm, DeprecatedString::formatted("{}: {}", name, message));
+    return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", name, message)));
 }
 
 // B.1.1 get Error.prototype.stack ( ), https://tc39.es/proposal-error-stacks/#sec-get-error.prototype-stack
@@ -86,19 +86,19 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     // 4. Return ? GetStackString(error).
     // NOTE: These steps are not implemented based on the proposal, but to roughly follow behavior of other browsers.
 
-    DeprecatedString name = "Error";
-    auto name_property = TRY(error.get(vm.names.name));
-    if (!name_property.is_undefined())
-        name = TRY(name_property.to_deprecated_string(vm));
+    String name {};
+    if (auto name_property = TRY(error.get(vm.names.name)); !name_property.is_undefined())
+        name = TRY(name_property.to_string(vm));
+    else
+        name = TRY_OR_THROW_OOM(vm, String::from_utf8("Error"sv));
 
-    DeprecatedString message = "";
-    auto message_property = TRY(error.get(vm.names.message));
-    if (!message_property.is_undefined())
-        message = TRY(message_property.to_deprecated_string(vm));
+    String message {};
+    if (auto message_property = TRY(error.get(vm.names.message)); !message_property.is_undefined())
+        message = TRY(message_property.to_string(vm));
 
-    DeprecatedString header = name;
-    if (!message.is_empty())
-        header = DeprecatedString::formatted("{}: {}", name, message);
+    auto header = message.is_empty()
+        ? move(name)
+        : TRY_OR_THROW_OOM(vm, String::formatted("{}: {}", name, message));
 
     return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::formatted("{}\n{}", header, MUST_OR_THROW_OOM(error.stack_string(vm)))));
 }
