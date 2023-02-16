@@ -57,7 +57,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
         maximum = TRY(maximum_value.to_u32(vm));
 
     if (maximum.has_value() && maximum.value() < initial)
-        return vm.throw_completion<JS::RangeError>("maximum should be larger than or equal to initial");
+        return vm.throw_completion<JS::RangeError>("maximum should be larger than or equal to initial"sv);
 
     auto value_value = TRY(descriptor->get("value"));
     auto reference_value = TRY([&]() -> JS::ThrowCompletionOr<Wasm::Value> {
@@ -71,7 +71,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyTableConstructor:
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::TableType { *reference_type, Wasm::Limits { initial, maximum } });
     if (!address.has_value())
-        return vm.throw_completion<JS::TypeError>("Wasm Table allocation failed");
+        return vm.throw_completion<JS::TypeError>("Wasm Table allocation failed"sv);
 
     auto& table = *WebAssemblyObject::s_abstract_machine.store().get(*address);
     for (auto& element : table.elements())

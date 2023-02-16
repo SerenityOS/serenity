@@ -44,7 +44,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyMemoryConstructor
 
     auto address = WebAssemblyObject::s_abstract_machine.store().allocate(Wasm::MemoryType { Wasm::Limits { initial, maximum } });
     if (!address.has_value())
-        return vm.throw_completion<JS::TypeError>("Wasm Memory allocation failed");
+        return vm.throw_completion<JS::TypeError>("Wasm Memory allocation failed"sv);
 
     return MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyMemoryObject>(realm, realm, *address));
 }

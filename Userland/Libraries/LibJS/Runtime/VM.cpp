@@ -90,7 +90,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
         // If you are here because you want to enable dynamic module importing make sure it won't be a security problem
         // by checking the default implementation of HostImportModuleDynamically and creating your own hook or calling
         // vm.enable_default_host_import_module_dynamically_hook().
-        promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()));
+        promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()).release_allocated_value_but_fixme_should_propagate_errors());
 
         promise->perform_then(
             NativeFunction::create(realm, "", [](auto&) -> ThrowCompletionOr<Value> {
@@ -154,10 +154,10 @@ VM::VM(OwnPtr<CustomData> custom_data)
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    m_error_messages[to_underlying(ErrorMessage::OutOfMemory)] = ErrorType::OutOfMemory.message();
+    m_error_messages[to_underlying(ErrorMessage::OutOfMemory)] = String::from_utf8(ErrorType::OutOfMemory.message()).release_value_but_fixme_should_propagate_errors();
 }
 
-DeprecatedString const& VM::error_message(ErrorMessage type) const
+String const& VM::error_message(ErrorMessage type) const
 {
     VERIFY(type < ErrorMessage::__Count);
 
@@ -1001,7 +1001,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         // If there is no ScriptOrModule in any of the execution contexts
         if (referencing_script_or_module.has<Empty>()) {
             // Throw an error for now
-            promise->reject(InternalError::create(realm, DeprecatedString::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
+            promise->reject(InternalError::create(realm, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier).release_value_but_fixme_should_propagate_errors()));
             return;
         }
     }

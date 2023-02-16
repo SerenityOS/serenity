@@ -320,17 +320,17 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
-#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                          \
-    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                         \
-    {                                                                                                                                      \
-        auto& vm = interpreter.vm();                                                                                                       \
-        auto& realm = *vm.current_realm();                                                                                                 \
-        interpreter.accumulator() = ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string));                 \
-        return {};                                                                                                                         \
-    }                                                                                                                                      \
-    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                               \
-    {                                                                                                                                      \
-        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string)); \
+#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                             \
+    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                            \
+    {                                                                                                                                         \
+        auto& vm = interpreter.vm();                                                                                                          \
+        auto& realm = *vm.current_realm();                                                                                                    \
+        interpreter.accumulator() = MUST_OR_THROW_OOM(ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string))); \
+        return {};                                                                                                                            \
+    }                                                                                                                                         \
+    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                                  \
+    {                                                                                                                                         \
+        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string));    \
     }
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DEFINE_NEW_BUILTIN_ERROR_OP)
@@ -446,7 +446,7 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
         if (TRY(vm.lexical_environment()->has_binding(name)))
-            return vm.throw_completion<InternalError>(DeprecatedString::formatted("Lexical environment already has binding '{}'", name));
+            return vm.throw_completion<InternalError>(TRY_OR_THROW_OOM(vm, String::formatted("Lexical environment already has binding '{}'", name)));
 
         if (m_is_immutable)
             vm.lexical_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
@@ -929,7 +929,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                 auto& realm = *vm.current_realm();
                 auto iterated_object_value = vm.this_value();
                 if (!iterated_object_value.is_object())
-                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next");
+                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next"sv);
 
                 auto& iterated_object = iterated_object_value.as_object();
                 auto result_object = Object::create(realm, nullptr);

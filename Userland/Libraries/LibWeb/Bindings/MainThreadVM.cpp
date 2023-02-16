@@ -68,7 +68,7 @@ JS::VM& main_thread_vm()
         vm->host_ensure_can_add_private_element = [](JS::Object const& object) -> JS::ThrowCompletionOr<void> {
             // 1. If O is a WindowProxy object, or implements Location, then return Completion { [[Type]]: throw, [[Value]]: a new TypeError }.
             if (is<HTML::WindowProxy>(object) || is<HTML::Location>(object))
-                return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object");
+                return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object"sv);
 
             // 2. Return NormalCompletion(unused).
             return {};

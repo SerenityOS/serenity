@@ -52,7 +52,7 @@ JS::NonnullGCPtr<WebIDL::Promise> Body::fully_read_as_promise() const
         return WebIDL::create_resolved_promise(realm, JS::PrimitiveString::create(vm, move(result)));
     }
     // Empty, Blob, FormData
-    return WebIDL::create_rejected_promise(realm, JS::InternalError::create(realm, "Reading body isn't fully implemented"sv));
+    return WebIDL::create_rejected_promise(realm, JS::InternalError::create(realm, "Reading body isn't fully implemented"sv).release_allocated_value_but_fixme_should_propagate_errors());
 }
 
 // https://fetch.spec.whatwg.org/#byte-sequence-as-a-body

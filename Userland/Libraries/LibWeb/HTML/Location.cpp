@@ -89,7 +89,7 @@ JS::ThrowCompletionOr<void> Location::set_href(DeprecatedString const& new_href)
     // 2. Parse the given value relative to the entry settings object. If that failed, throw a TypeError exception.
     auto href_url = window.associated_document().parse_url(new_href);
     if (!href_url.is_valid())
-        return vm.throw_completion<JS::URIError>(DeprecatedString::formatted("Invalid URL '{}'", new_href));
+        return vm.throw_completion<JS::URIError>(TRY_OR_THROW_OOM(vm, String::formatted("Invalid URL '{}'", new_href)));
 
     // 3. Location-object navigate given the resulting URL record.
     window.did_set_location_href({}, href_url);

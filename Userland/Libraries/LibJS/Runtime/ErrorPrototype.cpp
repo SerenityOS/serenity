@@ -100,7 +100,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_getter)
     if (!message.is_empty())
         header = DeprecatedString::formatted("{}: {}", name, message);
 
-    return PrimitiveString::create(vm, DeprecatedString::formatted("{}\n{}", header, error.stack_string()));
+    return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::formatted("{}\n{}", header, MUST_OR_THROW_OOM(error.stack_string(vm)))));
 }
 
 // B.1.2 set Error.prototype.stack ( value ), https://tc39.es/proposal-error-stacks/#sec-set-error.prototype-stack

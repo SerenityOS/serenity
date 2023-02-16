@@ -824,7 +824,7 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             auto compile = [&](auto& node, auto kind, auto name) -> ThrowCompletionOr<NonnullOwnPtr<Bytecode::Executable>> {
                 auto executable_result = Bytecode::Generator::generate(node, kind);
                 if (executable_result.is_error())
-                    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_deprecated_string());
+                    return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
                 auto bytecode_executable = executable_result.release_value();
                 bytecode_executable->name = name;

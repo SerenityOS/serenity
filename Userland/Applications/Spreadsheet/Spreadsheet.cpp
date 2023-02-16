@@ -172,7 +172,7 @@ JS::ThrowCompletionOr<JS::Value> Sheet::evaluate(StringView source, Cell* on_beh
         name);
 
     if (script_or_error.is_error())
-        return interpreter().vm().throw_completion<JS::SyntaxError>(script_or_error.error().first().to_deprecated_string());
+        return interpreter().vm().throw_completion<JS::SyntaxError>(TRY_OR_THROW_OOM(interpreter().vm(), script_or_error.error().first().to_string()));
 
     return interpreter().run(script_or_error.value());
 }

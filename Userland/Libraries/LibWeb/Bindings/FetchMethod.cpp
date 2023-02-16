@@ -219,7 +219,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                 }
                 return record_union_type;
             }
-            return vm.throw_completion<JS::TypeError>("No union types matched");
+            return vm.throw_completion<JS::TypeError>("No union types matched"sv);
         };
         Optional<Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>>> headers_value;
         if (!headers_property_value.is_nullish())

@@ -100,7 +100,7 @@ public:
         // Keep this last:
         __Count,
     };
-    DeprecatedString const& error_message(ErrorMessage) const;
+    String const& error_message(ErrorMessage) const;
 
     bool did_reach_stack_space_limit() const
     {
@@ -201,7 +201,12 @@ public:
     Completion throw_completion(Args&&... args)
     {
         auto& realm = *current_realm();
-        return JS::throw_completion(T::create(realm, forward<Args>(args)...));
+        auto completion = T::create(realm, forward<Args>(args)...);
+
+        if constexpr (IsSame<decltype(completion), ThrowCompletionOr<NonnullGCPtr<T>>>)
+            return JS::throw_completion(MUST_OR_THROW_OOM(completion));
+        else
+            return JS::throw_completion(completion);
     }
 
     template<typename T, typename... Args>
@@ -296,7 +301,7 @@ private:
 
     PrimitiveString* m_empty_string { nullptr };
     PrimitiveString* m_single_ascii_character_strings[128] {};
-    AK::Array<DeprecatedString, to_underlying(ErrorMessage::__Count)> m_error_messages;
+    AK::Array<String, to_underlying(ErrorMessage::__Count)> m_error_messages;
 
     struct StoredModule {
         ScriptOrModule referencing_script_or_module;
