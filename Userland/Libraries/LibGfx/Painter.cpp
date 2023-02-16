@@ -1230,10 +1230,10 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
                 auto bottom_left = get_pixel(source, scaled_x0, scaled_y1);
                 auto bottom_right = get_pixel(source, scaled_x1, scaled_y1);
 
-                auto top = top_left.interpolate(top_right, x_ratio);
-                auto bottom = bottom_left.interpolate(bottom_right, x_ratio);
+                auto top = top_left.mixed_with(top_right, x_ratio);
+                auto bottom = bottom_left.mixed_with(bottom_right, x_ratio);
 
-                src_pixel = top.interpolate(bottom, y_ratio);
+                src_pixel = top.mixed_with(bottom, y_ratio);
             } else if constexpr (scaling_mode == Painter::ScalingMode::SmoothPixels) {
                 auto scaled_x1 = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
                 auto scaled_x0 = clamp(scaled_x1 - 1, clipped_src_rect.left(), clipped_src_rect.right());
@@ -1251,10 +1251,10 @@ ALWAYS_INLINE static void do_draw_scaled_bitmap(Gfx::Bitmap& target, IntRect con
                 auto bottom_left = get_pixel(source, scaled_x0, scaled_y1);
                 auto bottom_right = get_pixel(source, scaled_x1, scaled_y1);
 
-                auto top = top_left.interpolate(top_right, scaled_x_ratio);
-                auto bottom = bottom_left.interpolate(bottom_right, scaled_x_ratio);
+                auto top = top_left.mixed_with(top_right, scaled_x_ratio);
+                auto bottom = bottom_left.mixed_with(bottom_right, scaled_x_ratio);
 
-                src_pixel = top.interpolate(bottom, scaled_y_ratio);
+                src_pixel = top.mixed_with(bottom, scaled_y_ratio);
             } else {
                 auto scaled_x = clamp(desired_x >> 32, clipped_src_rect.left(), clipped_src_rect.right());
                 auto scaled_y = clamp(desired_y >> 32, clipped_src_rect.top(), clipped_src_rect.bottom());
