@@ -773,7 +773,7 @@ Lexer::ReductionResult Lexer::reduce_parameter_expansion()
     }
 
     auto next = m_lexer.peek();
-    if (is_ascii_alphanumeric(next)) {
+    if (is_ascii_alphanumeric(next) || next == '_') {
         m_state.buffer.append(consume());
         expansion.parameter.append(next);
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
