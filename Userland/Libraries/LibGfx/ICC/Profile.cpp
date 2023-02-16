@@ -5,6 +5,7 @@
  */
 
 #include <AK/Endian.h>
+#include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <math.h>
@@ -16,32 +17,6 @@
 namespace Gfx::ICC {
 
 namespace {
-
-// ICC V4, 4.2 dateTimeNumber
-// "All the dateTimeNumber values in a profile shall be in Coordinated Universal Time [...]."
-struct DateTimeNumber {
-    BigEndian<u16> year;
-    BigEndian<u16> month;
-    BigEndian<u16> day;
-    BigEndian<u16> hours;
-    BigEndian<u16> minutes;
-    BigEndian<u16> seconds;
-};
-
-// ICC V4, 4.6 s15Fixed16Number
-using s15Fixed16Number = i32;
-
-// ICC V4, 4.14 XYZNumber
-struct XYZNumber {
-    BigEndian<s15Fixed16Number> x;
-    BigEndian<s15Fixed16Number> y;
-    BigEndian<s15Fixed16Number> z;
-
-    operator XYZ() const
-    {
-        return XYZ { x / (double)0x1'0000, y / (double)0x1'0000, z / (double)0x1'0000 };
-    }
-};
 
 ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
 {
@@ -83,39 +58,6 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
 
     return timestamp;
 }
-
-// ICC V4, 7.2 Profile header
-struct ICCHeader {
-    BigEndian<u32> profile_size;
-    BigEndian<PreferredCMMType> preferred_cmm_type;
-
-    u8 profile_version_major;
-    u8 profile_version_minor_bugfix;
-    BigEndian<u16> profile_version_zero;
-
-    BigEndian<DeviceClass> profile_device_class;
-    BigEndian<ColorSpace> data_color_space;
-    BigEndian<ColorSpace> profile_connection_space; // "PCS" in the spec.
-
-    DateTimeNumber profile_creation_time;
-
-    BigEndian<u32> profile_file_signature;
-    BigEndian<PrimaryPlatform> primary_platform;
-
-    BigEndian<u32> profile_flags;
-    BigEndian<DeviceManufacturer> device_manufacturer;
-    BigEndian<DeviceModel> device_model;
-    BigEndian<u64> device_attributes;
-    BigEndian<u32> rendering_intent;
-
-    XYZNumber pcs_illuminant;
-
-    BigEndian<Creator> profile_creator;
-
-    u8 profile_id[16];
-    u8 reserved[28];
-};
-static_assert(AssertSize<ICCHeader, 128>());
 
 ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
 {
