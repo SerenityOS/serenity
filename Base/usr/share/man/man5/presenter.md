@@ -46,7 +46,7 @@ The slides array contains a list of slide objects, their JSON order determines t
 
 Most slide objects are graphical objects of one of the pre-defined types. All graphical objects, like GUI widgets, have a bounding box rectangle which determines their position and size. Objects choose which frames they appear on.
 
-In the file format, slide objects are JSON objects with the following basic properties:
+In the file format, slide objects are JSON objects with the following basic properties:
 
 -   `type`: (string enum) Specifies the type of the slide object and what other properties the object may have, see below.
 -   `rect`: (4-element array of integers: `[left, top, width, height]`, optional) Specifies the bounding box of the object. Is mandatory for most types.
