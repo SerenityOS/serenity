@@ -1682,10 +1682,13 @@ RefPtr<AST::Node> Parser::parse_word()
             append_bareword(string.substring_view(*run_start, string.length() - *run_start));
     };
 
+    if (!token.resolved_expansions.is_empty())
+        dbgln_if(SHELL_POSIX_PARSER_DEBUG, "Expanding '{}' with {} expansion entries", token.value, token.resolved_expansions.size());
     size_t current_offset = 0;
     for (auto& expansion : token.resolved_expansions) {
         expansion.visit(
             [&](ResolvedParameterExpansion const& x) {
+                dbgln_if(SHELL_POSIX_PARSER_DEBUG, "    Expanding '{}' ({}+{})", x.to_deprecated_string(), x.range.start, x.range.length);
                 if (x.range.start >= token.value.length()) {
                     dbgln("Parameter expansion range {}-{} is out of bounds for '{}'", x.range.start, x.range.length, token.value);
                     return;
@@ -1713,7 +1716,7 @@ RefPtr<AST::Node> Parser::parse_word()
             });
     }
 
-    if (current_offset >= token.value.length()) {
+    if (current_offset > token.value.length()) {
         dbgln("Parameter expansion range {}- is out of bounds for '{}'", current_offset, token.value);
         return word;
     }
