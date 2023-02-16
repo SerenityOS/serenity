@@ -533,6 +533,7 @@ Lexer::ReductionResult Lexer::reduce_start()
     if (m_lexer.is_eof()) {
         auto tokens = Token::maybe_from_state(m_state);
         m_state.buffer.clear();
+        m_state.expansions.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
@@ -615,6 +616,7 @@ Lexer::ReductionResult Lexer::reduce_start()
         m_state.on_new_line = true;
 
         m_state.buffer.clear();
+        m_state.expansions.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
@@ -637,6 +639,7 @@ Lexer::ReductionResult Lexer::reduce_start()
         auto tokens = Token::maybe_from_state(m_state);
         m_state.buffer.clear();
         m_state.buffer.append(consume());
+        m_state.expansions.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
