@@ -13,12 +13,12 @@ namespace Shell::Posix {
 
 class Parser {
 public:
-    Parser(StringView input, bool interactive = false)
+    Parser(StringView input, bool interactive = false, Optional<Reduction> starting_reduction = {})
         : m_lexer(input)
         , m_in_interactive_mode(interactive)
         , m_eof_token(Token::eof())
     {
-        fill_token_buffer();
+        fill_token_buffer(starting_reduction);
     }
 
     RefPtr<AST::Node> parse();
@@ -31,20 +31,23 @@ public:
     auto& errors() const { return m_errors; }
 
 private:
-    Optional<Token> next_expanded_token();
+    Optional<Token> next_expanded_token(Optional<Reduction> starting_reduction = {});
     Vector<Token> perform_expansions(Vector<Token> tokens);
-    void fill_token_buffer();
+    void fill_token_buffer(Optional<Reduction> starting_reduction = {});
+    void handle_heredoc_contents();
 
-    Token const& peek() const
+    Token const& peek()
     {
         if (eof())
             return m_eof_token;
+        handle_heredoc_contents();
         return m_token_buffer[m_token_index];
     }
     Token const& consume()
     {
         if (eof())
             return m_eof_token;
+        handle_heredoc_contents();
         return m_token_buffer[m_token_index++];
     }
     void skip()
@@ -108,6 +111,7 @@ private:
     Vector<Token> m_previous_token_buffer;
 
     Vector<Error> m_errors;
+    HashMap<DeprecatedString, NonnullRefPtr<AST::Heredoc>> m_unprocessed_heredoc_entries;
 
     Token m_eof_token;
 

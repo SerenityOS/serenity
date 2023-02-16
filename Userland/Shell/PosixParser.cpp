@@ -9,6 +9,11 @@
 #include <AK/StringUtils.h>
 #include <Shell/PosixParser.h>
 
+static Shell::AST::Position empty_position()
+{
+    return { 0, 0, { 0, 0 }, { 0, 0 } };
+}
+
 template<typename T, typename... Ts>
 static inline bool is_one_of(T const& value, Ts const&... values)
 {
@@ -22,7 +27,8 @@ static inline bool is_io_operator(Shell::Posix::Token const& token)
         Token::Type::Less, Token::Type::Great,
         Token::Type::LessAnd, Token::Type::GreatAnd,
         Token::Type::DoubleLess, Token::Type::DoubleGreat,
-        Token::Type::LessGreat, Token::Type::Clobber);
+        Token::Type::DoubleLessDash, Token::Type::LessGreat,
+        Token::Type::Clobber);
 }
 
 static inline bool is_separator(Shell::Posix::Token const& token)
@@ -95,10 +101,10 @@ static inline bool is_valid_name(StringView word)
 }
 
 namespace Shell::Posix {
-void Parser::fill_token_buffer()
+void Parser::fill_token_buffer(Optional<Reduction> starting_reduction)
 {
     for (;;) {
-        auto token = next_expanded_token();
+        auto token = next_expanded_token(starting_reduction);
         if (!token.has_value())
             break;
 #if SHELL_POSIX_PARSER_DEBUG
@@ -126,10 +132,36 @@ RefPtr<AST::Node> Parser::parse()
     return parse_complete_command();
 }
 
-Optional<Token> Parser::next_expanded_token()
+void Parser::handle_heredoc_contents()
+{
+    while (!eof() && m_token_buffer[m_token_index].type == Token::Type::HeredocContents) {
+        auto& token = m_token_buffer[m_token_index++];
+        auto entry = m_unprocessed_heredoc_entries.get(token.relevant_heredoc_key.value());
+        if (!entry.has_value()) {
+            error(token, "Discarding unexpected heredoc contents for key '{}'", *token.relevant_heredoc_key);
+            continue;
+        }
+
+        auto& heredoc = **entry;
+
+        RefPtr<AST::Node> contents;
+        if (heredoc.allow_interpolation()) {
+            Parser parser { token.value, m_in_interactive_mode, Reduction::HeredocContents };
+            contents = parser.parse_word();
+        } else {
+            contents = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), token.value, AST::StringLiteral::EnclosureType::None);
+        }
+
+        if (contents)
+            heredoc.set_contents(contents);
+        m_unprocessed_heredoc_entries.remove(*token.relevant_heredoc_key);
+    }
+}
+
+Optional<Token> Parser::next_expanded_token(Optional<Reduction> starting_reduction)
 {
     while (m_token_buffer.find_if([](auto& token) { return token.type == Token::Type::Eof; }).is_end()) {
-        auto tokens = m_lexer.batch_next();
+        auto tokens = m_lexer.batch_next(starting_reduction);
         auto expanded = perform_expansions(move(tokens));
         m_token_buffer.extend(expanded);
     }
@@ -587,11 +619,6 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
     swap_expansions();
 
     return tokens;
-}
-
-static AST::Position empty_position()
-{
-    return { 0, 0, { 0, 0 }, { 0, 0 } };
 }
 
 RefPtr<AST::Node> Parser::parse_complete_command()
@@ -1835,11 +1862,45 @@ RefPtr<AST::Node> Parser::parse_io_redirect()
     if (auto io_file = parse_io_file(start_position, io_number))
         return io_file;
 
-    // if (auto io_here = parse_io_here(start_position, io_number))
-    //     return io_here;
+    if (auto io_here = parse_io_here(start_position, io_number))
+        return io_here;
 
     m_token_index = start_index;
     return nullptr;
+}
+
+RefPtr<AST::Node> Parser::parse_io_here(AST::Position start_position, Optional<int> fd)
+{
+    // io_here: IO_NUMBER? (DLESS | DLESSDASH) WORD
+    auto io_operator = peek().type;
+    if (!is_one_of(io_operator, Token::Type::DoubleLess, Token::Type::DoubleLessDash))
+        return nullptr;
+
+    auto io_operator_token = consume();
+
+    auto redirection_fd = fd.value_or(0);
+
+    auto end_keyword = consume();
+    if (!is_one_of(end_keyword.type, Token::Type::Word, Token::Type::Token))
+        return make_ref_counted<AST::SyntaxError>(io_operator_token.position.value_or(start_position), "Expected a heredoc keyword", true);
+
+    auto [end_keyword_text, allow_interpolation] = Lexer::process_heredoc_key(end_keyword);
+    RefPtr<AST::SyntaxError> error;
+
+    auto position = start_position.with_end(peek().position.value_or(empty_position()));
+    auto result = make_ref_counted<AST::Heredoc>(
+        position,
+        end_keyword_text,
+        allow_interpolation,
+        io_operator == Token::Type::DoubleLessDash,
+        Optional<int> { redirection_fd });
+
+    m_unprocessed_heredoc_entries.set(end_keyword_text, result);
+
+    if (error)
+        result->set_is_syntax_error(*error);
+
+    return result;
 }
 
 RefPtr<AST::Node> Parser::parse_io_file(AST::Position start_position, Optional<int> fd)
