@@ -167,26 +167,28 @@ bool EditingEngine::on_key(KeyEvent const& event)
 void EditingEngine::move_one_left()
 {
     if (m_editor->cursor().column() > 0) {
-        int new_column = m_editor->cursor().column() - 1;
+        auto new_column = m_editor->document().get_previous_grapheme_cluster_boundary(m_editor->cursor());
         m_editor->set_cursor(m_editor->cursor().line(), new_column);
     } else if (m_editor->cursor().line() > 0) {
-        int new_line = m_editor->cursor().line() - 1;
-        int new_column = m_editor->lines()[new_line].length();
+        auto new_line = m_editor->cursor().line() - 1;
+        auto new_column = m_editor->lines()[new_line].length();
         m_editor->set_cursor(new_line, new_column);
     }
 }
 
 void EditingEngine::move_one_right()
 {
-    int new_line = m_editor->cursor().line();
-    int new_column = m_editor->cursor().column();
+    auto new_line = m_editor->cursor().line();
+    auto new_column = m_editor->cursor().column();
+
     if (m_editor->cursor().column() < m_editor->current_line().length()) {
         new_line = m_editor->cursor().line();
-        new_column = m_editor->cursor().column() + 1;
+        new_column = m_editor->document().get_next_grapheme_cluster_boundary(m_editor->cursor());
     } else if (m_editor->cursor().line() != m_editor->line_count() - 1) {
         new_line = m_editor->cursor().line() + 1;
         new_column = 0;
     }
+
     m_editor->set_cursor(new_line, new_column);
 }
 
