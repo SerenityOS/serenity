@@ -8,6 +8,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/Fetch/Infrastructure/NoSniffBlocking.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -22,7 +23,7 @@ ErrorOr<bool> determine_nosniff(HeaderList const& list)
         return false;
 
     // 3. If values[0] is an ASCII case-insensitive match for "nosniff", then return true.
-    if (!values->is_empty() && values->at(0).equals_ignoring_case("nosniff"sv))
+    if (!values->is_empty() && Infra::is_ascii_case_insensitive_match(values->at(0), "nosniff"sv))
         return true;
 
     // 4. Return false.

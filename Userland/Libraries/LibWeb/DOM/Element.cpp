@@ -36,6 +36,7 @@
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -1121,7 +1122,8 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
     // 1. Use the first matching item from this list:
     // - If position is an ASCII case-insensitive match for the string "beforebegin"
     // - If position is an ASCII case-insensitive match for the string "afterend"
-    if (position.equals_ignoring_case("beforebegin"sv) || position.equals_ignoring_case("afterend"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(position, "beforebegin"sv)
+        || Infra::is_ascii_case_insensitive_match(position, "afterend"sv)) {
         // Let context be the context object's parent.
         context = this->parent();
 
@@ -1131,7 +1133,8 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
     }
     // - If position is an ASCII case-insensitive match for the string "afterbegin"
     // - If position is an ASCII case-insensitive match for the string "beforeend"
-    else if (position.equals_ignoring_case("afterbegin"sv) || position.equals_ignoring_case("beforeend"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "afterbegin"sv)
+        || Infra::is_ascii_case_insensitive_match(position, "beforeend"sv)) {
         // Let context be the context object.
         context = this;
     }
@@ -1162,25 +1165,25 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
     // 4. Use the first matching item from this list:
 
     // - If position is an ASCII case-insensitive match for the string "beforebegin"
-    if (position.equals_ignoring_case("beforebegin"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(position, "beforebegin"sv)) {
         // Insert fragment into the context object's parent before the context object.
         parent()->insert_before(fragment, this);
     }
 
     // - If position is an ASCII case-insensitive match for the string "afterbegin"
-    else if (position.equals_ignoring_case("afterbegin"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "afterbegin"sv)) {
         // Insert fragment into the context object before its first child.
         insert_before(fragment, first_child());
     }
 
     // - If position is an ASCII case-insensitive match for the string "beforeend"
-    else if (position.equals_ignoring_case("beforeend"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "beforeend"sv)) {
         // Append fragment to the context object.
         TRY(append_child(fragment));
     }
 
     // - If position is an ASCII case-insensitive match for the string "afterend"
-    else if (position.equals_ignoring_case("afterend"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "afterend"sv)) {
         // Insert fragment into the context object's parent before the context object's next sibling.
         parent()->insert_before(fragment, next_sibling());
     }
@@ -1191,7 +1194,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
 WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node)
 {
     // To insert adjacent, given an element element, string where, and a node node, run the steps associated with the first ASCII case-insensitive match for where:
-    if (where.equals_ignoring_case("beforebegin"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "beforebegin"sv)) {
         // -> "beforebegin"
         // If element’s parent is null, return null.
         if (!parent())
@@ -1201,19 +1204,19 @@ WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString c
         return JS::GCPtr<Node> { TRY(parent()->pre_insert(move(node), this)) };
     }
 
-    if (where.equals_ignoring_case("afterbegin"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "afterbegin"sv)) {
         // -> "afterbegin"
         // Return the result of pre-inserting node into element before element’s first child.
         return JS::GCPtr<Node> { TRY(pre_insert(move(node), first_child())) };
     }
 
-    if (where.equals_ignoring_case("beforeend"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "beforeend"sv)) {
         // -> "beforeend"
         // Return the result of pre-inserting node into element before null.
         return JS::GCPtr<Node> { TRY(pre_insert(move(node), nullptr)) };
     }
 
-    if (where.equals_ignoring_case("afterend"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "afterend"sv)) {
         // -> "afterend"
         // If element’s parent is null, return null.
         if (!parent())

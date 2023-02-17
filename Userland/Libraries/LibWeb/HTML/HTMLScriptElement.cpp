@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/MimeSniff/MimeType.h>
 
@@ -189,12 +190,12 @@ void HTMLScriptElement::prepare_script()
         m_script_type = ScriptType::Classic;
     }
     // 10. Otherwise, if the script block's type string is an ASCII case-insensitive match for the string "module",
-    else if (script_block_type.equals_ignoring_case("module"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(script_block_type, "module"sv)) {
         // then set el's type to "module".
         m_script_type = ScriptType::Module;
     }
     // 11. Otherwise, if the script block's type string is an ASCII case-insensitive match for the string "importmap",
-    else if (script_block_type.equals_ignoring_case("importmap"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(script_block_type, "importmap"sv)) {
         // then set el's type to "importmap".
         m_script_type = ScriptType::ImportMap;
     }
@@ -251,13 +252,14 @@ void HTMLScriptElement::prepare_script()
         event = event.trim(Infra::ASCII_WHITESPACE);
 
         // 4. If for is not an ASCII case-insensitive match for the string "window", then return.
-        if (!for_.equals_ignoring_case("window"sv)) {
+        if (!Infra::is_ascii_case_insensitive_match(for_, "window"sv)) {
             dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'for' attribute is not equal to 'window'");
             return;
         }
 
         // 5. If event is not an ASCII case-insensitive match for either the string "onload" or the string "onload()", then return.
-        if (!event.equals_ignoring_case("onload"sv) && !event.equals_ignoring_case("onload()"sv)) {
+        if (!Infra::is_ascii_case_insensitive_match(event, "onload"sv)
+            && !Infra::is_ascii_case_insensitive_match(event, "onload()"sv)) {
             dbgln("HTMLScriptElement: Refusing to run classic script because the provided 'event' attribute is not equal to 'onload' or 'onload()'");
             return;
         }
