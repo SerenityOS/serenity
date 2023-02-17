@@ -515,7 +515,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         auto& font = fragment.layout_node().font();
         auto scaled_font = [&]() -> RefPtr<Gfx::Font> {
             auto device_font_pt_size = context.enclosing_device_pixels(font.presentation_size());
-            FontSelector font_selector = { font.family(), static_cast<float>(device_font_pt_size.value()), font.weight(), font.width(), font.slope() };
+            FontSelector font_selector = { FlyString::from_utf8(font.family()).release_value_but_fixme_should_propagate_errors(), static_cast<float>(device_font_pt_size.value()), font.weight(), font.width(), font.slope() };
             if (auto cached_font = FontCache::the().get(font_selector)) {
                 return cached_font;
             }
