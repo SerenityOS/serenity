@@ -9,7 +9,26 @@
 #include <LibGfx/ICC/Profile.h>
 #include <time.h>
 
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
 namespace Gfx::ICC {
+
+static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile)
+{
+    VERIFY(bytes.size() >= sizeof(ICCHeader) + sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry));
+
+    *bit_cast<BigEndian<u32>*>(bytes.data() + sizeof(ICCHeader)) = profile.tag_count();
+
+    TagTableEntry* tag_table_entry = bit_cast<TagTableEntry*>(bytes.data() + sizeof(ICCHeader) + sizeof(u32));
+    profile.for_each_tag([&tag_table_entry](auto tag_signature, auto) {
+        tag_table_entry->tag_signature = tag_signature;
+        tag_table_entry->offset_to_beginning_of_tag_data_element = 0; // FIXME
+        tag_table_entry->size_of_tag_data_element = 0; // FIXME
+        ++tag_table_entry;
+    });
+
+    return {};
+}
 
 static ErrorOr<void> encode_header(ByteBuffer& bytes, Profile const& profile)
 {
@@ -63,9 +82,11 @@ static ErrorOr<void> encode_header(ByteBuffer& bytes, Profile const& profile)
 ErrorOr<ByteBuffer> encode(Profile const& profile)
 {
     // Leaves enough room for the profile header and the tag table count.
-    // FIXME: Serialize tag data and write tag table and tag data too.
-    auto bytes = TRY(ByteBuffer::create_zeroed(sizeof(ICCHeader) + sizeof(u32)));
+    // FIXME: Serialize tag data and write tag data too.
+    size_t tag_table_size = sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry);
+    auto bytes = TRY(ByteBuffer::create_zeroed(sizeof(ICCHeader) + tag_table_size));
 
+    TRY(encode_tag_table(bytes, profile));
     TRY(encode_header(bytes, profile));
 
     return bytes;
