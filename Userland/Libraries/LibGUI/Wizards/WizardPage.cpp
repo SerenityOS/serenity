@@ -34,7 +34,7 @@ WizardPage::WizardPage(DeprecatedString const& title_text, DeprecatedString cons
     m_subtitle_label = header_widget.add<Label>(subtitle_text);
     m_subtitle_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
     m_subtitle_label->set_fixed_height(m_subtitle_label->font().glyph_height());
-    header_widget.layout()->add_spacer();
+    header_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& separator = add<SeparatorWidget>(Gfx::Orientation::Horizontal);
     separator.set_fixed_height(2);

@@ -52,7 +52,7 @@ ErrorOr<NonnullRefPtr<SettingsWindow>> SettingsWindow::create(DeprecatedString t
         };
     }
 
-    TRY(button_container->layout()->try_add_spacer());
+    TRY(button_container->add_spacer());
 
     window->m_ok_button = TRY(button_container->try_add<GUI::DialogButton>(String::from_utf8_short_string("OK"sv)));
     window->m_ok_button->on_click = [window = window->make_weak_ptr<SettingsWindow>()](auto) {

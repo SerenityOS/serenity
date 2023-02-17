@@ -155,7 +155,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     button_widget->set_fixed_height(22);
     button_widget->layout()->set_spacing(5);
 
-    button_widget->layout()->add_spacer();
+    TRY(button_widget->add_spacer());
 
     auto ok_button = TRY(make_button(String::from_utf8_short_string("OK"sv), button_widget));
     ok_button->on_click = [this](auto) {

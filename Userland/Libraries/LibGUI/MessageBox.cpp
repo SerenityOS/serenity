@@ -165,7 +165,7 @@ void MessageBox::build()
         return button;
     };
 
-    button_container.layout()->add_spacer();
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
     if (should_include_ok_button())
         m_ok_button = add_button(String::from_utf8_short_string("OK"sv), ExecResult::OK);
     if (should_include_yes_button())
@@ -174,7 +174,7 @@ void MessageBox::build()
         m_no_button = add_button(String::from_utf8_short_string("No"sv), ExecResult::No);
     if (should_include_cancel_button())
         m_cancel_button = add_button(String::from_utf8_short_string("Cancel"sv), ExecResult::Cancel);
-    button_container.layout()->add_spacer();
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
     width = max(width, text_width + icon_width + 56);

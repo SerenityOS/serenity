@@ -87,12 +87,12 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     starting_meridiem_combo.set_model(MeridiemListModel::create());
     starting_meridiem_combo.set_selected_index(0);
 
-    widget->layout()->add_spacer();
+    widget->add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& button_container = widget->add<GUI::Widget>();
     button_container.set_fixed_height(20);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.layout()->add_spacer();
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
     auto& ok_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     ok_button.set_fixed_size(80, 20);
     ok_button.on_click = [this](auto) {

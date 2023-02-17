@@ -331,7 +331,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // Preview selected color
     m_preview_widget = preview_container.add<ColorPreview>(m_color);
 
-    vertical_container.layout()->add_spacer();
+    vertical_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     // HTML
     auto& html_container = vertical_container.add<GUI::Widget>();

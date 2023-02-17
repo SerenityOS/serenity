@@ -44,7 +44,7 @@ WizardDialog::WizardDialog(Window* parent_window)
     nav_container_widget.set_fixed_height(42);
     nav_container_widget.layout()->set_margins({ 0, 10 });
     nav_container_widget.layout()->set_spacing(0);
-    nav_container_widget.layout()->add_spacer();
+    nav_container_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_back_button = nav_container_widget.add<DialogButton>(String::from_utf8_short_string("< Back"sv));
     m_back_button->on_click = [&](auto) {

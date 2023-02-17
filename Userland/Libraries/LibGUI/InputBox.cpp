@@ -104,7 +104,7 @@ void InputBox::build()
     button_container_inner.set_layout<HorizontalBoxLayout>();
     button_container_inner.set_preferred_height(SpecialDimension::Fit);
     button_container_inner.layout()->set_spacing(6);
-    button_container_inner.layout()->add_spacer();
+    button_container_inner.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_ok_button = button_container_inner.add<DialogButton>();
     m_ok_button->set_text(String::from_utf8_short_string("OK"sv));
