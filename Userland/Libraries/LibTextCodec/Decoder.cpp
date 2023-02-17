@@ -157,7 +157,7 @@ Optional<StringView> get_standardized_encoding(StringView encoding)
 }
 
 // https://encoding.spec.whatwg.org/#bom-sniff
-Decoder* bom_sniff_to_decoder(StringView input)
+Optional<Decoder&> bom_sniff_to_decoder(StringView input)
 {
     // 1. Let BOM be the result of peeking 3 bytes from ioQueue, converted to a byte sequence.
     // 2. For each of the rows in the table below, starting with the first one and going down,
@@ -172,22 +172,28 @@ Decoder* bom_sniff_to_decoder(StringView input)
 
     auto bytes = input.bytes();
     if (bytes.size() < 2)
-        return nullptr;
+        return {};
 
     auto first_byte = bytes[0];
 
     switch (first_byte) {
     case 0xEF: // UTF-8
         if (bytes.size() < 3)
-            return nullptr;
-        return bytes[1] == 0xBB && bytes[2] == 0xBF ? &s_utf8_decoder : nullptr;
+            return {};
+        if (bytes[1] == 0xBB && bytes[2] == 0xBF)
+            return s_utf8_decoder;
+        return {};
     case 0xFE: // UTF-16BE
-        return bytes[1] == 0xFF ? &s_utf16be_decoder : nullptr;
+        if (bytes[1] == 0xFF)
+            return s_utf16be_decoder;
+        return {};
     case 0xFF: // UTF-16LE
-        return bytes[1] == 0xFE ? &s_utf16le_decoder : nullptr;
+        if (bytes[1] == 0xFE)
+            return s_utf16le_decoder;
+        return {};
     }
 
-    return nullptr;
+    return {};
 }
 
 // https://encoding.spec.whatwg.org/#decode
@@ -197,13 +203,13 @@ DeprecatedString convert_input_to_utf8_using_given_decoder_unless_there_is_a_byt
 
     // 1. Let BOMEncoding be the result of BOM sniffing ioQueue.
     // 2. If BOMEncoding is non-null:
-    if (auto* unicode_decoder = bom_sniff_to_decoder(input); unicode_decoder) {
+    if (auto unicode_decoder = bom_sniff_to_decoder(input); unicode_decoder.has_value()) {
         // 1. Set encoding to BOMEncoding.
-        actual_decoder = unicode_decoder;
+        actual_decoder = &unicode_decoder.value();
 
         // 2. Read three bytes from ioQueue, if BOMEncoding is UTF-8; otherwise read two bytes. (Do nothing with those bytes.)
         // FIXME: I imagine this will be pretty slow for large inputs, as it's regenerating the input without the first 2/3 bytes.
-        input = input.substring_view(unicode_decoder == &s_utf8_decoder ? 3 : 2);
+        input = input.substring_view(&unicode_decoder.value() == &s_utf8_decoder ? 3 : 2);
     }
 
     VERIFY(actual_decoder);
