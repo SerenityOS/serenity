@@ -96,11 +96,11 @@ enum class PrimaryPlatform : u32 {
 StringView primary_platform_name(PrimaryPlatform);
 
 // ICC v4, 7.2.15 Rendering intent field
-enum class RenderingIntent {
-    Perceptual,
-    MediaRelativeColorimetric,
-    Saturation,
-    ICCAbsoluteColorimetric,
+enum class RenderingIntent : u32 {
+    Perceptual = 0,
+    MediaRelativeColorimetric = 1,
+    Saturation = 2,
+    ICCAbsoluteColorimetric = 3,
 };
 StringView rendering_intent_name(RenderingIntent);
 

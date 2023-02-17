@@ -64,7 +64,7 @@ struct ICCHeader {
     BigEndian<DeviceManufacturer> device_manufacturer;
     BigEndian<DeviceModel> device_model;
     BigEndian<u64> device_attributes;
-    BigEndian<u32> rendering_intent;
+    BigEndian<RenderingIntent> rendering_intent;
 
     XYZNumber pcs_illuminant;
 
