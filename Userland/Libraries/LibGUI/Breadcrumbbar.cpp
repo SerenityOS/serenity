@@ -86,6 +86,10 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
         if (on_segment_change && m_selected_segment != index)
             on_segment_change(index);
     };
+    button.on_double_click = [this](auto modifiers) {
+        if (on_doubleclick)
+            on_doubleclick(modifiers);
+    };
     button.on_focus_change = [this, index = m_segments.size()](auto has_focus, auto) {
         if (has_focus && on_segment_change && m_selected_segment != index)
             on_segment_change(index);
@@ -154,7 +158,7 @@ void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
 void Breadcrumbbar::doubleclick_event(MouseEvent& event)
 {
     if (on_doubleclick)
-        on_doubleclick(event);
+        on_doubleclick(event.modifiers());
 }
 
 void Breadcrumbbar::resize_event(ResizeEvent&)

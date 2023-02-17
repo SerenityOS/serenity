@@ -80,7 +80,7 @@ PathBreadcrumbbar::PathBreadcrumbbar(NonnullRefPtr<GUI::TextBox> location_text_b
             on_paths_drop(m_breadcrumbbar->segment_data(segment_index), event);
     };
 
-    m_breadcrumbbar->on_doubleclick = [&](GUI::MouseEvent const&) {
+    m_breadcrumbbar->on_doubleclick = [&](auto) {
         show_location_text_box();
     };
 }
