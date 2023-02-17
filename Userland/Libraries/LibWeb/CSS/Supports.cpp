@@ -93,7 +93,7 @@ ErrorOr<String> Supports::InParens::to_string() const
     return value.visit(
         [](NonnullOwnPtr<Condition> const& condition) -> ErrorOr<String> { return String::formatted("({})", TRY(condition->to_string())); },
         [](Supports::Feature const& it) -> ErrorOr<String> { return it.to_string(); },
-        [](GeneralEnclosed const& it) -> ErrorOr<String> { return String::from_utf8(it.to_string()); });
+        [](GeneralEnclosed const& it) -> ErrorOr<String> { return it.to_string(); });
 }
 
 ErrorOr<String> Supports::Condition::to_string() const
