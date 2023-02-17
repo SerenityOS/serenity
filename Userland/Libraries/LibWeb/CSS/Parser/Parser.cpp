@@ -1427,13 +1427,13 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
     // `[ <function-token> <any-value>? ) ]`
     if (first_token.is_function()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() };
+        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors() };
     }
 
     // `( <any-value>? )`
     if (first_token.is_block() && first_token.block().is_paren()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string() };
+        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors() };
     }
 
     return {};
