@@ -63,6 +63,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
@@ -1270,42 +1271,44 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
 
     // 2. If interface is an ASCII case-insensitive match for any of the strings in the first column in the following table,
     //      then set constructor to the interface in the second column on the same row as the matching string:
-    auto interface_lowercase = interface.to_lowercase();
-    if (interface_lowercase == "beforeunloadevent") {
+    if (Infra::is_ascii_case_insensitive_match(interface, "beforeunloadevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create BeforeUnloadEvent
-    } else if (interface_lowercase == "compositionevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "compositionevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create CompositionEvent
-    } else if (interface_lowercase == "customevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "customevent"sv)) {
         event = TRY(CustomEvent::create(realm, ""));
-    } else if (interface_lowercase == "devicemotionevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "devicemotionevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create DeviceMotionEvent
-    } else if (interface_lowercase == "deviceorientationevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "deviceorientationevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create DeviceOrientationEvent
-    } else if (interface_lowercase == "dragevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "dragevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create DragEvent
-    } else if (interface_lowercase.is_one_of("event", "events")) {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "event"sv)
+        || Infra::is_ascii_case_insensitive_match(interface, "events"sv)) {
         event = TRY(Event::create(realm, ""));
-    } else if (interface_lowercase == "focusevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "focusevent"sv)) {
         event = UIEvents::FocusEvent::create(realm, "");
-    } else if (interface_lowercase == "hashchangeevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "hashchangeevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create HashChangeEvent
-    } else if (interface_lowercase == "htmlevents") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "htmlevents"sv)) {
         event = TRY(Event::create(realm, ""));
-    } else if (interface_lowercase == "keyboardevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "keyboardevent"sv)) {
         event = UIEvents::KeyboardEvent::create(realm, "");
-    } else if (interface_lowercase == "messageevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "messageevent"sv)) {
         event = TRY(HTML::MessageEvent::create(realm, ""));
-    } else if (interface_lowercase.is_one_of("mouseevent", "mouseevents")) {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "mouseevent"sv)
+        || Infra::is_ascii_case_insensitive_match(interface, "mouseevents"sv)) {
         event = TRY(UIEvents::MouseEvent::create(realm, ""));
-    } else if (interface_lowercase == "storageevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "storageevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create StorageEvent
-    } else if (interface_lowercase == "svgevents") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "svgevents"sv)) {
         event = TRY(Event::create(realm, ""));
-    } else if (interface_lowercase == "textevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "textevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create CompositionEvent
-    } else if (interface_lowercase == "touchevent") {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "touchevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create TouchEvent
-    } else if (interface_lowercase.is_one_of("uievent", "uievents")) {
+    } else if (Infra::is_ascii_case_insensitive_match(interface, "uievent"sv)
+        || Infra::is_ascii_case_insensitive_match(interface, "uievents"sv)) {
         event = UIEvents::UIEvent::create(realm, "");
     }
 

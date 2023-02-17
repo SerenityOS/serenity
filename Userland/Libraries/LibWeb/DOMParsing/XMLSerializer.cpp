@@ -15,6 +15,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/DOMParsing/XMLSerializer.h>
 #include <LibWeb/HTML/HTMLTemplateElement.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -859,7 +860,7 @@ static WebIDL::ExceptionOr<DeprecatedString> serialize_processing_instruction(DO
         if (processing_instruction.target().contains(':'))
             return WebIDL::InvalidStateError::create(processing_instruction.realm(), "Processing instruction target contains a colon");
 
-        if (processing_instruction.target().equals_ignoring_case("xml"sv))
+        if (Infra::is_ascii_case_insensitive_match(processing_instruction.target(), "xml"sv))
             return WebIDL::InvalidStateError::create(processing_instruction.realm(), "Processing instruction target is equal to 'xml'");
 
         // 2. If the require well-formed flag is set (its value is true), and node's data contains characters that are not matched by the XML Char production or contains

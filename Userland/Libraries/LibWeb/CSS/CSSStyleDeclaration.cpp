@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS {
 
@@ -88,7 +89,7 @@ WebIDL::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(Proper
     }
 
     // 4. If priority is not the empty string and is not an ASCII case-insensitive match for the string "important", then return.
-    if (!priority.is_empty() && !priority.equals_ignoring_case("important"sv))
+    if (!priority.is_empty() && !Infra::is_ascii_case_insensitive_match(priority, "important"sv))
         return {};
 
     // 5. Let component value list be the result of parsing value for property property.

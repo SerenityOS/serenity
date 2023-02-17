@@ -32,6 +32,7 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Infra/Strings.h>
 
 static void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
@@ -1895,7 +1896,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         Optional<size_t> important_index;
         for (size_t i = declaration_values.size() - 1; i > 0; i--) {
             auto value = declaration_values[i];
-            if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important"sv)) {
+            if (value.is(Token::Type::Ident) && Infra::is_ascii_case_insensitive_match(value.token().ident(), "important"sv)) {
                 important_index = i;
                 break;
             }
