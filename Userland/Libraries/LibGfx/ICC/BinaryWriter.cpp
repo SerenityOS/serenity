@@ -13,18 +13,39 @@
 
 namespace Gfx::ICC {
 
-static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile)
+static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
+{
+    (void)tag_data;
+    return ByteBuffer {};
+}
+
+static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile)
+{
+    Vector<ByteBuffer> tag_data_bytes;
+
+    // FIXME: If two tags refer to the same TagData object, write it just once to the output.
+    TRY(tag_data_bytes.try_resize(profile.tag_count()));
+    size_t i = 0;
+    profile.for_each_tag([&](auto, auto tag_data) {
+        // FIXME: Come up with a way to allow TRY instead of MUST here.
+        tag_data_bytes[i++] = MUST(encode_tag_data(tag_data));
+    });
+    return tag_data_bytes;
+}
+
+static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile, Vector<size_t> const& offsets, Vector<ByteBuffer> const& tag_data_bytes)
 {
     VERIFY(bytes.size() >= sizeof(ICCHeader) + sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry));
 
     *bit_cast<BigEndian<u32>*>(bytes.data() + sizeof(ICCHeader)) = profile.tag_count();
 
-    TagTableEntry* tag_table_entry = bit_cast<TagTableEntry*>(bytes.data() + sizeof(ICCHeader) + sizeof(u32));
-    profile.for_each_tag([&tag_table_entry](auto tag_signature, auto) {
-        tag_table_entry->tag_signature = tag_signature;
-        tag_table_entry->offset_to_beginning_of_tag_data_element = 0; // FIXME
-        tag_table_entry->size_of_tag_data_element = 0; // FIXME
-        ++tag_table_entry;
+    TagTableEntry* tag_table_entries = bit_cast<TagTableEntry*>(bytes.data() + sizeof(ICCHeader) + sizeof(u32));
+    int i = 0;
+    profile.for_each_tag([&](auto tag_signature, auto) {
+        tag_table_entries[i].tag_signature = tag_signature;
+        tag_table_entries[i].offset_to_beginning_of_tag_data_element = offsets[i];
+        tag_table_entries[i].size_of_tag_data_element = tag_data_bytes[i].size();
+        ++i;
     });
 
     return {};
@@ -81,12 +102,30 @@ static ErrorOr<void> encode_header(ByteBuffer& bytes, Profile const& profile)
 
 ErrorOr<ByteBuffer> encode(Profile const& profile)
 {
-    // Leaves enough room for the profile header and the tag table count.
-    // FIXME: Serialize tag data and write tag data too.
-    size_t tag_table_size = sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry);
-    auto bytes = TRY(ByteBuffer::create_zeroed(sizeof(ICCHeader) + tag_table_size));
+    // Valid profiles always have tags. Profile only represents valid profiles.
+    VERIFY(profile.tag_count() > 0);
 
-    TRY(encode_tag_table(bytes, profile));
+    Vector<ByteBuffer> tag_data_bytes = TRY(encode_tag_datas(profile));
+
+    size_t tag_table_size = sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry);
+    size_t offset = sizeof(ICCHeader) + tag_table_size;
+    Vector<size_t> offsets;
+    for (auto const& bytes : tag_data_bytes) {
+        TRY(offsets.try_append(offset));
+        offset += align_up_to(bytes.size(), 4);
+    }
+
+    // Omit padding after last element.
+    // FIXME: Is that correct?
+    size_t total_size = offsets.last() + tag_data_bytes.last().size();
+
+    // Leave enough room for the profile header and the tag table count.
+    auto bytes = TRY(ByteBuffer::create_zeroed(total_size));
+
+    for (size_t i = 0; i < tag_data_bytes.size(); ++i)
+        memcpy(bytes.data() + offsets[i], tag_data_bytes[i].data(), tag_data_bytes[i].size());
+
+    TRY(encode_tag_table(bytes, profile, offsets, tag_data_bytes));
     TRY(encode_header(bytes, profile));
 
     return bytes;
