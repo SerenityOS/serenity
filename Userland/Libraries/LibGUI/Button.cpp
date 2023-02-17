@@ -145,6 +145,12 @@ void Button::click(unsigned modifiers)
         m_action->activate(this);
 }
 
+void Button::double_click(unsigned int modifiers)
+{
+    if (on_double_click)
+        on_double_click(modifiers);
+}
+
 void Button::middle_mouse_click(unsigned int modifiers)
 {
     if (!is_enabled())
