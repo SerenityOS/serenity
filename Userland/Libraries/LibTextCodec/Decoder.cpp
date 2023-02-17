@@ -6,7 +6,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
@@ -197,7 +196,7 @@ Optional<Decoder&> bom_sniff_to_decoder(StringView input)
 }
 
 // https://encoding.spec.whatwg.org/#decode
-DeprecatedString convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(Decoder& fallback_decoder, StringView input)
+ErrorOr<String> convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(Decoder& fallback_decoder, StringView input)
 {
     Decoder* actual_decoder = &fallback_decoder;
 
@@ -220,21 +219,22 @@ DeprecatedString convert_input_to_utf8_using_given_decoder_unless_there_is_a_byt
     return actual_decoder->to_utf8(input);
 }
 
-DeprecatedString Decoder::to_utf8(StringView input)
+ErrorOr<String> Decoder::to_utf8(StringView input)
 {
     StringBuilder builder(input.length());
-    process(input, [&builder](u32 c) { builder.append_code_point(c); });
-    return builder.to_deprecated_string();
+    TRY(process(input, [&builder](u32 c) { return builder.try_append_code_point(c); }));
+    return builder.to_string();
 }
 
-void UTF8Decoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> UTF8Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     for (auto c : Utf8View(input)) {
-        on_code_point(c);
+        TRY(on_code_point(c));
     }
+    return {};
 }
 
-DeprecatedString UTF8Decoder::to_utf8(StringView input)
+ErrorOr<String> UTF8Decoder::to_utf8(StringView input)
 {
     // Discard the BOM
     auto bomless_input = input;
@@ -242,10 +242,10 @@ DeprecatedString UTF8Decoder::to_utf8(StringView input)
         bomless_input = input.substring_view(3);
     }
 
-    return bomless_input;
+    return String::from_utf8(bomless_input);
 }
 
-void UTF16BEDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> UTF16BEDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     // rfc2781, 2.2 Decoding UTF-16
     size_t utf16_length = input.length() - (input.length() % 2);
@@ -254,7 +254,7 @@ void UTF16BEDecoder::process(StringView input, Function<void(u32)> on_code_point
         //    of W1. Terminate.
         u16 w1 = (static_cast<u8>(input[i]) << 8) | static_cast<u8>(input[i + 1]);
         if (!is_unicode_surrogate(w1)) {
-            on_code_point(w1);
+            TRY(on_code_point(w1));
             continue;
         }
 
@@ -265,13 +265,13 @@ void UTF16BEDecoder::process(StringView input, Function<void(u32)> on_code_point
         //    is not between 0xDC00 and 0xDFFF, the sequence is in error.
         //    Terminate.
         if (!Utf16View::is_high_surrogate(w1) || i + 2 == utf16_length) {
-            on_code_point(replacement_code_point);
+            TRY(on_code_point(replacement_code_point));
             continue;
         }
 
         u16 w2 = (static_cast<u8>(input[i + 2]) << 8) | static_cast<u8>(input[i + 3]);
         if (!Utf16View::is_low_surrogate(w2)) {
-            on_code_point(replacement_code_point);
+            TRY(on_code_point(replacement_code_point));
             continue;
         }
 
@@ -279,12 +279,14 @@ void UTF16BEDecoder::process(StringView input, Function<void(u32)> on_code_point
         //    bits of W1 as its 10 high-order bits and the 10 low-order bits of
         //    W2 as its 10 low-order bits.
         // 5) Add 0x10000 to U' to obtain the character value U. Terminate.
-        on_code_point(Utf16View::decode_surrogate_pair(w1, w2));
+        TRY(on_code_point(Utf16View::decode_surrogate_pair(w1, w2)));
         i += 2;
     }
+
+    return {};
 }
 
-DeprecatedString UTF16BEDecoder::to_utf8(StringView input)
+ErrorOr<String> UTF16BEDecoder::to_utf8(StringView input)
 {
     // Discard the BOM
     auto bomless_input = input;
@@ -292,11 +294,11 @@ DeprecatedString UTF16BEDecoder::to_utf8(StringView input)
         bomless_input = input.substring_view(2);
 
     StringBuilder builder(bomless_input.length() / 2);
-    process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });
-    return builder.to_deprecated_string();
+    TRY(process(bomless_input, [&builder](u32 c) { return builder.try_append_code_point(c); }));
+    return builder.to_string();
 }
 
-void UTF16LEDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> UTF16LEDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     // rfc2781, 2.2 Decoding UTF-16
     size_t utf16_length = input.length() - (input.length() % 2);
@@ -305,7 +307,7 @@ void UTF16LEDecoder::process(StringView input, Function<void(u32)> on_code_point
         //    of W1. Terminate.
         u16 w1 = static_cast<u8>(input[i]) | (static_cast<u8>(input[i + 1]) << 8);
         if (!is_unicode_surrogate(w1)) {
-            on_code_point(w1);
+            TRY(on_code_point(w1));
             continue;
         }
 
@@ -316,13 +318,13 @@ void UTF16LEDecoder::process(StringView input, Function<void(u32)> on_code_point
         //    is not between 0xDC00 and 0xDFFF, the sequence is in error.
         //    Terminate.
         if (!Utf16View::is_high_surrogate(w1) || i + 2 == utf16_length) {
-            on_code_point(replacement_code_point);
+            TRY(on_code_point(replacement_code_point));
             continue;
         }
 
         u16 w2 = static_cast<u8>(input[i + 2]) | (static_cast<u8>(input[i + 3]) << 8);
         if (!Utf16View::is_low_surrogate(w2)) {
-            on_code_point(replacement_code_point);
+            TRY(on_code_point(replacement_code_point));
             continue;
         }
 
@@ -330,12 +332,14 @@ void UTF16LEDecoder::process(StringView input, Function<void(u32)> on_code_point
         //    bits of W1 as its 10 high-order bits and the 10 low-order bits of
         //    W2 as its 10 low-order bits.
         // 5) Add 0x10000 to U' to obtain the character value U. Terminate.
-        on_code_point(Utf16View::decode_surrogate_pair(w1, w2));
+        TRY(on_code_point(Utf16View::decode_surrogate_pair(w1, w2)));
         i += 2;
     }
+
+    return {};
 }
 
-DeprecatedString UTF16LEDecoder::to_utf8(StringView input)
+ErrorOr<String> UTF16LEDecoder::to_utf8(StringView input)
 {
     // Discard the BOM
     auto bomless_input = input;
@@ -343,16 +347,18 @@ DeprecatedString UTF16LEDecoder::to_utf8(StringView input)
         bomless_input = input.substring_view(2);
 
     StringBuilder builder(bomless_input.length() / 2);
-    process(bomless_input, [&builder](u32 c) { builder.append_code_point(c); });
-    return builder.to_deprecated_string();
+    TRY(process(bomless_input, [&builder](u32 c) { return builder.try_append_code_point(c); }));
+    return builder.to_string();
 }
 
-void Latin1Decoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> Latin1Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     for (auto ch : input) {
         // Latin1 is the same as the first 256 Unicode code_points, so no mapping is needed, just utf-8 encoding.
-        on_code_point(ch);
+        TRY(on_code_point(ch));
     }
+
+    return {};
 }
 
 namespace {
@@ -434,14 +440,16 @@ u32 convert_latin2_to_utf8(u8 in)
 }
 }
 
-void Latin2Decoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> Latin2Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     for (auto c : input) {
-        on_code_point(convert_latin2_to_utf8(c));
+        TRY(on_code_point(convert_latin2_to_utf8(c)));
     }
+
+    return {};
 }
 
-void HebrewDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> HebrewDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     static constexpr Array<u32, 128> translation_table = {
         0x20AC, 0xFFFD, 0x201A, 0x192, 0x201E, 0x2026, 0x2020, 0x2021, 0x2C6, 0x2030, 0xFFFD, 0x2039, 0xFFFD, 0xFFFD, 0xFFFD, 0xFFFD,
@@ -455,14 +463,16 @@ void HebrewDecoder::process(StringView input, Function<void(u32)> on_code_point)
     };
     for (unsigned char ch : input) {
         if (ch < 0x80) { // Superset of ASCII
-            on_code_point(ch);
+            TRY(on_code_point(ch));
         } else {
-            on_code_point(translation_table[ch - 0x80]);
+            TRY(on_code_point(translation_table[ch - 0x80]));
         }
     }
+
+    return {};
 }
 
-void CyrillicDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> CyrillicDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     static constexpr Array<u32, 128> translation_table = {
         0x402, 0x403, 0x201A, 0x453, 0x201E, 0x2026, 0x2020, 0x2021, 0x20AC, 0x2030, 0x409, 0x2039, 0x40A, 0x40C, 0x40B, 0x40F,
@@ -476,14 +486,16 @@ void CyrillicDecoder::process(StringView input, Function<void(u32)> on_code_poin
     };
     for (unsigned char ch : input) {
         if (ch < 0x80) { // Superset of ASCII
-            on_code_point(ch);
+            TRY(on_code_point(ch));
         } else {
-            on_code_point(translation_table[ch - 0x80]);
+            TRY(on_code_point(translation_table[ch - 0x80]));
         }
     }
+
+    return {};
 }
 
-void Koi8RDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> Koi8RDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     // clang-format off
     static constexpr Array<u32, 128> translation_table = {
@@ -500,14 +512,16 @@ void Koi8RDecoder::process(StringView input, Function<void(u32)> on_code_point)
 
     for (unsigned char ch : input) {
         if (ch < 0x80) { // Superset of ASCII
-            on_code_point(ch);
+            TRY(on_code_point(ch));
         } else {
-            on_code_point(translation_table[ch - 0x80]);
+            TRY(on_code_point(translation_table[ch - 0x80]));
         }
     }
+
+    return {};
 }
 
-void Latin9Decoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> Latin9Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     auto convert_latin9_to_utf8 = [](u8 ch) -> u32 {
         // Latin9 is the same as the first 256 Unicode code points, except for 8 characters.
@@ -534,11 +548,13 @@ void Latin9Decoder::process(StringView input, Function<void(u32)> on_code_point)
     };
 
     for (auto ch : input) {
-        on_code_point(convert_latin9_to_utf8(ch));
+        TRY(on_code_point(convert_latin9_to_utf8(ch)));
     }
+
+    return {};
 }
 
-void MacRomanDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> MacRomanDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     // https://encoding.spec.whatwg.org/index-macintosh.txt
     // clang-format off
@@ -556,14 +572,16 @@ void MacRomanDecoder::process(StringView input, Function<void(u32)> on_code_poin
 
     for (u8 ch : input) {
         if (ch < 0x80) { // Superset of ASCII
-            on_code_point(ch);
+            TRY(on_code_point(ch));
         } else {
-            on_code_point(translation_table[ch - 0x80]);
+            TRY(on_code_point(translation_table[ch - 0x80]));
         }
     }
+
+    return {};
 }
 
-void TurkishDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> TurkishDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     auto convert_turkish_to_utf8 = [](u8 ch) -> u32 {
         // Turkish (aka ISO-8859-9, Windows-1254) is the same as the first 256 Unicode code points, except for 6 characters.
@@ -586,12 +604,14 @@ void TurkishDecoder::process(StringView input, Function<void(u32)> on_code_point
     };
 
     for (auto ch : input) {
-        on_code_point(convert_turkish_to_utf8(ch));
+        TRY(on_code_point(convert_turkish_to_utf8(ch)));
     }
+
+    return {};
 }
 
 // https://encoding.spec.whatwg.org/#x-user-defined-decoder
-void XUserDefinedDecoder::process(StringView input, Function<void(u32)> on_code_point)
+ErrorOr<void> XUserDefinedDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
     auto convert_x_user_defined_to_utf8 = [](u8 ch) -> u32 {
         // 2. If byte is an ASCII byte, return a code point whose value is byte.
@@ -606,10 +626,12 @@ void XUserDefinedDecoder::process(StringView input, Function<void(u32)> on_code_
     };
 
     for (auto ch : input) {
-        on_code_point(convert_x_user_defined_to_utf8(ch));
+        TRY(on_code_point(convert_x_user_defined_to_utf8(ch)));
     }
 
     // 1. If byte is end-of-queue, return finished.
+
+    return {};
 }
 
 }

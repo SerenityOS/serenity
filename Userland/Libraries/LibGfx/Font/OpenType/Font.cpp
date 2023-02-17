@@ -322,7 +322,7 @@ DeprecatedString Name::string_for_id(NameId id) const
 
     if (platform_id == to_underlying(Platform::Windows)) {
         static auto& decoder = *TextCodec::decoder_for("utf-16be"sv);
-        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length });
+        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     }
 
     return DeprecatedString((char const*)m_slice.offset_pointer(storage_offset + offset), length);

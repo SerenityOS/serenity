@@ -163,7 +163,7 @@ WebIDL::ExceptionOr<DeprecatedString> WorkerGlobalScope::atob(DeprecatedString c
     // decode_base64() returns a byte string. LibJS uses UTF-8 for strings. Use Latin1Decoder to convert bytes 128-255 to UTF-8.
     auto decoder = TextCodec::decoder_for("windows-1252"sv);
     VERIFY(decoder.has_value());
-    return decoder->to_utf8(decoded_data.value());
+    return TRY_OR_THROW_OOM(vm(), decoder->to_utf8(decoded_data.value()));
 }
 
 }

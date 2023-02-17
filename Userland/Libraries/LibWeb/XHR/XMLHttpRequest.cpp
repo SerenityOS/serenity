@@ -224,7 +224,7 @@ DeprecatedString XMLHttpRequest::get_text_response() const
     // If we don't support the decoder yet, let's crash instead of attempting to return something, as the result would be incorrect and create obscure bugs.
     VERIFY(decoder.has_value());
 
-    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_received_bytes);
+    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_received_bytes).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://xhr.spec.whatwg.org/#final-mime-type
