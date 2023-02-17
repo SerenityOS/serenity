@@ -37,6 +37,7 @@ public:
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(unsigned modifiers)> on_click;
+    Function<void(unsigned modifiers)> on_double_click;
     Function<void(unsigned modifiers)> on_middle_mouse_click;
     Function<void(ContextMenuEvent&)> on_context_menu_request;
 
@@ -44,6 +45,7 @@ public:
     Gfx::ButtonStyle button_style() const { return m_button_style; }
 
     virtual void click(unsigned modifiers = 0) override;
+    virtual void double_click(unsigned modifiers = 0) override;
     virtual void middle_mouse_click(unsigned modifiers = 0) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
 

@@ -160,6 +160,12 @@ void AbstractButton::mouseup_event(MouseEvent& event)
     Widget::mouseup_event(event);
 }
 
+void AbstractButton::doubleclick_event(GUI::MouseEvent& event)
+{
+    double_click(event.modifiers());
+    Widget::doubleclick_event(event);
+}
+
 void AbstractButton::enter_event(Core::Event&)
 {
     m_hovered = true;
