@@ -88,7 +88,9 @@ ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core:
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.append(R"~~~(#include <LibWeb/CSS/MediaFeatureID.h>
+    generator.append(R"~~~(
+#include <LibWeb/CSS/MediaFeatureID.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS {
 
@@ -100,7 +102,7 @@ Optional<MediaFeatureID> media_feature_id_from_string(StringView string)
         member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
-    if (string.equals_ignoring_case("@name@"sv))
+    if (Infra::is_ascii_case_insensitive_match(string, "@name@"sv))
         return MediaFeatureID::@name:titlecase@;
 )~~~");
     });
