@@ -11,13 +11,8 @@
 
 namespace Gfx::ICC {
 
-ErrorOr<ByteBuffer> encode(Profile const& profile)
+static ErrorOr<void> encode_header(ByteBuffer& bytes, Profile const& profile)
 {
-
-    // Leaves enough room for the profile header and the tag table count.
-    // FIXME: Serialize tag data and write tag table and tag data too.
-    auto bytes = TRY(ByteBuffer::create_zeroed(sizeof(ICCHeader) + sizeof(u32)));
-
     VERIFY(bytes.size() >= sizeof(ICCHeader));
     auto& raw_header = *bit_cast<ICCHeader*>(bytes.data());
 
@@ -61,6 +56,17 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
     auto id = Profile::compute_id(bytes);
     static_assert(sizeof(id.data) == sizeof(raw_header.profile_id));
     memcpy(raw_header.profile_id, id.data, sizeof(id.data));
+
+    return {};
+}
+
+ErrorOr<ByteBuffer> encode(Profile const& profile)
+{
+    // Leaves enough room for the profile header and the tag table count.
+    // FIXME: Serialize tag data and write tag table and tag data too.
+    auto bytes = TRY(ByteBuffer::create_zeroed(sizeof(ICCHeader) + sizeof(u32)));
+
+    TRY(encode_header(bytes, profile));
 
     return bytes;
 }
