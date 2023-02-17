@@ -239,14 +239,8 @@ public:
 
     Color mixed_with(Color other, float weight) const
     {
-        if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0)) {
-            return Gfx::Color {
-                round_to<u8>(mix<float>(red(), other.red(), weight)),
-                round_to<u8>(mix<float>(green(), other.green(), weight)),
-                round_to<u8>(mix<float>(blue(), other.blue(), weight)),
-                round_to<u8>(mix<float>(alpha(), other.alpha(), weight)),
-            };
-        }
+        if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0))
+            return interpolate(other, weight);
         // Fallback to slower, but more visually pleasing premultiplied alpha mix.
         // This is needed for linear-gradient()s in LibWeb.
         auto mixed_alpha = mix<float>(alpha(), other.alpha(), weight);
@@ -263,11 +257,12 @@ public:
 
     Color interpolate(Color other, float weight) const noexcept
     {
-        u8 r = red() + round_to<u8>(static_cast<float>(other.red() - red()) * weight);
-        u8 g = green() + round_to<u8>(static_cast<float>(other.green() - green()) * weight);
-        u8 b = blue() + round_to<u8>(static_cast<float>(other.blue() - blue()) * weight);
-        u8 a = alpha() + round_to<u8>(static_cast<float>(other.alpha() - alpha()) * weight);
-        return Color(r, g, b, a);
+        return Gfx::Color {
+            round_to<u8>(mix<float>(red(), other.red(), weight)),
+            round_to<u8>(mix<float>(green(), other.green(), weight)),
+            round_to<u8>(mix<float>(blue(), other.blue(), weight)),
+            round_to<u8>(mix<float>(alpha(), other.alpha(), weight)),
+        };
     }
 
     constexpr Color multiply(Color other) const
