@@ -460,6 +460,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/InterruptManagement.cpp
         Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp
+        Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
