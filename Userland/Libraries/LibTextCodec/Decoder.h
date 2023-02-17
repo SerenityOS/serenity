@@ -89,8 +89,8 @@ public:
 Optional<Decoder&> decoder_for(StringView encoding);
 Optional<StringView> get_standardized_encoding(StringView encoding);
 
-// This returns the appropriate Unicode decoder for the sniffed BOM or nullptr if there is no appropriate decoder.
-Decoder* bom_sniff_to_decoder(StringView);
+// This returns the appropriate Unicode decoder for the sniffed BOM or nothing if there is no appropriate decoder.
+Optional<Decoder&> bom_sniff_to_decoder(StringView);
 
 // NOTE: This has an obnoxious name to discourage usage. Only use this if you absolutely must! For example, XHR in LibWeb uses this.
 // This will use the given decoder unless there is a byte order mark in the input, in which we will instead use the appropriate Unicode decoder.
