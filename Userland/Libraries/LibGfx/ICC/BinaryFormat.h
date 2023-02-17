@@ -75,6 +75,10 @@ struct ICCHeader {
 };
 static_assert(AssertSize<ICCHeader, 128>());
 
+// ICC v4, 7.2.9 Profile file signature field
+// "The profile file signature field shall contain the value “acsp” (61637370h) as a profile file signature."
+constexpr u32 ProfileFileSignature = 0x61637370;
+
 // Common bits of ICC v4, Table 40 — lut16Type encoding and Table 44 — lut8Type encoding
 struct LUTHeader {
     u8 number_of_input_channels;
