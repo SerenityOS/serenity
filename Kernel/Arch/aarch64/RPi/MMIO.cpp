@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/aarch64/CPUID.h>
+#include <Kernel/Arch/aarch64/MainIdRegister.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 
 namespace Kernel::RPi {
@@ -12,8 +12,8 @@ namespace Kernel::RPi {
 MMIO::MMIO()
     : m_base_address(0xFE00'0000)
 {
-    auto main_id_register = Aarch64::MIDR_EL1::read();
-    if (static_cast<ArmLimited>(main_id_register.PartNum) <= ArmLimited::Cortex_A53) // Raspberry Pi 3
+    MainIdRegister id;
+    if (id.part_num() <= MainIdRegister::RaspberryPi3)
         m_base_address = PhysicalAddress(0x3F00'0000);
 }
 
