@@ -247,6 +247,8 @@ public:
             callback(tag.key, tag.value);
     }
 
+    size_t tag_count() const { return m_tag_table.size(); }
+
     // Only versions 2 and 4 are in use.
     bool is_v2() const { return version().major_version() == 2; }
     bool is_v4() const { return version().major_version() == 4; }
