@@ -155,14 +155,14 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
                 rules_to_run.extend(it->value);
         } else {
             for (auto const& class_name : element.class_names()) {
-                if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+                if (auto it = m_rule_cache->rules_by_class.find(FlyString::from_utf8(class_name).release_value_but_fixme_should_propagate_errors()); it != m_rule_cache->rules_by_class.end())
                     rules_to_run.extend(it->value);
             }
             if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
-                if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+                if (auto it = m_rule_cache->rules_by_id.find(FlyString::from_utf8(id).release_value_but_fixme_should_propagate_errors()); it != m_rule_cache->rules_by_id.end())
                     rules_to_run.extend(it->value);
             }
-            if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
+            if (auto it = m_rule_cache->rules_by_tag_name.find(FlyString::from_utf8(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != m_rule_cache->rules_by_tag_name.end())
                 rules_to_run.extend(it->value);
             rules_to_run.extend(m_rule_cache->other_rules);
         }
@@ -587,16 +587,16 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, DeprecatedFlyString const& custom_property_name)
+static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
 {
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
-        if (auto it = current_element->custom_properties().find(custom_property_name); it != current_element->custom_properties().end())
+        if (auto it = current_element->custom_properties().find(custom_property_name.to_string().to_deprecated_string()); it != current_element->custom_properties().end())
             return it->value.value;
     }
     return nullptr;
 }
 
-bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
+bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
 {
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
@@ -606,10 +606,10 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
         return false;
     }
 
-    auto get_dependency_node = [&](auto name) -> NonnullRefPtr<PropertyDependencyNode> {
+    auto get_dependency_node = [&](FlyString name) -> NonnullRefPtr<PropertyDependencyNode> {
         if (auto existing = dependencies.get(name); existing.has_value())
             return *existing.value();
-        auto new_node = PropertyDependencyNode::create(name);
+        auto new_node = PropertyDependencyNode::create(name.to_string());
         dependencies.set(name, new_node);
         return new_node;
     };
@@ -648,13 +648,13 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
         // but rebuilding it every time.
         if (custom_property_name == property_name)
             return false;
-        auto parent = get_dependency_node(property_name);
-        auto child = get_dependency_node(custom_property_name);
+        auto parent = get_dependency_node(FlyString::from_utf8(property_name).release_value_but_fixme_should_propagate_errors());
+        auto child = get_dependency_node(FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors());
         parent->add_child(child);
         if (parent->has_cycles())
             return false;
 
-        if (auto custom_property_value = get_custom_property(element, custom_property_name)) {
+        if (auto custom_property_value = get_custom_property(element, FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors())) {
             VERIFY(custom_property_value->is_unresolved());
             Parser::TokenStream custom_property_tokens { custom_property_value->as_unresolved().values() };
             if (!expand_variables(element, custom_property_name, dependencies, custom_property_tokens, dest))
@@ -778,7 +778,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     Parser::TokenStream unresolved_values_without_variables_expanded { unresolved.values() };
     Vector<Parser::ComponentValue> values_with_variables_expanded;
 
-    HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
+    HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_variables(element, string_from_property_id(property_id), dependencies, unresolved_values_without_variables_expanded, values_with_variables_expanded))
         return {};
 
@@ -1398,7 +1398,7 @@ ErrorOr<NonnullRefPtr<StyleProperties>> StyleComputer::compute_style(DOM::Elemen
     return style;
 }
 
-PropertyDependencyNode::PropertyDependencyNode(DeprecatedString name)
+PropertyDependencyNode::PropertyDependencyNode(String name)
     : m_name(move(name))
 {
 }
@@ -1467,19 +1467,19 @@ void StyleComputer::build_rule_cache()
                 if (!added_to_bucket) {
                     for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
                         if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
-                            m_rule_cache->rules_by_id.ensure(simple_selector.name().to_string().to_deprecated_string()).append(move(matching_rule));
+                            m_rule_cache->rules_by_id.ensure(simple_selector.name()).append(move(matching_rule));
                             ++num_id_rules;
                             added_to_bucket = true;
                             break;
                         }
                         if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
-                            m_rule_cache->rules_by_class.ensure(simple_selector.name().to_string().to_deprecated_string()).append(move(matching_rule));
+                            m_rule_cache->rules_by_class.ensure(simple_selector.name()).append(move(matching_rule));
                             ++num_class_rules;
                             added_to_bucket = true;
                             break;
                         }
                         if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
-                            m_rule_cache->rules_by_tag_name.ensure(simple_selector.name().to_string().to_deprecated_string()).append(move(matching_rule));
+                            m_rule_cache->rules_by_tag_name.ensure(simple_selector.name()).append(move(matching_rule));
                             ++num_tag_name_rules;
                             added_to_bucket = true;
                             break;
