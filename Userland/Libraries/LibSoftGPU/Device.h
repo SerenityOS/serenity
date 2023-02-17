@@ -110,6 +110,7 @@ private:
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
     Vector<GPU::Vertex> m_clipped_vertices;
+    float m_one_over_fog_depth;
     Array<Sampler, GPU::NUM_TEXTURE_UNITS> m_samplers;
     bool m_samplers_need_texture_staging { false };
     Array<GPU::Light, NUM_LIGHTS> m_lights;
