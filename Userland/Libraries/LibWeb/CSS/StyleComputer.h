@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -73,7 +73,7 @@ public:
 
     Gfx::Font const& initial_font() const;
 
-    void did_load_font(DeprecatedFlyString const& family_name);
+    void did_load_font(FlyString const& family_name);
 
     void load_fonts_from_sheet(CSSStyleSheet const&);
 
@@ -118,7 +118,7 @@ private:
     OwnPtr<RuleCache> m_rule_cache;
 
     class FontLoader;
-    HashMap<DeprecatedString, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
+    HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
 };
 
 }

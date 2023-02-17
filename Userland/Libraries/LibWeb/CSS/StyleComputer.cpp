@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +43,7 @@ StyleComputer::~StyleComputer() = default;
 
 class StyleComputer::FontLoader : public ResourceClient {
 public:
-    explicit FontLoader(StyleComputer& style_computer, DeprecatedFlyString family_name, AK::URL url)
+    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, AK::URL url)
         : m_style_computer(style_computer)
         , m_family_name(move(family_name))
     {
@@ -105,7 +105,7 @@ private:
     }
 
     StyleComputer& m_style_computer;
-    DeprecatedFlyString m_family_name;
+    FlyString m_family_name;
     RefPtr<Gfx::VectorFont> m_vector_font;
 
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
@@ -1187,7 +1187,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
-    auto find_font = [&](DeprecatedString const& family) -> RefPtr<Gfx::Font> {
+    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
         float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
@@ -1200,7 +1200,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
+        if (auto found_font = Gfx::FontDatabase::the().get(family.to_deprecated_string(), font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};
@@ -1238,7 +1238,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         default:
             return {};
         }
-        return find_font(Platform::FontPlugin::the().generic_font_name(generic_font));
+        return find_font(String::from_utf8(Platform::FontPlugin::the().generic_font_name(generic_font)).release_value_but_fixme_should_propagate_errors());
     };
 
     RefPtr<Gfx::Font> found_font;
@@ -1250,7 +1250,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (family.is_identifier()) {
                 found_font = find_generic_font(family.to_identifier());
             } else if (family.is_string()) {
-                found_font = find_font(family.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+                found_font = find_font(family.to_string().release_value_but_fixme_should_propagate_errors());
             }
             if (found_font)
                 break;
@@ -1258,7 +1258,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     } else if (family_value->is_identifier()) {
         found_font = find_generic_font(family_value->to_identifier());
     } else if (family_value->is_string()) {
-        found_font = find_font(family_value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+        found_font = find_font(family_value->to_string().release_value_but_fixme_should_propagate_errors());
     }
 
     if (!found_font) {
@@ -1519,7 +1519,7 @@ CSSPixelRect StyleComputer::viewport_rect() const
     return {};
 }
 
-void StyleComputer::did_load_font([[maybe_unused]] DeprecatedFlyString const& family_name)
+void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
 {
     document().invalidate_layout();
 }
@@ -1530,11 +1530,9 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         if (!is<CSSFontFaceRule>(rule))
             continue;
         auto const& font_face = static_cast<CSSFontFaceRule const&>(rule).font_face();
-        // FIXME: Use font_face.font_family() directly when we port to new Strings here.
-        auto font_family = font_face.font_family().to_string().to_deprecated_string();
         if (font_face.sources().is_empty())
             continue;
-        if (m_loaded_fonts.contains(font_family))
+        if (m_loaded_fonts.contains(font_face.font_family()))
             continue;
 
         // NOTE: This is rather ad-hoc, we just look for the first valid
@@ -1562,8 +1560,8 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
 
         LoadRequest request;
         auto url = m_document.parse_url(candidate_url.value().to_deprecated_string());
-        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_family, move(url));
-        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_family, move(loader));
+        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family().to_string(), move(loader));
     }
 }
 
