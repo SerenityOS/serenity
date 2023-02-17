@@ -8,7 +8,9 @@
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ImageDecoder.h>
@@ -89,8 +91,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    static StringView path;
+    StringView path;
     args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE");
+
+    StringView dump_out_path;
+    args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE");
+
+    StringView reencode_out_path;
+    args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE");
+
+    bool force_print = false;
+    args_parser.add_option(force_print, "Print profile even when writing ICC files", "print", 0);
+
     args_parser.parse(arguments);
 
     auto file = TRY(Core::MappedFile::map(path));
@@ -108,7 +120,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         icc_bytes = file->bytes();
     }
 
+    if (!dump_out_path.is_empty()) {
+        auto output_stream = TRY(Core::File::open(dump_out_path, Core::File::OpenMode::Write));
+        TRY(output_stream->write_entire_buffer(icc_bytes));
+    }
+
     auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes));
+
+    if (!reencode_out_path.is_empty()) {
+        auto reencoded_bytes = TRY(Gfx::ICC::encode(profile));
+        auto output_stream = TRY(Core::File::open(reencode_out_path, Core::File::OpenMode::Write));
+        TRY(output_stream->write_entire_buffer(reencoded_bytes));
+    }
+
+    bool do_print = (dump_out_path.is_empty() && reencode_out_path.is_empty()) || force_print;
+    if (!do_print)
+        return 0;
 
     outln("                  size: {} bytes", profile->on_disk_size());
     out_optional("    preferred CMM type", profile->preferred_cmm_type());
