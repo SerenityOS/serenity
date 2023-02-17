@@ -29,9 +29,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto* fdt_header = reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(file->data());
+    auto const* fdt_header = reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(file->data());
+    auto bytes = ReadonlyBytes { file->data(), file->size() };
 
-    bool valid = DeviceTree::dump(*fdt_header, static_cast<u8 const*>(file->data()), file->size());
+    TRY(DeviceTree::dump(*fdt_header, bytes));
 
-    return valid ? 0 : 1;
+    return 0;
 }
