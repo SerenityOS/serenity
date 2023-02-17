@@ -31,7 +31,7 @@ struct MatchingRule {
 
 class PropertyDependencyNode : public RefCounted<PropertyDependencyNode> {
 public:
-    static NonnullRefPtr<PropertyDependencyNode> create(DeprecatedString name)
+    static NonnullRefPtr<PropertyDependencyNode> create(String name)
     {
         return adopt_ref(*new PropertyDependencyNode(move(name)));
     }
@@ -40,9 +40,9 @@ public:
     bool has_cycles();
 
 private:
-    explicit PropertyDependencyNode(DeprecatedString name);
+    explicit PropertyDependencyNode(String name);
 
-    DeprecatedString m_name;
+    String m_name;
     NonnullRefPtrVector<PropertyDependencyNode> m_children;
     bool m_marked { false };
 };
@@ -87,7 +87,7 @@ private:
     void compute_defaulted_property_value(StyleProperties&, DOM::Element const*, CSS::PropertyID, Optional<CSS::Selector::PseudoElement>) const;
 
     RefPtr<StyleValue> resolve_unresolved_style_value(DOM::Element&, PropertyID, UnresolvedStyleValue const&) const;
-    bool expand_variables(DOM::Element&, StringView property_name, HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
+    bool expand_variables(DOM::Element&, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
     bool expand_unresolved_values(DOM::Element&, StringView property_name, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const;
 
     template<typename Callback>
@@ -109,9 +109,9 @@ private:
     DOM::Document& m_document;
 
     struct RuleCache {
-        HashMap<DeprecatedFlyString, Vector<MatchingRule>> rules_by_id;
-        HashMap<DeprecatedFlyString, Vector<MatchingRule>> rules_by_class;
-        HashMap<DeprecatedFlyString, Vector<MatchingRule>> rules_by_tag_name;
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_id;
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_class;
+        HashMap<FlyString, Vector<MatchingRule>> rules_by_tag_name;
         HashMap<Selector::PseudoElement, Vector<MatchingRule>> rules_by_pseudo_element;
         Vector<MatchingRule> other_rules;
     };
