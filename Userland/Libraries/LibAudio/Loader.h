@@ -24,8 +24,8 @@ namespace Audio {
 
 static constexpr StringView no_plugin_error = "No loader plugin available"sv;
 
-using LoaderSamples = Result<FixedArray<Sample>, LoaderError>;
-using MaybeLoaderError = Result<void, LoaderError>;
+using LoaderSamples = ErrorOr<FixedArray<Sample>, LoaderError>;
+using MaybeLoaderError = ErrorOr<void, LoaderError>;
 
 class LoaderPlugin {
 public:
