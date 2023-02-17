@@ -828,13 +828,10 @@ static ErrorOr<void> decode_bmp_dib(BMPLoadingContext& context)
 
     u8 header_size = context.is_included_in_ico ? 0 : bmp_header_size;
 
-    if (!context.is_included_in_ico && context.file_size < (u8)(header_size + 4))
+    if (context.file_size < (u8)(header_size + 4))
         return Error::from_string_literal("File size too short");
 
-    if (context.is_included_in_ico && context.file_size < 4)
-        return Error::from_string_literal("File size too short");
-
-    InputStreamer streamer(context.file_bytes + (context.is_included_in_ico ? 0 : header_size), 4);
+    InputStreamer streamer(context.file_bytes + header_size, 4);
 
     u32 dib_size = streamer.read_u32();
 
