@@ -392,7 +392,7 @@ void HexEditorWidget::update_inspector_values(size_t position)
 
     // FIXME: Parse as other values like Timestamp etc
 
-    DeprecatedString utf16_string = TextCodec::decoder_for("utf-16le"sv)->to_utf8(StringView(selected_bytes.span()));
+    DeprecatedString utf16_string = TextCodec::decoder_for("utf-16le"sv)->to_utf8(StringView(selected_bytes.span())).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_string);
 
     m_value_inspector->set_model(value_inspector_model);

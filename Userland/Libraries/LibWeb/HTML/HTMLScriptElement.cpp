@@ -515,7 +515,7 @@ void HTMLScriptElement::resource_did_load()
     // we have to re-encode it to UTF-8.
     if (resource()->has_encoding()) {
         if (auto codec = TextCodec::decoder_for(resource()->encoding().value()); codec.has_value()) {
-            data = codec->to_utf8(data).to_byte_buffer();
+            data = codec->to_utf8(data).release_value_but_fixme_should_propagate_errors().to_deprecated_string().to_byte_buffer();
         }
     }
 

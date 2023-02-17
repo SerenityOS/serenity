@@ -885,7 +885,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     auto decoder = TextCodec::decoder_for("windows-1252"sv);
                     VERIFY(decoder.has_value());
 
-                    auto utf8_source = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, source);
+                    auto utf8_source = TRY(TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, source));
                     builder.append(utf8_source);
                 }
             }
