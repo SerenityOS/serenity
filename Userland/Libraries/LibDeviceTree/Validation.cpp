@@ -104,7 +104,7 @@ bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, u8 
     u64 strings_block_size = header.off_dt_strings + header.size_dt_strings;
     if (strings_block_size > blob_size) {
         if (verbose == Verbose::Yes)
-            warnln("FDT Header reports invalid StringsBlock size: {} is too large given total size {}", structure_block_size, blob_size);
+            warnln("FDT Header reports invalid StringsBlock size: {} is too large given total size {}", strings_block_size, blob_size);
         return false;
     }
 
