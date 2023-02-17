@@ -36,6 +36,8 @@ public:
     u8 minor_version() const { return m_minor_and_bugfix_version >> 4; }
     u8 bugfix_version() const { return m_minor_and_bugfix_version & 0xf; }
 
+    u8 minor_and_bugfix_version() const { return m_minor_and_bugfix_version; }
+
 private:
     u8 m_major_version = 0;
     u8 m_minor_and_bugfix_version = 0;
