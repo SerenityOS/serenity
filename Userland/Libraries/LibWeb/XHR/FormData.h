@@ -15,7 +15,12 @@
 namespace Web::XHR {
 
 // https://xhr.spec.whatwg.org/#formdataentryvalue
-using FormDataEntryValue = Variant<JS::NonnullGCPtr<FileAPI::File>, DeprecatedString>;
+using FormDataEntryValue = Variant<JS::Handle<FileAPI::File>, String>;
+
+struct FormDataEntry {
+    String name;
+    FormDataEntryValue value;
+};
 
 // https://xhr.spec.whatwg.org/#interface-formdata
 class FormData : public Bindings::PlatformObject {
@@ -25,27 +30,26 @@ public:
     virtual ~FormData() override;
 
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> construct_impl(JS::Realm&, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>> form = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> construct_impl(JS::Realm&, HashMap<DeprecatedString, Vector<FormDataEntryValue>> entry_list);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> construct_impl(JS::Realm&, Vector<FormDataEntry> entry_list);
 
-    WebIDL::ExceptionOr<void> append(DeprecatedString const& name, DeprecatedString const& value);
-    WebIDL::ExceptionOr<void> append(DeprecatedString const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<DeprecatedString> const& filename = {});
-    void delete_(DeprecatedString const& name);
-    Variant<JS::NonnullGCPtr<FileAPI::File>, DeprecatedString, Empty> get(DeprecatedString const& name);
-    Vector<FormDataEntryValue> get_all(DeprecatedString const& name);
-    bool has(DeprecatedString const& name);
-    WebIDL::ExceptionOr<void> set(DeprecatedString const& name, DeprecatedString const& value);
-    WebIDL::ExceptionOr<void> set(DeprecatedString const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<DeprecatedString> const& filename = {});
+    WebIDL::ExceptionOr<void> append(String const& name, String const& value);
+    WebIDL::ExceptionOr<void> append(String const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<String> const& filename = {});
+    void delete_(String const& name);
+    Variant<JS::Handle<FileAPI::File>, String, Empty> get(String const& name);
+    WebIDL::ExceptionOr<Vector<FormDataEntryValue>> get_all(String const& name);
+    bool has(String const& name);
+    WebIDL::ExceptionOr<void> set(String const& name, String const& value);
+    WebIDL::ExceptionOr<void> set(String const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<String> const& filename = {});
 
 private:
-    explicit FormData(JS::Realm&, HashMap<DeprecatedString, Vector<FormDataEntryValue>> entry_list = {});
+    explicit FormData(JS::Realm&, Vector<FormDataEntry> entry_list = {});
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
-    virtual void visit_edges(Cell::Visitor&) override;
 
     WebIDL::ExceptionOr<void> append_impl(String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename = {});
     WebIDL::ExceptionOr<void> set_impl(String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename = {});
 
-    HashMap<DeprecatedString, Vector<FormDataEntryValue>> m_entry_list;
+    Vector<FormDataEntry> m_entry_list;
 };
 
 }
