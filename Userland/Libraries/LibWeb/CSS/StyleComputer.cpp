@@ -115,9 +115,8 @@ static CSSStyleSheet& default_stylesheet()
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern char const default_stylesheet_source[];
-        DeprecatedString css = default_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
+        extern StringView default_stylesheet_source;
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), default_stylesheet_source));
     }
     return *sheet;
 }
@@ -126,9 +125,8 @@ static CSSStyleSheet& quirks_mode_stylesheet()
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern char const quirks_mode_stylesheet_source[];
-        DeprecatedString css = quirks_mode_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
+        extern StringView quirks_mode_stylesheet_source;
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), quirks_mode_stylesheet_source));
     }
     return *sheet;
 }
