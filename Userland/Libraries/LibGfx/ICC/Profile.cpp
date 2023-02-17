@@ -249,14 +249,11 @@ ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
 {
     // ICC v4, 7.2.15 Rendering intent field
     switch (header.rendering_intent) {
-    case 0:
-        return RenderingIntent::Perceptual;
-    case 1:
-        return RenderingIntent::MediaRelativeColorimetric;
-    case 2:
-        return RenderingIntent::Saturation;
-    case 3:
-        return RenderingIntent::ICCAbsoluteColorimetric;
+    case RenderingIntent::Perceptual:
+    case RenderingIntent::MediaRelativeColorimetric:
+    case RenderingIntent::Saturation:
+    case RenderingIntent::ICCAbsoluteColorimetric:
+        return header.rendering_intent;
     }
     return Error::from_string_literal("ICC::Profile: Invalid rendering intent");
 }
