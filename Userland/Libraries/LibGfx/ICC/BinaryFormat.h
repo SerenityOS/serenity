@@ -10,6 +10,7 @@
 #include <LibGfx/ICC/DistinctFourCC.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/TagTypes.h>
+#include <math.h>
 
 namespace Gfx::ICC {
 
@@ -35,6 +36,15 @@ struct XYZNumber {
     BigEndian<s15Fixed16Number> x;
     BigEndian<s15Fixed16Number> y;
     BigEndian<s15Fixed16Number> z;
+
+    XYZNumber() = default;
+
+    XYZNumber(XYZ const& xyz)
+        : x(round(xyz.x * 0x1'0000))
+        , y(round(xyz.y * 0x1'0000))
+        , z(round(xyz.z * 0x1'0000))
+    {
+    }
 
     operator XYZ() const
     {
