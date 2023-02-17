@@ -56,7 +56,7 @@ CellTypeDialog::CellTypeDialog(Vector<Position> const& positions, Sheet& sheet, 
     buttonbox.set_shrink_to_fit(true);
     auto& button_layout = buttonbox.set_layout<GUI::HorizontalBoxLayout>();
     button_layout.set_spacing(10);
-    button_layout.add_spacer();
+    buttonbox.add_spacer().release_value_but_fixme_should_propagate_errors();
     auto& ok_button = buttonbox.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     ok_button.set_fixed_width(80);
     ok_button.on_click = [&](auto) { done(ExecResult::OK); };

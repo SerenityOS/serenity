@@ -135,7 +135,7 @@ ClockWidget::ClockWidget()
     settings_container.set_fixed_height(24);
     settings_container.set_layout<GUI::HorizontalBoxLayout>();
     settings_container.layout()->set_margins({ 2 });
-    settings_container.layout()->add_spacer();
+    settings_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_jump_to_button = settings_container.add<GUI::Button>();
     m_jump_to_button->set_button_style(Gfx::ButtonStyle::Coolbar);

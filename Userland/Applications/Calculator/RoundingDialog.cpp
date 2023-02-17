@@ -53,7 +53,7 @@ RoundingDialog::RoundingDialog(GUI::Window* parent_window, StringView title)
     main_widget->add_child(*m_buttons_container);
 
     m_buttons_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_buttons_container->layout()->add_spacer();
+    m_buttons_container->add_spacer().release_value_but_fixme_should_propagate_errors();
     m_buttons_container->add_child(*m_ok_button);
     m_buttons_container->add_child(*m_cancel_button);
 

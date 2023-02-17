@@ -96,7 +96,7 @@ ShutdownDialog::ShutdownDialog()
     button_container.set_fixed_height(23);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.layout()->set_spacing(5);
-    button_container.layout()->add_spacer();
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
     auto& ok_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
     ok_button.set_fixed_size(80, 23);
     ok_button.on_click = [this](auto) {
