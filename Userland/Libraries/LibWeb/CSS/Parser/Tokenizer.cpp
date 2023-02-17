@@ -199,8 +199,8 @@ Tokenizer::Tokenizer(StringView input, StringView encoding)
 {
     // https://www.w3.org/TR/css-syntax-3/#css-filter-code-points
     auto filter_code_points = [](StringView input, auto encoding) -> ErrorOr<String> {
-        auto* decoder = TextCodec::decoder_for(encoding);
-        VERIFY(decoder);
+        auto decoder = TextCodec::decoder_for(encoding);
+        VERIFY(decoder.has_value());
 
         StringBuilder builder { input.length() };
         bool last_was_carriage_return = false;

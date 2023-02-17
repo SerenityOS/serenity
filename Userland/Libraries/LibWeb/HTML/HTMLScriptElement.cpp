@@ -514,7 +514,7 @@ void HTMLScriptElement::resource_did_load()
     // If the resource has an explicit encoding (i.e from a HTTP Content-Type header)
     // we have to re-encode it to UTF-8.
     if (resource()->has_encoding()) {
-        if (auto* codec = TextCodec::decoder_for(resource()->encoding().value())) {
+        if (auto codec = TextCodec::decoder_for(resource()->encoding().value()); codec.has_value()) {
             data = codec->to_utf8(data).to_byte_buffer();
         }
     }

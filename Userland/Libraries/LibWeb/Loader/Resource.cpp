@@ -83,7 +83,7 @@ static DeprecatedString mime_type_from_content_type(DeprecatedString const& cont
 
 static bool is_valid_encoding(StringView encoding)
 {
-    return TextCodec::decoder_for(encoding);
+    return TextCodec::decoder_for(encoding).has_value();
 }
 
 void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const& headers, Optional<u32> status_code)

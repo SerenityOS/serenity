@@ -11,8 +11,8 @@
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto* decoder = TextCodec::decoder_for("utf-16be"sv);
-    VERIFY(decoder);
+    auto decoder = TextCodec::decoder_for("utf-16be"sv);
+    VERIFY(decoder.has_value());
     decoder->to_utf8({ data, size });
     return 0;
 }
