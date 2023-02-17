@@ -89,6 +89,14 @@ static_assert(AssertSize<ICCHeader, 128>());
 // "The profile file signature field shall contain the value “acsp” (61637370h) as a profile file signature."
 constexpr u32 ProfileFileSignature = 0x61637370;
 
+// ICC V4, 7.3 Tag table, Table 24 - Tag table structure
+struct TagTableEntry {
+    BigEndian<TagSignature> tag_signature;
+    BigEndian<u32> offset_to_beginning_of_tag_data_element;
+    BigEndian<u32> size_of_tag_data_element;
+};
+static_assert(AssertSize<TagTableEntry, 12>());
+
 // Common bits of ICC v4, Table 40 — lut16Type encoding and Table 44 — lut8Type encoding
 struct LUTHeader {
     u8 number_of_input_channels;
