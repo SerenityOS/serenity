@@ -222,7 +222,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, DeprecatedString spec
     TRY(vm.push_execution_context(eval_context, {}));
 
     // 6. Perform HostImportModuleDynamically(null, specifierString, innerCapability).
-    vm.host_import_module_dynamically(Empty {}, ModuleRequest { move(specifier_string) }, inner_capability);
+    MUST_OR_THROW_OOM(vm.host_import_module_dynamically(Empty {}, ModuleRequest { move(specifier_string) }, inner_capability));
 
     // 7. Suspend evalContext and remove it from the execution context stack.
     // NOTE: We don't support this concept yet.

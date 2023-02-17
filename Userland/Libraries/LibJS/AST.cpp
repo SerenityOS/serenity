@@ -3589,7 +3589,7 @@ Completion ImportCall::execute(Interpreter& interpreter) const
     ModuleRequest request { specifier_string, assertions };
 
     // 12. Perform HostImportModuleDynamically(referencingScriptOrModule, moduleRequest, promiseCapability).
-    interpreter.vm().host_import_module_dynamically(referencing_script_or_module, move(request), promise_capability);
+    MUST_OR_THROW_OOM(interpreter.vm().host_import_module_dynamically(referencing_script_or_module, move(request), promise_capability));
 
     // 13. Return promiseCapability.[[Promise]].
     return Value { promise_capability->promise() };

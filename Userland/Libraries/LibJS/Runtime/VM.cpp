@@ -81,7 +81,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
         return resolve_imported_module(move(referencing_script_or_module), specifier);
     };
 
-    host_import_module_dynamically = [&](ScriptOrModule, ModuleRequest const&, PromiseCapability const& promise_capability) {
+    host_import_module_dynamically = [&](ScriptOrModule, ModuleRequest const&, PromiseCapability const& promise_capability) -> ThrowCompletionOr<void> {
         // By default, we throw on dynamic imports this is to prevent arbitrary file access by scripts.
         VERIFY(current_realm());
         auto& realm = *current_realm();
@@ -90,7 +90,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
         // If you are here because you want to enable dynamic module importing make sure it won't be a security problem
         // by checking the default implementation of HostImportModuleDynamically and creating your own hook or calling
         // vm.enable_default_host_import_module_dynamically_hook().
-        promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()).release_allocated_value_but_fixme_should_propagate_errors());
+        promise->reject(MUST_OR_THROW_OOM(Error::create(realm, ErrorType::DynamicImportNotAllowed.message())));
 
         promise->perform_then(
             NativeFunction::create(realm, "", [](auto&) -> ThrowCompletionOr<Value> {
@@ -106,6 +106,8 @@ VM::VM(OwnPtr<CustomData> custom_data)
                 return js_undefined();
             }),
             {});
+
+        return {};
     };
 
     host_finish_dynamic_import = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability const& promise_capability, Promise* promise) {
@@ -971,7 +973,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 }
 
 // 16.2.1.8 HostImportModuleDynamically ( referencingScriptOrModule, specifier, promiseCapability ), https://tc39.es/ecma262/#sec-hostimportmoduledynamically
-void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability)
+ThrowCompletionOr<void> VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability)
 {
     auto& realm = *current_realm();
 
@@ -1001,8 +1003,8 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         // If there is no ScriptOrModule in any of the execution contexts
         if (referencing_script_or_module.has<Empty>()) {
             // Throw an error for now
-            promise->reject(InternalError::create(realm, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier).release_value_but_fixme_should_propagate_errors()));
-            return;
+            promise->reject(InternalError::create(realm, TRY_OR_THROW_OOM(*this, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier))));
+            return {};
         }
     }
 
@@ -1026,6 +1028,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
 
     // It must return unused.
     // Note: Just return void always since the resulting value cannot be accessed by user code.
+    return {};
 }
 
 // 16.2.1.9 FinishDynamicImport ( referencingScriptOrModule, specifier, promiseCapability, innerPromise ), https://tc39.es/ecma262/#sec-finishdynamicimport
