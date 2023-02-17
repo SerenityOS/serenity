@@ -272,26 +272,6 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
 
     __End = CPUFeature(1u) << 255u); // SENTINEL VALUE
 
-enum class ArmLimited { // 0x41
-    Cortex_A34 = 0xd02,
-    Cortex_A53 = 0xd03, // Raspberry Pi 2 v1.2 / Raspberry Pi 3
-    Cortex_A35 = 0xd04,
-    Cortex_A55 = 0xd05,
-    Cortex_A65 = 0xd06,
-    Cortex_A57 = 0xd07,
-    Cortex_A72 = 0xd08, // Raspberry Pi 4
-    Cortex_A73 = 0xd09,
-    Cortex_A75 = 0xd0a,
-    Cortex_A76 = 0xd0b,
-    Neoverse_N1 = 0xd0c,
-    Cortex_A77 = 0xd0d,
-    Cortex_A78 = 0xd41,
-    Cortex_A65AE = 0xd43,
-    Cortex_X1 = 0xd44,
-    Cortex_A78C = 0xd4b,
-    Cortex_X1C = 0xd4c,
-};
-
 CPUFeature::Type detect_cpu_features();
 StringView cpu_feature_to_name(CPUFeature::Type const&);
 StringView cpu_feature_to_description(CPUFeature::Type const&);
