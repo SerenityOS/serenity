@@ -757,6 +757,36 @@ constexpr T ceil(T num)
 #endif
 }
 
+template<FloatingPoint T>
+constexpr T floor(T num)
+{
+    if (is_constant_evaluated()) {
+        if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
+            return num;
+        return (static_cast<T>(static_cast<i64>(num)) == num)
+            ? static_cast<i64>(num)
+            : static_cast<i64>(num) - ((num > 0) ? 0 : 1);
+    }
+#if ARCH(AARCH64)
+    AARCH64_INSTRUCTION(frintm, num);
+#else
+    return __builtin_floor(num);
+#endif
+}
+
+template<FloatingPoint T>
+constexpr T round(T x)
+{
+    CONSTEXPR_STATE(round, x);
+    // Note: This is break-tie-away-from-zero, so not the hw's understanding of
+    //       "nearest", which would be towards even.
+    if (x == 0.)
+        return x;
+    if (x > 0.)
+        return floor(x + .5);
+    return ceil(x - .5);
+}
+
 #undef CONSTEXPR_STATE
 #undef AARCH64_INSTRUCTION
 }
