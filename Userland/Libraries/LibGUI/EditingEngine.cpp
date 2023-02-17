@@ -8,6 +8,7 @@
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>
+#include <LibUnicode/Segmentation.h>
 
 namespace GUI {
 
@@ -45,7 +46,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
             return true;
         }
         m_editor->update_selection(event.shift());
-        move_one_left();
+        move_to_previous_grapheme_boundary(); // Default behavior is to advance the cursor until the next grapheme boundary.
         if (event.shift() && m_editor->selection().start().is_valid()) {
             m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
@@ -73,7 +74,7 @@ bool EditingEngine::on_key(KeyEvent const& event)
             return true;
         }
         m_editor->update_selection(event.shift());
-        move_one_right();
+        move_to_next_grapheme_boundary(); // Default behavior is to advance the cursor until the next grapheme boundary.
         if (event.shift() && m_editor->selection().start().is_valid()) {
             m_editor->selection().set_end(m_editor->cursor());
             m_editor->did_update_selection();
@@ -190,6 +191,31 @@ void EditingEngine::move_one_right()
     m_editor->set_cursor(new_line, new_column);
 }
 
+void EditingEngine::move_to_previous_grapheme_boundary()
+{
+    if (m_editor->cursor().column() > 0) {
+        auto offset = Unicode::previous_grapheme_segmentation_boundary(m_editor->line(m_editor->cursor().line()).view(), m_editor->cursor().column());
+        auto new_column = offset.value_or(m_editor->cursor().column() - 1);
+        m_editor->set_cursor(m_editor->cursor().line(), new_column);
+    } else if (m_editor->cursor().line() > 0) {
+        int new_line = m_editor->cursor().line() - 1;
+        int new_column = m_editor->lines()[new_line].length();
+        m_editor->set_cursor(new_line, new_column);
+    }
+}
+void EditingEngine::move_to_next_grapheme_boundary()
+{
+    if (m_editor->cursor().column() < m_editor->current_line().length()) {
+
+        auto offset = Unicode::next_grapheme_segmentation_boundary(m_editor->line(m_editor->cursor().line()).view(), m_editor->cursor().column());
+        auto new_column = offset.value_or(m_editor->cursor().column() + 1);
+        m_editor->set_cursor(m_editor->cursor().line(), new_column);
+    } else if (m_editor->cursor().line() != m_editor->line_count() - 1) {
+        int new_line = m_editor->cursor().line() - 1;
+        int new_column = m_editor->lines()[new_line].length();
+        m_editor->set_cursor(new_line, new_column);
+    }
+}
 void EditingEngine::move_to_previous_span()
 {
     TextPosition new_cursor;

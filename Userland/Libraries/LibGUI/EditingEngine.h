@@ -74,7 +74,8 @@ protected:
     void move_page_down();
     void move_to_first_line();
     void move_to_last_line();
-
+    void move_to_previous_grapheme_boundary();
+    void move_to_next_grapheme_boundary();
     void move_up(double page_height_factor);
     void move_down(double page_height_factor);
 
