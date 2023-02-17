@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 
 #include <AK/Forward.h>
 #include <AK/Function.h>
+#include <AK/Optional.h>
 
 namespace TextCodec {
 
@@ -84,7 +86,7 @@ public:
     virtual void process(StringView, Function<void(u32)> on_code_point) override;
 };
 
-Decoder* decoder_for(StringView encoding);
+Optional<Decoder&> decoder_for(StringView encoding);
 Optional<StringView> get_standardized_encoding(StringView encoding);
 
 // This returns the appropriate Unicode decoder for the sniffed BOM or nullptr if there is no appropriate decoder.

@@ -2798,8 +2798,8 @@ HTMLTokenizer::HTMLTokenizer()
 
 HTMLTokenizer::HTMLTokenizer(StringView input, DeprecatedString const& encoding)
 {
-    auto* decoder = TextCodec::decoder_for(encoding);
-    VERIFY(decoder);
+    auto decoder = TextCodec::decoder_for(encoding);
+    VERIFY(decoder.has_value());
     m_decoded_input = decoder->to_utf8(input);
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();

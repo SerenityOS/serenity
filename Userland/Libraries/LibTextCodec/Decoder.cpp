@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,37 +31,37 @@ TurkishDecoder s_turkish_decoder;
 XUserDefinedDecoder s_x_user_defined_decoder;
 }
 
-Decoder* decoder_for(StringView a_encoding)
+Optional<Decoder&> decoder_for(StringView a_encoding)
 {
     auto encoding = get_standardized_encoding(a_encoding);
     if (encoding.has_value()) {
         if (encoding.value().equals_ignoring_case("windows-1252"sv))
-            return &s_latin1_decoder;
+            return s_latin1_decoder;
         if (encoding.value().equals_ignoring_case("utf-8"sv))
-            return &s_utf8_decoder;
+            return s_utf8_decoder;
         if (encoding.value().equals_ignoring_case("utf-16be"sv))
-            return &s_utf16be_decoder;
+            return s_utf16be_decoder;
         if (encoding.value().equals_ignoring_case("utf-16le"sv))
-            return &s_utf16le_decoder;
+            return s_utf16le_decoder;
         if (encoding.value().equals_ignoring_case("iso-8859-2"sv))
-            return &s_latin2_decoder;
+            return s_latin2_decoder;
         if (encoding.value().equals_ignoring_case("windows-1255"sv))
-            return &s_hebrew_decoder;
+            return s_hebrew_decoder;
         if (encoding.value().equals_ignoring_case("windows-1251"sv))
-            return &s_cyrillic_decoder;
+            return s_cyrillic_decoder;
         if (encoding.value().equals_ignoring_case("koi8-r"sv))
-            return &s_koi8r_decoder;
+            return s_koi8r_decoder;
         if (encoding.value().equals_ignoring_case("iso-8859-15"sv))
-            return &s_latin9_decoder;
+            return s_latin9_decoder;
         if (encoding.value().equals_ignoring_case("macintosh"sv))
-            return &s_mac_roman_decoder;
+            return s_mac_roman_decoder;
         if (encoding.value().equals_ignoring_case("windows-1254"sv))
-            return &s_turkish_decoder;
+            return s_turkish_decoder;
         if (encoding.value().equals_ignoring_case("x-user-defined"sv))
-            return &s_x_user_defined_decoder;
+            return s_x_user_defined_decoder;
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
-    return nullptr;
+    return {};
 }
 
 // https://encoding.spec.whatwg.org/#concept-encoding-get
