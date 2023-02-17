@@ -37,7 +37,7 @@ public:
     Function<void(size_t index)> on_segment_click;
     Function<void(size_t index, DropEvent&)> on_segment_drop;
     Function<void(size_t index, DragEvent&)> on_segment_drag_enter;
-    Function<void(MouseEvent& event)> on_doubleclick;
+    Function<void(unsigned modifiers)> on_doubleclick;
 
 protected:
     virtual void did_change_font() override;
