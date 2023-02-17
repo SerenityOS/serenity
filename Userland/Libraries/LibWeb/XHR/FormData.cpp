@@ -18,7 +18,7 @@ namespace Web::XHR {
 // https://xhr.spec.whatwg.org/#dom-formdata
 WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Optional<JS::NonnullGCPtr<HTML::HTMLFormElement>> form)
 {
-    HashMap<DeprecatedString, Vector<FormDataEntryValue>> list;
+    Vector<FormDataEntry> list;
     // 1. If form is given, then:
     if (form.has_value()) {
         // 1. Let list be the result of constructing the entry list for form.
@@ -33,12 +33,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Rea
     return construct_impl(realm, move(list));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, HashMap<DeprecatedString, Vector<FormDataEntryValue>> entry_list)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<FormData>> FormData::construct_impl(JS::Realm& realm, Vector<FormDataEntry> entry_list)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<FormData>(realm, realm, move(entry_list)));
 }
 
-FormData::FormData(JS::Realm& realm, HashMap<DeprecatedString, Vector<FormDataEntryValue>> entry_list)
+FormData::FormData(JS::Realm& realm, Vector<FormDataEntry> entry_list)
     : PlatformObject(realm)
     , m_entry_list(move(entry_list))
 {
@@ -54,30 +54,17 @@ JS::ThrowCompletionOr<void> FormData::initialize(JS::Realm& realm)
     return {};
 }
 
-void FormData::visit_edges(Cell::Visitor& visitor)
-{
-    Base::visit_edges(visitor);
-    for (auto const& entry : m_entry_list) {
-        for (auto const& value : entry.value) {
-            if (auto* file = value.get_pointer<JS::NonnullGCPtr<FileAPI::File>>())
-                visitor.visit(*file);
-        }
-    }
-}
-
 // https://xhr.spec.whatwg.org/#dom-formdata-append
-WebIDL::ExceptionOr<void> FormData::append(DeprecatedString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> FormData::append(String const& name, String const& value)
 {
-    auto& vm = realm().vm();
-    return append_impl(TRY_OR_THROW_OOM(vm, String::from_deprecated_string(name)), TRY_OR_THROW_OOM(vm, String::from_deprecated_string(value)));
+    return append_impl(name, value);
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-append-blob
-WebIDL::ExceptionOr<void> FormData::append(DeprecatedString const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<DeprecatedString> const& filename)
+WebIDL::ExceptionOr<void> FormData::append(String const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<String> const& filename)
 {
-    auto& vm = realm().vm();
-    auto inner_filename = filename.has_value() ? TRY_OR_THROW_OOM(vm, String::from_deprecated_string(filename.value())) : Optional<String> {};
-    return append_impl(TRY_OR_THROW_OOM(vm, String::from_deprecated_string(name)), blob_value, inner_filename);
+    auto inner_filename = filename.has_value() ? filename.value() : Optional<String> {};
+    return append_impl(name, blob_value, inner_filename);
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-append
@@ -91,67 +78,67 @@ WebIDL::ExceptionOr<void> FormData::append_impl(String const& name, Variant<JS::
     // 2. Let entry be the result of creating an entry with name, value, and filename if given.
     auto entry = TRY(HTML::create_entry(realm, name, value, filename));
 
-    // FIXME: Remove this when our binding generator supports "new string".
-    auto form_data_entry_value = entry.value.has<String>()
-        ? FormDataEntryValue { entry.value.get<String>().to_deprecated_string() }
-        : FormDataEntryValue { entry.value.get<JS::NonnullGCPtr<FileAPI::File>>() };
-
     // 3. Append entry to this’s entry list.
-    if (auto entries = m_entry_list.get(entry.name.to_deprecated_string()); entries.has_value() && !entries->is_empty())
-        TRY_OR_THROW_OOM(vm, entries->try_append(form_data_entry_value));
-    else
-        TRY_OR_THROW_OOM(vm, m_entry_list.try_set(entry.name.to_deprecated_string(), { form_data_entry_value }));
-
+    TRY_OR_THROW_OOM(vm, m_entry_list.try_append(move(entry)));
     return {};
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-delete
-void FormData::delete_(DeprecatedString const& name)
+void FormData::delete_(String const& name)
 {
     // The delete(name) method steps are to remove all entries whose name is name from this’s entry list.
-    m_entry_list.remove(name);
+    m_entry_list.remove_all_matching([&name](FormDataEntry const& entry) {
+        return entry.name == name;
+    });
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-get
-Variant<JS::NonnullGCPtr<FileAPI::File>, DeprecatedString, Empty> FormData::get(DeprecatedString const& name)
+Variant<JS::Handle<FileAPI::File>, String, Empty> FormData::get(String const& name)
 {
     // 1. If there is no entry whose name is name in this’s entry list, then return null.
-    if (!m_entry_list.contains(name))
+    auto entry_iterator = m_entry_list.find_if([&name](FormDataEntry const& entry) {
+        return entry.name == name;
+    });
+    if (entry_iterator.is_end())
         return Empty {};
     // 2. Return the value of the first entry whose name is name from this’s entry list.
-    return m_entry_list.get(name)->at(0);
+    return entry_iterator->value;
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-getall
-Vector<FormDataEntryValue> FormData::get_all(DeprecatedString const& name)
+WebIDL::ExceptionOr<Vector<FormDataEntryValue>> FormData::get_all(String const& name)
 {
     // 1. If there is no entry whose name is name in this’s entry list, then return the empty list.
-    if (!m_entry_list.contains(name))
-        return {};
     // 2. Return the values of all entries whose name is name, in order, from this’s entry list.
-    return *m_entry_list.get(name);
+    Vector<FormDataEntryValue> values;
+    for (auto const& entry : m_entry_list) {
+        if (entry.name == name)
+            TRY_OR_THROW_OOM(vm(), values.try_append(entry.value));
+    }
+    return values;
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-has
-bool FormData::has(DeprecatedString const& name)
+bool FormData::has(String const& name)
 {
     // The has(name) method steps are to return true if there is an entry whose name is name in this’s entry list; otherwise false.
-    return m_entry_list.contains(name);
+    return !m_entry_list.find_if([&name](auto& entry) {
+                            return entry.name == name;
+                        })
+                .is_end();
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-set
-WebIDL::ExceptionOr<void> FormData::set(DeprecatedString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> FormData::set(String const& name, String const& value)
 {
-    auto& vm = realm().vm();
-    return set_impl(TRY_OR_THROW_OOM(vm, String::from_deprecated_string(name)), TRY_OR_THROW_OOM(vm, String::from_deprecated_string(value)));
+    return set_impl(name, value);
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-set-blob
-WebIDL::ExceptionOr<void> FormData::set(DeprecatedString const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<DeprecatedString> const& filename)
+WebIDL::ExceptionOr<void> FormData::set(String const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<String> const& filename)
 {
-    auto& vm = realm().vm();
-    auto inner_filename = filename.has_value() ? TRY_OR_THROW_OOM(vm, String::from_deprecated_string(filename.value())) : Optional<String> {};
-    return set_impl(TRY_OR_THROW_OOM(vm, String::from_deprecated_string(name)), blob_value, inner_filename);
+    auto inner_filename = filename.has_value() ? filename.value() : Optional<String> {};
+    return set_impl(name, blob_value, inner_filename);
 }
 
 // https://xhr.spec.whatwg.org/#dom-formdata-set
@@ -165,19 +152,20 @@ WebIDL::ExceptionOr<void> FormData::set_impl(String const& name, Variant<JS::Non
     // 2. Let entry be the result of creating an entry with name, value, and filename if given.
     auto entry = TRY(HTML::create_entry(realm, name, value, filename));
 
-    // FIXME: Remove this when our binding generator supports "new string".
-    auto form_data_entry_value = entry.value.has<String>()
-        ? FormDataEntryValue { entry.value.get<String>().to_deprecated_string() }
-        : FormDataEntryValue { entry.value.get<JS::NonnullGCPtr<FileAPI::File>>() };
+    auto existing = m_entry_list.find_if([&name](auto& entry) {
+        return entry.name == name;
+    });
 
     // 3. If there are entries in this’s entry list whose name is name, then replace the first such entry with entry and remove the others.
-    if (auto entries = m_entry_list.get(entry.name.to_deprecated_string()); entries.has_value() && !entries->is_empty()) {
-        entries->remove(0, entries->size());
-        TRY_OR_THROW_OOM(vm, entries->try_append(form_data_entry_value));
+    if (!existing.is_end()) {
+        existing->value = entry.value;
+        m_entry_list.remove_all_matching([&name, &existing](auto& entry) {
+            return &entry != &*existing && entry.name == name;
+        });
     }
     // 4. Otherwise, append entry to this’s entry list.
     else {
-        TRY_OR_THROW_OOM(vm, m_entry_list.try_set(entry.name.to_deprecated_string(), { form_data_entry_value }));
+        TRY_OR_THROW_OOM(vm, m_entry_list.try_append(move(entry)));
     }
 
     return {};

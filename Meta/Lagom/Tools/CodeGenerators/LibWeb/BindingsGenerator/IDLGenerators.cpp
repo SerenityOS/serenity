@@ -139,7 +139,7 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
         return { .name = "JS::Handle<JS::Object>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.name() == "File")
-        return { .name = "JS::NonnullGCPtr<FileAPI::File>", .sequence_storage_type = SequenceStorageType::MarkedVector };
+        return { .name = "JS::Handle<FileAPI::File>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.name() == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);

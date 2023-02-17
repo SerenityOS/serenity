@@ -15,7 +15,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#create-an-entry
-WebIDL::ExceptionOr<Entry> create_entry(JS::Realm& realm, String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename)
+WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String const& name, Variant<JS::NonnullGCPtr<FileAPI::Blob>, String> const& value, Optional<String> const& filename)
 {
     auto& vm = realm.vm();
 
@@ -24,11 +24,11 @@ WebIDL::ExceptionOr<Entry> create_entry(JS::Realm& realm, String const& name, Va
 
     auto entry_value = TRY(value.visit(
         // 2. If value is a string, then set value to the result of converting value into a scalar value string.
-        [&](String const& string) -> WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<FileAPI::File>, String>> {
+        [&](String const& string) -> WebIDL::ExceptionOr<Variant<JS::Handle<FileAPI::File>, String>> {
             return TRY_OR_THROW_OOM(vm, Infra::convert_to_scalar_value_string(string));
         },
         // 3. Otherwise:
-        [&](JS::NonnullGCPtr<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<Variant<JS::NonnullGCPtr<FileAPI::File>, String>> {
+        [&](JS::NonnullGCPtr<FileAPI::Blob> const& blob) -> WebIDL::ExceptionOr<Variant<JS::Handle<FileAPI::File>, String>> {
             // 1. If value is not a File object, then set value to a new File object, representing the same bytes, whose name attribute value is "blob".
             // 2. If filename is given, then set value to a new File object, representing the same bytes, whose name attribute is filename.
             String name_attribute;
@@ -36,11 +36,11 @@ WebIDL::ExceptionOr<Entry> create_entry(JS::Realm& realm, String const& name, Va
                 name_attribute = filename.value();
             else
                 name_attribute = TRY_OR_THROW_OOM(vm, String::from_utf8("blob"sv));
-            return TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, name_attribute.to_deprecated_string(), {}));
+            return JS::make_handle(TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, name_attribute.to_deprecated_string(), {})));
         }));
 
     // 4. Return an entry whose name is name and whose value is value.
-    return Entry {
+    return XHR::FormDataEntry {
         .name = move(entry_name),
         .value = move(entry_value),
     };
@@ -48,13 +48,13 @@ WebIDL::ExceptionOr<Entry> create_entry(JS::Realm& realm, String const& name, Va
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#constructing-the-form-data-set
 // FIXME: Add missing parameters optional submitter, and optional encoding
-WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_entry_list(JS::Realm& realm, HTMLFormElement& form)
+WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(JS::Realm& realm, HTMLFormElement& form)
 {
     auto& vm = realm.vm();
 
     // 1. If form's constructing entry list is true, then return null.
     if (form.constructing_entry_list())
-        return Optional<HashMapWithVectorOfFormDataEntryValue> {};
+        return Optional<Vector<XHR::FormDataEntry>> {};
 
     // 2. Set form's constructing entry list to true.
     form.set_constructing_entry_list(true);
@@ -63,7 +63,7 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
     auto controls = TRY_OR_THROW_OOM(vm, form.get_submittable_elements());
 
     // 4. Let entry list be a new empty entry list.
-    HashMapWithVectorOfFormDataEntryValue entry_list;
+    Vector<XHR::FormDataEntry> entry_list;
 
     // 5. For each element field in controls, in tree order:
     for (auto const& control : controls) {
@@ -101,19 +101,17 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
             continue;
 
         // 5. Let name be the value of the field element's name attribute.
-        auto name = control->name();
-
-        auto form_data_entries = entry_list.contains(name) && entry_list.get(name).has_value()
-            ? entry_list.get(name).value()
-            : Vector<XHR::FormDataEntryValue> {};
+        auto name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(control->name()));
 
         // 6. If the field element is a select element, then for each option element in the select element's list of options whose selectedness is true and that is not disabled, create an entry with name and the value of the option element, and append it to entry list.
         if (auto* select_element = dynamic_cast<HTML::HTMLSelectElement*>(control.ptr())) {
             for (auto const& option_element : select_element->list_of_options()) {
-                if (option_element->selected() && !option_element->disabled())
-                    TRY_OR_THROW_OOM(vm, form_data_entries.try_append(option_element->value()));
+                if (option_element->selected() && !option_element->disabled()) {
+                    auto option_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(option_element->name()));
+                    auto option_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(option_element->value()));
+                    TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(option_name), .value = move(option_value) }));
+                }
             }
-            TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
         }
         // 7. Otherwise, if the field element is an input element whose type attribute is in the Checkbox state or the Radio Button state, then:
         else if (auto* checkbox_or_radio_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); checkbox_or_radio_element && (checkbox_or_radio_element->type() == "checkbox" || checkbox_or_radio_element->type() == "radio") && checkbox_or_radio_element->checked()) {
@@ -123,8 +121,9 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
                 value = "on";
 
             // 2. Create an entry with name and value, and append it to entry list.
-            TRY_OR_THROW_OOM(vm, form_data_entries.try_append(value));
-            TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
+            auto checkbox_or_radio_element_name = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(checkbox_or_radio_element->name()));
+            auto checkbox_or_radio_element_value = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(value));
+            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(checkbox_or_radio_element_name), .value = move(checkbox_or_radio_element_value) }));
         }
         // 8. Otherwise, if the field element is an input element whose type attribute is in the File Upload state, then:
         else if (auto* file_element = dynamic_cast<HTML::HTMLInputElement*>(control.ptr()); file_element && file_element->type() == "file") {
@@ -133,16 +132,14 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
                 FileAPI::FilePropertyBag options {};
                 options.type = "application/octet-stream";
                 auto file = TRY(FileAPI::File::create(realm, {}, "", options));
-                TRY_OR_THROW_OOM(vm, form_data_entries.try_append(file));
-                TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
+                TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = JS::make_handle(file) }));
             }
             // 2. Otherwise, for each file in selected files, create an entry with name and a File object representing the file, and append it to entry list.
             else {
                 for (size_t i = 0; i < file_element->files()->length(); i++) {
                     auto file = JS::NonnullGCPtr { *file_element->files()->item(i) };
-                    TRY_OR_THROW_OOM(vm, form_data_entries.try_append(file));
+                    TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = JS::make_handle(file) }));
                 }
-                TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
             }
         }
         // FIXME: 9. Otherwise, if the field element is an input element whose type attribute is in the Hidden state and name is an ASCII case-insensitive match for "_charset_":
@@ -152,8 +149,8 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
         else {
             auto* element = dynamic_cast<HTML::HTMLElement*>(control.ptr());
             VERIFY(element);
-            TRY_OR_THROW_OOM(vm, form_data_entries.try_append(element->attribute("value"sv)));
-            TRY_OR_THROW_OOM(vm, entry_list.try_set(name, form_data_entries));
+            auto value_attribute = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(element->attribute("value"sv)));
+            TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = move(value_attribute) }));
         }
 
         // FIXME: 11. If the element has a dirname attribute, and that attribute's value is not the empty string, then:
@@ -175,7 +172,7 @@ WebIDL::ExceptionOr<Optional<HashMapWithVectorOfFormDataEntryValue>> construct_e
     form.set_constructing_entry_list(false);
 
     // 9. Return a clone of entry list.
-    return TRY_OR_THROW_OOM(vm, entry_list.clone());
+    return entry_list;
 }
 
 }
