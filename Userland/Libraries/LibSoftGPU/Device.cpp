@@ -1281,7 +1281,7 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
         f32x4 factor;
         switch (m_options.fog_mode) {
         case GPU::FogMode::Linear:
-            factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
+            factor = (m_options.fog_end - quad.fog_depth) * m_one_over_fog_depth;
             break;
         case GPU::FogMode::Exp: {
             auto argument = -m_options.fog_density * quad.fog_depth;
@@ -1555,6 +1555,8 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 void Device::set_options(GPU::RasterizerOptions const& options)
 {
     m_options = options;
+    if (m_options.fog_enabled)
+        m_one_over_fog_depth = 1.f / (m_options.fog_end - m_options.fog_start);
 }
 
 void Device::set_light_model_params(GPU::LightModelParameters const& lighting_model)
