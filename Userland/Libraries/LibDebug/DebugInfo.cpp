@@ -142,13 +142,6 @@ Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source
     if (!file_path.starts_with('/'))
         file_path = DeprecatedString::formatted("/{}", file_path);
 
-    constexpr auto SERENITY_LIBS_PREFIX = "/usr/src/serenity"sv;
-    if (file.starts_with(SERENITY_LIBS_PREFIX)) {
-        size_t file_prefix_offset = SERENITY_LIBS_PREFIX.length() + 1;
-        file_path = file.substring(file_prefix_offset, file.length() - file_prefix_offset);
-        file_path = DeprecatedString::formatted("../{}", file_path);
-    }
-
     Optional<SourcePositionAndAddress> result;
     for (auto const& line_entry : m_sorted_lines) {
         if (!line_entry.file.ends_with(file_path))
