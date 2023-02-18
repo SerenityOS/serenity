@@ -6,7 +6,7 @@
 
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/Profile.h>
-#include <LibGfx/JPGLoader.h>
+#include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibTest/TestCase.h>
 
@@ -31,7 +31,7 @@ TEST_CASE(png)
 TEST_CASE(jpg)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc-v4.jpg"sv)));
-    auto jpg = MUST(Gfx::JPGImageDecoderPlugin::create(file->bytes()));
+    auto jpg = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     EXPECT(jpg->initialize());
     auto icc_bytes = MUST(jpg->icc_data());
     EXPECT(icc_bytes.has_value());

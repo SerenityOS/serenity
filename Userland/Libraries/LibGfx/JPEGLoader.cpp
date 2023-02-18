@@ -14,7 +14,7 @@
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
-#include <LibGfx/JPGLoader.h>
+#include <LibGfx/JPEGLoader.h>
 
 #define JPG_INVALID 0X0000
 
@@ -173,7 +173,7 @@ struct ICCMultiChunkState {
     FixedArray<ByteBuffer> chunks;
 };
 
-struct JPGLoadingContext {
+struct JPEGLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
@@ -218,13 +218,13 @@ static void generate_huffman_codes(HuffmanTableSpec& table)
 static ErrorOr<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
 {
     if (count > (8 * sizeof(size_t))) {
-        dbgln_if(JPG_DEBUG, "Can't read {} bits at once!", count);
+        dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
         return Error::from_string_literal("Reading too much huffman bits at once");
     }
     size_t value = 0;
     while (count--) {
         if (hstream.byte_offset >= hstream.stream.size()) {
-            dbgln_if(JPG_DEBUG, "Huffman stream exhausted. This could be an error!");
+            dbgln_if(JPEG_DEBUG, "Huffman stream exhausted. This could be an error!");
             return Error::from_string_literal("Huffman stream exhausted.");
         }
         u8 current_byte = hstream.stream[hstream.byte_offset];
@@ -253,7 +253,7 @@ static ErrorOr<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec
         }
     }
 
-    dbgln_if(JPG_DEBUG, "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
+    dbgln_if(JPEG_DEBUG, "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
     return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
 }
 
@@ -284,7 +284,7 @@ static inline i32* get_component(Macroblock& block, unsigned component)
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
-static ErrorOr<void> build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
+static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (unsigned component_i = 0; component_i < context.component_count; component_i++) {
         auto& component = context.components[component_i];
@@ -305,7 +305,7 @@ static ErrorOr<void> build_macroblocks(JPGLoadingContext& context, Vector<Macrob
                 // For DC coefficients, symbol encodes the length of the coefficient.
                 auto dc_length = TRY(get_next_symbol(context.huffman_stream, dc_table));
                 if (dc_length > 11) {
-                    dbgln_if(JPG_DEBUG, "DC coefficient too long: {}!", dc_length);
+                    dbgln_if(JPEG_DEBUG, "DC coefficient too long: {}!", dc_length);
                     return Error::from_string_literal("DC coefficient too long");
                 }
 
@@ -334,13 +334,13 @@ static ErrorOr<void> build_macroblocks(JPGLoadingContext& context, Vector<Macrob
                     j += run_length;
 
                     if (j >= 64) {
-                        dbgln_if(JPG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
+                        dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
                         return Error::from_string_literal("Run-length exceeded boundaries");
                     }
 
                     u8 coeff_length = ac_symbol & 0x0F;
                     if (coeff_length > 10) {
-                        dbgln_if(JPG_DEBUG, "AC coefficient too long: {}!", coeff_length);
+                        dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
                         return Error::from_string_literal("AC coefficient too long");
                     }
 
@@ -359,12 +359,12 @@ static ErrorOr<void> build_macroblocks(JPGLoadingContext& context, Vector<Macrob
     return {};
 }
 
-static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& context)
+static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPEGLoadingContext& context)
 {
     Vector<Macroblock> macroblocks;
     macroblocks.resize(context.mblock_meta.padded_total);
 
-    if constexpr (JPG_DEBUG) {
+    if constexpr (JPEG_DEBUG) {
         dbgln("Image width: {}", context.frame.width);
         dbgln("Image height: {}", context.frame.height);
         dbgln("Macroblocks in a row: {}", context.mblock_meta.hpadded_count);
@@ -403,7 +403,7 @@ static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPGLoadingContext& cont
             }
 
             if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
-                if constexpr (JPG_DEBUG) {
+                if constexpr (JPEG_DEBUG) {
                     dbgln("Failed to build Macroblock {}", i);
                     dbgln("Huffman stream byte offset {}", context.huffman_stream.byte_offset);
                     dbgln("Huffman stream bit offset {}", context.huffman_stream.bit_offset);
@@ -430,7 +430,7 @@ static inline bool is_valid_marker(const Marker marker)
     if (marker >= JPG_APPN0 && marker <= JPG_APPNF) {
 
         if (marker != JPG_APPN0)
-            dbgln_if(JPG_DEBUG, "{:#04x} not supported yet. The decoder may fail!", marker);
+            dbgln_if(JPEG_DEBUG, "{:#04x} not supported yet. The decoder may fail!", marker);
         return true;
     }
     if (marker >= JPG_RESERVED1 && marker <= JPG_RESERVEDD)
@@ -452,7 +452,7 @@ static inline bool is_valid_marker(const Marker marker)
 
     if (marker >= 0xFFC0 && marker <= 0xFFCF) {
         if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
-            dbgln_if(JPG_DEBUG, "Decoding this frame-type (SOF{}) is not currently supported. Decoder will fail!", marker & 0xf);
+            dbgln_if(JPEG_DEBUG, "Decoding this frame-type (SOF{}) is not currently supported. Decoder will fail!", marker & 0xf);
             return false;
         }
     }
@@ -477,10 +477,10 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
     return is_valid_marker(marker) ? marker : JPG_INVALID;
 }
 
-static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
-    if (context.state < JPGLoadingContext::State::FrameDecoded) {
-        dbgln_if(JPG_DEBUG, "{}: SOS found before reading a SOF!", TRY(stream.tell()));
+    if (context.state < JPEGLoadingContext::State::FrameDecoded) {
+        dbgln_if(JPEG_DEBUG, "{}: SOS found before reading a SOF!", TRY(stream.tell()));
         return Error::from_string_literal("SOS found before reading a SOF");
     }
 
@@ -488,7 +488,7 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingCo
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
     u8 component_count = TRY(stream.read_value<u8>());
     if (component_count != context.component_count) {
-        dbgln_if(JPG_DEBUG, "{}: Unsupported number of components: {}!", TRY(stream.tell()), component_count);
+        dbgln_if(JPEG_DEBUG, "{}: Unsupported number of components: {}!", TRY(stream.tell()), component_count);
         return Error::from_string_literal("Unsupported number of components");
     }
 
@@ -507,17 +507,17 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingCo
         component.ac_destination_id = table_ids & 0x0F;
 
         if (context.dc_tables.size() != context.ac_tables.size()) {
-            dbgln_if(JPG_DEBUG, "{}: DC & AC table count mismatch!", TRY(stream.tell()));
+            dbgln_if(JPEG_DEBUG, "{}: DC & AC table count mismatch!", TRY(stream.tell()));
             return Error::from_string_literal("DC & AC table count mismatch");
         }
 
         if (!context.dc_tables.contains(component.dc_destination_id)) {
-            dbgln_if(JPG_DEBUG, "DC table (id: {}) does not exist!", component.dc_destination_id);
+            dbgln_if(JPEG_DEBUG, "DC table (id: {}) does not exist!", component.dc_destination_id);
             return Error::from_string_literal("DC table does not exist");
         }
 
         if (!context.ac_tables.contains(component.ac_destination_id)) {
-            dbgln_if(JPG_DEBUG, "AC table (id: {}) does not exist!", component.ac_destination_id);
+            dbgln_if(JPEG_DEBUG, "AC table (id: {}) does not exist!", component.ac_destination_id);
             return Error::from_string_literal("AC table does not exist");
         }
     }
@@ -528,7 +528,7 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingCo
 
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
-        dbgln_if(JPG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
+        dbgln_if(JPEG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
             TRY(stream.tell()),
             spectral_selection_start,
             spectral_selection_end,
@@ -538,18 +538,18 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPGLoadingCo
     return {};
 }
 
-static ErrorOr<void> read_reset_marker(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_reset_marker(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     if (bytes_to_read != 2) {
-        dbgln_if(JPG_DEBUG, "{}: Malformed reset marker found!", TRY(stream.tell()));
+        dbgln_if(JPEG_DEBUG, "{}: Malformed reset marker found!", TRY(stream.tell()));
         return Error::from_string_literal("Malformed reset marker found");
     }
     context.dc_reset_interval = TRY(stream.read_value<BigEndian<u16>>());
     return {};
 }
 
-static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -560,11 +560,11 @@ static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPGLoadingCo
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
         if (table_type > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unrecognized huffman table: {}!", TRY(stream.tell()), table_type);
+            dbgln_if(JPEG_DEBUG, "{}: Unrecognized huffman table: {}!", TRY(stream.tell()), table_type);
             return Error::from_string_literal("Unrecognized huffman table");
         }
         if (table_destination_id > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Invalid huffman table destination id: {}!", TRY(stream.tell()), table_destination_id);
+            dbgln_if(JPEG_DEBUG, "{}: Invalid huffman table destination id: {}!", TRY(stream.tell()), table_destination_id);
             return Error::from_string_literal("Invalid huffman table destination id");
         }
 
@@ -595,13 +595,13 @@ static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPGLoadingCo
     }
 
     if (bytes_to_read != 0) {
-        dbgln_if(JPG_DEBUG, "{}: Extra bytes detected in huffman header!", TRY(stream.tell()));
+        dbgln_if(JPEG_DEBUG, "{}: Extra bytes detected in huffman header!", TRY(stream.tell()));
         return Error::from_string_literal("Extra bytes detected in huffman header");
     }
     return {};
 }
 
-static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPGLoadingContext& context, int bytes_to_read)
+static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPEGLoadingContext& context, int bytes_to_read)
 {
     if (bytes_to_read <= 2)
         return Error::from_string_literal("icc marker too small");
@@ -659,7 +659,7 @@ static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPGLoadingContext&
     return {};
 }
 
-static ErrorOr<void> read_app_marker(SeekableStream& stream, JPGLoadingContext& context, int app_marker_number)
+static ErrorOr<void> read_app_marker(SeekableStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -690,7 +690,7 @@ static ErrorOr<void> read_app_marker(SeekableStream& stream, JPGLoadingContext& 
     return stream.discard(bytes_to_read);
 }
 
-static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPGLoadingContext& context)
+static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPEGLoadingContext& context)
 {
     if ((luma.hsample_factor == 1 || luma.hsample_factor == 2) && (luma.vsample_factor == 1 || luma.vsample_factor == 2)) {
         context.mblock_meta.hpadded_count += luma.hsample_factor == 1 ? 0 : context.mblock_meta.hcount % 2;
@@ -700,7 +700,7 @@ static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, J
         context.hsample_factor = luma.hsample_factor;
         context.vsample_factor = luma.vsample_factor;
 
-        if constexpr (JPG_DEBUG) {
+        if constexpr (JPEG_DEBUG) {
             dbgln("Horizontal Subsampling Factor: {}", luma.hsample_factor);
             dbgln("Vertical Subsampling Factor: {}", luma.vsample_factor);
         }
@@ -710,7 +710,7 @@ static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, J
     return false;
 }
 
-static inline void set_macroblock_metadata(JPGLoadingContext& context)
+static inline void set_macroblock_metadata(JPEGLoadingContext& context)
 {
     context.mblock_meta.hcount = (context.frame.width + 7) / 8;
     context.mblock_meta.vcount = (context.frame.height + 7) / 8;
@@ -719,10 +719,10 @@ static inline void set_macroblock_metadata(JPGLoadingContext& context)
     context.mblock_meta.total = context.mblock_meta.hcount * context.mblock_meta.vcount;
 }
 
-static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
-    if (context.state == JPGLoadingContext::FrameDecoded) {
-        dbgln_if(JPG_DEBUG, "{}: SOF repeated!", TRY(stream.tell()));
+    if (context.state == JPEGLoadingContext::FrameDecoded) {
+        dbgln_if(JPEG_DEBUG, "{}: SOF repeated!", TRY(stream.tell()));
         return Error::from_string_literal("SOF repeated");
     }
 
@@ -733,14 +733,14 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingC
 
     context.frame.precision = TRY(stream.read_value<u8>());
     if (context.frame.precision != 8) {
-        dbgln_if(JPG_DEBUG, "{}: SOF precision != 8!", TRY(stream.tell()));
+        dbgln_if(JPEG_DEBUG, "{}: SOF precision != 8!", TRY(stream.tell()));
         return Error::from_string_literal("SOF precision != 8");
     }
 
     context.frame.height = TRY(stream.read_value<BigEndian<u16>>());
     context.frame.width = TRY(stream.read_value<BigEndian<u16>>());
     if (!context.frame.width || !context.frame.height) {
-        dbgln_if(JPG_DEBUG, "{}: ERROR! Image height: {}, Image width: {}!", TRY(stream.tell()), context.frame.height, context.frame.width);
+        dbgln_if(JPEG_DEBUG, "{}: ERROR! Image height: {}, Image width: {}!", TRY(stream.tell()), context.frame.height, context.frame.width);
         return Error::from_string_literal("Image frame height of width null");
     }
 
@@ -753,7 +753,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingC
 
     context.component_count = TRY(stream.read_value<u8>());
     if (context.component_count != 1 && context.component_count != 3) {
-        dbgln_if(JPG_DEBUG, "{}: Unsupported number of components in SOF: {}!", TRY(stream.tell()), context.component_count);
+        dbgln_if(JPEG_DEBUG, "{}: Unsupported number of components in SOF: {}!", TRY(stream.tell()), context.component_count);
         return Error::from_string_literal("Unsupported number of components in SOF");
     }
 
@@ -775,7 +775,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingC
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
-                dbgln_if(JPG_DEBUG, "{}: Unsupported luma subsampling factors: horizontal: {}, vertical: {}",
+                dbgln_if(JPEG_DEBUG, "{}: Unsupported luma subsampling factors: horizontal: {}, vertical: {}",
                     TRY(stream.tell()),
                     component.hsample_factor,
                     component.vsample_factor);
@@ -783,7 +783,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingC
             }
         } else {
             if (component.hsample_factor != 1 || component.vsample_factor != 1) {
-                dbgln_if(JPG_DEBUG, "{}: Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
+                dbgln_if(JPEG_DEBUG, "{}: Unsupported chroma subsampling factors: horizontal: {}, vertical: {}",
                     TRY(stream.tell()),
                     component.hsample_factor,
                     component.vsample_factor);
@@ -793,7 +793,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingC
 
         component.qtable_id = TRY(stream.read_value<u8>());
         if (component.qtable_id > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", TRY(stream.tell()), component.qtable_id);
+            dbgln_if(JPEG_DEBUG, "{}: Unsupported quantization table id: {}!", TRY(stream.tell()), component.qtable_id);
             return Error::from_string_literal("Unsupported quantization table id");
         }
 
@@ -803,7 +803,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPGLoadingC
     return {};
 }
 
-static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
@@ -811,12 +811,12 @@ static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPGLoad
         u8 info_byte = TRY(stream.read_value<u8>());
         u8 element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported unit hint in quantization table: {}!", TRY(stream.tell()), element_unit_hint);
+            dbgln_if(JPEG_DEBUG, "{}: Unsupported unit hint in quantization table: {}!", TRY(stream.tell()), element_unit_hint);
             return Error::from_string_literal("Unsupported unit hint in quantization table");
         }
         u8 table_id = info_byte & 0x0F;
         if (table_id > 1) {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported quantization table id: {}!", TRY(stream.tell()), table_id);
+            dbgln_if(JPEG_DEBUG, "{}: Unsupported quantization table id: {}!", TRY(stream.tell()), table_id);
             return Error::from_string_literal("Unsupported quantization table id");
         }
         u32* table = table_id == 0 ? context.luma_table : context.chroma_table;
@@ -832,7 +832,7 @@ static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPGLoad
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
     }
     if (bytes_to_read != 0) {
-        dbgln_if(JPG_DEBUG, "{}: Invalid length for one or more quantization tables!", TRY(stream.tell()));
+        dbgln_if(JPEG_DEBUG, "{}: Invalid length for one or more quantization tables!", TRY(stream.tell()));
         return Error::from_string_literal("Invalid length for one or more quantization tables");
     }
 
@@ -846,7 +846,7 @@ static ErrorOr<void> skip_marker_with_length(Stream& stream)
     return {};
 }
 
-static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
@@ -867,7 +867,7 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
     }
 }
 
-static void inverse_dct(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     static float const m0 = 2.0f * AK::cos(1.0f / 16.0f * 2.0f * AK::Pi<float>);
     static float const m1 = 2.0f * AK::cos(2.0f / 16.0f * 2.0f * AK::Pi<float>);
@@ -1034,7 +1034,7 @@ static void inverse_dct(JPGLoadingContext const& context, Vector<Macroblock>& ma
     }
 }
 
-static void ycbcr_to_rgb(JPGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
@@ -1067,7 +1067,7 @@ static void ycbcr_to_rgb(JPGLoadingContext const& context, Vector<Macroblock>& m
     }
 }
 
-static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macroblock> const& macroblocks)
+static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblock> const& macroblocks)
 {
     context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
 
@@ -1087,11 +1087,11 @@ static ErrorOr<void> compose_bitmap(JPGLoadingContext& context, Vector<Macrobloc
     return {};
 }
 
-static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
     if (marker != JPG_SOI) {
-        dbgln_if(JPG_DEBUG, "{}: SOI not found: {:x}!", TRY(stream.tell()), marker);
+        dbgln_if(JPEG_DEBUG, "{}: SOI not found: {:x}!", TRY(stream.tell()), marker);
         return Error::from_string_literal("SOI not found");
     }
     for (;;) {
@@ -1117,7 +1117,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext&
         case JPG_RST7:
         case JPG_SOI:
         case JPG_EOI:
-            dbgln_if(JPG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
+            dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Unexpected marker");
         case JPG_APPN0:
         case JPG_APPN1:
@@ -1139,7 +1139,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext&
             break;
         case JPG_SOF0:
             TRY(read_start_of_frame(stream, context));
-            context.state = JPGLoadingContext::FrameDecoded;
+            context.state = JPEGLoadingContext::FrameDecoded;
             break;
         case JPG_DQT:
             TRY(read_quantization_table(stream, context));
@@ -1154,7 +1154,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext&
             return read_start_of_scan(stream, context);
         default:
             if (auto result = skip_marker_with_length(stream); result.is_error()) {
-                dbgln_if(JPG_DEBUG, "{}: Error skipping marker: {:x}!", TRY(stream.tell()), marker);
+                dbgln_if(JPEG_DEBUG, "{}: Error skipping marker: {:x}!", TRY(stream.tell()), marker);
                 return result.release_error();
             }
             break;
@@ -1164,7 +1164,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPGLoadingContext&
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingContext& context)
+static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     u8 last_byte;
     u8 current_byte = TRY(stream.read_value<u8>());
@@ -1189,7 +1189,7 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingC
                 current_byte = TRY(stream.read_value<u8>());
                 continue;
             }
-            dbgln_if(JPG_DEBUG, "{}: Invalid marker: {:x}!", TRY(stream.tell()), marker);
+            dbgln_if(JPEG_DEBUG, "{}: Invalid marker: {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Invalid marker");
         } else {
             context.huffman_stream.stream.append(last_byte);
@@ -1199,21 +1199,21 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPGLoadingC
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> decode_header(JPGLoadingContext& context)
+static ErrorOr<void> decode_header(JPEGLoadingContext& context)
 {
-    if (context.state < JPGLoadingContext::State::HeaderDecoded) {
+    if (context.state < JPEGLoadingContext::State::HeaderDecoded) {
         context.stream = TRY(try_make<FixedMemoryStream>(ReadonlyBytes { context.data, context.data_size }));
 
         if (auto result = parse_header(*context.stream, context); result.is_error()) {
-            context.state = JPGLoadingContext::State::Error;
+            context.state = JPEGLoadingContext::State::Error;
             return result.release_error();
         }
-        context.state = JPGLoadingContext::State::HeaderDecoded;
+        context.state = JPEGLoadingContext::State::HeaderDecoded;
     }
     return {};
 }
 
-static ErrorOr<void> decode_jpg(JPGLoadingContext& context)
+static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
 {
     TRY(decode_header(context));
     TRY(scan_huffman_stream(*context.stream, context));
@@ -1226,45 +1226,45 @@ static ErrorOr<void> decode_jpg(JPGLoadingContext& context)
     return {};
 }
 
-JPGImageDecoderPlugin::JPGImageDecoderPlugin(u8 const* data, size_t size)
+JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(u8 const* data, size_t size)
 {
-    m_context = make<JPGLoadingContext>();
+    m_context = make<JPEGLoadingContext>();
     m_context->data = data;
     m_context->data_size = size;
     m_context->huffman_stream.stream.ensure_capacity(50 * KiB);
 }
 
-JPGImageDecoderPlugin::~JPGImageDecoderPlugin() = default;
+JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
 
-IntSize JPGImageDecoderPlugin::size()
+IntSize JPEGImageDecoderPlugin::size()
 {
-    if (m_context->state == JPGLoadingContext::State::Error)
+    if (m_context->state == JPEGLoadingContext::State::Error)
         return {};
-    if (m_context->state >= JPGLoadingContext::State::FrameDecoded)
+    if (m_context->state >= JPEGLoadingContext::State::FrameDecoded)
         return { m_context->frame.width, m_context->frame.height };
 
     return {};
 }
 
-void JPGImageDecoderPlugin::set_volatile()
+void JPEGImageDecoderPlugin::set_volatile()
 {
     if (m_context->bitmap)
         m_context->bitmap->set_volatile();
 }
 
-bool JPGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
+bool JPEGImageDecoderPlugin::set_nonvolatile(bool& was_purged)
 {
     if (!m_context->bitmap)
         return false;
     return m_context->bitmap->set_nonvolatile(was_purged);
 }
 
-bool JPGImageDecoderPlugin::initialize()
+bool JPEGImageDecoderPlugin::initialize()
 {
     return true;
 }
 
-ErrorOr<bool> JPGImageDecoderPlugin::sniff(ReadonlyBytes data)
+ErrorOr<bool> JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     return data.size() > 3
         && data.data()[0] == 0xFF
@@ -1272,46 +1272,46 @@ ErrorOr<bool> JPGImageDecoderPlugin::sniff(ReadonlyBytes data)
         && data.data()[2] == 0xFF;
 }
 
-ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPGImageDecoderPlugin::create(ReadonlyBytes data)
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) JPGImageDecoderPlugin(data.data(), data.size()));
+    return adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(data.data(), data.size()));
 }
 
-bool JPGImageDecoderPlugin::is_animated()
+bool JPEGImageDecoderPlugin::is_animated()
 {
     return false;
 }
 
-size_t JPGImageDecoderPlugin::loop_count()
+size_t JPEGImageDecoderPlugin::loop_count()
 {
     return 0;
 }
 
-size_t JPGImageDecoderPlugin::frame_count()
+size_t JPEGImageDecoderPlugin::frame_count()
 {
     return 1;
 }
 
-ErrorOr<ImageFrameDescriptor> JPGImageDecoderPlugin::frame(size_t index)
+ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)
-        return Error::from_string_literal("JPGImageDecoderPlugin: Invalid frame index");
+        return Error::from_string_literal("JPEGImageDecoderPlugin: Invalid frame index");
 
-    if (m_context->state == JPGLoadingContext::State::Error)
-        return Error::from_string_literal("JPGImageDecoderPlugin: Decoding failed");
+    if (m_context->state == JPEGLoadingContext::State::Error)
+        return Error::from_string_literal("JPEGImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < JPGLoadingContext::State::BitmapDecoded) {
-        if (auto result = decode_jpg(*m_context); result.is_error()) {
-            m_context->state = JPGLoadingContext::State::Error;
+    if (m_context->state < JPEGLoadingContext::State::BitmapDecoded) {
+        if (auto result = decode_jpeg(*m_context); result.is_error()) {
+            m_context->state = JPEGLoadingContext::State::Error;
             return result.release_error();
         }
-        m_context->state = JPGLoadingContext::State::BitmapDecoded;
+        m_context->state = JPEGLoadingContext::State::BitmapDecoded;
     }
 
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
-ErrorOr<Optional<ReadonlyBytes>> JPGImageDecoderPlugin::icc_data()
+ErrorOr<Optional<ReadonlyBytes>> JPEGImageDecoderPlugin::icc_data()
 {
     TRY(decode_header(*m_context));
 

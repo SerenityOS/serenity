@@ -10,7 +10,7 @@
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/JPGLoader.h>
+#include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PNGWriter.h>
 #include <memory.h>
@@ -154,10 +154,10 @@ void SpiceAgent::on_message_received()
                         frame_or_error = bmp_decoder->frame(0);
                 }
             } else if (type == ClipboardType::JPG) {
-                if (Gfx::JPGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors()) {
-                    auto jpg_decoder = Gfx::JPGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
-                    if (jpg_decoder->initialize())
-                        frame_or_error = jpg_decoder->frame(0);
+                if (Gfx::JPEGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors()) {
+                    auto jpeg_decoder = Gfx::JPEGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
+                    if (jpeg_decoder->initialize())
+                        frame_or_error = jpeg_decoder->frame(0);
                 }
             } else {
                 dbgln("Unknown clipboard type: {}", (u32)type);

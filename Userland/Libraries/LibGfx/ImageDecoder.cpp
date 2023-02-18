@@ -10,7 +10,7 @@
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/JPGLoader.h>
+#include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PBMLoader.h>
 #include <LibGfx/PGMLoader.h>
 #include <LibGfx/PNGLoader.h>
@@ -33,7 +33,7 @@ static constexpr ImagePluginInitializer s_initializers[] = {
     { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
     { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
     { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
-    { JPGImageDecoderPlugin::sniff, JPGImageDecoderPlugin::create },
+    { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
     { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
     { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
 };

@@ -10,14 +10,14 @@
 
 namespace Gfx {
 
-struct JPGLoadingContext;
+struct JPEGLoadingContext;
 
-class JPGImageDecoderPlugin : public ImageDecoderPlugin {
+class JPEGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static ErrorOr<bool> sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    virtual ~JPGImageDecoderPlugin() override;
+    virtual ~JPEGImageDecoderPlugin() override;
     virtual IntSize size() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
@@ -29,9 +29,9 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    JPGImageDecoderPlugin(u8 const*, size_t);
+    JPEGImageDecoderPlugin(u8 const*, size_t);
 
-    OwnPtr<JPGLoadingContext> m_context;
+    OwnPtr<JPEGLoadingContext> m_context;
 };
 
 }

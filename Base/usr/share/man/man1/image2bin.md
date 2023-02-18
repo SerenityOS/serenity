@@ -18,6 +18,6 @@ in a raw binary format for further examination.
 ```sh
 # Convert a PNG image to raw bitmap
 $ image2bin example.png > example.bin
-# Convert a JPG image to raw bitmap
+# Convert a JPEG image to raw bitmap
 $ image2bin another_example.jpg > another_example.bin
 ```
