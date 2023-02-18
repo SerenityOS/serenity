@@ -127,7 +127,7 @@ ErrorOr<size_t> RAMFSInode::read_bytes_from_content_space(size_t offset, size_t 
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(m_metadata.size >= 0);
-    if (static_cast<size_t>(m_metadata.size) < offset)
+    if (offset >= static_cast<size_t>(m_metadata.size))
         return 0;
     auto mapping_region = TRY(MM.allocate_kernel_region(DataBlock::block_size, "RAMFSInode Mapping Region"sv, Memory::Region::Access::Read, AllocationStrategy::Reserve));
     return const_cast<RAMFSInode&>(*this).do_io_on_content_space(*mapping_region, offset, io_size, buffer, false);
