@@ -34,6 +34,7 @@ static bool make_is_available();
 static ErrorOr<void> notify_make_not_available();
 static void update_path_environment_variable();
 static Optional<DeprecatedString> last_opened_project_path();
+static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, DeprecatedString const& path, pid_t pid_to_debug);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -55,22 +56,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* path_argument = nullptr;
     bool mode_coredump = false;
+    pid_t pid_to_debug = -1;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
     args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
+    args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID");
     args_parser.parse(arguments);
 
-    auto argument_absolute_path = Core::DeprecatedFile::real_path_for(path_argument);
-
-    auto project_path = Core::DeprecatedFile::real_path_for(".");
-    if (!mode_coredump) {
-        if (!argument_absolute_path.is_null())
-            project_path = argument_absolute_path;
-        else if (auto path = last_opened_project_path(); path.has_value())
-            project_path = path.release_value();
-    }
-
-    auto hack_studio_widget = TRY(HackStudioWidget::create(project_path));
+    auto absolute_path_argument = Core::DeprecatedFile::real_path_for(path_argument);
+    auto hack_studio_widget = TRY(create_hack_studio_widget(mode_coredump, absolute_path_argument, pid_to_debug));
     window->set_main_widget(hack_studio_widget);
     s_hack_studio_widget = hack_studio_widget;
 
@@ -89,7 +83,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     hack_studio_widget->update_actions();
 
     if (mode_coredump)
-        hack_studio_widget->open_coredump(argument_absolute_path);
+        hack_studio_widget->open_coredump(absolute_path_argument);
+
+    if (pid_to_debug != -1)
+        hack_studio_widget->debug_process(pid_to_debug);
 
     return app->exec();
 }
@@ -211,4 +208,20 @@ bool semantic_syntax_highlighting_is_enabled()
     return s_hack_studio_widget->semantic_syntax_highlighting_is_enabled();
 }
 
+}
+
+static ErrorOr<NonnullRefPtr<HackStudioWidget>> create_hack_studio_widget(bool mode_coredump, DeprecatedString const& absolute_path_argument, pid_t pid_to_debug)
+{
+    auto project_path = Core::DeprecatedFile::real_path_for(".");
+    if (!mode_coredump) {
+        if (!absolute_path_argument.is_null())
+            project_path = absolute_path_argument;
+        else if (auto last_path = last_opened_project_path(); last_path.has_value())
+            project_path = last_path.release_value();
+    }
+
+    if (pid_to_debug != -1)
+        project_path = "/usr/src/serenity";
+
+    return HackStudioWidget::create(project_path);
 }
