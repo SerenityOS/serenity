@@ -139,6 +139,16 @@ static ErrorOr<ByteBuffer> encode_s15_fixed_array(S15Fixed16ArrayTagData const& 
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_signature(SignatureTagData const& tag_data)
+{
+    // ICC v4, 10.23 signatureType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(3 * sizeof(u32)));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)SignatureTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 8) = tag_data.signature();
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
 {
     // ICC v4, 10.31 XYZType
@@ -168,6 +178,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_parametric_curve(static_cast<ParametricCurveTagData const&>(tag_data));
     case S15Fixed16ArrayTagData::Type:
         return encode_s15_fixed_array(static_cast<S15Fixed16ArrayTagData const&>(tag_data));
+    case SignatureTagData::Type:
+        return encode_signature(static_cast<SignatureTagData const&>(tag_data));
     case XYZTagData::Type:
         return encode_xyz(static_cast<XYZTagData const&>(tag_data));
     }
