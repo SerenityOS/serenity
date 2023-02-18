@@ -534,6 +534,9 @@ if (BUILD_LAGOM)
         add_executable(image ../../Userland/Utilities/image.cpp)
         target_link_libraries(image LibCore LibGfx LibMain)
 
+        add_executable(isobmff ../../Userland/Utilities/isobmff.cpp)
+        target_link_libraries(isobmff LibCore LibGfx LibMain)
+
         add_executable(ttfdisasm ../../Userland/Utilities/ttfdisasm.cpp)
         target_link_libraries(ttfdisasm LibGfx LibMain)
 
