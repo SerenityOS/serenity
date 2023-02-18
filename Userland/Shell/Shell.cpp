@@ -308,7 +308,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                     NonnullRefPtr<AST::Node> substitute = adopt_ref(*new AST::Join(subcommand_nonnull->position(),
                         subcommand_nonnull,
                         adopt_ref(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
-                    auto res = substitute->run(*this);
+                    auto res = substitute->run(*this).release_value_but_fixme_should_propagate_errors();
                     for (auto& subst_command : res->resolve_as_commands(*this).release_value_but_fixme_should_propagate_errors()) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
                             commands.append(subst_command);
@@ -1434,7 +1434,7 @@ void Shell::highlight(Line::Editor& editor) const
     auto ast = parse(line, m_is_interactive);
     if (!ast)
         return;
-    ast->highlight_in_editor(editor, const_cast<Shell&>(*this));
+    ast->highlight_in_editor(editor, const_cast<Shell&>(*this)).release_value_but_fixme_should_propagate_errors();
 }
 
 Vector<Line::CompletionSuggestion> Shell::complete()
@@ -1450,7 +1450,7 @@ Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
     if (!ast)
         return {};
 
-    return ast->complete_for_editor(*this, line.length());
+    return ast->complete_for_editor(*this, line.length()).release_value_but_fixme_should_propagate_errors();
 }
 
 Vector<Line::CompletionSuggestion> Shell::complete_path(StringView base, StringView part, size_t offset, ExecutableOnly executable_only, AST::Node const* command_node, AST::Node const* node, EscapeMode escape_mode)
@@ -1691,7 +1691,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         if (!node)
             return Error::from_string_literal("Cannot complete");
 
-        program_name_storage = const_cast<AST::Node&>(*node).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
+        program_name_storage = TRY(TRY(const_cast<AST::Node&>(*node).run(*this))->resolve_as_string(*this));
         known_program_name = program_name_storage;
     }
 
@@ -1734,8 +1734,11 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
         virtual void visit(AST::BraceExpansion const* node) override
         {
-            if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::BraceExpansion*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
+            if (should_include(node)) {
+                auto value = static_cast<AST::Node*>(const_cast<AST::BraceExpansion*>(node))->run(shell).release_value_but_fixme_should_propagate_errors();
+                auto entries = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+                list().extend(move(entries));
+            }
         }
 
         virtual void visit(AST::CommandLiteral const* node) override
@@ -1800,14 +1803,20 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
         virtual void visit(AST::SimpleVariable const* node) override
         {
-            if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::SimpleVariable*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
+            if (should_include(node)) {
+                auto values = static_cast<AST::Node*>(const_cast<AST::SimpleVariable*>(node))->run(shell).release_value_but_fixme_should_propagate_errors();
+                auto entries = values->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+                list().extend(move(entries));
+            }
         }
 
         virtual void visit(AST::SpecialVariable const* node) override
         {
-            if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::SpecialVariable*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
+            if (should_include(node)) {
+                auto values = static_cast<AST::Node*>(const_cast<AST::SpecialVariable*>(node))->run(shell).release_value_but_fixme_should_propagate_errors();
+                auto entries = values->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+                list().extend(move(entries));
+            }
         }
 
         virtual void visit(AST::Juxtaposition const* node) override
@@ -1842,8 +1851,11 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
         virtual void visit(AST::Tilde const* node) override
         {
-            if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::Tilde*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
+            if (should_include(node)) {
+                auto values = static_cast<AST::Node*>(const_cast<AST::Tilde*>(node))->run(shell).release_value_but_fixme_should_propagate_errors();
+                auto entries = values->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+                list().extend(move(entries));
+            }
         }
 
         virtual void visit(AST::PathRedirectionNode const*) override { }
@@ -1887,8 +1899,8 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     });
     {
         TemporaryChange change(m_is_interactive, false);
-        execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
-            auto result = entry->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
+        TRY(execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> ErrorOr<IterationDecision> {
+            auto result = TRY(entry->resolve_as_string(*this));
             JsonParser parser(result);
             auto parsed_result = parser.parse();
             if (parsed_result.is_error())
@@ -1931,7 +1943,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             }
 
             return IterationDecision::Continue;
-        });
+        }));
     }
 
     auto pgid = getpgrp();
