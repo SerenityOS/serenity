@@ -599,7 +599,7 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     builder.append("sources:\n"sv);
     for (auto const& source : font_face.sources()) {
         indent(builder, indent_levels + 2);
-        builder.appendff("url={}, format={}\n", source.url, source.format.value_or("???"));
+        builder.appendff("url={}, format={}\n", source.url, source.format.value_or(String::from_utf8_short_string("???"sv)));
     }
 
     indent(builder, indent_levels + 1);
