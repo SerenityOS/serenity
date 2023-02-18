@@ -383,7 +383,7 @@ static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPEGLoadingContext& con
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
             if (context.dc_reset_interval > 0) {
-                if (i % context.dc_reset_interval == 0) {
+                if (i != 0 && i % (context.dc_reset_interval * context.vsample_factor * context.hsample_factor) == 0) {
                     context.previous_dc_values[0] = 0;
                     context.previous_dc_values[1] = 0;
                     context.previous_dc_values[2] = 0;
