@@ -551,16 +551,6 @@ ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(Readon
     VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
-    // Table 49 — measurementType structure
-    struct MeasurementHeader {
-        BigEndian<StandardObserver> standard_observer;
-        XYZNumber tristimulus_value_for_measurement_backing;
-        BigEndian<MeasurementGeometry> measurement_geometry;
-        BigEndian<u16Fixed16Number> measurement_flare;
-        BigEndian<StandardIlluminant> standard_illuminant;
-    };
-    static_assert(AssertSize<MeasurementHeader, 28>());
-
     if (bytes.size() < 2 * sizeof(u32) + sizeof(MeasurementHeader))
         return Error::from_string_literal("ICC::Profile: measurementTag has not enough data");
 

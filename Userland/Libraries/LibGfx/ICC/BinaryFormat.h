@@ -130,6 +130,16 @@ struct CLUTHeader {
 };
 static_assert(AssertSize<CLUTHeader, 20>());
 
+// Table 49 — measurementType structure
+struct MeasurementHeader {
+    BigEndian<MeasurementTagData::StandardObserver> standard_observer;
+    XYZNumber tristimulus_value_for_measurement_backing;
+    BigEndian<MeasurementTagData::MeasurementGeometry> measurement_geometry;
+    BigEndian<u16Fixed16Number> measurement_flare;
+    BigEndian<MeasurementTagData::StandardIlluminant> standard_illuminant;
+};
+static_assert(AssertSize<MeasurementHeader, 28>());
+
 // ICC v4, 10.15 multiLocalizedUnicodeType
 struct MultiLocalizedUnicodeRawRecord {
     BigEndian<u16> language_code;
