@@ -238,8 +238,8 @@
 #cmakedefine01 JOB_DEBUG
 #endif
 
-#ifndef JPG_DEBUG
-#cmakedefine01 JPG_DEBUG
+#ifndef JPEG_DEBUG
+#cmakedefine01 JPEG_DEBUG
 #endif
 
 #ifndef JS_BYTECODE_DEBUG

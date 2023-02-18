@@ -34,7 +34,7 @@ set(SOURCES
     ICC/TagTypes.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
-    JPGLoader.cpp
+    JPEGLoader.cpp
     PBMLoader.cpp
     PGMLoader.cpp
     PNGLoader.cpp

@@ -17,7 +17,7 @@
     T(GIFLoader)             \
     T(HttpRequest)           \
     T(ICOLoader)             \
-    T(JPGLoader)             \
+    T(JPEGLoader)            \
     T(Js)                    \
     T(Markdown)              \
     T(PBMLoader)             \
@@ -61,8 +61,8 @@ ENUMERATE_TARGETS(__ENUMERATE_TARGET)
 #include <Meta/Lagom/Fuzzers/FuzzICOLoader.cpp>
 #undef LLVMFuzzerTestOneInput
 
-#define LLVMFuzzerTestOneInput TestJPGLoader
-#include <Meta/Lagom/Fuzzers/FuzzJPGLoader.cpp>
+#define LLVMFuzzerTestOneInput TestJPEGLoader
+#include <Meta/Lagom/Fuzzers/FuzzJPEGLoader.cpp>
 #undef LLVMFuzzerTestOneInput
 
 #define LLVMFuzzerTestOneInput TestJs
