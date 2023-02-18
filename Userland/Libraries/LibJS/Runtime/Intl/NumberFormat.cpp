@@ -672,15 +672,15 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, Num
     return result;
 }
 
-static ThrowCompletionOr<Vector<StringView>> separate_integer_into_groups(VM& vm, ::Locale::NumberGroupings const& grouping_sizes, StringView integer, NumberFormat::UseGrouping use_grouping)
+static ThrowCompletionOr<Vector<String>> separate_integer_into_groups(VM& vm, ::Locale::NumberGroupings const& grouping_sizes, String integer, NumberFormat::UseGrouping use_grouping)
 {
-    auto default_group = [&]() -> ThrowCompletionOr<Vector<StringView>> {
-        Vector<StringView> groups;
-        TRY_OR_THROW_OOM(vm, groups.try_append(integer));
+    auto default_group = [&]() -> ThrowCompletionOr<Vector<String>> {
+        Vector<String> groups;
+        TRY_OR_THROW_OOM(vm, groups.try_append(move(integer)));
         return groups;
     };
 
-    Utf8View utf8_integer { integer };
+    auto utf8_integer = integer.code_points();
     if (utf8_integer.length() <= grouping_sizes.primary_grouping_size)
         return default_group();
 
@@ -704,10 +704,15 @@ static ThrowCompletionOr<Vector<StringView>> separate_integer_into_groups(VM& vm
         VERIFY_NOT_REACHED();
     }
 
-    Vector<StringView> groups;
+    Vector<String> groups;
 
     auto add_group = [&](size_t index, size_t length) -> ThrowCompletionOr<void> {
-        TRY_OR_THROW_OOM(vm, groups.try_prepend(utf8_integer.unicode_substring_view(index, length).as_string()));
+        length = utf8_integer.unicode_substring_view(index, length).byte_length();
+        index = utf8_integer.byte_offset_of(index);
+
+        auto group = TRY_OR_THROW_OOM(vm, integer.substring_from_byte_offset_with_shared_superstring(index, length));
+        TRY_OR_THROW_OOM(vm, groups.try_prepend(move(group)));
+
         return {};
     };
 
@@ -788,28 +793,28 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                 // 3. Let decimalSepIndex be StringIndexOf(n, ".", 0).
                 auto decimal_sep_index = formatted_string.find_byte_offset('.');
 
-                StringView integer;
-                Optional<StringView> fraction;
+                String integer;
+                Optional<String> fraction;
 
                 // 4. If decimalSepIndex > 0, then
                 if (decimal_sep_index.has_value() && (*decimal_sep_index > 0)) {
                     // a. Let integer be the substring of n from position 0, inclusive, to position decimalSepIndex, exclusive.
-                    integer = formatted_string.bytes_as_string_view().substring_view(0, *decimal_sep_index);
+                    integer = TRY_OR_THROW_OOM(vm, formatted_string.substring_from_byte_offset_with_shared_superstring(0, *decimal_sep_index));
 
                     // b. Let fraction be the substring of n from position decimalSepIndex, exclusive, to the end of n.
-                    fraction = formatted_string.bytes_as_string_view().substring_view(*decimal_sep_index + 1);
+                    fraction = TRY_OR_THROW_OOM(vm, formatted_string.substring_from_byte_offset_with_shared_superstring(*decimal_sep_index + 1));
                 }
                 // 5. Else,
                 else {
                     // a. Let integer be n.
-                    integer = formatted_string.bytes_as_string_view();
+                    integer = move(formatted_string);
                     // b. Let fraction be undefined.
                 }
 
                 // 6. If the numberFormat.[[UseGrouping]] is false, then
                 if (number_format.use_grouping() == NumberFormat::UseGrouping::False) {
                     // a. Append a new Record { [[Type]]: "integer", [[Value]]: integer } as the last element of result.
-                    TRY_OR_THROW_OOM(vm, result.try_append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer)) }));
+                    TRY_OR_THROW_OOM(vm, result.try_append({ "integer"sv, move(integer) }));
                 }
                 // 7. Else,
                 else {
@@ -817,7 +822,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     auto group_sep_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::Group)).value_or(","sv);
 
                     // b. Let groups be a List whose elements are, in left to right order, the substrings defined by ILND set of locations within the integer, which may depend on the value of numberFormat.[[UseGrouping]].
-                    auto groups = MUST_OR_THROW_OOM(separate_integer_into_groups(vm, *grouping_sizes, integer, number_format.use_grouping()));
+                    auto groups = MUST_OR_THROW_OOM(separate_integer_into_groups(vm, *grouping_sizes, move(integer), number_format.use_grouping()));
 
                     // c. Assert: The number of elements in groups List is greater than 0.
                     VERIFY(!groups.is_empty());
@@ -828,7 +833,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                         auto integer_group = groups.take_first();
 
                         // ii. Append a new Record { [[Type]]: "integer", [[Value]]: integerGroup } as the last element of result.
-                        TRY_OR_THROW_OOM(vm, result.try_append({ "integer"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(integer_group)) }));
+                        TRY_OR_THROW_OOM(vm, result.try_append({ "integer"sv, move(integer_group) }));
 
                         // iii. If groups List is not empty, then
                         if (!groups.is_empty()) {
@@ -845,7 +850,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
                     // b. Append a new Record { [[Type]]: "decimal", [[Value]]: decimalSepSymbol } as the last element of result.
                     TRY_OR_THROW_OOM(vm, result.try_append({ "decimal"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(decimal_sep_symbol)) }));
                     // c. Append a new Record { [[Type]]: "fraction", [[Value]]: fraction } as the last element of result.
-                    TRY_OR_THROW_OOM(vm, result.try_append({ "fraction"sv, TRY_OR_THROW_OOM(vm, String::from_utf8(*fraction)) }));
+                    TRY_OR_THROW_OOM(vm, result.try_append({ "fraction"sv, fraction.release_value() }));
                 }
             }
             // iv. Else if p is equal to "compactSymbol", then
