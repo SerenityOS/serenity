@@ -78,7 +78,8 @@ Vector<DeprecatedString> const& ShellComprehensionEngine::DocumentData::sourced_
                         auto& filename = entries[1];
                         if (filename->would_execute())
                             return;
-                        auto name_list = const_cast<::Shell::AST::Node*>(filename.ptr())->run(nullptr)->resolve_as_list(nullptr).release_value_but_fixme_should_propagate_errors();
+                        auto name_list_node = const_cast<::Shell::AST::Node*>(filename.ptr())->run(nullptr).release_value_but_fixme_should_propagate_errors();
+                        auto name_list = name_list_node->resolve_as_list(nullptr).release_value_but_fixme_should_propagate_errors();
                         StringBuilder builder;
                         builder.join(' ', name_list);
                         sourced_files.set(builder.to_deprecated_string());
@@ -146,7 +147,7 @@ Vector<CodeComprehension::AutocompleteResultEntry> ShellComprehensionEngine::get
         return {};
     }
 
-    auto completions = const_cast<::Shell::AST::Node*>(document.node.ptr())->complete_for_editor(shell(), offset_in_file, hit_test);
+    auto completions = const_cast<::Shell::AST::Node*>(document.node.ptr())->complete_for_editor(shell(), offset_in_file, hit_test).release_value_but_fixme_should_propagate_errors();
     Vector<CodeComprehension::AutocompleteResultEntry> entries;
     for (auto& completion : completions)
         entries.append({ completion.text_string, completion.input_offset });
