@@ -149,6 +149,20 @@ static ErrorOr<ByteBuffer> encode_signature(SignatureTagData const& tag_data)
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_text(TextTagData const& tag_data)
+{
+    // ICC v4, 10.24 textType
+    // "The textType is a simple text structure that contains a 7-bit ASCII text string. The length of the string is obtained
+    //  by subtracting 8 from the element size portion of the tag itself. This string shall be terminated with a 00h byte."
+    auto text_bytes = tag_data.text().bytes();
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + text_bytes.size() + 1));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)TextTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+    memcpy(bytes.data() + 8, text_bytes.data(), text_bytes.size());
+    *(bytes.data() + 8 + text_bytes.size()) = '\0';
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
 {
     // ICC v4, 10.31 XYZType
@@ -180,6 +194,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_s15_fixed_array(static_cast<S15Fixed16ArrayTagData const&>(tag_data));
     case SignatureTagData::Type:
         return encode_signature(static_cast<SignatureTagData const&>(tag_data));
+    case TextTagData::Type:
+        return encode_text(static_cast<TextTagData const&>(tag_data));
     case XYZTagData::Type:
         return encode_xyz(static_cast<XYZTagData const&>(tag_data));
     }
