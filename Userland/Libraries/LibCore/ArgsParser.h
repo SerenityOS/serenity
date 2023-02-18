@@ -73,6 +73,19 @@ public:
     bool parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
     bool parse(Main::Arguments const& arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit)
     {
+        if (arguments.argv == nullptr && arguments.argc == 0) {
+            // Allocate the data from arguments.strings instead.
+            Vector<DeprecatedString> strings;
+            Vector<char const*> data;
+            strings.ensure_capacity(arguments.strings.size());
+            data.ensure_capacity(arguments.strings.size());
+            for (auto& entry : arguments.strings) {
+                strings.append(entry);
+                data.append(strings.last().characters());
+            }
+            return parse(data.size(), const_cast<char* const*>(data.data()), failure_behavior);
+        }
+
         return parse(arguments.argc, arguments.argv, failure_behavior);
     }
 
