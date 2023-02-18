@@ -700,7 +700,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     for (auto& redirection : command.redirections)
         TRY(resolve_redirection(redirection));
 
-    if (int local_return_code = 0; command.should_wait && run_builtin(command, rewirings, local_return_code)) {
+    if (int local_return_code = 0; command.should_wait && TRY(run_builtin(command, rewirings, local_return_code))) {
         last_return_code = local_return_code;
         for (auto& next_in_chain : command.next_chain)
             run_tail(command, next_in_chain, *last_return_code);
@@ -791,7 +791,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
             _exit(last_return_code.value_or(0));
         }
 
-        if (int local_return_code = 0; run_builtin(command, {}, local_return_code))
+        if (int local_return_code = 0; TRY(run_builtin(command, {}, local_return_code)))
             _exit(local_return_code);
 
         if (int local_return_code = 0; invoke_function(command, local_return_code))
@@ -875,6 +875,24 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     fds.collect();
 
     return *job;
+}
+
+ErrorOr<void> Shell::execute_process(Span<StringView> argv)
+{
+    Vector<DeprecatedString> strings;
+    Vector<char const*> args;
+    TRY(strings.try_ensure_capacity(argv.size()));
+    TRY(args.try_ensure_capacity(argv.size() + 1));
+
+    for (auto& entry : argv) {
+        strings.unchecked_append(entry);
+        args.unchecked_append(strings.last().characters());
+    }
+
+    args.append(nullptr);
+
+    // NOTE: noreturn.
+    execute_process(move(args));
 }
 
 void Shell::execute_process(Vector<char const*>&& argv)
