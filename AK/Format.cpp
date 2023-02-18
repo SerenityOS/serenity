@@ -357,6 +357,7 @@ ErrorOr<void> FormatBuilder::put_i64(
 }
 
 ErrorOr<void> FormatBuilder::put_fixed_point(
+    bool is_negative,
     i64 integer_value,
     u64 fraction_value,
     u64 fraction_one,
@@ -373,7 +374,6 @@ ErrorOr<void> FormatBuilder::put_fixed_point(
     StringBuilder string_builder;
     FormatBuilder format_builder { string_builder };
 
-    bool is_negative = integer_value < 0;
     if (is_negative)
         integer_value = -integer_value;
 

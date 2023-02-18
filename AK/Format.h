@@ -209,6 +209,7 @@ public:
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
     ErrorOr<void> put_fixed_point(
+        bool is_negative,
         i64 integer_value,
         u64 fraction_value,
         u64 fraction_one,
