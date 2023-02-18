@@ -14,6 +14,26 @@
 
 namespace Gfx::ICC {
 
+static ErrorOr<ByteBuffer> encode_chromaticity(ChromaticityTagData const& tag_data)
+{
+    // ICC v4, 10.2 chromaticityType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 2 * sizeof(u16) + tag_data.xy_coordinates().size() * 2 * sizeof(u16Fixed16Number)));
+
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)ChromaticityTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 8) = tag_data.xy_coordinates().size();
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 10) = (u16)tag_data.phosphor_or_colorant_type();
+
+    auto* coordinates = bit_cast<BigEndian<u16Fixed16Number>*>(bytes.data() + 12);
+    for (size_t i = 0; i < tag_data.xy_coordinates().size(); ++i) {
+        coordinates[2 * i] = tag_data.xy_coordinates()[i].x.raw();
+        coordinates[2 * i + 1] = tag_data.xy_coordinates()[i].y.raw();
+    }
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeTagData const& tag_data)
 {
     // ICC v4, 10.15 multiLocalizedUnicodeType
@@ -108,6 +128,8 @@ static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
 static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
 {
     switch (tag_data.type()) {
+    case ChromaticityTagData::Type:
+        return encode_chromaticity(static_cast<ChromaticityTagData const&>(tag_data));
     case MultiLocalizedUnicodeTagData::Type:
         return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
     case ParametricCurveTagData::Type:
