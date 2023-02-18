@@ -1050,7 +1050,7 @@ void HackStudioWidget::initialize_debugger()
             }
             dbgln("Debugger stopped at source position: {}:{}", source_position.value().file_path, source_position.value().line_number);
 
-            deferred_invoke([this, source_position, &regs] {
+            GUI::Application::the()->event_loop().deferred_invoke([this, source_position, &regs] {
                 m_current_editor_in_execution = get_editor_of_file(source_position.value().file_path);
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
@@ -1059,20 +1059,20 @@ void HackStudioWidget::initialize_debugger()
                 m_disassembly_widget->update_state(*Debugger::the().session(), regs);
                 HackStudioWidget::reveal_action_tab(*m_debug_info_widget);
             });
-            Core::EventLoop::wake_current();
+            GUI::Application::the()->event_loop().wake();
 
             return Debugger::HasControlPassedToUser::Yes;
         },
         [this]() {
-            deferred_invoke([this] {
+            GUI::Application::the()->event_loop().deferred_invoke([this] {
                 m_debug_info_widget->set_debug_actions_enabled(false);
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
             });
-            Core::EventLoop::wake_current();
+            GUI::Application::the()->event_loop().wake();
         },
         [this]() {
-            deferred_invoke([this] {
+            GUI::Application::the()->event_loop().deferred_invoke([this] {
                 m_debug_info_widget->set_debug_actions_enabled(false);
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
@@ -1089,7 +1089,7 @@ void HackStudioWidget::initialize_debugger()
                 HackStudioWidget::hide_action_tabs();
                 GUI::MessageBox::show(window(), "Program Exited"sv, "Debugger"sv, GUI::MessageBox::Type::Information);
             });
-            Core::EventLoop::wake_current();
+            GUI::Application::the()->event_loop().wake();
         });
 }
 
