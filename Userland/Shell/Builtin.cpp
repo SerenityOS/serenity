@@ -43,7 +43,7 @@ int Shell::builtin_dump(int argc, char const** argv)
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    (posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0);
+    (void)(posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0);
     return 0;
 }
 
