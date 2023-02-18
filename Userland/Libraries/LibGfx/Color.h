@@ -237,7 +237,7 @@ public:
 #endif
     }
 
-    Color mixed_with(Color other, float weight) const
+    ALWAYS_INLINE Color mixed_with(Color other, float weight) const
     {
         if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0))
             return interpolate(other, weight);
@@ -255,7 +255,7 @@ public:
         };
     }
 
-    Color interpolate(Color other, float weight) const noexcept
+    ALWAYS_INLINE Color interpolate(Color other, float weight) const noexcept
     {
         return Gfx::Color {
             round_to<u8>(mix<float>(red(), other.red(), weight)),
