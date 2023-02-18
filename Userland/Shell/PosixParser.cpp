@@ -149,7 +149,7 @@ void Parser::handle_heredoc_contents()
             Parser parser { token.value, m_in_interactive_mode, Reduction::HeredocContents };
             contents = parser.parse_word();
         } else {
-            contents = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), token.value, AST::StringLiteral::EnclosureType::None);
+            contents = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), String::from_utf8(token.value).release_value_but_fixme_should_propagate_errors(), AST::StringLiteral::EnclosureType::None);
         }
 
         if (contents)
@@ -643,7 +643,7 @@ RefPtr<AST::Node> Parser::parse_complete_command()
         auto position = peek().position;
         auto syntax_error = make_ref_counted<AST::SyntaxError>(
             position.value_or(empty_position()),
-            "Extra tokens after complete command"sv);
+            String::from_utf8("Extra tokens after complete command"sv).release_value_but_fixme_should_propagate_errors());
 
         if (list)
             list->set_is_syntax_error(*syntax_error);
@@ -837,7 +837,7 @@ RefPtr<AST::Node> Parser::parse_function_definition()
 
     return make_ref_counted<AST::FunctionDeclaration>(
         name.position.value_or(empty_position()).with_end(peek().position.value_or(empty_position())),
-        AST::NameWithPosition { name.value, name.position.value_or(empty_position()) },
+        AST::NameWithPosition { String::from_utf8(name.value).release_value_but_fixme_should_propagate_errors(), name.position.value_or(empty_position()) },
         Vector<AST::NameWithPosition> {},
         body.release_nonnull());
 }
@@ -921,13 +921,13 @@ RefPtr<AST::Node> Parser::parse_while_clause()
     if (!condition)
         condition = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            "Expected condition after 'while'"sv);
+            String::from_utf8("Expected condition after 'while'"sv).release_value_but_fixme_should_propagate_errors());
 
     auto do_group = parse_do_group();
     if (!do_group)
         do_group = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            "Expected 'do' after 'while'"sv);
+            String::from_utf8("Expected 'do' after 'while'"sv).release_value_but_fixme_should_propagate_errors());
 
     // while foo; bar -> loop { if foo { bar } else { break } }
     return make_ref_counted<AST::ForLoop>(
@@ -955,13 +955,13 @@ RefPtr<AST::Node> Parser::parse_until_clause()
     if (!condition)
         condition = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            "Expected condition after 'until'"sv);
+            String::from_utf8("Expected condition after 'until'"sv).release_value_but_fixme_should_propagate_errors());
 
     auto do_group = parse_do_group();
     if (!do_group)
         do_group = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            "Expected 'do' after 'until'"sv);
+            String::from_utf8("Expected 'do' after 'until'"sv).release_value_but_fixme_should_propagate_errors());
 
     // until foo; bar -> loop { if foo { break } else { bar } }
     return make_ref_counted<AST::ForLoop>(
@@ -992,7 +992,7 @@ RefPtr<AST::Node> Parser::parse_brace_group()
     if (peek().type != Token::Type::CloseBrace) {
         error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected '}}', not {}", peek().type_name()));
+            String::formatted("Expected '}}', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
     } else {
         consume();
     }
@@ -1020,12 +1020,12 @@ RefPtr<AST::Node> Parser::parse_case_clause()
     if (!expr)
         expr = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected a word, not {}", peek().type_name()));
+            String::formatted("Expected a word, not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
 
     if (peek().type != Token::Type::In) {
         syntax_error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected 'in', not {}", peek().type_name()));
+            String::formatted("Expected 'in', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
     } else {
         skip();
     }
@@ -1059,7 +1059,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    DeprecatedString::formatted("Expected ')', not {}", peek().type_name()));
+                    String::formatted("Expected ')', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
             break;
         }
 
@@ -1074,7 +1074,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    DeprecatedString::formatted("Expected ';;', not {}", peek().type_name()));
+                    String::formatted("Expected ';;', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
         }
 
         if (syntax_error) {
@@ -1097,7 +1097,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
     if (peek().type != Token::Type::Esac) {
         syntax_error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected 'esac', not {}", peek().type_name()));
+            String::formatted("Expected 'esac', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
     } else {
         skip();
     }
@@ -1105,7 +1105,7 @@ RefPtr<AST::Node> Parser::parse_case_clause()
     auto node = make_ref_counted<AST::MatchExpr>(
         start_position.with_end(peek().position.value_or(empty_position())),
         expr.release_nonnull(),
-        DeprecatedString {},
+        String {},
         Optional<AST::Position> {},
         move(entries));
 
@@ -1132,7 +1132,7 @@ Parser::CaseItemsResult Parser::parse_case_list()
         if (!node)
             node = make_ref_counted<AST::SyntaxError>(
                 peek().position.value_or(empty_position()),
-                DeprecatedString::formatted("Expected a word, not {}", peek().type_name()));
+                String::formatted("Expected a word, not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
 
         nodes.append(node.release_nonnull());
 
@@ -1147,7 +1147,7 @@ Parser::CaseItemsResult Parser::parse_case_list()
     if (nodes.is_empty())
         nodes.append(make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected a word, not {}", peek().type_name())));
+            String::formatted("Expected a word, not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors()));
 
     return { move(pipes), move(nodes) };
 }
@@ -1162,20 +1162,20 @@ RefPtr<AST::Node> Parser::parse_if_clause()
     skip();
     auto main_condition = parse_compound_list();
     if (!main_condition)
-        main_condition = make_ref_counted<AST::SyntaxError>(empty_position(), "Expected compound list after 'if'");
+        main_condition = make_ref_counted<AST::SyntaxError>(empty_position(), String::from_utf8("Expected compound list after 'if'"sv).release_value_but_fixme_should_propagate_errors());
 
     RefPtr<AST::SyntaxError> syntax_error;
     if (peek().type != Token::Type::Then) {
         syntax_error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected 'then', not {}", peek().type_name()));
+            String::formatted("Expected 'then', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
     } else {
         skip();
     }
 
     auto main_consequence = parse_compound_list();
     if (!main_consequence)
-        main_consequence = make_ref_counted<AST::SyntaxError>(empty_position(), "Expected compound list after 'then'");
+        main_consequence = make_ref_counted<AST::SyntaxError>(empty_position(), String::from_utf8("Expected compound list after 'then'"sv).release_value_but_fixme_should_propagate_errors());
 
     auto node = make_ref_counted<AST::IfCond>(start_position, Optional<AST::Position>(), main_condition.release_nonnull(), main_consequence.release_nonnull(), nullptr);
     auto active_node = node;
@@ -1184,20 +1184,20 @@ RefPtr<AST::Node> Parser::parse_if_clause()
         skip();
         auto condition = parse_compound_list();
         if (!condition)
-            condition = make_ref_counted<AST::SyntaxError>(empty_position(), "Expected compound list after 'elif'");
+            condition = make_ref_counted<AST::SyntaxError>(empty_position(), String::from_utf8("Expected compound list after 'elif'"sv).release_value_but_fixme_should_propagate_errors());
 
         if (peek().type != Token::Type::Then) {
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    DeprecatedString::formatted("Expected 'then', not {}", peek().type_name()));
+                    String::formatted("Expected 'then', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
         } else {
             skip();
         }
 
         auto consequence = parse_compound_list();
         if (!consequence)
-            consequence = make_ref_counted<AST::SyntaxError>(empty_position(), "Expected compound list after 'then'");
+            consequence = make_ref_counted<AST::SyntaxError>(empty_position(), String::from_utf8("Expected compound list after 'then'"sv).release_value_but_fixme_should_propagate_errors());
 
         auto new_node = make_ref_counted<AST::IfCond>(start_position, Optional<AST::Position>(), condition.release_nonnull(), consequence.release_nonnull(), nullptr);
 
@@ -1211,7 +1211,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
         skip();
         active_node->false_branch() = parse_compound_list();
         if (!active_node->false_branch())
-            active_node->false_branch() = make_ref_counted<AST::SyntaxError>(empty_position(), "Expected compound list after 'else'");
+            active_node->false_branch() = make_ref_counted<AST::SyntaxError>(empty_position(), String::from_utf8("Expected compound list after 'else'"sv).release_value_but_fixme_should_propagate_errors());
         break;
     case Token::Type::Fi:
         needs_fi = false;
@@ -1220,7 +1220,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
         if (!syntax_error)
             syntax_error = make_ref_counted<AST::SyntaxError>(
                 peek().position.value_or(empty_position()),
-                DeprecatedString::formatted("Expected 'else' or 'fi', not {}", peek().type_name()));
+                String::formatted("Expected 'else' or 'fi', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
         break;
     }
 
@@ -1229,7 +1229,7 @@ RefPtr<AST::Node> Parser::parse_if_clause()
             if (!syntax_error)
                 syntax_error = make_ref_counted<AST::SyntaxError>(
                     peek().position.value_or(empty_position()),
-                    DeprecatedString::formatted("Expected 'fi', not {}", peek().type_name()));
+                    String::formatted("Expected 'fi', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
         } else {
             skip();
         }
@@ -1252,10 +1252,10 @@ RefPtr<AST::Node> Parser::parse_subshell()
 
     auto list = parse_compound_list();
     if (!list)
-        error = make_ref_counted<AST::SyntaxError>(peek().position.value_or(empty_position()), "Expected compound list after ("sv);
+        error = make_ref_counted<AST::SyntaxError>(peek().position.value_or(empty_position()), String::from_utf8("Expected compound list after ("sv).release_value_but_fixme_should_propagate_errors());
 
     if (peek().type != Token::Type::CloseParen)
-        error = make_ref_counted<AST::SyntaxError>(peek().position.value_or(empty_position()), "Expected ) after compound list"sv);
+        error = make_ref_counted<AST::SyntaxError>(peek().position.value_or(empty_position()), String::from_utf8("Expected ) after compound list"sv).release_value_but_fixme_should_propagate_errors());
     else
         skip();
 
@@ -1369,7 +1369,7 @@ RefPtr<AST::Node> Parser::parse_for_clause()
     auto body = parse_do_group();
     return AST::make_ref_counted<AST::ForLoop>(
         start_position.with_end(peek().position.value_or(empty_position())),
-        AST::NameWithPosition { move(name), name_position.value_or(empty_position()) },
+        AST::NameWithPosition { String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors(), name_position.value_or(empty_position()) },
         Optional<AST::NameWithPosition> {},
         move(iterated_expression),
         move(body),
@@ -1414,13 +1414,13 @@ RefPtr<AST::Node> Parser::parse_word()
             auto user = lexer.consume_while(is_ascii_alphanumeric);
             string = lexer.remaining();
 
-            word = make_ref_counted<AST::Tilde>(token.position.value_or(empty_position()), user);
+            word = make_ref_counted<AST::Tilde>(token.position.value_or(empty_position()), String::from_utf8(user).release_value_but_fixme_should_propagate_errors());
         }
 
         if (string.is_empty())
             return;
 
-        auto node = make_ref_counted<AST::BarewordLiteral>(token.position.value_or(empty_position()), string);
+        auto node = make_ref_counted<AST::BarewordLiteral>(token.position.value_or(empty_position()), String::from_utf8(string).release_value_but_fixme_should_propagate_errors());
 
         if (word) {
             word = make_ref_counted<AST::Juxtaposition>(
@@ -1437,7 +1437,7 @@ RefPtr<AST::Node> Parser::parse_word()
         if (string.is_empty())
             return;
 
-        auto node = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), string, AST::StringLiteral::EnclosureType::SingleQuotes);
+        auto node = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), String::from_utf8(string).release_value_but_fixme_should_propagate_errors(), AST::StringLiteral::EnclosureType::SingleQuotes);
 
         if (word) {
             word = make_ref_counted<AST::Juxtaposition>(
@@ -1454,7 +1454,7 @@ RefPtr<AST::Node> Parser::parse_word()
         if (string.is_empty())
             return;
 
-        auto node = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), string, AST::StringLiteral::EnclosureType::DoubleQuotes);
+        auto node = make_ref_counted<AST::StringLiteral>(token.position.value_or(empty_position()), String::from_utf8(string).release_value_but_fixme_should_propagate_errors(), AST::StringLiteral::EnclosureType::DoubleQuotes);
 
         if (word) {
             word = make_ref_counted<AST::Juxtaposition>(
@@ -1512,12 +1512,12 @@ RefPtr<AST::Node> Parser::parse_word()
         case ResolvedParameterExpansion::Op::GetVariable:
             node = make_ref_counted<AST::SimpleVariable>(
                 token.position.value_or(empty_position()),
-                x.parameter);
+                String::from_deprecated_string(x.parameter).release_value_but_fixme_should_propagate_errors());
             break;
         case ResolvedParameterExpansion::Op::GetLastBackgroundPid:
             node = make_ref_counted<AST::SyntaxError>(
                 token.position.value_or(empty_position()),
-                "$! not implemented");
+                String::from_utf8("$! not implemented"sv).release_value_but_fixme_should_propagate_errors());
             break;
         case ResolvedParameterExpansion::Op::GetPositionalParameterList:
             node = make_ref_counted<AST::SpecialVariable>(
@@ -1527,7 +1527,7 @@ RefPtr<AST::Node> Parser::parse_word()
         case ResolvedParameterExpansion::Op::GetCurrentOptionFlags:
             node = make_ref_counted<AST::SyntaxError>(
                 token.position.value_or(empty_position()),
-                "The current option flags are not available in parameter expansions");
+                String::from_utf8("The current option flags are not available in parameter expansions"sv).release_value_but_fixme_should_propagate_errors());
             break;
         case ResolvedParameterExpansion::Op::GetPositionalParameterCount:
             node = make_ref_counted<AST::SpecialVariable>(
@@ -1542,7 +1542,7 @@ RefPtr<AST::Node> Parser::parse_word()
         case ResolvedParameterExpansion::Op::GetPositionalParameterListAsString:
             node = make_ref_counted<AST::SyntaxError>(
                 token.position.value_or(empty_position()),
-                "$* not implemented");
+                String::from_utf8("$* not implemented"sv).release_value_but_fixme_should_propagate_errors());
             break;
         case ResolvedParameterExpansion::Op::GetShellProcessId:
             node = make_ref_counted<AST::SpecialVariable>(
@@ -1555,7 +1555,7 @@ RefPtr<AST::Node> Parser::parse_word()
             NonnullRefPtrVector<AST::Node> arguments;
             arguments.append(make_ref_counted<AST::BarewordLiteral>(
                 token.position.value_or(empty_position()),
-                x.parameter));
+                String::from_deprecated_string(x.parameter).release_value_but_fixme_should_propagate_errors()));
 
             if (!x.argument.is_empty()) {
                 // dbgln("Will parse {}", x.argument);
@@ -1565,7 +1565,7 @@ RefPtr<AST::Node> Parser::parse_word()
             node = make_ref_counted<AST::ImmediateExpression>(
                 token.position.value_or(empty_position()),
                 AST::NameWithPosition {
-                    immediate_function_name,
+                    String::from_deprecated_string(immediate_function_name).release_value_but_fixme_should_propagate_errors(),
                     token.position.value_or(empty_position()),
                 },
                 move(arguments),
@@ -1576,7 +1576,7 @@ RefPtr<AST::Node> Parser::parse_word()
             node = make_ref_counted<AST::ImmediateExpression>(
                 token.position.value_or(empty_position()),
                 AST::NameWithPosition {
-                    "reexpand",
+                    String::from_utf8("reexpand"sv).release_value_but_fixme_should_propagate_errors(),
                     token.position.value_or(empty_position()),
                 },
                 Vector { node.release_nonnull() },
@@ -1732,7 +1732,7 @@ RefPtr<AST::Node> Parser::parse_do_group()
     if (peek().type != Token::Type::Do) {
         return make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected 'do', not {}", peek().type_name()));
+            String::formatted("Expected 'do', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
     }
 
     consume();
@@ -1743,7 +1743,7 @@ RefPtr<AST::Node> Parser::parse_do_group()
     if (peek().type != Token::Type::Done) {
         error = make_ref_counted<AST::SyntaxError>(
             peek().position.value_or(empty_position()),
-            DeprecatedString::formatted("Expected 'done', not {}", peek().type_name()));
+            String::formatted("Expected 'done', not {}", peek().type_name()).release_value_but_fixme_should_propagate_errors());
     } else {
         consume();
     }
@@ -1779,17 +1779,17 @@ RefPtr<AST::Node> Parser::parse_simple_command()
             nodes.append(
                 make_ref_counted<AST::BarewordLiteral>(
                     peek().position.value_or(empty_position()),
-                    consume().value));
+                    String::from_deprecated_string(consume().value).release_value_but_fixme_should_propagate_errors()));
         } else {
             // env (assignments) (command)
             nodes.append(make_ref_counted<AST::BarewordLiteral>(
                 empty_position(),
-                "env"));
+                String::from_utf8_short_string("env"sv)));
 
             nodes.append(
                 make_ref_counted<AST::BarewordLiteral>(
                     peek().position.value_or(empty_position()),
-                    consume().value));
+                    String::from_deprecated_string(consume().value).release_value_but_fixme_should_propagate_errors()));
         }
     }
 
@@ -1804,10 +1804,10 @@ RefPtr<AST::Node> Parser::parse_simple_command()
                 auto parts = definition.split_limit('=', 2, SplitBehavior::KeepEmpty);
                 auto name = make_ref_counted<AST::BarewordLiteral>(
                     empty_position(),
-                    parts[0]);
+                    String::from_deprecated_string(parts[0]).release_value_but_fixme_should_propagate_errors());
                 auto value = make_ref_counted<AST::BarewordLiteral>(
                     empty_position(),
-                    parts.size() > 1 ? parts[1] : "");
+                    String::from_deprecated_string(parts.size() > 1 ? parts[1] : "").release_value_but_fixme_should_propagate_errors());
 
                 variables.append({ move(name), move(value) });
             }
@@ -1885,7 +1885,7 @@ RefPtr<AST::Node> Parser::parse_io_here(AST::Position start_position, Optional<i
 
     auto end_keyword = consume();
     if (!is_one_of(end_keyword.type, Token::Type::Word, Token::Type::Token))
-        return make_ref_counted<AST::SyntaxError>(io_operator_token.position.value_or(start_position), "Expected a heredoc keyword", true);
+        return make_ref_counted<AST::SyntaxError>(io_operator_token.position.value_or(start_position), String::from_utf8("Expected a heredoc keyword"sv).release_value_but_fixme_should_propagate_errors(), true);
 
     auto [end_keyword_text, allow_interpolation] = Lexer::process_heredoc_key(end_keyword);
     RefPtr<AST::SyntaxError> error;
@@ -1893,7 +1893,7 @@ RefPtr<AST::Node> Parser::parse_io_here(AST::Position start_position, Optional<i
     auto position = start_position.with_end(peek().position.value_or(empty_position()));
     auto result = make_ref_counted<AST::Heredoc>(
         position,
-        end_keyword_text,
+        String::from_deprecated_string(end_keyword_text).release_value_but_fixme_should_propagate_errors(),
         allow_interpolation,
         io_operator == Token::Type::DoubleLessDash,
         Optional<int> { redirection_fd });
@@ -1954,7 +1954,7 @@ RefPtr<AST::Node> Parser::parse_io_file(AST::Position start_position, Optional<i
         auto is_less = io_operator == Token::Type::LessAnd;
         auto source_fd = fd.value_or(is_less ? 0 : 1);
         if (word->is_bareword()) {
-            auto maybe_target_fd = static_ptr_cast<AST::BarewordLiteral>(word)->text().to_int(AK::TrimWhitespace::No);
+            auto maybe_target_fd = static_ptr_cast<AST::BarewordLiteral>(word)->text().bytes_as_string_view().to_int();
             if (maybe_target_fd.has_value()) {
                 auto target_fd = maybe_target_fd.release_value();
                 if (is_less)

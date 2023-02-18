@@ -6,10 +6,10 @@
 
 #include "AST.h"
 #include "Shell.h"
-#include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/DeprecatedFile.h>
@@ -108,7 +108,7 @@ namespace Shell::AST {
 
 static inline void print_indented(StringView str, int indent)
 {
-    dbgln("{}{}", DeprecatedString::repeated(' ', indent * 2), str);
+    dbgln("{: >{}}", str, str.length() + indent * 2);
 }
 
 static inline Optional<Position> merge_positions(Optional<Position> const& left, Optional<Position> const& right)
@@ -154,7 +154,7 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     return commands;
 }
 
-static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& input_value, NonnullRefPtrVector<Slice> slices)
+static String resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullRefPtrVector<Slice> slices)
 {
     if (slices.is_empty())
         return move(input_value);
@@ -169,13 +169,13 @@ static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& i
             return move(input_value);
         }
 
-        auto index_values = value->resolve_as_list(shell);
+        auto index_values = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
         Vector<size_t> indices;
         indices.ensure_capacity(index_values.size());
 
         size_t i = 0;
         for (auto& value : index_values) {
-            auto maybe_index = value.to_int();
+            auto maybe_index = value.bytes_as_string_view().to_int();
             if (!maybe_index.has_value()) {
                 shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
                 return move(input_value);
@@ -185,10 +185,10 @@ static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& i
             auto index = maybe_index.value();
             auto original_index = index;
             if (index < 0)
-                index += input_value.length();
+                index += input_value.bytes_as_string_view().length();
 
-            if (index < 0 || (size_t)index >= input_value.length()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, input_value.length()), slice.position());
+            if (index < 0 || (size_t)index >= input_value.bytes_as_string_view().length()) {
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, input_value.bytes_as_string_view().length()), slice.position());
                 return move(input_value);
             }
             indices.unchecked_append(index);
@@ -196,15 +196,15 @@ static DeprecatedString resolve_slices(RefPtr<Shell> shell, DeprecatedString&& i
 
         StringBuilder builder { indices.size() };
         for (auto& index : indices)
-            builder.append(input_value[index]);
+            builder.append(input_value.bytes_as_string_view()[index]);
 
-        input_value = builder.to_deprecated_string();
+        input_value = builder.to_string().release_value_but_fixme_should_propagate_errors();
     }
 
     return move(input_value);
 }
 
-static Vector<DeprecatedString> resolve_slices(RefPtr<Shell> shell, Vector<DeprecatedString>&& values, NonnullRefPtrVector<Slice> slices)
+static Vector<String> resolve_slices(RefPtr<Shell> shell, Vector<String>&& values, NonnullRefPtrVector<Slice> slices)
 {
     if (slices.is_empty())
         return move(values);
@@ -219,13 +219,13 @@ static Vector<DeprecatedString> resolve_slices(RefPtr<Shell> shell, Vector<Depre
             return move(values);
         }
 
-        auto index_values = value->resolve_as_list(shell);
+        auto index_values = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
         Vector<size_t> indices;
         indices.ensure_capacity(index_values.size());
 
         size_t i = 0;
         for (auto& value : index_values) {
-            auto maybe_index = value.to_int();
+            auto maybe_index = value.bytes_as_string_view().to_int();
             if (!maybe_index.has_value()) {
                 shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
                 return move(values);
@@ -244,7 +244,7 @@ static Vector<DeprecatedString> resolve_slices(RefPtr<Shell> shell, Vector<Depre
             indices.unchecked_append(index);
         }
 
-        Vector<DeprecatedString> result;
+        Vector<String> result;
         result.ensure_capacity(indices.size());
         for (auto& index : indices)
             result.unchecked_append(values[index]);
@@ -276,7 +276,7 @@ bool Node::is_syntax_error() const
 
 void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
 {
-    auto value = run(shell)->resolve_without_cast(shell);
+    auto value = run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return;
 
@@ -286,7 +286,7 @@ void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Nonnul
     }
 
     if (value->is_list_without_resolution()) {
-        auto list = value->resolve_without_cast(shell);
+        auto list = value->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
         for (auto& element : static_cast<ListValue*>(list.ptr())->values()) {
             if (callback(element) == IterationDecision::Break)
                 break;
@@ -294,7 +294,7 @@ void Node::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Nonnul
         return;
     }
 
-    auto list = value->resolve_as_list(shell);
+    auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     for (auto& element : list) {
         if (callback(make_ref_counted<StringValue>(move(element))) == IterationDecision::Break)
             break;
@@ -310,13 +310,13 @@ Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
         };
     }
 
-    return run(shell)->resolve_as_commands(shell);
+    return run(shell)->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors();
 }
 
 void Node::dump(int level) const
 {
     print_indented(DeprecatedString::formatted("{} at {}:{} (from {}.{} to {}.{})",
-                       class_name().characters(),
+                       class_name(),
                        m_position.start_offset,
                        m_position.end_offset,
                        m_position.start_line.line_number,
@@ -380,7 +380,7 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
             if (!program_name_node)
                 return {};
 
-            DeprecatedString program_name;
+            String program_name;
             if (program_name_node->is_bareword())
                 program_name = static_cast<BarewordLiteral const*>(program_name_node.ptr())->text();
             else
@@ -475,15 +475,17 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
         if (shell && shell->has_any_error())
             break;
         if (!result) {
-            result = make_ref_counted<ListValue>({ element->run(shell)->resolve_without_cast(shell) });
+            result = make_ref_counted<ListValue>({ element->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors() });
             continue;
         }
-        auto element_value = element->run(shell)->resolve_without_cast(shell);
+        auto element_value = element->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
         if (shell && shell->has_any_error())
             break;
 
         if (result->is_command() || element_value->is_command()) {
-            auto joined_commands = join_commands(result->resolve_as_commands(shell), element_value->resolve_as_commands(shell));
+            auto joined_commands = join_commands(
+                result->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors(),
+                element_value->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors());
 
             if (joined_commands.size() == 1) {
                 auto& command = joined_commands[0];
@@ -498,7 +500,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
             if (result->is_list_without_resolution()) {
                 values.extend(static_cast<ListValue*>(result.ptr())->values());
             } else {
-                for (auto& result : result->resolve_as_list(shell))
+                for (auto& result : result->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors())
                     values.append(make_ref_counted<StringValue>(result));
             }
 
@@ -644,29 +646,29 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
     }
 
     if (m_text.starts_with('-')) {
-        if (m_text == "--") {
+        if (m_text == "--"sv) {
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
             return;
         }
-        if (m_text == "-")
+        if (m_text == "-"sv)
             return;
 
-        if (m_text.starts_with("--"sv)) {
-            auto index = m_text.find('=').value_or(m_text.length() - 1) + 1;
+        if (m_text.starts_with_bytes("--"sv)) {
+            auto index = m_text.find_byte_offset('=').value_or(m_text.bytes_as_string_view().length() - 1) + 1;
             editor.stylize({ m_position.start_offset, m_position.start_offset + index }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         } else {
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         }
     }
     if (Core::DeprecatedFile::exists(m_text)) {
-        auto realpath = shell.resolve_path(m_text);
+        auto realpath = shell.resolve_path(m_text.bytes_as_string_view());
         auto url = URL::create_with_file_scheme(realpath);
         url.set_host(shell.hostname);
         editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
     }
 }
 
-BarewordLiteral::BarewordLiteral(Position position, DeprecatedString text)
+BarewordLiteral::BarewordLiteral(Position position, String text)
     : Node(move(position))
     , m_text(move(text))
 {
@@ -738,14 +740,14 @@ RefPtr<Value> CastToCommand::run(RefPtr<Shell> shell)
     if (m_inner->is_command())
         return m_inner->run(shell);
 
-    auto value = m_inner->run(shell)->resolve_without_cast(shell);
+    auto value = m_inner->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     if (value->is_command())
         return value;
 
-    auto argv = value->resolve_as_list(shell);
+    auto argv = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     return make_ref_counted<CommandValue>(move(argv), position());
 }
 
@@ -773,7 +775,7 @@ Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& she
     auto corrected_offset = offset - matching_node->position().start_offset;
     auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
 
-    if (corrected_offset > node->text().length())
+    if (corrected_offset > node->text().bytes_as_string_view().length())
         return {};
 
     return shell.complete_program_name(node->text(), corrected_offset);
@@ -806,14 +808,14 @@ RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
     if (!m_inner)
         return make_ref_counted<ListValue>({});
 
-    auto inner_value = m_inner->run(shell)->resolve_without_cast(shell);
+    auto inner_value = m_inner->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     if (inner_value->is_command() || inner_value->is_list())
         return inner_value;
 
-    auto values = inner_value->resolve_as_list(shell);
+    auto values = inner_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     NonnullRefPtrVector<Value> cast_values;
     for (auto& value : values)
         cast_values.append(make_ref_counted<StringValue>(value));
@@ -921,7 +923,7 @@ void Comment::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadat
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(150, 150, 150) }); // Light gray
 }
 
-Comment::Comment(Position position, DeprecatedString text)
+Comment::Comment(Position position, String text)
     : Node(move(position))
     , m_text(move(text))
 {
@@ -962,11 +964,11 @@ void DoubleQuotedString::dump(int level) const
 RefPtr<Value> DoubleQuotedString::run(RefPtr<Shell> shell)
 {
     StringBuilder builder;
-    auto values = m_inner->run(shell)->resolve_as_list(shell);
+    auto values = m_inner->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
 
     builder.join(""sv, values);
 
-    return make_ref_counted<StringValue>(builder.to_deprecated_string());
+    return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1005,20 +1007,20 @@ void DynamicEvaluate::dump(int level) const
 
 RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
 {
-    auto result = m_inner->run(shell)->resolve_without_cast(shell);
+    auto result = m_inner->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     // Dynamic Evaluation behaves differently between strings and lists.
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
-        auto name_part = result->resolve_as_list(shell);
+        auto name_part = result->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
         VERIFY(name_part.size() == 1);
         return make_ref_counted<SimpleVariableValue>(name_part[0]);
     }
 
     // If it's anything else, we're just gonna cast it to a list.
-    auto list = result->resolve_as_list(shell);
+    auto list = result->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     return make_ref_counted<CommandValue>(move(list), position());
 }
 
@@ -1094,9 +1096,9 @@ RefPtr<Value> FunctionDeclaration::run(RefPtr<Shell> shell)
 {
     Vector<DeprecatedString> args;
     for (auto& arg : m_arguments)
-        args.append(arg.name);
+        args.append(arg.name.to_deprecated_string());
 
-    shell->define_function(m_name.name, move(args), m_block);
+    shell->define_function(m_name.name.to_deprecated_string(), move(args), m_block);
 
     return make_ref_counted<ListValue>({});
 }
@@ -1136,12 +1138,12 @@ Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shel
     auto corrected_offset = offset - matching_node->position().start_offset - 1; // Skip the first '$'
     auto* node = static_cast<SimpleVariable const*>(matching_node.ptr());
 
-    auto name = node->name().substring_view(0, corrected_offset);
+    auto name = node->name().bytes_as_string_view().substring_view(0, corrected_offset);
 
     Vector<Line::CompletionSuggestion> results;
     for (auto& arg : m_arguments) {
-        if (arg.name.starts_with(name))
-            results.append(arg.name);
+        if (arg.name.starts_with_bytes(name))
+            results.append(arg.name.to_deprecated_string());
     }
 
     results.extend(matching_node->complete_for_editor(shell, offset, hit_test_result));
@@ -1219,7 +1221,7 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
     };
 
     if (m_iterated_expression) {
-        auto variable_name = m_variable.has_value() ? m_variable->name : "it";
+        auto variable_name = m_variable.has_value() ? m_variable->name : String::from_utf8_short_string("it"sv);
         Optional<StringView> index_name = m_index_variable.has_value() ? Optional<StringView>(m_index_variable->name) : Optional<StringView>();
         size_t i = 0;
         m_iterated_expression->for_each_entry(shell, [&](auto value) {
@@ -1238,10 +1240,10 @@ RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
 
             {
                 auto frame = shell->push_frame(DeprecatedString::formatted("for ({})", this));
-                shell->set_local_variable(variable_name, value, true);
+                shell->set_local_variable(variable_name.bytes_as_string_view(), value, true);
 
                 if (index_name.has_value())
-                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(DeprecatedString::number(i)), true);
+                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(String::number(i).release_value_but_fixme_should_propagate_errors()), true);
 
                 ++i;
 
@@ -1349,7 +1351,7 @@ void Glob::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata m
     editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
 }
 
-Glob::Glob(Position position, DeprecatedString text)
+Glob::Glob(Position position, String text)
     : Node(move(position))
     , m_text(move(text))
 {
@@ -1396,19 +1398,19 @@ RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
 
         if (!value)
             return value;
-        auto list = value->resolve_as_list(shell);
+        auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
         // The list better have one entry, otherwise we've put the wrong kind of node inside this heredoc
         VERIFY(list.size() == 1);
-        auto lines = list.first().split_view('\n');
+        auto lines = list.first().bytes_as_string_view().split_view('\n');
 
         // Now just trim each line and put them back in a string
-        StringBuilder builder { list.first().length() };
+        StringBuilder builder { list.first().bytes_as_string_view().length() };
         for (auto& line : lines) {
             builder.append(line.trim_whitespace(TrimMode::Left));
             builder.append('\n');
         }
 
-        return make_ref_counted<StringValue>(builder.to_deprecated_string());
+        return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
     }();
 
     if (evaluates_to_string())
@@ -1434,11 +1436,12 @@ RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
         return nullptr;
     }
 
-    auto text = value->resolve_as_string(shell);
+    auto text = value->resolve_as_string(shell).release_value_but_fixme_should_propagate_errors();
+    auto bytes = text.bytes();
 
-    auto written = fwrite(text.characters(), 1, text.length(), file);
+    auto written = fwrite(bytes.data(), 1, bytes.size(), file);
     fflush(file);
-    if (written != text.length()) {
+    if (written != bytes.size()) {
         if (shell)
             shell->raise_error(Shell::ShellError::WriteFailure, "heredoc"sv, position());
     }
@@ -1472,7 +1475,7 @@ HitTestResult Heredoc::hit_test_position(size_t offset) const
     return m_contents->hit_test_position(offset);
 }
 
-Heredoc::Heredoc(Position position, DeprecatedString end, bool allow_interpolation, bool deindent, Optional<int> target_fd)
+Heredoc::Heredoc(Position position, String end, bool allow_interpolation, bool deindent, Optional<int> target_fd)
     : Node(move(position))
     , m_end(move(end))
     , m_allows_interpolation(allow_interpolation)
@@ -1653,7 +1656,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
     if (m_command->would_execute())
         return m_command->for_each_entry(shell, move(callback));
 
-    auto unexpanded_commands = m_command->run(shell)->resolve_as_commands(shell);
+    auto unexpanded_commands = m_command->run(shell)->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return;
 
@@ -1708,7 +1711,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     stream.discard(ifs.length()).release_value_but_fixme_should_propagate_errors();
 
                     if (shell->options.inline_exec_keep_empty_segments)
-                        if (callback(make_ref_counted<StringValue>("")) == IterationDecision::Break) {
+                        if (callback(make_ref_counted<StringValue>(String {})) == IterationDecision::Break) {
                             loop.quit(Break);
                             notifier->set_enabled(false);
                             return Break;
@@ -1723,8 +1726,8 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                     auto entry = entry_result.release_value();
                     stream.read_entire_buffer(entry).release_value_but_fixme_should_propagate_errors();
 
-                    auto str = StringView(entry.data(), entry.size() - ifs.length());
-                    if (callback(make_ref_counted<StringValue>(str)) == IterationDecision::Break) {
+                    auto str = String::from_utf8(StringView(entry.data(), entry.size() - ifs.length())).release_value_but_fixme_should_propagate_errors();
+                    if (callback(make_ref_counted<StringValue>(move(str))) == IterationDecision::Break) {
                         loop.quit(Break);
                         notifier->set_enabled(false);
                         return Break;
@@ -1812,7 +1815,7 @@ void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(Non
                 }
                 auto entry = entry_result.release_value();
                 stream.read_entire_buffer(entry).release_value_but_fixme_should_propagate_errors();
-                callback(make_ref_counted<StringValue>(DeprecatedString::copy(entry)));
+                callback(make_ref_counted<StringValue>(String::from_utf8(entry).release_value_but_fixme_should_propagate_errors()));
             }
         }
 
@@ -1872,7 +1875,7 @@ Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, si
     auto corrected_offset = offset - matching_node->position().start_offset;
     auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
 
-    if (corrected_offset > node->text().length())
+    if (corrected_offset > node->text().bytes_as_string_view().length())
         return {};
 
     return shell.complete_program_name(node->text(), corrected_offset);
@@ -1910,7 +1913,7 @@ void IfCond::dump(int level) const
 
 RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
 {
-    auto cond = m_condition->run(shell)->resolve_without_cast(shell);
+    auto cond = m_condition->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
@@ -2051,7 +2054,7 @@ Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shel
 
     auto corrected_offset = offset - m_function.position.start_offset;
 
-    if (corrected_offset > m_function.name.length())
+    if (corrected_offset > m_function.name.bytes_as_string_view().length())
         return {};
 
     return shell.complete_immediate_function_name(m_function.name, corrected_offset);
@@ -2160,9 +2163,9 @@ Join::~Join()
 void MatchExpr::dump(int level) const
 {
     Node::dump(level);
-    print_indented(DeprecatedString::formatted("(expression: {})", m_expr_name.characters()), level + 1);
+    print_indented(DeprecatedString::formatted("(expression: {})", m_expr_name), level + 1);
     m_matched_expr->dump(level + 2);
-    print_indented(DeprecatedString::formatted("(named: {})", m_expr_name.characters()), level + 1);
+    print_indented(DeprecatedString::formatted("(named: {})", m_expr_name), level + 1);
     print_indented("(entries)"sv, level + 1);
     for (auto& entry : m_entries) {
         StringBuilder builder;
@@ -2201,11 +2204,11 @@ void MatchExpr::dump(int level) const
 
 RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
 {
-    auto value = m_matched_expr->run(shell)->resolve_without_cast(shell);
+    auto value = m_matched_expr->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto list = value->resolve_as_list(shell);
+    auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
 
     auto list_matches = [&](auto&& pattern, auto& spans) {
         if constexpr (IsSame<RemoveCVReference<decltype(pattern)>, Regex<ECMA262>>) {
@@ -2219,7 +2222,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
             spans.ensure_capacity(match.n_capture_groups);
             for (size_t i = 0; i < match.n_capture_groups; ++i) {
                 auto& capture = match.capture_group_matches[0][i];
-                spans.append(capture.view.to_deprecated_string());
+                spans.append(capture.view.to_string().release_value_but_fixme_should_propagate_errors());
             }
             return true;
         } else {
@@ -2228,10 +2231,10 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
 
             for (size_t i = 0; i < pattern.size(); ++i) {
                 Vector<AK::MaskSpan> mask_spans;
-                if (!list[i].matches(pattern[i], mask_spans))
+                if (!list[i].bytes_as_string_view().matches(pattern[i], mask_spans))
                     return false;
                 for (auto& span : mask_spans)
-                    spans.append(list[i].substring(span.start, span.length));
+                    spans.append(list[i].substring_from_byte_offset(span.start, span.length).release_value_but_fixme_should_propagate_errors());
             }
 
             return true;
@@ -2242,7 +2245,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         if constexpr (IsSame<RemoveCVReference<decltype(option)>, Regex<ECMA262>>) {
             return option;
         } else {
-            Vector<DeprecatedString> pattern;
+            Vector<String> pattern;
             if (option.is_glob()) {
                 pattern.append(static_cast<const Glob*>(&option)->text());
             } else if (option.is_bareword()) {
@@ -2253,8 +2256,8 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
                     return pattern;
 
                 option.for_each_entry(shell, [&](auto&& value) {
-                    pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behavior,
-                                                                     //       asking the node for a 'raw' value.
+                    pattern.extend(value->resolve_as_list(nullptr).release_value_but_fixme_should_propagate_errors()); // Note: 'nullptr' incurs special behavior,
+                                                                                                                       //       asking the node for a 'raw' value.
                     return IterationDecision::Continue;
                 });
             }
@@ -2265,19 +2268,19 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
 
     auto frame = shell->push_frame(DeprecatedString::formatted("match ({})", this));
     if (!m_expr_name.is_empty())
-        shell->set_local_variable(m_expr_name, value, true);
+        shell->set_local_variable(m_expr_name.to_deprecated_string(), value, true);
 
     for (auto& entry : m_entries) {
         auto result = entry.options.visit([&](auto& options) -> Variant<IterationDecision, RefPtr<Value>> {
             for (auto& option : options) {
-                Vector<DeprecatedString> spans;
+                Vector<String> spans;
                 if (list_matches(resolve_pattern(option), spans)) {
                     if (entry.body) {
                         if (entry.match_names.has_value()) {
                             size_t i = 0;
                             for (auto& name : entry.match_names.value()) {
                                 if (spans.size() > i)
-                                    shell->set_local_variable(name, make_ref_counted<AST::StringValue>(spans[i]), true);
+                                    shell->set_local_variable(name.to_deprecated_string(), make_ref_counted<AST::StringValue>(spans[i]), true);
                                 ++i;
                             }
                         }
@@ -2346,7 +2349,7 @@ HitTestResult MatchExpr::hit_test_position(size_t offset) const
     return {};
 }
 
-MatchExpr::MatchExpr(Position position, NonnullRefPtr<Node> expr, DeprecatedString name, Optional<Position> as_position, Vector<MatchEntry> entries)
+MatchExpr::MatchExpr(Position position, NonnullRefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries)
     : Node(move(position))
     , m_matched_expr(move(expr))
     , m_expr_name(move(name))
@@ -2537,14 +2540,14 @@ void PathRedirectionNode::highlight_in_editor(Line::Editor& editor, Shell& shell
     metadata.is_first_in_list = false;
     m_path->highlight_in_editor(editor, shell, metadata);
     if (m_path->is_bareword()) {
-        auto path_text = m_path->run(nullptr)->resolve_as_list(nullptr);
+        auto path_text = m_path->run(nullptr)->resolve_as_list(nullptr).release_value_but_fixme_should_propagate_errors();
         VERIFY(path_text.size() == 1);
         // Apply a URL to the path.
         auto& position = m_path->position();
         auto& path = path_text[0];
         if (!path.starts_with('/'))
-            path = DeprecatedString::formatted("{}/{}", shell.cwd, path);
-        auto url = URL::create_with_file_scheme(path);
+            path = String::formatted("{}/{}", shell.cwd, path).release_value_but_fixme_should_propagate_errors();
+        auto url = URL::create_with_file_scheme(path.to_deprecated_string());
         url.set_host(shell.hostname);
         editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
     }
@@ -2567,7 +2570,7 @@ Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shel
     auto corrected_offset = offset - matching_node->position().start_offset;
     auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
 
-    if (corrected_offset > node->text().length())
+    if (corrected_offset > node->text().bytes_as_string_view().length())
         return {};
 
     return shell.complete_path(""sv, node->text(), corrected_offset, Shell::ExecutableOnly::No, nullptr, nullptr);
@@ -2592,8 +2595,8 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
         NonnullRefPtrVector<Value> values;
 
         if (start->is_string() && end->is_string()) {
-            auto start_str = start->resolve_as_list(shell)[0];
-            auto end_str = end->resolve_as_list(shell)[0];
+            auto start_str = start->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
+            auto end_str = end->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
 
             Utf8View start_view { start_str }, end_view { end_str };
             if (start_view.validate() && end_view.validate()) {
@@ -2606,24 +2609,24 @@ RefPtr<Value> Range::run(RefPtr<Shell> shell)
                     for (u32 code_point = start_code_point; code_point != end_code_point; code_point += step) {
                         builder.clear();
                         builder.append_code_point(code_point);
-                        values.append(make_ref_counted<StringValue>(builder.to_deprecated_string()));
+                        values.append(make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors()));
                     }
                     // Append the ending code point too, most shells treat this as inclusive.
                     builder.clear();
                     builder.append_code_point(end_code_point);
-                    values.append(make_ref_counted<StringValue>(builder.to_deprecated_string()));
+                    values.append(make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors()));
                 } else {
                     // Could be two numbers?
-                    auto start_int = start_str.to_int();
-                    auto end_int = end_str.to_int();
+                    auto start_int = start_str.bytes_as_string_view().to_int();
+                    auto end_int = end_str.bytes_as_string_view().to_int();
                     if (start_int.has_value() && end_int.has_value()) {
                         auto start = start_int.value();
                         auto end = end_int.value();
                         auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
-                            values.append(make_ref_counted<StringValue>(DeprecatedString::number(value)));
+                            values.append(make_ref_counted<StringValue>(String::number(value).release_value_but_fixme_should_propagate_errors()));
                         // Append the range end too, most shells treat this as inclusive.
-                        values.append(make_ref_counted<StringValue>(DeprecatedString::number(end)));
+                        values.append(make_ref_counted<StringValue>(String::number(end).release_value_but_fixme_should_propagate_errors()));
                     } else {
                         goto yield_start_end;
                     }
@@ -2708,14 +2711,14 @@ void ReadRedirection::dump(int level) const
 RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::Read));
+    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::Read));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -2738,14 +2741,14 @@ void ReadWriteRedirection::dump(int level) const
 RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::ReadWrite));
+    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::ReadWrite));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -2933,7 +2936,7 @@ RefPtr<Value> SimpleVariable::run(RefPtr<Shell>)
 {
     NonnullRefPtr<Value> value = make_ref_counted<SimpleVariableValue>(m_name);
     if (m_slice)
-        value = value->with_slices(*m_slice);
+        value = value->with_slices(*m_slice).release_value_but_fixme_should_propagate_errors();
     return value;
 }
 
@@ -2969,13 +2972,13 @@ Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& sh
 
     auto corrected_offset = offset - matching_node->position().start_offset - 1;
 
-    if (corrected_offset > m_name.length() + 1)
+    if (corrected_offset > m_name.bytes_as_string_view().length() + 1)
         return {};
 
     return shell.complete_variable(m_name, corrected_offset);
 }
 
-SimpleVariable::SimpleVariable(Position position, DeprecatedString name)
+SimpleVariable::SimpleVariable(Position position, String name)
     : VariableNode(move(position))
     , m_name(move(name))
 {
@@ -2989,7 +2992,7 @@ void SpecialVariable::dump(int level) const
 {
     Node::dump(level);
     print_indented("(Name)"sv, level + 1);
-    print_indented(DeprecatedString { &m_name, 1 }, level + 1);
+    print_indented(StringView { &m_name, 1 }, level + 1);
     print_indented("(Slice)"sv, level + 1);
     if (m_slice)
         m_slice->dump(level + 2);
@@ -3001,7 +3004,7 @@ RefPtr<Value> SpecialVariable::run(RefPtr<Shell>)
 {
     NonnullRefPtr<Value> value = make_ref_counted<SpecialVariableValue>(m_name);
     if (m_slice)
-        value = value->with_slices(*m_slice);
+        value = value->with_slices(*m_slice).release_value_but_fixme_should_propagate_errors();
     return value;
 }
 
@@ -3044,19 +3047,19 @@ void Juxtaposition::dump(int level) const
 
 RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
 {
-    auto left_value = m_left->run(shell)->resolve_without_cast(shell);
+    auto left_value = m_left->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto right_value = m_right->run(shell)->resolve_without_cast(shell);
+    auto right_value = m_right->run(shell)->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto left = left_value->resolve_as_list(shell);
-    auto right = right_value->resolve_as_list(shell);
+    auto left = left_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto right = right_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
 
     if (m_mode == Mode::StringExpand) {
-        Vector<DeprecatedString> result;
+        Vector<String> result;
         result.ensure_capacity(left.size() + right.size());
 
         for (auto& left_item : left)
@@ -3064,7 +3067,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
 
         if (!result.is_empty() && !right.is_empty()) {
             auto& last = result.last();
-            last = DeprecatedString::formatted("{}{}", last, right.first());
+            last = String::formatted("{}{}", last, right.first()).release_value_but_fixme_should_propagate_errors();
             right.take_first();
         }
         for (auto& right_item : right)
@@ -3082,14 +3085,14 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         builder.append(left[0]);
         builder.append(right[0]);
 
-        return make_ref_counted<StringValue>(builder.to_deprecated_string());
+        return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
     }
 
     // Otherwise, treat them as lists and create a list product (or just append).
     if (left.is_empty() || right.is_empty())
         return make_ref_counted<ListValue>({});
 
-    Vector<DeprecatedString> result;
+    Vector<String> result;
     result.ensure_capacity(left.size() * right.size());
 
     StringBuilder builder;
@@ -3097,7 +3100,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         for (auto& right_element : right) {
             builder.append(left_element);
             builder.append(right_element);
-            result.append(builder.to_deprecated_string());
+            result.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
             builder.clear();
         }
     }
@@ -3113,8 +3116,8 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
     // since that resolution is a pure operation, we can just go ahead
     // and do it to get the value :)
     if (m_right->is_bareword() && m_left->is_tilde()) {
-        auto tilde_value = m_left->run(shell)->resolve_as_list(shell)[0];
-        auto bareword_value = m_right->run(shell)->resolve_as_list(shell)[0];
+        auto tilde_value = m_left->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
+        auto bareword_value = m_right->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
 
         StringBuilder path_builder;
         path_builder.append(tilde_value);
@@ -3143,14 +3146,14 @@ Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& she
 
     // '~/foo/bar' is special, we have to actually resolve the tilde
     // then complete the bareword with that path prefix.
-    auto left_values = m_left->run(shell)->resolve_as_list(shell);
+    auto left_values = m_left->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
 
     if (left_values.is_empty())
         return m_right->complete_for_editor(shell, offset, hit_test_result);
 
     auto& left_value = left_values.first();
 
-    auto right_values = m_right->run(shell)->resolve_as_list(shell);
+    auto right_values = m_right->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     StringView right_value {};
 
     auto corrected_offset = offset - matching_node->position().start_offset;
@@ -3221,7 +3224,7 @@ void StringLiteral::highlight_in_editor(Line::Editor& editor, Shell&, HighlightM
     editor.stylize({ m_position.start_offset, m_position.end_offset }, move(style));
 }
 
-StringLiteral::StringLiteral(Position position, DeprecatedString text, EnclosureType enclosure_type)
+StringLiteral::StringLiteral(Position position, String text, EnclosureType enclosure_type)
     : Node(move(position))
     , m_text(move(text))
     , m_enclosure_type(enclosure_type)
@@ -3241,11 +3244,11 @@ void StringPartCompose::dump(int level) const
 
 RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
 {
-    auto left = m_left->run(shell)->resolve_as_list(shell);
+    auto left = m_left->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto right = m_right->run(shell)->resolve_as_list(shell);
+    auto right = m_right->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
@@ -3253,7 +3256,7 @@ RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
     builder.join(' ', left);
     builder.join(' ', right);
 
-    return make_ref_counted<StringValue>(builder.to_deprecated_string());
+    return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3296,8 +3299,8 @@ void SyntaxError::dump(int level) const
 
 RefPtr<Value> SyntaxError::run(RefPtr<Shell> shell)
 {
-    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, m_syntax_error_text, position());
-    return make_ref_counted<StringValue>("");
+    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, m_syntax_error_text.to_deprecated_string(), position());
+    return make_ref_counted<StringValue>(String {});
 }
 
 void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata)
@@ -3305,7 +3308,7 @@ void SyntaxError::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMet
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Bold });
 }
 
-SyntaxError::SyntaxError(Position position, DeprecatedString error, bool is_continuable)
+SyntaxError::SyntaxError(Position position, String error, bool is_continuable)
     : Node(move(position))
     , m_syntax_error_text(move(error))
     , m_is_continuable(is_continuable)
@@ -3375,21 +3378,21 @@ Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size
 
     auto corrected_offset = offset - matching_node->position().start_offset - 1;
 
-    if (corrected_offset > m_username.length() + 1)
+    if (corrected_offset > m_username.bytes_as_string_view().length() + 1)
         return {};
 
     return shell.complete_user(m_username, corrected_offset);
 }
 
-DeprecatedString Tilde::text() const
+String Tilde::text() const
 {
     StringBuilder builder;
     builder.append('~');
     builder.append(m_username);
-    return builder.to_deprecated_string();
+    return builder.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
-Tilde::Tilde(Position position, DeprecatedString username)
+Tilde::Tilde(Position position, String username)
     : Node(move(position))
     , m_username(move(username))
 {
@@ -3409,14 +3412,14 @@ void WriteAppendRedirection::dump(int level) const
 RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::WriteAppend));
+    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::WriteAppend));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3439,14 +3442,14 @@ void WriteRedirection::dump(int level) const
 RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
 {
     Command command;
-    auto path_segments = m_path->run(shell)->resolve_as_list(shell);
+    auto path_segments = m_path->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
     builder.join(' ', path_segments);
 
-    command.redirections.append(PathRedirection::create(builder.to_deprecated_string(), m_fd, PathRedirection::Write));
+    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::Write));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3472,7 +3475,7 @@ void VariableDeclarations::dump(int level) const
 RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
 {
     for (auto& var : m_variables) {
-        auto name_value = var.name->run(shell)->resolve_as_list(shell);
+        auto name_value = var.name->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
         if (shell && shell->has_any_error())
             break;
 
@@ -3481,9 +3484,9 @@ RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)
         auto value = var.value->run(shell);
         if (shell && shell->has_any_error())
             break;
-        value = value->resolve_without_cast(shell);
+        value = value->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
 
-        shell->set_local_variable(name, value.release_nonnull());
+        shell->set_local_variable(name.to_deprecated_string(), value.release_nonnull());
     }
 
     return make_ref_counted<ListValue>({});
@@ -3535,21 +3538,21 @@ Value::~Value()
 {
 }
 
-DeprecatedString Value::resolve_as_string(RefPtr<Shell> shell)
+ErrorOr<String> Value::resolve_as_string(RefPtr<Shell> shell)
 {
     if (shell)
         shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Conversion to string not allowed");
-    return {};
+    return String {};
 }
 
-Vector<AST::Command> Value::resolve_as_commands(RefPtr<Shell> shell)
+ErrorOr<Vector<AST::Command>> Value::resolve_as_commands(RefPtr<Shell> shell)
 {
     Command command;
-    command.argv = resolve_as_list(shell);
-    return { command };
+    command.argv = TRY(resolve_as_list(shell));
+    return Vector { move(command) };
 }
 
-ListValue::ListValue(Vector<DeprecatedString> values)
+ListValue::ListValue(Vector<String> values)
 {
     if (values.is_empty())
         return;
@@ -3558,16 +3561,16 @@ ListValue::ListValue(Vector<DeprecatedString> values)
         m_contained_values.append(adopt_ref(*new StringValue(move(str))));
 }
 
-NonnullRefPtr<Value> Value::with_slices(NonnullRefPtr<Slice> slice) const&
+ErrorOr<NonnullRefPtr<Value>> Value::with_slices(NonnullRefPtr<Slice> slice) const&
 {
-    auto value = clone();
+    auto value = TRY(clone());
     value->m_slices.append(move(slice));
     return value;
 }
 
-NonnullRefPtr<Value> Value::with_slices(NonnullRefPtrVector<Slice> slices) const&
+ErrorOr<NonnullRefPtr<Value>> Value::with_slices(NonnullRefPtrVector<Slice> slices) const&
 {
-    auto value = clone();
+    auto value = TRY(clone());
     value->m_slices.extend(move(slices));
     return value;
 }
@@ -3576,24 +3579,24 @@ ListValue::~ListValue()
 {
 }
 
-Vector<DeprecatedString> ListValue::resolve_as_list(RefPtr<Shell> shell)
+ErrorOr<Vector<String>> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
-    Vector<DeprecatedString> values;
+    Vector<String> values;
     for (auto& value : m_contained_values)
-        values.extend(value.resolve_as_list(shell));
+        values.extend(TRY(value.resolve_as_list(shell)));
 
     return resolve_slices(shell, move(values), m_slices);
 }
 
-NonnullRefPtr<Value> ListValue::resolve_without_cast(RefPtr<Shell> shell)
+ErrorOr<NonnullRefPtr<Value>> ListValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     NonnullRefPtrVector<Value> values;
     for (auto& value : m_contained_values)
-        values.append(value.resolve_without_cast(shell));
+        values.append(TRY(value.resolve_without_cast(shell)));
 
     NonnullRefPtr<Value> value = make_ref_counted<ListValue>(move(values));
     if (!m_slices.is_empty())
-        value = value->with_slices(m_slices);
+        value = TRY(value->with_slices(m_slices));
     return value;
 }
 
@@ -3605,25 +3608,25 @@ CommandSequenceValue::~CommandSequenceValue()
 {
 }
 
-Vector<DeprecatedString> CommandSequenceValue::resolve_as_list(RefPtr<Shell> shell)
+ErrorOr<Vector<String>> CommandSequenceValue::resolve_as_list(RefPtr<Shell> shell)
 {
     shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Unexpected cast of a command sequence to a list");
-    return {};
+    return Vector<String> {};
 }
 
-Vector<Command> CommandSequenceValue::resolve_as_commands(RefPtr<Shell>)
+ErrorOr<Vector<Command>> CommandSequenceValue::resolve_as_commands(RefPtr<Shell>)
 {
     return m_contained_values;
 }
 
-Vector<DeprecatedString> CommandValue::resolve_as_list(RefPtr<Shell>)
+ErrorOr<Vector<String>> CommandValue::resolve_as_list(RefPtr<Shell>)
 {
     return m_command.argv;
 }
 
-Vector<Command> CommandValue::resolve_as_commands(RefPtr<Shell>)
+ErrorOr<Vector<Command>> CommandValue::resolve_as_commands(RefPtr<Shell>)
 {
-    return { m_command };
+    return Vector { m_command };
 }
 
 JobValue::~JobValue()
@@ -3634,31 +3637,31 @@ StringValue::~StringValue()
 {
 }
 
-DeprecatedString StringValue::resolve_as_string(RefPtr<Shell> shell)
+ErrorOr<String> StringValue::resolve_as_string(RefPtr<Shell> shell)
 {
-    if (m_split.is_null())
+    if (m_split.is_empty())
         return m_string;
     return Value::resolve_as_string(shell);
 }
 
-Vector<DeprecatedString> StringValue::resolve_as_list(RefPtr<Shell> shell)
+ErrorOr<Vector<String>> StringValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (is_list()) {
         auto parts = StringView(m_string).split_view(m_split, m_keep_empty ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing);
-        Vector<DeprecatedString> result;
+        Vector<String> result;
         result.ensure_capacity(parts.size());
         for (auto& part : parts)
-            result.append(part);
+            result.append(TRY(String::from_utf8(part)));
         return resolve_slices(shell, move(result), m_slices);
     }
 
-    return { resolve_slices(shell, DeprecatedString { m_string }, m_slices) };
+    return Vector<String> { resolve_slices(shell, Vector { m_string }, m_slices) };
 }
 
-NonnullRefPtr<Value> StringValue::resolve_without_cast(RefPtr<Shell> shell)
+ErrorOr<NonnullRefPtr<Value>> StringValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     if (is_list())
-        return make_ref_counted<AST::ListValue>(resolve_as_list(shell)); // No need to reapply the slices.
+        return try_make_ref_counted<AST::ListValue>(TRY(resolve_as_list(shell))); // No need to reapply the slices.
 
     return *this;
 }
@@ -3666,49 +3669,59 @@ NonnullRefPtr<Value> StringValue::resolve_without_cast(RefPtr<Shell> shell)
 GlobValue::~GlobValue()
 {
 }
-Vector<DeprecatedString> GlobValue::resolve_as_list(RefPtr<Shell> shell)
+
+ErrorOr<Vector<String>> GlobValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
-        return { resolve_slices(shell, DeprecatedString { m_glob }, m_slices) };
+        return resolve_slices(shell, Vector { m_glob }, m_slices);
 
     auto results = shell->expand_globs(m_glob, shell->cwd);
     if (results.is_empty())
         shell->raise_error(Shell::ShellError::InvalidGlobError, "Glob did not match anything!", m_generation_position);
-    return resolve_slices(shell, move(results), m_slices);
+
+    Vector<String> strings;
+    TRY(strings.try_ensure_capacity(results.size()));
+    for (auto& entry : results) {
+        TRY(strings.try_append(TRY(String::from_utf8(entry))));
+    }
+
+    return resolve_slices(shell, move(strings), m_slices);
 }
 
 SimpleVariableValue::~SimpleVariableValue()
 {
 }
 
-DeprecatedString SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
+ErrorOr<String> SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
 {
     if (!shell)
-        return resolve_slices(shell, DeprecatedString {}, m_slices);
+        return resolve_slices(shell, String {}, m_slices);
 
-    if (auto value = resolve_without_cast(shell); value != this)
+    if (auto value = TRY(resolve_without_cast(shell)); value != this)
         return value->resolve_as_string(shell);
 
-    char* env_value = getenv(m_name.characters());
-    return resolve_slices(shell, env_value, m_slices);
+    auto name = m_name.to_deprecated_string();
+    char* env_value = getenv(name.characters());
+    return resolve_slices(shell, TRY(String::from_utf8(StringView { env_value, strlen(env_value) })), m_slices);
 }
 
-Vector<DeprecatedString> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
+ErrorOr<Vector<String>> SimpleVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
-        return resolve_slices(shell, Vector<DeprecatedString> {}, m_slices);
+        return resolve_slices(shell, Vector<String> {}, m_slices);
 
-    if (auto value = resolve_without_cast(shell); value != this)
+    if (auto value = TRY(resolve_without_cast(shell)); value != this)
         return value->resolve_as_list(shell);
 
-    char* env_value = getenv(m_name.characters());
+    auto name = m_name.to_deprecated_string();
+    char* env_value = getenv(name.characters());
     if (env_value == nullptr)
-        return { resolve_slices(shell, "", m_slices) };
+        return { resolve_slices(shell, Vector { String {} }, m_slices) };
 
-    return { resolve_slices(shell, DeprecatedString { env_value }, m_slices) };
+    return { resolve_slices(shell, Vector { TRY(String::from_utf8(StringView { env_value, strlen(env_value) })) }, m_slices) };
 }
 
-NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
+ErrorOr<NonnullRefPtr<Value>> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     VERIFY(shell);
 
@@ -3716,7 +3729,7 @@ NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> she
         auto result = value.release_nonnull();
         // If a slice is applied, add it.
         if (!m_slices.is_empty())
-            result = result->with_slices(m_slices);
+            result = TRY(result->with_slices(m_slices));
 
         return const_cast<Value&>(*result);
     }
@@ -3728,76 +3741,76 @@ SpecialVariableValue::~SpecialVariableValue()
 {
 }
 
-DeprecatedString SpecialVariableValue::resolve_as_string(RefPtr<Shell> shell)
+ErrorOr<String> SpecialVariableValue::resolve_as_string(RefPtr<Shell> shell)
 {
     if (!shell)
-        return {};
+        return String {};
 
-    auto result = resolve_as_list(shell);
+    auto result = TRY(resolve_as_list(shell));
     if (result.size() == 1)
         return result[0];
 
     if (result.is_empty())
-        return {};
+        return String {};
 
     return Value::resolve_as_string(shell);
 }
 
-Vector<DeprecatedString> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
+ErrorOr<Vector<String>> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (!shell)
-        return {};
+        return Vector<String> {};
 
     switch (m_name) {
     case '?':
-        return { resolve_slices(shell, DeprecatedString::number(shell->last_return_code.value_or(0)), m_slices) };
+        return { resolve_slices(shell, Vector { TRY(String::number(shell->last_return_code.value_or(0))) }, m_slices) };
     case '$':
-        return { resolve_slices(shell, DeprecatedString::number(getpid()), m_slices) };
+        return { resolve_slices(shell, Vector { TRY(String::number(getpid())) }, m_slices) };
     case '*':
         if (auto argv = shell->lookup_local_variable("ARGV"sv))
-            return resolve_slices(shell, const_cast<Value&>(*argv).resolve_as_list(shell), m_slices);
-        return resolve_slices(shell, Vector<DeprecatedString> {}, m_slices);
+            return resolve_slices(shell, TRY(const_cast<Value&>(*argv).resolve_as_list(shell)), m_slices);
+        return resolve_slices(shell, Vector<String> {}, m_slices);
     case '#':
         if (auto argv = shell->lookup_local_variable("ARGV"sv)) {
             if (argv->is_list()) {
                 auto list_argv = static_cast<AST::ListValue const*>(argv.ptr());
-                return { resolve_slices(shell, DeprecatedString::number(list_argv->values().size()), m_slices) };
+                return { resolve_slices(shell, Vector { TRY(String::number(list_argv->values().size())) }, m_slices) };
             }
-            return { resolve_slices(shell, "1", m_slices) };
+            return { resolve_slices(shell, Vector { String::from_utf8_short_string("1"sv) }, m_slices) };
         }
-        return { resolve_slices(shell, "0", m_slices) };
+        return { resolve_slices(shell, Vector { String::from_utf8_short_string("0"sv) }, m_slices) };
     default:
-        return { resolve_slices(shell, "", m_slices) };
+        return { resolve_slices(shell, Vector { String::from_utf8_short_string(""sv) }, m_slices) };
     }
 }
 
-NonnullRefPtr<Value> SpecialVariableValue::resolve_without_cast(RefPtr<Shell> shell)
+ErrorOr<NonnullRefPtr<Value>> SpecialVariableValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     if (!shell)
         return *this;
 
-    return make_ref_counted<ListValue>(resolve_as_list(shell));
+    return try_make_ref_counted<ListValue>(TRY(resolve_as_list(shell)));
 }
 
 TildeValue::~TildeValue()
 {
 }
 
-DeprecatedString TildeValue::resolve_as_string(RefPtr<Shell> shell)
+ErrorOr<String> TildeValue::resolve_as_string(RefPtr<Shell> shell)
 {
-    return resolve_as_list(shell).first();
+    return TRY(resolve_as_list(shell)).first();
 }
 
-Vector<DeprecatedString> TildeValue::resolve_as_list(RefPtr<Shell> shell)
+ErrorOr<Vector<String>> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
     StringBuilder builder;
     builder.append('~');
     builder.append(m_username);
 
     if (!shell)
-        return { resolve_slices(shell, builder.to_deprecated_string(), m_slices) };
+        return { resolve_slices(shell, Vector { TRY(builder.to_string()) }, m_slices) };
 
-    return { resolve_slices(shell, shell->expand_tilde(builder.to_deprecated_string()), m_slices) };
+    return { resolve_slices(shell, Vector { TRY(String::from_utf8(shell->expand_tilde(builder.to_deprecated_string()))) }, m_slices) };
 }
 
 ErrorOr<NonnullRefPtr<Rewiring>> CloseRedirection::apply() const
@@ -3811,7 +3824,7 @@ CloseRedirection::~CloseRedirection()
 
 ErrorOr<NonnullRefPtr<Rewiring>> PathRedirection::apply() const
 {
-    auto check_fd_and_return = [my_fd = this->fd](int fd, DeprecatedString const& path) -> ErrorOr<NonnullRefPtr<Rewiring>> {
+    auto check_fd_and_return = [my_fd = this->fd](int fd, String const& path) -> ErrorOr<NonnullRefPtr<Rewiring>> {
         if (fd < 0) {
             auto error = Error::from_errno(errno);
             dbgln("open() failed for '{}' with {}", path, error);
@@ -3819,18 +3832,20 @@ ErrorOr<NonnullRefPtr<Rewiring>> PathRedirection::apply() const
         }
         return adopt_nonnull_ref_or_enomem(new (nothrow) Rewiring(fd, my_fd, Rewiring::Close::Old));
     };
+
+    auto path_string = path.to_deprecated_string();
     switch (direction) {
     case AST::PathRedirection::WriteAppend:
-        return check_fd_and_return(open(path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666), path);
+        return check_fd_and_return(open(path_string.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666), path);
 
     case AST::PathRedirection::Write:
-        return check_fd_and_return(open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666), path);
+        return check_fd_and_return(open(path_string.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666), path);
 
     case AST::PathRedirection::Read:
-        return check_fd_and_return(open(path.characters(), O_RDONLY), path);
+        return check_fd_and_return(open(path_string.characters(), O_RDONLY), path);
 
     case AST::PathRedirection::ReadWrite:
-        return check_fd_and_return(open(path.characters(), O_RDWR | O_CREAT, 0666), path);
+        return check_fd_and_return(open(path_string.characters(), O_RDWR | O_CREAT, 0666), path);
     }
 
     VERIFY_NOT_REACHED();

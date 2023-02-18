@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "AST.h"
 #include "NodeVisitor.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>

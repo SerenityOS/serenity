@@ -59,7 +59,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
         if (expr_node->is_list())
             mode = List;
         else if (expr_node->is_simple_variable()) // "Look inside" variables
-            mode = const_cast<AST::Node*>(expr_node)->run(this)->resolve_without_cast(this)->is_list_without_resolution() ? List : String;
+            mode = const_cast<AST::Node*>(expr_node)->run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors()->is_list_without_resolution() ? List : String;
         else if (is<AST::ImmediateExpression>(expr_node))
             mode = List;
         else
@@ -67,7 +67,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
     }
 
     auto value_with_number = [&](auto number) -> NonnullRefPtr<AST::Node> {
-        return AST::make_ref_counted<AST::BarewordLiteral>(invoking_node.position(), DeprecatedString::number(number));
+        return AST::make_ref_counted<AST::BarewordLiteral>(invoking_node.position(), String::number(number).release_value_but_fixme_should_propagate_errors());
     };
 
     auto do_across = [&](StringView mode_name, auto& values) {
@@ -80,9 +80,9 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
             // ImmediateExpression(length <mode_name> <entry>)
             resulting_nodes.unchecked_append(AST::make_ref_counted<AST::ImmediateExpression>(
                 expr_node->position(),
-                AST::NameWithPosition { "length", invoking_node.function_position() },
+                AST::NameWithPosition { String::from_utf8("length"sv).release_value_but_fixme_should_propagate_errors(), invoking_node.function_position() },
                 NonnullRefPtrVector<AST::Node> { Vector<NonnullRefPtr<AST::Node>> {
-                    static_cast<NonnullRefPtr<AST::Node>>(AST::make_ref_counted<AST::BarewordLiteral>(expr_node->position(), mode_name)),
+                    static_cast<NonnullRefPtr<AST::Node>>(AST::make_ref_counted<AST::BarewordLiteral>(expr_node->position(), String::from_utf8(mode_name).release_value_but_fixme_should_propagate_errors())),
                     AST::make_ref_counted<AST::SyntheticNode>(expr_node->position(), NonnullRefPtr<AST::Value>(entry)),
                 } },
                 expr_node->position()));
@@ -100,7 +100,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
         if (!value)
             return value_with_number(0);
 
-        value = value->resolve_without_cast(this);
+        value = value->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
 
         if (auto list = dynamic_cast<AST::ListValue*>(value.ptr())) {
             if (across)
@@ -109,7 +109,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
             return value_with_number(list->values().size());
         }
 
-        auto list = value->resolve_as_list(this);
+        auto list = value->resolve_as_list(this).release_value_but_fixme_should_propagate_errors();
         if (!across)
             return value_with_number(list.size());
 
@@ -145,7 +145,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
         if (!value)
             return value_with_number(0);
 
-        value = value->resolve_without_cast(*this);
+        value = value->resolve_without_cast(*this).release_value_but_fixme_should_propagate_errors();
 
         if (auto list = dynamic_cast<AST::ListValue*>(value.ptr())) {
             if (!across)
@@ -165,7 +165,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
         }
 
         // Evaluate the nodes and substitute with the lengths.
-        auto list = value->resolve_as_list(this);
+        auto list = value->resolve_as_list(this).release_value_but_fixme_should_propagate_errors();
 
         if (!expr_node->is_list()) {
             if (list.size() == 1) {
@@ -173,7 +173,7 @@ RefPtr<AST::Node> Shell::immediate_length_impl(AST::ImmediateExpression& invokin
                     goto raise_no_list_allowed;
 
                 // This is the normal case, the expression is a normal non-list expression.
-                return value_with_number(list.first().length());
+                return value_with_number(list.first().bytes_as_string_view().length());
             }
 
             // This can be hit by asking for the length of a command list (e.g. `(>/dev/null)`)
@@ -208,7 +208,7 @@ RefPtr<AST::Node> Shell::immediate_regex_replace(AST::ImmediateExpression& invok
 
     auto pattern = const_cast<AST::Node&>(arguments[0]).run(this);
     auto replacement = const_cast<AST::Node&>(arguments[1]).run(this);
-    auto value = const_cast<AST::Node&>(arguments[2]).run(this)->resolve_without_cast(this);
+    auto value = const_cast<AST::Node&>(arguments[2]).run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
 
     if (!pattern->is_string()) {
         raise_error(ShellError::EvaluatedSyntaxError, "Expected the regex_replace pattern to be a string", arguments[0].position());
@@ -225,10 +225,13 @@ RefPtr<AST::Node> Shell::immediate_regex_replace(AST::ImmediateExpression& invok
         return nullptr;
     }
 
-    Regex<PosixExtendedParser> re { pattern->resolve_as_list(this).first() };
-    auto result = re.replace(value->resolve_as_list(this)[0], replacement->resolve_as_list(this)[0], PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Unicode);
+    Regex<PosixExtendedParser> re { pattern->resolve_as_list(this).release_value_but_fixme_should_propagate_errors().first().to_deprecated_string() };
+    auto result = re.replace(
+        value->resolve_as_list(this).release_value_but_fixme_should_propagate_errors()[0],
+        replacement->resolve_as_list(this).release_value_but_fixme_should_propagate_errors()[0],
+        PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Unicode);
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), move(result), AST::StringLiteral::EnclosureType::None);
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), String::from_utf8(result).release_value_but_fixme_should_propagate_errors(), AST::StringLiteral::EnclosureType::None);
 }
 
 RefPtr<AST::Node> Shell::immediate_remove_suffix(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
@@ -239,24 +242,25 @@ RefPtr<AST::Node> Shell::immediate_remove_suffix(AST::ImmediateExpression& invok
     }
 
     auto suffix = const_cast<AST::Node&>(arguments[0]).run(this);
-    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this);
+    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
 
     if (!suffix->is_string()) {
         raise_error(ShellError::EvaluatedSyntaxError, "Expected the remove_suffix suffix string to be a string", arguments[0].position());
         return nullptr;
     }
 
-    auto suffix_str = suffix->resolve_as_list(this)[0];
-    auto values = value->resolve_as_list(this);
+    auto suffix_str = suffix->resolve_as_list(this).release_value_but_fixme_should_propagate_errors()[0];
+    auto values = value->resolve_as_list(this).release_value_but_fixme_should_propagate_errors();
 
     Vector<NonnullRefPtr<AST::Node>> nodes;
 
     for (auto& value_str : values) {
-        StringView removed { value_str };
+        String removed = String::from_utf8(value_str).release_value_but_fixme_should_propagate_errors();
 
-        if (value_str.ends_with(suffix_str))
-            removed = removed.substring_view(0, value_str.length() - suffix_str.length());
-        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), removed, AST::StringLiteral::EnclosureType::None));
+        if (value_str.bytes_as_string_view().ends_with(suffix_str))
+            removed = removed.substring_from_byte_offset(0, value_str.bytes_as_string_view().length() - suffix_str.bytes_as_string_view().length()).release_value_but_fixme_should_propagate_errors();
+
+        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), move(removed), AST::StringLiteral::EnclosureType::None));
     }
 
     return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(nodes));
@@ -270,24 +274,24 @@ RefPtr<AST::Node> Shell::immediate_remove_prefix(AST::ImmediateExpression& invok
     }
 
     auto prefix = const_cast<AST::Node&>(arguments[0]).run(this);
-    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this);
+    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
 
     if (!prefix->is_string()) {
         raise_error(ShellError::EvaluatedSyntaxError, "Expected the remove_prefix prefix string to be a string", arguments[0].position());
         return nullptr;
     }
 
-    auto prefix_str = prefix->resolve_as_list(this)[0];
-    auto values = value->resolve_as_list(this);
+    auto prefix_str = prefix->resolve_as_list(this).release_value_but_fixme_should_propagate_errors()[0];
+    auto values = value->resolve_as_list(this).release_value_but_fixme_should_propagate_errors();
 
     Vector<NonnullRefPtr<AST::Node>> nodes;
 
     for (auto& value_str : values) {
-        StringView removed { value_str };
+        String removed = String::from_utf8(value_str).release_value_but_fixme_should_propagate_errors();
 
-        if (value_str.starts_with(prefix_str))
-            removed = removed.substring_view(prefix_str.length());
-        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), removed, AST::StringLiteral::EnclosureType::None));
+        if (value_str.bytes_as_string_view().starts_with(prefix_str))
+            removed = removed.substring_from_byte_offset(prefix_str.bytes_as_string_view().length()).release_value_but_fixme_should_propagate_errors();
+        nodes.append(AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), move(removed), AST::StringLiteral::EnclosureType::None));
     }
 
     return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), move(nodes));
@@ -301,14 +305,14 @@ RefPtr<AST::Node> Shell::immediate_split(AST::ImmediateExpression& invoking_node
     }
 
     auto delimiter = const_cast<AST::Node&>(arguments[0]).run(this);
-    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this);
+    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
 
     if (!delimiter->is_string()) {
         raise_error(ShellError::EvaluatedSyntaxError, "Expected the split delimiter string to be a string", arguments[0].position());
         return nullptr;
     }
 
-    auto delimiter_str = delimiter->resolve_as_list(this)[0];
+    auto delimiter_str = delimiter->resolve_as_list(this).release_value_but_fixme_should_propagate_errors()[0];
 
     auto transform = [&](auto const& values) {
         // Translate to a list of applications of `split <delimiter>`
@@ -334,25 +338,25 @@ RefPtr<AST::Node> Shell::immediate_split(AST::ImmediateExpression& invoking_node
     }
 
     // Otherwise, just resolve to a list and transform that.
-    auto list = value->resolve_as_list(this);
+    auto list = value->resolve_as_list(this).release_value_but_fixme_should_propagate_errors();
     if (!value->is_list()) {
         if (list.is_empty())
             return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), NonnullRefPtrVector<AST::Node> {});
 
         auto& value = list.first();
-        Vector<DeprecatedString> split_strings;
+        Vector<String> split_strings;
         if (delimiter_str.is_empty()) {
             StringBuilder builder;
             for (auto code_point : Utf8View { value }) {
                 builder.append_code_point(code_point);
-                split_strings.append(builder.to_deprecated_string());
+                split_strings.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
                 builder.clear();
             }
         } else {
             auto split = StringView { value }.split_view(delimiter_str, options.inline_exec_keep_empty_segments ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing);
             split_strings.ensure_capacity(split.size());
             for (auto& entry : split)
-                split_strings.append(entry);
+                split_strings.append(String::from_utf8(entry).release_value_but_fixme_should_propagate_errors());
         }
         return AST::make_ref_counted<AST::SyntheticNode>(invoking_node.position(), AST::make_ref_counted<AST::ListValue>(move(split_strings)));
     }
@@ -368,12 +372,12 @@ RefPtr<AST::Node> Shell::immediate_concat_lists(AST::ImmediateExpression& invoki
         if (auto* list = dynamic_cast<const AST::ListConcatenate*>(&argument)) {
             result.extend(list->list());
         } else {
-            auto list_of_values = const_cast<AST::Node&>(argument).run(this)->resolve_without_cast(this);
+            auto list_of_values = const_cast<AST::Node&>(argument).run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
             if (auto* list = dynamic_cast<AST::ListValue*>(list_of_values.ptr())) {
                 for (auto& entry : static_cast<Vector<NonnullRefPtr<AST::Value>>&>(list->values()))
                     result.append(AST::make_ref_counted<AST::SyntheticNode>(argument.position(), entry));
             } else {
-                auto values = list_of_values->resolve_as_list(this);
+                auto values = list_of_values->resolve_as_list(this).release_value_but_fixme_should_propagate_errors();
                 for (auto& entry : values)
                     result.append(AST::make_ref_counted<AST::StringLiteral>(argument.position(), entry, AST::StringLiteral::EnclosureType::None));
             }
@@ -391,7 +395,7 @@ RefPtr<AST::Node> Shell::immediate_filter_glob(AST::ImmediateExpression& invokin
         return nullptr;
     }
 
-    auto glob_list = const_cast<AST::Node&>(arguments[0]).run(*this)->resolve_as_list(*this);
+    auto glob_list = const_cast<AST::Node&>(arguments[0]).run(*this)->resolve_as_list(*this).release_value_but_fixme_should_propagate_errors();
     if (glob_list.size() != 1) {
         raise_error(ShellError::EvaluatedSyntaxError, "Expected the <glob> argument to filter_glob to be a single string", arguments[0].position());
         return nullptr;
@@ -402,18 +406,18 @@ RefPtr<AST::Node> Shell::immediate_filter_glob(AST::ImmediateExpression& invokin
     NonnullRefPtrVector<AST::Node> result;
 
     const_cast<AST::Node&>(list_node).for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) {
-        auto value = entry->resolve_as_list(*this);
+        auto value = entry->resolve_as_list(*this).release_value_but_fixme_should_propagate_errors();
         if (value.size() == 0)
             return IterationDecision::Continue;
         if (value.size() == 1) {
-            if (!value.first().matches(glob))
+            if (!value.first().bytes_as_string_view().matches(glob))
                 return IterationDecision::Continue;
             result.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), value.first(), AST::StringLiteral::EnclosureType::None));
             return IterationDecision::Continue;
         }
 
         for (auto& entry : value) {
-            if (entry.matches(glob)) {
+            if (entry.bytes_as_string_view().matches(glob)) {
                 NonnullRefPtrVector<AST::Node> nodes;
                 for (auto& string : value)
                     nodes.append(AST::make_ref_counted<AST::StringLiteral>(arguments[1].position(), string, AST::StringLiteral::EnclosureType::None));
@@ -440,17 +444,17 @@ RefPtr<AST::Node> Shell::immediate_join(AST::ImmediateExpression& invoking_node,
         return nullptr;
     }
 
-    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this);
+    auto value = const_cast<AST::Node&>(arguments[1]).run(this)->resolve_without_cast(this).release_value_but_fixme_should_propagate_errors();
     if (!value->is_list()) {
         raise_error(ShellError::EvaluatedSyntaxError, "Expected the joined list to be a list", arguments[1].position());
         return nullptr;
     }
 
-    auto delimiter_str = delimiter->resolve_as_list(this)[0];
+    auto delimiter_str = delimiter->resolve_as_list(this).release_value_but_fixme_should_propagate_errors()[0];
     StringBuilder builder;
-    builder.join(delimiter_str, value->resolve_as_list(*this));
+    builder.join(delimiter_str, value->resolve_as_list(*this).release_value_but_fixme_should_propagate_errors());
 
-    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_deprecated_string(), AST::StringLiteral::EnclosureType::None);
+    return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_string().release_value_but_fixme_should_propagate_errors(), AST::StringLiteral::EnclosureType::None);
 }
 
 RefPtr<AST::Node> Shell::immediate_value_or_default(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
@@ -460,7 +464,7 @@ RefPtr<AST::Node> Shell::immediate_value_or_default(AST::ImmediateExpression& in
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (!local_variable_or(name, ""sv).is_empty())
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
@@ -474,12 +478,12 @@ RefPtr<AST::Node> Shell::immediate_assign_default(AST::ImmediateExpression& invo
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (!local_variable_or(name, ""sv).is_empty())
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
-    auto value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_without_cast(*this);
-    set_local_variable(name, value);
+    auto value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_without_cast(*this).release_value_but_fixme_should_propagate_errors();
+    set_local_variable(name.to_deprecated_string(), value);
 
     return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
 }
@@ -491,15 +495,15 @@ RefPtr<AST::Node> Shell::immediate_error_if_empty(AST::ImmediateExpression& invo
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (!local_variable_or(name, ""sv).is_empty())
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
-    auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this);
+    auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (error_value.is_empty())
-        error_value = DeprecatedString::formatted("Expected {} to be non-empty", name);
+        error_value = String::formatted("Expected {} to be non-empty", name).release_value_but_fixme_should_propagate_errors();
 
-    raise_error(ShellError::EvaluatedSyntaxError, error_value, invoking_node.position());
+    raise_error(ShellError::EvaluatedSyntaxError, error_value.bytes_as_string_view(), invoking_node.position());
     return nullptr;
 }
 
@@ -510,8 +514,8 @@ RefPtr<AST::Node> Shell::immediate_null_or_alternative(AST::ImmediateExpression&
         return nullptr;
     }
 
-    auto value = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_without_cast(*this);
-    if ((value->is_string() && value->resolve_as_string(*this).is_empty()) || (value->is_list() && value->resolve_as_list(*this).is_empty()))
+    auto value = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_without_cast(*this).release_value_but_fixme_should_propagate_errors();
+    if ((value->is_string() && value->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors().is_empty()) || (value->is_list() && value->resolve_as_list(*this).release_value_but_fixme_should_propagate_errors().is_empty()))
         return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
 
     return arguments.last();
@@ -524,7 +528,7 @@ RefPtr<AST::Node> Shell::immediate_defined_value_or_default(AST::ImmediateExpres
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (!find_frame_containing_local_variable(name))
         return arguments.last();
 
@@ -538,12 +542,12 @@ RefPtr<AST::Node> Shell::immediate_assign_defined_default(AST::ImmediateExpressi
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (find_frame_containing_local_variable(name))
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
-    auto value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_without_cast(*this);
-    set_local_variable(name, value);
+    auto value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_without_cast(*this).release_value_but_fixme_should_propagate_errors();
+    set_local_variable(name.to_deprecated_string(), value);
 
     return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
 }
@@ -555,15 +559,15 @@ RefPtr<AST::Node> Shell::immediate_error_if_unset(AST::ImmediateExpression& invo
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (find_frame_containing_local_variable(name))
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
-    auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this);
+    auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (error_value.is_empty())
-        error_value = DeprecatedString::formatted("Expected {} to be set", name);
+        error_value = String::formatted("Expected {} to be set", name).release_value_but_fixme_should_propagate_errors();
 
-    raise_error(ShellError::EvaluatedSyntaxError, error_value, invoking_node.position());
+    raise_error(ShellError::EvaluatedSyntaxError, error_value.bytes_as_string_view(), invoking_node.position());
     return nullptr;
 }
 
@@ -574,7 +578,7 @@ RefPtr<AST::Node> Shell::immediate_null_if_unset_or_alternative(AST::ImmediateEx
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     if (!find_frame_containing_local_variable(name))
         return arguments.last();
 
@@ -588,7 +592,7 @@ RefPtr<AST::Node> Shell::immediate_reexpand(AST::ImmediateExpression& invoking_n
         return nullptr;
     }
 
-    auto value = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto value = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     return parse(value, m_is_interactive, false);
 }
 
@@ -599,7 +603,7 @@ RefPtr<AST::Node> Shell::immediate_length_of_variable(AST::ImmediateExpression& 
         return nullptr;
     }
 
-    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
     auto variable = make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
     return immediate_length_impl(
