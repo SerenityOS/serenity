@@ -112,14 +112,8 @@ void Debugger::stop()
 
 void Debugger::start()
 {
-
-    auto child_setup_callback = [this]() {
-        if (m_child_setup_callback)
-            return m_child_setup_callback();
-        return ErrorOr<void> {};
-    };
-    m_debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback));
-    VERIFY(!!m_debug_session);
+    auto [debug_session, initial_state] = create_debug_session();
+    m_debug_session = move(debug_session);
 
     for (auto const& breakpoint : m_breakpoints) {
         dbgln("inserting breakpoint at: {}:{}", breakpoint.file_path, breakpoint.line_number);
@@ -132,14 +126,36 @@ void Debugger::start()
         }
     }
 
-    debugger_loop();
+    debugger_loop(initial_state);
 }
 
-int Debugger::debugger_loop()
+Debugger::CreateDebugSessionResult Debugger::create_debug_session()
+{
+    if (!m_executable_path.is_null()) {
+        auto child_setup_callback = [this]() {
+            if (m_child_setup_callback)
+                return m_child_setup_callback();
+            return ErrorOr<void> {};
+        };
+        auto debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback));
+        VERIFY(!!debug_session);
+        return { debug_session.release_nonnull(), Debug::DebugSession::Running };
+    }
+
+    if (m_pid_to_attach.has_value()) {
+        auto debug_session = Debug::DebugSession::attach(m_pid_to_attach.value(), m_source_root);
+        VERIFY(!!debug_session);
+        return { debug_session.release_nonnull(), Debug::DebugSession::Stopped };
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+int Debugger::debugger_loop(Debug::DebugSession::DesiredInitialDebugeeState initial_state)
 {
     VERIFY(m_debug_session);
 
-    m_debug_session->run(Debug::DebugSession::DesiredInitialDebugeeState::Running, [this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
+    m_debug_session->run(initial_state, [this](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             dbgln("Program exited");
             m_on_exit_callback();

@@ -76,6 +76,7 @@ public:
     };
 
     void open_coredump(DeprecatedString const& coredump_path);
+    void debug_process(pid_t pid);
     void for_each_open_file(Function<void(ProjectFile const&)>);
     bool semantic_syntax_highlighting_is_enabled() const;
 

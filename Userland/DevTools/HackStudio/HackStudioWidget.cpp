@@ -1878,6 +1878,21 @@ void HackStudioWidget::open_coredump(DeprecatedString const& coredump_path)
     }
 }
 
+void HackStudioWidget::debug_process(pid_t pid)
+{
+    open_project("/usr/src/serenity");
+    Debugger::the().set_pid_to_attach(pid);
+
+    m_debugger_thread = Threading::Thread::construct(Debugger::start_static);
+    m_debugger_thread->start();
+    m_stop_action->set_enabled(true);
+    m_run_action->set_enabled(false);
+
+    for (auto& editor_wrapper : m_all_editor_wrappers) {
+        editor_wrapper.set_debug_mode(true);
+    }
+}
+
 void HackStudioWidget::for_each_open_file(Function<void(ProjectFile const&)> func)
 {
     for (auto& open_file : m_open_files) {
