@@ -72,7 +72,7 @@ static ErrorOr<void> determine_system_mode()
             g_system_mode = "text";
     });
 
-    auto f = Core::DeprecatedFile::construct("/sys/kernel/system_mode");
+    auto f = Core::DeprecatedFile::construct("/sys/kernel/constants/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue and assume "text" mode.
