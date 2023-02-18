@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Utf16View.h>
 #include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
@@ -13,9 +14,58 @@
 
 namespace Gfx::ICC {
 
+static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeTagData const& tag_data)
+{
+    // ICC v4, 10.15 multiLocalizedUnicodeType
+    // "The Unicode strings in storage should be encoded as 16-bit big-endian, UTF-16BE,
+    //  and should not be NULL terminated."
+    size_t number_of_records = tag_data.records().size();
+    size_t header_and_record_size = 4 * sizeof(u32) + number_of_records * sizeof(MultiLocalizedUnicodeRawRecord);
+
+    size_t number_of_codepoints = 0;
+    Vector<Utf16Data> utf16_strings;
+    TRY(utf16_strings.try_ensure_capacity(number_of_records));
+    for (auto const& record : tag_data.records()) {
+        TRY(utf16_strings.try_append(TRY(utf8_to_utf16(record.text))));
+        number_of_codepoints += utf16_strings.last().size();
+    }
+
+    size_t string_table_size = number_of_codepoints * sizeof(u16);
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(header_and_record_size + string_table_size));
+
+    auto* header = bit_cast<BigEndian<u32>*>(bytes.data());
+    header[0] = (u32)MultiLocalizedUnicodeTagData::Type;
+    header[1] = 0;
+    header[2] = number_of_records;
+    header[3] = sizeof(MultiLocalizedUnicodeRawRecord);
+
+    size_t offset = header_and_record_size;
+    auto* records = bit_cast<MultiLocalizedUnicodeRawRecord*>(bytes.data() + 16);
+    for (size_t i = 0; i < number_of_records; ++i) {
+        records[i].language_code = tag_data.records()[i].iso_639_1_language_code;
+        records[i].country_code = tag_data.records()[i].iso_3166_1_country_code;
+        records[i].string_length_in_bytes = utf16_strings[i].size() * sizeof(u16);
+        records[i].string_offset_in_bytes = offset;
+        offset += records[i].string_offset_in_bytes;
+    }
+
+    auto* string_table = bit_cast<BigEndian<u16>*>(bytes.data() + header_and_record_size);
+    for (auto const& utf16_string : utf16_strings) {
+        for (size_t i = 0; i < utf16_string.size(); ++i)
+            string_table[i] = utf16_string[i];
+        string_table += utf16_string.size();
+    }
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
 {
-    (void)tag_data;
+    switch (tag_data.type()) {
+    case MultiLocalizedUnicodeTagData::Type:
+        return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
+    }
     return ByteBuffer {};
 }
 
