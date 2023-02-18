@@ -156,7 +156,7 @@ public:
     bool run_file(DeprecatedString const&, bool explicitly_invoked = true);
     ErrorOr<bool> run_builtin(const AST::Command&, NonnullRefPtrVector<AST::Rewiring> const&, int& retval);
     bool has_builtin(StringView) const;
-    RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
+    ErrorOr<RefPtr<AST::Node>> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
     static bool has_immediate_function(StringView);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
@@ -423,13 +423,13 @@ private:
     virtual void custom_event(Core::CustomEvent&) override;
 
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
-    RefPtr<AST::Node> immediate_##name(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
+    ErrorOr<RefPtr<AST::Node>> immediate_##name(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
 
-    RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&, bool across);
+    ErrorOr<RefPtr<AST::Node>> immediate_length_impl(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     ErrorOr<int> builtin_##builtin(Main::Arguments);

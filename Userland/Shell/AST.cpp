@@ -2048,7 +2048,7 @@ ErrorOr<void> ImmediateExpression::dump(int level) const
 
 RefPtr<Value> ImmediateExpression::run(RefPtr<Shell> shell)
 {
-    auto node = shell->run_immediate_function(m_function.name, *this, arguments());
+    auto node = shell->run_immediate_function(m_function.name, *this, arguments()).release_value_but_fixme_should_propagate_errors();
     if (node)
         return node->run(shell);
 
