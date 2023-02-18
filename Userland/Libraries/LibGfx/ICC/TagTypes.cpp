@@ -1175,14 +1175,6 @@ ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_
     VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
-    // Table 84 — viewingConditionsType encoding
-    struct ViewingConditionsHeader {
-        XYZNumber unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
-        XYZNumber unnormalized_ciexyz_values_for_surround;   // "(in which Y is in cd/m2)"
-        BigEndian<MeasurementTagData::StandardIlluminant> illuminant_type;
-    };
-    static_assert(AssertSize<ViewingConditionsHeader, 28>());
-
     if (bytes.size() < 2 * sizeof(u32) + sizeof(ViewingConditionsHeader))
         return Error::from_string_literal("ICC::Profile: viewingConditionsType has not enough data");
 
