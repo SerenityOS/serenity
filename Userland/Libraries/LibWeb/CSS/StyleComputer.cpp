@@ -1532,9 +1532,11 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         if (!is<CSSFontFaceRule>(rule))
             continue;
         auto const& font_face = static_cast<CSSFontFaceRule const&>(rule).font_face();
+        // FIXME: Use font_face.font_family() directly when we port to new Strings here.
+        auto font_family = font_face.font_family().to_string().to_deprecated_string();
         if (font_face.sources().is_empty())
             continue;
-        if (m_loaded_fonts.contains(font_face.font_family()))
+        if (m_loaded_fonts.contains(font_family))
             continue;
 
         // NOTE: This is rather ad-hoc, we just look for the first valid
@@ -1562,8 +1564,8 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
 
         LoadRequest request;
         auto url = m_document.parse_url(candidate_url.value().to_deprecated_string());
-        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
-        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family(), move(loader));
+        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_family, move(url));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_family, move(loader));
     }
 }
 

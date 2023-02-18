@@ -5300,7 +5300,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
 
-    Optional<DeprecatedFlyString> font_family;
+    Optional<FlyString> font_family;
     Vector<FontFace::Source> src;
     Vector<UnicodeRange> unicode_range;
 
@@ -5352,7 +5352,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             if (had_syntax_error || font_family_parts.is_empty())
                 continue;
 
-            font_family = DeprecatedString::join(' ', font_family_parts);
+            font_family = String::join(' ', font_family_parts).release_value_but_fixme_should_propagate_errors();
             continue;
         }
         if (declaration.name().equals_ignoring_case("src"sv)) {
@@ -5423,7 +5423,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
         if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
-            Optional<DeprecatedFlyString> format;
+            Optional<FlyString> format;
 
             source_tokens.skip_whitespace();
             if (!source_tokens.has_next_token()) {
@@ -5457,7 +5457,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
                     continue;
                 }
 
-                format = format_name;
+                format = FlyString::from_utf8(format_name).release_value_but_fixme_should_propagate_errors();
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (unrecognized function token `{}`); discarding.", function.name());
                 return {};
