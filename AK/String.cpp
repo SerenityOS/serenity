@@ -491,6 +491,16 @@ bool String::contains(char needle, CaseSensitivity case_sensitivity) const
     return contains(StringView { &needle, 1 }, case_sensitivity);
 }
 
+bool String::starts_with_bytes(StringView bytes) const
+{
+    return bytes_as_string_view().starts_with(bytes);
+}
+
+bool String::starts_with(u32 code_point) const
+{
+    return bytes_as_string_view().starts_with(code_point);
+}
+
 bool String::is_short_string() const
 {
     return has_short_string_bit(reinterpret_cast<uintptr_t>(m_data));
