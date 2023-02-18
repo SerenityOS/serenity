@@ -162,12 +162,13 @@ public:
                 return UIDimension { SpecialDimension::Fit };
             else
                 return {};
-        } else {
-            int value_int = value.to_i32();
+        } else if (value.is_integer<i32>()) {
+            auto value_int = value.as_integer<i32>();
             if (value_int < 0)
                 return {};
             return UIDimension(value_int);
         }
+        return {};
     }
 
 private:
