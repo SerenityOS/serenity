@@ -465,7 +465,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_value_or_default(AST::ImmediateExpre
     }
 
     auto name = TRY(TRY(const_cast<AST::Node&>(arguments.first()).run(*this))->resolve_as_string(*this));
-    if (!local_variable_or(name, ""sv).is_empty())
+    if (!TRY(local_variable_or(name, ""sv)).is_empty())
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
     return arguments.last();
@@ -479,7 +479,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_assign_default(AST::ImmediateExpress
     }
 
     auto name = TRY(TRY(const_cast<AST::Node&>(arguments.first()).run(*this))->resolve_as_string(*this));
-    if (!local_variable_or(name, ""sv).is_empty())
+    if (!TRY(local_variable_or(name, ""sv)).is_empty())
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
     auto value = TRY(TRY(const_cast<AST::Node&>(arguments.last()).run(*this))->resolve_without_cast(*this));
@@ -496,7 +496,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_error_if_empty(AST::ImmediateExpress
     }
 
     auto name = TRY(TRY(const_cast<AST::Node&>(arguments.first()).run(*this))->resolve_as_string(*this));
-    if (!local_variable_or(name, ""sv).is_empty())
+    if (!TRY(local_variable_or(name, ""sv)).is_empty())
         return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
 
     auto error_value = TRY(TRY(const_cast<AST::Node&>(arguments.last()).run(*this))->resolve_as_string(*this));

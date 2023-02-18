@@ -544,7 +544,7 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
         auto parts = value.split_limit('=', 2);
 
         if (parts.size() == 1) {
-            auto value = lookup_local_variable(parts[0]);
+            auto value = TRY(lookup_local_variable(parts[0]));
             if (value) {
                 auto values = TRY(const_cast<AST::Value&>(*value).resolve_as_list(*this));
                 StringBuilder builder;
@@ -932,7 +932,7 @@ ErrorOr<int> Shell::builtin_shift(Main::Arguments arguments)
     if (count < 1)
         return 0;
 
-    auto argv_ = lookup_local_variable("ARGV"sv);
+    auto argv_ = TRY(lookup_local_variable("ARGV"sv));
     if (!argv_) {
         warnln("shift: ARGV is unset");
         return 1;
@@ -965,7 +965,7 @@ ErrorOr<int> Shell::builtin_source(Main::Arguments arguments)
     if (!parser.parse(arguments))
         return 1;
 
-    auto previous_argv = lookup_local_variable("ARGV"sv);
+    auto previous_argv = TRY(lookup_local_variable("ARGV"sv));
     ScopeGuard guard { [&] {
         if (!args.is_empty())
             set_local_variable("ARGV", const_cast<AST::Value&>(*previous_argv));
@@ -1008,7 +1008,7 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
     for (auto& arg : args)
         command.argv.append(TRY(String::from_utf8(arg)));
 
-    auto commands = expand_aliases({ move(command) });
+    auto commands = TRY(expand_aliases({ move(command) }));
 
     AK::Statistics iteration_times;
 
@@ -1146,7 +1146,7 @@ ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
         if (!did_touch_path && value == "PATH"sv)
             did_touch_path = true;
 
-        if (lookup_local_variable(value)) {
+        if (TRY(lookup_local_variable(value)) != nullptr) {
             unset_local_variable(value);
         } else {
             unsetenv(value.characters());
@@ -1175,7 +1175,7 @@ ErrorOr<int> Shell::builtin_not(Main::Arguments arguments)
     for (auto& arg : args)
         command.argv.unchecked_append(TRY(String::from_utf8(arg)));
 
-    auto commands = expand_aliases({ move(command) });
+    auto commands = TRY(expand_aliases({ move(command) }));
     int exit_code = 1;
     auto found_a_job = false;
     for (auto& job : run_commands(commands)) {
@@ -1351,7 +1351,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
     };
 
     auto enlist = [&](auto name, auto value) -> ErrorOr<NonnullRefPtr<AST::Value>> {
-        auto variable = lookup_local_variable(name);
+        auto variable = TRY(lookup_local_variable(name));
         if (variable) {
             auto list = TRY(const_cast<AST::Value&>(*variable).resolve_as_list(*this));
             auto new_value = TRY(value->resolve_as_string(*this));

@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (cursor >= 0)
                     editor.set_cursor(cursor);
             }
-            shell->highlight(editor);
+            (void)shell->highlight(editor);
         };
         editor->on_tab_complete = [&](const Line::Editor&) {
             return shell->complete();

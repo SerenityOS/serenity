@@ -165,15 +165,15 @@ public:
     static DeprecatedString expand_tilde(StringView expression);
     static Vector<DeprecatedString> expand_globs(StringView path, StringView base);
     static Vector<DeprecatedString> expand_globs(Vector<StringView> path_segments, StringView base);
-    Vector<AST::Command> expand_aliases(Vector<AST::Command>);
+    ErrorOr<Vector<AST::Command>> expand_aliases(Vector<AST::Command>);
     DeprecatedString resolve_path(DeprecatedString) const;
     DeprecatedString resolve_alias(StringView) const;
 
     static bool has_history_event(StringView);
 
-    RefPtr<AST::Value const> get_argument(size_t) const;
-    RefPtr<AST::Value const> lookup_local_variable(StringView) const;
-    DeprecatedString local_variable_or(StringView, DeprecatedString const&) const;
+    ErrorOr<RefPtr<AST::Value const>> get_argument(size_t) const;
+    ErrorOr<RefPtr<AST::Value const>> lookup_local_variable(StringView) const;
+    ErrorOr<DeprecatedString> local_variable_or(StringView, DeprecatedString const&) const;
     void set_local_variable(DeprecatedString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);
 
@@ -276,7 +276,7 @@ public:
         No
     };
 
-    void highlight(Line::Editor&) const;
+    ErrorOr<void> highlight(Line::Editor&) const;
     Vector<Line::CompletionSuggestion> complete();
     Vector<Line::CompletionSuggestion> complete(StringView);
     Vector<Line::CompletionSuggestion> complete_program_name(StringView, size_t offset, EscapeMode = EscapeMode::Bareword);

@@ -289,11 +289,11 @@ Vector<DeprecatedString> Shell::expand_globs(Vector<StringView> path_segments, S
     }
 }
 
-Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands)
+ErrorOr<Vector<AST::Command>> Shell::expand_aliases(Vector<AST::Command> initial_commands)
 {
     Vector<AST::Command> commands;
 
-    Function<void(AST::Command&)> resolve_aliases_and_append = [&](auto& command) {
+    Function<ErrorOr<void>(AST::Command&)> resolve_aliases_and_append = [&](auto& command) -> ErrorOr<void> {
         if (!command.argv.is_empty()) {
             auto alias = resolve_alias(command.argv[0]);
             if (!alias.is_null()) {
@@ -308,12 +308,12 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                     NonnullRefPtr<AST::Node> substitute = adopt_ref(*new AST::Join(subcommand_nonnull->position(),
                         subcommand_nonnull,
                         adopt_ref(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
-                    auto res = substitute->run(*this).release_value_but_fixme_should_propagate_errors();
-                    for (auto& subst_command : res->resolve_as_commands(*this).release_value_but_fixme_should_propagate_errors()) {
+                    auto res = TRY(substitute->run(*this));
+                    for (auto& subst_command : TRY(res->resolve_as_commands(*this))) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
                             commands.append(subst_command);
                         else
-                            resolve_aliases_and_append(subst_command);
+                            TRY(resolve_aliases_and_append(subst_command));
                     }
                 } else {
                     commands.append(command);
@@ -324,10 +324,12 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
         } else {
             commands.append(command);
         }
+
+        return {};
     };
 
     for (auto& command : initial_commands)
-        resolve_aliases_and_append(command);
+        TRY(resolve_aliases_and_append(command));
 
     return commands;
 }
@@ -350,7 +352,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
     return nullptr;
 }
 
-RefPtr<AST::Value const> Shell::lookup_local_variable(StringView name) const
+ErrorOr<RefPtr<AST::Value const>> Shell::lookup_local_variable(StringView name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -361,13 +363,13 @@ RefPtr<AST::Value const> Shell::lookup_local_variable(StringView name) const
     return nullptr;
 }
 
-RefPtr<AST::Value const> Shell::get_argument(size_t index) const
+ErrorOr<RefPtr<AST::Value const>> Shell::get_argument(size_t index) const
 {
     if (index == 0)
-        return adopt_ref(*new AST::StringValue(String::from_deprecated_string(current_script).release_value_but_fixme_should_propagate_errors()));
+        return adopt_ref(*new AST::StringValue(TRY(String::from_deprecated_string(current_script))));
 
     --index;
-    if (auto argv = lookup_local_variable("ARGV"sv)) {
+    if (auto argv = TRY(lookup_local_variable("ARGV"sv))) {
         if (argv->is_list_without_resolution()) {
             AST::ListValue const* list = static_cast<AST::ListValue const*>(argv.ptr());
             if (list->values().size() <= index)
@@ -385,12 +387,12 @@ RefPtr<AST::Value const> Shell::get_argument(size_t index) const
     return nullptr;
 }
 
-DeprecatedString Shell::local_variable_or(StringView name, DeprecatedString const& replacement) const
+ErrorOr<DeprecatedString> Shell::local_variable_or(StringView name, DeprecatedString const& replacement) const
 {
-    auto value = lookup_local_variable(name);
+    auto value = TRY(lookup_local_variable(name));
     if (value) {
         StringBuilder builder;
-        builder.join(' ', const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).release_value_but_fixme_should_propagate_errors());
+        builder.join(' ', TRY(const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this))));
         return builder.to_deprecated_string();
     }
     return replacement;
@@ -1085,10 +1087,17 @@ bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const
         return false;
 
     auto value = lookup_local_variable("PROGRAMS_ALLOWED_TO_MODIFY_DEFAULT_TERMIOS"sv);
-    if (!value)
+    if (value.is_error())
         return false;
 
-    return const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).release_value_but_fixme_should_propagate_errors().contains_slow(command.argv[0]);
+    if (!value.value())
+        return false;
+
+    auto result = const_cast<AST::Value&>(*value.value()).resolve_as_list(const_cast<Shell&>(*this));
+    if (result.is_error())
+        return false;
+
+    return result.value().contains_slow(command.argv[0]);
 }
 
 void Shell::restore_ios()
@@ -1428,13 +1437,13 @@ void Shell::remove_entry_from_cache(StringView entry)
         cached_path.remove(index);
 }
 
-void Shell::highlight(Line::Editor& editor) const
+ErrorOr<void> Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
     auto ast = parse(line, m_is_interactive);
     if (!ast)
-        return;
-    ast->highlight_in_editor(editor, const_cast<Shell&>(*this)).release_value_but_fixme_should_propagate_errors();
+        return {};
+    return ast->highlight_in_editor(editor, const_cast<Shell&>(*this));
 }
 
 Vector<Line::CompletionSuggestion> Shell::complete()
@@ -1697,15 +1706,15 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
     AST::Command completion_command;
     completion_command.argv.append(program_name_storage);
-    completion_command = expand_aliases({ completion_command }).last();
+    completion_command = TRY(expand_aliases({ completion_command })).last();
 
-    auto completion_utility_name = String::formatted("_complete_{}", completion_command.argv[0]).release_value_but_fixme_should_propagate_errors();
+    auto completion_utility_name = TRY(String::formatted("_complete_{}", completion_command.argv[0]));
     if (binary_search(cached_path.span(), completion_utility_name, nullptr, RunnablePathComparator {}) != nullptr)
         completion_command.argv[0] = completion_utility_name;
     else if (!options.invoke_program_for_autocomplete)
         return Error::from_string_literal("Refusing to use the program itself as completion source");
 
-    completion_command.argv.extend({ String::from_utf8("--complete"sv).release_value_but_fixme_should_propagate_errors(), String::from_utf8_short_string("--"sv) });
+    completion_command.argv.extend({ TRY(String::from_utf8("--complete"sv)), String::from_utf8_short_string("--"sv) });
 
     struct Visitor : public AST::NodeVisitor {
         Visitor(Shell& shell, AST::Position position)
@@ -1874,7 +1883,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
     completion_command.argv.extend(visitor.list());
 
-    auto devnull = String::from_utf8("/dev/null"sv).release_value_but_fixme_should_propagate_errors();
+    auto devnull = TRY(String::from_utf8("/dev/null"sv));
     completion_command.should_wait = true;
     completion_command.redirections.append(AST::PathRedirection::create(devnull, STDERR_FILENO, AST::PathRedirection::Write));
     completion_command.redirections.append(AST::PathRedirection::create(devnull, STDIN_FILENO, AST::PathRedirection::Read));

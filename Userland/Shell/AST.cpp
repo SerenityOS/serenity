@@ -1000,7 +1000,7 @@ ErrorOr<RefPtr<Value>> DoubleQuotedString::run(RefPtr<Shell> shell)
 
     builder.join(""sv, values);
 
-    return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
+    return make_ref_counted<StringValue>(TRY(builder.to_string()));
 }
 
 ErrorOr<void> DoubleQuotedString::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1711,7 +1711,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
     if (!shell)
         return {};
 
-    auto commands = shell->expand_aliases(move(unexpanded_commands));
+    auto commands = TRY(shell->expand_aliases(move(unexpanded_commands)));
 
     if (m_capture_stdout) {
         // Make sure that we're going to be running _something_.
@@ -1751,12 +1751,12 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
             NothingLeft,
         };
         auto check_and_call = [&]() -> ErrorOr<CheckResult> {
-            auto ifs = shell->local_variable_or("IFS"sv, "\n"sv);
+            auto ifs = TRY(shell->local_variable_or("IFS"sv, "\n"sv));
 
-            if (auto offset = stream.offset_of(ifs.bytes()).release_value_but_fixme_should_propagate_errors(); offset.has_value()) {
+            if (auto offset = TRY(stream.offset_of(ifs.bytes())); offset.has_value()) {
                 auto line_end = offset.value();
                 if (line_end == 0) {
-                    stream.discard(ifs.length()).release_value_but_fixme_should_propagate_errors();
+                    TRY(stream.discard(ifs.length()));
 
                     if (shell->options.inline_exec_keep_empty_segments)
                         if (TRY(callback(make_ref_counted<StringValue>(String {}))) == IterationDecision::Break) {
@@ -3741,7 +3741,7 @@ StringValue::~StringValue()
 ErrorOr<String> StringValue::resolve_as_string(RefPtr<Shell> shell)
 {
     if (m_split.is_empty())
-        return m_string;
+        return TRY(resolve_slices(shell, String { m_string }, m_slices));
     return Value::resolve_as_string(shell);
 }
 
@@ -3799,7 +3799,7 @@ ErrorOr<String> SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
         return resolve_slices(shell, String {}, m_slices);
 
     if (auto value = TRY(resolve_without_cast(shell)); value != this)
-        return value->resolve_as_string(shell);
+        return resolve_slices(shell, TRY(value->resolve_as_string(shell)), m_slices);
 
     auto name = m_name.to_deprecated_string();
     char* env_value = getenv(name.characters());
@@ -3826,7 +3826,7 @@ ErrorOr<NonnullRefPtr<Value>> SimpleVariableValue::resolve_without_cast(RefPtr<S
 {
     VERIFY(shell);
 
-    if (auto value = shell->lookup_local_variable(m_name)) {
+    if (auto value = TRY(shell->lookup_local_variable(m_name))) {
         auto result = value.release_nonnull();
         // If a slice is applied, add it.
         if (!m_slices.is_empty())
@@ -3868,11 +3868,11 @@ ErrorOr<Vector<String>> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shel
     case '$':
         return { resolve_slices(shell, Vector { TRY(String::number(getpid())) }, m_slices) };
     case '*':
-        if (auto argv = shell->lookup_local_variable("ARGV"sv))
+        if (auto argv = TRY(shell->lookup_local_variable("ARGV"sv)))
             return resolve_slices(shell, TRY(const_cast<Value&>(*argv).resolve_as_list(shell)), m_slices);
         return resolve_slices(shell, Vector<String> {}, m_slices);
     case '#':
-        if (auto argv = shell->lookup_local_variable("ARGV"sv)) {
+        if (auto argv = TRY(shell->lookup_local_variable("ARGV"sv))) {
             if (argv->is_list()) {
                 auto list_argv = static_cast<AST::ListValue const*>(argv.ptr());
                 return { resolve_slices(shell, Vector { TRY(String::number(list_argv->values().size())) }, m_slices) };
