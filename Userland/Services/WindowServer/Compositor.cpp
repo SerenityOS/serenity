@@ -320,7 +320,7 @@ void Compositor::compose()
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
             } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
                 VERIFY(screen.compositor_screen_data().m_wallpaper_bitmap);
-                painter.blit(rect.location(), *screen.compositor_screen_data().m_wallpaper_bitmap, rect);
+                painter.blit(rect.location(), *screen.compositor_screen_data().m_wallpaper_bitmap, rect.translated(-screen.location()));
             } else {
                 VERIFY_NOT_REACHED();
             }
