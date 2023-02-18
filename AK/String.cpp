@@ -77,7 +77,7 @@ private:
     bool m_substring { false };
     bool m_is_fly_string { false };
 
-    u8 m_bytes_or_substring_data[0];
+    alignas(SubstringData) u8 m_bytes_or_substring_data[0];
 };
 
 void StringData::operator delete(void* ptr)

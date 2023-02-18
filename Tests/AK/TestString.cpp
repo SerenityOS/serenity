@@ -97,6 +97,17 @@ TEST_CASE(substring)
     EXPECT_EQ(long_substring, "Hello I am"sv);
 }
 
+TEST_CASE(substring_with_shared_superstring)
+{
+    auto superstring = MUST(String::from_utf8("Hello I am a long string"sv));
+
+    auto substring1 = MUST(superstring.substring_from_byte_offset_with_shared_superstring(0, 5));
+    EXPECT_EQ(substring1, "Hello"sv);
+
+    auto substring2 = MUST(superstring.substring_from_byte_offset_with_shared_superstring(0, 10));
+    EXPECT_EQ(substring2, "Hello I am"sv);
+}
+
 TEST_CASE(code_points)
 {
     auto string = MUST(String::from_utf8("🦬🪒"sv));
