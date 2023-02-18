@@ -26,12 +26,12 @@ extern char** environ;
 
 namespace Shell {
 
-int Shell::builtin_noop(int, char const**)
+ErrorOr<int> Shell::builtin_noop(Main::Arguments)
 {
     return 0;
 }
 
-int Shell::builtin_dump(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_dump(Main::Arguments arguments)
 {
     bool posix = false;
     StringView source;
@@ -40,10 +40,10 @@ int Shell::builtin_dump(int argc, char const** argv)
     parser.add_positional_argument(source, "Shell code to parse and dump", "source");
     parser.add_option(posix, "Use the POSIX parser", "posix", 'p');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    (void)(posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0);
+    TRY((posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0));
     return 0;
 }
 
@@ -80,20 +80,20 @@ static Vector<DeprecatedString> find_matching_executables_in_path(StringView fil
     return executables;
 }
 
-int Shell::builtin_where(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
 {
-    Vector<StringView> arguments;
+    Vector<StringView> values_to_lookup;
     bool do_only_path_search { false };
     bool do_follow_symlinks { false };
     bool do_print_only_type { false };
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(arguments, "List of shell builtins, aliases or executables", "arguments");
+    parser.add_positional_argument(values_to_lookup, "List of shell builtins, aliases or executables", "arguments");
     parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p');
     parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's');
     parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     auto const lookup_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
@@ -114,7 +114,7 @@ int Shell::builtin_where(int argc, char const** argv)
     };
 
     bool at_least_one_succeded { false };
-    for (auto const& argument : arguments) {
+    for (auto const& argument : values_to_lookup) {
         auto const alias = lookup_alias(argument);
         if (alias.has_value()) {
             if (do_print_only_type)
@@ -147,24 +147,24 @@ int Shell::builtin_where(int argc, char const** argv)
     return at_least_one_succeded ? 0 : 1;
 }
 
-int Shell::builtin_alias(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_alias(Main::Arguments arguments)
 {
-    Vector<DeprecatedString> arguments;
+    Vector<DeprecatedString> aliases;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(aliases, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    if (arguments.is_empty()) {
+    if (aliases.is_empty()) {
         for (auto& alias : m_aliases)
             printf("%s=%s\n", escape_token(alias.key).characters(), escape_token(alias.value).characters());
         return 0;
     }
 
     bool fail = false;
-    for (auto& argument : arguments) {
+    for (auto& argument : aliases) {
         auto parts = argument.split_limit('=', 2, SplitBehavior::KeepEmpty);
         if (parts.size() == 1) {
             auto alias = m_aliases.get(parts[0]);
@@ -182,17 +182,17 @@ int Shell::builtin_alias(int argc, char const** argv)
     return fail ? 1 : 0;
 }
 
-int Shell::builtin_unalias(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_unalias(Main::Arguments arguments)
 {
     bool remove_all { false };
-    Vector<DeprecatedString> arguments;
+    Vector<DeprecatedString> aliases;
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
     parser.add_option(remove_all, "Remove all aliases", nullptr, 'a');
-    parser.add_positional_argument(arguments, "List of aliases to remove", "alias", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(aliases, "List of aliases to remove", "alias", Core::ArgsParser::Required::Yes);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (remove_all) {
@@ -201,14 +201,8 @@ int Shell::builtin_unalias(int argc, char const** argv)
         return 0;
     }
 
-    if (arguments.is_empty()) {
-        warnln("unalias: not enough arguments");
-        parser.print_usage(stderr, argv[0]);
-        return 1;
-    }
-
     bool failed { false };
-    for (auto& argument : arguments) {
+    for (auto& argument : aliases) {
         if (!m_aliases.contains(argument)) {
             warnln("unalias: {}: alias not found", argument);
             failed = true;
@@ -221,7 +215,7 @@ int Shell::builtin_unalias(int argc, char const** argv)
     return failed ? 1 : 0;
 }
 
-int Shell::builtin_bg(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
 {
     int job_id = -1;
     bool is_pid = false;
@@ -251,7 +245,7 @@ int Shell::builtin_bg(int argc, char const** argv)
             return false;
         } });
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -286,7 +280,7 @@ int Shell::builtin_bg(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_type(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
 {
     Vector<DeprecatedString> commands;
     bool dont_show_function_source = false;
@@ -296,7 +290,7 @@ int Shell::builtin_type(int argc, char const** argv)
     parser.add_positional_argument(commands, "Command(s) to list info about", "command");
     parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     bool something_not_found = false;
@@ -355,14 +349,14 @@ int Shell::builtin_type(int argc, char const** argv)
         return 0;
 }
 
-int Shell::builtin_cd(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
 {
     char const* arg_path = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     DeprecatedString new_path;
@@ -409,14 +403,14 @@ int Shell::builtin_cd(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_cdh(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_cdh(Main::Arguments arguments)
 {
     int index = -1;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (index == -1) {
@@ -435,12 +429,12 @@ int Shell::builtin_cdh(int argc, char const** argv)
         return 1;
     }
 
-    char const* path = cd_history.at(cd_history.size() - index).characters();
-    char const* cd_args[] = { "cd", path, nullptr };
-    return Shell::builtin_cd(2, cd_args);
+    StringView path = cd_history.at(cd_history.size() - index);
+    StringView cd_args[] = { "cd"sv, path };
+    return Shell::builtin_cd({ .argc = 0, .argv = 0, .strings = cd_args });
 }
 
-int Shell::builtin_dirs(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_dirs(Main::Arguments arguments)
 {
     // The first directory in the stack is ALWAYS the current directory
     directory_stack.at(0) = cwd.characters();
@@ -458,7 +452,7 @@ int Shell::builtin_dirs(int argc, char const** argv)
     parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v');
     parser.add_positional_argument(paths, "Extra paths to put on the stack", "path", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     // -v implies -p
@@ -493,26 +487,24 @@ int Shell::builtin_dirs(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_exec(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_exec(Main::Arguments arguments)
 {
-    if (argc < 2) {
+    if (arguments.strings.size() < 2) {
         warnln("Shell: No command given to exec");
         return 1;
     }
 
-    Vector<char const*> argv_vector;
-    argv_vector.append(argv + 1, argc - 1);
-    argv_vector.append(nullptr);
-
-    execute_process(move(argv_vector));
+    TRY(execute_process(arguments.strings.slice(1)));
+    // NOTE: Won't get here.
+    return 0;
 }
 
-int Shell::builtin_exit(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_exit(Main::Arguments arguments)
 {
     int exit_code = 0;
     Core::ArgsParser parser;
     parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No);
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (m_is_interactive) {
@@ -532,14 +524,14 @@ int Shell::builtin_exit(int argc, char const** argv)
     exit(exit_code);
 }
 
-int Shell::builtin_export(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
 {
     Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (vars.is_empty()) {
@@ -554,7 +546,7 @@ int Shell::builtin_export(int argc, char const** argv)
         if (parts.size() == 1) {
             auto value = lookup_local_variable(parts[0]);
             if (value) {
-                auto values = const_cast<AST::Value&>(*value).resolve_as_list(*this).release_value_but_fixme_should_propagate_errors();
+                auto values = TRY(const_cast<AST::Value&>(*value).resolve_as_list(*this));
                 StringBuilder builder;
                 builder.join(' ', values);
                 parts.append(builder.to_deprecated_string());
@@ -578,13 +570,13 @@ int Shell::builtin_export(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_glob(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_glob(Main::Arguments arguments)
 {
     Vector<DeprecatedString> globs;
     Core::ArgsParser parser;
     parser.add_positional_argument(globs, "Globs to resolve", "glob");
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     for (auto& glob : globs) {
@@ -595,7 +587,7 @@ int Shell::builtin_glob(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_fg(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_fg(Main::Arguments arguments)
 {
     int job_id = -1;
     bool is_pid = false;
@@ -625,7 +617,7 @@ int Shell::builtin_fg(int argc, char const** argv)
             return false;
         } });
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -667,7 +659,7 @@ int Shell::builtin_fg(int argc, char const** argv)
         return 0;
 }
 
-int Shell::builtin_disown(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_disown(Main::Arguments arguments)
 {
     Vector<int> job_ids;
     Vector<bool> id_is_pid;
@@ -697,7 +689,7 @@ int Shell::builtin_disown(int argc, char const** argv)
             return false;
         } });
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (job_ids.is_empty()) {
@@ -736,7 +728,7 @@ int Shell::builtin_disown(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_history(int, char const**)
+ErrorOr<int> Shell::builtin_history(Main::Arguments)
 {
     for (size_t i = 0; i < m_editor->history().size(); ++i) {
         printf("%6zu  %s\n", i + 1, m_editor->history()[i].entry.characters());
@@ -744,7 +736,7 @@ int Shell::builtin_history(int, char const**)
     return 0;
 }
 
-int Shell::builtin_jobs(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_jobs(Main::Arguments arguments)
 {
     bool list = false, show_pid = false;
 
@@ -752,7 +744,7 @@ int Shell::builtin_jobs(int argc, char const** argv)
     parser.add_option(list, "List all information about jobs", "list", 'l');
     parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     Job::PrintStatusMode mode = Job::PrintStatusMode::Basic;
@@ -771,7 +763,7 @@ int Shell::builtin_jobs(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_popd(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_popd(Main::Arguments arguments)
 {
     if (directory_stack.size() <= 1) {
         warnln("Shell: popd: directory stack empty");
@@ -782,7 +774,7 @@ int Shell::builtin_popd(int argc, char const** argv)
     Core::ArgsParser parser;
     parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n');
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     auto popped_path = directory_stack.take_last();
@@ -799,14 +791,14 @@ int Shell::builtin_popd(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_pushd(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_pushd(Main::Arguments arguments)
 {
     StringBuilder path_builder;
     bool should_switch = true;
 
     // From the BASH reference manual: https://www.gnu.org/software/bash/manual/html_node/Directory-Stack-Builtins.html
     // With no arguments, pushd exchanges the top two directories and makes the new top the current directory.
-    if (argc == 1) {
+    if (arguments.strings.size() == 1) {
         if (directory_stack.size() < 2) {
             warnln("pushd: no other directory");
             return 1;
@@ -829,26 +821,27 @@ int Shell::builtin_pushd(int argc, char const** argv)
     }
 
     // Let's assume the user's typed in 'pushd <dir>'
-    if (argc == 2) {
+    if (arguments.strings.size() == 2) {
         directory_stack.append(cwd.characters());
-        if (argv[1][0] == '/') {
-            path_builder.append({ argv[1], strlen(argv[1]) });
+        if (arguments.strings[1].starts_with('/')) {
+            path_builder.append(arguments.strings[1]);
         } else {
-            path_builder.appendff("{}/{}", cwd, argv[1]);
+            path_builder.appendff("{}/{}", cwd, arguments.strings[1]);
         }
-    } else if (argc == 3) {
+    } else if (arguments.strings.size() == 3) {
         directory_stack.append(cwd.characters());
-        for (int i = 1; i < argc; i++) {
-            char const* arg = argv[i];
+        for (size_t i = 1; i < arguments.strings.size(); i++) {
+            auto arg = arguments.strings[i];
 
-            if (arg[0] != '-') {
-                if (arg[0] == '/') {
-                    path_builder.append({ arg, strlen(arg) });
-                } else
+            if (arg.starts_with('-')) {
+                if (arg.starts_with('/')) {
+                    path_builder.append(arg);
+                } else {
                     path_builder.appendff("{}/{}", cwd, arg);
+                }
             }
 
-            if (!strcmp(arg, "-n"))
+            if (arg == "-n"sv)
                 should_switch = false;
         }
     }
@@ -880,16 +873,16 @@ int Shell::builtin_pushd(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_pwd(int, char const**)
+ErrorOr<int> Shell::builtin_pwd(Main::Arguments)
 {
     print_path(cwd);
     fputc('\n', stdout);
     return 0;
 }
 
-int Shell::builtin_setopt(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_setopt(Main::Arguments arguments)
 {
-    if (argc == 1) {
+    if (arguments.strings.size() == 1) {
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
     if (options.name)                                         \
         warnln("{}", #name);
@@ -910,7 +903,7 @@ int Shell::builtin_setopt(int argc, char const** argv)
 
 #undef __ENUMERATE_SHELL_OPTION
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
@@ -926,14 +919,14 @@ int Shell::builtin_setopt(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_shift(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_shift(Main::Arguments arguments)
 {
     int count = 1;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (count < 1)
@@ -960,7 +953,7 @@ int Shell::builtin_shift(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_source(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_source(Main::Arguments arguments)
 {
     char const* file_to_source = nullptr;
     Vector<StringView> args;
@@ -969,7 +962,7 @@ int Shell::builtin_source(int argc, char const** argv)
     parser.add_positional_argument(file_to_source, "File to read commands from", "path");
     parser.add_positional_argument(args, "ARGV for the sourced file", "args", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv)))
+    if (!parser.parse(arguments))
         return 1;
 
     auto previous_argv = lookup_local_variable("ARGV"sv);
@@ -982,7 +975,7 @@ int Shell::builtin_source(int argc, char const** argv)
         Vector<String> arguments;
         arguments.ensure_capacity(args.size());
         for (auto& arg : args)
-            arguments.append(String::from_utf8(arg).release_value_but_fixme_should_propagate_errors());
+            arguments.append(TRY(String::from_utf8(arg)));
 
         set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(arguments)));
     }
@@ -993,7 +986,7 @@ int Shell::builtin_source(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_time(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
 {
     Vector<StringView> args;
 
@@ -1004,16 +997,16 @@ int Shell::builtin_time(int argc, char const** argv)
     parser.set_stop_on_first_non_option(true);
     parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (number_of_iterations < 1)
         return 1;
 
     AST::Command command;
-    command.argv.ensure_capacity(args.size());
+    TRY(command.argv.try_ensure_capacity(args.size()));
     for (auto& arg : args)
-        command.argv.append(String::from_utf8(arg).release_value_but_fixme_should_propagate_errors());
+        command.argv.append(TRY(String::from_utf8(arg)));
 
     auto commands = expand_aliases({ move(command) });
 
@@ -1038,7 +1031,7 @@ int Shell::builtin_time(int argc, char const** argv)
 
         warnln("Timing report: {} ms", iteration_times.sum());
         warnln("==============");
-        warnln("Command:         {}", DeprecatedString::join(' ', Span<char const*>(argv, argc)));
+        warnln("Command:         {}", DeprecatedString::join(' ', arguments.strings));
         warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max:{})",
             iteration_times.average(), iteration_times.median(),
             iteration_times.standard_deviation(),
@@ -1052,14 +1045,14 @@ int Shell::builtin_time(int argc, char const** argv)
     return exit_code;
 }
 
-int Shell::builtin_umask(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_umask(Main::Arguments arguments)
 {
     char const* mask_text = nullptr;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (!mask_text) {
@@ -1080,7 +1073,7 @@ int Shell::builtin_umask(int argc, char const** argv)
     return 1;
 }
 
-int Shell::builtin_wait(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
 {
     Vector<int> job_ids;
     Vector<bool> id_is_pid;
@@ -1110,7 +1103,7 @@ int Shell::builtin_wait(int argc, char const** argv)
             return false;
         } });
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     Vector<NonnullRefPtr<Job>> jobs_to_wait_for;
@@ -1138,14 +1131,14 @@ int Shell::builtin_wait(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_unset(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
 {
     Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     bool did_touch_path = false;
@@ -1166,15 +1159,21 @@ int Shell::builtin_unset(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_not(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_not(Main::Arguments arguments)
 {
-    // FIXME: Use ArgsParser when it can collect unrelated -arguments too.
-    if (argc == 1)
+    Vector<StringView> args;
+
+    Core::ArgsParser parser;
+    parser.set_stop_on_first_non_option(true);
+    parser.add_positional_argument(args, "Command to run followed by its arguments", "string");
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
         return 1;
 
     AST::Command command;
-    for (size_t i = 1; i < (size_t)argc; ++i)
-        command.argv.append(String::from_utf8(StringView { argv[i], strlen(argv[i]) }).release_value_but_fixme_should_propagate_errors());
+    TRY(command.argv.try_ensure_capacity(args.size()));
+    for (auto& arg : args)
+        command.argv.unchecked_append(TRY(String::from_utf8(arg)));
 
     auto commands = expand_aliases({ move(command) });
     int exit_code = 1;
@@ -1190,7 +1189,7 @@ int Shell::builtin_not(int argc, char const** argv)
     return exit_code == 0 ? 1 : 0;
 }
 
-int Shell::builtin_kill(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_kill(Main::Arguments arguments)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<String> replaced_values;
@@ -1199,18 +1198,19 @@ int Shell::builtin_kill(int argc, char const** argv)
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
-    replaced_values.append(String::from_deprecated_string(kill_path.release_value()).release_value_but_fixme_should_propagate_errors());
-    for (auto i = 1; i < argc; ++i) {
-        if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
+
+    replaced_values.append(TRY(String::from_deprecated_string(kill_path.release_value())));
+    for (size_t i = 1; i < arguments.strings.size(); ++i) {
+        if (auto job_id = resolve_job_spec(arguments.strings[i]); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
-                replaced_values.append(String::number(job->pid()).release_value_but_fixme_should_propagate_errors());
+                replaced_values.append(TRY(String::number(job->pid())));
             } else {
                 warnln("kill: Job with pid {} not found", job_id.value());
                 return 1;
             }
         } else {
-            replaced_values.append(String::from_deprecated_string(argv[i]).release_value_but_fixme_should_propagate_errors());
+            replaced_values.append(TRY(String::from_utf8(arguments.strings[i])));
         }
     }
 
@@ -1233,7 +1233,7 @@ int Shell::builtin_kill(int argc, char const** argv)
     return exit_code;
 }
 
-bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Rewiring> const& rewirings, int& retval)
+ErrorOr<bool> Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Rewiring> const& rewirings, int& retval)
 {
     if (command.argv.is_empty())
         return false;
@@ -1241,15 +1241,16 @@ bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Re
     if (!has_builtin(command.argv.first()))
         return false;
 
-    // FIXME: Make all the functions above take the more idiomatic (Main::Arguments) parameters, and remove this gross conversion.
-    Vector<char const*> argv;
-    Vector<DeprecatedString> args;
-    for (auto& arg : command.argv) {
-        args.append(arg.to_deprecated_string());
-        argv.append(args.last().characters());
-    }
+    Vector<StringView> arguments;
+    TRY(arguments.try_ensure_capacity(command.argv.size()));
+    for (auto& arg : command.argv)
+        arguments.unchecked_append(arg);
 
-    argv.append(nullptr);
+    Main::Arguments arguments_object {
+        .argc = 0,
+        .argv = nullptr,
+        .strings = arguments
+    };
 
     StringView name = command.argv.first();
 
@@ -1271,7 +1272,7 @@ bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Re
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin)                               \
     if (name == #builtin) {                                              \
-        retval = builtin_##builtin(argv.size() - 1, argv.data());        \
+        retval = TRY(builtin_##builtin(arguments_object));               \
         if (!has_error(ShellError::None))                                \
             raise_error(m_error, m_error_description, command.position); \
         fflush(stdout);                                                  \
@@ -1285,7 +1286,7 @@ bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Re
     return false;
 }
 
-int Shell::builtin_argsparser_parse(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 {
     // argsparser_parse
     //   --add-option variable [--type (bool | string | i32 | u32 | double | size)] --help-string "" --long-name "" --short-name "" [--value-name "" <if not --type bool>] --list
@@ -1298,7 +1299,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
 
     Core::ArgsParser user_parser;
 
-    Vector<char const*> arguments;
+    Vector<char const*> descriptors;
     Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
     DeprecatedString current_variable;
     // if max > 1 or min < 1, or explicit `--list`.
@@ -1314,51 +1315,53 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
 
     auto type = Type::String;
 
-    auto try_convert = [](StringView value, Type type) -> Optional<RefPtr<AST::Value>> {
+    auto try_convert = [](StringView value, Type type) -> ErrorOr<Optional<RefPtr<AST::Value>>> {
         switch (type) {
         case Type::Bool:
-            return AST::make_ref_counted<AST::StringValue>(String::from_utf8("true"sv).release_value_but_fixme_should_propagate_errors());
+            return AST::make_ref_counted<AST::StringValue>(TRY(String::from_utf8("true"sv)));
         case Type::String:
-            return AST::make_ref_counted<AST::StringValue>(String::from_utf8(value).release_value_but_fixme_should_propagate_errors());
+            return AST::make_ref_counted<AST::StringValue>(TRY(String::from_utf8(value)));
         case Type::I32:
             if (auto number = value.to_int(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(String::number(*number).release_value_but_fixme_should_propagate_errors());
+                return AST::make_ref_counted<AST::StringValue>(TRY(String::number(*number)));
 
             warnln("Invalid value for type i32: {}", value);
-            return {};
+            return OptionalNone {};
         case Type::U32:
         case Type::Size:
             if (auto number = value.to_uint(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(String::number(*number).release_value_but_fixme_should_propagate_errors());
+                return AST::make_ref_counted<AST::StringValue>(TRY(String::number(*number)));
 
             warnln("Invalid value for type u32|size: {}", value);
-            return {};
+            return OptionalNone {};
         case Type::Double: {
             DeprecatedString string = value;
             char* endptr = nullptr;
             auto number = strtod(string.characters(), &endptr);
             if (endptr != string.characters() + string.length()) {
                 warnln("Invalid value for type double: {}", value);
-                return {};
+                return OptionalNone {};
             }
 
-            return AST::make_ref_counted<AST::StringValue>(String::number(number).release_value_but_fixme_should_propagate_errors());
+            return AST::make_ref_counted<AST::StringValue>(TRY(String::number(number)));
         }
         default:
             VERIFY_NOT_REACHED();
         }
     };
 
-    auto enlist = [&](auto name, auto value) -> NonnullRefPtr<AST::Value> {
+    auto enlist = [&](auto name, auto value) -> ErrorOr<NonnullRefPtr<AST::Value>> {
         auto variable = lookup_local_variable(name);
         if (variable) {
-            auto list = const_cast<AST::Value&>(*variable).resolve_as_list(*this).release_value_but_fixme_should_propagate_errors();
-            auto new_value = value->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
+            auto list = TRY(const_cast<AST::Value&>(*variable).resolve_as_list(*this));
+            auto new_value = TRY(value->resolve_as_string(*this));
             list.append(move(new_value));
-            return make_ref_counted<AST::ListValue>(move(list));
+            return try_make_ref_counted<AST::ListValue>(move(list));
         }
         return *value;
     };
+
+    // FIXME: We cannot return ErrorOr<T> from Core::ArgsParser::Option::accept_value(), fix the MUST's here whenever that function is ErrorOr-aware.
     auto commit = [&] {
         return current.visit(
             [&](Core::ArgsParser::Option& option) {
@@ -1367,11 +1370,11 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return false;
                 }
                 option.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = try_convert({ value, strlen(value) }, type);
+                    auto result = MUST(try_convert({ value, strlen(value) }, type));
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
-                            value = enlist(current_variable, move(value));
+                            value = MUST(enlist(current_variable, move(value)));
                         this->set_local_variable(current_variable, move(value), true);
                         return true;
                     }
@@ -1389,11 +1392,11 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return false;
                 }
                 arg.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = try_convert({ value, strlen(value) }, type);
+                    auto result = MUST(try_convert({ value, strlen(value) }, type));
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
-                            value = enlist(current_variable, move(value));
+                            value = MUST(enlist(current_variable, move(value)));
                         this->set_local_variable(current_variable, move(value), true);
                         return true;
                     }
@@ -1412,7 +1415,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
 
     parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
-        .help_string = "Stop processing arguments after a non-argument parameter is seen",
+        .help_string = "Stop processing descriptors after a non-argument parameter is seen",
         .long_name = "stop-on-first-non-option",
         .accept_value = [&](auto) {
             user_parser.set_stop_on_first_non_option(true);
@@ -1496,8 +1499,12 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return false;
             }
 
-            if (type == Type::Bool)
-                set_local_variable(current_variable, make_ref_counted<AST::StringValue>(String::from_utf8("false"sv).release_value_but_fixme_should_propagate_errors()), true);
+            if (type == Type::Bool) {
+                set_local_variable(
+                    current_variable,
+                    make_ref_counted<AST::StringValue>(MUST(String::from_utf8("false"sv))),
+                    true);
+            }
             return true;
         },
     });
@@ -1616,7 +1623,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     });
     parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Set the minimum required number of positional arguments for the argument being described",
+        .help_string = "Set the minimum required number of positional descriptors for the argument being described",
         .long_name = "min",
         .value_name = "n",
         .accept_value = [&](auto value) {
@@ -1644,7 +1651,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     });
     parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Set the maximum required number of positional arguments for the argument being described",
+        .help_string = "Set the maximum required number of positional descriptors for the argument being described",
         .long_name = "max",
         .value_name = "n",
         .accept_value = [&](auto value) {
@@ -1687,15 +1694,15 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
             return true;
         },
     });
-    parser.add_positional_argument(arguments, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No);
+    parser.add_positional_argument(descriptors, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No);
 
-    if (!parser.parse(argc, const_cast<char* const*>(argv), Core::ArgsParser::FailureBehavior::Ignore))
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
         return 2;
 
     if (!commit())
         return 2;
 
-    if (!user_parser.parse(static_cast<int>(arguments.size()), const_cast<char* const*>(arguments.data()), Core::ArgsParser::FailureBehavior::Ignore))
+    if (!user_parser.parse(static_cast<int>(descriptors.size()), const_cast<char* const*>(descriptors.data()), Core::ArgsParser::FailureBehavior::Ignore))
         return 1;
 
     return 0;

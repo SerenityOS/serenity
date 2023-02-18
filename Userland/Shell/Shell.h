@@ -21,6 +21,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibLine/Editor.h>
+#include <LibMain/Main.h>
 #include <termios.h>
 
 #define ENUMERATE_SHELL_BUILTINS()     \
@@ -153,7 +154,7 @@ public:
     ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
     NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
     bool run_file(DeprecatedString const&, bool explicitly_invoked = true);
-    bool run_builtin(const AST::Command&, NonnullRefPtrVector<AST::Rewiring> const&, int& retval);
+    ErrorOr<bool> run_builtin(const AST::Command&, NonnullRefPtrVector<AST::Rewiring> const&, int& retval);
     bool has_builtin(StringView) const;
     RefPtr<AST::Node> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
     static bool has_immediate_function(StringView);
@@ -417,6 +418,7 @@ private:
     void run_tail(const AST::Command&, const AST::NodeWithAction&, int head_exit_code);
 
     [[noreturn]] void execute_process(Vector<char const*>&& argv);
+    ErrorOr<void> execute_process(Span<StringView> argv);
 
     virtual void custom_event(Core::CustomEvent&) override;
 
@@ -430,7 +432,7 @@ private:
     RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
-    int builtin_##builtin(int argc, char const** argv);
+    ErrorOr<int> builtin_##builtin(Main::Arguments);
 
     ENUMERATE_SHELL_BUILTINS();
 
