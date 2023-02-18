@@ -60,6 +60,23 @@ static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeT
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_parametric_curve(ParametricCurveTagData const& tag_data)
+{
+    // ICC v4, 10.18 parametricCurveType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 2 * sizeof(u16) + tag_data.parameter_count() * sizeof(s15Fixed16Number)));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)ParametricCurveTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 8) = (u16)tag_data.function_type();
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 10) = 0;
+
+    auto* parameters = bit_cast<BigEndian<s15Fixed16Number>*>(bytes.data() + 12);
+    for (size_t i = 0; i < tag_data.parameter_count(); ++i)
+        parameters[i] = tag_data.parameter(i).raw();
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_s15_fixed_array(S15Fixed16ArrayTagData const& tag_data)
 {
     // ICC v4, 10.22 s15Fixed16ArrayType
@@ -93,6 +110,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
     switch (tag_data.type()) {
     case MultiLocalizedUnicodeTagData::Type:
         return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
+    case ParametricCurveTagData::Type:
+        return encode_parametric_curve(static_cast<ParametricCurveTagData const&>(tag_data));
     case S15Fixed16ArrayTagData::Type:
         return encode_s15_fixed_array(static_cast<S15Fixed16ArrayTagData const&>(tag_data));
     case XYZTagData::Type:

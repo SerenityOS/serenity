@@ -626,6 +626,13 @@ public:
 
     static unsigned parameter_count(FunctionType);
 
+    unsigned parameter_count() const { return parameter_count(function_type()); }
+    S15Fixed16 parameter(size_t i) const
+    {
+        VERIFY(i < parameter_count());
+        return m_parameters[i];
+    }
+
     S15Fixed16 g() const { return m_parameters[0]; }
     S15Fixed16 a() const
     {
