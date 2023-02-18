@@ -762,6 +762,8 @@ public:
         : TagData(offset, size, Type)
         , m_text(move(text))
     {
+        for (u8 byte : text.bytes())
+            VERIFY(byte < 128);
     }
 
     // Guaranteed to be 7-bit ASCII.
