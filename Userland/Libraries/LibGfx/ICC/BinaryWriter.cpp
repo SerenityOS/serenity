@@ -34,6 +34,19 @@ static ErrorOr<ByteBuffer> encode_chromaticity(ChromaticityTagData const& tag_da
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_cipc(CicpTagData const& tag_data)
+{
+    // ICC v4, 10.3 cicpType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 4));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)CicpTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+    bytes.data()[8] = tag_data.color_primaries();
+    bytes.data()[9] = tag_data.transfer_characteristics();
+    bytes.data()[10] = tag_data.matrix_coefficients();
+    bytes.data()[11] = tag_data.video_full_range_flag();
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeTagData const& tag_data)
 {
     // ICC v4, 10.15 multiLocalizedUnicodeType
@@ -130,6 +143,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
     switch (tag_data.type()) {
     case ChromaticityTagData::Type:
         return encode_chromaticity(static_cast<ChromaticityTagData const&>(tag_data));
+    case CicpTagData::Type:
+        return encode_cipc(static_cast<CicpTagData const&>(tag_data));
     case MultiLocalizedUnicodeTagData::Type:
         return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
     case ParametricCurveTagData::Type:
