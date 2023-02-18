@@ -164,6 +164,7 @@ public:
 
     Gfx::IntSize physical_size() const { return { physical_width(), physical_height() }; }
 
+    Gfx::IntPoint location() const { return m_virtual_rect.location(); }
     Gfx::IntSize size() const { return { m_virtual_rect.width(), m_virtual_rect.height() }; }
     Gfx::IntRect rect() const { return m_virtual_rect; }
 

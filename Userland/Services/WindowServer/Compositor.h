@@ -40,7 +40,6 @@ struct CompositorScreenData {
     OwnPtr<Gfx::Painter> m_back_painter;
     OwnPtr<Gfx::Painter> m_front_painter;
     OwnPtr<Gfx::Painter> m_temp_painter;
-    OwnPtr<Gfx::Painter> m_wallpaper_painter;
     RefPtr<Gfx::Bitmap> m_cursor_back_bitmap;
     OwnPtr<Gfx::Painter> m_cursor_back_painter;
     Gfx::IntRect m_last_cursor_rect;
@@ -62,7 +61,6 @@ struct CompositorScreenData {
     void flip_buffers(Screen&);
     void draw_cursor(Screen&, Gfx::IntRect const&);
     bool restore_cursor_back(Screen&, Gfx::IntRect&);
-    void init_wallpaper_bitmap(Screen&);
     void clear_wallpaper_bitmap();
 
     template<typename F>

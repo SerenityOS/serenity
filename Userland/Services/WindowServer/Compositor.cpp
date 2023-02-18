@@ -840,28 +840,47 @@ void Compositor::update_wallpaper_bitmap()
             screen_data.clear_wallpaper_bitmap();
             return IterationDecision::Continue;
         }
-        if (!screen_data.m_wallpaper_bitmap)
-            screen_data.init_wallpaper_bitmap(screen);
 
-        auto rect = screen_data.m_wallpaper_bitmap->rect();
-        auto& painter = *screen_data.m_wallpaper_painter;
+        // See if there is another screen with the same resolution and scale.
+        // If so, we can use the same bitmap.
+        bool share_bitmap_with_other_screen = false;
+        Screen::for_each([&](Screen& screen2) {
+            if (&screen == &screen2) {
+                // Stop iterating here, we haven't updated wallpaper bitmaps for
+                // this screen and the following screens.
+                return IterationDecision::Break;
+            }
 
-        painter.draw_scaled_bitmap(rect, *m_wallpaper, m_wallpaper->rect());
+            if (screen.size() == screen2.size() && screen.scale_factor() == screen2.scale_factor()) {
+                auto& screen2_data = screen2.compositor_screen_data();
 
+                // Use the same bitmap as the other screen
+                screen_data.m_wallpaper_bitmap = screen2_data.m_wallpaper_bitmap;
+                share_bitmap_with_other_screen = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        if (share_bitmap_with_other_screen)
+            return IterationDecision::Continue;
+
+        if (screen.size() == m_wallpaper->size() && screen.scale_factor() == m_wallpaper->scale()) {
+            // If the screen size is equal to the wallpaper size, we don't actually need to scale it
+            screen_data.m_wallpaper_bitmap = m_wallpaper;
+        } else {
+            if (!screen_data.m_wallpaper_bitmap)
+                screen_data.m_wallpaper_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+
+            Gfx::Painter painter(*screen_data.m_wallpaper_bitmap);
+            painter.draw_scaled_bitmap(screen_data.m_wallpaper_bitmap->rect(), *m_wallpaper, m_wallpaper->rect());
+        }
         return IterationDecision::Continue;
     });
 }
 
-void CompositorScreenData::init_wallpaper_bitmap(Screen& screen)
-{
-    m_wallpaper_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
-    m_wallpaper_painter = make<Gfx::Painter>(*m_wallpaper_bitmap);
-    m_wallpaper_painter->translate(-screen.rect().location());
-}
-
 void CompositorScreenData::clear_wallpaper_bitmap()
 {
-    m_wallpaper_painter = nullptr;
     m_wallpaper_bitmap = nullptr;
 }
 
