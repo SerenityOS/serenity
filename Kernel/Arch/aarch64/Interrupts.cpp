@@ -53,7 +53,7 @@ void dump_registers(RegisterState const& regs)
     dbgln("x30={:p}", regs.x[30]);
 }
 
-static PageFault page_fault_from_exception_syndrome_register(VirtualAddress fault_address, Aarch64::ESR_EL1 esr_el1)
+static ErrorOr<PageFault> page_fault_from_exception_syndrome_register(VirtualAddress fault_address, Aarch64::ESR_EL1 esr_el1)
 {
     PageFault fault { fault_address };
 
@@ -63,7 +63,8 @@ static PageFault page_fault_from_exception_syndrome_register(VirtualAddress faul
     } else if (data_fault_status_code >= 0b000100 && data_fault_status_code <= 0b000111) {
         fault.set_type(PageFault::Type::PageNotPresent);
     } else {
-        PANIC("Unknown DFSC: {}", data_fault_status_code);
+        dbgln("Unknown DFSC: {}", Aarch64::data_fault_status_code_to_string(esr_el1.ISS));
+        return Error::from_errno(EFAULT);
     }
 
     fault.set_access((esr_el1.ISS & (1 << 6)) == (1 << 6) ? PageFault::Access::Write : PageFault::Access::Read);
@@ -86,13 +87,17 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     Processor::enable_interrupts();
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
-        auto page_fault = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
-        page_fault.handle(*trap_frame->regs);
+        auto page_fault_or_error = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
+        if (page_fault_or_error.is_error()) {
+            handle_crash(*trap_frame->regs, "Unknown page fault", SIGSEGV, false);
+        } else {
+            auto page_fault = page_fault_or_error.release_value();
+            page_fault.handle(*trap_frame->regs);
+        }
     } else if (Aarch64::exception_class_is_svc_instruction_execution(esr_el1.EC)) {
         syscall_handler(trap_frame);
     } else {
-        dump_registers(*trap_frame->regs);
-        PANIC("Unexpected exception!");
+        handle_crash(*trap_frame->regs, "Unexpected exception", SIGSEGV, false);
     }
 
     Processor::disable_interrupts();
