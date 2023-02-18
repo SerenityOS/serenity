@@ -149,4 +149,12 @@ struct MultiLocalizedUnicodeRawRecord {
 };
 static_assert(AssertSize<MultiLocalizedUnicodeRawRecord, 12>());
 
+// Table 84 — viewingConditionsType encoding
+struct ViewingConditionsHeader {
+    XYZNumber unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
+    XYZNumber unnormalized_ciexyz_values_for_surround;   // "(in which Y is in cd/m2)"
+    BigEndian<MeasurementTagData::StandardIlluminant> illuminant_type;
+};
+static_assert(AssertSize<ViewingConditionsHeader, 28>());
+
 }
