@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace Web::CSS {
@@ -50,11 +50,11 @@ public:
             int offset = { 0 };  // "B"
 
             // https://www.w3.org/TR/css-syntax-3/#serializing-anb
-            DeprecatedString serialize() const
+            ErrorOr<String> serialize() const
             {
                 // 1. If A is zero, return the serialization of B.
                 if (step_size == 0) {
-                    return DeprecatedString::formatted("{}", offset);
+                    return String::formatted("{}", offset);
                 }
 
                 // 2. Otherwise, let result initially be an empty string.
@@ -63,24 +63,24 @@ public:
                 // 3.
                 // - A is 1: Append "n" to result.
                 if (step_size == 1)
-                    result.append('n');
+                    TRY(result.try_append('n'));
                 // - A is -1: Append "-n" to result.
                 else if (step_size == -1)
-                    result.append("-n"sv);
+                    TRY(result.try_append("-n"sv));
                 // - A is non-zero: Serialize A and append it to result, then append "n" to result.
                 else if (step_size != 0)
-                    result.appendff("{}n", step_size);
+                    TRY(result.try_appendff("{}n", step_size));
 
                 // 4.
                 // - B is greater than zero: Append "+" to result, then append the serialization of B to result.
                 if (offset > 0)
-                    result.appendff("+{}", offset);
+                    TRY(result.try_appendff("+{}", offset));
                 // - B is less than zero: Append the serialization of B to result.
                 if (offset < 0)
-                    result.appendff("{}", offset);
+                    TRY(result.try_appendff("{}", offset));
 
                 // 5. Return result.
-                return result.to_deprecated_string();
+                return result.to_string();
             }
         };
 
@@ -121,7 +121,7 @@ public:
             SelectorList argument_selector_list {};
 
             // Used for :lang(en-gb,dk)
-            Vector<DeprecatedFlyString> languages {};
+            Vector<FlyString> languages {};
         };
 
         struct Attribute {
@@ -140,20 +140,20 @@ public:
                 CaseInsensitiveMatch,
             };
             MatchType match_type;
-            DeprecatedFlyString name {};
-            DeprecatedString value {};
+            FlyString name {};
+            String value {};
             CaseType case_type;
         };
 
         struct Name {
-            Name(DeprecatedFlyString n)
+            Name(FlyString n)
                 : name(move(n))
-                , lowercase_name(name.to_lowercase())
+                , lowercase_name(name.to_string().to_lowercase().release_value_but_fixme_should_propagate_errors())
             {
             }
 
-            DeprecatedFlyString name;
-            DeprecatedFlyString lowercase_name;
+            FlyString name;
+            FlyString lowercase_name;
         };
 
         Type type;
@@ -166,12 +166,12 @@ public:
         PseudoElement const& pseudo_element() const { return value.get<PseudoElement>(); }
         PseudoElement& pseudo_element() { return value.get<PseudoElement>(); }
 
-        DeprecatedFlyString const& name() const { return value.get<Name>().name; }
-        DeprecatedFlyString& name() { return value.get<Name>().name; }
-        DeprecatedFlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
-        DeprecatedFlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
+        FlyString const& name() const { return value.get<Name>().name; }
+        FlyString& name() { return value.get<Name>().name; }
+        FlyString const& lowercase_name() const { return value.get<Name>().lowercase_name; }
+        FlyString& lowercase_name() { return value.get<Name>().lowercase_name; }
 
-        DeprecatedString serialize() const;
+        ErrorOr<String> serialize() const;
     };
 
     enum class Combinator {
@@ -200,7 +200,7 @@ public:
     Vector<CompoundSelector> const& compound_selectors() const { return m_compound_selectors; }
     Optional<PseudoElement> pseudo_element() const { return m_pseudo_element; }
     u32 specificity() const;
-    DeprecatedString serialize() const;
+    ErrorOr<String> serialize() const;
 
 private:
     explicit Selector(Vector<CompoundSelector>&&);
@@ -294,7 +294,7 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
+ErrorOr<String> serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
 
 }
 
@@ -304,7 +304,7 @@ template<>
 struct Formatter<Web::CSS::Selector> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::CSS::Selector const& selector)
     {
-        return Formatter<StringView>::format(builder, selector.serialize());
+        return Formatter<StringView>::format(builder, TRY(selector.serialize()));
     }
 };
 

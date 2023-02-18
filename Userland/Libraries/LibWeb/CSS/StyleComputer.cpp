@@ -1469,19 +1469,19 @@ void StyleComputer::build_rule_cache()
                 if (!added_to_bucket) {
                     for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
                         if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
-                            m_rule_cache->rules_by_id.ensure(simple_selector.name()).append(move(matching_rule));
+                            m_rule_cache->rules_by_id.ensure(simple_selector.name().to_string().to_deprecated_string()).append(move(matching_rule));
                             ++num_id_rules;
                             added_to_bucket = true;
                             break;
                         }
                         if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
-                            m_rule_cache->rules_by_class.ensure(simple_selector.name()).append(move(matching_rule));
+                            m_rule_cache->rules_by_class.ensure(simple_selector.name().to_string().to_deprecated_string()).append(move(matching_rule));
                             ++num_class_rules;
                             added_to_bucket = true;
                             break;
                         }
                         if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
-                            m_rule_cache->rules_by_tag_name.ensure(simple_selector.name()).append(move(matching_rule));
+                            m_rule_cache->rules_by_tag_name.ensure(simple_selector.name().to_string().to_deprecated_string()).append(move(matching_rule));
                             ++num_tag_name_rules;
                             added_to_bucket = true;
                             break;

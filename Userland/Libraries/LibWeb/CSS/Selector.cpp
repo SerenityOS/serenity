@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -119,7 +119,7 @@ u32 Selector::specificity() const
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-simple-selector
-DeprecatedString Selector::SimpleSelector::serialize() const
+ErrorOr<String> Selector::SimpleSelector::serialize() const
 {
     StringBuilder s;
     switch (type) {
@@ -129,50 +129,50 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         // FIXME: 2. If the namespace prefix maps to a namespace that is the null namespace (not in a namespace) append "|" (U+007C) to s.
         // 3. If this is a type selector append the serialization of the element name as an identifier to s.
         if (type == Selector::SimpleSelector::Type::TagName) {
-            serialize_an_identifier(s, name()).release_value_but_fixme_should_propagate_errors();
+            TRY(serialize_an_identifier(s, name()));
         }
         // 4. If this is a universal selector append "*" (U+002A) to s.
         if (type == Selector::SimpleSelector::Type::Universal)
-            s.append('*');
+            TRY(s.try_append('*'));
         break;
     case Selector::SimpleSelector::Type::Attribute: {
         auto& attribute = this->attribute();
 
         // 1. Append "[" (U+005B) to s.
-        s.append('[');
+        TRY(s.try_append('['));
 
         // FIXME: 2. If the namespace prefix maps to a namespace that is not the null namespace (not in a namespace) append the serialization of the namespace prefix as an identifier, followed by a "|" (U+007C) to s.
 
         // 3. Append the serialization of the attribute name as an identifier to s.
-        serialize_an_identifier(s, attribute.name).release_value_but_fixme_should_propagate_errors();
+        TRY(serialize_an_identifier(s, attribute.name));
 
         // 4. If there is an attribute value specified, append "=", "~=", "|=", "^=", "$=", or "*=" as appropriate (depending on the type of attribute selector),
         //    followed by the serialization of the attribute value as a string, to s.
-        if (!attribute.value.is_null()) {
+        if (!attribute.value.is_empty()) {
             switch (attribute.match_type) {
             case Selector::SimpleSelector::Attribute::MatchType::ExactValueMatch:
-                s.append("="sv);
+                TRY(s.try_append("="sv));
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::ContainsWord:
-                s.append("~="sv);
+                TRY(s.try_append("~="sv));
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::ContainsString:
-                s.append("*="sv);
+                TRY(s.try_append("*="sv));
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::StartsWithSegment:
-                s.append("|="sv);
+                TRY(s.try_append("|="sv));
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::StartsWithString:
-                s.append("^="sv);
+                TRY(s.try_append("^="sv));
                 break;
             case Selector::SimpleSelector::Attribute::MatchType::EndsWithString:
-                s.append("$="sv);
+                TRY(s.try_append("$="sv));
                 break;
             default:
                 break;
             }
 
-            serialize_a_string(s, attribute.value).release_value_but_fixme_should_propagate_errors();
+            TRY(serialize_a_string(s, attribute.value));
         }
 
         // 5. If the attribute selector has the case-insensitivity flag present, append " i" (U+0020 U+0069) to s.
@@ -180,30 +180,30 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         //    (the line just above is an addition to CSS OM to match Selectors Level 4 last draft)
         switch (attribute.case_type) {
         case Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch:
-            s.append(" i"sv);
+            TRY(s.try_append(" i"sv));
             break;
         case Selector::SimpleSelector::Attribute::CaseType::CaseSensitiveMatch:
-            s.append(" s"sv);
+            TRY(s.try_append(" s"sv));
             break;
         default:
             break;
         }
 
         // 6. Append "]" (U+005D) to s.
-        s.append(']');
+        TRY(s.try_append(']'));
         break;
     }
 
     case Selector::SimpleSelector::Type::Class:
         // Append a "." (U+002E), followed by the serialization of the class name as an identifier to s.
-        s.append('.');
-        serialize_an_identifier(s, name()).release_value_but_fixme_should_propagate_errors();
+        TRY(s.try_append('.'));
+        TRY(serialize_an_identifier(s, name()));
         break;
 
     case Selector::SimpleSelector::Type::Id:
         // Append a "#" (U+0023), followed by the serialization of the ID as an identifier to s.
-        s.append('#');
-        serialize_an_identifier(s, name()).release_value_but_fixme_should_propagate_errors();
+        TRY(s.try_append('#'));
+        TRY(serialize_an_identifier(s, name()));
         break;
 
     case Selector::SimpleSelector::Type::PseudoClass: {
@@ -228,8 +228,8 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::Checked:
         case Selector::SimpleSelector::PseudoClass::Type::Active:
             // If the pseudo-class does not accept arguments append ":" (U+003A), followed by the name of the pseudo-class, to s.
-            s.append(':');
-            s.append(pseudo_class_name(pseudo_class.type));
+            TRY(s.try_append(':'));
+            TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
             break;
         case Selector::SimpleSelector::PseudoClass::Type::NthChild:
         case Selector::SimpleSelector::PseudoClass::Type::NthLastChild:
@@ -241,26 +241,26 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         case Selector::SimpleSelector::PseudoClass::Type::Lang:
             // Otherwise, append ":" (U+003A), followed by the name of the pseudo-class, followed by "(" (U+0028),
             // followed by the value of the pseudo-class argument(s) determined as per below, followed by ")" (U+0029), to s.
-            s.append(':');
-            s.append(pseudo_class_name(pseudo_class.type));
-            s.append('(');
+            TRY(s.try_append(':'));
+            TRY(s.try_append(pseudo_class_name(pseudo_class.type)));
+            TRY(s.try_append('('));
             if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthChild
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastChild
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthOfType
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::NthLastOfType) {
                 // The result of serializing the value using the rules to serialize an <an+b> value.
-                s.append(pseudo_class.nth_child_pattern.serialize());
+                TRY(s.try_append(TRY(pseudo_class.nth_child_pattern.serialize())));
             } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Not
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Is
                 || pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Where) {
                 // The result of serializing the value using the rules for serializing a group of selectors.
                 // NOTE: `:is()` and `:where()` aren't in the spec for this yet, but it should be!
-                s.append(serialize_a_group_of_selectors(pseudo_class.argument_selector_list));
+                TRY(s.try_append(TRY(serialize_a_group_of_selectors(pseudo_class.argument_selector_list))));
             } else if (pseudo_class.type == Selector::SimpleSelector::PseudoClass::Type::Lang) {
                 // The serialization of a comma-separated list of each argument’s serialization as a string, preserving relative order.
                 s.join(", "sv, pseudo_class.languages);
             }
-            s.append(')');
+            TRY(s.try_append(')'));
             break;
         default:
             dbgln("FIXME: Unknown pseudo class type for serialization: {}", to_underlying(pseudo_class.type));
@@ -275,11 +275,11 @@ DeprecatedString Selector::SimpleSelector::serialize() const
         dbgln("FIXME: Unsupported simple selector serialization for type {}", to_underlying(type));
         break;
     }
-    return s.to_deprecated_string();
+    return s.to_string();
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-selector
-DeprecatedString Selector::serialize() const
+ErrorOr<String> Selector::serialize() const
 {
     StringBuilder s;
 
@@ -289,14 +289,14 @@ DeprecatedString Selector::serialize() const
         // 1. If there is only one simple selector in the compound selectors which is a universal selector, append the result of serializing the universal selector to s.
         if (compound_selector.simple_selectors.size() == 1
             && compound_selector.simple_selectors.first().type == Selector::SimpleSelector::Type::Universal) {
-            s.append(compound_selector.simple_selectors.first().serialize());
+            TRY(s.try_append(TRY(compound_selector.simple_selectors.first().serialize())));
         }
         // 2. Otherwise, for each simple selector in the compound selectors...
         //    FIXME: ...that is not a universal selector of which the namespace prefix maps to a namespace that is not the default namespace...
         //    ...serialize the simple selector and append the result to s.
         else {
             for (auto& simple_selector : compound_selector.simple_selectors) {
-                s.append(simple_selector.serialize());
+                TRY(s.try_append(TRY(simple_selector.serialize())));
             }
         }
 
@@ -304,21 +304,21 @@ DeprecatedString Selector::serialize() const
         //    followed by the combinator ">", "+", "~", ">>", "||", as appropriate, followed by another
         //    single SPACE (U+0020) if the combinator was not whitespace, to s.
         if (i != compound_selectors().size() - 1) {
-            s.append(' ');
+            TRY(s.try_append(' '));
             // Note: The combinator that appears between parts `i` and `i+1` appears with the `i+1` selector,
             //       so we have to check that one.
             switch (compound_selectors()[i + 1].combinator) {
             case Selector::Combinator::ImmediateChild:
-                s.append("> "sv);
+                TRY(s.try_append("> "sv));
                 break;
             case Selector::Combinator::NextSibling:
-                s.append("+ "sv);
+                TRY(s.try_append("+ "sv));
                 break;
             case Selector::Combinator::SubsequentSibling:
-                s.append("~ "sv);
+                TRY(s.try_append("~ "sv));
                 break;
             case Selector::Combinator::Column:
-                s.append("|| "sv);
+                TRY(s.try_append("|| "sv));
                 break;
             default:
                 break;
@@ -327,22 +327,20 @@ DeprecatedString Selector::serialize() const
             // 4. If this is the last part of the chain of the selector and there is a pseudo-element,
             // append "::" followed by the name of the pseudo-element, to s.
             if (compound_selector.simple_selectors.last().type == Selector::SimpleSelector::Type::PseudoElement) {
-                s.append("::"sv);
-                s.append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element()));
+                TRY(s.try_append("::"sv));
+                TRY(s.try_append(pseudo_element_name(compound_selector.simple_selectors.last().pseudo_element())));
             }
         }
     }
 
-    return s.to_deprecated_string();
+    return s.to_string();
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-group-of-selectors
-DeprecatedString serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors)
+ErrorOr<String> serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors)
 {
     // To serialize a group of selectors serialize each selector in the group of selectors and then serialize a comma-separated list of these serializations.
-    StringBuilder builder;
-    builder.join(", "sv, selectors);
-    return builder.to_deprecated_string();
+    return String::join(", "sv, selectors);
 }
 
 Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
