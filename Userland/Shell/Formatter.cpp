@@ -598,7 +598,7 @@ void Formatter::visit(const AST::MatchExpr* node)
                         if (!first)
                             current_builder().append(" | "sv);
                         first = false;
-                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, option.pattern_value);
+                        auto node = make_ref_counted<AST::BarewordLiteral>(AST::Position {}, String::from_utf8(option.pattern_value).release_value_but_fixme_should_propagate_errors());
                         node->visit(*this);
                     }
                 });
@@ -791,7 +791,7 @@ void Formatter::visit(const AST::StringLiteral* node)
         current_builder().append("'"sv);
 
     if (m_options.in_double_quotes && !m_options.in_heredoc) {
-        for (auto ch : node->text()) {
+        for (auto ch : node->text().bytes_as_string_view()) {
             switch (ch) {
             case '"':
             case '\\':

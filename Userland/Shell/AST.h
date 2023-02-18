@@ -9,11 +9,11 @@
 #include "Forward.h"
 #include "Job.h"
 #include "NodeVisitor.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibLine/Editor.h>
@@ -60,7 +60,7 @@ struct Position {
 };
 
 struct NameWithPosition {
-    DeprecatedString name;
+    String name;
     Position position;
 };
 
@@ -117,7 +117,7 @@ private:
 };
 
 struct PathRedirection : public Redirection {
-    DeprecatedString path;
+    String path;
     int fd { -1 };
     enum {
         Read,
@@ -126,7 +126,7 @@ struct PathRedirection : public Redirection {
         ReadWrite,
     } direction { Read };
 
-    static NonnullRefPtr<PathRedirection> create(DeprecatedString path, int fd, decltype(direction) direction)
+    static NonnullRefPtr<PathRedirection> create(String path, int fd, decltype(direction) direction)
     {
         return adopt_ref(*new PathRedirection(move(path), fd, direction));
     }
@@ -135,7 +135,7 @@ struct PathRedirection : public Redirection {
     virtual ~PathRedirection();
 
 private:
-    PathRedirection(DeprecatedString path, int fd, decltype(direction) direction)
+    PathRedirection(String path, int fd, decltype(direction) direction)
         : path(move(path))
         , fd(fd)
         , direction(direction)
@@ -207,7 +207,7 @@ struct NodeWithAction {
 };
 
 struct Command {
-    Vector<DeprecatedString> argv;
+    Vector<String> argv;
     NonnullRefPtrVector<Redirection> redirections;
     bool should_wait { true };
     bool is_pipe_source { false };
@@ -227,13 +227,13 @@ struct HitTestResult {
 
 class Value : public RefCounted<Value> {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) = 0;
-    virtual DeprecatedString resolve_as_string(RefPtr<Shell> shell);
-    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>);
-    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) { return *this; }
-    virtual NonnullRefPtr<Value> clone() const = 0;
-    virtual NonnullRefPtr<Value> with_slices(NonnullRefPtr<Slice> slice) const&;
-    virtual NonnullRefPtr<Value> with_slices(NonnullRefPtrVector<Slice> slices) const&;
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) = 0;
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell> shell);
+    virtual ErrorOr<Vector<Command>> resolve_as_commands(RefPtr<Shell>);
+    virtual ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) { return *this; }
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const = 0;
+    virtual ErrorOr<NonnullRefPtr<Value>> with_slices(NonnullRefPtr<Slice> slice) const&;
+    virtual ErrorOr<NonnullRefPtr<Value>> with_slices(NonnullRefPtrVector<Slice> slices) const&;
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -253,9 +253,9 @@ protected:
 
 class CommandValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<CommandValue>(m_command)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<Vector<Command>> resolve_as_commands(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<CommandValue>(m_command))->set_slices(m_slices); }
     virtual ~CommandValue();
     virtual bool is_command() const override { return true; }
     CommandValue(Command command)
@@ -263,7 +263,7 @@ public:
     {
     }
 
-    CommandValue(Vector<DeprecatedString> argv, Position position)
+    CommandValue(Vector<String> argv, Position position)
         : m_command({ move(argv), {}, true, false, true, false, nullptr, {}, move(position) })
     {
     }
@@ -274,9 +274,9 @@ private:
 
 class CommandSequenceValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<CommandSequenceValue>(m_contained_values)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<Vector<Command>> resolve_as_commands(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<CommandSequenceValue>(m_contained_values))->set_slices(m_slices); }
     virtual ~CommandSequenceValue();
     virtual bool is_command() const override { return true; }
     CommandSequenceValue(Vector<Command> commands)
@@ -290,10 +290,10 @@ private:
 
 class JobValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
-    virtual DeprecatedString resolve_as_string(RefPtr<Shell>) override { return DeprecatedString::formatted("%{}", m_job->job_id()); }
-    virtual Vector<Command> resolve_as_commands(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<JobValue>(m_job)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell>) override { return String::formatted("%{}", m_job->job_id()); }
+    virtual ErrorOr<Vector<Command>> resolve_as_commands(RefPtr<Shell>) override { VERIFY_NOT_REACHED(); }
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<JobValue>(m_job))->set_slices(m_slices); }
     virtual ~JobValue();
     virtual bool is_job() const override { return true; }
     JobValue(RefPtr<Job> job)
@@ -309,13 +309,13 @@ private:
 
 class ListValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<ListValue>(m_contained_values)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<ListValue>(m_contained_values))->set_slices(m_slices); }
     virtual ~ListValue();
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
-    ListValue(Vector<DeprecatedString> values);
+    ListValue(Vector<String> values);
     ListValue(NonnullRefPtrVector<Value> values)
         : m_contained_values(move(values))
     {
@@ -330,14 +330,14 @@ private:
 
 class StringValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual DeprecatedString resolve_as_string(RefPtr<Shell> shell) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<StringValue>(m_string, m_split, m_keep_empty)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell> shell) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<StringValue>(m_string, m_split, m_keep_empty))->set_slices(m_slices); }
     virtual ~StringValue();
-    virtual bool is_string() const override { return m_split.is_null(); }
-    virtual bool is_list() const override { return !m_split.is_null(); }
-    NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
-    StringValue(DeprecatedString string, DeprecatedString split_by = {}, bool keep_empty = false)
+    virtual bool is_string() const override { return m_split.is_empty(); }
+    virtual bool is_list() const override { return !m_split.is_empty(); }
+    ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) override;
+    StringValue(String string, String split_by = {}, bool keep_empty = false)
         : m_string(move(string))
         , m_split(move(split_by))
         , m_keep_empty(keep_empty)
@@ -345,50 +345,50 @@ public:
     }
 
 private:
-    DeprecatedString m_string;
-    DeprecatedString m_split;
+    String m_string;
+    String m_split;
     bool m_keep_empty { false };
 };
 
 class GlobValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<GlobValue>(m_glob, m_generation_position)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<GlobValue>(m_glob, m_generation_position))->set_slices(m_slices); }
     virtual ~GlobValue();
     virtual bool is_glob() const override { return true; }
-    GlobValue(DeprecatedString glob, Position position)
+    GlobValue(String glob, Position position)
         : m_glob(move(glob))
         , m_generation_position(move(position))
     {
     }
 
 private:
-    DeprecatedString m_glob;
+    String m_glob;
     Position m_generation_position;
 };
 
 class SimpleVariableValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual DeprecatedString resolve_as_string(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SimpleVariableValue>(m_name)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<SimpleVariableValue>(m_name))->set_slices(m_slices); }
     virtual ~SimpleVariableValue();
-    SimpleVariableValue(DeprecatedString name)
+    SimpleVariableValue(String name)
         : m_name(move(name))
     {
     }
 
 private:
-    DeprecatedString m_name;
+    String m_name;
 };
 
 class SpecialVariableValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual DeprecatedString resolve_as_string(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> resolve_without_cast(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<SpecialVariableValue>(m_name)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<SpecialVariableValue>(m_name))->set_slices(m_slices); }
     virtual ~SpecialVariableValue();
     SpecialVariableValue(char name)
         : m_name(name)
@@ -401,18 +401,18 @@ private:
 
 class TildeValue final : public Value {
 public:
-    virtual Vector<DeprecatedString> resolve_as_list(RefPtr<Shell>) override;
-    virtual DeprecatedString resolve_as_string(RefPtr<Shell>) override;
-    virtual NonnullRefPtr<Value> clone() const override { return make_ref_counted<TildeValue>(m_username)->set_slices(m_slices); }
+    virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell>) override;
+    virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<TildeValue>(m_username))->set_slices(m_slices); }
     virtual ~TildeValue();
     virtual bool is_string() const override { return true; }
-    TildeValue(DeprecatedString name)
+    TildeValue(String name)
         : m_username(move(name))
     {
     }
 
 private:
-    DeprecatedString m_username;
+    String m_username;
 };
 
 class Node : public RefCounted<Node> {
@@ -432,7 +432,7 @@ public:
             return { this, nullptr, nullptr };
         return { nullptr, nullptr, nullptr };
     }
-    virtual DeprecatedString class_name() const { return "Node"; }
+    virtual StringView class_name() const { return "Node"sv; }
     Node(Position);
     virtual ~Node() = default;
 
@@ -519,14 +519,14 @@ protected:
     RefPtr<SyntaxError> m_syntax_error_node;
 };
 
-#define NODE(name)                                       \
-    virtual DeprecatedString class_name() const override \
-    {                                                    \
-        return #name;                                    \
-    }                                                    \
-    virtual Kind kind() const override                   \
-    {                                                    \
-        return Kind::name;                               \
+#define NODE(name)                                 \
+    virtual StringView class_name() const override \
+    {                                              \
+        return #name##sv;                          \
+    }                                              \
+    virtual Kind kind() const override             \
+    {                                              \
+        return Kind::name;                         \
     }
 
 class PathRedirectionNode : public Node {
@@ -610,11 +610,11 @@ private:
 
 class BarewordLiteral final : public Node {
 public:
-    BarewordLiteral(Position, DeprecatedString);
+    BarewordLiteral(Position, String);
     virtual ~BarewordLiteral() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString const& text() const { return m_text; }
+    String const& text() const { return m_text; }
 
 private:
     NODE(BarewordLiteral);
@@ -624,7 +624,7 @@ private:
     virtual bool is_bareword() const override { return true; }
     virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; }
 
-    DeprecatedString m_text;
+    String m_text;
 };
 
 class BraceExpansion final : public Node {
@@ -727,11 +727,11 @@ private:
 
 class Comment : public Node {
 public:
-    Comment(Position, DeprecatedString);
+    Comment(Position, String);
     virtual ~Comment();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString const& text() const { return m_text; }
+    String const& text() const { return m_text; }
 
 private:
     NODE(Comment);
@@ -739,7 +739,7 @@ private:
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
 
-    DeprecatedString m_text;
+    String m_text;
 };
 
 class ContinuationControl final : public Node {
@@ -890,11 +890,11 @@ private:
 
 class Glob final : public Node {
 public:
-    Glob(Position, DeprecatedString);
+    Glob(Position, String);
     virtual ~Glob();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString const& text() const { return m_text; }
+    String const& text() const { return m_text; }
 
 private:
     NODE(Glob);
@@ -904,7 +904,7 @@ private:
     virtual bool is_glob() const override { return true; }
     virtual bool is_list() const override { return true; }
 
-    DeprecatedString m_text;
+    String m_text;
 };
 
 struct HistorySelector {
@@ -923,7 +923,7 @@ struct HistorySelector {
         EventKind kind { IndexFromStart };
         size_t index { 0 };
         Position text_position;
-        DeprecatedString text;
+        String text;
     } event;
 
     struct WordSelector {
@@ -1025,7 +1025,7 @@ public:
 
     NonnullRefPtrVector<Node> const& arguments() const { return m_arguments; }
     auto const& function() const { return m_function; }
-    DeprecatedString const& function_name() const { return m_function.name; }
+    String const& function_name() const { return m_function.name; }
     Position const& function_position() const { return m_function.position; }
     bool has_closing_brace() const { return m_closing_brace_position.has_value(); }
 
@@ -1067,7 +1067,7 @@ private:
 
 struct MatchEntry {
     Variant<NonnullRefPtrVector<Node>, Vector<Regex<ECMA262>>> options;
-    Optional<Vector<DeprecatedString>> match_names;
+    Optional<Vector<String>> match_names;
     Optional<Position> match_as_position;
     Vector<Position> pipe_positions;
     RefPtr<Node> body;
@@ -1075,12 +1075,12 @@ struct MatchEntry {
 
 class MatchExpr final : public Node {
 public:
-    MatchExpr(Position, NonnullRefPtr<Node> expr, DeprecatedString name, Optional<Position> as_position, Vector<MatchEntry> entries);
+    MatchExpr(Position, NonnullRefPtr<Node> expr, String name, Optional<Position> as_position, Vector<MatchEntry> entries);
     virtual ~MatchExpr();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
     NonnullRefPtr<Node> const& matched_expr() const { return m_matched_expr; }
-    DeprecatedString const& expr_name() const { return m_expr_name; }
+    String const& expr_name() const { return m_expr_name; }
     Vector<MatchEntry> const& entries() const { return m_entries; }
     Optional<Position> const& as_position() const { return m_as_position; }
 
@@ -1094,7 +1094,7 @@ private:
     virtual bool should_override_execution_in_current_process() const override { return true; }
 
     NonnullRefPtr<Node> m_matched_expr;
-    DeprecatedString m_expr_name;
+    String m_expr_name;
     Optional<Position> m_as_position;
     Vector<MatchEntry> m_entries;
 };
@@ -1273,11 +1273,11 @@ protected:
 
 class SimpleVariable final : public VariableNode {
 public:
-    SimpleVariable(Position, DeprecatedString);
+    SimpleVariable(Position, String);
     virtual ~SimpleVariable();
 
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
-    DeprecatedString const& name() const { return m_name; }
+    String const& name() const { return m_name; }
 
 private:
     NODE(SimpleVariable);
@@ -1288,7 +1288,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_simple_variable() const override { return true; }
 
-    DeprecatedString m_name;
+    String m_name;
 };
 
 class SpecialVariable final : public VariableNode {
@@ -1338,11 +1338,11 @@ private:
 
 class Heredoc final : public Node {
 public:
-    Heredoc(Position, DeprecatedString end, bool allow_interpolation, bool deindent, Optional<int> target_fd = {});
+    Heredoc(Position, String end, bool allow_interpolation, bool deindent, Optional<int> target_fd = {});
     virtual ~Heredoc();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString const& end() const { return m_end; }
+    String const& end() const { return m_end; }
     bool allow_interpolation() const { return m_allows_interpolation; }
     bool deindent() const { return m_deindent; }
     Optional<int> target_fd() const { return m_target_fd; }
@@ -1365,7 +1365,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) const override;
     virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; };
 
-    DeprecatedString m_end;
+    String m_end;
     bool m_allows_interpolation { false };
     bool m_deindent { false };
     Optional<int> m_target_fd;
@@ -1380,11 +1380,11 @@ public:
         DoubleQuotes,
     };
 
-    StringLiteral(Position, DeprecatedString, EnclosureType);
+    StringLiteral(Position, String, EnclosureType);
     virtual ~StringLiteral();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString const& text() const { return m_text; }
+    String const& text() const { return m_text; }
     EnclosureType enclosure_type() const { return m_enclosure_type; }
 
 private:
@@ -1394,7 +1394,7 @@ private:
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; };
 
-    DeprecatedString m_text;
+    String m_text;
     EnclosureType m_enclosure_type;
 };
 
@@ -1420,11 +1420,11 @@ private:
 
 class SyntaxError final : public Node {
 public:
-    SyntaxError(Position, DeprecatedString, bool is_continuable = false);
+    SyntaxError(Position, String, bool is_continuable = false);
     virtual ~SyntaxError();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString const& error_text() const { return m_syntax_error_text; }
+    String const& error_text() const { return m_syntax_error_text; }
     bool is_continuable() const { return m_is_continuable; }
 
     virtual void clear_syntax_error() override
@@ -1449,7 +1449,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) const override { return { nullptr, nullptr, nullptr }; }
     virtual SyntaxError& syntax_error_node() override;
 
-    DeprecatedString m_syntax_error_text;
+    String m_syntax_error_text;
     bool m_is_continuable { false };
     bool m_is_cleared { false };
 };
@@ -1473,11 +1473,11 @@ private:
 
 class Tilde final : public Node {
 public:
-    Tilde(Position, DeprecatedString);
+    Tilde(Position, String);
     virtual ~Tilde();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    DeprecatedString text() const;
+    String text() const;
 
 private:
     NODE(Tilde);
@@ -1488,7 +1488,7 @@ private:
     virtual HitTestResult hit_test_position(size_t) const override;
     virtual bool is_tilde() const override { return true; }
 
-    DeprecatedString m_username;
+    String m_username;
 };
 
 class VariableDeclarations final : public Node {

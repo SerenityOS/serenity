@@ -554,7 +554,7 @@ int Shell::builtin_export(int argc, char const** argv)
         if (parts.size() == 1) {
             auto value = lookup_local_variable(parts[0]);
             if (value) {
-                auto values = const_cast<AST::Value&>(*value).resolve_as_list(*this);
+                auto values = const_cast<AST::Value&>(*value).resolve_as_list(*this).release_value_but_fixme_should_propagate_errors();
                 StringBuilder builder;
                 builder.join(' ', values);
                 parts.append(builder.to_deprecated_string());
@@ -963,7 +963,7 @@ int Shell::builtin_shift(int argc, char const** argv)
 int Shell::builtin_source(int argc, char const** argv)
 {
     char const* file_to_source = nullptr;
-    Vector<DeprecatedString> args;
+    Vector<StringView> args;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(file_to_source, "File to read commands from", "path");
@@ -978,8 +978,14 @@ int Shell::builtin_source(int argc, char const** argv)
             set_local_variable("ARGV", const_cast<AST::Value&>(*previous_argv));
     } };
 
-    if (!args.is_empty())
-        set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(args)));
+    if (!args.is_empty()) {
+        Vector<String> arguments;
+        arguments.ensure_capacity(args.size());
+        for (auto& arg : args)
+            arguments.append(String::from_utf8(arg).release_value_but_fixme_should_propagate_errors());
+
+        set_local_variable("ARGV", AST::make_ref_counted<AST::ListValue>(move(arguments)));
+    }
 
     if (!run_file(file_to_source, true))
         return 126;
@@ -989,20 +995,25 @@ int Shell::builtin_source(int argc, char const** argv)
 
 int Shell::builtin_time(int argc, char const** argv)
 {
-    AST::Command command;
+    Vector<StringView> args;
 
     int number_of_iterations = 1;
 
     Core::ArgsParser parser;
     parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations");
     parser.set_stop_on_first_non_option(true);
-    parser.add_positional_argument(command.argv, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
+    parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
 
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
     if (number_of_iterations < 1)
         return 1;
+
+    AST::Command command;
+    command.argv.ensure_capacity(args.size());
+    for (auto& arg : args)
+        command.argv.append(String::from_utf8(arg).release_value_but_fixme_should_propagate_errors());
 
     auto commands = expand_aliases({ move(command) });
 
@@ -1163,7 +1174,7 @@ int Shell::builtin_not(int argc, char const** argv)
 
     AST::Command command;
     for (size_t i = 1; i < (size_t)argc; ++i)
-        command.argv.append(argv[i]);
+        command.argv.append(String::from_utf8(StringView { argv[i], strlen(argv[i]) }).release_value_but_fixme_should_propagate_errors());
 
     auto commands = expand_aliases({ move(command) });
     int exit_code = 1;
@@ -1182,24 +1193,24 @@ int Shell::builtin_not(int argc, char const** argv)
 int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
-    Vector<DeprecatedString> replaced_values;
+    Vector<String> replaced_values;
     auto kill_path = Core::DeprecatedFile::resolve_executable_from_environment("kill"sv);
     if (!kill_path.has_value()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
-    replaced_values.append(kill_path.release_value());
+    replaced_values.append(String::from_deprecated_string(kill_path.release_value()).release_value_but_fixme_should_propagate_errors());
     for (auto i = 1; i < argc; ++i) {
         if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
-                replaced_values.append(DeprecatedString::number(job->pid()));
+                replaced_values.append(String::number(job->pid()).release_value_but_fixme_should_propagate_errors());
             } else {
                 warnln("kill: Job with pid {} not found", job_id.value());
                 return 1;
             }
         } else {
-            replaced_values.append(argv[i]);
+            replaced_values.append(String::from_deprecated_string(argv[i]).release_value_but_fixme_should_propagate_errors());
         }
     }
 
@@ -1230,9 +1241,13 @@ bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Re
     if (!has_builtin(command.argv.first()))
         return false;
 
+    // FIXME: Make all the functions above take the more idiomatic (Main::Arguments) parameters, and remove this gross conversion.
     Vector<char const*> argv;
-    for (auto& arg : command.argv)
-        argv.append(arg.characters());
+    Vector<DeprecatedString> args;
+    for (auto& arg : command.argv) {
+        args.append(arg.to_deprecated_string());
+        argv.append(args.last().characters());
+    }
 
     argv.append(nullptr);
 
@@ -1302,19 +1317,19 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     auto try_convert = [](StringView value, Type type) -> Optional<RefPtr<AST::Value>> {
         switch (type) {
         case Type::Bool:
-            return AST::make_ref_counted<AST::StringValue>("true");
+            return AST::make_ref_counted<AST::StringValue>(String::from_utf8("true"sv).release_value_but_fixme_should_propagate_errors());
         case Type::String:
-            return AST::make_ref_counted<AST::StringValue>(value);
+            return AST::make_ref_counted<AST::StringValue>(String::from_utf8(value).release_value_but_fixme_should_propagate_errors());
         case Type::I32:
             if (auto number = value.to_int(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(DeprecatedString::number(*number));
+                return AST::make_ref_counted<AST::StringValue>(String::number(*number).release_value_but_fixme_should_propagate_errors());
 
             warnln("Invalid value for type i32: {}", value);
             return {};
         case Type::U32:
         case Type::Size:
             if (auto number = value.to_uint(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(DeprecatedString::number(*number));
+                return AST::make_ref_counted<AST::StringValue>(String::number(*number).release_value_but_fixme_should_propagate_errors());
 
             warnln("Invalid value for type u32|size: {}", value);
             return {};
@@ -1327,7 +1342,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
                 return {};
             }
 
-            return AST::make_ref_counted<AST::StringValue>(DeprecatedString::number(number));
+            return AST::make_ref_counted<AST::StringValue>(String::number(number).release_value_but_fixme_should_propagate_errors());
         }
         default:
             VERIFY_NOT_REACHED();
@@ -1337,8 +1352,8 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     auto enlist = [&](auto name, auto value) -> NonnullRefPtr<AST::Value> {
         auto variable = lookup_local_variable(name);
         if (variable) {
-            auto list = const_cast<AST::Value&>(*variable).resolve_as_list(*this);
-            auto new_value = value->resolve_as_string(*this);
+            auto list = const_cast<AST::Value&>(*variable).resolve_as_list(*this).release_value_but_fixme_should_propagate_errors();
+            auto new_value = value->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
             list.append(move(new_value));
             return make_ref_counted<AST::ListValue>(move(list));
         }
@@ -1482,7 +1497,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
             }
 
             if (type == Type::Bool)
-                set_local_variable(current_variable, make_ref_counted<AST::StringValue>("false"), true);
+                set_local_variable(current_variable, make_ref_counted<AST::StringValue>(String::from_utf8("false"sv).release_value_but_fixme_should_propagate_errors()), true);
             return true;
         },
     });

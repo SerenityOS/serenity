@@ -165,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView command_to_run = {};
     StringView file_to_read_from = {};
-    Vector<DeprecatedString> script_args;
+    Vector<StringView> script_args;
     bool skip_rc_files = false;
     char const* format = nullptr;
     bool should_format_live = false;
@@ -236,7 +236,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         shell->cache_path();
     }
 
-    shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(script_args))));
+    Vector<String> args_to_pass;
+    TRY(args_to_pass.try_ensure_capacity(script_args.size()));
+    for (auto& arg : script_args)
+        TRY(args_to_pass.try_append(TRY(String::from_utf8(arg))));
+
+    shell->set_local_variable("ARGV", adopt_ref(*new Shell::AST::ListValue(move(args_to_pass))));
 
     if (!command_to_run.is_empty()) {
         auto result = shell->run_command(command_to_run);

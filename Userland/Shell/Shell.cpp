@@ -309,7 +309,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                         subcommand_nonnull,
                         adopt_ref(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
                     auto res = substitute->run(*this);
-                    for (auto& subst_command : res->resolve_as_commands(*this)) {
+                    for (auto& subst_command : res->resolve_as_commands(*this).release_value_but_fixme_should_propagate_errors()) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
                             commands.append(subst_command);
                         else
@@ -364,7 +364,7 @@ RefPtr<AST::Value const> Shell::lookup_local_variable(StringView name) const
 RefPtr<AST::Value const> Shell::get_argument(size_t index) const
 {
     if (index == 0)
-        return adopt_ref(*new AST::StringValue(current_script));
+        return adopt_ref(*new AST::StringValue(String::from_deprecated_string(current_script).release_value_but_fixme_should_propagate_errors()));
 
     --index;
     if (auto argv = lookup_local_variable("ARGV"sv)) {
@@ -390,7 +390,7 @@ DeprecatedString Shell::local_variable_or(StringView name, DeprecatedString cons
     auto value = lookup_local_variable(name);
     if (value) {
         StringBuilder builder;
-        builder.join(' ', const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)));
+        builder.join(' ', const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).release_value_but_fixme_should_propagate_errors());
         return builder.to_deprecated_string();
     }
     return replacement;
@@ -594,7 +594,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     if (command->is_syntax_error()) {
         auto& error_node = command->syntax_error_node();
         auto& position = error_node.position();
-        raise_error(ShellError::EvaluatedSyntaxError, error_node.error_text(), position);
+        raise_error(ShellError::EvaluatedSyntaxError, error_node.error_text().bytes_as_string_view(), position);
     }
 
     if (!has_error(ShellError::None)) {
@@ -673,7 +673,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     auto apply_rewirings = [&]() -> ErrorOr<void> {
         for (auto& rewiring : rewirings) {
 
-            dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)" : command.argv[0].characters(), getpid(), rewiring.old_fd, rewiring.new_fd);
+            dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)"sv : command.argv[0], getpid(), rewiring.old_fd, rewiring.new_fd);
             int rc = dup2(rewiring.old_fd, rewiring.new_fd);
             if (rc < 0)
                 return Error::from_syscall("dup2"sv, rc);
@@ -734,11 +734,13 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     }
 
     Vector<char const*> argv;
-    Vector<DeprecatedString> copy_argv = command.argv;
+    Vector<DeprecatedString> copy_argv;
     argv.ensure_capacity(command.argv.size() + 1);
 
-    for (auto& arg : copy_argv)
-        argv.append(arg.characters());
+    for (auto& arg : command.argv) {
+        copy_argv.append(arg.to_deprecated_string());
+        argv.append(copy_argv.last().characters());
+    }
 
     argv.append(nullptr);
 
@@ -1068,7 +1070,7 @@ bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const
     if (!value)
         return false;
 
-    return const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).contains_slow(command.argv[0]);
+    return const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).release_value_but_fixme_should_propagate_errors().contains_slow(command.argv[0]);
 }
 
 void Shell::restore_ios()
@@ -1665,29 +1667,27 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     if (command_node->would_execute())
         return Error::from_string_literal("Refusing to complete nodes that would execute");
 
-    DeprecatedString program_name_storage;
+    String program_name_storage;
     if (known_program_name.is_null()) {
         auto node = command_node->leftmost_trivial_literal();
         if (!node)
             return Error::from_string_literal("Cannot complete");
 
-        program_name_storage = const_cast<AST::Node&>(*node).run(*this)->resolve_as_string(*this);
+        program_name_storage = const_cast<AST::Node&>(*node).run(*this)->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
         known_program_name = program_name_storage;
     }
 
-    auto program_name = known_program_name;
-
     AST::Command completion_command;
-    completion_command.argv.append(program_name);
+    completion_command.argv.append(program_name_storage);
     completion_command = expand_aliases({ completion_command }).last();
 
-    auto completion_utility_name = DeprecatedString::formatted("_complete_{}", completion_command.argv[0]);
+    auto completion_utility_name = String::formatted("_complete_{}", completion_command.argv[0]).release_value_but_fixme_should_propagate_errors();
     if (binary_search(cached_path.span(), completion_utility_name, nullptr, RunnablePathComparator {}) != nullptr)
         completion_command.argv[0] = completion_utility_name;
     else if (!options.invoke_program_for_autocomplete)
         return Error::from_string_literal("Refusing to use the program itself as completion source");
 
-    completion_command.argv.extend({ "--complete", "--" });
+    completion_command.argv.extend({ String::from_utf8("--complete"sv).release_value_but_fixme_should_propagate_errors(), String::from_utf8_short_string("--"sv) });
 
     struct Visitor : public AST::NodeVisitor {
         Visitor(Shell& shell, AST::Position position)
@@ -1699,12 +1699,12 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
         Shell& shell;
         AST::Position completion_position;
-        Vector<Vector<DeprecatedString>> lists;
+        Vector<Vector<String>> lists;
         bool fail { false };
 
         void push_list() { lists.empend(); }
-        Vector<DeprecatedString> pop_list() { return lists.take_last(); }
-        Vector<DeprecatedString>& list() { return lists.last(); }
+        Vector<String> pop_list() { return lists.take_last(); }
+        Vector<String>& list() { return lists.last(); }
 
         bool should_include(AST::Node const* node) const { return node->position().end_offset <= completion_position.end_offset; }
 
@@ -1717,7 +1717,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         virtual void visit(AST::BraceExpansion const* node) override
         {
             if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::BraceExpansion*>(node))->run(shell)->resolve_as_list(shell));
+                list().extend(static_cast<AST::Node*>(const_cast<AST::BraceExpansion*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
         }
 
         virtual void visit(AST::CommandLiteral const* node) override
@@ -1742,7 +1742,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto list = pop_list();
             StringBuilder builder;
             builder.join(""sv, list);
-            this->list().append(builder.to_deprecated_string());
+            this->list().append(builder.to_string().release_value_but_fixme_should_propagate_errors());
         }
 
         virtual void visit(AST::Glob const* node) override
@@ -1761,7 +1761,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
             auto list = pop_list();
             StringBuilder builder;
             builder.join(""sv, list);
-            this->list().append(builder.to_deprecated_string());
+            this->list().append(builder.to_string().release_value_but_fixme_should_propagate_errors());
         }
 
         virtual void visit(AST::ImmediateExpression const* node) override
@@ -1783,13 +1783,13 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         virtual void visit(AST::SimpleVariable const* node) override
         {
             if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::SimpleVariable*>(node))->run(shell)->resolve_as_list(shell));
+                list().extend(static_cast<AST::Node*>(const_cast<AST::SimpleVariable*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
         }
 
         virtual void visit(AST::SpecialVariable const* node) override
         {
             if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::SpecialVariable*>(node))->run(shell)->resolve_as_list(shell));
+                list().extend(static_cast<AST::Node*>(const_cast<AST::SpecialVariable*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
         }
 
         virtual void visit(AST::Juxtaposition const* node) override
@@ -1810,7 +1810,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
                 for (auto& right_entry : right) {
                     builder.append(left_entry);
                     builder.append(right_entry);
-                    list().append(builder.to_deprecated_string());
+                    list().append(builder.to_string().release_value_but_fixme_should_propagate_errors());
                     builder.clear();
                 }
             }
@@ -1825,7 +1825,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         virtual void visit(AST::Tilde const* node) override
         {
             if (should_include(node))
-                list().extend(static_cast<AST::Node*>(const_cast<AST::Tilde*>(node))->run(shell)->resolve_as_list(shell));
+                list().extend(static_cast<AST::Node*>(const_cast<AST::Tilde*>(node))->run(shell)->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors());
         }
 
         virtual void visit(AST::PathRedirectionNode const*) override { }
@@ -1844,9 +1844,10 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
     completion_command.argv.extend(visitor.list());
 
+    auto devnull = String::from_utf8("/dev/null"sv).release_value_but_fixme_should_propagate_errors();
     completion_command.should_wait = true;
-    completion_command.redirections.append(AST::PathRedirection::create("/dev/null", STDERR_FILENO, AST::PathRedirection::Write));
-    completion_command.redirections.append(AST::PathRedirection::create("/dev/null", STDIN_FILENO, AST::PathRedirection::Read));
+    completion_command.redirections.append(AST::PathRedirection::create(devnull, STDERR_FILENO, AST::PathRedirection::Write));
+    completion_command.redirections.append(AST::PathRedirection::create(devnull, STDIN_FILENO, AST::PathRedirection::Read));
 
     auto execute_node = make_ref_counted<AST::Execute>(
         AST::Position {},
@@ -1869,7 +1870,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
     {
         TemporaryChange change(m_is_interactive, false);
         execute_node->for_each_entry(*this, [&](NonnullRefPtr<AST::Value> entry) -> IterationDecision {
-            auto result = entry->resolve_as_string(*this);
+            auto result = entry->resolve_as_string(*this).release_value_but_fixme_should_propagate_errors();
             JsonParser parser(result);
             auto parsed_result = parser.parse();
             if (parsed_result.is_error())
