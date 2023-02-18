@@ -180,6 +180,21 @@ static ErrorOr<ByteBuffer> encode_text(TextTagData const& tag_data)
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_viewing_conditions(ViewingConditionsTagData const& tag_data)
+{
+    // ICC v4, 10.30 viewingConditionsType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(ViewingConditionsHeader)));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)ViewingConditionsTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<ViewingConditionsHeader*>(bytes.data() + 8);
+    header.unnormalized_ciexyz_values_for_illuminant = tag_data.unnormalized_ciexyz_values_for_illuminant();
+    header.unnormalized_ciexyz_values_for_surround = tag_data.unnormalized_ciexyz_values_for_surround();
+    header.illuminant_type = tag_data.illuminant_type();
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
 {
     // ICC v4, 10.31 XYZType
@@ -215,6 +230,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_signature(static_cast<SignatureTagData const&>(tag_data));
     case TextTagData::Type:
         return encode_text(static_cast<TextTagData const&>(tag_data));
+    case ViewingConditionsTagData::Type:
+        return encode_viewing_conditions(static_cast<ViewingConditionsTagData const&>(tag_data));
     case XYZTagData::Type:
         return encode_xyz(static_cast<XYZTagData const&>(tag_data));
     }
