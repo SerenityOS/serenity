@@ -62,6 +62,23 @@ static ErrorOr<ByteBuffer> encode_curve(CurveTagData const& tag_data)
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_measurement(MeasurementTagData const& tag_data)
+{
+    // ICC v4, 10.14 measurementType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(MeasurementHeader)));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)MeasurementTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<MeasurementHeader*>(bytes.data() + 8);
+    header.standard_observer = tag_data.standard_observer();
+    header.tristimulus_value_for_measurement_backing = tag_data.tristimulus_value_for_measurement_backing();
+    header.measurement_geometry = tag_data.measurement_geometry();
+    header.measurement_flare = tag_data.measurement_flare().raw();
+    header.standard_illuminant = tag_data.standard_illuminant();
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeTagData const& tag_data)
 {
     // ICC v4, 10.15 multiLocalizedUnicodeType
@@ -186,6 +203,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_cipc(static_cast<CicpTagData const&>(tag_data));
     case CurveTagData::Type:
         return encode_curve(static_cast<CurveTagData const&>(tag_data));
+    case MeasurementTagData::Type:
+        return encode_measurement(static_cast<MeasurementTagData const&>(tag_data));
     case MultiLocalizedUnicodeTagData::Type:
         return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
     case ParametricCurveTagData::Type:
