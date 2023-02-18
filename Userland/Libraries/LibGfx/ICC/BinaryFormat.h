@@ -130,4 +130,13 @@ struct CLUTHeader {
 };
 static_assert(AssertSize<CLUTHeader, 20>());
 
+// ICC v4, 10.15 multiLocalizedUnicodeType
+struct MultiLocalizedUnicodeRawRecord {
+    BigEndian<u16> language_code;
+    BigEndian<u16> country_code;
+    BigEndian<u32> string_length_in_bytes;
+    BigEndian<u32> string_offset_in_bytes;
+};
+static_assert(AssertSize<MultiLocalizedUnicodeRawRecord, 12>());
+
 }

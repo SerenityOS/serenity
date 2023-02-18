@@ -686,7 +686,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     // of each record. Any code that needs to access the nth record should determine the record’s offset by multiplying
     // n by the contents of this size field and adding 16. This minor extra effort allows for future expansion of the record
     // encoding, should the need arise, without having to define a new tag type."
-    if (record_size < 12)
+    if (record_size < sizeof(MultiLocalizedUnicodeRawRecord))
         return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType record size too small");
     if (bytes.size() < 16 + number_of_records * record_size)
         return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType not enough data for records");
@@ -699,17 +699,9 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     //  and should not be NULL terminated."
     auto& utf_16be_decoder = *TextCodec::decoder_for("utf-16be"sv);
 
-    struct RawRecord {
-        BigEndian<u16> language_code;
-        BigEndian<u16> country_code;
-        BigEndian<u32> string_length_in_bytes;
-        BigEndian<u32> string_offset_in_bytes;
-    };
-    static_assert(AssertSize<RawRecord, 12>());
-
     for (u32 i = 0; i < number_of_records; ++i) {
         size_t offset = 16 + i * record_size;
-        RawRecord record = *bit_cast<RawRecord const*>(bytes.data() + offset);
+        auto record = *bit_cast<MultiLocalizedUnicodeRawRecord const*>(bytes.data() + offset);
 
         records[i].iso_639_1_language_code = record.language_code;
         records[i].iso_3166_1_country_code = record.country_code;
