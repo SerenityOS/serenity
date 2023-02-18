@@ -201,6 +201,9 @@ u32 FATInode::first_cluster() const
 ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     dbgln_if(FAT_DEBUG, "FATFS: Reading inode {}: size: {} offset: {}", identifier().index(), size, offset);
+    VERIFY(offset >= 0);
+    if (offset >= m_metadata.size)
+        return 0;
 
     // FIXME: Read only the needed blocks instead of the whole file
     auto blocks = TRY(const_cast<FATInode&>(*this).read_block_list());
