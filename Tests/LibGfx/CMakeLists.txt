@@ -6,6 +6,7 @@ set(TEST_SOURCES
     TestGfxBitmap.cpp
     TestICCProfile.cpp
     TestImageDecoder.cpp
+    TestParseISOBMFF.cpp
     TestRect.cpp
     TestScalingFunctions.cpp
 )
