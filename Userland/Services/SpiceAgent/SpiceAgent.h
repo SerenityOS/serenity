@@ -81,7 +81,7 @@ public:
         PNG,
         BMP,
         TIFF,
-        JPG,
+        JPEG,
         FileList,
         __Count
     };

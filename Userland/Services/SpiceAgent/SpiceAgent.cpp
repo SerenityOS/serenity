@@ -46,7 +46,7 @@ Optional<SpiceAgent::ClipboardType> SpiceAgent::mime_type_to_clipboard_type(Depr
     if (mime == "text/plain")
         return ClipboardType::Text;
     else if (mime == "image/jpeg")
-        return ClipboardType::JPG;
+        return ClipboardType::JPEG;
     else if (mime == "image/bmp")
         return ClipboardType::BMP;
     else if (mime == "image/png" || mime == "image/x-serenityos")
@@ -100,7 +100,7 @@ void SpiceAgent::on_message_received()
                 switch (type) {
                 case ClipboardType::PNG:
                 case ClipboardType::BMP:
-                case ClipboardType::JPG:
+                case ClipboardType::JPEG:
                     found_type = type;
                     break;
                 default:
@@ -153,7 +153,7 @@ void SpiceAgent::on_message_received()
                     if (bmp_decoder->initialize())
                         frame_or_error = bmp_decoder->frame(0);
                 }
-            } else if (type == ClipboardType::JPG) {
+            } else if (type == ClipboardType::JPEG) {
                 if (Gfx::JPEGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors()) {
                     auto jpeg_decoder = Gfx::JPEGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
                     if (jpeg_decoder->initialize())
