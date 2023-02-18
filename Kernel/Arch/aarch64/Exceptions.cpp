@@ -74,7 +74,10 @@ static void setup_el1()
     system_control_register_el1.UMA = 1;  // Don't trap access to DAIF (debugging) flags of EFLAGS register
     system_control_register_el1.SA0 = 1;  // Enable stack access alignment check for EL0
     system_control_register_el1.SA = 1;   // Enable stack access alignment check for EL1
-    system_control_register_el1.A = 1;    // Enable memory access alignment check
+
+    // FIXME: Enable memory access alignment check when userspace will not execute unaligned memory accesses anymore.
+    //        See: https://github.com/SerenityOS/serenity/issues/17516
+    system_control_register_el1.A = 0; // Disable memory access alignment check
 
     Aarch64::SCTLR_EL1::write(system_control_register_el1);
 
