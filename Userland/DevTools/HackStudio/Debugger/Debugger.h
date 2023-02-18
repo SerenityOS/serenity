@@ -38,6 +38,7 @@ public:
 
     void set_executable_path(DeprecatedString const& path) { m_executable_path = path; }
     void set_source_root(DeprecatedString const& source_root) { m_source_root = source_root; }
+    void set_pid_to_attach(pid_t pid) { m_pid_to_attach = pid; }
 
     Debug::DebugSession* session() { return m_debug_session.ptr(); }
 
@@ -98,13 +99,19 @@ private:
     Debug::DebugInfo::SourcePosition create_source_position(DeprecatedString const& file, size_t line);
 
     void start();
-    int debugger_loop();
+    int debugger_loop(Debug::DebugSession::DesiredInitialDebugeeState);
 
     void remove_temporary_breakpoints();
     void do_step_out(PtraceRegisters const&);
     void do_step_over(PtraceRegisters const&);
     void insert_temporary_breakpoint(FlatPtr address);
     void insert_temporary_breakpoint_at_return_address(PtraceRegisters const&);
+
+    struct CreateDebugSessionResult {
+        NonnullOwnPtr<Debug::DebugSession> session;
+        Debug::DebugSession::DesiredInitialDebugeeState initial_state { Debug::DebugSession::Stopped };
+    };
+    CreateDebugSessionResult create_debug_session();
 
     OwnPtr<Debug::DebugSession> m_debug_session;
     DeprecatedString m_source_root;
@@ -117,6 +124,7 @@ private:
     Vector<Debug::DebugInfo::SourcePosition> m_breakpoints;
 
     DeprecatedString m_executable_path;
+    Optional<pid_t> m_pid_to_attach;
 
     Function<HasControlPassedToUser(PtraceRegisters const&)> m_on_stopped_callback;
     Function<void()> m_on_continue_callback;
