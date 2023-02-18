@@ -109,6 +109,9 @@ public:
     // Compare this String against another string with caseless matching. Using this method requires linking LibUnicode into your application.
     ErrorOr<bool> equals_ignoring_case(String const&) const;
 
+    bool starts_with(u32 code_point) const;
+    bool starts_with_bytes(StringView) const;
+
     // Creates a substring with a deep copy of the specified data window.
     ErrorOr<String> substring_from_byte_offset(size_t start, size_t byte_count) const;
     ErrorOr<String> substring_from_byte_offset(size_t start) const;
