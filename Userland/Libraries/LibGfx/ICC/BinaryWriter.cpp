@@ -60,11 +60,27 @@ static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeT
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
+{
+    // ICC v4, 10.31 XYZType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + tag_data.xyzs().size() * sizeof(XYZNumber)));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)XYZTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto* xyzs = bit_cast<XYZNumber*>(bytes.data() + 8);
+    for (size_t i = 0; i < tag_data.xyzs().size(); ++i)
+        xyzs[i] = tag_data.xyzs()[i];
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
 {
     switch (tag_data.type()) {
     case MultiLocalizedUnicodeTagData::Type:
         return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
+    case XYZTagData::Type:
+        return encode_xyz(static_cast<XYZTagData const&>(tag_data));
     }
     return ByteBuffer {};
 }
