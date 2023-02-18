@@ -170,7 +170,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/CommandLine.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
@@ -178,8 +177,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/LoadBase.cpp
-    FileSystem/SysFS/Subsystems/Kernel/SystemMode.cpp
     FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp
     FileSystem/SysFS/Subsystems/Kernel/Log.cpp
     FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp
@@ -194,6 +191,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/Route.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/TCP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
