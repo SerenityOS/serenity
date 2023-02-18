@@ -16,60 +16,60 @@
 #include <AK/Vector.h>
 #include <LibGfx/JPEGLoader.h>
 
-#define JPG_INVALID 0X0000
+#define JPEG_INVALID 0X0000
 
-#define JPG_APPN0 0XFFE0
-#define JPG_APPN1 0XFFE1
-#define JPG_APPN2 0XFFE2
-#define JPG_APPN3 0XFFE3
-#define JPG_APPN4 0XFFE4
-#define JPG_APPN5 0XFFE5
-#define JPG_APPN6 0XFFE6
-#define JPG_APPN7 0XFFE7
-#define JPG_APPN8 0XFFE8
-#define JPG_APPN9 0XFFE9
-#define JPG_APPNA 0XFFEA
-#define JPG_APPNB 0XFFEB
-#define JPG_APPNC 0XFFEC
-#define JPG_APPND 0XFFED
-#define JPG_APPNE 0xFFEE
-#define JPG_APPNF 0xFFEF
+#define JPEG_APPN0 0XFFE0
+#define JPEG_APPN1 0XFFE1
+#define JPEG_APPN2 0XFFE2
+#define JPEG_APPN3 0XFFE3
+#define JPEG_APPN4 0XFFE4
+#define JPEG_APPN5 0XFFE5
+#define JPEG_APPN6 0XFFE6
+#define JPEG_APPN7 0XFFE7
+#define JPEG_APPN8 0XFFE8
+#define JPEG_APPN9 0XFFE9
+#define JPEG_APPNA 0XFFEA
+#define JPEG_APPNB 0XFFEB
+#define JPEG_APPNC 0XFFEC
+#define JPEG_APPND 0XFFED
+#define JPEG_APPNE 0xFFEE
+#define JPEG_APPNF 0xFFEF
 
-#define JPG_RESERVED1 0xFFF1
-#define JPG_RESERVED2 0xFFF2
-#define JPG_RESERVED3 0xFFF3
-#define JPG_RESERVED4 0xFFF4
-#define JPG_RESERVED5 0xFFF5
-#define JPG_RESERVED6 0xFFF6
-#define JPG_RESERVED7 0xFFF7
-#define JPG_RESERVED8 0xFFF8
-#define JPG_RESERVED9 0xFFF9
-#define JPG_RESERVEDA 0xFFFA
-#define JPG_RESERVEDB 0xFFFB
-#define JPG_RESERVEDC 0xFFFC
-#define JPG_RESERVEDD 0xFFFD
+#define JPEG_RESERVED1 0xFFF1
+#define JPEG_RESERVED2 0xFFF2
+#define JPEG_RESERVED3 0xFFF3
+#define JPEG_RESERVED4 0xFFF4
+#define JPEG_RESERVED5 0xFFF5
+#define JPEG_RESERVED6 0xFFF6
+#define JPEG_RESERVED7 0xFFF7
+#define JPEG_RESERVED8 0xFFF8
+#define JPEG_RESERVED9 0xFFF9
+#define JPEG_RESERVEDA 0xFFFA
+#define JPEG_RESERVEDB 0xFFFB
+#define JPEG_RESERVEDC 0xFFFC
+#define JPEG_RESERVEDD 0xFFFD
 
-#define JPG_RST0 0xFFD0
-#define JPG_RST1 0xFFD1
-#define JPG_RST2 0xFFD2
-#define JPG_RST3 0xFFD3
-#define JPG_RST4 0xFFD4
-#define JPG_RST5 0xFFD5
-#define JPG_RST6 0xFFD6
-#define JPG_RST7 0xFFD7
+#define JPEG_RST0 0xFFD0
+#define JPEG_RST1 0xFFD1
+#define JPEG_RST2 0xFFD2
+#define JPEG_RST3 0xFFD3
+#define JPEG_RST4 0xFFD4
+#define JPEG_RST5 0xFFD5
+#define JPEG_RST6 0xFFD6
+#define JPEG_RST7 0xFFD7
 
-#define JPG_DHP 0xFFDE
-#define JPG_EXP 0xFFDF
+#define JPEG_DHP 0xFFDE
+#define JPEG_EXP 0xFFDF
 
-#define JPG_DHT 0XFFC4
-#define JPG_DQT 0XFFDB
-#define JPG_EOI 0xFFD9
-#define JPG_RST 0XFFDD
-#define JPG_SOF0 0XFFC0
-#define JPG_SOF2 0xFFC2
-#define JPG_SOI 0XFFD8
-#define JPG_SOS 0XFFDA
-#define JPG_COM 0xFFFE
+#define JPEG_DHT 0XFFC4
+#define JPEG_DQT 0XFFDB
+#define JPEG_EOI 0xFFD9
+#define JPEG_RST 0XFFDD
+#define JPEG_SOF0 0XFFC0
+#define JPEG_SOF2 0xFFC2
+#define JPEG_SOI 0XFFD8
+#define JPEG_SOS 0XFFDA
+#define JPEG_COM 0xFFFE
 
 namespace Gfx {
 
@@ -427,26 +427,26 @@ static inline ErrorOr<void> ensure_bounds_okay(const size_t cursor, const size_t
 
 static inline bool is_valid_marker(const Marker marker)
 {
-    if (marker >= JPG_APPN0 && marker <= JPG_APPNF) {
+    if (marker >= JPEG_APPN0 && marker <= JPEG_APPNF) {
 
-        if (marker != JPG_APPN0)
+        if (marker != JPEG_APPN0)
             dbgln_if(JPEG_DEBUG, "{:#04x} not supported yet. The decoder may fail!", marker);
         return true;
     }
-    if (marker >= JPG_RESERVED1 && marker <= JPG_RESERVEDD)
+    if (marker >= JPEG_RESERVED1 && marker <= JPEG_RESERVEDD)
         return true;
-    if (marker >= JPG_RST0 && marker <= JPG_RST7)
+    if (marker >= JPEG_RST0 && marker <= JPEG_RST7)
         return true;
     switch (marker) {
-    case JPG_COM:
-    case JPG_DHP:
-    case JPG_EXP:
-    case JPG_DHT:
-    case JPG_DQT:
-    case JPG_RST:
-    case JPG_SOF0:
-    case JPG_SOI:
-    case JPG_SOS:
+    case JPEG_COM:
+    case JPEG_DHP:
+    case JPEG_EXP:
+    case JPEG_DHT:
+    case JPEG_DQT:
+    case JPEG_RST:
+    case JPEG_SOF0:
+    case JPEG_SOI:
+    case JPEG_SOS:
         return true;
     }
 
@@ -466,15 +466,15 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
     if (is_valid_marker(marker))
         return marker;
     if (marker != 0xFFFF)
-        return JPG_INVALID;
+        return JPEG_INVALID;
     u8 next;
     do {
         next = TRY(stream.read_value<u8>());
         if (next == 0x00)
-            return JPG_INVALID;
+            return JPEG_INVALID;
     } while (next == 0xFF);
     marker = 0xFF00 | (u16)next;
-    return is_valid_marker(marker) ? marker : JPG_INVALID;
+    return is_valid_marker(marker) ? marker : JPEG_INVALID;
 }
 
 static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingContext& context)
@@ -1090,7 +1090,7 @@ static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblo
 static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
-    if (marker != JPG_SOI) {
+    if (marker != JPEG_SOI) {
         dbgln_if(JPEG_DEBUG, "{}: SOI not found: {:x}!", TRY(stream.tell()), marker);
         return Error::from_string_literal("SOI not found");
     }
@@ -1106,51 +1106,51 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
         }
 
         switch (marker) {
-        case JPG_INVALID:
-        case JPG_RST0:
-        case JPG_RST1:
-        case JPG_RST2:
-        case JPG_RST3:
-        case JPG_RST4:
-        case JPG_RST5:
-        case JPG_RST6:
-        case JPG_RST7:
-        case JPG_SOI:
-        case JPG_EOI:
+        case JPEG_INVALID:
+        case JPEG_RST0:
+        case JPEG_RST1:
+        case JPEG_RST2:
+        case JPEG_RST3:
+        case JPEG_RST4:
+        case JPEG_RST5:
+        case JPEG_RST6:
+        case JPEG_RST7:
+        case JPEG_SOI:
+        case JPEG_EOI:
             dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Unexpected marker");
-        case JPG_APPN0:
-        case JPG_APPN1:
-        case JPG_APPN2:
-        case JPG_APPN3:
-        case JPG_APPN4:
-        case JPG_APPN5:
-        case JPG_APPN6:
-        case JPG_APPN7:
-        case JPG_APPN8:
-        case JPG_APPN9:
-        case JPG_APPNA:
-        case JPG_APPNB:
-        case JPG_APPNC:
-        case JPG_APPND:
-        case JPG_APPNE:
-        case JPG_APPNF:
-            TRY(read_app_marker(stream, context, marker - JPG_APPN0));
+        case JPEG_APPN0:
+        case JPEG_APPN1:
+        case JPEG_APPN2:
+        case JPEG_APPN3:
+        case JPEG_APPN4:
+        case JPEG_APPN5:
+        case JPEG_APPN6:
+        case JPEG_APPN7:
+        case JPEG_APPN8:
+        case JPEG_APPN9:
+        case JPEG_APPNA:
+        case JPEG_APPNB:
+        case JPEG_APPNC:
+        case JPEG_APPND:
+        case JPEG_APPNE:
+        case JPEG_APPNF:
+            TRY(read_app_marker(stream, context, marker - JPEG_APPN0));
             break;
-        case JPG_SOF0:
+        case JPEG_SOF0:
             TRY(read_start_of_frame(stream, context));
             context.state = JPEGLoadingContext::FrameDecoded;
             break;
-        case JPG_DQT:
+        case JPEG_DQT:
             TRY(read_quantization_table(stream, context));
             break;
-        case JPG_RST:
+        case JPEG_RST:
             TRY(read_reset_marker(stream, context));
             break;
-        case JPG_DHT:
+        case JPEG_DHT:
             TRY(read_huffman_table(stream, context));
             break;
-        case JPG_SOS:
+        case JPEG_SOS:
             return read_start_of_scan(stream, context);
         default:
             if (auto result = skip_marker_with_length(stream); result.is_error()) {
@@ -1182,9 +1182,9 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPEGLoading
                 continue;
             }
             Marker marker = 0xFF00 | current_byte;
-            if (marker == JPG_EOI)
+            if (marker == JPEG_EOI)
                 return {};
-            if (marker >= JPG_RST0 && marker <= JPG_RST7) {
+            if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
                 context.huffman_stream.stream.append(marker);
                 current_byte = TRY(stream.read_value<u8>());
                 continue;
