@@ -1903,8 +1903,8 @@ RefPtr<AST::Node> Parser::parse_bareword()
 
         auto first_slash_index = string.find_byte_offset('/');
         if (first_slash_index.has_value()) {
-            username = string.substring_from_byte_offset(1, *first_slash_index).release_value_but_fixme_should_propagate_errors();
-            string = string.substring_from_byte_offset(*first_slash_index + 1).release_value_but_fixme_should_propagate_errors();
+            username = string.substring_from_byte_offset(1, *first_slash_index - 1).release_value_but_fixme_should_propagate_errors();
+            string = string.substring_from_byte_offset(*first_slash_index).release_value_but_fixme_should_propagate_errors();
         } else {
             username = string.substring_from_byte_offset(1).release_value_but_fixme_should_propagate_errors();
             string = {};
