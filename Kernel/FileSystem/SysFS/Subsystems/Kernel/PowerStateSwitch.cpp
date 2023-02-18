@@ -57,11 +57,7 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
         return Error::from_errno(EINVAL);
     char buf[1];
     TRY(data.read(buf, 1));
-    if (buf[0] == '0')
-        return Error::from_errno(EINVAL);
     switch (buf[0]) {
-    case '0':
-        VERIFY_NOT_REACHED();
     case '1':
         reboot();
         VERIFY_NOT_REACHED();
@@ -69,7 +65,7 @@ ErrorOr<size_t> SysFSPowerStateSwitchNode::write_bytes(off_t offset, size_t coun
         poweroff();
         VERIFY_NOT_REACHED();
     default:
-        VERIFY_NOT_REACHED();
+        return Error::from_errno(EINVAL);
     }
 }
 
