@@ -106,8 +106,10 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
 
 namespace Shell::AST {
 
-static inline void print_indented(StringView str, int indent)
+template<typename... Args>
+static inline void print_indented(int indent, CheckedFormatString<Args...> format, Args&&... args)
 {
+    auto str = DeprecatedString::formatted(format.view(), forward<Args>(args)...);
     dbgln("{: >{}}", str, str.length() + indent * 2);
 }
 
@@ -313,17 +315,19 @@ Vector<Command> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
     return run(shell)->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors();
 }
 
-void Node::dump(int level) const
+ErrorOr<void> Node::dump(int level) const
 {
-    print_indented(DeprecatedString::formatted("{} at {}:{} (from {}.{} to {}.{})",
-                       class_name(),
-                       m_position.start_offset,
-                       m_position.end_offset,
-                       m_position.start_line.line_number,
-                       m_position.start_line.line_column,
-                       m_position.end_line.line_number,
-                       m_position.end_line.line_column),
-        level);
+    print_indented(level,
+        "{} at {}:{} (from {}.{} to {}.{})",
+        class_name(),
+        m_position.start_offset,
+        m_position.end_offset,
+        m_position.start_line.line_number,
+        m_position.start_line.line_column,
+        m_position.end_line.line_number,
+        m_position.end_line.line_column);
+
+    return {};
 }
 
 Node::Node(Position position)
@@ -409,11 +413,12 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
     return Node::complete_for_editor(shell, offset, { nullptr, nullptr, nullptr });
 }
 
-void And::dump(int level) const
+ErrorOr<void> And::dump(int level) const
 {
-    Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_left->dump(level + 1));
+    TRY(m_right->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> And::run(RefPtr<Shell> shell)
@@ -460,11 +465,13 @@ And::And(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right,
         set_is_syntax_error(m_right->syntax_error_node());
 }
 
-void ListConcatenate::dump(int level) const
+ErrorOr<void> ListConcatenate::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     for (auto& element : m_list)
-        element->dump(level + 1);
+        TRY(element->dump(level + 1));
+
+    return {};
 }
 
 RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
@@ -575,10 +582,11 @@ ListConcatenate::ListConcatenate(Position position, Vector<NonnullRefPtr<Node>> 
     }
 }
 
-void Background::dump(int level) const
+ErrorOr<void> Background::dump(int level) const
 {
-    Node::dump(level);
-    m_command->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_command->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Background::run(RefPtr<Shell> shell)
@@ -608,10 +616,11 @@ Background::Background(Position position, NonnullRefPtr<Node> command)
         set_is_syntax_error(m_command->syntax_error_node());
 }
 
-void BarewordLiteral::dump(int level) const
+ErrorOr<void> BarewordLiteral::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(m_text, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "{}", m_text);
+    return {};
 }
 
 RefPtr<Value> BarewordLiteral::run(RefPtr<Shell>)
@@ -674,11 +683,12 @@ BarewordLiteral::BarewordLiteral(Position position, String text)
 {
 }
 
-void BraceExpansion::dump(int level) const
+ErrorOr<void> BraceExpansion::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     for (auto& entry : m_entries)
-        entry.dump(level + 1);
+        TRY(entry.dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> BraceExpansion::run(RefPtr<Shell> shell)
@@ -729,10 +739,11 @@ BraceExpansion::BraceExpansion(Position position, NonnullRefPtrVector<Node> entr
     }
 }
 
-void CastToCommand::dump(int level) const
+ErrorOr<void> CastToCommand::dump(int level) const
 {
-    Node::dump(level);
-    m_inner->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_inner->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> CastToCommand::run(RefPtr<Shell> shell)
@@ -794,13 +805,14 @@ CastToCommand::CastToCommand(Position position, NonnullRefPtr<Node> inner)
         set_is_syntax_error(m_inner->syntax_error_node());
 }
 
-void CastToList::dump(int level) const
+ErrorOr<void> CastToList::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     if (m_inner)
-        m_inner->dump(level + 1);
+        TRY(m_inner->dump(level + 1));
     else
-        print_indented("(empty)"sv, level + 1);
+        print_indented(level + 1, "(empty)");
+    return {};
 }
 
 RefPtr<Value> CastToList::run(RefPtr<Shell> shell)
@@ -856,10 +868,11 @@ CastToList::CastToList(Position position, RefPtr<Node> inner)
         set_is_syntax_error(m_inner->syntax_error_node());
 }
 
-void CloseFdRedirection::dump(int level) const
+ErrorOr<void> CloseFdRedirection::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(DeprecatedString::formatted("{} -> Close", m_fd), level);
+    TRY(Node::dump(level));
+    print_indented(level, "{} -> Close", m_fd);
+    return {};
 }
 
 RefPtr<Value> CloseFdRedirection::run(RefPtr<Shell>)
@@ -886,10 +899,11 @@ CloseFdRedirection::~CloseFdRedirection()
 {
 }
 
-void CommandLiteral::dump(int level) const
+ErrorOr<void> CommandLiteral::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(DeprecatedString::formatted("(Generated command literal: {})", m_command), level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(Generated command literal: {})", m_command);
+    return {};
 }
 
 RefPtr<Value> CommandLiteral::run(RefPtr<Shell>)
@@ -907,10 +921,11 @@ CommandLiteral::~CommandLiteral()
 {
 }
 
-void Comment::dump(int level) const
+ErrorOr<void> Comment::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(m_text, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "{}", m_text);
+    return {};
 }
 
 RefPtr<Value> Comment::run(RefPtr<Shell>)
@@ -933,10 +948,11 @@ Comment::~Comment()
 {
 }
 
-void ContinuationControl::dump(int level) const
+ErrorOr<void> ContinuationControl::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(m_kind == Continue ? "(Continue)"sv : "(Break)"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "{}", m_kind == Continue ? "(Continue)"sv : "(Break)"sv);
+    return {};
 }
 
 RefPtr<Value> ContinuationControl::run(RefPtr<Shell> shell)
@@ -955,10 +971,11 @@ void ContinuationControl::highlight_in_editor(Line::Editor& editor, Shell&, High
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Yellow) });
 }
 
-void DoubleQuotedString::dump(int level) const
+ErrorOr<void> DoubleQuotedString::dump(int level) const
 {
-    Node::dump(level);
-    m_inner->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_inner->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> DoubleQuotedString::run(RefPtr<Shell> shell)
@@ -999,10 +1016,11 @@ DoubleQuotedString::~DoubleQuotedString()
 {
 }
 
-void DynamicEvaluate::dump(int level) const
+ErrorOr<void> DynamicEvaluate::dump(int level) const
 {
-    Node::dump(level);
-    m_inner->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_inner->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> DynamicEvaluate::run(RefPtr<Shell> shell)
@@ -1047,10 +1065,11 @@ DynamicEvaluate::~DynamicEvaluate()
 {
 }
 
-void Fd2FdRedirection::dump(int level) const
+ErrorOr<void> Fd2FdRedirection::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(DeprecatedString::formatted("{} -> {}", m_old_fd, m_new_fd), level);
+    TRY(Node::dump(level));
+    print_indented(level, "{} -> {}", m_old_fd, m_new_fd);
+    return {};
 }
 
 RefPtr<Value> Fd2FdRedirection::run(RefPtr<Shell>)
@@ -1077,19 +1096,20 @@ Fd2FdRedirection::~Fd2FdRedirection()
 {
 }
 
-void FunctionDeclaration::dump(int level) const
+ErrorOr<void> FunctionDeclaration::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(DeprecatedString::formatted("(name: {})\n", m_name.name), level + 1);
-    print_indented("(argument names)"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(name: {})\n", m_name.name);
+    print_indented(level + 1, "(argument names)");
     for (auto& arg : m_arguments)
-        print_indented(DeprecatedString::formatted("(name: {})\n", arg.name), level + 2);
+        print_indented(level + 2, "(name: {})\n", arg.name);
 
-    print_indented("(body)"sv, level + 1);
+    print_indented(level + 1, "(body)");
     if (m_block)
-        m_block->dump(level + 2);
+        TRY(m_block->dump(level + 2));
     else
-        print_indented("(null)"sv, level + 2);
+        print_indented(level + 2, "(null)");
+    return {};
 }
 
 RefPtr<Value> FunctionDeclaration::run(RefPtr<Shell> shell)
@@ -1165,22 +1185,23 @@ FunctionDeclaration::~FunctionDeclaration()
 {
 }
 
-void ForLoop::dump(int level) const
+ErrorOr<void> ForLoop::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     if (m_variable.has_value())
-        print_indented(DeprecatedString::formatted("iterating with {} in", m_variable->name), level + 1);
+        print_indented(level + 1, "iterating with {} in", m_variable->name);
     if (m_index_variable.has_value())
-        print_indented(DeprecatedString::formatted("with index name {} in", m_index_variable->name), level + 1);
+        print_indented(level + 1, "with index name {} in", m_index_variable->name);
     if (m_iterated_expression)
-        m_iterated_expression->dump(level + 2);
+        TRY(m_iterated_expression->dump(level + 2));
     else
-        print_indented("(ever)"sv, level + 2);
-    print_indented("Running"sv, level + 1);
+        print_indented(level + 2, "(ever)");
+    print_indented(level + 1, "Running");
     if (m_block)
-        m_block->dump(level + 2);
+        TRY(m_block->dump(level + 2));
     else
-        print_indented("(null)"sv, level + 2);
+        print_indented(level + 2, "(null)");
+    return {};
 }
 
 RefPtr<Value> ForLoop::run(RefPtr<Shell> shell)
@@ -1332,10 +1353,11 @@ ForLoop::~ForLoop()
 {
 }
 
-void Glob::dump(int level) const
+ErrorOr<void> Glob::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(m_text, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "{}", m_text);
+    return {};
 }
 
 RefPtr<Value> Glob::run(RefPtr<Shell>)
@@ -1361,22 +1383,23 @@ Glob::~Glob()
 {
 }
 
-void Heredoc::dump(int level) const
+ErrorOr<void> Heredoc::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("(End Key)"sv, level + 1);
-    print_indented(m_end, level + 2);
-    print_indented("(Allows Interpolation)"sv, level + 1);
-    print_indented(DeprecatedString::formatted("{}", m_allows_interpolation), level + 2);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(End Key)");
+    print_indented(level + 2, "{}", m_end);
+    print_indented(level + 1, "(Allows Interpolation)");
+    print_indented(level + 2, "{}", m_allows_interpolation);
     if (!evaluates_to_string()) {
-        print_indented("(Target FD)"sv, level + 1);
-        print_indented(DeprecatedString::number(*m_target_fd), level + 2);
+        print_indented(level + 1, "(Target FD)");
+        print_indented(level + 2, "{}", *m_target_fd);
     }
-    print_indented("(Contents)"sv, level + 1);
+    print_indented(level + 1, "(Contents)");
     if (m_contents)
-        m_contents->dump(level + 2);
+        TRY(m_contents->dump(level + 2));
     else
-        print_indented("(null)"sv, level + 2);
+        print_indented(level + 2, "(null)");
+    return {};
 }
 
 RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
@@ -1488,47 +1511,49 @@ Heredoc::~Heredoc()
 {
 }
 
-void HistoryEvent::dump(int level) const
+ErrorOr<void> HistoryEvent::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("Event Selector"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "Event Selector");
     switch (m_selector.event.kind) {
     case HistorySelector::EventKind::IndexFromStart:
-        print_indented("IndexFromStart"sv, level + 2);
+        print_indented(level + 2, "IndexFromStart");
         break;
     case HistorySelector::EventKind::IndexFromEnd:
-        print_indented("IndexFromEnd"sv, level + 2);
+        print_indented(level + 2, "IndexFromEnd");
         break;
     case HistorySelector::EventKind::ContainingStringLookup:
-        print_indented("ContainingStringLookup"sv, level + 2);
+        print_indented(level + 2, "ContainingStringLookup");
         break;
     case HistorySelector::EventKind::StartingStringLookup:
-        print_indented("StartingStringLookup"sv, level + 2);
+        print_indented(level + 2, "StartingStringLookup");
         break;
     }
-    print_indented(DeprecatedString::formatted("{}({})", m_selector.event.index, m_selector.event.text), level + 3);
+    print_indented(level + 3, "{}({})", m_selector.event.index, m_selector.event.text);
 
-    print_indented("Word Selector"sv, level + 1);
+    print_indented(level + 1, "Word Selector");
     auto print_word_selector = [&](HistorySelector::WordSelector const& selector) {
         switch (selector.kind) {
         case HistorySelector::WordSelectorKind::Index:
-            print_indented(DeprecatedString::formatted("Index {}", selector.selector), level + 3);
+            print_indented(level + 3, "Index {}", selector.selector);
             break;
         case HistorySelector::WordSelectorKind::Last:
-            print_indented(DeprecatedString::formatted("Last"), level + 3);
+            print_indented(level + 3, "Last");
             break;
         }
     };
 
     if (m_selector.word_selector_range.end.has_value()) {
-        print_indented("Range Start"sv, level + 2);
+        print_indented(level + 2, "Range Start");
         print_word_selector(m_selector.word_selector_range.start);
-        print_indented("Range End"sv, level + 2);
+        print_indented(level + 2, "Range End");
         print_word_selector(m_selector.word_selector_range.end.value());
     } else {
-        print_indented("Direct Address"sv, level + 2);
+        print_indented(level + 2, "Direct Address");
         print_word_selector(m_selector.word_selector_range.start);
     }
+
+    return {};
 }
 
 RefPtr<Value> HistoryEvent::run(RefPtr<Shell> shell)
@@ -1643,12 +1668,14 @@ HistoryEvent::~HistoryEvent()
 {
 }
 
-void Execute::dump(int level) const
+ErrorOr<void> Execute::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     if (m_capture_stdout)
-        print_indented("(Capturing stdout)"sv, level + 1);
-    m_command->dump(level + 1);
+        print_indented(level + 1, "(Capturing stdout)");
+    TRY(m_command->dump(level + 1));
+
+    return {};
 }
 
 void Execute::for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback)
@@ -1894,21 +1921,23 @@ Execute::~Execute()
 {
 }
 
-void IfCond::dump(int level) const
+ErrorOr<void> IfCond::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("Condition"sv, ++level);
-    m_condition->dump(level + 1);
-    print_indented("True Branch"sv, level);
+    TRY(Node::dump(level));
+    print_indented(++level, "Condition");
+    TRY(m_condition->dump(level + 1));
+    print_indented(level, "True Branch");
     if (m_true_branch)
-        m_true_branch->dump(level + 1);
+        TRY(m_true_branch->dump(level + 1));
     else
-        print_indented("(empty)"sv, level + 1);
-    print_indented("False Branch"sv, level);
+        print_indented(level + 1, "(empty)");
+    print_indented(level, "False Branch");
     if (m_false_branch)
-        m_false_branch->dump(level + 1);
+        TRY(m_false_branch->dump(level + 1));
     else
-        print_indented("(empty)"sv, level + 1);
+        print_indented(level + 1, "(empty)");
+
+    return {};
 }
 
 RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
@@ -2005,14 +2034,16 @@ IfCond::~IfCond()
 {
 }
 
-void ImmediateExpression::dump(int level) const
+ErrorOr<void> ImmediateExpression::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("(function)"sv, level + 1);
-    print_indented(m_function.name, level + 2);
-    print_indented("(arguments)"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(function)"sv);
+    print_indented(level + 2, "{}", m_function.name);
+    print_indented(level + 1, "(arguments)");
     for (auto& argument : arguments())
-        argument.dump(level + 2);
+        TRY(argument.dump(level + 2));
+
+    return {};
 }
 
 RefPtr<Value> ImmediateExpression::run(RefPtr<Shell> shell)
@@ -2094,11 +2125,12 @@ ImmediateExpression::~ImmediateExpression()
 {
 }
 
-void Join::dump(int level) const
+ErrorOr<void> Join::dump(int level) const
 {
-    Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_left->dump(level + 1));
+    TRY(m_right->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Join::run(RefPtr<Shell> shell)
@@ -2160,13 +2192,13 @@ Join::~Join()
 {
 }
 
-void MatchExpr::dump(int level) const
+ErrorOr<void> MatchExpr::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(DeprecatedString::formatted("(expression: {})", m_expr_name), level + 1);
-    m_matched_expr->dump(level + 2);
-    print_indented(DeprecatedString::formatted("(named: {})", m_expr_name), level + 1);
-    print_indented("(entries)"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(expression: {})", m_expr_name);
+    TRY(m_matched_expr->dump(level + 2));
+    print_indented(level + 1, "(named: {})", m_expr_name);
+    print_indented(level + 1, "(entries)");
     for (auto& entry : m_entries) {
         StringBuilder builder;
         builder.append("(match"sv);
@@ -2184,22 +2216,25 @@ void MatchExpr::dump(int level) const
         } else {
             builder.append(')');
         }
-        print_indented(builder.string_view(), level + 2);
-        entry.options.visit(
-            [&](NonnullRefPtrVector<Node> const& options) {
+        print_indented(level + 2, "{}", builder.string_view());
+        TRY(entry.options.visit(
+            [&](NonnullRefPtrVector<Node> const& options) -> ErrorOr<void> {
                 for (auto& option : options)
-                    option.dump(level + 3);
+                    TRY(option.dump(level + 3));
+                return {};
             },
-            [&](Vector<Regex<ECMA262>> const& options) {
+            [&](Vector<Regex<ECMA262>> const& options) -> ErrorOr<void> {
                 for (auto& option : options)
-                    print_indented(DeprecatedString::formatted("(regex: {})", option.pattern_value), level + 3);
-            });
-        print_indented("(execute)"sv, level + 2);
+                    print_indented(level + 3, "(regex: {})", option.pattern_value);
+                return {};
+            }));
+        print_indented(level + 2, "(execute)");
         if (entry.body)
-            entry.body->dump(level + 3);
+            TRY(entry.body->dump(level + 3));
         else
-            print_indented("(nothing)"sv, level + 3);
+            print_indented(level + 3, "(nothing)"sv);
     }
+    return {};
 }
 
 RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
@@ -2374,11 +2409,12 @@ MatchExpr::~MatchExpr()
 {
 }
 
-void Or::dump(int level) const
+ErrorOr<void> Or::dump(int level) const
 {
-    Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_left->dump(level + 1));
+    TRY(m_right->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Or::run(RefPtr<Shell> shell)
@@ -2428,11 +2464,12 @@ Or::~Or()
 {
 }
 
-void Pipe::dump(int level) const
+ErrorOr<void> Pipe::dump(int level) const
 {
-    Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_left->dump(level + 1));
+    TRY(m_right->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
@@ -2580,13 +2617,14 @@ PathRedirectionNode::~PathRedirectionNode()
 {
 }
 
-void Range::dump(int level) const
+ErrorOr<void> Range::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("(From)"sv, level + 1);
-    m_start->dump(level + 2);
-    print_indented("(To)"sv, level + 1);
-    m_end->dump(level + 2);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(From)");
+    TRY(m_start->dump(level + 2));
+    print_indented(level + 1, "(To)");
+    TRY(m_end->dump(level + 2));
+    return {};
 }
 
 RefPtr<Value> Range::run(RefPtr<Shell> shell)
@@ -2701,11 +2739,12 @@ Range::~Range()
 {
 }
 
-void ReadRedirection::dump(int level) const
+ErrorOr<void> ReadRedirection::dump(int level) const
 {
-    Node::dump(level);
-    m_path->dump(level + 1);
-    print_indented(DeprecatedString::formatted("To {}", m_fd), level + 1);
+    TRY(Node::dump(level));
+    TRY(m_path->dump(level + 1));
+    print_indented(level + 1, "To {}", m_fd);
+    return {};
 }
 
 RefPtr<Value> ReadRedirection::run(RefPtr<Shell> shell)
@@ -2731,11 +2770,12 @@ ReadRedirection::~ReadRedirection()
 {
 }
 
-void ReadWriteRedirection::dump(int level) const
+ErrorOr<void> ReadWriteRedirection::dump(int level) const
 {
-    Node::dump(level);
-    m_path->dump(level + 1);
-    print_indented(DeprecatedString::formatted("To/From {}", m_fd), level + 1);
+    TRY(Node::dump(level));
+    TRY(m_path->dump(level + 1));
+    print_indented(level + 1, "To/From {}", m_fd);
+    return {};
 }
 
 RefPtr<Value> ReadWriteRedirection::run(RefPtr<Shell> shell)
@@ -2761,11 +2801,12 @@ ReadWriteRedirection::~ReadWriteRedirection()
 {
 }
 
-void Sequence::dump(int level) const
+ErrorOr<void> Sequence::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     for (auto& entry : m_entries)
-        entry.dump(level + 1);
+        TRY(entry.dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
@@ -2839,11 +2880,12 @@ Sequence::~Sequence()
 {
 }
 
-void Subshell::dump(int level) const
+ErrorOr<void> Subshell::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     if (m_block)
-        m_block->dump(level + 1);
+        TRY(m_block->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Subshell::run(RefPtr<Shell> shell)
@@ -2881,10 +2923,11 @@ Subshell::~Subshell()
 {
 }
 
-void Slice::dump(int level) const
+ErrorOr<void> Slice::dump(int level) const
 {
-    Node::dump(level);
-    m_selector->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_selector->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Slice::run(RefPtr<Shell> shell)
@@ -2920,16 +2963,17 @@ Slice::~Slice()
 {
 }
 
-void SimpleVariable::dump(int level) const
+ErrorOr<void> SimpleVariable::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("(Name)"sv, level + 1);
-    print_indented(m_name, level + 2);
-    print_indented("(Slice)"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(Name)");
+    print_indented(level + 2, "{}", m_name);
+    print_indented(level + 1, "(Slice)");
     if (m_slice)
-        m_slice->dump(level + 2);
+        TRY(m_slice->dump(level + 2));
     else
-        print_indented("(None)"sv, level + 2);
+        print_indented(level + 2, "(None)");
+    return {};
 }
 
 RefPtr<Value> SimpleVariable::run(RefPtr<Shell>)
@@ -2988,16 +3032,17 @@ SimpleVariable::~SimpleVariable()
 {
 }
 
-void SpecialVariable::dump(int level) const
+ErrorOr<void> SpecialVariable::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("(Name)"sv, level + 1);
-    print_indented(StringView { &m_name, 1 }, level + 1);
-    print_indented("(Slice)"sv, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(Name)");
+    print_indented(level + 1, "{:c}", m_name);
+    print_indented(level + 1, "(Slice)");
     if (m_slice)
-        m_slice->dump(level + 2);
+        TRY(m_slice->dump(level + 2));
     else
-        print_indented("(None)"sv, level + 2);
+        print_indented(level + 2, "(None)");
+    return {};
 }
 
 RefPtr<Value> SpecialVariable::run(RefPtr<Shell>)
@@ -3038,11 +3083,12 @@ SpecialVariable::~SpecialVariable()
 {
 }
 
-void Juxtaposition::dump(int level) const
+ErrorOr<void> Juxtaposition::dump(int level) const
 {
-    Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_left->dump(level + 1));
+    TRY(m_right->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
@@ -3202,10 +3248,11 @@ Juxtaposition::~Juxtaposition()
 {
 }
 
-void StringLiteral::dump(int level) const
+ErrorOr<void> StringLiteral::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(m_text, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "{}", m_text);
+    return {};
 }
 
 RefPtr<Value> StringLiteral::run(RefPtr<Shell>)
@@ -3235,11 +3282,12 @@ StringLiteral::~StringLiteral()
 {
 }
 
-void StringPartCompose::dump(int level) const
+ErrorOr<void> StringPartCompose::dump(int level) const
 {
-    Node::dump(level);
-    m_left->dump(level + 1);
-    m_right->dump(level + 1);
+    TRY(Node::dump(level));
+    TRY(m_left->dump(level + 1));
+    TRY(m_right->dump(level + 1));
+    return {};
 }
 
 RefPtr<Value> StringPartCompose::run(RefPtr<Shell> shell)
@@ -3288,13 +3336,14 @@ StringPartCompose::~StringPartCompose()
 {
 }
 
-void SyntaxError::dump(int level) const
+ErrorOr<void> SyntaxError::dump(int level) const
 {
-    Node::dump(level);
-    print_indented("(Error text)"sv, level + 1);
-    print_indented(m_syntax_error_text, level + 2);
-    print_indented("(Can be recovered from)"sv, level + 1);
-    print_indented(DeprecatedString::formatted("{}", m_is_continuable), level + 2);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "(Error text)");
+    print_indented(level + 2, "{}", m_syntax_error_text);
+    print_indented(level + 1, "(Can be recovered from)");
+    print_indented(level + 2, "{}", m_is_continuable);
+    return {};
 }
 
 RefPtr<Value> SyntaxError::run(RefPtr<Shell> shell)
@@ -3324,9 +3373,10 @@ SyntaxError::~SyntaxError()
 {
 }
 
-void SyntheticNode::dump(int level) const
+ErrorOr<void> SyntheticNode::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
+    return {};
 }
 
 RefPtr<Value> SyntheticNode::run(RefPtr<Shell>)
@@ -3344,10 +3394,11 @@ SyntheticNode::SyntheticNode(Position position, NonnullRefPtr<Value> value)
 {
 }
 
-void Tilde::dump(int level) const
+ErrorOr<void> Tilde::dump(int level) const
 {
-    Node::dump(level);
-    print_indented(m_username, level + 1);
+    TRY(Node::dump(level));
+    print_indented(level + 1, "{}", m_username);
+    return {};
 }
 
 RefPtr<Value> Tilde::run(RefPtr<Shell>)
@@ -3402,11 +3453,12 @@ Tilde::~Tilde()
 {
 }
 
-void WriteAppendRedirection::dump(int level) const
+ErrorOr<void> WriteAppendRedirection::dump(int level) const
 {
-    Node::dump(level);
-    m_path->dump(level + 1);
-    print_indented(DeprecatedString::formatted("From {}", m_fd), level + 1);
+    TRY(Node::dump(level));
+    TRY(m_path->dump(level + 1));
+    print_indented(level + 1, "From {}", m_fd);
+    return {};
 }
 
 RefPtr<Value> WriteAppendRedirection::run(RefPtr<Shell> shell)
@@ -3432,11 +3484,12 @@ WriteAppendRedirection::~WriteAppendRedirection()
 {
 }
 
-void WriteRedirection::dump(int level) const
+ErrorOr<void> WriteRedirection::dump(int level) const
 {
-    Node::dump(level);
-    m_path->dump(level + 1);
-    print_indented(DeprecatedString::formatted("From {}", m_fd), level + 1);
+    TRY(Node::dump(level));
+    TRY(m_path->dump(level + 1));
+    print_indented(level + 1, "From {}", m_fd);
+    return {};
 }
 
 RefPtr<Value> WriteRedirection::run(RefPtr<Shell> shell)
@@ -3462,14 +3515,15 @@ WriteRedirection::~WriteRedirection()
 {
 }
 
-void VariableDeclarations::dump(int level) const
+ErrorOr<void> VariableDeclarations::dump(int level) const
 {
-    Node::dump(level);
+    TRY(Node::dump(level));
     for (auto& var : m_variables) {
-        print_indented("Set"sv, level + 1);
-        var.name->dump(level + 2);
-        var.value->dump(level + 2);
+        print_indented(level + 1, "Set");
+        TRY(var.name->dump(level + 2));
+        TRY(var.value->dump(level + 2));
     }
+    return {};
 }
 
 RefPtr<Value> VariableDeclarations::run(RefPtr<Shell> shell)

@@ -588,7 +588,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
 
     if constexpr (SH_DEBUG) {
         dbgln("Command follows");
-        command->dump(0);
+        (void)command->dump(0);
     }
 
     if (command->is_syntax_error()) {
@@ -2498,7 +2498,7 @@ RefPtr<AST::Node> Shell::parse(StringView input, bool interactive, bool as_comma
             auto node = parser.parse();
             if constexpr (SHELL_POSIX_PARSER_DEBUG) {
                 dbgln("Parsed with the POSIX Parser:");
-                node->dump(0);
+                (void)node->dump(0);
             }
             return node;
         }

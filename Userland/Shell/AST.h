@@ -420,7 +420,7 @@ class Node : public RefCounted<Node> {
     AK_MAKE_NONMOVABLE(Node);
 
 public:
-    virtual void dump(int level) const = 0;
+    virtual ErrorOr<void> dump(int level) const = 0;
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback);
     virtual RefPtr<Value> run(RefPtr<Shell>) = 0;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) = 0;
@@ -560,7 +560,7 @@ public:
 
 private:
     NODE(And);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -579,7 +579,7 @@ public:
 
 private:
     NODE(ListConcatenate);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
@@ -600,7 +600,7 @@ public:
 
 private:
     NODE(Background);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -618,7 +618,7 @@ public:
 
 private:
     NODE(BarewordLiteral);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual bool is_bareword() const override { return true; }
@@ -637,7 +637,7 @@ public:
 
 private:
     NODE(BraceExpansion);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -655,7 +655,7 @@ public:
 
 private:
     NODE(CastToCommand);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -677,7 +677,7 @@ public:
 
 private:
     NODE(CastToList);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void for_each_entry(RefPtr<Shell> shell, Function<IterationDecision(NonnullRefPtr<Value>)> callback) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
@@ -698,7 +698,7 @@ public:
 
 private:
     NODE(CloseFdRedirection);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual bool is_command() const override { return true; }
@@ -716,7 +716,7 @@ public:
 
 private:
     NODE(CommandLiteral);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override { VERIFY_NOT_REACHED(); }
     virtual bool is_command() const override { return true; }
@@ -735,7 +735,7 @@ public:
 
 private:
     NODE(Comment);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
 
@@ -761,7 +761,7 @@ public:
 private:
     NODE(ContinuationControl);
 
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
 
@@ -778,7 +778,7 @@ public:
 
 private:
     NODE(DynamicEvaluate);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -805,7 +805,7 @@ public:
 
 private:
     NODE(DoubleQuotedString);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -824,7 +824,7 @@ public:
 
 private:
     NODE(Fd2FdRedirection);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual bool is_command() const override { return true; }
@@ -845,7 +845,7 @@ public:
 
 private:
     NODE(FunctionDeclaration);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -873,7 +873,7 @@ public:
 
 private:
     NODE(ForLoop);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -898,7 +898,7 @@ public:
 
 private:
     NODE(Glob);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual bool is_glob() const override { return true; }
@@ -957,7 +957,7 @@ public:
 
 private:
     NODE(HistoryEvent);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
 
@@ -978,7 +978,7 @@ public:
 
 private:
     NODE(Execute);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1004,7 +1004,7 @@ public:
 
 private:
     NODE(IfCond);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1031,7 +1031,7 @@ public:
 
 private:
     NODE(ImmediateExpression);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, HitTestResult const&) const override;
@@ -1053,7 +1053,7 @@ public:
 
 private:
     NODE(Join);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1086,7 +1086,7 @@ public:
 
 private:
     NODE(MatchExpr);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1111,7 +1111,7 @@ public:
 
 private:
     NODE(Or);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1132,7 +1132,7 @@ public:
 
 private:
     NODE(Pipe);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1153,7 +1153,7 @@ public:
 
 private:
     NODE(Range);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1170,7 +1170,7 @@ public:
 
 private:
     NODE(ReadRedirection);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
 };
 
@@ -1182,7 +1182,7 @@ public:
 
 private:
     NODE(ReadWriteRedirection);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
 };
 
@@ -1198,7 +1198,7 @@ public:
 
 private:
     NODE(Sequence);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1220,7 +1220,7 @@ public:
 
 private:
     NODE(Subshell);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1239,7 +1239,7 @@ public:
 
     NonnullRefPtr<AST::Node> selector() const { return m_selector; }
 
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, HitTestResult const&) const override;
@@ -1281,7 +1281,7 @@ public:
 
 private:
     NODE(SimpleVariable);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, HitTestResult const&) const override;
@@ -1301,7 +1301,7 @@ public:
 
 private:
     NODE(SpecialVariable);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, HitTestResult const&) const override;
@@ -1325,7 +1325,7 @@ public:
 
 private:
     NODE(Juxtaposition);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1359,7 +1359,7 @@ public:
 
 private:
     NODE(Heredoc);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1389,7 +1389,7 @@ public:
 
 private:
     NODE(StringLiteral);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual RefPtr<Node const> leftmost_trivial_literal() const override { return this; };
@@ -1409,7 +1409,7 @@ public:
 
 private:
     NODE(StringPartCompose);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1443,7 +1443,7 @@ public:
 
 private:
     NODE(SyntaxError);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override { return { nullptr, nullptr, nullptr }; }
@@ -1464,7 +1464,7 @@ public:
 
 private:
     NODE(SyntheticValue);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
 
@@ -1481,7 +1481,7 @@ public:
 
 private:
     NODE(Tilde);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, HitTestResult const&) const override;
@@ -1505,7 +1505,7 @@ public:
 
 private:
     NODE(VariableDeclarations);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
     virtual void highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
@@ -1522,7 +1522,7 @@ public:
 
 private:
     NODE(WriteAppendRedirection);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
 };
 
@@ -1534,7 +1534,7 @@ public:
 
 private:
     NODE(WriteRedirection);
-    virtual void dump(int level) const override;
+    virtual ErrorOr<void> dump(int level) const override;
     virtual RefPtr<Value> run(RefPtr<Shell>) override;
 };
 
