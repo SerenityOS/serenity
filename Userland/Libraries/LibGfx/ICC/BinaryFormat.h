@@ -149,6 +149,16 @@ struct MultiLocalizedUnicodeRawRecord {
 };
 static_assert(AssertSize<MultiLocalizedUnicodeRawRecord, 12>());
 
+// Table 66 — namedColor2Type encoding
+struct NamedColorHeader {
+    BigEndian<u32> vendor_specific_flag;
+    BigEndian<u32> count_of_named_colors;
+    BigEndian<u32> number_of_device_coordinates_of_each_named_color;
+    u8 prefix_for_each_color_name[32]; // null-terminated
+    u8 suffix_for_each_color_name[32]; // null-terminated
+};
+static_assert(AssertSize<NamedColorHeader, 76>());
+
 // Table 84 — viewingConditionsType encoding
 struct ViewingConditionsHeader {
     XYZNumber unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
