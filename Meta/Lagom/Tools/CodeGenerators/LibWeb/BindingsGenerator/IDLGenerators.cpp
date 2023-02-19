@@ -389,7 +389,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
         auto callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
-        @cpp_name@ = @cpp_type@::create(realm, *callback_type).ptr();
+        @cpp_name@ = TRY(throw_dom_exception_if_needed(vm, [&] { return @cpp_type@::create(realm, *callback_type); }));
     }
 )~~~");
         } else {
