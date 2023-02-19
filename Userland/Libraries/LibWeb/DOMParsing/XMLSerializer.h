@@ -14,7 +14,7 @@ class XMLSerializer final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(XMLSerializer, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<XMLSerializer> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLSerializer>> construct_impl(JS::Realm&);
 
     virtual ~XMLSerializer() override;
 
