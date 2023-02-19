@@ -29,7 +29,7 @@ public:
 
 protected:
 #ifdef KERNEL
-    explicit PartitionTable(Kernel::StorageDevice const&);
+    explicit PartitionTable(Kernel::StorageDevice&);
     NonnullRefPtr<Kernel::StorageDevice> m_device;
 #else
     explicit PartitionTable(NonnullRefPtr<Core::DeprecatedFile>);

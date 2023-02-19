@@ -16,8 +16,8 @@ public:
     ~EBRPartitionTable();
 
 #ifdef KERNEL
-    static ErrorOr<NonnullOwnPtr<EBRPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
-    explicit EBRPartitionTable(Kernel::StorageDevice const&);
+    static ErrorOr<NonnullOwnPtr<EBRPartitionTable>> try_to_initialize(Kernel::StorageDevice&);
+    explicit EBRPartitionTable(Kernel::StorageDevice&);
 #else
     static ErrorOr<NonnullOwnPtr<EBRPartitionTable>> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>);
     explicit EBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile>);
@@ -30,7 +30,7 @@ public:
 
 private:
 #ifdef KERNEL
-    void search_extended_partition(Kernel::StorageDevice const&, MBRPartitionTable&, u64, size_t limit);
+    void search_extended_partition(Kernel::StorageDevice&, MBRPartitionTable&, u64, size_t limit);
 #else
     void search_extended_partition(NonnullRefPtr<Core::DeprecatedFile>, MBRPartitionTable&, u64, size_t limit);
 #endif
