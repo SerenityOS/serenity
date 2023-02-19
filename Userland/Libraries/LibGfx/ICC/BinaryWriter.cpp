@@ -404,10 +404,8 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
     }
 
     // Omit padding after last element.
-    // FIXME: Is that correct?
     size_t total_size = offsets.last() + tag_data_bytes.last().size();
 
-    // Leave enough room for the profile header and the tag table count.
     auto bytes = TRY(ByteBuffer::create_zeroed(total_size));
 
     for (size_t i = 0; i < tag_data_bytes.size(); ++i)
