@@ -256,6 +256,8 @@ static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile, Hash
 
 static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile, Vector<size_t> const& offsets, Vector<ByteBuffer> const& tag_data_bytes, HashMap<TagData*, size_t> const& tag_data_map)
 {
+    // ICC v4, 7.3 Tag table
+    // ICC v4, 7.3.1 Overview
     VERIFY(bytes.size() >= sizeof(ICCHeader) + sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry));
 
     *bit_cast<BigEndian<u32>*>(bytes.data() + sizeof(ICCHeader)) = profile.tag_count();
