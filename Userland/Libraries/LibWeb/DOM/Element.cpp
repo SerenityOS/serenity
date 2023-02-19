@@ -675,7 +675,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
     if (!layout_node() || !layout_node()->is_box())
-        return Geometry::DOMRectList::create(realm(), move(rects));
+        return Geometry::DOMRectList::create(realm(), move(rects)).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single DOMRect object that describes
     // the bounding box of the element as defined by the SVG specification, applying the transforms that apply to the element and its ancestors.
@@ -689,7 +689,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     auto bounding_rect = get_bounding_client_rect();
     rects.append(*bounding_rect);
-    return Geometry::DOMRectList::create(realm(), move(rects));
+    return Geometry::DOMRectList::create(realm(), move(rects)).release_value_but_fixme_should_propagate_errors();
 }
 
 int Element::client_top() const
