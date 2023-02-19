@@ -67,7 +67,7 @@
 #define JPEG_DHT 0XFFC4
 #define JPEG_DQT 0XFFDB
 #define JPEG_EOI 0xFFD9
-#define JPEG_RST 0XFFDD
+#define JPEG_DRI 0XFFDD
 #define JPEG_SOF0 0XFFC0
 #define JPEG_SOF2 0xFFC2
 #define JPEG_SOF15 0xFFCF
@@ -197,7 +197,7 @@ struct JPEGLoadingContext {
     u8 component_count { 0 };
     Vector<ComponentSpec, 3> components;
     RefPtr<Gfx::Bitmap> bitmap;
-    u16 dc_reset_interval { 0 };
+    u16 dc_restart_interval { 0 };
     HashMap<u8, HuffmanTableSpec> dc_tables;
     HashMap<u8, HuffmanTableSpec> ac_tables;
     HuffmanStreamState huffman_stream;
@@ -386,8 +386,8 @@ static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPEGLoadingContext& con
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
-            if (context.dc_reset_interval > 0) {
-                if (i != 0 && i % (context.dc_reset_interval * context.vsample_factor * context.hsample_factor) == 0) {
+            if (context.dc_restart_interval > 0) {
+                if (i != 0 && i % (context.dc_restart_interval * context.vsample_factor * context.hsample_factor) == 0) {
                     context.previous_dc_values[0] = 0;
                     context.previous_dc_values[1] = 0;
                     context.previous_dc_values[2] = 0;
@@ -458,7 +458,7 @@ static inline bool is_supported_marker(Marker const marker)
     case JPEG_EXP:
     case JPEG_DHT:
     case JPEG_DQT:
-    case JPEG_RST:
+    case JPEG_DRI:
     case JPEG_SOF0:
     case JPEG_SOI:
     case JPEG_SOS:
@@ -549,14 +549,15 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
     return {};
 }
 
-static ErrorOr<void> read_reset_marker(AK::SeekableStream& stream, JPEGLoadingContext& context)
+static ErrorOr<void> read_restart_interval(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
+    // B.2.4.4 - Restart interval definition syntax
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     if (bytes_to_read != 2) {
-        dbgln_if(JPEG_DEBUG, "{}: Malformed reset marker found!", TRY(stream.tell()));
-        return Error::from_string_literal("Malformed reset marker found");
+        dbgln_if(JPEG_DEBUG, "{}: Malformed DRI marker found!", TRY(stream.tell()));
+        return Error::from_string_literal("Malformed DRI marker found");
     }
-    context.dc_reset_interval = TRY(stream.read_value<BigEndian<u16>>());
+    context.dc_restart_interval = TRY(stream.read_value<BigEndian<u16>>());
     return {};
 }
 
@@ -1151,8 +1152,8 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
         case JPEG_DQT:
             TRY(read_quantization_table(stream, context));
             break;
-        case JPEG_RST:
-            TRY(read_reset_marker(stream, context));
+        case JPEG_DRI:
+            TRY(read_restart_interval(stream, context));
             break;
         case JPEG_DHT:
             TRY(read_huffman_table(stream, context));
