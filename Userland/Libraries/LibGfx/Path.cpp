@@ -291,7 +291,7 @@ void Path::segmentize_path()
             break;
         }
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto control = static_cast<QuadraticBezierCurveSegment&>(segment).through();
+            auto control = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
             Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });
@@ -309,7 +309,7 @@ void Path::segmentize_path()
             break;
         }
         case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<EllipticalArcSegment&>(segment);
+            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
             Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });
