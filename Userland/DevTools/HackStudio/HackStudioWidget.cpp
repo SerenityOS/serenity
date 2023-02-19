@@ -788,6 +788,7 @@ void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
     m_all_editor_wrappers.append(wrapper);
     wrapper.editor().set_focus(true);
     wrapper.editor().set_font(*m_editor_font);
+    wrapper.editor().set_wrapping_mode(m_wrapping_mode);
     wrapper.set_project_root(m_project->root_path());
     wrapper.editor().on_cursor_change = [this] { on_cursor_change(); };
     wrapper.on_change = [this] { update_gml_preview(); };
@@ -1499,14 +1500,17 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     m_wrapping_mode_actions.set_exclusive(true);
     auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode");
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
+        m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)
             wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     });
     m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
+        m_wrapping_mode = GUI::TextEditor::WrappingMode::WrapAnywhere;
         for (auto& wrapper : m_all_editor_wrappers)
             wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
     });
     m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
+        m_wrapping_mode = GUI::TextEditor::WrappingMode::WrapAtWords;
         for (auto& wrapper : m_all_editor_wrappers)
             wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
     });
@@ -1519,7 +1523,17 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     wrapping_mode_menu.add_action(*m_wrap_anywhere_action);
     wrapping_mode_menu.add_action(*m_wrap_at_words_action);
 
-    m_no_wrapping_action->set_checked(true);
+    switch (m_wrapping_mode) {
+    case GUI::TextEditor::NoWrap:
+        m_no_wrapping_action->set_checked(true);
+        break;
+    case GUI::TextEditor::WrapAtWords:
+        m_wrap_at_words_action->set_checked(true);
+        break;
+    case GUI::TextEditor::WrapAnywhere:
+        m_wrap_anywhere_action->set_checked(true);
+        break;
+    }
 
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv));
     m_editor_font_action = GUI::Action::create("Editor &Font...", icon,
