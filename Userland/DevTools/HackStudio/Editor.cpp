@@ -121,7 +121,7 @@ void Editor::focusout_event(GUI::FocusEvent& event)
 
 Gfx::IntRect Editor::gutter_icon_rect(size_t line_number) const
 {
-    return gutter_content_rect(line_number).translated(ruler_width() + gutter_width() + frame_thickness(), -vertical_scrollbar().value());
+    return gutter_content_rect(line_number).translated(frame_thickness(), 0);
 }
 
 void Editor::paint_event(GUI::PaintEvent& event)

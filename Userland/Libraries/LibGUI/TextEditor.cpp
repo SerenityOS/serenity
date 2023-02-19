@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, networkException <networkexception@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -137,7 +138,7 @@ void TextEditor::update_content_size()
         content_width = max(frame_inner_rect().width(), content_width);
 
     set_content_size({ content_width, content_height });
-    set_size_occupied_by_fixed_elements({ ruler_width() + gutter_width(), 0 });
+    set_size_occupied_by_fixed_elements({ gutter_width() + ruler_width(), 0 });
 }
 
 TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content_position) const
@@ -201,7 +202,7 @@ TextPosition TextEditor::text_position_at(Gfx::IntPoint widget_position) const
 {
     auto content_position = widget_position;
     content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    content_position.translate_by(-(m_horizontal_content_padding + ruler_width() + gutter_width()), 0);
+    content_position.translate_by(-(m_horizontal_content_padding + gutter_width() + ruler_width()), 0);
     content_position.translate_by(-frame_thickness(), -frame_thickness());
     content_position.translate_by(0, -height_occupied_by_banner_widget());
     return text_position_at_content_position(content_position);
@@ -358,33 +359,28 @@ int TextEditor::gutter_width() const
     return line_height(); // square gutter
 }
 
-Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
-{
-    if (!m_ruler_visible)
-        return {};
-    return {
-        0 - ruler_width() + horizontal_scrollbar().value(),
-        line_content_rect(line_index).y(),
-        ruler_width(),
-        line_content_rect(line_index).height()
-    };
-}
-
 Gfx::IntRect TextEditor::gutter_content_rect(size_t line_index) const
 {
     if (!m_gutter_visible)
         return {};
     return {
-        0 - ruler_width() - gutter_width() + horizontal_scrollbar().value(),
-        line_content_rect(line_index).y(),
+        0,
+        line_content_rect(line_index).y() - vertical_scrollbar().value(),
         gutter_width(),
         line_content_rect(line_index).height()
     };
 }
 
-Gfx::IntRect TextEditor::ruler_rect_in_inner_coordinates() const
+Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
 {
-    return { gutter_width(), 0, ruler_width(), widget_inner_rect().height() };
+    if (!m_ruler_visible)
+        return {};
+    return {
+        gutter_width(),
+        line_content_rect(line_index).y() - vertical_scrollbar().value(),
+        ruler_width(),
+        line_content_rect(line_index).height()
+    };
 }
 
 Gfx::IntRect TextEditor::gutter_rect_in_inner_coordinates() const
@@ -392,12 +388,17 @@ Gfx::IntRect TextEditor::gutter_rect_in_inner_coordinates() const
     return { 0, 0, gutter_width(), widget_inner_rect().height() };
 }
 
+Gfx::IntRect TextEditor::ruler_rect_in_inner_coordinates() const
+{
+    return { gutter_width(), 0, ruler_width(), widget_inner_rect().height() };
+}
+
 Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
 {
     return {
-        m_horizontal_content_padding + ruler_width() + gutter_width(),
+        m_horizontal_content_padding + gutter_width() + ruler_width(),
         0,
-        frame_inner_rect().width() - (m_horizontal_content_padding * 2) - width_occupied_by_vertical_scrollbar() - ruler_width() - gutter_width(),
+        frame_inner_rect().width() - (m_horizontal_content_padding * 2) - width_occupied_by_vertical_scrollbar() - gutter_width() + ruler_width(),
         frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar()
     };
 }
@@ -462,13 +463,6 @@ void TextEditor::paint_event(PaintEvent& event)
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
     }
 
-    auto horizontal_scrollbar_value = horizontal_scrollbar().value();
-    painter.translate(-horizontal_scrollbar_value, -vertical_scrollbar().value());
-    if (m_icon && horizontal_scrollbar_value > 0)
-        painter.translate(min(icon_size() + icon_padding(), horizontal_scrollbar_value), 0);
-    painter.translate(gutter_width(), 0);
-    painter.translate(ruler_width(), 0);
-
     size_t first_visible_line = text_position_at(event.rect().top_left()).line();
     size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
 
@@ -494,7 +488,13 @@ void TextEditor::paint_event(PaintEvent& event)
         }
     }
 
+    auto horizontal_scrollbar_value = horizontal_scrollbar().value();
+    painter.translate(-horizontal_scrollbar_value, -vertical_scrollbar().value());
+    if (m_icon && horizontal_scrollbar_value > 0)
+        painter.translate(min(icon_size() + icon_padding(), horizontal_scrollbar_value), 0);
+
     auto gutter_ruler_width = gutter_width() + ruler_width();
+    painter.translate(gutter_ruler_width, 0);
     Gfx::IntRect text_clip_rect { 0, 0, widget_inner_rect().width() - gutter_ruler_width, widget_inner_rect().height() };
     text_clip_rect.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     painter.add_clip_rect(text_clip_rect);
