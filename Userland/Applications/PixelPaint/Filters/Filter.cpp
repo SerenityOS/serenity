@@ -38,7 +38,7 @@ ErrorOr<RefPtr<GUI::Widget>> Filter::get_settings_widget()
     return m_settings_widget.ptr();
 }
 
-void Filter::apply() const
+void Filter::apply()
 {
     if (!m_editor)
         return;
