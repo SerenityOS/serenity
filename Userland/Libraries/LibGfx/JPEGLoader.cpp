@@ -425,7 +425,7 @@ static inline ErrorOr<void> ensure_bounds_okay(const size_t cursor, const size_t
     return {};
 }
 
-static inline bool is_valid_marker(const Marker marker)
+static inline bool is_supported_marker(Marker const marker)
 {
     if (marker >= JPEG_APPN0 && marker <= JPEG_APPNF) {
 
@@ -463,7 +463,7 @@ static inline bool is_valid_marker(const Marker marker)
 static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
 {
     u16 marker = TRY(stream.read_value<BigEndian<u16>>());
-    if (is_valid_marker(marker))
+    if (is_supported_marker(marker))
         return marker;
     if (marker != 0xFFFF)
         return JPEG_INVALID;
@@ -474,7 +474,7 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
             return JPEG_INVALID;
     } while (next == 0xFF);
     marker = 0xFF00 | (u16)next;
-    return is_valid_marker(marker) ? marker : JPEG_INVALID;
+    return is_supported_marker(marker) ? marker : JPEG_INVALID;
 }
 
 static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingContext& context)
