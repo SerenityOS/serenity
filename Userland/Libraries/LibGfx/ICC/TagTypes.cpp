@@ -732,16 +732,6 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
     VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
-    // Table 66 — namedColor2Type encoding
-    struct NamedColorHeader {
-        BigEndian<u32> vendor_specific_flag;
-        BigEndian<u32> count_of_named_colors;
-        BigEndian<u32> number_of_device_coordinates_of_each_named_color;
-        u8 prefix_for_each_color_name[32]; // null-terminated
-        u8 suffix_for_each_color_name[32]; // null-terminated
-    };
-    static_assert(AssertSize<NamedColorHeader, 76>());
-
     if (bytes.size() < 2 * sizeof(u32) + sizeof(NamedColorHeader))
         return Error::from_string_literal("ICC::Profile: namedColor2Type has not enough data");
 
