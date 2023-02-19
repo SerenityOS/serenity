@@ -16,7 +16,6 @@
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
-#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
