@@ -895,7 +895,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
         for (auto& flex_item : flex_line.items) {
             sum_of_hypothetical_main_sizes += (flex_item->hypothetical_main_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after);
         }
-        if (sum_of_hypothetical_main_sizes < m_available_space_for_items->main.to_px_or_zero())
+        if (sum_of_hypothetical_main_sizes < specified_main_size(flex_container()))
             used_flex_factor = FlexFactor::FlexGrowFactor;
         else
             used_flex_factor = FlexFactor::FlexShrinkFactor;
@@ -937,7 +937,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
                 else
                     sum_of_items_on_line += flex_item->flex_base_size + flex_item->margins.main_before + flex_item->margins.main_after + flex_item->borders.main_before + flex_item->borders.main_after + flex_item->padding.main_before + flex_item->padding.main_after;
             }
-            return m_available_space_for_items->main.to_px_or_zero() - sum_of_items_on_line;
+            return specified_main_size(flex_container()) - sum_of_items_on_line;
         };
 
         CSSPixels initial_free_space = calculate_free_space();
