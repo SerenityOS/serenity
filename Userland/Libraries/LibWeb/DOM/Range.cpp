@@ -1139,7 +1139,7 @@ WebIDL::ExceptionOr<void> Range::delete_contents()
 JS::NonnullGCPtr<Geometry::DOMRect> Range::get_bounding_client_rect() const
 {
     dbgln("(STUBBED) Range::get_bounding_client_rect()");
-    return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0);
+    return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
 }
 
 }

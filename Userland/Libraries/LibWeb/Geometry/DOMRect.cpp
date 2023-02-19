@@ -6,15 +6,16 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMRect.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Geometry {
 
-JS::NonnullGCPtr<DOMRect> DOMRect::construct_impl(JS::Realm& realm, double x, double y, double width, double height)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRect>> DOMRect::construct_impl(JS::Realm& realm, double x, double y, double width, double height)
 {
-    return realm.heap().allocate<DOMRect>(realm, realm, x, y, width, height).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMRect>(realm, realm, x, y, width, height));
 }
 
-JS::NonnullGCPtr<DOMRect> DOMRect::create(JS::Realm& realm, Gfx::FloatRect const& rect)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMRect>> DOMRect::create(JS::Realm& realm, Gfx::FloatRect const& rect)
 {
     return construct_impl(realm, rect.x(), rect.y(), rect.width(), rect.height());
 }
