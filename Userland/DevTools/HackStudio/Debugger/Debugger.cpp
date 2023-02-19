@@ -314,5 +314,9 @@ void Debugger::set_requested_debugger_action(DebuggerAction action)
     pthread_cond_signal(continue_cond());
     pthread_mutex_unlock(continue_mutex());
 }
+void Debugger::stop_debuggee()
+{
+    return m_debug_session->stop_debuggee();
+}
 
 }
