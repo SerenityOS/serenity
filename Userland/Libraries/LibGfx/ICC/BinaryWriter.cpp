@@ -166,6 +166,62 @@ static ErrorOr<ByteBuffer> encode_signature(SignatureTagData const& tag_data)
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_text_description(TextDescriptionTagData const& tag_data)
+{
+    // ICC v2, 6.5.17 textDescriptionType
+    // All lengths include room for a trailing nul character.
+    // See also the many comments in TextDescriptionTagData::from_bytes().
+    u32 ascii_size = sizeof(u32) + tag_data.ascii_description().bytes().size() + 1;
+
+    // FIXME: Include tag_data.unicode_description() if it's set.
+    u32 unicode_size = 2 * sizeof(u32);
+
+    // FIXME: Include tag_data.macintosh_description() if it's set.
+    u32 macintosh_size = sizeof(u16) + sizeof(u8) + 67;
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + ascii_size + unicode_size + macintosh_size));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(TextDescriptionTagData::Type);
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    // ASCII
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 8) = tag_data.ascii_description().bytes().size() + 1;
+    memcpy(bytes.data() + 12, tag_data.ascii_description().bytes().data(), tag_data.ascii_description().bytes().size());
+    bytes.data()[12 + tag_data.ascii_description().bytes().size()] = '\0';
+
+    // Unicode
+    // "Because the Unicode language code and Unicode count immediately follow the ASCII description,
+    //  their alignment is not correct when the ASCII count is not a multiple of four"
+    // So we can't use BigEndian<u32> here.
+    u8* cursor = bytes.data() + 8 + ascii_size;
+    u32 unicode_language_code = 0; // FIXME: Set to tag_data.unicode_language_code() once this writes unicode data.
+    cursor[0] = unicode_language_code >> 24;
+    cursor[1] = (unicode_language_code >> 16) & 0xff;
+    cursor[2] = (unicode_language_code >> 8) & 0xff;
+    cursor[3] = unicode_language_code & 0xff;
+    cursor += 4;
+
+    // FIXME: Include tag_data.unicode_description() if it's set.
+    u32 ucs2_count = 0; // FIXME: If tag_data.unicode_description() is set, set this to its length plus room for one nul character.
+    cursor[0] = ucs2_count >> 24;
+    cursor[1] = (ucs2_count >> 16) & 0xff;
+    cursor[2] = (ucs2_count >> 8) & 0xff;
+    cursor[3] = ucs2_count & 0xff;
+    cursor += 4;
+
+    // Macintosh scriptcode
+    u16 scriptcode_code = 0; // MacRoman
+    cursor[0] = (scriptcode_code >> 8) & 0xff;
+    cursor[1] = scriptcode_code & 0xff;
+    cursor += 2;
+
+    u8 macintosh_description_length = 0; // FIXME: If tag_data.macintosh_description() is set, set this to tis length plus room for one nul character.
+    cursor[0] = macintosh_description_length;
+    cursor += 1;
+    memset(cursor, 0, 67);
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_text(TextTagData const& tag_data)
 {
     // ICC v4, 10.24 textType
@@ -228,6 +284,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_s15_fixed_array(static_cast<S15Fixed16ArrayTagData const&>(tag_data));
     case SignatureTagData::Type:
         return encode_signature(static_cast<SignatureTagData const&>(tag_data));
+    case TextDescriptionTagData::Type:
+        return encode_text_description(static_cast<TextDescriptionTagData const&>(tag_data));
     case TextTagData::Type:
         return encode_text(static_cast<TextTagData const&>(tag_data));
     case ViewingConditionsTagData::Type:
