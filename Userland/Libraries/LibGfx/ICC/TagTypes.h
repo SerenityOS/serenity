@@ -537,6 +537,20 @@ public:
     {
         VERIFY(root_names.size() == pcs_coordinates.size());
         VERIFY(root_names.size() * number_of_device_coordinates == device_coordinates.size());
+
+        for (u8 byte : m_prefix.bytes())
+            VERIFY(byte < 128);
+        VERIFY(m_prefix.bytes().size() < 32);
+
+        for (u8 byte : m_suffix.bytes())
+            VERIFY(byte < 128);
+        VERIFY(m_suffix.bytes().size() < 32);
+
+        for (auto const& root_name : m_root_names) {
+            for (u8 byte : root_name.bytes())
+                VERIFY(byte < 128);
+            VERIFY(root_name.bytes().size() < 32);
+        }
     }
 
     // "(least-significant 16 bits reserved for ICC use)"
