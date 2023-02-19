@@ -62,6 +62,72 @@ static ErrorOr<ByteBuffer> encode_curve(CurveTagData const& tag_data)
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_lut_16(Lut16TagData const& tag_data)
+{
+    // ICC v4, 10.10 lut16Type
+    u32 input_tables_size = tag_data.input_tables().size();
+    u32 clut_values_size = tag_data.clut_values().size();
+    u32 output_tables_size = tag_data.output_tables().size();
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(LUTHeader) + 2 * sizeof(u16) + sizeof(u16) * (input_tables_size + clut_values_size + output_tables_size)));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(Lut16TagData::Type);
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<LUTHeader*>(bytes.data() + 8);
+    header.number_of_input_channels = tag_data.number_of_input_channels();
+    header.number_of_output_channels = tag_data.number_of_output_channels();
+    header.number_of_clut_grid_points = tag_data.number_of_clut_grid_points();
+    header.reserved_for_padding = 0;
+    for (int i = 0; i < 9; ++i)
+        header.e_parameters[i] = tag_data.e_matrix().e[i].raw();
+
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 8 + sizeof(LUTHeader)) = tag_data.number_of_input_table_entries();
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 8 + sizeof(LUTHeader) + 2) = tag_data.number_of_output_table_entries();
+
+    auto* values = bit_cast<BigEndian<u16>*>(bytes.data() + 8 + sizeof(LUTHeader) + 4);
+    for (u16 input_value : tag_data.input_tables())
+        *values++ = input_value;
+
+    for (u16 clut_value : tag_data.clut_values())
+        *values++ = clut_value;
+
+    for (u16 output_value : tag_data.output_tables())
+        *values++ = output_value;
+
+    return bytes;
+}
+
+static ErrorOr<ByteBuffer> encode_lut_8(Lut8TagData const& tag_data)
+{
+    // ICC v4, 10.11 lut8Type
+    u32 input_tables_size = tag_data.input_tables().size();
+    u32 clut_values_size = tag_data.clut_values().size();
+    u32 output_tables_size = tag_data.output_tables().size();
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(LUTHeader) + input_tables_size + clut_values_size + output_tables_size));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(Lut8TagData::Type);
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<LUTHeader*>(bytes.data() + 8);
+    header.number_of_input_channels = tag_data.number_of_input_channels();
+    header.number_of_output_channels = tag_data.number_of_output_channels();
+    header.number_of_clut_grid_points = tag_data.number_of_clut_grid_points();
+    header.reserved_for_padding = 0;
+    for (int i = 0; i < 9; ++i)
+        header.e_parameters[i] = tag_data.e_matrix().e[i].raw();
+
+    u8* values = bytes.data() + 8 + sizeof(LUTHeader);
+    memcpy(values, tag_data.input_tables().data(), input_tables_size);
+    values += input_tables_size;
+
+    memcpy(values, tag_data.clut_values().data(), clut_values_size);
+    values += clut_values_size;
+
+    memcpy(values, tag_data.output_tables().data(), output_tables_size);
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_measurement(MeasurementTagData const& tag_data)
 {
     // ICC v4, 10.14 measurementType
@@ -310,6 +376,10 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_cipc(static_cast<CicpTagData const&>(tag_data));
     case CurveTagData::Type:
         return encode_curve(static_cast<CurveTagData const&>(tag_data));
+    case Lut16TagData::Type:
+        return encode_lut_16(static_cast<Lut16TagData const&>(tag_data));
+    case Lut8TagData::Type:
+        return encode_lut_8(static_cast<Lut8TagData const&>(tag_data));
     case MeasurementTagData::Type:
         return encode_measurement(static_cast<MeasurementTagData const&>(tag_data));
     case MultiLocalizedUnicodeTagData::Type:
