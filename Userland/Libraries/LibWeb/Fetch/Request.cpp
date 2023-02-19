@@ -81,18 +81,18 @@ Optional<Infrastructure::Body&> Request::body_impl()
 }
 
 // https://fetch.spec.whatwg.org/#request-create
-JS::NonnullGCPtr<Request> Request::create(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> request, Headers::Guard guard)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::create(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Request> request, Headers::Guard guard)
 {
     // 1. Let requestObject be a new Request object with realm.
     // 2. Set requestObject’s request to request.
-    auto request_object = realm.heap().allocate<Request>(realm, realm, request).release_allocated_value_but_fixme_should_propagate_errors();
+    auto request_object = MUST_OR_THROW_OOM(realm.heap().allocate<Request>(realm, realm, request));
 
     // 3. Set requestObject’s headers to a new Headers object with realm, whose headers list is request’s headers list and guard is guard.
-    request_object->m_headers = realm.heap().allocate<Headers>(realm, realm, request->header_list()).release_allocated_value_but_fixme_should_propagate_errors();
+    request_object->m_headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, request->header_list()));
     request_object->m_headers->set_guard(guard);
 
     // 4. Set requestObject’s signal to a new AbortSignal object with realm.
-    request_object->m_signal = realm.heap().allocate<DOM::AbortSignal>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    request_object->m_signal = MUST_OR_THROW_OOM(realm.heap().allocate<DOM::AbortSignal>(realm, realm));
 
     // 5. Return requestObject.
     return request_object;
@@ -639,7 +639,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone() const
     auto cloned_request = TRY(m_request->clone(vm));
 
     // 3. Let clonedRequestObject be the result of creating a Request object, given clonedRequest, this’s headers’s guard, and this’s relevant Realm.
-    auto cloned_request_object = Request::create(HTML::relevant_realm(*this), cloned_request, m_headers->guard());
+    auto cloned_request_object = TRY(Request::create(HTML::relevant_realm(*this), cloned_request, m_headers->guard()));
 
     // 4. Make clonedRequestObject’s signal follow this’s signal.
     cloned_request_object->m_signal->follow(*m_signal);

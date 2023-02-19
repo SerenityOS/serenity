@@ -65,7 +65,7 @@ class Request final
     WEB_PLATFORM_OBJECT(Request, Bindings::PlatformObject);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>, Headers::Guard);
+    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Request>, Headers::Guard);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> construct_impl(JS::Realm&, RequestInfo const& input, RequestInit const& init = {});
 
     virtual ~Request() override;
