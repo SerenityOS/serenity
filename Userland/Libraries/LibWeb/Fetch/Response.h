@@ -32,7 +32,7 @@ class Response final
     WEB_PLATFORM_OBJECT(Response, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Response> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> construct_impl(JS::Realm&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
 
     virtual ~Response() override;
