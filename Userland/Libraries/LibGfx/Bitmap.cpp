@@ -468,8 +468,10 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop, Optional<
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
 {
-    if (m_buffer.is_valid())
-        return NonnullRefPtr { *this };
+    if (m_buffer.is_valid()) {
+        // FIXME: The const_cast here is awkward.
+        return NonnullRefPtr { const_cast<Bitmap&>(*this) };
+    }
     auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE)));
     auto bitmap = TRY(Bitmap::create_with_anonymous_buffer(m_format, move(buffer), size(), scale(), palette_to_vector()));
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
