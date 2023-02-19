@@ -18,7 +18,7 @@ public:
         , m_in_interactive_mode(interactive)
         , m_eof_token(Token::eof())
     {
-        fill_token_buffer(starting_reduction);
+        (void)fill_token_buffer(starting_reduction);
     }
 
     RefPtr<AST::Node> parse();
@@ -31,9 +31,9 @@ public:
     auto& errors() const { return m_errors; }
 
 private:
-    Optional<Token> next_expanded_token(Optional<Reduction> starting_reduction = {});
+    ErrorOr<Optional<Token>> next_expanded_token(Optional<Reduction> starting_reduction = {});
     Vector<Token> perform_expansions(Vector<Token> tokens);
-    void fill_token_buffer(Optional<Reduction> starting_reduction = {});
+    ErrorOr<void> fill_token_buffer(Optional<Reduction> starting_reduction = {});
     void handle_heredoc_contents();
 
     Token const& peek()
@@ -66,34 +66,34 @@ private:
         NonnullRefPtrVector<AST::Node> nodes;
     };
 
-    RefPtr<AST::Node> parse_complete_command();
-    RefPtr<AST::Node> parse_list();
-    RefPtr<AST::Node> parse_and_or();
-    RefPtr<AST::Node> parse_pipeline();
-    RefPtr<AST::Node> parse_pipe_sequence();
-    RefPtr<AST::Node> parse_command();
-    RefPtr<AST::Node> parse_compound_command();
-    RefPtr<AST::Node> parse_subshell();
-    RefPtr<AST::Node> parse_compound_list();
-    RefPtr<AST::Node> parse_term();
-    RefPtr<AST::Node> parse_for_clause();
-    RefPtr<AST::Node> parse_case_clause();
-    CaseItemsResult parse_case_list();
-    RefPtr<AST::Node> parse_if_clause();
-    RefPtr<AST::Node> parse_while_clause();
-    RefPtr<AST::Node> parse_until_clause();
-    RefPtr<AST::Node> parse_function_definition();
-    RefPtr<AST::Node> parse_function_body();
-    RefPtr<AST::Node> parse_brace_group();
-    RefPtr<AST::Node> parse_do_group();
-    RefPtr<AST::Node> parse_simple_command();
-    RefPtr<AST::Node> parse_prefix();
-    RefPtr<AST::Node> parse_suffix();
-    RefPtr<AST::Node> parse_io_redirect();
-    RefPtr<AST::Node> parse_redirect_list();
-    RefPtr<AST::Node> parse_io_file(AST::Position, Optional<int> fd);
-    RefPtr<AST::Node> parse_io_here(AST::Position, Optional<int> fd);
-    RefPtr<AST::Node> parse_word();
+    ErrorOr<RefPtr<AST::Node>> parse_complete_command();
+    ErrorOr<RefPtr<AST::Node>> parse_list();
+    ErrorOr<RefPtr<AST::Node>> parse_and_or();
+    ErrorOr<RefPtr<AST::Node>> parse_pipeline();
+    ErrorOr<RefPtr<AST::Node>> parse_pipe_sequence();
+    ErrorOr<RefPtr<AST::Node>> parse_command();
+    ErrorOr<RefPtr<AST::Node>> parse_compound_command();
+    ErrorOr<RefPtr<AST::Node>> parse_subshell();
+    ErrorOr<RefPtr<AST::Node>> parse_compound_list();
+    ErrorOr<RefPtr<AST::Node>> parse_term();
+    ErrorOr<RefPtr<AST::Node>> parse_for_clause();
+    ErrorOr<RefPtr<AST::Node>> parse_case_clause();
+    ErrorOr<RefPtr<AST::Node>> parse_if_clause();
+    ErrorOr<RefPtr<AST::Node>> parse_while_clause();
+    ErrorOr<RefPtr<AST::Node>> parse_until_clause();
+    ErrorOr<RefPtr<AST::Node>> parse_function_definition();
+    ErrorOr<RefPtr<AST::Node>> parse_function_body();
+    ErrorOr<RefPtr<AST::Node>> parse_brace_group();
+    ErrorOr<RefPtr<AST::Node>> parse_do_group();
+    ErrorOr<RefPtr<AST::Node>> parse_simple_command();
+    ErrorOr<RefPtr<AST::Node>> parse_prefix();
+    ErrorOr<RefPtr<AST::Node>> parse_suffix();
+    ErrorOr<RefPtr<AST::Node>> parse_io_redirect();
+    ErrorOr<RefPtr<AST::Node>> parse_redirect_list();
+    ErrorOr<RefPtr<AST::Node>> parse_io_file(AST::Position, Optional<int> fd);
+    ErrorOr<RefPtr<AST::Node>> parse_io_here(AST::Position, Optional<int> fd);
+    ErrorOr<RefPtr<AST::Node>> parse_word();
+    ErrorOr<CaseItemsResult> parse_case_list();
 
     template<typename... Ts>
     void error(Token const& token, CheckedFormatString<Ts...> fmt, Ts&&... args)
@@ -111,7 +111,7 @@ private:
     Vector<Token> m_previous_token_buffer;
 
     Vector<Error> m_errors;
-    HashMap<DeprecatedString, NonnullRefPtr<AST::Heredoc>> m_unprocessed_heredoc_entries;
+    HashMap<String, NonnullRefPtr<AST::Heredoc>> m_unprocessed_heredoc_entries;
 
     Token m_eof_token;
 
