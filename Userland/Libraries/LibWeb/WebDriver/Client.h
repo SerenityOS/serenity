@@ -75,6 +75,7 @@ public:
     virtual Response get_element_rect(Parameters parameters, JsonValue payload) = 0;
     virtual Response is_element_enabled(Parameters parameters, JsonValue payload) = 0;
     virtual Response get_computed_role(Parameters parameters, JsonValue payload) = 0;
+    virtual Response get_computed_label(Parameters parameters, JsonValue payload) = 0;
     virtual Response element_click(Parameters parameters, JsonValue payload) = 0;
 
     // 13. Document, https://w3c.github.io/webdriver/#document

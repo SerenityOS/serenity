@@ -1258,6 +1258,25 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
     return ""sv;
 }
 
+// 12.4.10 Get Computed Label, https://w3c.github.io/webdriver/#get-computed-label
+Messages::WebDriverClient::GetComputedLabelResponse WebDriverConnection::get_computed_label(DeprecatedString const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
+    // 3. Let element be the result of trying to get a known element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let label be the result of a Accessible Name and Description Computation for the Accessible Name of the element.
+    auto label = element->accessible_name(element->document()).release_value_but_fixme_should_propagate_errors();
+
+    // 5. Return success with data label.
+    return label.to_deprecated_string();
+}
+
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
 Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_click(DeprecatedString const& element_id)
 {
