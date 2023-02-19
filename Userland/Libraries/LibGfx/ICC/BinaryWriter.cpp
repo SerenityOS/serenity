@@ -293,6 +293,10 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
     case XYZTagData::Type:
         return encode_xyz(static_cast<XYZTagData const&>(tag_data));
     }
+
+    // FIXME: If this gets hit, we always write an invalid icc output file.
+    // Make this return an Optional and don't write tags that have types we can't encode.
+    // Not ideal, but better than writing invalid outputs.
     return ByteBuffer {};
 }
 
