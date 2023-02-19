@@ -331,7 +331,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::properties_of_typ
     return properties;
 }
 
-CppComprehensionEngine::Symbol CppComprehensionEngine::Symbol::create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Cpp::Declaration> declaration, IsLocal is_local)
+CppComprehensionEngine::Symbol CppComprehensionEngine::Symbol::create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Cpp::Declaration const> declaration, IsLocal is_local)
 {
     return { { name, scope }, move(declaration), is_local == IsLocal::Yes };
 }
@@ -416,7 +416,7 @@ Optional<CodeComprehension::ProjectLocation> CppComprehensionEngine::find_declar
     return find_preprocessor_definition(document, identifier_position);
 }
 
-RefPtr<Cpp::Declaration> CppComprehensionEngine::find_declaration_of(DocumentData const& document, const GUI::TextPosition& identifier_position)
+RefPtr<Cpp::Declaration const> CppComprehensionEngine::find_declaration_of(DocumentData const& document, const GUI::TextPosition& identifier_position)
 {
     auto node = document.parser().node_at(Cpp::Position { identifier_position.line(), identifier_position.column() });
     if (!node) {
@@ -509,7 +509,7 @@ static Optional<TargetDeclaration> get_target_declaration(ASTNode const& node, D
 
     return TargetDeclaration { TargetDeclaration::Type::Variable, name };
 }
-RefPtr<Cpp::Declaration> CppComprehensionEngine::find_declaration_of(DocumentData const& document_data, ASTNode const& node) const
+RefPtr<Cpp::Declaration const> CppComprehensionEngine::find_declaration_of(DocumentData const& document_data, ASTNode const& node) const
 {
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
 
@@ -669,15 +669,15 @@ Vector<StringView> CppComprehensionEngine::scope_of_node(ASTNode const& node) co
     if (!parent->is_declaration())
         return parent_scope;
 
-    auto& parent_decl = static_cast<Cpp::Declaration&>(*parent);
+    auto& parent_decl = static_cast<Cpp::Declaration const&>(*parent);
 
     StringView containing_scope;
     if (parent_decl.is_namespace())
-        containing_scope = static_cast<NamespaceDeclaration&>(parent_decl).full_name();
+        containing_scope = static_cast<NamespaceDeclaration const&>(parent_decl).full_name();
     if (parent_decl.is_struct_or_class())
-        containing_scope = static_cast<StructOrClassDeclaration&>(parent_decl).full_name();
+        containing_scope = static_cast<StructOrClassDeclaration const&>(parent_decl).full_name();
     if (parent_decl.is_function())
-        containing_scope = static_cast<FunctionDeclaration&>(parent_decl).full_name();
+        containing_scope = static_cast<FunctionDeclaration const&>(parent_decl).full_name();
 
     parent_scope.append(containing_scope);
     return parent_scope;
@@ -751,9 +751,9 @@ Optional<Vector<CodeComprehension::AutocompleteResultEntry>> CppComprehensionEng
     return options;
 }
 
-RefPtr<Cpp::Declaration> CppComprehensionEngine::find_declaration_of(CppComprehensionEngine::DocumentData const& document, CppComprehensionEngine::SymbolName const& target_symbol_name) const
+RefPtr<Cpp::Declaration const> CppComprehensionEngine::find_declaration_of(CppComprehensionEngine::DocumentData const& document, CppComprehensionEngine::SymbolName const& target_symbol_name) const
 {
-    RefPtr<Cpp::Declaration> target_declaration;
+    RefPtr<Cpp::Declaration const> target_declaration;
     for_each_available_symbol(document, [&](Symbol const& symbol) {
         if (symbol.name == target_symbol_name) {
             target_declaration = symbol.declaration;
@@ -834,7 +834,7 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
 
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node type: {}", node->class_name());
 
-    FunctionCall* call_node { nullptr };
+    FunctionCall const* call_node { nullptr };
 
     if (node->is_function_call()) {
         call_node = verify_cast<FunctionCall>(node.ptr());
@@ -880,7 +880,7 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
 
 Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get_function_params_hint(
     DocumentData const& document,
-    FunctionCall& call_node,
+    FunctionCall const& call_node,
     size_t argument_index)
 {
     Identifier const* callee = nullptr;
