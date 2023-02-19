@@ -776,7 +776,7 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
         move(prefix), move(suffix), move(root_names), move(pcs_coordinates), move(device_coordinates));
 }
 
-ErrorOr<String> NamedColor2TagData::color_name(u32 index)
+ErrorOr<String> NamedColor2TagData::color_name(u32 index) const
 {
     StringBuilder builder;
     builder.append(prefix());
