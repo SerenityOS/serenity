@@ -61,12 +61,14 @@
 #define JPEG_DHP 0xFFDE
 #define JPEG_EXP 0xFFDF
 
+#define JPEG_DAC 0XFFCC
 #define JPEG_DHT 0XFFC4
 #define JPEG_DQT 0XFFDB
 #define JPEG_EOI 0xFFD9
 #define JPEG_RST 0XFFDD
 #define JPEG_SOF0 0XFFC0
 #define JPEG_SOF2 0xFFC2
+#define JPEG_SOF15 0xFFCF
 #define JPEG_SOI 0XFFD8
 #define JPEG_SOS 0XFFDA
 #define JPEG_COM 0xFFFE
@@ -425,6 +427,17 @@ static inline ErrorOr<void> ensure_bounds_okay(const size_t cursor, const size_t
     return {};
 }
 
+static bool is_frame_marker(Marker const marker)
+{
+    // B.1.1.3 - Marker assignments
+    bool const is_sof_marker = marker >= JPEG_SOF0 && marker <= JPEG_SOF15;
+
+    // Start of frame markers are valid for JPEG_SOF0 to JPEG_SOF15 except number 4, 8 (reserved) and 12.
+    bool const is_defined_marker = marker != JPEG_DHT && marker != 0xFFC8 && marker != JPEG_DAC;
+
+    return is_sof_marker && is_defined_marker;
+}
+
 static inline bool is_supported_marker(Marker const marker)
 {
     if (marker >= JPEG_APPN0 && marker <= JPEG_APPNF) {
@@ -450,12 +463,8 @@ static inline bool is_supported_marker(Marker const marker)
         return true;
     }
 
-    if (marker >= 0xFFC0 && marker <= 0xFFCF) {
-        if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
-            dbgln_if(JPEG_DEBUG, "Decoding this frame-type (SOF{}) is not currently supported. Decoder will fail!", marker & 0xf);
-            return false;
-        }
-    }
+    if (is_frame_marker(marker))
+        dbgln_if(JPEG_DEBUG, "Decoding this frame-type (SOF{}) is not currently supported. Decoder will fail!", marker & 0xf);
 
     return false;
 }
@@ -1098,12 +1107,8 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
         marker = TRY(read_marker_at_cursor(stream));
 
         // Set frame type if the marker marks a new frame.
-        if (marker >= 0xFFC0 && marker <= 0xFFCF) {
-            // Ignore interleaved markers.
-            if (marker != 0xFFC4 && marker != 0xFFC8 && marker != 0xFFCC) {
-                context.frame.type = static_cast<StartOfFrame::FrameType>(marker & 0xF);
-            }
-        }
+        if (is_frame_marker(marker))
+            context.frame.type = static_cast<StartOfFrame::FrameType>(marker & 0xF);
 
         switch (marker) {
         case JPEG_INVALID:
