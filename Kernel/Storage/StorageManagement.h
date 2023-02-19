@@ -61,7 +61,7 @@ private:
 
     void dump_storage_devices_and_partitions() const;
 
-    ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice const&) const;
+    ErrorOr<NonnullOwnPtr<Partition::PartitionTable>> try_to_initialize_partition_table(StorageDevice&) const;
 
     LockRefPtr<BlockDevice> boot_block_device() const;
 
