@@ -247,6 +247,14 @@ public:
             callback(tag.key, tag.value);
     }
 
+    template<FallibleFunction<TagSignature, NonnullRefPtr<TagData>> Callback>
+    ErrorOr<void> try_for_each_tag(Callback&& callback) const
+    {
+        for (auto const& tag : m_tag_table)
+            TRY(callback(tag.key, tag.value));
+        return {};
+    }
+
     size_t tag_count() const { return m_tag_table.size(); }
 
     // Only versions 2 and 4 are in use.
