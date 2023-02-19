@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/MappedFile.h>
+#include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PNGLoader.h>
@@ -38,4 +39,14 @@ TEST_CASE(jpg)
 
     auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
     EXPECT(icc_profile->is_v4());
+}
+
+TEST_CASE(serialize_icc)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("p3-v4.icc"sv)));
+    auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(file->bytes()));
+    EXPECT(icc_profile->is_v4());
+
+    auto serialized_bytes = MUST(Gfx::ICC::encode(*icc_profile));
+    EXPECT_EQ(serialized_bytes, file->bytes());
 }
