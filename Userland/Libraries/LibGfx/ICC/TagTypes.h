@@ -746,7 +746,7 @@ public:
         , m_unicode_description(move(unicode_description))
         , m_macintosh_description(move(macintosh_description))
     {
-        for (u8 byte : ascii_description.bytes())
+        for (u8 byte : m_ascii_description.bytes())
             VERIFY(byte < 128);
     }
 
@@ -778,7 +778,7 @@ public:
         : TagData(offset, size, Type)
         , m_text(move(text))
     {
-        for (u8 byte : text.bytes())
+        for (u8 byte : m_text.bytes())
             VERIFY(byte < 128);
     }
 
