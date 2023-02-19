@@ -692,6 +692,32 @@ private:
     Vector<S15Fixed16, 9> m_values;
 };
 
+// ICC v4, 10.23 signatureType
+class SignatureTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x73696720 }; // 'sig '
+
+    static ErrorOr<NonnullRefPtr<SignatureTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    SignatureTagData(u32 offset, u32 size, u32 signature)
+        : TagData(offset, size, Type)
+        , m_signature(signature)
+    {
+    }
+
+    u32 signature() const { return m_signature; }
+
+    static Optional<StringView> colorimetric_intent_image_state_signature_name(u32);
+    static Optional<StringView> perceptual_rendering_intent_gamut_signature_name(u32);
+    static Optional<StringView> saturation_rendering_intent_gamut_signature_name(u32);
+    static Optional<StringView> technology_signature_name(u32);
+
+    Optional<StringView> name_for_tag(TagSignature);
+
+private:
+    u32 m_signature;
+};
+
 // ICC v2, 6.5.17 textDescriptionType
 class TextDescriptionTagData : public TagData {
 public:
@@ -723,32 +749,6 @@ private:
     Optional<String> m_unicode_description;
 
     Optional<String> m_macintosh_description;
-};
-
-// ICC v4, 10.23 signatureType
-class SignatureTagData : public TagData {
-public:
-    static constexpr TagTypeSignature Type { 0x73696720 }; // 'sig '
-
-    static ErrorOr<NonnullRefPtr<SignatureTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
-
-    SignatureTagData(u32 offset, u32 size, u32 signature)
-        : TagData(offset, size, Type)
-        , m_signature(signature)
-    {
-    }
-
-    u32 signature() const { return m_signature; }
-
-    static Optional<StringView> colorimetric_intent_image_state_signature_name(u32);
-    static Optional<StringView> perceptual_rendering_intent_gamut_signature_name(u32);
-    static Optional<StringView> saturation_rendering_intent_gamut_signature_name(u32);
-    static Optional<StringView> technology_signature_name(u32);
-
-    Optional<StringView> name_for_tag(TagSignature);
-
-private:
-    u32 m_signature;
 };
 
 // ICC v4, 10.24 textType
