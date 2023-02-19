@@ -6,12 +6,13 @@
 
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/DOM/NodeFilter.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<NodeFilter> NodeFilter::create(JS::Realm& realm, WebIDL::CallbackType& callback)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeFilter>> NodeFilter::create(JS::Realm& realm, WebIDL::CallbackType& callback)
 {
-    return realm.heap().allocate<NodeFilter>(realm, realm, callback).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<NodeFilter>(realm, realm, callback));
 }
 
 NodeFilter::NodeFilter(JS::Realm& realm, WebIDL::CallbackType& callback)
