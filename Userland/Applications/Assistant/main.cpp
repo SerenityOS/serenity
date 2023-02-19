@@ -36,7 +36,7 @@ namespace Assistant {
 
 struct AppState {
     Optional<size_t> selected_index;
-    NonnullRefPtrVector<Result> results;
+    NonnullRefPtrVector<Result const> results;
     size_t visible_result_count { 0 };
 
     Threading::Mutex lock;
@@ -84,7 +84,7 @@ public:
     {
     }
 
-    Function<void(NonnullRefPtrVector<Result>)> on_new_results;
+    Function<void(NonnullRefPtrVector<Result const>)> on_new_results;
 
     void search(DeprecatedString const& query)
     {
@@ -121,7 +121,7 @@ private:
         // NonnullRefPtrVector will provide dual_pivot_quick_sort references rather than pointers,
         // and dual_pivot_quick_sort requires being able to construct the underlying type on the
         // stack. Assistant::Result is pure virtual, thus cannot be constructed on the stack.
-        Vector<NonnullRefPtr<Result>> all_results;
+        Vector<NonnullRefPtr<Result const>> all_results;
         for (auto const& results_for_provider : new_results->value) {
             if (results_for_provider == nullptr)
                 continue;
