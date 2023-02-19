@@ -14,7 +14,7 @@
 #    include <serenity.h>
 #elif defined(AK_OS_LINUX) or defined(AK_OS_MACOS)
 #    include <pthread.h>
-#elif defined(AK_OS_FREEBSD)
+#elif defined(AK_OS_FREEBSD) or defined(AK_OS_OPENBSD)
 #    include <pthread.h>
 #    include <pthread_np.h>
 #endif
@@ -66,6 +66,16 @@ StackInfo::StackInfo()
         // and just set it to 8MB.
         m_size = eight_megabytes;
     }
+    m_base = top_of_stack - m_size;
+#elif defined(AK_OS_OPENBSD)
+    int rc;
+    stack_t thread_stack;
+    if ((rc = pthread_stackseg_np(pthread_self(), &thread_stack)) != 0) {
+        fprintf(stderr, "pthread_stackseg_np: %s\n", strerror(rc));
+        VERIFY_NOT_REACHED();
+    }
+    FlatPtr top_of_stack = (FlatPtr)thread_stack.ss_sp;
+    m_size = (size_t)thread_stack.ss_size;
     m_base = top_of_stack - m_size;
 #else
 #    pragma message "StackInfo not supported on this platform! Recursion checks and stack scans may not work properly"
