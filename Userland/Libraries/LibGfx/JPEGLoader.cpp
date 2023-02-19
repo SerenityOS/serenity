@@ -18,6 +18,8 @@
 
 #define JPEG_INVALID 0X0000
 
+// These names are defined in B.1.1.3 - Marker assignments
+
 #define JPEG_APPN0 0XFFE0
 #define JPEG_APPN1 0XFFE1
 #define JPEG_APPN2 0XFFE2
