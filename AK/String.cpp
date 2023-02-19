@@ -63,7 +63,7 @@ public:
     }
 
     bool is_fly_string() const { return m_is_fly_string; }
-    void set_fly_string(bool is_fly_string) { m_is_fly_string = is_fly_string; }
+    void set_fly_string(bool is_fly_string) const { m_is_fly_string = is_fly_string; }
 
 private:
     explicit StringData(size_t byte_count);
@@ -75,7 +75,7 @@ private:
     mutable unsigned m_hash { 0 };
     mutable bool m_has_hash { false };
     bool m_substring { false };
-    bool m_is_fly_string { false };
+    mutable bool m_is_fly_string { false };
 
     alignas(SubstringData) u8 m_bytes_or_substring_data[0];
 };
@@ -165,7 +165,7 @@ void StringData::compute_hash() const
 
 }
 
-String::String(NonnullRefPtr<Detail::StringData> data)
+String::String(NonnullRefPtr<Detail::StringData const> data)
     : m_data(&data.leak_ref())
 {
 }
@@ -485,7 +485,7 @@ String String::fly_string_data_to_string(Badge<FlyString>, uintptr_t const& data
         return String { *reinterpret_cast<ShortString const*>(&data) };
 
     auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
-    return String { NonnullRefPtr<Detail::StringData>(*string_data) };
+    return String { NonnullRefPtr<Detail::StringData const>(*string_data) };
 }
 
 StringView String::fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const& data)

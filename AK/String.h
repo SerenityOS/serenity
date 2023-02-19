@@ -230,7 +230,7 @@ private:
         u8 storage[MAX_SHORT_STRING_BYTE_COUNT] = { 0 };
     };
 
-    explicit String(NonnullRefPtr<Detail::StringData>);
+    explicit String(NonnullRefPtr<Detail::StringData const>);
 
     explicit constexpr String(ShortString short_string)
         : m_short_string(short_string)
@@ -241,7 +241,7 @@ private:
 
     union {
         ShortString m_short_string;
-        Detail::StringData* m_data { nullptr };
+        Detail::StringData const* m_data { nullptr };
     };
 };
 
