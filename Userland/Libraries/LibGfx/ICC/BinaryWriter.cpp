@@ -238,21 +238,23 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
     return ByteBuffer {};
 }
 
-static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile)
+static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile, HashMap<TagData*, size_t>& tag_data_map)
 {
     Vector<ByteBuffer> tag_data_bytes;
+    TRY(tag_data_bytes.try_ensure_capacity(profile.tag_count()));
 
-    // FIXME: If two tags refer to the same TagData object, write it just once to the output.
-    TRY(tag_data_bytes.try_resize(profile.tag_count()));
-    size_t i = 0;
     profile.for_each_tag([&](auto, auto tag_data) {
+        if (tag_data_map.contains(tag_data.ptr()))
+            return;
+
         // FIXME: Come up with a way to allow TRY instead of MUST here.
-        tag_data_bytes[i++] = MUST(encode_tag_data(tag_data));
+        tag_data_bytes.append(MUST(encode_tag_data(tag_data)));
+        MUST(tag_data_map.try_set(tag_data.ptr(), tag_data_bytes.size() - 1));
     });
     return tag_data_bytes;
 }
 
-static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile, Vector<size_t> const& offsets, Vector<ByteBuffer> const& tag_data_bytes)
+static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile, Vector<size_t> const& offsets, Vector<ByteBuffer> const& tag_data_bytes, HashMap<TagData*, size_t> const& tag_data_map)
 {
     VERIFY(bytes.size() >= sizeof(ICCHeader) + sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry));
 
@@ -260,10 +262,12 @@ static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile,
 
     TagTableEntry* tag_table_entries = bit_cast<TagTableEntry*>(bytes.data() + sizeof(ICCHeader) + sizeof(u32));
     int i = 0;
-    profile.for_each_tag([&](auto tag_signature, auto) {
+    profile.for_each_tag([&](auto tag_signature, auto tag_data) {
         tag_table_entries[i].tag_signature = tag_signature;
-        tag_table_entries[i].offset_to_beginning_of_tag_data_element = offsets[i];
-        tag_table_entries[i].size_of_tag_data_element = tag_data_bytes[i].size();
+
+        auto index = tag_data_map.get(tag_data.ptr()).value();
+        tag_table_entries[i].offset_to_beginning_of_tag_data_element = offsets[index];
+        tag_table_entries[i].size_of_tag_data_element = tag_data_bytes[index].size();
         ++i;
     });
 
@@ -324,7 +328,8 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
     // Valid profiles always have tags. Profile only represents valid profiles.
     VERIFY(profile.tag_count() > 0);
 
-    Vector<ByteBuffer> tag_data_bytes = TRY(encode_tag_datas(profile));
+    HashMap<TagData*, size_t> tag_data_map;
+    Vector<ByteBuffer> tag_data_bytes = TRY(encode_tag_datas(profile, tag_data_map));
 
     size_t tag_table_size = sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry);
     size_t offset = sizeof(ICCHeader) + tag_table_size;
@@ -344,7 +349,7 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
     for (size_t i = 0; i < tag_data_bytes.size(); ++i)
         memcpy(bytes.data() + offsets[i], tag_data_bytes[i].data(), tag_data_bytes[i].size());
 
-    TRY(encode_tag_table(bytes, profile, offsets, tag_data_bytes));
+    TRY(encode_tag_table(bytes, profile, offsets, tag_data_bytes, tag_data_map));
     TRY(encode_header(bytes, profile));
 
     return bytes;
