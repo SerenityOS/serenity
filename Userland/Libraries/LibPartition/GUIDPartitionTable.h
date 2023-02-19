@@ -16,8 +16,8 @@ public:
     virtual ~GUIDPartitionTable() = default;
 
 #ifdef KERNEL
-    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(Kernel::StorageDevice const&);
-    explicit GUIDPartitionTable(Kernel::StorageDevice const&);
+    static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(Kernel::StorageDevice&);
+    explicit GUIDPartitionTable(Kernel::StorageDevice&);
 #else
     static ErrorOr<NonnullOwnPtr<GUIDPartitionTable>> try_to_initialize(NonnullRefPtr<Core::DeprecatedFile>);
     explicit GUIDPartitionTable(NonnullRefPtr<Core::DeprecatedFile>);

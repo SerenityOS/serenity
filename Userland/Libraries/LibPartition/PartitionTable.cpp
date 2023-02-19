@@ -14,7 +14,7 @@
 namespace Partition {
 
 #ifdef KERNEL
-PartitionTable::PartitionTable(Kernel::StorageDevice const& device)
+PartitionTable::PartitionTable(Kernel::StorageDevice& device)
     : m_device(device)
     , m_block_size(device.block_size())
 {

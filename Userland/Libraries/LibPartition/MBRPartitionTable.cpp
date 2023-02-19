@@ -19,7 +19,7 @@ namespace Partition {
 #define EBR_LBA_CONTAINER 0x0F
 
 #ifdef KERNEL
-ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice& device)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device)));
 #else
@@ -37,7 +37,7 @@ ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(N
 }
 
 #ifdef KERNEL
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device, u32 start_lba)
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice& device, u32 start_lba)
 {
     auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device, start_lba)).release_value_but_fixme_should_propagate_errors();
 #else
@@ -66,7 +66,7 @@ bool MBRPartitionTable::read_boot_record()
 }
 
 #ifdef KERNEL
-MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice const& device, u32 start_lba)
+MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice& device, u32 start_lba)
     : PartitionTable(device)
 #else
 MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file, u32 start_lba)
@@ -92,7 +92,7 @@ MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_
 }
 
 #ifdef KERNEL
-MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice const& device)
+MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice& device)
     : PartitionTable(device)
 #else
 MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file)
