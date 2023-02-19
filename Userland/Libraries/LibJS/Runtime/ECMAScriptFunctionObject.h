@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +15,7 @@
 
 namespace JS {
 
-void async_block_start(VM&, NonnullRefPtr<Statement> const& parse_node, PromiseCapability const&, ExecutionContext&);
+void async_block_start(VM&, NonnullRefPtr<Statement const> const& parse_node, PromiseCapability const&, ExecutionContext&);
 
 // 10.2 ECMAScript Function Objects, https://tc39.es/ecma262/#sec-ecmascript-function-objects
 class ECMAScriptFunctionObject final : public FunctionObject {
@@ -114,7 +115,7 @@ private:
     Environment* m_environment { nullptr };                                  // [[Environment]]
     PrivateEnvironment* m_private_environment { nullptr };                   // [[PrivateEnvironment]]
     Vector<FunctionParameter> const m_formal_parameters;                     // [[FormalParameters]]
-    NonnullRefPtr<Statement> m_ecmascript_code;                              // [[ECMAScriptCode]]
+    NonnullRefPtr<Statement const> m_ecmascript_code;                        // [[ECMAScriptCode]]
     Realm* m_realm { nullptr };                                              // [[Realm]]
     ScriptOrModule m_script_or_module;                                       // [[ScriptOrModule]]
     Object* m_home_object { nullptr };                                       // [[HomeObject]]

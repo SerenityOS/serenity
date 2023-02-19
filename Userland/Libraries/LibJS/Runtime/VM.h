@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
@@ -235,9 +235,9 @@ public:
 
     CustomData* custom_data() { return m_custom_data; }
 
-    ThrowCompletionOr<void> destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value);
+    ThrowCompletionOr<void> destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern const> const& target, Value value);
     ThrowCompletionOr<void> binding_initialization(DeprecatedFlyString const& target, Value value, Environment* environment);
-    ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment);
+    ThrowCompletionOr<void> binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment);
 
     ThrowCompletionOr<Value> named_evaluation_if_anonymous_function(ASTNode const& expression, DeprecatedFlyString const& name);
 

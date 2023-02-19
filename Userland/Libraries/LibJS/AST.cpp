@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
@@ -914,21 +914,21 @@ Completion ForStatement::for_body_evaluation(JS::Interpreter& interpreter, Vecto
 }
 
 struct ForInOfHeadState {
-    explicit ForInOfHeadState(Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs)
+    explicit ForInOfHeadState(Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> lhs)
     {
         lhs.visit(
-            [&](NonnullRefPtr<ASTNode>& ast_node) {
+            [&](NonnullRefPtr<ASTNode const>& ast_node) {
                 expression_lhs = ast_node.ptr();
             },
-            [&](NonnullRefPtr<BindingPattern>& pattern) {
+            [&](NonnullRefPtr<BindingPattern const>& pattern) {
                 pattern_lhs = pattern.ptr();
                 destructuring = true;
                 lhs_kind = Assignment;
             });
     }
 
-    ASTNode* expression_lhs = nullptr;
-    BindingPattern* pattern_lhs = nullptr;
+    ASTNode const* expression_lhs = nullptr;
+    BindingPattern const* pattern_lhs = nullptr;
     enum LhsKind {
         Assignment,
         VarBinding,
@@ -956,12 +956,12 @@ struct ForInOfHeadState {
                 VERIFY(expression_lhs);
                 if (is<VariableDeclaration>(*expression_lhs)) {
                     auto& declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
-                    VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
-                    lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter));
+                    VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier const>>());
+                    lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier const>>()->to_reference(interpreter));
                 } else if (is<UsingDeclaration>(*expression_lhs)) {
                     auto& declaration = static_cast<UsingDeclaration const&>(*expression_lhs);
-                    VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier>>());
-                    lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->to_reference(interpreter));
+                    VERIFY(declaration.declarations().first().target().has<NonnullRefPtr<Identifier const>>());
+                    lhs_reference = TRY(declaration.declarations().first().target().get<NonnullRefPtr<Identifier const>>()->to_reference(interpreter));
                 } else {
                     VERIFY(is<Identifier>(*expression_lhs) || is<MemberExpression>(*expression_lhs) || is<CallExpression>(*expression_lhs));
                     auto& expression = static_cast<Expression const&>(*expression_lhs);
@@ -1028,7 +1028,7 @@ struct ForInOfHeadState {
         }
         VERIFY(expression_lhs && is<VariableDeclaration>(*expression_lhs));
         auto& for_declaration = static_cast<VariableDeclaration const&>(*expression_lhs);
-        auto& binding_pattern = for_declaration.declarations().first().target().get<NonnullRefPtr<BindingPattern>>();
+        auto& binding_pattern = for_declaration.declarations().first().target().get<NonnullRefPtr<BindingPattern const>>();
         VERIFY(lhs_kind == VarBinding || iteration_environment);
 
         // At this point iteration_environment is undefined if lhs_kind == VarBinding which means this does both
@@ -1041,12 +1041,12 @@ struct ForInOfHeadState {
 // 14.7.5.6 ForIn/OfHeadEvaluation ( uninitializedBoundNames, expr, iterationKind ), https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation
 // This method combines ForInOfLoopEvaluation and ForIn/OfHeadEvaluation for similar reason as ForIn/OfBodyEvaluation, to prevent code duplication.
 // For the same reason we also skip step 6 and 7 of ForIn/OfHeadEvaluation as this is done by the appropriate for loop type.
-static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& interpreter, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> lhs, Expression const& rhs)
+static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& interpreter, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> lhs, Expression const& rhs)
 {
     auto& vm = interpreter.vm();
 
     ForInOfHeadState state(lhs);
-    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<Declaration>(ast_ptr->ptr())) {
+    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode const>>(); ast_ptr && is<Declaration>(ast_ptr->ptr())) {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
         //  ForInOfStatement : for ( var ForBinding in Expression ) Statement
         //  ForInOfStatement : for ( ForDeclaration in Expression ) Statement
@@ -1059,14 +1059,14 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
         if (is<VariableDeclaration>(ast_ptr->ptr())) {
             auto& variable_declaration = static_cast<VariableDeclaration const&>(*(*ast_ptr));
             VERIFY(variable_declaration.declarations().size() == 1);
-            state.destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern>>();
+            state.destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern const>>();
             if (variable_declaration.declaration_kind() == DeclarationKind::Var) {
                 state.lhs_kind = ForInOfHeadState::VarBinding;
                 auto& variable = variable_declaration.declarations().first();
                 // B.3.5 Initializers in ForIn Statement Heads, https://tc39.es/ecma262/#sec-initializers-in-forin-statement-heads
                 if (variable.init()) {
-                    VERIFY(variable.target().has<NonnullRefPtr<Identifier>>());
-                    auto& binding_id = variable.target().get<NonnullRefPtr<Identifier>>()->string();
+                    VERIFY(variable.target().has<NonnullRefPtr<Identifier const>>());
+                    auto& binding_id = variable.target().get<NonnullRefPtr<Identifier const>>()->string();
                     auto reference = TRY(interpreter.vm().resolve_binding(binding_id));
                     auto result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*variable.init(), binding_id));
                     TRY(reference.put_value(vm, result));
@@ -1742,7 +1742,7 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassMethod::class_element_evaluatio
 // 10.2.1.3 Runtime Semantics: EvaluateBody, https://tc39.es/ecma262/#sec-runtime-semantics-evaluatebody
 class ClassFieldInitializerStatement : public Statement {
 public:
-    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression> expression, DeprecatedFlyString field_name)
+    ClassFieldInitializerStatement(SourceRange source_range, NonnullRefPtr<Expression const> expression, DeprecatedFlyString field_name)
         : Statement(source_range)
         , m_expression(move(expression))
         , m_class_field_identifier_name(move(field_name))
@@ -1775,7 +1775,7 @@ public:
     }
 
 private:
-    NonnullRefPtr<Expression> m_expression;
+    NonnullRefPtr<Expression const> m_expression;
     DeprecatedFlyString m_class_field_identifier_name; // [[ClassFieldIdentifierName]]
 };
 
@@ -2414,7 +2414,7 @@ bool BindingPattern::contains_expression() const
     for (auto& entry : entries) {
         if (entry.initializer)
             return true;
-        if (auto binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern>>(); binding_ptr && (*binding_ptr)->contains_expression())
+        if (auto binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern const>>(); binding_ptr && (*binding_ptr)->contains_expression())
             return true;
     }
     return false;
@@ -2424,14 +2424,14 @@ ThrowCompletionOr<void> BindingPattern::for_each_bound_name(ThrowCompletionOrVoi
 {
     for (auto const& entry : entries) {
         auto const& alias = entry.alias;
-        if (alias.has<NonnullRefPtr<Identifier>>()) {
-            TRY(callback(alias.get<NonnullRefPtr<Identifier>>()->string()));
-        } else if (alias.has<NonnullRefPtr<BindingPattern>>()) {
-            TRY(alias.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name(forward<decltype(callback)>(callback)));
+        if (alias.has<NonnullRefPtr<Identifier const>>()) {
+            TRY(callback(alias.get<NonnullRefPtr<Identifier const>>()->string()));
+        } else if (alias.has<NonnullRefPtr<BindingPattern const>>()) {
+            TRY(alias.get<NonnullRefPtr<BindingPattern const>>()->for_each_bound_name(forward<decltype(callback)>(callback)));
         } else {
             auto const& name = entry.name;
-            if (name.has<NonnullRefPtr<Identifier>>())
-                TRY(callback(name.get<NonnullRefPtr<Identifier>>()->string()));
+            if (name.has<NonnullRefPtr<Identifier const>>())
+                TRY(callback(name.get<NonnullRefPtr<Identifier const>>()->string()));
         }
     }
     return {};
@@ -2449,10 +2449,10 @@ void BindingPattern::dump(int indent) const
         if (kind == Kind::Object) {
             print_indent(indent + 2);
             outln("(Identifier)");
-            if (entry.name.has<NonnullRefPtr<Identifier>>()) {
-                entry.name.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
+            if (entry.name.has<NonnullRefPtr<Identifier const>>()) {
+                entry.name.get<NonnullRefPtr<Identifier const>>()->dump(indent + 3);
             } else {
-                entry.name.get<NonnullRefPtr<Expression>>()->dump(indent + 3);
+                entry.name.get<NonnullRefPtr<Expression const>>()->dump(indent + 3);
             }
         } else if (entry.is_elision()) {
             print_indent(indent + 2);
@@ -2462,12 +2462,12 @@ void BindingPattern::dump(int indent) const
 
         print_indent(indent + 2);
         outln("(Pattern{})", entry.is_rest ? " rest=true" : "");
-        if (entry.alias.has<NonnullRefPtr<Identifier>>()) {
-            entry.alias.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
-        } else if (entry.alias.has<NonnullRefPtr<BindingPattern>>()) {
-            entry.alias.get<NonnullRefPtr<BindingPattern>>()->dump(indent + 3);
-        } else if (entry.alias.has<NonnullRefPtr<MemberExpression>>()) {
-            entry.alias.get<NonnullRefPtr<MemberExpression>>()->dump(indent + 3);
+        if (entry.alias.has<NonnullRefPtr<Identifier const>>()) {
+            entry.alias.get<NonnullRefPtr<Identifier const>>()->dump(indent + 3);
+        } else if (entry.alias.has<NonnullRefPtr<BindingPattern const>>()) {
+            entry.alias.get<NonnullRefPtr<BindingPattern const>>()->dump(indent + 3);
+        } else if (entry.alias.has<NonnullRefPtr<MemberExpression const>>()) {
+            entry.alias.get<NonnullRefPtr<MemberExpression const>>()->dump(indent + 3);
         } else {
             print_indent(indent + 3);
             outln("<empty>");
@@ -2718,7 +2718,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
         // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
         return m_lhs.visit(
             // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
-            [&](NonnullRefPtr<Expression> const& lhs) -> ThrowCompletionOr<Value> {
+            [&](NonnullRefPtr<Expression const> const& lhs) -> ThrowCompletionOr<Value> {
                 // a. Let lref be the result of evaluating LeftHandSideExpression.
                 // b. ReturnIfAbrupt(lref).
                 auto reference = TRY(lhs->to_reference(interpreter));
@@ -2745,7 +2745,7 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
                 return rhs_result;
             },
             // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
-            [&](NonnullRefPtr<BindingPattern> const& pattern) -> ThrowCompletionOr<Value> {
+            [&](NonnullRefPtr<BindingPattern const> const& pattern) -> ThrowCompletionOr<Value> {
                 // 3. Let rref be the result of evaluating AssignmentExpression.
                 // 4. Let rval be ? GetValue(rref).
                 auto rhs_result = TRY(m_rhs->execute(interpreter)).release_value();
@@ -2757,10 +2757,10 @@ Completion AssignmentExpression::execute(Interpreter& interpreter) const
                 return rhs_result;
             });
     }
-    VERIFY(m_lhs.has<NonnullRefPtr<Expression>>());
+    VERIFY(m_lhs.has<NonnullRefPtr<Expression const>>());
 
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    auto& lhs_expression = *m_lhs.get<NonnullRefPtr<Expression>>();
+    auto& lhs_expression = *m_lhs.get<NonnullRefPtr<Expression const>>();
     auto reference = TRY(lhs_expression.to_reference(interpreter));
 
     // 2. Let lval be ? GetValue(lref).
@@ -3029,7 +3029,7 @@ Completion VariableDeclaration::execute(Interpreter& interpreter) const
     for (auto& declarator : m_declarations) {
         if (auto* init = declarator.init()) {
             TRY(declarator.target().visit(
-                [&](NonnullRefPtr<Identifier> const& id) -> ThrowCompletionOr<void> {
+                [&](NonnullRefPtr<Identifier const> const& id) -> ThrowCompletionOr<void> {
                     auto reference = TRY(id->to_reference(interpreter));
                     auto initializer_result = TRY(interpreter.vm().named_evaluation_if_anonymous_function(*init, id->string()));
                     VERIFY(!initializer_result.is_empty());
@@ -3039,7 +3039,7 @@ Completion VariableDeclaration::execute(Interpreter& interpreter) const
                     else
                         return reference.initialize_referenced_binding(vm, initializer_result);
                 },
-                [&](NonnullRefPtr<BindingPattern> const& pattern) -> ThrowCompletionOr<void> {
+                [&](NonnullRefPtr<BindingPattern const> const& pattern) -> ThrowCompletionOr<void> {
                     auto initializer_result = TRY(init->execute(interpreter)).release_value();
 
                     Environment* environment = m_declaration_kind == DeclarationKind::Var ? nullptr : interpreter.lexical_environment();
@@ -3047,8 +3047,8 @@ Completion VariableDeclaration::execute(Interpreter& interpreter) const
                     return vm.binding_initialization(pattern, initializer_result, environment);
                 }));
         } else if (m_declaration_kind != DeclarationKind::Var) {
-            VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
-            auto& identifier = declarator.target().get<NonnullRefPtr<Identifier>>();
+            VERIFY(declarator.target().has<NonnullRefPtr<Identifier const>>());
+            auto& identifier = declarator.target().get<NonnullRefPtr<Identifier const>>();
             auto reference = TRY(identifier->to_reference(interpreter));
             TRY(reference.initialize_referenced_binding(vm, js_undefined()));
         }
@@ -3068,10 +3068,10 @@ ThrowCompletionOr<void> VariableDeclaration::for_each_bound_name(ThrowCompletion
 {
     for (auto const& entry : declarations()) {
         TRY(entry.target().visit(
-            [&](NonnullRefPtr<Identifier> const& id) {
+            [&](NonnullRefPtr<Identifier const> const& id) {
                 return callback(id->string());
             },
-            [&](NonnullRefPtr<BindingPattern> const& binding) {
+            [&](NonnullRefPtr<BindingPattern const> const& binding) {
                 return binding->for_each_bound_name([&](auto const& name) {
                     return callback(name);
                 });
@@ -3112,10 +3112,10 @@ Completion UsingDeclaration::execute(Interpreter& interpreter) const
     auto& vm = interpreter.vm();
 
     for (auto& declarator : m_declarations) {
-        VERIFY(declarator.target().has<NonnullRefPtr<Identifier>>());
+        VERIFY(declarator.target().has<NonnullRefPtr<Identifier const>>());
         VERIFY(declarator.init());
 
-        auto& id = declarator.target().get<NonnullRefPtr<Identifier>>();
+        auto& id = declarator.target().get<NonnullRefPtr<Identifier const>>();
 
         // 2. ReturnIfAbrupt(next).
         auto reference = TRY(id->to_reference(interpreter));
@@ -3131,8 +3131,8 @@ Completion UsingDeclaration::execute(Interpreter& interpreter) const
 ThrowCompletionOr<void> UsingDeclaration::for_each_bound_name(ThrowCompletionOrVoidCallback<DeprecatedFlyString const&>&& callback) const
 {
     for (auto const& entry : m_declarations) {
-        VERIFY(entry.target().has<NonnullRefPtr<Identifier>>());
-        TRY(callback(entry.target().get<NonnullRefPtr<Identifier>>()->string()));
+        VERIFY(entry.target().has<NonnullRefPtr<Identifier const>>());
+        TRY(callback(entry.target().get<NonnullRefPtr<Identifier const>>()->string()));
     }
 
     return {};
@@ -3349,24 +3349,24 @@ ThrowCompletionOr<OptionalChain::ReferenceAndValue> OptionalChain::to_reference_
             return ReferenceAndValue { {}, js_undefined() };
 
         auto expression = reference.visit(
-            [&](Call const& call) -> NonnullRefPtr<Expression> {
+            [&](Call const& call) -> NonnullRefPtr<Expression const> {
                 return CallExpression::create(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), base_reference, base),
                     call.arguments);
             },
-            [&](ComputedReference const& ref) -> NonnullRefPtr<Expression> {
+            [&](ComputedReference const& ref) -> NonnullRefPtr<Expression const> {
                 return create_ast_node<MemberExpression>(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), base_reference, base),
                     ref.expression,
                     true);
             },
-            [&](MemberReference const& ref) -> NonnullRefPtr<Expression> {
+            [&](MemberReference const& ref) -> NonnullRefPtr<Expression const> {
                 return create_ast_node<MemberExpression>(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), base_reference, base),
                     ref.identifier,
                     false);
             },
-            [&](PrivateMemberReference const& ref) -> NonnullRefPtr<Expression> {
+            [&](PrivateMemberReference const& ref) -> NonnullRefPtr<Expression const> {
                 return create_ast_node<MemberExpression>(source_range(),
                     create_ast_node<SyntheticReferenceExpression>(source_range(), base_reference, base),
                     ref.private_identifier,
@@ -3945,7 +3945,7 @@ void CatchClause::dump(int indent) const
             else
                 outln("CatchClause ({})", parameter);
         },
-        [&](NonnullRefPtr<BindingPattern> const& pattern) {
+        [&](NonnullRefPtr<BindingPattern const> const& pattern) {
             outln("CatchClause");
             print_indent(indent);
             outln("(Parameter)");
@@ -3981,7 +3981,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
                 // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
                 MUST(catch_environment->create_mutable_binding(vm, parameter, false));
             },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+            [&](NonnullRefPtr<BindingPattern const> const& pattern) {
                 // 3. For each element argName of the BoundNames of CatchParameter, do
                 pattern->for_each_bound_name([&](auto& name) {
                     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
@@ -3997,7 +3997,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
             [&](DeprecatedFlyString const& parameter) {
                 return catch_environment->initialize_binding(vm, parameter, thrown_value, Environment::InitializeBindingHint::Normal);
             },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+            [&](NonnullRefPtr<BindingPattern const> const& pattern) {
                 return vm.binding_initialization(pattern, thrown_value, catch_environment);
             });
 
@@ -4119,9 +4119,9 @@ Completion SwitchStatement::execute_impl(Interpreter& interpreter) const
             return js_undefined();
         }
 
-        NonnullRefPtrVector<SwitchCase> case_clauses_1;
-        NonnullRefPtrVector<SwitchCase> case_clauses_2;
-        RefPtr<SwitchCase> default_clause;
+        NonnullRefPtrVector<SwitchCase const> case_clauses_1;
+        NonnullRefPtrVector<SwitchCase const> case_clauses_2;
+        RefPtr<SwitchCase const> default_clause;
         for (auto const& switch_case : m_cases) {
             if (!switch_case.test())
                 default_clause = switch_case;
@@ -4524,17 +4524,17 @@ ThrowCompletionOr<void> ScopeNode::for_each_function_hoistable_with_annexB_exten
     return {};
 }
 
-void ScopeNode::add_lexical_declaration(NonnullRefPtr<Declaration> declaration)
+void ScopeNode::add_lexical_declaration(NonnullRefPtr<Declaration const> declaration)
 {
     m_lexical_declarations.append(move(declaration));
 }
 
-void ScopeNode::add_var_scoped_declaration(NonnullRefPtr<Declaration> declaration)
+void ScopeNode::add_var_scoped_declaration(NonnullRefPtr<Declaration const> declaration)
 {
     m_var_declarations.append(move(declaration));
 }
 
-void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration> declaration)
+void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration const> declaration)
 {
     m_functions_hoistable_with_annexB_extension.append(move(declaration));
 }
@@ -4967,12 +4967,12 @@ DeprecatedString SourceRange::filename() const
     return code->filename().to_deprecated_string();
 }
 
-NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments)
+NonnullRefPtr<CallExpression> CallExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
 {
     return ASTNodeWithTailArray::create<CallExpression>(arguments.size(), move(source_range), move(callee), arguments);
 }
 
-NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression> callee, ReadonlySpan<Argument> arguments)
+NonnullRefPtr<NewExpression> NewExpression::create(SourceRange source_range, NonnullRefPtr<Expression const> callee, ReadonlySpan<Argument> arguments)
 {
     return ASTNodeWithTailArray::create<NewExpression>(arguments.size(), move(source_range), move(callee), arguments);
 }

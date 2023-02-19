@@ -87,7 +87,7 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
             });
     } else {
         auto program_node = program.visit(
-            [](auto& visitor) -> NonnullRefPtr<JS::Program> {
+            [](auto& visitor) -> NonnullRefPtr<JS::Program const> {
                 return visitor->parse_node();
             });
 
