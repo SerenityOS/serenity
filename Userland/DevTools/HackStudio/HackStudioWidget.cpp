@@ -1091,7 +1091,7 @@ void HackStudioWidget::initialize_debugger()
             });
             GUI::Application::the()->event_loop().wake();
         },
-        [this](float progress) {
+        [](float progress) {
             if (GUI::Application::the()->active_window())
                 GUI::Application::the()->active_window()->set_progress(progress * 100);
         });
