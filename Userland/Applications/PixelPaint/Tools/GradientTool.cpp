@@ -24,7 +24,7 @@
 
 namespace PixelPaint {
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> GradientTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> GradientTool::cursor()
 {
     if (m_hover_over_drag_handle || m_hover_over_start_handle || m_hover_over_end_handle)
         return Gfx::StandardCursor::Hand;

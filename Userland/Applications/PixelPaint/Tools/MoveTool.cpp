@@ -274,7 +274,7 @@ Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_curso
     return {};
 }
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> MoveTool::cursor()
 {
     if (m_resize_anchor_location.has_value()) {
         switch (m_resize_anchor_location.value()) {
