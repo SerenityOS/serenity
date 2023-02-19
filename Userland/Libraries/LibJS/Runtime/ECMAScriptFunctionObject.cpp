@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
  * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -350,7 +351,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                     has_duplicates = true;
             },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+            [&](NonnullRefPtr<BindingPattern const> const& pattern) {
                 if (pattern->contains_expression())
                     has_parameter_expressions = true;
 
@@ -472,7 +473,8 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                         return reference.put_value(vm, argument_value);
                     else
                         return reference.initialize_referenced_binding(vm, argument_value);
-                } else if (IsSame<NonnullRefPtr<BindingPattern> const&, decltype(param)>) {
+                }
+                if constexpr (IsSame<NonnullRefPtr<BindingPattern const> const&, decltype(param)>) {
                     // Here the difference from hasDuplicates is important
                     return vm.binding_initialization(param, argument_value, used_environment);
                 }
@@ -728,7 +730,7 @@ void ECMAScriptFunctionObject::async_function_start(PromiseCapability const& pro
 }
 
 // 27.7.5.2 AsyncBlockStart ( promiseCapability, asyncBody, asyncContext ), https://tc39.es/ecma262/#sec-asyncblockstart
-void async_block_start(VM& vm, NonnullRefPtr<Statement> const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
+void async_block_start(VM& vm, NonnullRefPtr<Statement const> const& async_body, PromiseCapability const& promise_capability, ExecutionContext& async_context)
 {
     auto& realm = *vm.current_realm();
 
