@@ -57,7 +57,7 @@ ErrorOr<void> Program::link(GPU::Device& device)
     // Link vertex shader objects
 
     Vector<GLSL::ObjectFile const*> vertex_shader_object_files;
-    for (auto vertex_shader : m_vertex_shaders)
+    for (auto const& vertex_shader : m_vertex_shaders)
         vertex_shader_object_files.append(vertex_shader->object_file());
 
     auto linked_vertex_shader_or_error = linker.link(vertex_shader_object_files);
