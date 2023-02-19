@@ -1090,6 +1090,10 @@ void HackStudioWidget::initialize_debugger()
                 GUI::MessageBox::show(window(), "Program Exited"sv, "Debugger"sv, GUI::MessageBox::Type::Information);
             });
             GUI::Application::the()->event_loop().wake();
+        },
+        [this](float progress) {
+            if (GUI::Application::the()->active_window())
+                GUI::Application::the()->active_window()->set_progress(progress * 100);
         });
 }
 

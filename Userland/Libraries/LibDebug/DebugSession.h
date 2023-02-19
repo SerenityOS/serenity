@@ -27,8 +27,8 @@ namespace Debug {
 
 class DebugSession : public ProcessInspector {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {});
-    static OwnPtr<DebugSession> attach(pid_t pid, DeprecatedString source_root = {});
+    static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {}, Function<void(float)> on_initialization_progress = {});
+    static OwnPtr<DebugSession> attach(pid_t pid, DeprecatedString source_root = {}, Function<void(float)> on_initialization_progress = {});
 
     virtual ~DebugSession() override;
 
@@ -131,7 +131,7 @@ public:
     };
 
 private:
-    explicit DebugSession(pid_t, DeprecatedString source_root);
+    explicit DebugSession(pid_t, DeprecatedString source_root, Function<void(float)> on_initialization_progress = {});
 
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
@@ -147,6 +147,8 @@ private:
 
     // Maps from library name to LoadedLibrary object
     HashMap<DeprecatedString, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
+
+    Function<void(float)> m_on_initialization_progress;
 };
 
 template<typename Callback>
