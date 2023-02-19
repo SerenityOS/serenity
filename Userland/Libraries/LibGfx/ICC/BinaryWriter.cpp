@@ -305,14 +305,14 @@ static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile, Hash
     Vector<ByteBuffer> tag_data_bytes;
     TRY(tag_data_bytes.try_ensure_capacity(profile.tag_count()));
 
-    profile.for_each_tag([&](auto, auto tag_data) {
+    TRY(profile.try_for_each_tag([&](auto, auto tag_data) -> ErrorOr<void> {
         if (tag_data_map.contains(tag_data.ptr()))
-            return;
+            return {};
 
-        // FIXME: Come up with a way to allow TRY instead of MUST here.
-        tag_data_bytes.append(MUST(encode_tag_data(tag_data)));
-        MUST(tag_data_map.try_set(tag_data.ptr(), tag_data_bytes.size() - 1));
-    });
+        tag_data_bytes.append(TRY(encode_tag_data(tag_data)));
+        TRY(tag_data_map.try_set(tag_data.ptr(), tag_data_bytes.size() - 1));
+        return {};
+    }));
     return tag_data_bytes;
 }
 
