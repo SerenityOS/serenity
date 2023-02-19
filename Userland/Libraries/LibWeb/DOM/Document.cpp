@@ -378,7 +378,7 @@ JS::GCPtr<Selection::Selection> Document::get_selection()
     }
 
     if (!m_selection) {
-        m_selection = Selection::Selection::create(realm(), *this);
+        m_selection = Selection::Selection::create(realm(), *this).release_value_but_fixme_should_propagate_errors();
     }
     return m_selection;
 }

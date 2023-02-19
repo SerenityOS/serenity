@@ -11,9 +11,9 @@
 
 namespace Web::Selection {
 
-JS::NonnullGCPtr<Selection> Selection::create(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Selection>> Selection::create(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
 {
-    return realm->heap().allocate<Selection>(realm, realm, document).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm->heap().allocate<Selection>(realm, realm, document));
 }
 
 Selection::Selection(JS::NonnullGCPtr<JS::Realm> realm, JS::NonnullGCPtr<DOM::Document> document)
