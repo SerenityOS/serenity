@@ -2815,7 +2815,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 {
     auto* impl = TRY(impl_from(vm));
 
-    return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue).ptr();
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue); }));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
@@ -2844,14 +2844,14 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 {
     auto* impl = TRY(impl_from(vm));
 
-    return @iterator_name@::create(*impl, Object::PropertyKind::Key).ptr();
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Key);  }));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 {
     auto* impl = TRY(impl_from(vm));
 
-    return @iterator_name@::create(*impl, Object::PropertyKind::Value).ptr();
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Value); }));
 }
 )~~~");
     }
