@@ -274,6 +274,7 @@ protected:
     Gfx::IntRect content_rect_for_position(TextPosition const&) const;
     int gutter_width() const;
     int ruler_width() const;
+    int fixed_elements_width() const { return gutter_width() + ruler_width(); }
 
     virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(Syntax::HighlighterClient::span_collection_index, move(spans)); }
 

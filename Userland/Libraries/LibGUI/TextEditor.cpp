@@ -138,7 +138,7 @@ void TextEditor::update_content_size()
         content_width = max(frame_inner_rect().width(), content_width);
 
     set_content_size({ content_width, content_height });
-    set_size_occupied_by_fixed_elements({ gutter_width() + ruler_width(), 0 });
+    set_size_occupied_by_fixed_elements({ fixed_elements_width(), 0 });
 }
 
 TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content_position) const
@@ -202,7 +202,7 @@ TextPosition TextEditor::text_position_at(Gfx::IntPoint widget_position) const
 {
     auto content_position = widget_position;
     content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    content_position.translate_by(-(m_horizontal_content_padding + gutter_width() + ruler_width()), 0);
+    content_position.translate_by(-(m_horizontal_content_padding + fixed_elements_width()), 0);
     content_position.translate_by(-frame_thickness(), -frame_thickness());
     content_position.translate_by(0, -height_occupied_by_banner_widget());
     return text_position_at_content_position(content_position);
@@ -396,9 +396,9 @@ Gfx::IntRect TextEditor::ruler_rect_in_inner_coordinates() const
 Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
 {
     return {
-        m_horizontal_content_padding + gutter_width() + ruler_width(),
+        m_horizontal_content_padding + fixed_elements_width(),
         0,
-        frame_inner_rect().width() - (m_horizontal_content_padding * 2) - width_occupied_by_vertical_scrollbar() - gutter_width() + ruler_width(),
+        frame_inner_rect().width() - (m_horizontal_content_padding * 2) - width_occupied_by_vertical_scrollbar() - fixed_elements_width(),
         frame_inner_rect().height() - height_occupied_by_horizontal_scrollbar()
     };
 }
@@ -493,7 +493,7 @@ void TextEditor::paint_event(PaintEvent& event)
     if (m_icon && horizontal_scrollbar_value > 0)
         painter.translate(min(icon_size() + icon_padding(), horizontal_scrollbar_value), 0);
 
-    auto gutter_ruler_width = gutter_width() + ruler_width();
+    auto gutter_ruler_width = fixed_elements_width();
     painter.translate(gutter_ruler_width, 0);
     Gfx::IntRect text_clip_rect { 0, 0, widget_inner_rect().width() - gutter_ruler_width, widget_inner_rect().height() };
     text_clip_rect.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
