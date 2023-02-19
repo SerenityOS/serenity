@@ -343,7 +343,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
 {
     VERIFY(sx >= 0 && sy >= 0);
     if (sx == 1 && sy == 1)
-        return NonnullRefPtr { *this };
+        return clone();
 
     auto new_bitmap = TRY(Gfx::Bitmap::create(format(), { width() * sx, height() * sy }, scale()));
 
