@@ -732,6 +732,8 @@ public:
         , m_unicode_description(move(unicode_description))
         , m_macintosh_description(move(macintosh_description))
     {
+        for (u8 byte : ascii_description.bytes())
+            VERIFY(byte < 128);
     }
 
     // Guaranteed to be 7-bit ASCII.
