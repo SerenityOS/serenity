@@ -19,11 +19,11 @@ static ErrorOr<ByteBuffer> encode_chromaticity(ChromaticityTagData const& tag_da
     // ICC v4, 10.2 chromaticityType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 2 * sizeof(u16) + tag_data.xy_coordinates().size() * 2 * sizeof(u16Fixed16Number)));
 
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)ChromaticityTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(ChromaticityTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
     *bit_cast<BigEndian<u16>*>(bytes.data() + 8) = tag_data.xy_coordinates().size();
-    *bit_cast<BigEndian<u16>*>(bytes.data() + 10) = (u16)tag_data.phosphor_or_colorant_type();
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 10) = static_cast<u16>(tag_data.phosphor_or_colorant_type());
 
     auto* coordinates = bit_cast<BigEndian<u16Fixed16Number>*>(bytes.data() + 12);
     for (size_t i = 0; i < tag_data.xy_coordinates().size(); ++i) {
@@ -38,7 +38,7 @@ static ErrorOr<ByteBuffer> encode_cipc(CicpTagData const& tag_data)
 {
     // ICC v4, 10.3 cicpType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 4));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)CicpTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(CicpTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
     bytes.data()[8] = tag_data.color_primaries();
     bytes.data()[9] = tag_data.transfer_characteristics();
@@ -51,7 +51,7 @@ static ErrorOr<ByteBuffer> encode_curve(CurveTagData const& tag_data)
 {
     // ICC v4, 10.6 curveType
     auto bytes = TRY(ByteBuffer::create_uninitialized(3 * sizeof(u32) + tag_data.values().size() * sizeof(u16)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)CurveTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(CurveTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
     *bit_cast<BigEndian<u32>*>(bytes.data() + 8) = tag_data.values().size();
 
@@ -66,7 +66,7 @@ static ErrorOr<ByteBuffer> encode_measurement(MeasurementTagData const& tag_data
 {
     // ICC v4, 10.14 measurementType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(MeasurementHeader)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)MeasurementTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(MeasurementTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
     auto& header = *bit_cast<MeasurementHeader*>(bytes.data() + 8);
@@ -100,7 +100,7 @@ static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeT
     auto bytes = TRY(ByteBuffer::create_uninitialized(header_and_record_size + string_table_size));
 
     auto* header = bit_cast<BigEndian<u32>*>(bytes.data());
-    header[0] = (u32)MultiLocalizedUnicodeTagData::Type;
+    header[0] = static_cast<u32>(MultiLocalizedUnicodeTagData::Type);
     header[1] = 0;
     header[2] = number_of_records;
     header[3] = sizeof(MultiLocalizedUnicodeRawRecord);
@@ -129,10 +129,10 @@ static ErrorOr<ByteBuffer> encode_parametric_curve(ParametricCurveTagData const&
 {
     // ICC v4, 10.18 parametricCurveType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 2 * sizeof(u16) + tag_data.parameter_count() * sizeof(s15Fixed16Number)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)ParametricCurveTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(ParametricCurveTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
-    *bit_cast<BigEndian<u16>*>(bytes.data() + 8) = (u16)tag_data.function_type();
+    *bit_cast<BigEndian<u16>*>(bytes.data() + 8) = static_cast<u16>(tag_data.function_type());
     *bit_cast<BigEndian<u16>*>(bytes.data() + 10) = 0;
 
     auto* parameters = bit_cast<BigEndian<s15Fixed16Number>*>(bytes.data() + 12);
@@ -146,7 +146,7 @@ static ErrorOr<ByteBuffer> encode_s15_fixed_array(S15Fixed16ArrayTagData const& 
 {
     // ICC v4, 10.22 s15Fixed16ArrayType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + tag_data.values().size() * sizeof(s15Fixed16Number)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)S15Fixed16ArrayTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(S15Fixed16ArrayTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
     auto* values = bit_cast<BigEndian<s15Fixed16Number>*>(bytes.data() + 8);
@@ -160,7 +160,7 @@ static ErrorOr<ByteBuffer> encode_signature(SignatureTagData const& tag_data)
 {
     // ICC v4, 10.23 signatureType
     auto bytes = TRY(ByteBuffer::create_uninitialized(3 * sizeof(u32)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)SignatureTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(SignatureTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
     *bit_cast<BigEndian<u32>*>(bytes.data() + 8) = tag_data.signature();
     return bytes;
@@ -229,7 +229,7 @@ static ErrorOr<ByteBuffer> encode_text(TextTagData const& tag_data)
     //  by subtracting 8 from the element size portion of the tag itself. This string shall be terminated with a 00h byte."
     auto text_bytes = tag_data.text().bytes();
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + text_bytes.size() + 1));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)TextTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(TextTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
     memcpy(bytes.data() + 8, text_bytes.data(), text_bytes.size());
     *(bytes.data() + 8 + text_bytes.size()) = '\0';
@@ -240,7 +240,7 @@ static ErrorOr<ByteBuffer> encode_viewing_conditions(ViewingConditionsTagData co
 {
     // ICC v4, 10.30 viewingConditionsType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(ViewingConditionsHeader)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)ViewingConditionsTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(ViewingConditionsTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
     auto& header = *bit_cast<ViewingConditionsHeader*>(bytes.data() + 8);
@@ -255,7 +255,7 @@ static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
 {
     // ICC v4, 10.31 XYZType
     auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + tag_data.xyzs().size() * sizeof(XYZNumber)));
-    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)XYZTagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(XYZTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
     auto* xyzs = bit_cast<XYZNumber*>(bytes.data() + 8);
