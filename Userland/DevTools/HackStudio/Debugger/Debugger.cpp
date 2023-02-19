@@ -21,9 +21,10 @@ void Debugger::initialize(
     DeprecatedString source_root,
     Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
     Function<void()> on_continue_callback,
-    Function<void()> on_exit_callback)
+    Function<void()> on_exit_callback,
+    Function<void(float)> on_initialization_progress)
 {
-    s_the = new Debugger(source_root, move(on_stop_callback), move(on_continue_callback), move(on_exit_callback));
+    s_the = new Debugger(source_root, move(on_stop_callback), move(on_continue_callback), move(on_exit_callback), move(on_initialization_progress));
 }
 
 bool Debugger::is_initialized()
@@ -35,11 +36,13 @@ Debugger::Debugger(
     DeprecatedString source_root,
     Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
     Function<void()> on_continue_callback,
-    Function<void()> on_exit_callback)
+    Function<void()> on_exit_callback,
+    Function<void(float)> on_initialization_progress)
     : m_source_root(source_root)
     , m_on_stopped_callback(move(on_stop_callback))
     , m_on_continue_callback(move(on_continue_callback))
     , m_on_exit_callback(move(on_exit_callback))
+    , m_on_initialization_progress(move(on_initialization_progress))
 {
     pthread_mutex_init(&m_ui_action_mutex, nullptr);
     pthread_cond_init(&m_ui_action_cond, nullptr);
@@ -137,13 +140,13 @@ Debugger::CreateDebugSessionResult Debugger::create_debug_session()
                 return m_child_setup_callback();
             return ErrorOr<void> {};
         };
-        auto debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback));
+        auto debug_session = Debug::DebugSession::exec_and_attach(m_executable_path, m_source_root, move(child_setup_callback), move(m_on_initialization_progress));
         VERIFY(!!debug_session);
         return { debug_session.release_nonnull(), Debug::DebugSession::Running };
     }
 
     if (m_pid_to_attach.has_value()) {
-        auto debug_session = Debug::DebugSession::attach(m_pid_to_attach.value(), m_source_root);
+        auto debug_session = Debug::DebugSession::attach(m_pid_to_attach.value(), m_source_root, move(m_on_initialization_progress));
         VERIFY(!!debug_session);
         return { debug_session.release_nonnull(), Debug::DebugSession::Stopped };
     }

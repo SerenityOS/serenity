@@ -29,7 +29,8 @@ public:
         DeprecatedString source_root,
         Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
-        Function<void()> on_exit_callback);
+        Function<void()> on_exit_callback,
+        Function<void(float)> on_initialization_progress);
 
     static bool is_initialized();
 
@@ -94,7 +95,8 @@ private:
         DeprecatedString source_root,
         Function<HasControlPassedToUser(PtraceRegisters const&)> on_stop_callback,
         Function<void()> on_continue_callback,
-        Function<void()> on_exit_callback);
+        Function<void()> on_exit_callback,
+        Function<void(float)> on_initialization_progress);
 
     Debug::DebugInfo::SourcePosition create_source_position(DeprecatedString const& file, size_t line);
 
@@ -130,6 +132,7 @@ private:
     Function<void()> m_on_continue_callback;
     Function<void()> m_on_exit_callback;
     Function<ErrorOr<void>()> m_child_setup_callback;
+    Function<void(float)> m_on_initialization_progress;
 };
 
 }
