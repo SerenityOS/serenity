@@ -304,7 +304,7 @@ bool TextTool::on_keydown(GUI::KeyEvent& event)
     return true;
 }
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> TextTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> TextTool::cursor()
 {
     if (m_mouse_is_over_text)
         return Gfx::StandardCursor::Move;

@@ -187,7 +187,7 @@ private:
 
     float m_pixel_grid_threshold { 15.0f };
 
-    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_active_cursor { Gfx::StandardCursor::None };
+    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_active_cursor { Gfx::StandardCursor::None };
 
     bool m_loaded_from_image { true };
 

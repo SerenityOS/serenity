@@ -25,7 +25,7 @@ public:
     virtual void on_tool_activation() override;
     virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
 
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
 
 protected:
