@@ -211,12 +211,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
 
         // FIXME: Why do we assume `creation_url` is non-empty here? Is this a spec bug?
         // FIXME: Why do we assume `top_level_creation_url` is non-empty here? Is this a spec bug?
-        HTML::WindowEnvironmentSettingsObject::setup(
+        TRY(HTML::WindowEnvironmentSettingsObject::setup(
             creation_url.value(),
             move(realm_execution_context),
             navigation_params.reserved_environment,
             top_level_creation_url.value(),
-            top_level_origin);
+            top_level_origin));
     }
 
     // FIXME: 7. Let loadTimingInfo be a new document load timing info with its navigation start time set to response's timing info's start time.
