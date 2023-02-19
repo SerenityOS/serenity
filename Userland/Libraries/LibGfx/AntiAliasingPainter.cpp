@@ -443,8 +443,8 @@ FLATTEN AntiAliasingPainter::Range AntiAliasingPainter::draw_ellipse_part(
     int f_squared = y * y;
 
     // 1st and 2nd order differences of f(i)*f(i)
-    int delta_f_squared = -(static_cast<int64_t>(b_squared) * subpixel_resolution * subpixel_resolution) / a_squared;
-    int delta2_f_squared = 2 * delta_f_squared;
+    int delta_f_squared = (static_cast<int64_t>(b_squared) * subpixel_resolution * subpixel_resolution) / a_squared;
+    int delta2_f_squared = -delta_f_squared - delta_f_squared;
 
     // edge_intersection_area/subpixel_resolution = percentage of pixel intersected by circle
     // (aka the alpha for the pixel)
@@ -486,11 +486,6 @@ FLATTEN AntiAliasingPainter::Range AntiAliasingPainter::draw_ellipse_part(
 
     auto correct = [&] {
         int error = y - y_hat;
-
-        // FIXME: The alpha values seem too low, which makes things look
-        // overly pointy. This fixes that, though there's probably a better
-        // solution to be found. (This issue seems to exist in the base algorithm)
-        error /= 4;
 
         delta2_y += error;
         delta_y += error;
