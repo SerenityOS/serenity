@@ -545,7 +545,7 @@ public:
     // "If this field is 0, device coordinates are not provided."
     u32 number_of_device_coordinates() const { return m_number_of_device_coordinates; }
 
-    u32 size() { return m_root_names.size(); }
+    u32 size() const { return m_root_names.size(); }
 
     // "In order to maintain maximum portability, it is strongly recommended that
     //  special characters of the 7-bit ASCII set not be used."
@@ -554,13 +554,13 @@ public:
     String const& root_name(u32 index) const { return m_root_names[index]; } // "7-bit ASCII"
 
     // Returns 7-bit ASCII.
-    ErrorOr<String> color_name(u32 index);
+    ErrorOr<String> color_name(u32 index) const;
 
     // "The PCS representation corresponds to the header’s PCS field."
-    XYZOrLAB const& pcs_coordinates(u32 index) { return m_pcs_coordinates[index]; }
+    XYZOrLAB const& pcs_coordinates(u32 index) const { return m_pcs_coordinates[index]; }
 
     // "The device representation corresponds to the header’s “data colour space” field."
-    u16 const* device_coordinates(u32 index)
+    u16 const* device_coordinates(u32 index) const
     {
         VERIFY((index + 1) * m_number_of_device_coordinates <= m_device_coordinates.size());
         return m_device_coordinates.data() + index * m_number_of_device_coordinates;
