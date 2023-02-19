@@ -88,7 +88,7 @@ Box const* Node::containing_block() const
             ancestor = ancestor->parent();
         while (ancestor && ancestor->is_anonymous())
             ancestor = nearest_ancestor_capable_of_forming_a_containing_block(*ancestor);
-        return static_cast<BlockContainer const*>(ancestor);
+        return static_cast<Box const*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
