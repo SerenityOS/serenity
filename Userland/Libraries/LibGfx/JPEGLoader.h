@@ -12,6 +12,8 @@ namespace Gfx {
 
 struct JPEGLoadingContext;
 
+// For the specification, see: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
+
 class JPEGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static ErrorOr<bool> sniff(ReadonlyBytes);
