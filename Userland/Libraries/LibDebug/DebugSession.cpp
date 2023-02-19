@@ -510,4 +510,9 @@ void DebugSession::update_loaded_libs()
     });
 }
 
+void DebugSession::stop_debuggee()
+{
+    kill(pid(), SIGSTOP);
+}
+
 }

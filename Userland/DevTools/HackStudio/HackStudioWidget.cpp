@@ -1055,7 +1055,7 @@ void HackStudioWidget::initialize_debugger()
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().set_execution_position(source_position.value().line_number - 1);
                 m_debug_info_widget->update_state(*Debugger::the().session(), regs);
-                m_debug_info_widget->set_debug_actions_enabled(true);
+                m_debug_info_widget->set_debug_actions_enabled(true, DebugInfoWidget::DebugActionsState::DebuggeeStopped);
                 m_disassembly_widget->update_state(*Debugger::the().session(), regs);
                 HackStudioWidget::reveal_action_tab(*m_debug_info_widget);
             });
@@ -1065,7 +1065,7 @@ void HackStudioWidget::initialize_debugger()
         },
         [this]() {
             GUI::Application::the()->event_loop().deferred_invoke([this] {
-                m_debug_info_widget->set_debug_actions_enabled(false);
+                m_debug_info_widget->set_debug_actions_enabled(true, DebugInfoWidget::DebugActionsState::DebuggeeRunning);
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
             });
@@ -1073,7 +1073,7 @@ void HackStudioWidget::initialize_debugger()
         },
         [this]() {
             GUI::Application::the()->event_loop().deferred_invoke([this] {
-                m_debug_info_widget->set_debug_actions_enabled(false);
+                m_debug_info_widget->set_debug_actions_enabled(false, {});
                 if (m_current_editor_in_execution)
                     m_current_editor_in_execution->editor().clear_execution_position();
                 m_debug_info_widget->program_stopped();

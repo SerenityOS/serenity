@@ -40,12 +40,17 @@ ErrorOr<void> DebugInfoWidget::init_toolbar()
         Debugger::the().set_requested_debugger_action(Debugger::DebuggerAction::SourceStepOut);
     });
 
+    m_pause_action = GUI::Action::create("Pause", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-pause.png"sv)), [](auto&) {
+        Debugger::the().stop_debuggee();
+    });
+
     m_toolbar->add_action(*m_continue_action);
     m_toolbar->add_action(*m_singlestep_action);
     m_toolbar->add_action(*m_step_in_action);
     m_toolbar->add_action(*m_step_out_action);
+    m_toolbar->add_action(*m_pause_action);
 
-    set_debug_actions_enabled(false);
+    set_debug_actions_enabled(false, {});
 
     return {};
 }
@@ -193,12 +198,22 @@ void DebugInfoWidget::program_stopped()
     m_registers_view->set_model({});
 }
 
-void DebugInfoWidget::set_debug_actions_enabled(bool enabled)
+void DebugInfoWidget::set_debug_actions_enabled(bool enabled, Optional<DebugActionsState> state)
 {
-    m_continue_action->set_enabled(enabled);
-    m_singlestep_action->set_enabled(enabled);
-    m_step_in_action->set_enabled(enabled);
-    m_step_out_action->set_enabled(enabled);
+    if (!enabled) {
+        m_continue_action->set_enabled(false);
+        m_singlestep_action->set_enabled(false);
+        m_step_in_action->set_enabled(false);
+        m_step_out_action->set_enabled(false);
+        m_pause_action->set_enabled(false);
+        return;
+    }
+
+    m_continue_action->set_enabled(state == DebugActionsState::DebuggeeStopped);
+    m_singlestep_action->set_enabled(state == DebugActionsState::DebuggeeStopped);
+    m_step_in_action->set_enabled(state == DebugActionsState::DebuggeeStopped);
+    m_step_out_action->set_enabled(state == DebugActionsState::DebuggeeStopped);
+    m_pause_action->set_enabled(state == DebugActionsState::DebuggeeRunning);
 }
 
 }

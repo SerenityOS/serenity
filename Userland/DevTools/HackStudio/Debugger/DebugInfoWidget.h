@@ -29,7 +29,12 @@ public:
 
     void update_state(Debug::ProcessInspector&, PtraceRegisters const&);
     void program_stopped();
-    void set_debug_actions_enabled(bool enabled);
+
+    enum class DebugActionsState {
+        DebuggeeRunning,
+        DebuggeeStopped,
+    };
+    void set_debug_actions_enabled(bool enabled, Optional<DebugActionsState>);
 
     Function<void(Debug::DebugInfo::SourcePosition const&)> on_backtrace_frame_selection;
 
@@ -51,6 +56,7 @@ private:
     RefPtr<GUI::Action> m_singlestep_action;
     RefPtr<GUI::Action> m_step_in_action;
     RefPtr<GUI::Action> m_step_out_action;
+    RefPtr<GUI::Action> m_pause_action;
 };
 
 }

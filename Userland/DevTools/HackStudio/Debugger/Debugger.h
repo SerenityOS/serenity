@@ -64,6 +64,8 @@ public:
 
     void set_child_setup_callback(Function<ErrorOr<void>()> callback) { m_child_setup_callback = move(callback); }
 
+    void stop_debuggee();
+
 private:
     class DebuggingState {
     public:

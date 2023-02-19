@@ -100,6 +100,7 @@ public:
         Syscall,
     };
     void continue_debuggee(ContinueType type = ContinueType::FreeRun);
+    void stop_debuggee();
 
     // Returns the wstatus result of waitpid()
     int continue_debuggee_and_wait(ContinueType type = ContinueType::FreeRun);
@@ -169,7 +170,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
         // FIXME: This check actually only checks whether the debuggee
         // stopped because it hit a breakpoint/syscall/is in single stepping mode or not
-        if (WSTOPSIG(wstatus) != SIGTRAP) {
+        if (WSTOPSIG(wstatus) != SIGTRAP && WSTOPSIG(wstatus) != SIGSTOP) {
             callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
             m_is_debuggee_dead = true;
             return true;
