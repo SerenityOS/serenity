@@ -1290,7 +1290,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
         || Infra::is_ascii_case_insensitive_match(interface, "events"sv)) {
         event = TRY(Event::create(realm, ""));
     } else if (Infra::is_ascii_case_insensitive_match(interface, "focusevent"sv)) {
-        event = UIEvents::FocusEvent::create(realm, "");
+        event = TRY(UIEvents::FocusEvent::create(realm, ""));
     } else if (Infra::is_ascii_case_insensitive_match(interface, "hashchangeevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create HashChangeEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "htmlevents"sv)) {
@@ -1312,7 +1312,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
         event = TRY(Event::create(realm, "")); // FIXME: Create TouchEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "uievent"sv)
         || Infra::is_ascii_case_insensitive_match(interface, "uievents"sv)) {
-        event = UIEvents::UIEvent::create(realm, "");
+        event = TRY(UIEvents::UIEvent::create(realm, ""));
     }
 
     // 3. If constructor is null, then throw a "NotSupportedError" DOMException.
