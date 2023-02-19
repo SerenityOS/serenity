@@ -218,7 +218,7 @@ public:
         float x;
     };
 
-    NonnullRefPtrVector<Segment> const& segments() const { return m_segments; }
+    NonnullRefPtrVector<Segment const> const& segments() const { return m_segments; }
     auto& split_lines() const
     {
         if (!m_split_lines.has_value()) {
@@ -268,7 +268,7 @@ private:
         m_segments.append(adopt_ref(*new T(forward<Args>(args)...)));
     }
 
-    NonnullRefPtrVector<Segment> m_segments {};
+    NonnullRefPtrVector<Segment const> m_segments {};
 
     Optional<Vector<SplitLineSegment>> m_split_lines {};
     Optional<Gfx::FloatRect> m_bounding_box;
