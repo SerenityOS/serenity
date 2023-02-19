@@ -28,7 +28,7 @@ class IDLEventListener final : public JS::Object {
     JS_OBJECT(IDLEventListener, JS::Object);
 
 public:
-    static JS::NonnullGCPtr<IDLEventListener> create(JS::Realm&, JS::NonnullGCPtr<WebIDL::CallbackType>);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<IDLEventListener>> create(JS::Realm&, JS::NonnullGCPtr<WebIDL::CallbackType>);
     IDLEventListener(JS::Realm&, JS::NonnullGCPtr<WebIDL::CallbackType>);
 
     virtual ~IDLEventListener() = default;
