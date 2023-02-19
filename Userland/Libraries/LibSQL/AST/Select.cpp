@@ -39,7 +39,7 @@ static DeprecatedString result_column_name(ResultColumn const& column, size_t co
 
 ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
 {
-    NonnullRefPtrVector<ResultColumn> columns;
+    NonnullRefPtrVector<ResultColumn const> columns;
     Vector<DeprecatedString> column_names;
 
     auto const& result_column_list = this->result_column_list();
