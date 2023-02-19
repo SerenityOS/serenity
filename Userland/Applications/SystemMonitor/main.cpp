@@ -264,6 +264,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
     TRY(Core::System::unveil("/bin/Inspector", "rx"));
+    TRY(Core::System::unveil("/bin/HackStudio", "rx"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView args_tab = "processes"sv;
@@ -385,6 +386,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
         &process_table_view);
 
+    auto debug_action = GUI::Action::create(
+        "Debug in HackStudio", { Mod_Ctrl, Key_D }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"sv)), [&](const GUI::Action&) {
+            pid_t pid = selected_id(ProcessModel::Column::PID);
+            if (pid == -1)
+                return;
+            auto pid_string = DeprecatedString::number(pid);
+            GUI::Process::spawn_or_show_error(window, "/bin/HackStudio"sv, Array { "--pid", pid_string.characters() });
+        },
+        &process_table_view);
+
     HashMap<pid_t, NonnullRefPtr<GUI::Window>> process_windows;
 
     auto process_properties_action = GUI::CommonActions::make_properties_action(
@@ -424,6 +435,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     process_context_menu->add_action(continue_action);
     process_context_menu->add_separator();
     process_context_menu->add_action(profile_action);
+    process_context_menu->add_action(debug_action);
     process_context_menu->add_separator();
     process_context_menu->add_action(process_properties_action);
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
@@ -471,6 +483,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         stop_action->set_enabled(has_access);
         continue_action->set_enabled(has_access);
         profile_action->set_enabled(has_access);
+        debug_action->set_enabled(has_access);
         process_properties_action->set_enabled(has_access);
     };
 
