@@ -112,7 +112,7 @@ static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeT
         records[i].country_code = tag_data.records()[i].iso_3166_1_country_code;
         records[i].string_length_in_bytes = utf16_strings[i].size() * sizeof(u16);
         records[i].string_offset_in_bytes = offset;
-        offset += records[i].string_offset_in_bytes;
+        offset += records[i].string_length_in_bytes;
     }
 
     auto* string_table = bit_cast<BigEndian<u16>*>(bytes.data() + header_and_record_size);
