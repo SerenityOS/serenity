@@ -68,7 +68,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
             // 1. Assert: document has no child nodes.
             document->remove_all_children(true);
             // 2. Let root be the result of creating an element given document, "parsererror", and "http://www.mozilla.org/newlayout/xml/parsererror.xml".
-            auto root = DOM::create_element(*document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+            auto root = DOM::create_element(*document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml").release_value_but_fixme_should_propagate_errors();
             // FIXME: 3. Optionally, add attributes or children to root to describe the nature of the parsing error.
             // 4. Append root to document.
             MUST(document->append_child(*root));

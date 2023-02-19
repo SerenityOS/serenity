@@ -60,7 +60,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTMLTableRowElement>> HTMLTableSectionEleme
         return WebIDL::IndexSizeError::create(realm(), "Index is negative or greater than the number of rows");
 
     // 2. Let table row be the result of creating an element given this element's node document, tr, and the HTML namespace.
-    auto& table_row = static_cast<HTMLTableRowElement&>(*DOM::create_element(document(), TagNames::tr, Namespace::HTML));
+    auto& table_row = static_cast<HTMLTableRowElement&>(*TRY(DOM::create_element(document(), TagNames::tr, Namespace::HTML)));
 
     // 3. If index is −1 or equal to the number of items in the rows collection, then append table row to this element.
     if (index == -1 || index == rows_collection_size)

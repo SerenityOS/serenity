@@ -1214,7 +1214,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
         namespace_ = Namespace::HTML;
 
     // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
-    return DOM::create_element(*this, local_name, namespace_);
+    return TRY(DOM::create_element(*this, local_name, namespace_));
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
@@ -1229,7 +1229,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(Depre
     // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix());
+    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix()));
 }
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()

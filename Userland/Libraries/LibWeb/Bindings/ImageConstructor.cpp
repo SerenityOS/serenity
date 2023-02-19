@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLImageElementPrototype.h>
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -44,7 +45,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> ImageConstructor::construct(
     auto& document = window.associated_document();
 
     // 2. Let img be the result of creating an element given document, img, and the HTML namespace.
-    auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML);
+    auto image_element = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return DOM::create_element(document, HTML::TagNames::img, Namespace::HTML); }));
 
     // 3. If width is given, then set an attribute value for img using "width" and width.
     if (vm.argument_count() > 0) {
