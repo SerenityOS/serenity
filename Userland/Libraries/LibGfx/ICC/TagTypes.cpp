@@ -875,6 +875,140 @@ ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_byte
     return try_make_ref_counted<S15Fixed16ArrayTagData>(offset, size, move(values));
 }
 
+ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v4, 10.23 signatureType
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    if (bytes.size() < 3 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: signatureType has not enough data");
+
+    u32 signature = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
+
+    return try_make_ref_counted<SignatureTagData>(offset, size, signature);
+}
+
+Optional<StringView> SignatureTagData::colorimetric_intent_image_state_signature_name(u32 colorimetric_intent_image_state)
+{
+    // Table 26 — colorimetricIntentImageStateTag signatures
+    switch (colorimetric_intent_image_state) {
+    case 0x73636F65: // 'scoe'
+        return "Scene colorimetry estimates"sv;
+    case 0x73617065: // 'sape'
+        return "Scene appearance estimates"sv;
+    case 0x66706365: // 'fpce'
+        return "Focal plane colorimetry estimates"sv;
+    case 0x72686F63: // 'rhoc'
+        return "Reflection hardcopy original colorimetry"sv;
+    case 0x72706F63: // 'rpoc'
+        return "Reflection print output colorimetry"sv;
+    }
+    // "Other image state specifications are reserved for future ICC use."
+    return {};
+}
+
+Optional<StringView> SignatureTagData::perceptual_rendering_intent_gamut_signature_name(u32 perceptual_rendering_intent_gamut)
+{
+    // Table 27 — Perceptual rendering intent gamut
+    switch (perceptual_rendering_intent_gamut) {
+    case 0x70726D67: // 'prmg'
+        return "Perceptual reference medium gamut"sv;
+    }
+    // "It is possible that the ICC will define other signature values in the future."
+    return {};
+}
+
+Optional<StringView> SignatureTagData::saturation_rendering_intent_gamut_signature_name(u32 saturation_rendering_intent_gamut)
+{
+    // Table 28 — Saturation rendering intent gamut
+    switch (saturation_rendering_intent_gamut) {
+    case 0x70726D67: // 'prmg'
+        return "Perceptual reference medium gamut"sv;
+    }
+    // "It is possible that the ICC will define other signature values in the future."
+    return {};
+}
+
+Optional<StringView> SignatureTagData::technology_signature_name(u32 technology)
+{
+    // Table 29 — Technology signatures
+    switch (technology) {
+    case 0x6673636E: // 'fscn'
+        return "Film scanner"sv;
+    case 0x6463616D: // 'dcam'
+        return "Digital camera"sv;
+    case 0x7273636E: // 'rscn'
+        return "Reflective scanner"sv;
+    case 0x696A6574: // 'ijet'
+        return "Ink jet printer"sv;
+    case 0x74776178: // 'twax'
+        return "Thermal wax printer"sv;
+    case 0x6570686F: // 'epho'
+        return "Electrophotographic printer"sv;
+    case 0x65737461: // 'esta'
+        return "Electrostatic printer"sv;
+    case 0x64737562: // 'dsub'
+        return "Dye sublimation printer"sv;
+    case 0x7270686F: // 'rpho'
+        return "Photographic paper printer"sv;
+    case 0x6670726E: // 'fprn'
+        return "Film writer"sv;
+    case 0x7669646D: // 'vidm'
+        return "Video monitor"sv;
+    case 0x76696463: // 'vidc'
+        return "Video camera"sv;
+    case 0x706A7476: // 'pjtv'
+        return "Projection television"sv;
+    case 0x43525420: // 'CRT '
+        return "Cathode ray tube display"sv;
+    case 0x504D4420: // 'PMD '
+        return "Passive matrix display"sv;
+    case 0x414D4420: // 'AMD '
+        return "Active matrix display"sv;
+    case 0x4C434420: // 'LCD '
+        return "Liquid crystal display"sv;
+    case 0x4F4C4544: // 'OLED'
+        return "Organic LED display"sv;
+    case 0x4B504344: // 'KPCD'
+        return "Photo CD"sv;
+    case 0x696D6773: // 'imgs'
+        return "Photographic image setter"sv;
+    case 0x67726176: // 'grav'
+        return "Gravure"sv;
+    case 0x6F666673: // 'offs'
+        return "Offset lithography"sv;
+    case 0x73696C6B: // 'silk'
+        return "Silkscreen"sv;
+    case 0x666C6578: // 'flex'
+        return "Flexography"sv;
+    case 0x6D706673: // 'mpfs'
+        return "Motion picture film scanner"sv;
+    case 0x6D706672: // 'mpfr'
+        return "Motion picture film recorder"sv;
+    case 0x646D7063: // 'dmpc'
+        return "Digital motion picture camera"sv;
+    case 0x64636A70: // 'dcpj'
+        return "Digital cinema projector"sv;
+    }
+    // The spec does *not* say that other values are reserved for future use, but it says that for
+    // all other tags using signatureType. So return a {} here too instead of VERIFY_NOT_REACHED().
+    return {};
+}
+
+Optional<StringView> SignatureTagData::name_for_tag(TagSignature tag)
+{
+    if (tag == colorimetricIntentImageStateTag)
+        return colorimetric_intent_image_state_signature_name(signature());
+    if (tag == perceptualRenderingIntentGamutTag)
+        return perceptual_rendering_intent_gamut_signature_name(signature());
+    if (tag == saturationRenderingIntentGamutTag)
+        return saturation_rendering_intent_gamut_signature_name(signature());
+    if (tag == technologyTag)
+        return technology_signature_name(signature());
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v2, 6.5.17 textDescriptionType
@@ -1008,140 +1142,6 @@ ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_byte
     }
 
     return try_make_ref_counted<TextDescriptionTagData>(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description));
-}
-
-ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
-{
-    // ICC v4, 10.23 signatureType
-    VERIFY(tag_type(bytes) == Type);
-    TRY(check_reserved(bytes));
-
-    if (bytes.size() < 3 * sizeof(u32))
-        return Error::from_string_literal("ICC::Profile: signatureType has not enough data");
-
-    u32 signature = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
-
-    return try_make_ref_counted<SignatureTagData>(offset, size, signature);
-}
-
-Optional<StringView> SignatureTagData::colorimetric_intent_image_state_signature_name(u32 colorimetric_intent_image_state)
-{
-    // Table 26 — colorimetricIntentImageStateTag signatures
-    switch (colorimetric_intent_image_state) {
-    case 0x73636F65: // 'scoe'
-        return "Scene colorimetry estimates"sv;
-    case 0x73617065: // 'sape'
-        return "Scene appearance estimates"sv;
-    case 0x66706365: // 'fpce'
-        return "Focal plane colorimetry estimates"sv;
-    case 0x72686F63: // 'rhoc'
-        return "Reflection hardcopy original colorimetry"sv;
-    case 0x72706F63: // 'rpoc'
-        return "Reflection print output colorimetry"sv;
-    }
-    // "Other image state specifications are reserved for future ICC use."
-    return {};
-}
-
-Optional<StringView> SignatureTagData::perceptual_rendering_intent_gamut_signature_name(u32 perceptual_rendering_intent_gamut)
-{
-    // Table 27 — Perceptual rendering intent gamut
-    switch (perceptual_rendering_intent_gamut) {
-    case 0x70726D67: // 'prmg'
-        return "Perceptual reference medium gamut"sv;
-    }
-    // "It is possible that the ICC will define other signature values in the future."
-    return {};
-}
-
-Optional<StringView> SignatureTagData::saturation_rendering_intent_gamut_signature_name(u32 saturation_rendering_intent_gamut)
-{
-    // Table 28 — Saturation rendering intent gamut
-    switch (saturation_rendering_intent_gamut) {
-    case 0x70726D67: // 'prmg'
-        return "Perceptual reference medium gamut"sv;
-    }
-    // "It is possible that the ICC will define other signature values in the future."
-    return {};
-}
-
-Optional<StringView> SignatureTagData::technology_signature_name(u32 technology)
-{
-    // Table 29 — Technology signatures
-    switch (technology) {
-    case 0x6673636E: // 'fscn'
-        return "Film scanner"sv;
-    case 0x6463616D: // 'dcam'
-        return "Digital camera"sv;
-    case 0x7273636E: // 'rscn'
-        return "Reflective scanner"sv;
-    case 0x696A6574: // 'ijet'
-        return "Ink jet printer"sv;
-    case 0x74776178: // 'twax'
-        return "Thermal wax printer"sv;
-    case 0x6570686F: // 'epho'
-        return "Electrophotographic printer"sv;
-    case 0x65737461: // 'esta'
-        return "Electrostatic printer"sv;
-    case 0x64737562: // 'dsub'
-        return "Dye sublimation printer"sv;
-    case 0x7270686F: // 'rpho'
-        return "Photographic paper printer"sv;
-    case 0x6670726E: // 'fprn'
-        return "Film writer"sv;
-    case 0x7669646D: // 'vidm'
-        return "Video monitor"sv;
-    case 0x76696463: // 'vidc'
-        return "Video camera"sv;
-    case 0x706A7476: // 'pjtv'
-        return "Projection television"sv;
-    case 0x43525420: // 'CRT '
-        return "Cathode ray tube display"sv;
-    case 0x504D4420: // 'PMD '
-        return "Passive matrix display"sv;
-    case 0x414D4420: // 'AMD '
-        return "Active matrix display"sv;
-    case 0x4C434420: // 'LCD '
-        return "Liquid crystal display"sv;
-    case 0x4F4C4544: // 'OLED'
-        return "Organic LED display"sv;
-    case 0x4B504344: // 'KPCD'
-        return "Photo CD"sv;
-    case 0x696D6773: // 'imgs'
-        return "Photographic image setter"sv;
-    case 0x67726176: // 'grav'
-        return "Gravure"sv;
-    case 0x6F666673: // 'offs'
-        return "Offset lithography"sv;
-    case 0x73696C6B: // 'silk'
-        return "Silkscreen"sv;
-    case 0x666C6578: // 'flex'
-        return "Flexography"sv;
-    case 0x6D706673: // 'mpfs'
-        return "Motion picture film scanner"sv;
-    case 0x6D706672: // 'mpfr'
-        return "Motion picture film recorder"sv;
-    case 0x646D7063: // 'dmpc'
-        return "Digital motion picture camera"sv;
-    case 0x64636A70: // 'dcpj'
-        return "Digital cinema projector"sv;
-    }
-    // The spec does *not* say that other values are reserved for future use, but it says that for
-    // all other tags using signatureType. So return a {} here too instead of VERIFY_NOT_REACHED().
-    return {};
-}
-
-Optional<StringView> SignatureTagData::name_for_tag(TagSignature tag)
-{
-    if (tag == colorimetricIntentImageStateTag)
-        return colorimetric_intent_image_state_signature_name(signature());
-    if (tag == perceptualRenderingIntentGamutTag)
-        return perceptual_rendering_intent_gamut_signature_name(signature());
-    if (tag == saturationRenderingIntentGamutTag)
-        return saturation_rendering_intent_gamut_signature_name(signature());
-    if (tag == technologyTag)
-        return technology_signature_name(signature());
-    return {};
 }
 
 ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
