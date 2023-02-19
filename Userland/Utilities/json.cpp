@@ -124,7 +124,7 @@ JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t ke
     auto key = key_parts[key_index++];
 
     if (key == "*"sv) {
-        Vector<JsonValue> matches;
+        JsonArray matches;
         if (value.is_object()) {
             value.as_object().for_each_member([&](auto&, auto& member_value) {
                 matches.append(query(member_value, key_parts, key_index));
@@ -134,7 +134,7 @@ JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t ke
                 matches.append(query(member, key_parts, key_index));
             });
         }
-        return JsonValue(JsonArray(matches));
+        return matches;
     }
 
     JsonValue result {};
