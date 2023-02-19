@@ -88,7 +88,7 @@ void RequestManagerQt::Request::did_finish()
     auto buffer = m_reply.readAll();
     auto http_status_code = m_reply.attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt();
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
-    Vector<DeprecatedString> set_cookie_headers;
+    JsonArray set_cookie_headers;
     for (auto& it : m_reply.rawHeaderPairs()) {
         auto name = DeprecatedString(it.first.data(), it.first.length());
         auto value = DeprecatedString(it.second.data(), it.second.length());
@@ -104,7 +104,7 @@ void RequestManagerQt::Request::did_finish()
         }
     }
     if (!set_cookie_headers.is_empty()) {
-        response_headers.set("set-cookie"sv, JsonArray { set_cookie_headers }.to_deprecated_string());
+        response_headers.set("set-cookie"sv, set_cookie_headers.to_deprecated_string());
     }
     on_buffered_request_finish(success, buffer.length(), response_headers, http_status_code, ReadonlyBytes { buffer.data(), (size_t)buffer.size() });
 }
