@@ -192,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("tags:");
     HashMap<Gfx::ICC::TagData*, Gfx::ICC::TagSignature> tag_data_to_first_signature;
-    profile->for_each_tag([&tag_data_to_first_signature](auto tag_signature, auto tag_data) {
+    TRY(profile->try_for_each_tag([&tag_data_to_first_signature](auto tag_signature, auto tag_data) -> ErrorOr<void> {
         if (auto name = tag_signature_spec_name(tag_signature); name.has_value())
             out("{} ({}): ", *name, tag_signature);
         else
@@ -204,7 +204,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto it = tag_data_to_first_signature.find(tag_data);
         if (it != tag_data_to_first_signature.end()) {
             outln("    (see {} above)", it->value);
-            return;
+            return {};
         }
         tag_data_to_first_signature.set(tag_data, tag_signature);
 
@@ -259,8 +259,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto const& optional_clut = a_to_b.clut(); optional_clut.has_value()) {
                 auto const& clut = optional_clut.value();
                 outln("    color lookup table: {} grid points, {}",
-                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
-                    MUST(clut.values.visit(
+                    TRY(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    TRY(clut.values.visit(
                         [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
                         [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
             } else {
@@ -311,8 +311,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto const& optional_clut = b_to_a.clut(); optional_clut.has_value()) {
                 auto const& clut = optional_clut.value();
                 outln("    color lookup table: {} grid points, {}",
-                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
-                    MUST(clut.values.visit(
+                    TRY(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    TRY(clut.values.visit(
                         [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
                         [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
             } else {
@@ -350,7 +350,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 const auto& pcs = named_colors.pcs_coordinates(i);
 
                 // FIXME: Display decoded values? (See ICC v4 6.3.4.2 and 10.8.)
-                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", MUST(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
+                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", TRY(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
                 if (auto number_of_device_coordinates = named_colors.number_of_device_coordinates(); number_of_device_coordinates > 0) {
                     out(", device coordinates:");
                     for (size_t j = 0; j < number_of_device_coordinates; ++j)
@@ -394,9 +394,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else if (tag_data->type() == Gfx::ICC::TextDescriptionTagData::Type) {
             auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData&>(*tag_data);
             outln("    ascii: \"{}\"", text_description.ascii_description());
-            out_optional("    unicode", MUST(text_description.unicode_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
+            out_optional("    unicode", TRY(text_description.unicode_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
             outln("    unicode language code: 0x{}", text_description.unicode_language_code());
-            out_optional("    macintosh", MUST(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
+            out_optional("    macintosh", TRY(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
         } else if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
             outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
         } else if (tag_data->type() == Gfx::ICC::ViewingConditionsTagData::Type) {
@@ -408,7 +408,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             for (auto& xyz : static_cast<Gfx::ICC::XYZTagData&>(*tag_data).xyzs())
                 outln("    {}", xyz);
         }
-    });
+        return {};
+    }));
 
     return 0;
 }
