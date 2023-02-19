@@ -24,9 +24,9 @@ struct DeprecatedFlyStringImplTraits : public Traits<StringImpl*> {
     }
 };
 
-static Singleton<HashTable<StringImpl*, DeprecatedFlyStringImplTraits>> s_table;
+static Singleton<HashTable<StringImpl const*, DeprecatedFlyStringImplTraits>> s_table;
 
-static HashTable<StringImpl*, DeprecatedFlyStringImplTraits>& fly_impls()
+static HashTable<StringImpl const*, DeprecatedFlyStringImplTraits>& fly_impls()
 {
     return *s_table;
 }
