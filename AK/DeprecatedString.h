@@ -18,7 +18,7 @@ namespace AK {
 
 // DeprecatedString is a convenience wrapper around StringImpl, suitable for passing
 // around as a value type. It's basically the same as passing around a
-// RefPtr<StringImpl>, with a bit of syntactic sugar.
+// RefPtr<StringImpl const>, with a bit of syntactic sugar.
 //
 // Note that StringImpl is an immutable object that cannot shrink or grow.
 // Its allocation size is snugly tailored to the specific string it contains.
@@ -48,7 +48,7 @@ public:
     }
 
     DeprecatedString(DeprecatedString const& other)
-        : m_impl(const_cast<DeprecatedString&>(other).m_impl)
+        : m_impl(other.m_impl)
     {
     }
 
@@ -73,21 +73,21 @@ public:
     }
 
     DeprecatedString(StringImpl const& impl)
-        : m_impl(const_cast<StringImpl&>(impl))
+        : m_impl(impl)
     {
     }
 
     DeprecatedString(StringImpl const* impl)
-        : m_impl(const_cast<StringImpl*>(impl))
+        : m_impl(impl)
     {
     }
 
-    DeprecatedString(RefPtr<StringImpl>&& impl)
+    DeprecatedString(RefPtr<StringImpl const>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    DeprecatedString(NonnullRefPtr<StringImpl>&& impl)
+    DeprecatedString(NonnullRefPtr<StringImpl const>&& impl)
         : m_impl(move(impl))
     {
     }
@@ -234,7 +234,6 @@ public:
         return StringImpl::the_empty_stringimpl();
     }
 
-    [[nodiscard]] StringImpl* impl() { return m_impl.ptr(); }
     [[nodiscard]] StringImpl const* impl() const { return m_impl.ptr(); }
 
     DeprecatedString& operator=(DeprecatedString&& other)
@@ -323,7 +322,7 @@ public:
     }
 
 private:
-    RefPtr<StringImpl> m_impl;
+    RefPtr<StringImpl const> m_impl;
 };
 
 template<>

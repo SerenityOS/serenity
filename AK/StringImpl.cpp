@@ -34,7 +34,7 @@ StringImpl::~StringImpl()
         DeprecatedFlyString::did_destroy_impl({}, *this);
 }
 
-NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*& buffer)
+NonnullRefPtr<StringImpl const> StringImpl::create_uninitialized(size_t length, char*& buffer)
 {
     VERIFY(length);
     void* slot = kmalloc(allocation_size_for_stringimpl(length));
@@ -45,7 +45,7 @@ NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(size_t length, char*&
     return new_stringimpl;
 }
 
-RefPtr<StringImpl> StringImpl::create(char const* cstring, size_t length, ShouldChomp should_chomp)
+RefPtr<StringImpl const> StringImpl::create(char const* cstring, size_t length, ShouldChomp should_chomp)
 {
     if (!cstring)
         return nullptr;
@@ -70,7 +70,7 @@ RefPtr<StringImpl> StringImpl::create(char const* cstring, size_t length, Should
     return new_stringimpl;
 }
 
-RefPtr<StringImpl> StringImpl::create(char const* cstring, ShouldChomp shouldChomp)
+RefPtr<StringImpl const> StringImpl::create(char const* cstring, ShouldChomp shouldChomp)
 {
     if (!cstring)
         return nullptr;
@@ -81,12 +81,12 @@ RefPtr<StringImpl> StringImpl::create(char const* cstring, ShouldChomp shouldCho
     return create(cstring, strlen(cstring), shouldChomp);
 }
 
-RefPtr<StringImpl> StringImpl::create(ReadonlyBytes bytes, ShouldChomp shouldChomp)
+RefPtr<StringImpl const> StringImpl::create(ReadonlyBytes bytes, ShouldChomp shouldChomp)
 {
     return StringImpl::create(reinterpret_cast<char const*>(bytes.data()), bytes.size(), shouldChomp);
 }
 
-RefPtr<StringImpl> StringImpl::create_lowercased(char const* cstring, size_t length)
+RefPtr<StringImpl const> StringImpl::create_lowercased(char const* cstring, size_t length)
 {
     if (!cstring)
         return nullptr;
@@ -99,7 +99,7 @@ RefPtr<StringImpl> StringImpl::create_lowercased(char const* cstring, size_t len
     return impl;
 }
 
-RefPtr<StringImpl> StringImpl::create_uppercased(char const* cstring, size_t length)
+RefPtr<StringImpl const> StringImpl::create_uppercased(char const* cstring, size_t length)
 {
     if (!cstring)
         return nullptr;
@@ -112,7 +112,7 @@ RefPtr<StringImpl> StringImpl::create_uppercased(char const* cstring, size_t len
     return impl;
 }
 
-NonnullRefPtr<StringImpl> StringImpl::to_lowercase() const
+NonnullRefPtr<StringImpl const> StringImpl::to_lowercase() const
 {
     for (size_t i = 0; i < m_length; ++i) {
         if (is_ascii_upper_alpha(characters()[i]))
@@ -121,7 +121,7 @@ NonnullRefPtr<StringImpl> StringImpl::to_lowercase() const
     return const_cast<StringImpl&>(*this);
 }
 
-NonnullRefPtr<StringImpl> StringImpl::to_uppercase() const
+NonnullRefPtr<StringImpl const> StringImpl::to_uppercase() const
 {
     for (size_t i = 0; i < m_length; ++i) {
         if (is_ascii_lower_alpha(characters()[i]))
