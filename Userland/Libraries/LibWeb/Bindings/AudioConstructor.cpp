@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/AudioConstructor.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLAudioElementPrototype.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -44,7 +45,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> AudioConstructor::construct(
     auto& document = window.associated_document();
 
     // 2. Let audio be the result of creating an element given document, audio, and the HTML namespace.
-    auto audio = DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML);
+    auto audio = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return DOM::create_element(document, HTML::TagNames::audio, Namespace::HTML); }));
 
     // 3. Set an attribute value for audio using "preload" and "auto".
     MUST(audio->set_attribute(HTML::AttributeNames::preload, "auto"sv));

@@ -88,21 +88,21 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedStr
     doctype->set_name("html");
     MUST(html_document->append_child(*doctype));
 
-    auto html_element = create_element(html_document, HTML::TagNames::html, Namespace::HTML);
+    auto html_element = create_element(html_document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_document->append_child(html_element));
 
-    auto head_element = create_element(html_document, HTML::TagNames::head, Namespace::HTML);
+    auto head_element = create_element(html_document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
 
     if (!title.is_null()) {
-        auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML);
+        auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
         MUST(head_element->append_child(title_element));
 
         auto text_node = heap().allocate<Text>(realm(), html_document, title).release_allocated_value_but_fixme_should_propagate_errors();
         MUST(title_element->append_child(*text_node));
     }
 
-    auto body_element = create_element(html_document, HTML::TagNames::body, Namespace::HTML);
+    auto body_element = create_element(html_document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
     html_document->set_origin(document().origin());
