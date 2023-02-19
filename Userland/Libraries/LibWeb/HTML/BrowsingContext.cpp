@@ -139,7 +139,8 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
         move(realm_execution_context),
         {},
         top_level_creation_url,
-        top_level_origin);
+        top_level_origin)
+        .release_value_but_fixme_should_propagate_errors();
 
     // 12. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
     //     coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
