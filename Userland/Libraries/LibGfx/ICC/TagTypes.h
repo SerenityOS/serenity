@@ -201,6 +201,11 @@ public:
     {
         VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+
+        VERIFY(number_of_input_table_entries >= 2);
+        VERIFY(number_of_input_table_entries <= 4096);
+        VERIFY(number_of_output_table_entries >= 2);
+        VERIFY(number_of_output_table_entries <= 4096);
     }
 
     EMatrix3x3 const& e_matrix() const { return m_e; }
@@ -255,6 +260,9 @@ public:
     {
         VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+
+        VERIFY(number_of_input_table_entries == 256);
+        VERIFY(number_of_output_table_entries == 256);
     }
 
     EMatrix3x3 const& e_matrix() const { return m_e; }
