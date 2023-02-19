@@ -11,11 +11,11 @@
 namespace Web::ResizeObserver {
 
 // https://drafts.csswg.org/resize-observer/#dom-resizeobserver-resizeobserver
-JS::NonnullGCPtr<ResizeObserver> ResizeObserver::construct_impl(JS::Realm& realm, WebIDL::CallbackType* callback)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ResizeObserver>> ResizeObserver::construct_impl(JS::Realm& realm, WebIDL::CallbackType* callback)
 {
     // FIXME: Implement
     (void)callback;
-    return realm.heap().allocate<ResizeObserver>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<ResizeObserver>(realm, realm));
 }
 
 ResizeObserver::ResizeObserver(JS::Realm& realm)
