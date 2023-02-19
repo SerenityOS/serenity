@@ -23,19 +23,19 @@ static bool is_part_of_operator(StringView text, char ch)
 
 namespace Shell::Posix {
 
-Vector<Token> Lexer::batch_next(Optional<Reduction> starting_reduction)
+ErrorOr<Vector<Token>> Lexer::batch_next(Optional<Reduction> starting_reduction)
 {
     if (starting_reduction.has_value())
         m_next_reduction = *starting_reduction;
 
     for (; m_next_reduction != Reduction::None;) {
-        auto result = reduce(m_next_reduction);
+        auto result = TRY(reduce(m_next_reduction));
         m_next_reduction = result.next_reduction;
         if (!result.tokens.is_empty())
             return result.tokens;
     }
 
-    return {};
+    return Vector<Token> {};
 }
 
 ExpansionRange Lexer::range(ssize_t offset) const
@@ -79,11 +79,11 @@ bool Lexer::consume_specific(char ch)
     return false;
 }
 
-Lexer::ReductionResult Lexer::reduce(Reduction reduction)
+ErrorOr<Lexer::ReductionResult> Lexer::reduce(Reduction reduction)
 {
     switch (reduction) {
     case Reduction::None:
-        return { {}, Reduction::None };
+        return ReductionResult { {}, Reduction::None };
     case Reduction::End:
         return reduce_end();
     case Reduction::Operator:
@@ -117,9 +117,9 @@ Lexer::ReductionResult Lexer::reduce(Reduction reduction)
     VERIFY_NOT_REACHED();
 }
 
-Lexer::ReductionResult Lexer::reduce_end()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_end()
 {
-    return {
+    return ReductionResult {
         .tokens = { Token::eof() },
         .next_reduction = Reduction::None,
     };
@@ -205,21 +205,21 @@ Lexer::HeredocKeyResult Lexer::process_heredoc_key(Token const& token)
     // NOTE: Not checking the final state as any garbage that even partially parses is allowed to be used as a key :/
 
     return {
-        .key = builder.to_deprecated_string(),
+        .key = builder.to_string().release_value_but_fixme_should_propagate_errors(),
         .allow_interpolation = !had_a_single_quote_segment,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_operator()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_operator()
 {
     if (m_lexer.is_eof()) {
         if (is_operator(m_state.buffer.string_view())) {
-            auto tokens = Token::operators_from(m_state);
+            auto tokens = TRY(Token::operators_from(m_state));
             m_state.buffer.clear();
             m_state.position.start_offset = m_state.position.end_offset;
             m_state.position.start_line = m_state.position.end_line;
 
-            return {
+            return ReductionResult {
                 .tokens = move(tokens),
                 .next_reduction = Reduction::End,
             };
@@ -230,7 +230,7 @@ Lexer::ReductionResult Lexer::reduce_operator()
 
     if (is_part_of_operator(m_state.buffer.string_view(), m_lexer.peek())) {
         m_state.buffer.append(consume());
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Operator,
         };
@@ -238,7 +238,7 @@ Lexer::ReductionResult Lexer::reduce_operator()
 
     auto tokens = Vector<Token> {};
     if (is_operator(m_state.buffer.string_view())) {
-        tokens.extend(Token::operators_from(m_state));
+        tokens.extend(TRY(Token::operators_from(m_state)));
         m_state.buffer.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
@@ -246,11 +246,11 @@ Lexer::ReductionResult Lexer::reduce_operator()
 
     auto expect_heredoc_entry = !tokens.is_empty() && (tokens.last().type == Token::Type::DoubleLessDash || tokens.last().type == Token::Type::DoubleLess);
 
-    auto result = reduce(Reduction::Start);
+    auto result = TRY(reduce(Reduction::Start));
     tokens.extend(move(result.tokens));
 
     while (expect_heredoc_entry && tokens.size() == 1) {
-        result = reduce(result.next_reduction);
+        result = TRY(reduce(result.next_reduction));
         tokens.extend(move(result.tokens));
     }
 
@@ -263,16 +263,16 @@ Lexer::ReductionResult Lexer::reduce_operator()
         });
     }
 
-    return {
+    return ReductionResult {
         .tokens = move(tokens),
         .next_reduction = result.next_reduction,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_comment()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_comment()
 {
     if (m_lexer.is_eof()) {
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::End,
         };
@@ -280,24 +280,24 @@ Lexer::ReductionResult Lexer::reduce_comment()
 
     if (consume() == '\n') {
         m_state.on_new_line = true;
-        return {
+        return ReductionResult {
             .tokens = { Token::newline() },
             .next_reduction = Reduction::Start,
         };
     }
 
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::Comment,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_single_quoted_string()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_single_quoted_string()
 {
     if (m_lexer.is_eof()) {
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         tokens.append(Token::continuation('\''));
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::End,
         };
@@ -307,25 +307,25 @@ Lexer::ReductionResult Lexer::reduce_single_quoted_string()
     m_state.buffer.append(ch);
 
     if (ch == '\'') {
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Start,
         };
     }
 
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::SingleQuotedString,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_double_quoted_string()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_double_quoted_string()
 {
     m_state.previous_reduction = Reduction::DoubleQuotedString;
     if (m_lexer.is_eof()) {
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         tokens.append(Token::continuation('"'));
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::End,
         };
@@ -337,7 +337,7 @@ Lexer::ReductionResult Lexer::reduce_double_quoted_string()
     if (m_state.escaping) {
         m_state.escaping = false;
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::DoubleQuotedString,
         };
@@ -346,13 +346,13 @@ Lexer::ReductionResult Lexer::reduce_double_quoted_string()
     switch (ch) {
     case '\\':
         m_state.escaping = true;
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::DoubleQuotedString,
         };
     case '"':
         m_state.previous_reduction = Reduction::Start;
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Start,
         };
@@ -361,25 +361,25 @@ Lexer::ReductionResult Lexer::reduce_double_quoted_string()
             m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
         else
             m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Expansion,
         };
     case '`':
         m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
         };
     default:
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::DoubleQuotedString,
         };
     }
 }
 
-Lexer::ReductionResult Lexer::reduce_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_expansion()
 {
     if (m_lexer.is_eof())
         return reduce(m_state.previous_reduction);
@@ -390,14 +390,14 @@ Lexer::ReductionResult Lexer::reduce_expansion()
     case '{':
         consume();
         m_state.buffer.append(ch);
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::ExtendedParameterExpansion,
         };
     case '(':
         consume();
         m_state.buffer.append(ch);
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandOrArithmeticSubstitutionExpansion,
         };
@@ -410,7 +410,7 @@ Lexer::ReductionResult Lexer::reduce_expansion()
         expansion.parameter.append(ch);
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::ParameterExpansion,
         };
@@ -430,13 +430,13 @@ Lexer::ReductionResult Lexer::reduce_expansion()
     }
 }
 
-Lexer::ReductionResult Lexer::reduce_command_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_command_expansion()
 {
     if (m_lexer.is_eof()) {
         auto& expansion = m_state.expansions.last().get<CommandExpansion>();
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
+        return ReductionResult {
             .tokens = { Token::continuation('`') },
             .next_reduction = m_state.previous_reduction,
         };
@@ -449,7 +449,7 @@ Lexer::ReductionResult Lexer::reduce_command_expansion()
         auto& expansion = m_state.expansions.last().get<CommandExpansion>();
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = m_state.previous_reduction,
         };
@@ -457,7 +457,7 @@ Lexer::ReductionResult Lexer::reduce_command_expansion()
 
     if (!m_state.escaping && ch == '\\') {
         m_state.escaping = true;
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
         };
@@ -466,21 +466,21 @@ Lexer::ReductionResult Lexer::reduce_command_expansion()
     m_state.escaping = false;
     m_state.buffer.append(ch);
     m_state.expansions.last().get<CommandExpansion>().command.append(ch);
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::CommandExpansion,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_heredoc_contents()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_heredoc_contents()
 {
     if (m_lexer.is_eof()) {
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         m_state.buffer.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::End,
         };
@@ -489,7 +489,7 @@ Lexer::ReductionResult Lexer::reduce_heredoc_contents()
     if (!m_state.escaping && consume_specific('\\')) {
         m_state.escaping = true;
         m_state.buffer.append('\\');
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::HeredocContents,
         };
@@ -502,7 +502,7 @@ Lexer::ReductionResult Lexer::reduce_heredoc_contents()
         else
             m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Expansion,
         };
@@ -511,7 +511,7 @@ Lexer::ReductionResult Lexer::reduce_heredoc_contents()
     if (!m_state.escaping && consume_specific('`')) {
         m_state.buffer.append('`');
         m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
         };
@@ -519,25 +519,25 @@ Lexer::ReductionResult Lexer::reduce_heredoc_contents()
 
     m_state.escaping = false;
     m_state.buffer.append(consume());
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::HeredocContents,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_start()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
 {
     auto was_on_new_line = m_state.on_new_line;
     m_state.on_new_line = false;
 
     if (m_lexer.is_eof()) {
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         m_state.buffer.clear();
         m_state.expansions.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::End,
         };
@@ -555,7 +555,7 @@ Lexer::ReductionResult Lexer::reduce_start()
             if (m_lexer.consume_specific('\n')) {
                 if (entry.dedent)
                     m_lexer.ignore_while(is_any_of("\t"sv));
-                if (m_lexer.consume_specific(entry.key.view())) {
+                if (m_lexer.consume_specific(entry.key.bytes_as_string_view())) {
                     if (m_lexer.consume_specific('\n') || m_lexer.is_eof()) {
                         end_index = possible_end_index;
                         break;
@@ -572,7 +572,7 @@ Lexer::ReductionResult Lexer::reduce_start()
         m_state.buffer.clear();
         m_state.buffer.append(contents);
 
-        auto token = Token::maybe_from_state(m_state).first();
+        auto token = TRY(Token::maybe_from_state(m_state)).first();
         token.relevant_heredoc_key = entry.key;
         token.type = Token::Type::HeredocContents;
 
@@ -582,7 +582,7 @@ Lexer::ReductionResult Lexer::reduce_start()
 
         m_state.buffer.clear();
 
-        return {
+        return ReductionResult {
             .tokens = { move(token) },
             .next_reduction = Reduction::Start,
         };
@@ -595,7 +595,7 @@ Lexer::ReductionResult Lexer::reduce_start()
         m_state.buffer.clear();
         m_state.buffer.append(buffer);
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Start,
         };
@@ -603,14 +603,14 @@ Lexer::ReductionResult Lexer::reduce_start()
 
     if (!m_state.escaping && m_lexer.peek() == '#' && m_state.buffer.is_empty()) {
         consume();
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Comment,
         };
     }
 
     if (!m_state.escaping && consume_specific('\n')) {
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         tokens.append(Token::newline());
 
         m_state.on_new_line = true;
@@ -620,7 +620,7 @@ Lexer::ReductionResult Lexer::reduce_start()
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::Start,
         };
@@ -629,21 +629,21 @@ Lexer::ReductionResult Lexer::reduce_start()
     if (!m_state.escaping && consume_specific('\\')) {
         m_state.escaping = true;
         m_state.buffer.append('\\');
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Start,
         };
     }
 
     if (!m_state.escaping && is_part_of_operator(""sv, m_lexer.peek())) {
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         m_state.buffer.clear();
         m_state.buffer.append(consume());
         m_state.expansions.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::Operator,
         };
@@ -651,7 +651,7 @@ Lexer::ReductionResult Lexer::reduce_start()
 
     if (!m_state.escaping && consume_specific('\'')) {
         m_state.buffer.append('\'');
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::SingleQuotedString,
         };
@@ -659,7 +659,7 @@ Lexer::ReductionResult Lexer::reduce_start()
 
     if (!m_state.escaping && consume_specific('"')) {
         m_state.buffer.append('"');
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::DoubleQuotedString,
         };
@@ -667,13 +667,13 @@ Lexer::ReductionResult Lexer::reduce_start()
 
     if (!m_state.escaping && is_ascii_space(m_lexer.peek())) {
         consume();
-        auto tokens = Token::maybe_from_state(m_state);
+        auto tokens = TRY(Token::maybe_from_state(m_state));
         m_state.buffer.clear();
         m_state.expansions.clear();
         m_state.position.start_offset = m_state.position.end_offset;
         m_state.position.start_line = m_state.position.end_line;
 
-        return {
+        return ReductionResult {
             .tokens = move(tokens),
             .next_reduction = Reduction::Start,
         };
@@ -686,7 +686,7 @@ Lexer::ReductionResult Lexer::reduce_start()
         else
             m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Expansion,
         };
@@ -695,7 +695,7 @@ Lexer::ReductionResult Lexer::reduce_start()
     if (!m_state.escaping && consume_specific('`')) {
         m_state.buffer.append('`');
         m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
         };
@@ -703,20 +703,20 @@ Lexer::ReductionResult Lexer::reduce_start()
 
     m_state.escaping = false;
     m_state.buffer.append(consume());
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::Start,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_arithmetic_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_arithmetic_expansion()
 {
     if (m_lexer.is_eof()) {
         auto& expansion = m_state.expansions.last().get<ArithmeticExpansion>();
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
-            .tokens = { Token::continuation("$((") },
+        return ReductionResult {
+            .tokens = { Token::continuation(String::from_utf8_short_string("$(("sv)) },
             .next_reduction = m_state.previous_reduction,
         };
     }
@@ -724,11 +724,11 @@ Lexer::ReductionResult Lexer::reduce_arithmetic_expansion()
     if (m_lexer.peek() == ')' && m_state.buffer.string_view().ends_with(')')) {
         m_state.buffer.append(consume());
         auto& expansion = m_state.expansions.last().get<ArithmeticExpansion>();
-        expansion.expression = expansion.value.to_deprecated_string().substring(0, expansion.value.length() - 1);
+        expansion.expression = TRY(String::from_utf8(expansion.value.string_view().substring_view(0, expansion.value.length() - 1)));
         expansion.value.clear();
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = m_state.previous_reduction,
         };
@@ -737,13 +737,13 @@ Lexer::ReductionResult Lexer::reduce_arithmetic_expansion()
     auto ch = consume();
     m_state.buffer.append(ch);
     m_state.expansions.last().get<ArithmeticExpansion>().value.append(ch);
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::ArithmeticExpansion,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_special_parameter_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_special_parameter_expansion()
 {
     auto ch = consume();
     m_state.buffer.append(ch);
@@ -755,18 +755,18 @@ Lexer::ReductionResult Lexer::reduce_special_parameter_expansion()
     expansion.parameter.append(ch);
     expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = m_state.previous_reduction,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_parameter_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_parameter_expansion()
 {
     auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
 
     if (m_lexer.is_eof()) {
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Start,
         };
@@ -778,7 +778,7 @@ Lexer::ReductionResult Lexer::reduce_parameter_expansion()
         expansion.parameter.append(next);
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::ParameterExpansion,
         };
@@ -787,11 +787,11 @@ Lexer::ReductionResult Lexer::reduce_parameter_expansion()
     return reduce(m_state.previous_reduction);
 }
 
-Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_command_or_arithmetic_substitution_expansion()
 {
     if (m_lexer.is_eof()) {
-        return {
-            .tokens = { Token::continuation("$(") },
+        return ReductionResult {
+            .tokens = { Token::continuation(String::from_utf8_short_string("$("sv)) },
             .next_reduction = m_state.previous_reduction,
         };
     }
@@ -800,11 +800,11 @@ Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansio
     if (ch == '(' && m_state.buffer.string_view().ends_with("$("sv)) {
         m_state.buffer.append(consume());
         m_state.expansions.last() = ArithmeticExpansion {
-            .expression = "",
+            .expression = {},
             .value = StringBuilder {},
             .range = range(-2)
         };
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::ArithmeticExpansion,
         };
@@ -815,7 +815,7 @@ Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansio
         m_state.expansions.last().visit([&](auto& expansion) {
             expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
         });
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = m_state.previous_reduction,
         };
@@ -823,19 +823,19 @@ Lexer::ReductionResult Lexer::reduce_command_or_arithmetic_substitution_expansio
 
     m_state.buffer.append(consume());
     m_state.expansions.last().get<CommandExpansion>().command.append(ch);
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::CommandOrArithmeticSubstitutionExpansion,
     };
 }
 
-Lexer::ReductionResult Lexer::reduce_extended_parameter_expansion()
+ErrorOr<Lexer::ReductionResult> Lexer::reduce_extended_parameter_expansion()
 {
     auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
 
     if (m_lexer.is_eof()) {
-        return {
-            .tokens = { Token::continuation("${") },
+        return ReductionResult {
+            .tokens = { Token::continuation(String::from_utf8_short_string("${"sv)) },
             .next_reduction = m_state.previous_reduction,
         };
     }
@@ -845,7 +845,7 @@ Lexer::ReductionResult Lexer::reduce_extended_parameter_expansion()
         m_state.buffer.append(consume());
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-        return {
+        return ReductionResult {
             .tokens = {},
             .next_reduction = m_state.previous_reduction,
         };
@@ -855,7 +855,7 @@ Lexer::ReductionResult Lexer::reduce_extended_parameter_expansion()
     expansion.parameter.append(ch);
     expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
-    return {
+    return ReductionResult {
         .tokens = {},
         .next_reduction = Reduction::ExtendedParameterExpansion,
     };

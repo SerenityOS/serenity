@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Queue.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <Shell/AST.h>
@@ -51,7 +51,7 @@ struct CommandExpansion {
 };
 
 struct ArithmeticExpansion {
-    DeprecatedString expression;
+    String expression;
     StringBuilder value;
     ExpansionRange range;
 };
@@ -59,8 +59,8 @@ struct ArithmeticExpansion {
 using Expansion = Variant<ParameterExpansion, CommandExpansion, ArithmeticExpansion>;
 
 struct ResolvedParameterExpansion {
-    DeprecatedString parameter;
-    DeprecatedString argument;
+    String parameter;
+    String argument;
     ExpansionRange range;
     enum class Op {
         UseDefaultValue,                    // ${parameter:-word}
@@ -182,7 +182,7 @@ struct ResolvedCommandExpansion {
 using ResolvedExpansion = Variant<ResolvedParameterExpansion, ResolvedCommandExpansion>;
 
 struct HeredocEntry {
-    DeprecatedString key;
+    String key;
     bool allow_interpolation;
     bool dedent;
 };
@@ -257,27 +257,27 @@ struct Token {
     };
 
     Type type;
-    DeprecatedString value;
+    String value;
     Optional<AST::Position> position;
     Vector<Expansion> expansions;
     Vector<ResolvedExpansion> resolved_expansions {};
     StringView original_text;
-    Optional<DeprecatedString> relevant_heredoc_key {};
+    Optional<String> relevant_heredoc_key {};
     bool could_be_start_of_a_simple_command { false };
 
-    static Vector<Token> maybe_from_state(State const& state)
+    static ErrorOr<Vector<Token>> maybe_from_state(State const& state)
     {
         if (state.buffer.is_empty() || state.buffer.string_view().trim_whitespace().is_empty())
-            return {};
+            return Vector<Token> {};
 
         auto token = Token {
             .type = Type::Token,
-            .value = state.buffer.to_deprecated_string(),
+            .value = TRY(state.buffer.to_string()),
             .position = state.position,
             .expansions = state.expansions,
             .original_text = {},
         };
-        return { move(token) };
+        return Vector<Token> { move(token) };
     }
 
     static Optional<Token::Type> operator_from_name(StringView name)
@@ -320,14 +320,14 @@ struct Token {
         return {};
     }
 
-    static Vector<Token> operators_from(State const& state)
+    static ErrorOr<Vector<Token>> operators_from(State const& state)
     {
-        auto name = state.buffer.string_view();
+        auto name = TRY(state.buffer.to_string());
         auto type = operator_from_name(name);
         if (!type.has_value())
-            return {};
+            return Vector<Token> {};
 
-        return {
+        return Vector {
             Token {
                 .type = *type,
                 .value = name,
@@ -353,7 +353,7 @@ struct Token {
     {
         return {
             .type = Type::Newline,
-            .value = "\n",
+            .value = String::from_utf8_short_string("\n"sv),
             .position = {},
             .expansions = {},
             .original_text = {},
@@ -364,14 +364,14 @@ struct Token {
     {
         return {
             .type = Type::Continuation,
-            .value = DeprecatedString::formatted("{:c}", expected),
+            .value = String::from_code_point(expected),
             .position = {},
             .expansions = {},
             .original_text = {},
         };
     }
 
-    static Token continuation(DeprecatedString expected)
+    static Token continuation(String expected)
     {
         return {
             .type = Type::Continuation,
@@ -392,10 +392,10 @@ public:
     {
     }
 
-    Vector<Token> batch_next(Optional<Reduction> starting_reduction = {});
+    ErrorOr<Vector<Token>> batch_next(Optional<Reduction> starting_reduction = {});
 
     struct HeredocKeyResult {
-        DeprecatedString key;
+        String key;
         bool allow_interpolation;
     };
 
@@ -407,21 +407,21 @@ private:
         Reduction next_reduction { Reduction::None };
     };
 
-    ReductionResult reduce(Reduction);
-    ReductionResult reduce_end();
-    ReductionResult reduce_operator();
-    ReductionResult reduce_comment();
-    ReductionResult reduce_single_quoted_string();
-    ReductionResult reduce_double_quoted_string();
-    ReductionResult reduce_expansion();
-    ReductionResult reduce_command_expansion();
-    ReductionResult reduce_start();
-    ReductionResult reduce_arithmetic_expansion();
-    ReductionResult reduce_special_parameter_expansion();
-    ReductionResult reduce_parameter_expansion();
-    ReductionResult reduce_command_or_arithmetic_substitution_expansion();
-    ReductionResult reduce_extended_parameter_expansion();
-    ReductionResult reduce_heredoc_contents();
+    ErrorOr<ReductionResult> reduce(Reduction);
+    ErrorOr<ReductionResult> reduce_end();
+    ErrorOr<ReductionResult> reduce_operator();
+    ErrorOr<ReductionResult> reduce_comment();
+    ErrorOr<ReductionResult> reduce_single_quoted_string();
+    ErrorOr<ReductionResult> reduce_double_quoted_string();
+    ErrorOr<ReductionResult> reduce_expansion();
+    ErrorOr<ReductionResult> reduce_command_expansion();
+    ErrorOr<ReductionResult> reduce_start();
+    ErrorOr<ReductionResult> reduce_arithmetic_expansion();
+    ErrorOr<ReductionResult> reduce_special_parameter_expansion();
+    ErrorOr<ReductionResult> reduce_parameter_expansion();
+    ErrorOr<ReductionResult> reduce_command_or_arithmetic_substitution_expansion();
+    ErrorOr<ReductionResult> reduce_extended_parameter_expansion();
+    ErrorOr<ReductionResult> reduce_heredoc_contents();
 
     char consume();
     bool consume_specific(char);
