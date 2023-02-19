@@ -94,7 +94,7 @@ int TestSuite::main(DeprecatedString const& suite_name, int argc, char** argv)
 NonnullRefPtrVector<TestCase> TestSuite::find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks)
 {
     NonnullRefPtrVector<TestCase> matches;
-    for (auto const& t : m_cases) {
+    for (auto& t : m_cases) {
         if (!search.is_empty() && !t.name().matches(search, CaseSensitivity::CaseInsensitive)) {
             continue;
         }
