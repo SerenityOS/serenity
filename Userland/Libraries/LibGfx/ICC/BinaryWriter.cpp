@@ -125,6 +125,42 @@ static ErrorOr<ByteBuffer> encode_multi_localized_unicode(MultiLocalizedUnicodeT
     return bytes;
 }
 
+static ErrorOr<ByteBuffer> encode_named_color_2(NamedColor2TagData const& tag_data)
+{
+    // ICC v4, 10.17 namedColor2Type
+    unsigned const record_byte_size = 32 + sizeof(u16) * (3 + tag_data.number_of_device_coordinates());
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(NamedColorHeader) + tag_data.size() * record_byte_size));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = (u32)NamedColor2TagData::Type;
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<NamedColorHeader*>(bytes.data() + 8);
+    header.vendor_specific_flag = tag_data.vendor_specific_flag();
+    header.count_of_named_colors = tag_data.size();
+    header.number_of_device_coordinates_of_each_named_color = tag_data.number_of_device_coordinates();
+    memset(header.prefix_for_each_color_name, 0, 32);
+    memcpy(header.prefix_for_each_color_name, tag_data.prefix().bytes().data(), tag_data.prefix().bytes().size());
+    memset(header.suffix_for_each_color_name, 0, 32);
+    memcpy(header.suffix_for_each_color_name, tag_data.suffix().bytes().data(), tag_data.suffix().bytes().size());
+
+    u8* record = bytes.data() + 8 + sizeof(NamedColorHeader);
+    for (size_t i = 0; i < tag_data.size(); ++i) {
+        memset(record, 0, 32);
+        memcpy(record, tag_data.root_name(i).bytes().data(), tag_data.root_name(i).bytes().size());
+
+        auto* components = bit_cast<BigEndian<u16>*>(record + 32);
+        components[0] = tag_data.pcs_coordinates(i).xyz.x;
+        components[1] = tag_data.pcs_coordinates(i).xyz.y;
+        components[2] = tag_data.pcs_coordinates(i).xyz.z;
+        for (size_t j = 0; j < tag_data.number_of_device_coordinates(); ++j)
+            components[3 + j] = tag_data.device_coordinates(i)[j];
+
+        record += record_byte_size;
+    }
+
+    return bytes;
+}
+
 static ErrorOr<ByteBuffer> encode_parametric_curve(ParametricCurveTagData const& tag_data)
 {
     // ICC v4, 10.18 parametricCurveType
@@ -278,6 +314,8 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_measurement(static_cast<MeasurementTagData const&>(tag_data));
     case MultiLocalizedUnicodeTagData::Type:
         return encode_multi_localized_unicode(static_cast<MultiLocalizedUnicodeTagData const&>(tag_data));
+    case NamedColor2TagData::Type:
+        return encode_named_color_2(static_cast<NamedColor2TagData const&>(tag_data));
     case ParametricCurveTagData::Type:
         return encode_parametric_curve(static_cast<ParametricCurveTagData const&>(tag_data));
     case S15Fixed16ArrayTagData::Type:
