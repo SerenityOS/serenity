@@ -988,7 +988,7 @@ void Window::invoke_idle_callbacks()
         // 1. Pop the top callback from window's list of runnable idle callbacks.
         auto callback = m_runnable_idle_callbacks.take_first();
         // 2. Let deadlineArg be a new IdleDeadline whose [get deadline time algorithm] is getDeadline.
-        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(realm());
+        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(realm()).release_value_but_fixme_should_propagate_errors();
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
         auto result = callback->invoke(deadline_arg);
         if (result.is_error())
