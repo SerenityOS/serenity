@@ -126,7 +126,7 @@ public:
 
     [[nodiscard]] ShareableBitmap to_shareable_bitmap() const;
 
-    void invert();
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> inverted() const;
 
     ~Bitmap();
 

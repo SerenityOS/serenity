@@ -89,18 +89,15 @@ void Button::paint_event(PaintEvent& event)
             // Reusing that threshold here as it seems to work reasonably well.
             should_invert_icon = contrast_ratio < 4.5f && contrast_ratio < palette().button().contrast_ratio(solid_color->inverted());
         }
-        if (should_invert_icon)
-            m_icon->invert();
+        auto icon = should_invert_icon ? m_icon->inverted().release_value_but_fixme_should_propagate_errors() : NonnullRefPtr { *m_icon };
         if (is_enabled()) {
             if (is_hovered())
-                painter.blit_brightened(icon_location, *m_icon, m_icon->rect());
+                painter.blit_brightened(icon_location, *icon, icon->rect());
             else
-                painter.blit(icon_location, *m_icon, m_icon->rect());
+                painter.blit(icon_location, *icon, icon->rect());
         } else {
-            painter.blit_disabled(icon_location, *m_icon, m_icon->rect(), palette());
+            painter.blit_disabled(icon_location, *icon, icon->rect(), palette());
         }
-        if (should_invert_icon)
-            m_icon->invert();
     }
     auto& font = is_checked() ? this->font().bold_variant() : this->font();
     if (m_icon && !text().is_empty()) {

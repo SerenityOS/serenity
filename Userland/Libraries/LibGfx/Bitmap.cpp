@@ -476,12 +476,14 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() co
     return bitmap;
 }
 
-void Bitmap::invert()
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::inverted() const
 {
+    auto inverted_bitmap = TRY(clone());
     for (auto y = 0; y < height(); y++) {
         for (auto x = 0; x < width(); x++)
-            set_pixel(x, y, get_pixel(x, y).inverted());
+            inverted_bitmap->set_pixel(x, y, get_pixel(x, y).inverted());
     }
+    return inverted_bitmap;
 }
 
 Bitmap::~Bitmap()
