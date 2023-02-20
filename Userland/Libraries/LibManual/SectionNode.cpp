@@ -46,7 +46,7 @@ ErrorOr<void> SectionNode::reify_if_needed() const
     Core::DirIterator dir_iter { own_path.to_deprecated_string(), Core::DirIterator::Flags::SkipDots };
 
     struct Child {
-        NonnullRefPtr<Node> node;
+        NonnullRefPtr<Node const> node;
         String name_for_sorting;
     };
     Vector<Child> children;

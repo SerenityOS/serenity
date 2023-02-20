@@ -17,7 +17,7 @@
 
 namespace Manual {
 
-ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 2> const& query_parameters)
+ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<StringView, 2> const& query_parameters)
 {
     if (query_parameters.size() > 2)
         return Error::from_string_literal("Queries longer than 2 strings are not supported yet");
@@ -66,7 +66,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     return Error::from_string_literal("Page doesn't exist in section");
 }
 
-ErrorOr<NonnullRefPtr<Node>> Node::try_find_from_help_url(URL const& url)
+ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
 {
     if (url.host() != "man")
         return Error::from_string_view("Bad help operation"sv);
@@ -82,7 +82,7 @@ ErrorOr<NonnullRefPtr<Node>> Node::try_find_from_help_url(URL const& url)
     if (section_number > number_of_sections)
         return Error::from_string_view("Section number out of bounds"sv);
 
-    NonnullRefPtr<Node> current_node = sections[section_number - 1];
+    NonnullRefPtr<Node const> current_node = sections[section_number - 1];
 
     while (!paths.is_empty()) {
         auto next_path_segment = TRY(String::from_deprecated_string(paths.take_first()));
