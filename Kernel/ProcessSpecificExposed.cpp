@@ -108,7 +108,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS cons
     return TRY(ProcFSInode::try_create_as_child_process_link_inode(procfs, *maybe_pid, pid()));
 }
 
-ErrorOr<size_t> Process::procfs_get_child_proccess_link(ProcessID child_pid, KBufferBuilder& builder) const
+ErrorOr<size_t> Process::procfs_get_child_process_link(ProcessID child_pid, KBufferBuilder& builder) const
 {
     TRY(builder.appendff("../../{}", child_pid.value()));
     return builder.length();
