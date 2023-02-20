@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
@@ -117,7 +117,7 @@ void ConnectionFromClient::set_viewport_rect(Gfx::IntRect const& rect)
 
 void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap const& bitmap)
 {
-    m_backing_stores.set(backing_store_id, *bitmap.bitmap());
+    m_backing_stores.set(backing_store_id, *const_cast<Gfx::ShareableBitmap&>(bitmap).bitmap());
 }
 
 void ConnectionFromClient::remove_backing_store(i32 backing_store_id)
