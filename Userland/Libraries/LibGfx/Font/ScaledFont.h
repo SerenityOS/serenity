@@ -47,6 +47,8 @@ public:
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual float glyph_width(u32 code_point) const override;
     virtual float glyph_or_emoji_width(u32 code_point) const override;
+    virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const override;
+    virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const override;
     virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
     virtual float preferred_line_height() const override { return metrics().height() + metrics().line_gap; }
     virtual u8 glyph_height() const override { return pixel_size(); }

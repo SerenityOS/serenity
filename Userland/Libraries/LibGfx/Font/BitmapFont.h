@@ -61,12 +61,10 @@ public:
     bool contains_glyph(u32 code_point) const override;
     bool contains_raw_glyph(u32 code_point) const { return m_glyph_widths[code_point] > 0; }
 
-    virtual float glyph_or_emoji_width(u32 code_point) const override
-    {
-        if (m_fixed_width)
-            return m_glyph_width;
-        return glyph_or_emoji_width_for_variable_width_font(code_point);
-    }
+    virtual float glyph_or_emoji_width(u32) const override;
+    virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const override;
+    virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const override;
+
     float glyphs_horizontal_kerning(u32, u32) const override { return 0.f; }
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
@@ -138,7 +136,6 @@ private:
     int unicode_view_width(T const& view) const;
 
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
-    int glyph_or_emoji_width_for_variable_width_font(u32 code_point) const;
 
     DeprecatedString m_name;
     DeprecatedString m_family;

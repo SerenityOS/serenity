@@ -314,23 +314,34 @@ float BitmapFont::glyph_width(u32 code_point) const
     return m_fixed_width || !index.has_value() ? m_glyph_width : m_glyph_widths[index.value()];
 }
 
-int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) const
+template<typename CodePointIterator>
+static float glyph_or_emoji_width_impl(BitmapFont const& font, CodePointIterator& it)
 {
-    // FIXME: This is a hack in lieu of proper code point identification.
-    // 0xFFFF is arbitrary but also the end of the Basic Multilingual Plane.
-    if (code_point < 0xFFFF) {
-        auto index = glyph_index(code_point);
-        if (!index.has_value())
-            return glyph_width(0xFFFD);
-        if (m_glyph_widths[index.value()] > 0)
-            return glyph_width(code_point);
-        return glyph_width(0xFFFD);
-    }
+    if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it))
+        return font.pixel_size() * emoji->width() / emoji->height();
 
-    auto const* emoji = Emoji::emoji_for_code_point(code_point);
-    if (emoji == nullptr)
-        return glyph_width(0xFFFD);
-    return glyph_height() * emoji->width() / emoji->height();
+    if (font.is_fixed_width())
+        return font.glyph_fixed_width();
+
+    return font.glyph_width(*it);
+}
+
+float BitmapFont::glyph_or_emoji_width(u32 code_point) const
+{
+    Utf32View code_point_view { &code_point, 1 };
+    auto it = code_point_view.begin();
+
+    return glyph_or_emoji_width_impl(*this, it);
+}
+
+float BitmapFont::glyph_or_emoji_width(Utf8CodePointIterator& it) const
+{
+    return glyph_or_emoji_width_impl(*this, it);
+}
+
+float BitmapFont::glyph_or_emoji_width(Utf32CodePointIterator& it) const
+{
+    return glyph_or_emoji_width_impl(*this, it);
 }
 
 float BitmapFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
