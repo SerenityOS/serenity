@@ -8,6 +8,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Span.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
@@ -44,7 +45,8 @@ Bitmap const* Emoji::emoji_for_code_points(ReadonlySpan<u32> const& code_points)
     return bitmap.ptr();
 }
 
-Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
+template<typename CodePointIterator>
+static Bitmap const* emoji_for_code_point_iterator_impl(CodePointIterator& it)
 {
     // NOTE: I'm sure this could be more efficient, e.g. by checking if each code point falls
     // into a certain range in the loop below (emojis, modifiers, variation selectors, ZWJ),
@@ -105,7 +107,7 @@ Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
         } else {
             code_points.append(*code_point);
         }
-        if (auto const* emoji = emoji_for_code_points(code_points)) {
+        if (auto const* emoji = Emoji::emoji_for_code_points(code_points)) {
             u8 real_codepoint_length = i + 1;
             possible_emojis.empend(emoji, code_points, real_codepoint_length);
             last_codepoint_sequence_found = true;
@@ -128,6 +130,16 @@ Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
         ++it;
 
     return emoji;
+}
+
+Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
+{
+    return emoji_for_code_point_iterator_impl(it);
+}
+
+Bitmap const* Emoji::emoji_for_code_point_iterator(Utf32CodePointIterator& it)
+{
+    return emoji_for_code_point_iterator_impl(it);
 }
 
 }
