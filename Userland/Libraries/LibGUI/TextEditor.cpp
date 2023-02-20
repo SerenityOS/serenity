@@ -584,41 +584,16 @@ void TextEditor::paint_event(PaintEvent& event)
                         break;
                     }
                     auto& span = document().spans()[span_index];
-                    if (!span.range.is_valid()) {
-                        ++span_index;
-                        continue;
-                    }
-                    if (span.range.end().line() < line_index) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "spans not sorted (span end {}:{} is before current line {}) => ignoring", span.range.end().line(), span.range.end().column(), line_index);
-                        ++span_index;
-                        continue;
-                    }
                     if (span.range.start().line() > line_index
                         || (span.range.start().line() == line_index && span.range.start().column() >= start_of_visual_line + visual_line_text.length())) {
                         // no more spans in this line, moving on
                         break;
-                    }
-                    if (span.range.start().line() == span.range.end().line() && span.range.end().column() < span.range.start().column()) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "span from {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
-                        ++span_index;
-                        continue;
-                    }
-                    if (span.range.end().line() == line_index && span.range.end().column() < start_of_visual_line + next_column) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "spans not sorted (span end {}:{} is before current position {}:{}) => ignoring",
-                            span.range.end().line(), span.range.end().column(), line_index, start_of_visual_line + next_column);
-                        ++span_index;
-                        continue;
                     }
                     size_t span_start;
                     if (span.range.start().line() < line_index || span.range.start().column() < start_of_visual_line) {
                         span_start = 0;
                     } else {
                         span_start = span.range.start().column() - start_of_visual_line;
-                    }
-                    if (span_start < next_column) {
-                        dbgln_if(TEXTEDITOR_DEBUG, "span started before the current position, maybe two spans overlap? (span start {} is before current position {}) => ignoring", span_start, next_column);
-                        ++span_index;
-                        continue;
                     }
                     size_t span_end;
                     bool span_consumed;

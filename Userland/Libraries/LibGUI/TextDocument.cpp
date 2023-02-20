@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
@@ -1409,7 +1411,27 @@ void TextDocument::merge_span_collections()
     }
 
     m_spans.clear();
+    TextDocumentSpan previous_span { .range = { TextPosition(0, 0), TextPosition(0, 0) }, .attributes = {} };
     for (auto span : merged_spans) {
+        // Validate spans
+        if (!span.span.range.is_valid()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Invalid span {} => ignoring", span.span.range);
+            continue;
+        }
+        if (span.span.range.end() < span.span.range.start()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Span {} has negative length => ignoring", span.span.range);
+            continue;
+        }
+        if (span.span.range.end() < previous_span.range.start()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Spans not sorted (Span {} ends before previous span {}) => ignoring", span.span.range, previous_span.range);
+            continue;
+        }
+        if (span.span.range.start() < previous_span.range.end()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Span {} overlaps previous span {} => ignoring", span.span.range, previous_span.range);
+            continue;
+        }
+
+        previous_span = span.span;
         m_spans.append(move(span.span));
     }
 }
