@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,7 +80,7 @@ private:
     DeprecatedString m_text;
     DeprecatedString m_shortcut_text;
     Gfx::IntRect m_rect;
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     int m_submenu_id { -1 };
     bool m_exclusive { false };
 };

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@
 
 namespace WindowServer {
 
-Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, int scale_factor, Gfx::CursorParams const& cursor_params)
+Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap const>&& bitmap, int scale_factor, Gfx::CursorParams const& cursor_params)
     : m_params(cursor_params.constrained(*bitmap))
     , m_rect(bitmap->rect())
 {
@@ -27,13 +27,13 @@ void Cursor::update_rect_if_animated()
     }
 }
 
-NonnullRefPtr<Cursor> Cursor::create(NonnullRefPtr<Gfx::Bitmap>&& bitmap, int scale_factor)
+NonnullRefPtr<Cursor const> Cursor::create(NonnullRefPtr<Gfx::Bitmap const>&& bitmap, int scale_factor)
 {
     auto hotspot = bitmap->rect().center();
     return adopt_ref(*new Cursor(move(bitmap), scale_factor, Gfx::CursorParams(hotspot)));
 }
 
-RefPtr<Cursor> Cursor::create(StringView filename, StringView default_filename)
+RefPtr<Cursor const> Cursor::create(StringView filename, StringView default_filename)
 {
     auto cursor = adopt_ref(*new Cursor());
     if (cursor->load(filename, default_filename))
@@ -72,7 +72,7 @@ bool Cursor::load(StringView filename, StringView default_filename)
     return did_load_any;
 }
 
-RefPtr<Cursor> Cursor::create(Gfx::StandardCursor standard_cursor)
+RefPtr<Cursor const> Cursor::create(Gfx::StandardCursor standard_cursor)
 {
     switch (standard_cursor) {
     case Gfx::StandardCursor::None:
