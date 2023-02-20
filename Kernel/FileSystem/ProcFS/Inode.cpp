@@ -372,7 +372,7 @@ ErrorOr<void> ProcFSInode::try_fetch_process_property_data(NonnullLockRefPtr<Pro
         return {};
     }
     if (parent_subdirectory_type == SegmentedProcFSIndex::ProcessSubDirectory::Children) {
-        TRY(process->procfs_get_child_proccess_link(m_possible_data.property_index, builder));
+        TRY(process->procfs_get_child_process_link(m_possible_data.property_index, builder));
         return {};
     }
 
