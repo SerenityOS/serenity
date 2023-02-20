@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -31,12 +31,12 @@ NonnullRefPtr<StyleProperties> StyleProperties::clone() const
     return adopt_ref(*new StyleProperties(*this));
 }
 
-void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
+void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue const> value)
 {
     m_property_values[to_underlying(id)] = move(value);
 }
 
-NonnullRefPtr<StyleValue> StyleProperties::property(CSS::PropertyID property_id) const
+NonnullRefPtr<StyleValue const> StyleProperties::property(CSS::PropertyID property_id) const
 {
     auto value = m_property_values[to_underlying(property_id)];
     // By the time we call this method, all properties have values assigned.
@@ -44,7 +44,7 @@ NonnullRefPtr<StyleValue> StyleProperties::property(CSS::PropertyID property_id)
     return value.release_nonnull();
 }
 
-RefPtr<StyleValue> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
+RefPtr<StyleValue const> StyleProperties::maybe_null_property(CSS::PropertyID property_id) const
 {
     return m_property_values[to_underlying(property_id)];
 }
@@ -68,7 +68,7 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
     }
 
     if (value->is_calculated())
-        return CSS::Size::make_length(CSS::Length::make_calculated(value->as_calculated()));
+        return CSS::Size::make_length(CSS::Length::make_calculated(const_cast<CalculatedStyleValue&>(value->as_calculated())));
 
     if (value->is_percentage())
         return CSS::Size::make_percentage(value->as_percentage().percentage());
@@ -95,7 +95,7 @@ Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id
     auto value = property(id);
 
     if (value->is_calculated())
-        return LengthPercentage { value->as_calculated() };
+        return LengthPercentage { const_cast<CalculatedStyleValue&>(value->as_calculated()) };
 
     if (value->is_percentage())
         return value->as_percentage().percentage();
@@ -124,7 +124,7 @@ Color StyleProperties::color_or_fallback(CSS::PropertyID id, Layout::NodeWithSty
     return value->to_color(node);
 }
 
-NonnullRefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold)
+NonnullRefPtr<Gfx::Font const> StyleProperties::font_fallback(bool monospace, bool bold)
 {
     if (monospace && bold)
         return Platform::FontPlugin::the().default_fixed_width_font().bold_variant();
@@ -161,7 +161,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
     }
 
     if (line_height->is_calculated())
-        return CSS::Length::make_calculated(line_height->as_calculated()).to_px(layout_node);
+        return CSS::Length::make_calculated(const_cast<CalculatedStyleValue&>(line_height->as_calculated())).to_px(layout_node);
 
     return layout_node.font().pixel_metrics().line_spacing();
 }
@@ -193,7 +193,7 @@ float StyleProperties::opacity() const
             else
                 dbgln("Unable to resolve calc() as opacity (percentage): {}", value->to_string());
         } else {
-            auto maybe_number = value->as_calculated().resolve_number();
+            auto maybe_number = const_cast<CalculatedStyleValue&>(value->as_calculated()).resolve_number();
             if (maybe_number.has_value())
                 unclamped_opacity = maybe_number.value();
             else

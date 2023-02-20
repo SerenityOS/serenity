@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
@@ -54,7 +54,7 @@ private:
     void parse_iterable(Interface&);
     Function parse_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&, IsSpecialOperation is_special_operation = IsSpecialOperation::No);
     Vector<Parameter> parse_parameters();
-    NonnullRefPtr<Type> parse_type();
+    NonnullRefPtr<Type const> parse_type();
     void parse_constant(Interface&);
 
     DeprecatedString import_base_path;

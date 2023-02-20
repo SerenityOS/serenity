@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
@@ -915,7 +915,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // 3. Let types be the flattened member types of the union type.
         auto types = union_type.flattened_member_types();
 
-        RefPtr<Type> dictionary_type;
+        RefPtr<Type const> dictionary_type;
         for (auto& dictionary : interface.dictionaries) {
             for (auto& type : types) {
                 if (type.name() == dictionary.key) {
@@ -1077,7 +1077,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // 10. If Type(V) is Object, then:
         //     1. If types includes a sequence type, then:
-        RefPtr<IDL::ParameterizedType> sequence_type;
+        RefPtr<IDL::ParameterizedType const> sequence_type;
         for (auto& type : types) {
             if (type.name() == "sequence") {
                 sequence_type = verify_cast<IDL::ParameterizedType>(type);
@@ -1117,7 +1117,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
 
         // 4. If types includes a record type, then return the result of converting V to that record type.
-        RefPtr<IDL::ParameterizedType> record_type;
+        RefPtr<IDL::ParameterizedType const> record_type;
         for (auto& type : types) {
             if (type.name() == "record") {
                 record_type = verify_cast<IDL::ParameterizedType>(type);
@@ -1165,7 +1165,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        RefPtr<IDL::Type> numeric_type;
+        RefPtr<IDL::Type const> numeric_type;
         for (auto& type : types) {
             if (type.is_numeric()) {
                 numeric_type = type;
@@ -1794,7 +1794,7 @@ static EffectiveOverloadSet compute_the_effective_overload_set(auto const& overl
         int argument_count = (int)arguments.size();
 
         // 3. Let types be a type list.
-        NonnullRefPtrVector<Type> types;
+        NonnullRefPtrVector<Type const> types;
 
         // 4. Let optionalityValues be an optionality list.
         Vector<Optionality> optionality_values;
@@ -1911,7 +1911,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Parameterized: {
         auto const& parameterized_type = type.as_parameterized();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type const> {{", type.name(), type.is_nullable());
         append_type_list(builder, parameterized_type.parameters());
         builder.append("})"sv);
         return builder.to_deprecated_string();
@@ -1919,7 +1919,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Union: {
         auto const& union_type = type.as_union();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type const> {{", type.name(), type.is_nullable());
         append_type_list(builder, union_type.member_types());
         builder.append("})"sv);
         return builder.to_deprecated_string();
@@ -1978,7 +1978,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
                 continue;
 
             StringBuilder types_builder;
-            types_builder.append("NonnullRefPtrVector<IDL::Type> { "sv);
+            types_builder.append("NonnullRefPtrVector<IDL::Type const> { "sv);
             StringBuilder optionality_builder;
             optionality_builder.append("Vector<IDL::Optionality> { "sv);
 

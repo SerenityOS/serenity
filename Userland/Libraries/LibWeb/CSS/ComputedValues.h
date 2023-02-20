@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -77,7 +77,7 @@ public:
 };
 
 struct BackgroundLayerData {
-    RefPtr<CSS::AbstractImageStyleValue> background_image { nullptr };
+    RefPtr<CSS::AbstractImageStyleValue const> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
     CSS::BackgroundBox origin { CSS::BackgroundBox::PaddingBox };
     CSS::BackgroundBox clip { CSS::BackgroundBox::BorderBox };

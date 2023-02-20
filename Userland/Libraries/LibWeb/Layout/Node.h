@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -195,9 +195,9 @@ protected:
 
 private:
     CSS::ComputedValues m_computed_values;
-    RefPtr<Gfx::Font> m_font;
+    RefPtr<Gfx::Font const> m_font;
     CSSPixels m_line_height { 0 };
-    RefPtr<CSS::AbstractImageStyleValue> m_list_style_image;
+    RefPtr<CSS::AbstractImageStyleValue const> m_list_style_image;
 };
 
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +24,10 @@ public:
     ~ComponentValue();
 
     bool is_block() const { return m_value.has<NonnullRefPtr<Block>>(); }
-    Block const& block() const { return m_value.get<NonnullRefPtr<Block>>(); }
+    Block& block() const { return m_value.get<NonnullRefPtr<Block>>(); }
 
     bool is_function() const { return m_value.has<NonnullRefPtr<Function>>(); }
-    Function const& function() const { return m_value.get<NonnullRefPtr<Function>>(); }
+    Function& function() const { return m_value.get<NonnullRefPtr<Function>>(); }
 
     bool is_token() const { return m_value.has<Token>(); }
     bool is(Token::Type type) const { return is_token() && token().is(type); }
