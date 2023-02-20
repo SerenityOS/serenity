@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -820,7 +820,7 @@ bool Compositor::set_wallpaper_mode(DeprecatedString const& mode)
     return succeeded;
 }
 
-bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap> bitmap)
+bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap const> bitmap)
 {
     if (!bitmap)
         m_wallpaper = nullptr;
@@ -869,11 +869,12 @@ void Compositor::update_wallpaper_bitmap()
             // If the screen size is equal to the wallpaper size, we don't actually need to scale it
             screen_data.m_wallpaper_bitmap = m_wallpaper;
         } else {
-            if (!screen_data.m_wallpaper_bitmap)
-                screen_data.m_wallpaper_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+            auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
 
-            Gfx::Painter painter(*screen_data.m_wallpaper_bitmap);
-            painter.draw_scaled_bitmap(screen_data.m_wallpaper_bitmap->rect(), *m_wallpaper, m_wallpaper->rect());
+            Gfx::Painter painter(*bitmap);
+            painter.draw_scaled_bitmap(bitmap->rect(), *m_wallpaper, m_wallpaper->rect());
+
+            screen_data.m_wallpaper_bitmap = move(bitmap);
         }
         return IterationDecision::Continue;
     });

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -339,7 +339,7 @@ public:
     u8 last_processed_buttons() { return m_last_processed_buttons; }
 
 private:
-    explicit WindowManager(Gfx::PaletteImpl const&);
+    explicit WindowManager(Gfx::PaletteImpl&);
 
     void notify_new_active_window(Window&);
     void notify_previous_active_window(Window&);
@@ -371,25 +371,25 @@ private:
 
     [[nodiscard]] static WindowStack& get_rendering_window_stacks(WindowStack*&);
 
-    RefPtr<Cursor> m_hidden_cursor;
-    RefPtr<Cursor> m_arrow_cursor;
-    RefPtr<Cursor> m_hand_cursor;
-    RefPtr<Cursor> m_help_cursor;
-    RefPtr<Cursor> m_resize_horizontally_cursor;
-    RefPtr<Cursor> m_resize_vertically_cursor;
-    RefPtr<Cursor> m_resize_diagonally_tlbr_cursor;
-    RefPtr<Cursor> m_resize_diagonally_bltr_cursor;
-    RefPtr<Cursor> m_resize_column_cursor;
-    RefPtr<Cursor> m_resize_row_cursor;
-    RefPtr<Cursor> m_i_beam_cursor;
-    RefPtr<Cursor> m_disallowed_cursor;
-    RefPtr<Cursor> m_move_cursor;
-    RefPtr<Cursor> m_drag_cursor;
-    RefPtr<Cursor> m_drag_copy_cursor;
-    RefPtr<Cursor> m_wait_cursor;
-    RefPtr<Cursor> m_crosshair_cursor;
-    RefPtr<Cursor> m_eyedropper_cursor;
-    RefPtr<Cursor> m_zoom_cursor;
+    RefPtr<Cursor const> m_hidden_cursor;
+    RefPtr<Cursor const> m_arrow_cursor;
+    RefPtr<Cursor const> m_hand_cursor;
+    RefPtr<Cursor const> m_help_cursor;
+    RefPtr<Cursor const> m_resize_horizontally_cursor;
+    RefPtr<Cursor const> m_resize_vertically_cursor;
+    RefPtr<Cursor const> m_resize_diagonally_tlbr_cursor;
+    RefPtr<Cursor const> m_resize_diagonally_bltr_cursor;
+    RefPtr<Cursor const> m_resize_column_cursor;
+    RefPtr<Cursor const> m_resize_row_cursor;
+    RefPtr<Cursor const> m_i_beam_cursor;
+    RefPtr<Cursor const> m_disallowed_cursor;
+    RefPtr<Cursor const> m_move_cursor;
+    RefPtr<Cursor const> m_drag_cursor;
+    RefPtr<Cursor const> m_drag_copy_cursor;
+    RefPtr<Cursor const> m_wait_cursor;
+    RefPtr<Cursor const> m_crosshair_cursor;
+    RefPtr<Cursor const> m_eyedropper_cursor;
+    RefPtr<Cursor const> m_zoom_cursor;
     int m_cursor_highlight_radius { 0 };
     Gfx::Color m_cursor_highlight_color;
     bool m_cursor_highlight_enabled { false };
@@ -477,7 +477,7 @@ private:
     DeprecatedString m_dnd_text;
     bool m_dnd_accepts_drag { false };
 
-    RefPtr<Core::MimeData> m_dnd_mime_data;
+    RefPtr<Core::MimeData const> m_dnd_mime_data;
 
     WindowStack* m_switching_to_window_stack { nullptr };
     Vector<WeakPtr<Window>, 4> m_carry_window_to_new_stack;

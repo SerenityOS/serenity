@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -165,7 +166,7 @@ private:
     Gfx::Font const& font();
     void update_rect();
 
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap const> m_bitmap;
     DeprecatedString m_text;
     Gfx::IntRect m_label_rect;
 };

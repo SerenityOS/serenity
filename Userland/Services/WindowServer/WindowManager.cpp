@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,7 +35,7 @@ WindowManager& WindowManager::the()
     return *s_the;
 }
 
-WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
+WindowManager::WindowManager(Gfx::PaletteImpl& palette)
     : m_switcher(WindowSwitcher::construct())
     , m_keymap_switcher(KeymapSwitcher::construct())
     , m_palette(palette)
@@ -2242,7 +2242,7 @@ void WindowManager::apply_cursor_theme(DeprecatedString const& theme_name)
     auto cursor_theme_config = cursor_theme_config_or_error.release_value();
 
     auto* current_cursor = Compositor::the().current_cursor();
-    auto reload_cursor = [&](RefPtr<Cursor>& cursor, DeprecatedString const& name) {
+    auto reload_cursor = [&](RefPtr<Cursor const>& cursor, DeprecatedString const& name) {
         bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
 
         static auto const s_default_cursor_path = "/res/cursor-themes/Default/arrow.x2y2.png"sv;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -279,13 +279,13 @@ public:
     void set_base_size(Gfx::IntSize size) { m_base_size = size; }
 
     Gfx::Bitmap const& icon() const { return *m_icon; }
-    void set_icon(NonnullRefPtr<Gfx::Bitmap>&& icon) { m_icon = move(icon); }
+    void set_icon(NonnullRefPtr<Gfx::Bitmap const>&& icon) { m_icon = move(icon); }
 
     void set_default_icon();
 
     Cursor const* cursor() const { return (m_cursor_override ? m_cursor_override : m_cursor).ptr(); }
-    void set_cursor(RefPtr<Cursor> cursor) { m_cursor = move(cursor); }
-    void set_cursor_override(RefPtr<Cursor> cursor) { m_cursor_override = move(cursor); }
+    void set_cursor(RefPtr<Cursor const> cursor) { m_cursor = move(cursor); }
+    void set_cursor_override(RefPtr<Cursor const> cursor) { m_cursor_override = move(cursor); }
     void remove_cursor_override() { m_cursor_override = nullptr; }
 
     void request_update(Gfx::IntRect const&, bool ignore_occlusion = false);
@@ -445,9 +445,9 @@ private:
     Gfx::IntSize m_size_increment;
     Gfx::IntSize m_base_size;
     Gfx::IntSize m_minimum_size { 0, 0 };
-    NonnullRefPtr<Gfx::Bitmap> m_icon;
-    RefPtr<Cursor> m_cursor;
-    RefPtr<Cursor> m_cursor_override;
+    NonnullRefPtr<Gfx::Bitmap const> m_icon;
+    RefPtr<Cursor const> m_cursor;
+    RefPtr<Cursor const> m_cursor_override;
     WindowFrame m_frame;
     Gfx::DisjointIntRectSet m_pending_paint_rects;
     Gfx::IntRect m_rect_in_applet_area;
