@@ -421,7 +421,7 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     }
 }
 
-RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
+RefPtr<Gfx::Bitmap const> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
 {
     return m_pieces.get(piece).value();
 }

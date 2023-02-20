@@ -53,7 +53,7 @@ private:
     RefPtr<Core::Timer> m_cursor_blink_timer;
     RefPtr<PixelPaint::TextToolEditor> m_text_editor;
     Gfx::IntPoint m_add_text_position { 0, 0 };
-    RefPtr<Gfx::Font> m_selected_font;
+    RefPtr<Gfx::Font const> m_selected_font;
     bool m_text_input_is_active { false };
     bool m_cursor_blink_state { false };
     bool m_mouse_is_over_text { false };

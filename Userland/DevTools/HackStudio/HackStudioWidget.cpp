@@ -1837,7 +1837,7 @@ void HackStudioWidget::update_history_actions()
         m_locations_history_forward_action->set_enabled(true);
 }
 
-RefPtr<Gfx::Font> HackStudioWidget::read_editor_font_from_config()
+RefPtr<Gfx::Font const> HackStudioWidget::read_editor_font_from_config()
 {
     auto font_family = Config::read_string("HackStudio"sv, "EditorFont"sv, "Family"sv, "Csilla"sv);
     auto font_variant = Config::read_string("HackStudio"sv, "EditorFont"sv, "Variant"sv, "Regular"sv);
@@ -1850,7 +1850,7 @@ RefPtr<Gfx::Font> HackStudioWidget::read_editor_font_from_config()
     return font;
 }
 
-void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font> font)
+void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font const> font)
 {
     m_editor_font = move(font);
     for (auto& editor_wrapper : m_all_editor_wrappers) {
