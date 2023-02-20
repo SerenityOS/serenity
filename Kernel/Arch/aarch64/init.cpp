@@ -175,7 +175,6 @@ extern "C" [[noreturn]] void init()
     Processor::disable_interrupts();
     TimeManagement::initialize(0);
 
-    ProcFSComponentRegistry::initialize();
     JailManagement::the();
 
     Process::initialize();

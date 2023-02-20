@@ -363,9 +363,6 @@ ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& pr
         first_thread->detach();
     }
 
-    auto weak_ptr = TRY(this->try_make_weak_ptr());
-    m_procfs_traits = TRY(ProcessProcFSTraits::try_create({}, move(weak_ptr)));
-
     // This is not actually explicitly verified by any official documentation,
     // but it's not listed anywhere as being cleared, and rsync expects it to work like this.
     if (fork_parent)

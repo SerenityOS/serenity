@@ -18,7 +18,6 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/ProcessExposed.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::PCI {

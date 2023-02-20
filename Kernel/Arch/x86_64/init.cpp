@@ -47,7 +47,6 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Process.h>
-#include <Kernel/ProcessExposed.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
@@ -232,7 +231,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     __stack_chk_guard = get_fast_random<uintptr_t>();
 
-    ProcFSComponentRegistry::initialize();
     JailManagement::the();
     Process::initialize();
 
