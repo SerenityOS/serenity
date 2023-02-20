@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
@@ -143,7 +143,7 @@ private:
 };
 
 struct Parameter {
-    NonnullRefPtr<Type> type;
+    NonnullRefPtr<Type const> type;
     DeprecatedString name;
     bool optional { false };
     Optional<DeprecatedString> optional_default_value;
@@ -152,7 +152,7 @@ struct Parameter {
 };
 
 struct Function {
-    NonnullRefPtr<Type> return_type;
+    NonnullRefPtr<Type const> return_type;
     DeprecatedString name;
     Vector<Parameter> parameters;
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
@@ -170,7 +170,7 @@ struct Constructor {
 };
 
 struct Constant {
-    NonnullRefPtr<Type> type;
+    NonnullRefPtr<Type const> type;
     DeprecatedString name;
     DeprecatedString value;
 };
@@ -178,7 +178,7 @@ struct Constant {
 struct Attribute {
     bool inherit { false };
     bool readonly { false };
-    NonnullRefPtr<Type> type;
+    NonnullRefPtr<Type const> type;
     DeprecatedString name;
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
 
@@ -189,7 +189,7 @@ struct Attribute {
 
 struct DictionaryMember {
     bool required { false };
-    NonnullRefPtr<Type> type;
+    NonnullRefPtr<Type const> type;
     DeprecatedString name;
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
     Optional<DeprecatedString> default_value;
@@ -202,7 +202,7 @@ struct Dictionary {
 
 struct Typedef {
     HashMap<DeprecatedString, DeprecatedString> extended_attributes;
-    NonnullRefPtr<Type> type;
+    NonnullRefPtr<Type const> type;
 };
 
 struct Enumeration {
@@ -213,7 +213,7 @@ struct Enumeration {
 };
 
 struct CallbackFunction {
-    NonnullRefPtr<Type> return_type;
+    NonnullRefPtr<Type const> return_type;
     Vector<Parameter> parameters;
     bool is_legacy_treat_non_object_as_null { false };
 };
@@ -222,7 +222,7 @@ class Interface;
 
 class ParameterizedType : public Type {
 public:
-    ParameterizedType(DeprecatedString name, bool nullable, NonnullRefPtrVector<Type> parameters)
+    ParameterizedType(DeprecatedString name, bool nullable, NonnullRefPtrVector<Type const> parameters)
         : Type(Kind::Parameterized, move(name), nullable)
         , m_parameters(move(parameters))
     {
@@ -232,11 +232,11 @@ public:
 
     void generate_sequence_from_iterable(SourceGenerator& generator, DeprecatedString const& cpp_name, DeprecatedString const& iterable_cpp_name, DeprecatedString const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
 
-    NonnullRefPtrVector<Type> const& parameters() const { return m_parameters; }
-    NonnullRefPtrVector<Type>& parameters() { return m_parameters; }
+    NonnullRefPtrVector<Type const> const& parameters() const { return m_parameters; }
+    NonnullRefPtrVector<Type const>& parameters() { return m_parameters; }
 
 private:
-    NonnullRefPtrVector<Type> m_parameters;
+    NonnullRefPtrVector<Type const> m_parameters;
 };
 
 static inline size_t get_shortest_function_length(Vector<Function&> const& overload_set)
@@ -270,8 +270,8 @@ public:
     Optional<DeprecatedString> stringifier_attribute;
     bool has_unscopable_member { false };
 
-    Optional<NonnullRefPtr<Type>> value_iterator_type;
-    Optional<Tuple<NonnullRefPtr<Type>, NonnullRefPtr<Type>>> pair_iterator_types;
+    Optional<NonnullRefPtr<Type const>> value_iterator_type;
+    Optional<Tuple<NonnullRefPtr<Type const>, NonnullRefPtr<Type const>>> pair_iterator_types;
 
     Optional<Function> named_property_getter;
     Optional<Function> named_property_setter;
@@ -318,7 +318,7 @@ public:
 
 class UnionType : public Type {
 public:
-    UnionType(DeprecatedString name, bool nullable, NonnullRefPtrVector<Type> member_types)
+    UnionType(DeprecatedString name, bool nullable, NonnullRefPtrVector<Type const> member_types)
         : Type(Kind::Union, move(name), nullable)
         , m_member_types(move(member_types))
     {
@@ -326,16 +326,16 @@ public:
 
     virtual ~UnionType() override = default;
 
-    NonnullRefPtrVector<Type> const& member_types() const { return m_member_types; }
-    NonnullRefPtrVector<Type>& member_types() { return m_member_types; }
+    NonnullRefPtrVector<Type const> const& member_types() const { return m_member_types; }
+    NonnullRefPtrVector<Type const>& member_types() { return m_member_types; }
 
     // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
-    NonnullRefPtrVector<Type> flattened_member_types() const
+    NonnullRefPtrVector<Type const> flattened_member_types() const
     {
         // 1. Let T be the union type.
 
         // 2. Initialize S to ∅.
-        NonnullRefPtrVector<Type> types;
+        NonnullRefPtrVector<Type const> types;
 
         // 3. For each member type U of T:
         for (auto& type : m_member_types) {
@@ -390,7 +390,7 @@ public:
     }
 
 private:
-    NonnullRefPtrVector<Type> m_member_types;
+    NonnullRefPtrVector<Type const> m_member_types;
 };
 
 // https://webidl.spec.whatwg.org/#dfn-optionality-value
@@ -405,7 +405,7 @@ class EffectiveOverloadSet {
 public:
     struct Item {
         int callable_id;
-        NonnullRefPtrVector<Type> types;
+        NonnullRefPtrVector<Type const> types;
         Vector<Optionality> optionality_values;
     };
 

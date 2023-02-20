@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -172,7 +172,7 @@ void ElementInlineCSSStyleDeclaration::update_style_attribute()
 }
 
 // https://drafts.csswg.org/cssom/#set-a-css-declaration
-bool PropertyOwningCSSStyleDeclaration::set_a_css_declaration(PropertyID property_id, NonnullRefPtr<StyleValue> value, Important important)
+bool PropertyOwningCSSStyleDeclaration::set_a_css_declaration(PropertyID property_id, NonnullRefPtr<StyleValue const> value, Important important)
 {
     // FIXME: Handle logical property groups.
 

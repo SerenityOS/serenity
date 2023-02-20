@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -513,7 +513,7 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
 
         auto& font = fragment.layout_node().font();
-        auto scaled_font = [&]() -> RefPtr<Gfx::Font> {
+        auto scaled_font = [&]() -> RefPtr<Gfx::Font const> {
             auto device_font_pt_size = context.enclosing_device_pixels(font.presentation_size());
             FontSelector font_selector = { FlyString::from_utf8(font.family()).release_value_but_fixme_should_propagate_errors(), static_cast<float>(device_font_pt_size.value()), font.weight(), font.width(), font.slope() };
             if (auto cached_font = FontCache::the().get(font_selector)) {

@@ -291,14 +291,14 @@ StyleValueList const& StyleValue::as_value_list() const
 }
 
 BackgroundStyleValue::BackgroundStyleValue(
-    ValueComparingNonnullRefPtr<StyleValue> color,
-    ValueComparingNonnullRefPtr<StyleValue> image,
-    ValueComparingNonnullRefPtr<StyleValue> position,
-    ValueComparingNonnullRefPtr<StyleValue> size,
-    ValueComparingNonnullRefPtr<StyleValue> repeat,
-    ValueComparingNonnullRefPtr<StyleValue> attachment,
-    ValueComparingNonnullRefPtr<StyleValue> origin,
-    ValueComparingNonnullRefPtr<StyleValue> clip)
+    ValueComparingNonnullRefPtr<StyleValue const> color,
+    ValueComparingNonnullRefPtr<StyleValue const> image,
+    ValueComparingNonnullRefPtr<StyleValue const> position,
+    ValueComparingNonnullRefPtr<StyleValue const> size,
+    ValueComparingNonnullRefPtr<StyleValue const> repeat,
+    ValueComparingNonnullRefPtr<StyleValue const> attachment,
+    ValueComparingNonnullRefPtr<StyleValue const> origin,
+    ValueComparingNonnullRefPtr<StyleValue const> clip)
     : StyleValueWithDefaultOperators(Type::Background)
     , m_properties {
         .color = move(color),
@@ -335,7 +335,7 @@ ErrorOr<String> BackgroundStyleValue::to_string() const
         return String::formatted("{} {} {} {} {} {} {} {}", TRY(m_properties.color->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.position->to_string()), TRY(m_properties.size->to_string()), TRY(m_properties.repeat->to_string()), TRY(m_properties.attachment->to_string()), TRY(m_properties.origin->to_string()), TRY(m_properties.clip->to_string()));
     }
 
-    auto get_layer_value_string = [](ValueComparingNonnullRefPtr<StyleValue> const& style_value, size_t index) {
+    auto get_layer_value_string = [](ValueComparingNonnullRefPtr<StyleValue const> const& style_value, size_t index) {
         if (style_value->is_value_list())
             return style_value->as_value_list().value_at(index, true)->to_string();
         return style_value->to_string();
@@ -2236,19 +2236,19 @@ static Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPi
     return {};
 }
 
-ValueComparingNonnullRefPtr<StyleValue> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels) const
+ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels) const
 {
     return *this;
 }
 
-ValueComparingNonnullRefPtr<StyleValue> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+ValueComparingNonnullRefPtr<StyleValue const> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size); length.has_value())
         return LengthStyleValue::create(length.release_value());
     return *this;
 }
 
-ValueComparingNonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+ValueComparingNonnullRefPtr<StyleValue const> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     auto absolutized_offset_x = absolutized_length(m_properties.offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.offset_x);
     auto absolutized_offset_y = absolutized_length(m_properties.offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.offset_y);
@@ -2257,7 +2257,7 @@ ValueComparingNonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRe
     return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
 }
 
-ValueComparingNonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+ValueComparingNonnullRefPtr<StyleValue const> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     if (m_properties.horizontal_radius.is_percentage() && m_properties.vertical_radius.is_percentage())
         return *this;

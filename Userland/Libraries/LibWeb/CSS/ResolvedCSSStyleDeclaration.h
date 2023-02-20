@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,7 +32,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    RefPtr<StyleValue> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
+    RefPtr<StyleValue const> style_value_for_property(Layout::NodeWithStyle const&, PropertyID) const;
 
     JS::NonnullGCPtr<DOM::Element> m_element;
 };

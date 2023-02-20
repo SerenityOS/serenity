@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +13,7 @@ FontCache& FontCache::the()
     return cache;
 }
 
-RefPtr<Gfx::Font> FontCache::get(FontSelector const& font_selector) const
+RefPtr<Gfx::Font const> FontCache::get(FontSelector const& font_selector) const
 {
     auto cached_font = m_fonts.get(font_selector);
     if (cached_font.has_value())
@@ -21,7 +21,7 @@ RefPtr<Gfx::Font> FontCache::get(FontSelector const& font_selector) const
     return nullptr;
 }
 
-void FontCache::set(FontSelector const& font_selector, NonnullRefPtr<Gfx::Font> font)
+void FontCache::set(FontSelector const& font_selector, NonnullRefPtr<Gfx::Font const> font)
 {
     m_fonts.set(font_selector, move(font));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,9 +38,9 @@ public:
     auto& properties() { return m_property_values; }
     auto const& properties() const { return m_property_values; }
 
-    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
-    NonnullRefPtr<StyleValue> property(CSS::PropertyID) const;
-    RefPtr<StyleValue> maybe_null_property(CSS::PropertyID) const;
+    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue const> value);
+    NonnullRefPtr<StyleValue const> property(CSS::PropertyID) const;
+    RefPtr<StyleValue const> maybe_null_property(CSS::PropertyID) const;
 
     CSS::Size size_value(CSS::PropertyID) const;
     LengthPercentage length_percentage_or_fallback(CSS::PropertyID, LengthPercentage const& fallback) const;
@@ -103,7 +103,7 @@ public:
         return *m_font;
     }
 
-    void set_computed_font(NonnullRefPtr<Gfx::Font> font)
+    void set_computed_font(NonnullRefPtr<Gfx::Font const> font)
     {
         m_font = move(font);
     }
@@ -115,16 +115,16 @@ public:
     Optional<CSS::Position> position() const;
     Optional<int> z_index() const;
 
-    static NonnullRefPtr<Gfx::Font> font_fallback(bool monospace, bool bold);
+    static NonnullRefPtr<Gfx::Font const> font_fallback(bool monospace, bool bold);
 
 private:
     friend class StyleComputer;
 
-    Array<RefPtr<StyleValue>, to_underlying(CSS::last_property_id) + 1> m_property_values;
+    Array<RefPtr<StyleValue const>, to_underlying(CSS::last_property_id) + 1> m_property_values;
     Optional<CSS::Overflow> overflow(CSS::PropertyID) const;
     Vector<CSS::ShadowData> shadow(CSS::PropertyID) const;
 
-    mutable RefPtr<Gfx::Font> m_font;
+    mutable RefPtr<Gfx::Font const> m_font;
 };
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
@@ -587,7 +587,7 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
+static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
 {
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
         if (auto it = current_element->custom_properties().find(custom_property_name.to_string().to_deprecated_string()); it != current_element->custom_properties().end())
@@ -907,7 +907,7 @@ static DOM::Element const* element_to_inherit_style_from(DOM::Element const* ele
     return parent_element;
 }
 
-static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+static NonnullRefPtr<StyleValue const> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
@@ -1083,7 +1083,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         else
             weight = Gfx::FontWeight::Black;
     } else if (font_weight->is_calculated()) {
-        auto maybe_weight = font_weight->as_calculated().resolve_integer();
+        auto maybe_weight = const_cast<CalculatedStyleValue&>(font_weight->as_calculated()).resolve_integer();
         if (maybe_weight.has_value())
             weight = maybe_weight.value();
     }
@@ -1152,7 +1152,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = font_size->to_length();
 
         } else if (font_size->is_calculated()) {
-            maybe_length = Length::make_calculated(font_size->as_calculated());
+            maybe_length = Length::make_calculated(const_cast<CalculatedStyleValue&>(font_size->as_calculated()));
         }
         if (maybe_length.has_value()) {
             // FIXME: Support font-size: calc(...)
@@ -1187,7 +1187,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
-    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font> {
+    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font const> {
         float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
@@ -1206,7 +1206,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         return {};
     };
 
-    auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font> {
+    auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font const> {
         Platform::GenericFont generic_font {};
         switch (font_id) {
         case ValueID::Monospace:
@@ -1241,7 +1241,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         return find_font(String::from_utf8(Platform::FontPlugin::the().generic_font_name(generic_font)).release_value_but_fixme_should_propagate_errors());
     };
 
-    RefPtr<Gfx::Font> found_font;
+    RefPtr<Gfx::Font const> found_font;
 
     auto family_value = style.property(PropertyID::FontFamily);
     if (family_value->is_value_list()) {

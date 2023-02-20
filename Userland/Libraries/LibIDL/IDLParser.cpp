@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
@@ -163,10 +163,10 @@ Optional<Interface&> Parser::resolve_import(auto path)
     return result;
 }
 
-NonnullRefPtr<Type> Parser::parse_type()
+NonnullRefPtr<Type const> Parser::parse_type()
 {
     if (lexer.consume_specific('(')) {
-        NonnullRefPtrVector<Type> union_member_types;
+        NonnullRefPtrVector<Type const> union_member_types;
         union_member_types.append(parse_type());
         consume_whitespace();
         assert_string("or"sv);
@@ -203,7 +203,7 @@ NonnullRefPtr<Type> Parser::parse_type()
             name = "long long"sv;
     }
 
-    NonnullRefPtrVector<Type> parameters;
+    NonnullRefPtrVector<Type const> parameters;
     bool is_parameterized_type = false;
     if (lexer.consume_specific('<')) {
         is_parameterized_type = true;
@@ -820,11 +820,11 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
 
 static void resolve_union_typedefs(Interface& interface, UnionType& union_);
 
-static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<DeprecatedString, DeprecatedString>* extended_attributes = {})
+static void resolve_typedef(Interface& interface, NonnullRefPtr<Type const>& type, HashMap<DeprecatedString, DeprecatedString>* extended_attributes = {})
 {
     if (is<ParameterizedType>(*type)) {
-        auto& parameterized_type = type->as_parameterized();
-        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type.parameters());
+        auto& parameterized_type = const_cast<Type&>(*type).as_parameterized();
+        auto& parameters = static_cast<Vector<NonnullRefPtr<Type const>>&>(parameterized_type.parameters());
         for (auto& parameter : parameters)
             resolve_typedef(interface, parameter);
         return;
@@ -832,7 +832,7 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
 
     // Resolve anonymous union types until we get named types that can be resolved in the next step.
     if (is<UnionType>(*type) && type->name().is_empty()) {
-        resolve_union_typedefs(interface, type->as_union());
+        resolve_union_typedefs(interface, const_cast<Type&>(*type).as_union());
         return;
     }
 
@@ -841,7 +841,7 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
         return;
     bool nullable = type->is_nullable();
     type = it->value.type;
-    type->set_nullable(nullable);
+    const_cast<Type&>(*type).set_nullable(nullable);
     if (extended_attributes) {
         for (auto& attribute : it->value.extended_attributes)
             extended_attributes->set(attribute.key, attribute.value);
@@ -859,12 +859,12 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
     // UnionType(UnionType(A, B), UnionType(C, D))
     // Note that flattening unions is handled separately as per the spec.
     if (is<UnionType>(*type))
-        resolve_union_typedefs(interface, type->as_union());
+        resolve_union_typedefs(interface, const_cast<Type&>(*type).as_union());
 }
 
 static void resolve_union_typedefs(Interface& interface, UnionType& union_)
 {
-    auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_.member_types());
+    auto& member_types = static_cast<Vector<NonnullRefPtr<Type const>>&>(union_.member_types());
     for (auto& member_type : member_types)
         resolve_typedef(interface, member_type);
 }
