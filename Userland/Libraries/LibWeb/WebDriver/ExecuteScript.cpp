@@ -156,6 +156,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> clone_an_object(JS::Realm& re
             if (length > NumericLimits<u32>::max())
                 return ExecuteScriptResultType::JavaScriptError;
             auto array = JsonArray {};
+            array.ensure_capacity(length);
             for (size_t i = 0; i < length; ++i)
                 array.append(JsonValue {});
             return array;
