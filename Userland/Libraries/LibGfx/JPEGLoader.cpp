@@ -851,7 +851,7 @@ static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPEGLoa
     return {};
 }
 
-static ErrorOr<void> skip_marker_with_length(Stream& stream)
+static ErrorOr<void> skip_segment(Stream& stream)
 {
     u16 bytes_to_skip = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(stream.discard(bytes_to_skip));
@@ -1161,7 +1161,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
         case JPEG_SOS:
             return read_start_of_scan(stream, context);
         default:
-            if (auto result = skip_marker_with_length(stream); result.is_error()) {
+            if (auto result = skip_segment(stream); result.is_error()) {
                 dbgln_if(JPEG_DEBUG, "{}: Error skipping marker: {:x}!", TRY(stream.tell()), marker);
                 return result.release_error();
             }
