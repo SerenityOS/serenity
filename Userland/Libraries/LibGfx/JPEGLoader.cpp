@@ -1184,9 +1184,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
         case JPEG_SOF0:
             TRY(read_start_of_frame(stream, context));
             context.state = JPEGLoadingContext::FrameDecoded;
-            break;
-        case JPEG_SOS:
-            return read_start_of_scan(stream, context);
+            return {};
         default:
             if (auto result = skip_segment(stream); result.is_error()) {
                 dbgln_if(JPEG_DEBUG, "{}: Error skipping marker: {:x}!", TRY(stream.tell()), marker);
@@ -1248,11 +1246,33 @@ static ErrorOr<void> decode_header(JPEGLoadingContext& context)
     return {};
 }
 
+static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& context)
+{
+    // B.6 - Summary
+    // See: Figure B.16 – Flow of compressed data syntax
+    // This function handles the "Multi-scan" loop.
+
+    Marker marker = TRY(read_marker_at_cursor(*context.stream));
+    while (true) {
+        if (is_miscellaneous_or_table_marker(marker)) {
+            TRY(handle_miscellaneous_or_table(*context.stream, context, marker));
+        } else if (marker == JPEG_SOS) {
+            TRY(read_start_of_scan(*context.stream, context));
+            TRY(scan_huffman_stream(*context.stream, context));
+            return TRY(decode_huffman_stream(context));
+        } else {
+            dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(context.stream->tell()), marker);
+            return Error::from_string_literal("Unexpected marker");
+        }
+
+        marker = TRY(read_marker_at_cursor(*context.stream));
+    }
+}
+
 static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
 {
     TRY(decode_header(context));
-    TRY(scan_huffman_stream(*context.stream, context));
-    auto macroblocks = TRY(decode_huffman_stream(context));
+    auto macroblocks = TRY(construct_macroblocks(context));
     dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
     ycbcr_to_rgb(context, macroblocks);
