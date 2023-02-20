@@ -212,7 +212,11 @@ public:
             VERIFY(!(SHIFTED_INT32_TAG & (static_cast<i32>(value) & 0xFFFFFFFFul)));
             m_value.encoded = SHIFTED_INT32_TAG | (static_cast<i32>(value) & 0xFFFFFFFFul);
         } else {
+#if defined(AK_OS_NETBSD)
+            if (isnanf(value)) [[unlikely]]
+#else
             if (isnan(value)) [[unlikely]]
+#endif
                 m_value.encoded = CANON_NAN_BITS;
             else
                 m_value.as_double = value;
