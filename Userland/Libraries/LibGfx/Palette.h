@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
@@ -59,7 +59,7 @@ private:
 class Palette {
 
 public:
-    explicit Palette(PaletteImpl const&);
+    explicit Palette(PaletteImpl&);
     ~Palette() = default;
 
     Color accent() const { return color(ColorRole::Accent); }

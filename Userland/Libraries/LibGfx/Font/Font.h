@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -202,7 +203,7 @@ public:
     Font const& bold_variant() const;
 
 private:
-    mutable RefPtr<Gfx::Font> m_bold_variant;
+    mutable RefPtr<Gfx::Font const> m_bold_variant;
 };
 
 }
