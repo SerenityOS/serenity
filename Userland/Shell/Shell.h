@@ -170,8 +170,8 @@ public:
 
     static bool has_history_event(StringView);
 
-    RefPtr<AST::Value> get_argument(size_t) const;
-    RefPtr<AST::Value> lookup_local_variable(StringView) const;
+    RefPtr<AST::Value const> get_argument(size_t) const;
+    RefPtr<AST::Value const> lookup_local_variable(StringView) const;
     DeprecatedString local_variable_or(StringView, DeprecatedString const&) const;
     void set_local_variable(DeprecatedString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);
@@ -290,8 +290,8 @@ public:
     void restore_ios();
 
     u64 find_last_job_id() const;
-    Job const* find_job(u64 id, bool is_pid = false);
-    Job const* current_job() const { return m_current_job; }
+    Job* find_job(u64 id, bool is_pid = false);
+    Job* current_job() const { return m_current_job; }
     void kill_job(Job const*, int sig);
 
     DeprecatedString get_history_path();
@@ -406,7 +406,7 @@ private:
     void add_entry_to_cache(RunnablePath const&);
     void remove_entry_from_cache(StringView);
     void stop_all_jobs();
-    Job const* m_current_job { nullptr };
+    Job* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(StringView name);
     LocalFrame const* find_frame_containing_local_variable(StringView name) const
     {

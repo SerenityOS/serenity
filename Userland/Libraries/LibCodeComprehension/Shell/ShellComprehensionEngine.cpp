@@ -180,7 +180,7 @@ Optional<CodeComprehension::ProjectLocation> ShellComprehensionEngine::find_decl
         return {};
     }
 
-    auto name = static_ptr_cast<::Shell::AST::BarewordLiteral>(result.matching_node)->text();
+    auto name = static_ptr_cast<::Shell::AST::BarewordLiteral const>(result.matching_node)->text();
     auto& declarations = all_declarations();
     for (auto& entry : declarations) {
         for (auto& declaration : entry.value) {
@@ -209,7 +209,7 @@ void ShellComprehensionEngine::update_declared_symbols(DocumentData const& docum
 
                 DeprecatedString name;
                 if (literal->is_bareword())
-                    name = static_ptr_cast<::Shell::AST::BarewordLiteral>(literal)->text();
+                    name = static_ptr_cast<::Shell::AST::BarewordLiteral const>(literal)->text();
 
                 if (!name.is_empty()) {
                     dbgln("Found variable {}", name);
