@@ -43,6 +43,9 @@ public:
         return *m_ptr;
     }
 
+    // NOTE: This returns {} if the peek is at or past EOF.
+    Optional<u32> peek(size_t offset = 0) const;
+
     constexpr int code_point_length_in_bytes() const { return sizeof(u32); }
     bool done() const { return !m_length; }
 
