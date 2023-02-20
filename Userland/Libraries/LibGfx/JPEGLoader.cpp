@@ -363,6 +363,31 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
     return {};
 }
 
+static bool is_dct_based(StartOfFrame::FrameType frame_type)
+{
+    return frame_type == StartOfFrame::FrameType::Baseline_DCT
+        || frame_type == StartOfFrame::FrameType::Extended_Sequential_DCT
+        || frame_type == StartOfFrame::FrameType::Progressive_DCT
+        || frame_type == StartOfFrame::FrameType::Differential_Sequential_DCT
+        || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT
+        || frame_type == StartOfFrame::FrameType::Progressive_DCT_Arithmetic
+        || frame_type == StartOfFrame::FrameType::Differential_Sequential_DCT_Arithmetic
+        || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT_Arithmetic;
+}
+
+static void reset_decoder(JPEGLoadingContext& context)
+{
+    // E.2.4 Control procedure for decoding a restart interval
+    if (is_dct_based(context.frame.type)) {
+        context.previous_dc_values[0] = 0;
+        context.previous_dc_values[1] = 0;
+        context.previous_dc_values[2] = 0;
+        return;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     if constexpr (JPEG_DEBUG) {
@@ -385,9 +410,7 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
             if (context.dc_restart_interval > 0) {
                 if (i != 0 && i % (context.dc_restart_interval * context.vsample_factor * context.hsample_factor) == 0) {
-                    context.previous_dc_values[0] = 0;
-                    context.previous_dc_values[1] = 0;
-                    context.previous_dc_values[2] = 0;
+                    reset_decoder(context);
 
                     // Restart markers are stored in byte boundaries. Advance the huffman stream cursor to
                     //  the 0th bit of the next byte.
