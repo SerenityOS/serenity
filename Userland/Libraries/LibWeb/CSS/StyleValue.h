@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/GenericShorthands.h>
@@ -214,6 +215,62 @@ inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_val
     VERIFY_NOT_REACHED();
 }
 
+template<typename T>
+struct ValueComparingNonnullRefPtr : public NonnullRefPtr<T> {
+    using NonnullRefPtr<T>::NonnullRefPtr;
+
+    ValueComparingNonnullRefPtr(NonnullRefPtr<T> const& other)
+        : NonnullRefPtr<T>(other)
+    {
+    }
+
+    ValueComparingNonnullRefPtr(NonnullRefPtr<T>&& other)
+        : NonnullRefPtr<T>(move(other))
+    {
+    }
+
+    bool operator==(ValueComparingNonnullRefPtr const& other) const
+    {
+        return this->ptr() == other.ptr() || this->ptr()->equals(*other);
+    }
+
+private:
+    using NonnullRefPtr<T>::operator==;
+};
+
+template<typename T>
+struct ValueComparingRefPtr : public RefPtr<T> {
+    using RefPtr<T>::RefPtr;
+
+    ValueComparingRefPtr(RefPtr<T> const& other)
+        : RefPtr<T>(other)
+    {
+    }
+
+    ValueComparingRefPtr(RefPtr<T>&& other)
+        : RefPtr<T>(move(other))
+    {
+    }
+
+    template<typename U>
+    bool operator==(ValueComparingNonnullRefPtr<U> const& other) const
+    {
+        return this->ptr() == other.ptr() || (this->ptr() && this->ptr()->equals(*other));
+    }
+
+    bool operator==(ValueComparingRefPtr const& other) const
+    {
+        return this->ptr() == other.ptr() || (this->ptr() && other.ptr() && this->ptr()->equals(*other));
+    }
+
+private:
+    using RefPtr<T>::operator==;
+};
+
+template<typename T>
+using ValueComparingNonnullRefPtrVector = AK::NonnullPtrVector<ValueComparingNonnullRefPtr<T>>;
+using StyleValueVector = ValueComparingNonnullRefPtrVector<StyleValue>;
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue() = default;
@@ -412,7 +469,7 @@ public:
     virtual bool has_number() const { return false; }
     virtual bool has_integer() const { return false; }
 
-    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
+    virtual ValueComparingNonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
     virtual EdgeRect to_rect() const { VERIFY_NOT_REACHED(); }
@@ -422,7 +479,12 @@ public:
     virtual float to_integer() const { return 0; }
     virtual ErrorOr<String> to_string() const = 0;
 
-    virtual bool operator==(StyleValue const& other) const = 0;
+    virtual bool equals(StyleValue const& other) const = 0;
+
+    bool operator==(StyleValue const& other) const
+    {
+        return this->equals(other);
+    }
 
 protected:
     explicit StyleValue(Type);
@@ -435,18 +497,18 @@ template<typename T>
 struct StyleValueWithDefaultOperators : public StyleValue {
     using StyleValue::StyleValue;
 
-    bool operator==(StyleValue const& other) const override
+    virtual bool equals(StyleValue const& other) const override
     {
         if (type() != other.type())
             return false;
         auto const& typed_other = static_cast<T const&>(other);
-        return static_cast<T const&>(*this).equals(typed_other);
+        return static_cast<T const&>(*this).properties_equal(typed_other);
     }
 };
 
 class AngleStyleValue : public StyleValueWithDefaultOperators<AngleStyleValue> {
 public:
-    static NonnullRefPtr<AngleStyleValue> create(Angle angle)
+    static ValueComparingNonnullRefPtr<AngleStyleValue> create(Angle angle)
     {
         return adopt_ref(*new AngleStyleValue(move(angle)));
     }
@@ -456,7 +518,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override { return m_angle.to_string(); }
 
-    bool equals(AngleStyleValue const& other) const { return m_angle == other.m_angle; }
+    bool properties_equal(AngleStyleValue const& other) const { return m_angle == other.m_angle; }
 
 private:
     explicit AngleStyleValue(Angle angle)
@@ -470,15 +532,15 @@ private:
 
 class BackgroundStyleValue final : public StyleValueWithDefaultOperators<BackgroundStyleValue> {
 public:
-    static NonnullRefPtr<BackgroundStyleValue> create(
-        NonnullRefPtr<StyleValue> color,
-        NonnullRefPtr<StyleValue> image,
-        NonnullRefPtr<StyleValue> position,
-        NonnullRefPtr<StyleValue> size,
-        NonnullRefPtr<StyleValue> repeat,
-        NonnullRefPtr<StyleValue> attachment,
-        NonnullRefPtr<StyleValue> origin,
-        NonnullRefPtr<StyleValue> clip)
+    static ValueComparingNonnullRefPtr<BackgroundStyleValue> create(
+        ValueComparingNonnullRefPtr<StyleValue> color,
+        ValueComparingNonnullRefPtr<StyleValue> image,
+        ValueComparingNonnullRefPtr<StyleValue> position,
+        ValueComparingNonnullRefPtr<StyleValue> size,
+        ValueComparingNonnullRefPtr<StyleValue> repeat,
+        ValueComparingNonnullRefPtr<StyleValue> attachment,
+        ValueComparingNonnullRefPtr<StyleValue> origin,
+        ValueComparingNonnullRefPtr<StyleValue> clip)
     {
         return adopt_ref(*new BackgroundStyleValue(move(color), move(image), move(position), move(size), move(repeat), move(attachment), move(origin), move(clip)));
     }
@@ -486,39 +548,39 @@ public:
 
     size_t layer_count() const { return m_properties.layer_count; }
 
-    NonnullRefPtr<StyleValue> attachment() const { return m_properties.attachment; }
-    NonnullRefPtr<StyleValue> clip() const { return m_properties.clip; }
-    NonnullRefPtr<StyleValue> color() const { return m_properties.color; }
-    NonnullRefPtr<StyleValue> image() const { return m_properties.image; }
-    NonnullRefPtr<StyleValue> origin() const { return m_properties.origin; }
-    NonnullRefPtr<StyleValue> position() const { return m_properties.position; }
-    NonnullRefPtr<StyleValue> repeat() const { return m_properties.repeat; }
-    NonnullRefPtr<StyleValue> size() const { return m_properties.size; }
+    ValueComparingNonnullRefPtr<StyleValue> attachment() const { return m_properties.attachment; }
+    ValueComparingNonnullRefPtr<StyleValue> clip() const { return m_properties.clip; }
+    ValueComparingNonnullRefPtr<StyleValue> color() const { return m_properties.color; }
+    ValueComparingNonnullRefPtr<StyleValue> image() const { return m_properties.image; }
+    ValueComparingNonnullRefPtr<StyleValue> origin() const { return m_properties.origin; }
+    ValueComparingNonnullRefPtr<StyleValue> position() const { return m_properties.position; }
+    ValueComparingNonnullRefPtr<StyleValue> repeat() const { return m_properties.repeat; }
+    ValueComparingNonnullRefPtr<StyleValue> size() const { return m_properties.size; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(BackgroundStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(BackgroundStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     BackgroundStyleValue(
-        NonnullRefPtr<StyleValue> color,
-        NonnullRefPtr<StyleValue> image,
-        NonnullRefPtr<StyleValue> position,
-        NonnullRefPtr<StyleValue> size,
-        NonnullRefPtr<StyleValue> repeat,
-        NonnullRefPtr<StyleValue> attachment,
-        NonnullRefPtr<StyleValue> origin,
-        NonnullRefPtr<StyleValue> clip);
+        ValueComparingNonnullRefPtr<StyleValue> color,
+        ValueComparingNonnullRefPtr<StyleValue> image,
+        ValueComparingNonnullRefPtr<StyleValue> position,
+        ValueComparingNonnullRefPtr<StyleValue> size,
+        ValueComparingNonnullRefPtr<StyleValue> repeat,
+        ValueComparingNonnullRefPtr<StyleValue> attachment,
+        ValueComparingNonnullRefPtr<StyleValue> origin,
+        ValueComparingNonnullRefPtr<StyleValue> clip);
 
     struct Properties {
-        NonnullRefPtr<StyleValue> color;
-        NonnullRefPtr<StyleValue> image;
-        NonnullRefPtr<StyleValue> position;
-        NonnullRefPtr<StyleValue> size;
-        NonnullRefPtr<StyleValue> repeat;
-        NonnullRefPtr<StyleValue> attachment;
-        NonnullRefPtr<StyleValue> origin;
-        NonnullRefPtr<StyleValue> clip;
+        ValueComparingNonnullRefPtr<StyleValue> color;
+        ValueComparingNonnullRefPtr<StyleValue> image;
+        ValueComparingNonnullRefPtr<StyleValue> position;
+        ValueComparingNonnullRefPtr<StyleValue> size;
+        ValueComparingNonnullRefPtr<StyleValue> repeat;
+        ValueComparingNonnullRefPtr<StyleValue> attachment;
+        ValueComparingNonnullRefPtr<StyleValue> origin;
+        ValueComparingNonnullRefPtr<StyleValue> clip;
         size_t layer_count;
         bool operator==(Properties const&) const = default;
     } m_properties;
@@ -526,7 +588,7 @@ private:
 
 class BackgroundRepeatStyleValue final : public StyleValueWithDefaultOperators<BackgroundRepeatStyleValue> {
 public:
-    static NonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
+    static ValueComparingNonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
     {
         return adopt_ref(*new BackgroundRepeatStyleValue(repeat_x, repeat_y));
     }
@@ -537,7 +599,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(BackgroundRepeatStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(BackgroundRepeatStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
@@ -556,7 +618,7 @@ private:
 // NOTE: This is not used for identifier sizes, like `cover` and `contain`.
 class BackgroundSizeStyleValue final : public StyleValueWithDefaultOperators<BackgroundSizeStyleValue> {
 public:
-    static NonnullRefPtr<BackgroundSizeStyleValue> create(LengthPercentage size_x, LengthPercentage size_y)
+    static ValueComparingNonnullRefPtr<BackgroundSizeStyleValue> create(LengthPercentage size_x, LengthPercentage size_y)
     {
         return adopt_ref(*new BackgroundSizeStyleValue(size_x, size_y));
     }
@@ -567,7 +629,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(BackgroundSizeStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(BackgroundSizeStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
@@ -585,44 +647,44 @@ private:
 
 class BorderStyleValue final : public StyleValueWithDefaultOperators<BorderStyleValue> {
 public:
-    static NonnullRefPtr<BorderStyleValue> create(
-        NonnullRefPtr<StyleValue> border_width,
-        NonnullRefPtr<StyleValue> border_style,
-        NonnullRefPtr<StyleValue> border_color)
+    static ValueComparingNonnullRefPtr<BorderStyleValue> create(
+        ValueComparingNonnullRefPtr<StyleValue> border_width,
+        ValueComparingNonnullRefPtr<StyleValue> border_style,
+        ValueComparingNonnullRefPtr<StyleValue> border_color)
     {
         return adopt_ref(*new BorderStyleValue(move(border_width), move(border_style), move(border_color)));
     }
     virtual ~BorderStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> border_width() const { return m_properties.border_width; }
-    NonnullRefPtr<StyleValue> border_style() const { return m_properties.border_style; }
-    NonnullRefPtr<StyleValue> border_color() const { return m_properties.border_color; }
+    ValueComparingNonnullRefPtr<StyleValue> border_width() const { return m_properties.border_width; }
+    ValueComparingNonnullRefPtr<StyleValue> border_style() const { return m_properties.border_style; }
+    ValueComparingNonnullRefPtr<StyleValue> border_color() const { return m_properties.border_color; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(BorderStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(BorderStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     BorderStyleValue(
-        NonnullRefPtr<StyleValue> border_width,
-        NonnullRefPtr<StyleValue> border_style,
-        NonnullRefPtr<StyleValue> border_color)
+        ValueComparingNonnullRefPtr<StyleValue> border_width,
+        ValueComparingNonnullRefPtr<StyleValue> border_style,
+        ValueComparingNonnullRefPtr<StyleValue> border_color)
         : StyleValueWithDefaultOperators(Type::Border)
         , m_properties { .border_width = move(border_width), .border_style = move(border_style), .border_color = move(border_color) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> border_width;
-        NonnullRefPtr<StyleValue> border_style;
-        NonnullRefPtr<StyleValue> border_color;
+        ValueComparingNonnullRefPtr<StyleValue> border_width;
+        ValueComparingNonnullRefPtr<StyleValue> border_style;
+        ValueComparingNonnullRefPtr<StyleValue> border_color;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class BorderRadiusStyleValue final : public StyleValueWithDefaultOperators<BorderRadiusStyleValue> {
 public:
-    static NonnullRefPtr<BorderRadiusStyleValue> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
+    static ValueComparingNonnullRefPtr<BorderRadiusStyleValue> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
     {
         return adopt_ref(*new BorderRadiusStyleValue(horizontal_radius, vertical_radius));
     }
@@ -634,7 +696,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(BorderRadiusStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(BorderRadiusStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     BorderRadiusStyleValue(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
@@ -643,7 +705,7 @@ private:
     {
     }
 
-    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
+    virtual ValueComparingNonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
 
     struct Properties {
         bool is_elliptical;
@@ -655,33 +717,33 @@ private:
 
 class BorderRadiusShorthandStyleValue final : public StyleValueWithDefaultOperators<BorderRadiusShorthandStyleValue> {
 public:
-    static NonnullRefPtr<BorderRadiusShorthandStyleValue> create(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
+    static ValueComparingNonnullRefPtr<BorderRadiusShorthandStyleValue> create(ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_left, ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_right, ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_right, ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_left)
     {
         return adopt_ref(*new BorderRadiusShorthandStyleValue(move(top_left), move(top_right), move(bottom_right), move(bottom_left)));
     }
     virtual ~BorderRadiusShorthandStyleValue() override = default;
 
-    NonnullRefPtr<BorderRadiusStyleValue> top_left() const { return m_properties.top_left; }
-    NonnullRefPtr<BorderRadiusStyleValue> top_right() const { return m_properties.top_right; }
-    NonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_properties.bottom_right; }
-    NonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_properties.bottom_left; }
+    ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_left() const { return m_properties.top_left; }
+    ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_right() const { return m_properties.top_right; }
+    ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_right() const { return m_properties.bottom_right; }
+    ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_left() const { return m_properties.bottom_left; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(BorderRadiusShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(BorderRadiusShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    BorderRadiusShorthandStyleValue(NonnullRefPtr<BorderRadiusStyleValue> top_left, NonnullRefPtr<BorderRadiusStyleValue> top_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_right, NonnullRefPtr<BorderRadiusStyleValue> bottom_left)
+    BorderRadiusShorthandStyleValue(ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_left, ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_right, ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_right, ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_left)
         : StyleValueWithDefaultOperators(Type::BorderRadiusShorthand)
         , m_properties { .top_left = move(top_left), .top_right = move(top_right), .bottom_right = move(bottom_right), .bottom_left = move(bottom_left) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<BorderRadiusStyleValue> top_left;
-        NonnullRefPtr<BorderRadiusStyleValue> top_right;
-        NonnullRefPtr<BorderRadiusStyleValue> bottom_right;
-        NonnullRefPtr<BorderRadiusStyleValue> bottom_left;
+        ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_left;
+        ValueComparingNonnullRefPtr<BorderRadiusStyleValue> top_right;
+        ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_right;
+        ValueComparingNonnullRefPtr<BorderRadiusStyleValue> bottom_left;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
@@ -847,13 +909,13 @@ public:
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
-    static NonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
+    static ValueComparingNonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
     {
         return adopt_ref(*new CalculatedStyleValue(move(calc_sum), resolved_type));
     }
 
     ErrorOr<String> to_string() const override;
-    virtual bool operator==(StyleValue const& other) const override;
+    virtual bool equals(StyleValue const& other) const override;
     ResolvedType resolved_type() const { return m_resolved_type; }
     NonnullOwnPtr<CalcSum> const& expression() const { return m_expression; }
 
@@ -897,7 +959,7 @@ private:
 
 class ColorStyleValue : public StyleValueWithDefaultOperators<ColorStyleValue> {
 public:
-    static NonnullRefPtr<ColorStyleValue> create(Color color);
+    static ValueComparingNonnullRefPtr<ColorStyleValue> create(Color color);
     virtual ~ColorStyleValue() override = default;
 
     Color color() const { return m_color; }
@@ -905,7 +967,7 @@ public:
     virtual bool has_color() const override { return true; }
     virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
 
-    bool equals(ColorStyleValue const& other) const { return m_color == other.m_color; };
+    bool properties_equal(ColorStyleValue const& other) const { return m_color == other.m_color; };
 
 private:
     explicit ColorStyleValue(Color color)
@@ -919,7 +981,7 @@ private:
 
 class ContentStyleValue final : public StyleValueWithDefaultOperators<ContentStyleValue> {
 public:
-    static NonnullRefPtr<ContentStyleValue> create(NonnullRefPtr<StyleValueList> content, RefPtr<StyleValueList> alt_text)
+    static ValueComparingNonnullRefPtr<ContentStyleValue> create(ValueComparingNonnullRefPtr<StyleValueList> content, ValueComparingRefPtr<StyleValueList> alt_text)
     {
         return adopt_ref(*new ContentStyleValue(move(content), move(alt_text)));
     }
@@ -930,25 +992,25 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(ContentStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(ContentStyleValue const& other) const { return m_properties == other.m_properties; };
 
 private:
-    ContentStyleValue(NonnullRefPtr<StyleValueList> content, RefPtr<StyleValueList> alt_text)
+    ContentStyleValue(ValueComparingNonnullRefPtr<StyleValueList> content, ValueComparingRefPtr<StyleValueList> alt_text)
         : StyleValueWithDefaultOperators(Type::Content)
         , m_properties { .content = move(content), .alt_text = move(alt_text) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValueList> content;
-        RefPtr<StyleValueList> alt_text;
+        ValueComparingNonnullRefPtr<StyleValueList> content;
+        ValueComparingRefPtr<StyleValueList> alt_text;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class FilterValueListStyleValue final : public StyleValueWithDefaultOperators<FilterValueListStyleValue> {
 public:
-    static NonnullRefPtr<FilterValueListStyleValue> create(
+    static ValueComparingNonnullRefPtr<FilterValueListStyleValue> create(
         Vector<FilterFunction> filter_value_list)
     {
         VERIFY(filter_value_list.size() >= 1);
@@ -961,7 +1023,7 @@ public:
 
     virtual ~FilterValueListStyleValue() override = default;
 
-    bool equals(FilterValueListStyleValue const& other) const { return m_filter_value_list == other.m_filter_value_list; };
+    bool properties_equal(FilterValueListStyleValue const& other) const { return m_filter_value_list == other.m_filter_value_list; };
 
 private:
     FilterValueListStyleValue(Vector<FilterFunction> filter_value_list)
@@ -976,103 +1038,103 @@ private:
 
 class FlexStyleValue final : public StyleValueWithDefaultOperators<FlexStyleValue> {
 public:
-    static NonnullRefPtr<FlexStyleValue> create(
-        NonnullRefPtr<StyleValue> grow,
-        NonnullRefPtr<StyleValue> shrink,
-        NonnullRefPtr<StyleValue> basis)
+    static ValueComparingNonnullRefPtr<FlexStyleValue> create(
+        ValueComparingNonnullRefPtr<StyleValue> grow,
+        ValueComparingNonnullRefPtr<StyleValue> shrink,
+        ValueComparingNonnullRefPtr<StyleValue> basis)
     {
         return adopt_ref(*new FlexStyleValue(move(grow), move(shrink), move(basis)));
     }
     virtual ~FlexStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> grow() const { return m_properties.grow; }
-    NonnullRefPtr<StyleValue> shrink() const { return m_properties.shrink; }
-    NonnullRefPtr<StyleValue> basis() const { return m_properties.basis; }
+    ValueComparingNonnullRefPtr<StyleValue> grow() const { return m_properties.grow; }
+    ValueComparingNonnullRefPtr<StyleValue> shrink() const { return m_properties.shrink; }
+    ValueComparingNonnullRefPtr<StyleValue> basis() const { return m_properties.basis; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(FlexStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(FlexStyleValue const& other) const { return m_properties == other.m_properties; };
 
 private:
     FlexStyleValue(
-        NonnullRefPtr<StyleValue> grow,
-        NonnullRefPtr<StyleValue> shrink,
-        NonnullRefPtr<StyleValue> basis)
+        ValueComparingNonnullRefPtr<StyleValue> grow,
+        ValueComparingNonnullRefPtr<StyleValue> shrink,
+        ValueComparingNonnullRefPtr<StyleValue> basis)
         : StyleValueWithDefaultOperators(Type::Flex)
         , m_properties { .grow = move(grow), .shrink = move(shrink), .basis = move(basis) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> grow;
-        NonnullRefPtr<StyleValue> shrink;
-        NonnullRefPtr<StyleValue> basis;
+        ValueComparingNonnullRefPtr<StyleValue> grow;
+        ValueComparingNonnullRefPtr<StyleValue> shrink;
+        ValueComparingNonnullRefPtr<StyleValue> basis;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class FlexFlowStyleValue final : public StyleValueWithDefaultOperators<FlexFlowStyleValue> {
 public:
-    static NonnullRefPtr<FlexFlowStyleValue> create(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
+    static ValueComparingNonnullRefPtr<FlexFlowStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)
     {
         return adopt_ref(*new FlexFlowStyleValue(move(flex_direction), move(flex_wrap)));
     }
     virtual ~FlexFlowStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> flex_direction() const { return m_properties.flex_direction; }
-    NonnullRefPtr<StyleValue> flex_wrap() const { return m_properties.flex_wrap; }
+    ValueComparingNonnullRefPtr<StyleValue> flex_direction() const { return m_properties.flex_direction; }
+    ValueComparingNonnullRefPtr<StyleValue> flex_wrap() const { return m_properties.flex_wrap; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(FlexFlowStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(FlexFlowStyleValue const& other) const { return m_properties == other.m_properties; };
 
 private:
-    FlexFlowStyleValue(NonnullRefPtr<StyleValue> flex_direction, NonnullRefPtr<StyleValue> flex_wrap)
+    FlexFlowStyleValue(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)
         : StyleValueWithDefaultOperators(Type::FlexFlow)
         , m_properties { .flex_direction = move(flex_direction), .flex_wrap = move(flex_wrap) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> flex_direction;
-        NonnullRefPtr<StyleValue> flex_wrap;
+        ValueComparingNonnullRefPtr<StyleValue> flex_direction;
+        ValueComparingNonnullRefPtr<StyleValue> flex_wrap;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class FontStyleValue final : public StyleValueWithDefaultOperators<FontStyleValue> {
 public:
-    static NonnullRefPtr<FontStyleValue> create(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
+    static ValueComparingNonnullRefPtr<FontStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> font_stretch, ValueComparingNonnullRefPtr<StyleValue> font_style, ValueComparingNonnullRefPtr<StyleValue> font_weight, ValueComparingNonnullRefPtr<StyleValue> font_size, ValueComparingNonnullRefPtr<StyleValue> line_height, ValueComparingNonnullRefPtr<StyleValue> font_families)
     {
         return adopt_ref(*new FontStyleValue(move(font_stretch), move(font_style), move(font_weight), move(font_size), move(line_height), move(font_families)));
     }
     virtual ~FontStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> font_stretch() const { return m_properties.font_stretch; }
-    NonnullRefPtr<StyleValue> font_style() const { return m_properties.font_style; }
-    NonnullRefPtr<StyleValue> font_weight() const { return m_properties.font_weight; }
-    NonnullRefPtr<StyleValue> font_size() const { return m_properties.font_size; }
-    NonnullRefPtr<StyleValue> line_height() const { return m_properties.line_height; }
-    NonnullRefPtr<StyleValue> font_families() const { return m_properties.font_families; }
+    ValueComparingNonnullRefPtr<StyleValue> font_stretch() const { return m_properties.font_stretch; }
+    ValueComparingNonnullRefPtr<StyleValue> font_style() const { return m_properties.font_style; }
+    ValueComparingNonnullRefPtr<StyleValue> font_weight() const { return m_properties.font_weight; }
+    ValueComparingNonnullRefPtr<StyleValue> font_size() const { return m_properties.font_size; }
+    ValueComparingNonnullRefPtr<StyleValue> line_height() const { return m_properties.line_height; }
+    ValueComparingNonnullRefPtr<StyleValue> font_families() const { return m_properties.font_families; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(FontStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(FontStyleValue const& other) const { return m_properties == other.m_properties; };
 
 private:
-    FontStyleValue(NonnullRefPtr<StyleValue> font_stretch, NonnullRefPtr<StyleValue> font_style, NonnullRefPtr<StyleValue> font_weight, NonnullRefPtr<StyleValue> font_size, NonnullRefPtr<StyleValue> line_height, NonnullRefPtr<StyleValue> font_families)
+    FontStyleValue(ValueComparingNonnullRefPtr<StyleValue> font_stretch, ValueComparingNonnullRefPtr<StyleValue> font_style, ValueComparingNonnullRefPtr<StyleValue> font_weight, ValueComparingNonnullRefPtr<StyleValue> font_size, ValueComparingNonnullRefPtr<StyleValue> line_height, ValueComparingNonnullRefPtr<StyleValue> font_families)
         : StyleValueWithDefaultOperators(Type::Font)
         , m_properties { .font_stretch = move(font_stretch), .font_style = move(font_style), .font_weight = move(font_weight), .font_size = move(font_size), .line_height = move(line_height), .font_families = move(font_families) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> font_stretch;
-        NonnullRefPtr<StyleValue> font_style;
-        NonnullRefPtr<StyleValue> font_weight;
-        NonnullRefPtr<StyleValue> font_size;
-        NonnullRefPtr<StyleValue> line_height;
-        NonnullRefPtr<StyleValue> font_families;
+        ValueComparingNonnullRefPtr<StyleValue> font_stretch;
+        ValueComparingNonnullRefPtr<StyleValue> font_style;
+        ValueComparingNonnullRefPtr<StyleValue> font_weight;
+        ValueComparingNonnullRefPtr<StyleValue> font_size;
+        ValueComparingNonnullRefPtr<StyleValue> line_height;
+        ValueComparingNonnullRefPtr<StyleValue> font_families;
         // FIXME: Implement font-variant.
         bool operator==(Properties const&) const = default;
     } m_properties;
@@ -1080,7 +1142,7 @@ private:
 
 class FrequencyStyleValue : public StyleValueWithDefaultOperators<FrequencyStyleValue> {
 public:
-    static NonnullRefPtr<FrequencyStyleValue> create(Frequency frequency)
+    static ValueComparingNonnullRefPtr<FrequencyStyleValue> create(Frequency frequency)
     {
         return adopt_ref(*new FrequencyStyleValue(move(frequency)));
     }
@@ -1090,7 +1152,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override { return m_frequency.to_string(); }
 
-    bool equals(FrequencyStyleValue const& other) const { return m_frequency == other.m_frequency; };
+    bool properties_equal(FrequencyStyleValue const& other) const { return m_frequency == other.m_frequency; };
 
 private:
     explicit FrequencyStyleValue(Frequency frequency)
@@ -1104,13 +1166,13 @@ private:
 
 class GridTemplateAreaStyleValue final : public StyleValueWithDefaultOperators<GridTemplateAreaStyleValue> {
 public:
-    static NonnullRefPtr<GridTemplateAreaStyleValue> create(Vector<Vector<String>> grid_template_area);
+    static ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> create(Vector<Vector<String>> grid_template_area);
     virtual ~GridTemplateAreaStyleValue() override = default;
 
     Vector<Vector<String>> const& grid_template_area() const { return m_grid_template_area; }
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(GridTemplateAreaStyleValue const& other) const { return m_grid_template_area == other.m_grid_template_area; };
+    bool properties_equal(GridTemplateAreaStyleValue const& other) const { return m_grid_template_area == other.m_grid_template_area; };
 
 private:
     explicit GridTemplateAreaStyleValue(Vector<Vector<String>> grid_template_area)
@@ -1124,13 +1186,13 @@ private:
 
 class GridTrackPlacementStyleValue final : public StyleValueWithDefaultOperators<GridTrackPlacementStyleValue> {
 public:
-    static NonnullRefPtr<GridTrackPlacementStyleValue> create(CSS::GridTrackPlacement grid_track_placement);
+    static ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> create(CSS::GridTrackPlacement grid_track_placement);
     virtual ~GridTrackPlacementStyleValue() override = default;
 
     CSS::GridTrackPlacement const& grid_track_placement() const { return m_grid_track_placement; }
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(GridTrackPlacementStyleValue const& other) const { return m_grid_track_placement == other.m_grid_track_placement; };
+    bool properties_equal(GridTrackPlacementStyleValue const& other) const { return m_grid_track_placement == other.m_grid_track_placement; };
 
 private:
     explicit GridTrackPlacementStyleValue(CSS::GridTrackPlacement grid_track_placement)
@@ -1144,86 +1206,86 @@ private:
 
 class GridTrackPlacementShorthandStyleValue final : public StyleValueWithDefaultOperators<GridTrackPlacementShorthandStyleValue> {
 public:
-    static NonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(NonnullRefPtr<GridTrackPlacementStyleValue> start, NonnullRefPtr<GridTrackPlacementStyleValue> end)
+    static ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> end)
     {
         return adopt_ref(*new GridTrackPlacementShorthandStyleValue(move(start), move(end)));
     }
-    static NonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(GridTrackPlacement start)
+    static ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(GridTrackPlacement start)
     {
         return adopt_ref(*new GridTrackPlacementShorthandStyleValue(GridTrackPlacementStyleValue::create(start), GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto())));
     }
     virtual ~GridTrackPlacementShorthandStyleValue() override = default;
 
-    NonnullRefPtr<GridTrackPlacementStyleValue> start() const { return m_properties.start; }
-    NonnullRefPtr<GridTrackPlacementStyleValue> end() const { return m_properties.end; }
+    ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> start() const { return m_properties.start; }
+    ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> end() const { return m_properties.end; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(GridTrackPlacementShorthandStyleValue const& other) const { return m_properties == other.m_properties; };
+    bool properties_equal(GridTrackPlacementShorthandStyleValue const& other) const { return m_properties == other.m_properties; };
 
 private:
-    GridTrackPlacementShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> start, NonnullRefPtr<GridTrackPlacementStyleValue> end)
+    GridTrackPlacementShorthandStyleValue(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> end)
         : StyleValueWithDefaultOperators(Type::GridTrackPlacementShorthand)
         , m_properties { .start = move(start), .end = move(end) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<GridTrackPlacementStyleValue> start;
-        NonnullRefPtr<GridTrackPlacementStyleValue> end;
+        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> start;
+        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> end;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class GridAreaShorthandStyleValue final : public StyleValueWithDefaultOperators<GridAreaShorthandStyleValue> {
 public:
-    static NonnullRefPtr<GridAreaShorthandStyleValue> create(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
+    static ValueComparingNonnullRefPtr<GridAreaShorthandStyleValue> create(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_end, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_end)
     {
         return adopt_ref(*new GridAreaShorthandStyleValue(row_start, column_start, row_end, column_end));
     }
-    static NonnullRefPtr<GridAreaShorthandStyleValue> create(GridTrackPlacement row_start, GridTrackPlacement column_start, GridTrackPlacement row_end, GridTrackPlacement column_end)
+    static ValueComparingNonnullRefPtr<GridAreaShorthandStyleValue> create(GridTrackPlacement row_start, GridTrackPlacement column_start, GridTrackPlacement row_end, GridTrackPlacement column_end)
     {
         return adopt_ref(*new GridAreaShorthandStyleValue(GridTrackPlacementStyleValue::create(row_start), GridTrackPlacementStyleValue::create(column_start), GridTrackPlacementStyleValue::create(row_end), GridTrackPlacementStyleValue::create(column_end)));
     }
     virtual ~GridAreaShorthandStyleValue() override = default;
 
-    NonnullRefPtr<GridTrackPlacementStyleValue> row_start() const { return m_properties.row_start; }
-    NonnullRefPtr<GridTrackPlacementStyleValue> column_start() const { return m_properties.column_start; }
-    NonnullRefPtr<GridTrackPlacementStyleValue> row_end() const { return m_properties.row_end; }
-    NonnullRefPtr<GridTrackPlacementStyleValue> column_end() const { return m_properties.column_end; }
+    ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_start() const { return m_properties.row_start; }
+    ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_start() const { return m_properties.column_start; }
+    ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_end() const { return m_properties.row_end; }
+    ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_end() const { return m_properties.column_end; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(GridAreaShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(GridAreaShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    GridAreaShorthandStyleValue(NonnullRefPtr<GridTrackPlacementStyleValue> row_start, NonnullRefPtr<GridTrackPlacementStyleValue> column_start, NonnullRefPtr<GridTrackPlacementStyleValue> row_end, NonnullRefPtr<GridTrackPlacementStyleValue> column_end)
+    GridAreaShorthandStyleValue(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_end, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_end)
         : StyleValueWithDefaultOperators(Type::GridAreaShorthand)
         , m_properties { .row_start = move(row_start), .column_start = move(column_start), .row_end = move(row_end), .column_end = move(column_end) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<GridTrackPlacementStyleValue> row_start;
-        NonnullRefPtr<GridTrackPlacementStyleValue> column_start;
-        NonnullRefPtr<GridTrackPlacementStyleValue> row_end;
-        NonnullRefPtr<GridTrackPlacementStyleValue> column_end;
+        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_start;
+        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_start;
+        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> row_end;
+        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> column_end;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class GridTrackSizeStyleValue final : public StyleValueWithDefaultOperators<GridTrackSizeStyleValue> {
 public:
-    static NonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
+    static ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
     virtual ~GridTrackSizeStyleValue() override = default;
 
-    static NonnullRefPtr<GridTrackSizeStyleValue> make_auto();
+    static ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> make_auto();
 
     CSS::GridTrackSizeList grid_track_size_list() const { return m_grid_track_size_list; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(GridTrackSizeStyleValue const& other) const { return m_grid_track_size_list == other.m_grid_track_size_list; }
+    bool properties_equal(GridTrackSizeStyleValue const& other) const { return m_grid_track_size_list == other.m_grid_track_size_list; }
 
 private:
     explicit GridTrackSizeStyleValue(CSS::GridTrackSizeList grid_track_size_list)
@@ -1237,7 +1299,7 @@ private:
 
 class IdentifierStyleValue final : public StyleValueWithDefaultOperators<IdentifierStyleValue> {
 public:
-    static NonnullRefPtr<IdentifierStyleValue> create(CSS::ValueID id)
+    static ValueComparingNonnullRefPtr<IdentifierStyleValue> create(CSS::ValueID id)
     {
         return adopt_ref(*new IdentifierStyleValue(id));
     }
@@ -1252,7 +1314,7 @@ public:
     virtual Color to_color(Layout::NodeWithStyle const& node) const override;
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(IdentifierStyleValue const& other) const { return m_id == other.m_id; }
+    bool properties_equal(IdentifierStyleValue const& other) const { return m_id == other.m_id; }
 
 private:
     explicit IdentifierStyleValue(CSS::ValueID id)
@@ -1282,11 +1344,11 @@ class ImageStyleValue final
     : public AbstractImageStyleValue
     , public ImageResourceClient {
 public:
-    static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
+    static ValueComparingNonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
     virtual ~ImageStyleValue() override = default;
 
     virtual ErrorOr<String> to_string() const override;
-    virtual bool operator==(StyleValue const& other) const override;
+    virtual bool equals(StyleValue const& other) const override;
 
     virtual void load_any_resources(DOM::Document&) override;
 
@@ -1347,7 +1409,7 @@ public:
 
     using Size = Variant<Extent, CircleSize, EllipseSize>;
 
-    static NonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<RadialGradientStyleValue> create(EndingShape ending_shape, Size size, PositionValue position, Vector<LinearColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
         return adopt_ref(*new RadialGradientStyleValue(ending_shape, size, position, move(color_stop_list), repeating));
@@ -1357,7 +1419,7 @@ public:
 
     void paint(PaintContext&, DevicePixelRect const& dest_rect, CSS::ImageRendering) const override;
 
-    virtual bool operator==(StyleValue const& other) const override;
+    virtual bool equals(StyleValue const& other) const override;
 
     Vector<LinearColorStopListElement> const& color_stop_list() const
     {
@@ -1401,7 +1463,7 @@ private:
 
 class ConicGradientStyleValue final : public AbstractImageStyleValue {
 public:
-    static NonnullRefPtr<ConicGradientStyleValue> create(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<ConicGradientStyleValue> create(Angle from_angle, PositionValue position, Vector<AngularColorStopListElement> color_stop_list, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
         return adopt_ref(*new ConicGradientStyleValue(from_angle, position, move(color_stop_list), repeating));
@@ -1411,7 +1473,7 @@ public:
 
     void paint(PaintContext&, DevicePixelRect const& dest_rect, CSS::ImageRendering) const override;
 
-    virtual bool operator==(StyleValue const& other) const override;
+    virtual bool equals(StyleValue const& other) const override;
 
     Vector<AngularColorStopListElement> const& color_stop_list() const
     {
@@ -1461,7 +1523,7 @@ public:
         WebKit
     };
 
-    static NonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
+    static ValueComparingNonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
     {
         VERIFY(color_stop_list.size() >= 2);
         return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
@@ -1469,7 +1531,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
     virtual ~LinearGradientStyleValue() override = default;
-    virtual bool operator==(StyleValue const& other) const override;
+    virtual bool equals(StyleValue const& other) const override;
 
     Vector<LinearColorStopListElement> const& color_stop_list() const
     {
@@ -1510,16 +1572,16 @@ private:
 
 class InheritStyleValue final : public StyleValueWithDefaultOperators<InheritStyleValue> {
 public:
-    static NonnullRefPtr<InheritStyleValue> the()
+    static ValueComparingNonnullRefPtr<InheritStyleValue> the()
     {
-        static NonnullRefPtr<InheritStyleValue> instance = adopt_ref(*new InheritStyleValue);
+        static ValueComparingNonnullRefPtr<InheritStyleValue> instance = adopt_ref(*new InheritStyleValue);
         return instance;
     }
     virtual ~InheritStyleValue() override = default;
 
     ErrorOr<String> to_string() const override { return String::from_utf8("inherit"sv); }
 
-    bool equals(InheritStyleValue const&) const { return true; }
+    bool properties_equal(InheritStyleValue const&) const { return true; }
 
 private:
     InheritStyleValue()
@@ -1530,16 +1592,16 @@ private:
 
 class InitialStyleValue final : public StyleValueWithDefaultOperators<InitialStyleValue> {
 public:
-    static NonnullRefPtr<InitialStyleValue> the()
+    static ValueComparingNonnullRefPtr<InitialStyleValue> the()
     {
-        static NonnullRefPtr<InitialStyleValue> instance = adopt_ref(*new InitialStyleValue);
+        static ValueComparingNonnullRefPtr<InitialStyleValue> instance = adopt_ref(*new InitialStyleValue);
         return instance;
     }
     virtual ~InitialStyleValue() override = default;
 
     ErrorOr<String> to_string() const override { return String::from_utf8("initial"sv); }
 
-    bool equals(InitialStyleValue const&) const { return true; }
+    bool properties_equal(InitialStyleValue const&) const { return true; }
 
 private:
     InitialStyleValue()
@@ -1550,7 +1612,7 @@ private:
 
 class LengthStyleValue : public StyleValueWithDefaultOperators<LengthStyleValue> {
 public:
-    static NonnullRefPtr<LengthStyleValue> create(Length const&);
+    static ValueComparingNonnullRefPtr<LengthStyleValue> create(Length const&);
     virtual ~LengthStyleValue() override = default;
 
     Length const& length() const { return m_length; }
@@ -1561,9 +1623,9 @@ public:
     virtual ErrorOr<String> to_string() const override { return m_length.to_string(); }
     virtual Length to_length() const override { return m_length; }
     virtual ValueID to_identifier() const override { return has_auto() ? ValueID::Auto : ValueID::Invalid; }
-    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
+    virtual ValueComparingNonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
 
-    bool equals(LengthStyleValue const& other) const { return m_length == other.m_length; }
+    bool properties_equal(LengthStyleValue const& other) const { return m_length == other.m_length; }
 
 private:
     explicit LengthStyleValue(Length const& length)
@@ -1577,49 +1639,49 @@ private:
 
 class ListStyleStyleValue final : public StyleValueWithDefaultOperators<ListStyleStyleValue> {
 public:
-    static NonnullRefPtr<ListStyleStyleValue> create(
-        NonnullRefPtr<StyleValue> position,
-        NonnullRefPtr<StyleValue> image,
-        NonnullRefPtr<StyleValue> style_type)
+    static ValueComparingNonnullRefPtr<ListStyleStyleValue> create(
+        ValueComparingNonnullRefPtr<StyleValue> position,
+        ValueComparingNonnullRefPtr<StyleValue> image,
+        ValueComparingNonnullRefPtr<StyleValue> style_type)
     {
         return adopt_ref(*new ListStyleStyleValue(move(position), move(image), move(style_type)));
     }
     virtual ~ListStyleStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> position() const { return m_properties.position; }
-    NonnullRefPtr<StyleValue> image() const { return m_properties.image; }
-    NonnullRefPtr<StyleValue> style_type() const { return m_properties.style_type; }
+    ValueComparingNonnullRefPtr<StyleValue> position() const { return m_properties.position; }
+    ValueComparingNonnullRefPtr<StyleValue> image() const { return m_properties.image; }
+    ValueComparingNonnullRefPtr<StyleValue> style_type() const { return m_properties.style_type; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(ListStyleStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(ListStyleStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     ListStyleStyleValue(
-        NonnullRefPtr<StyleValue> position,
-        NonnullRefPtr<StyleValue> image,
-        NonnullRefPtr<StyleValue> style_type)
+        ValueComparingNonnullRefPtr<StyleValue> position,
+        ValueComparingNonnullRefPtr<StyleValue> image,
+        ValueComparingNonnullRefPtr<StyleValue> style_type)
         : StyleValueWithDefaultOperators(Type::ListStyle)
         , m_properties { .position = move(position), .image = move(image), .style_type = move(style_type) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> position;
-        NonnullRefPtr<StyleValue> image;
-        NonnullRefPtr<StyleValue> style_type;
+        ValueComparingNonnullRefPtr<StyleValue> position;
+        ValueComparingNonnullRefPtr<StyleValue> image;
+        ValueComparingNonnullRefPtr<StyleValue> style_type;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class NumericStyleValue : public StyleValueWithDefaultOperators<NumericStyleValue> {
 public:
-    static NonnullRefPtr<NumericStyleValue> create_float(float value)
+    static ValueComparingNonnullRefPtr<NumericStyleValue> create_float(float value)
     {
         return adopt_ref(*new NumericStyleValue(value));
     }
 
-    static NonnullRefPtr<NumericStyleValue> create_integer(i64 value)
+    static ValueComparingNonnullRefPtr<NumericStyleValue> create_integer(i64 value)
     {
         return adopt_ref(*new NumericStyleValue(value));
     }
@@ -1640,7 +1702,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(NumericStyleValue const& other) const { return m_value == other.m_value; }
+    bool properties_equal(NumericStyleValue const& other) const { return m_value == other.m_value; }
 
 private:
     explicit NumericStyleValue(Variant<float, i64> value)
@@ -1654,36 +1716,36 @@ private:
 
 class OverflowStyleValue final : public StyleValueWithDefaultOperators<OverflowStyleValue> {
 public:
-    static NonnullRefPtr<OverflowStyleValue> create(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
+    static ValueComparingNonnullRefPtr<OverflowStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> overflow_x, ValueComparingNonnullRefPtr<StyleValue> overflow_y)
     {
         return adopt_ref(*new OverflowStyleValue(move(overflow_x), move(overflow_y)));
     }
     virtual ~OverflowStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> overflow_x() const { return m_properties.overflow_x; }
-    NonnullRefPtr<StyleValue> overflow_y() const { return m_properties.overflow_y; }
+    ValueComparingNonnullRefPtr<StyleValue> overflow_x() const { return m_properties.overflow_x; }
+    ValueComparingNonnullRefPtr<StyleValue> overflow_y() const { return m_properties.overflow_y; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(OverflowStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(OverflowStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    OverflowStyleValue(NonnullRefPtr<StyleValue> overflow_x, NonnullRefPtr<StyleValue> overflow_y)
+    OverflowStyleValue(ValueComparingNonnullRefPtr<StyleValue> overflow_x, ValueComparingNonnullRefPtr<StyleValue> overflow_y)
         : StyleValueWithDefaultOperators(Type::Overflow)
         , m_properties { .overflow_x = move(overflow_x), .overflow_y = move(overflow_y) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> overflow_x;
-        NonnullRefPtr<StyleValue> overflow_y;
+        ValueComparingNonnullRefPtr<StyleValue> overflow_x;
+        ValueComparingNonnullRefPtr<StyleValue> overflow_y;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class PercentageStyleValue final : public StyleValueWithDefaultOperators<PercentageStyleValue> {
 public:
-    static NonnullRefPtr<PercentageStyleValue> create(Percentage percentage)
+    static ValueComparingNonnullRefPtr<PercentageStyleValue> create(Percentage percentage)
     {
         return adopt_ref(*new PercentageStyleValue(move(percentage)));
     }
@@ -1694,7 +1756,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(PercentageStyleValue const& other) const { return m_percentage == other.m_percentage; }
+    bool properties_equal(PercentageStyleValue const& other) const { return m_percentage == other.m_percentage; }
 
 private:
     PercentageStyleValue(Percentage&& percentage)
@@ -1708,7 +1770,7 @@ private:
 
 class PositionStyleValue final : public StyleValueWithDefaultOperators<PositionStyleValue> {
 public:
-    static NonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
+    static ValueComparingNonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
     {
         return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
     }
@@ -1721,7 +1783,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(PositionStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(PositionStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     PositionStyleValue(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
@@ -1741,7 +1803,7 @@ private:
 
 class ResolutionStyleValue : public StyleValueWithDefaultOperators<ResolutionStyleValue> {
 public:
-    static NonnullRefPtr<ResolutionStyleValue> create(Resolution resolution)
+    static ValueComparingNonnullRefPtr<ResolutionStyleValue> create(Resolution resolution)
     {
         return adopt_ref(*new ResolutionStyleValue(move(resolution)));
     }
@@ -1751,7 +1813,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override { return m_resolution.to_string(); }
 
-    bool equals(ResolutionStyleValue const& other) const { return m_resolution == other.m_resolution; }
+    bool properties_equal(ResolutionStyleValue const& other) const { return m_resolution == other.m_resolution; }
 
 private:
     explicit ResolutionStyleValue(Resolution resolution)
@@ -1765,7 +1827,7 @@ private:
 
 class ShadowStyleValue final : public StyleValueWithDefaultOperators<ShadowStyleValue> {
 public:
-    static NonnullRefPtr<ShadowStyleValue>
+    static ValueComparingNonnullRefPtr<ShadowStyleValue>
     create(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
     {
         return adopt_ref(*new ShadowStyleValue(color, offset_x, offset_y, blur_radius, spread_distance, placement));
@@ -1781,7 +1843,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(ShadowStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(ShadowStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     explicit ShadowStyleValue(Color color, Length const& offset_x, Length const& offset_y, Length const& blur_radius, Length const& spread_distance, ShadowPlacement placement)
@@ -1790,7 +1852,7 @@ private:
     {
     }
 
-    virtual NonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
+    virtual ValueComparingNonnullRefPtr<StyleValue> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const override;
 
     struct Properties {
         Color color;
@@ -1805,7 +1867,7 @@ private:
 
 class StringStyleValue : public StyleValueWithDefaultOperators<StringStyleValue> {
 public:
-    static NonnullRefPtr<StringStyleValue> create(String const& string)
+    static ValueComparingNonnullRefPtr<StringStyleValue> create(String const& string)
     {
         return adopt_ref(*new StringStyleValue(string));
     }
@@ -1813,7 +1875,7 @@ public:
 
     ErrorOr<String> to_string() const override { return m_string; }
 
-    bool equals(StringStyleValue const& other) const { return m_string == other.m_string; }
+    bool properties_equal(StringStyleValue const& other) const { return m_string == other.m_string; }
 
 private:
     explicit StringStyleValue(String const& string)
@@ -1827,48 +1889,48 @@ private:
 
 class TextDecorationStyleValue final : public StyleValueWithDefaultOperators<TextDecorationStyleValue> {
 public:
-    static NonnullRefPtr<TextDecorationStyleValue> create(
-        NonnullRefPtr<StyleValue> line,
-        NonnullRefPtr<StyleValue> thickness,
-        NonnullRefPtr<StyleValue> style,
-        NonnullRefPtr<StyleValue> color)
+    static ValueComparingNonnullRefPtr<TextDecorationStyleValue> create(
+        ValueComparingNonnullRefPtr<StyleValue> line,
+        ValueComparingNonnullRefPtr<StyleValue> thickness,
+        ValueComparingNonnullRefPtr<StyleValue> style,
+        ValueComparingNonnullRefPtr<StyleValue> color)
     {
         return adopt_ref(*new TextDecorationStyleValue(move(line), move(thickness), move(style), move(color)));
     }
     virtual ~TextDecorationStyleValue() override = default;
 
-    NonnullRefPtr<StyleValue> line() const { return m_properties.line; }
-    NonnullRefPtr<StyleValue> thickness() const { return m_properties.thickness; }
-    NonnullRefPtr<StyleValue> style() const { return m_properties.style; }
-    NonnullRefPtr<StyleValue> color() const { return m_properties.color; }
+    ValueComparingNonnullRefPtr<StyleValue> line() const { return m_properties.line; }
+    ValueComparingNonnullRefPtr<StyleValue> thickness() const { return m_properties.thickness; }
+    ValueComparingNonnullRefPtr<StyleValue> style() const { return m_properties.style; }
+    ValueComparingNonnullRefPtr<StyleValue> color() const { return m_properties.color; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(TextDecorationStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(TextDecorationStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
     TextDecorationStyleValue(
-        NonnullRefPtr<StyleValue> line,
-        NonnullRefPtr<StyleValue> thickness,
-        NonnullRefPtr<StyleValue> style,
-        NonnullRefPtr<StyleValue> color)
+        ValueComparingNonnullRefPtr<StyleValue> line,
+        ValueComparingNonnullRefPtr<StyleValue> thickness,
+        ValueComparingNonnullRefPtr<StyleValue> style,
+        ValueComparingNonnullRefPtr<StyleValue> color)
         : StyleValueWithDefaultOperators(Type::TextDecoration)
         , m_properties { .line = move(line), .thickness = move(thickness), .style = move(style), .color = move(color) }
     {
     }
 
     struct Properties {
-        NonnullRefPtr<StyleValue> line;
-        NonnullRefPtr<StyleValue> thickness;
-        NonnullRefPtr<StyleValue> style;
-        NonnullRefPtr<StyleValue> color;
+        ValueComparingNonnullRefPtr<StyleValue> line;
+        ValueComparingNonnullRefPtr<StyleValue> thickness;
+        ValueComparingNonnullRefPtr<StyleValue> style;
+        ValueComparingNonnullRefPtr<StyleValue> color;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
 class TimeStyleValue : public StyleValueWithDefaultOperators<TimeStyleValue> {
 public:
-    static NonnullRefPtr<TimeStyleValue> create(Time time)
+    static ValueComparingNonnullRefPtr<TimeStyleValue> create(Time time)
     {
         return adopt_ref(*new TimeStyleValue(move(time)));
     }
@@ -1878,7 +1940,7 @@ public:
 
     virtual ErrorOr<String> to_string() const override { return m_time.to_string(); }
 
-    bool equals(TimeStyleValue const& other) const { return m_time == other.m_time; }
+    bool properties_equal(TimeStyleValue const& other) const { return m_time == other.m_time; }
 
 private:
     explicit TimeStyleValue(Time time)
@@ -1892,21 +1954,21 @@ private:
 
 class TransformationStyleValue final : public StyleValueWithDefaultOperators<TransformationStyleValue> {
 public:
-    static NonnullRefPtr<TransformationStyleValue> create(CSS::TransformFunction transform_function, NonnullRefPtrVector<StyleValue>&& values)
+    static ValueComparingNonnullRefPtr<TransformationStyleValue> create(CSS::TransformFunction transform_function, StyleValueVector&& values)
     {
         return adopt_ref(*new TransformationStyleValue(transform_function, move(values)));
     }
     virtual ~TransformationStyleValue() override = default;
 
     CSS::TransformFunction transform_function() const { return m_properties.transform_function; }
-    NonnullRefPtrVector<StyleValue> values() const { return m_properties.values; }
+    StyleValueVector values() const { return m_properties.values; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(TransformationStyleValue const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(TransformationStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    TransformationStyleValue(CSS::TransformFunction transform_function, NonnullRefPtrVector<StyleValue>&& values)
+    TransformationStyleValue(CSS::TransformFunction transform_function, StyleValueVector&& values)
         : StyleValueWithDefaultOperators(Type::Transformation)
         , m_properties { .transform_function = transform_function, .values = move(values) }
     {
@@ -1914,14 +1976,14 @@ private:
 
     struct Properties {
         CSS::TransformFunction transform_function;
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         bool operator==(Properties const& other) const;
     } m_properties;
 };
 
 class UnresolvedStyleValue final : public StyleValue {
 public:
-    static NonnullRefPtr<UnresolvedStyleValue> create(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)
+    static ValueComparingNonnullRefPtr<UnresolvedStyleValue> create(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)
     {
         return adopt_ref(*new UnresolvedStyleValue(move(values), contains_var_or_attr));
     }
@@ -1932,7 +1994,7 @@ public:
     Vector<Parser::ComponentValue> const& values() const { return m_values; }
     bool contains_var_or_attr() const { return m_contains_var_or_attr; }
 
-    virtual bool operator==(StyleValue const& other) const override;
+    virtual bool equals(StyleValue const& other) const override;
 
 private:
     UnresolvedStyleValue(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)
@@ -1948,16 +2010,16 @@ private:
 
 class UnsetStyleValue final : public StyleValueWithDefaultOperators<UnsetStyleValue> {
 public:
-    static NonnullRefPtr<UnsetStyleValue> the()
+    static ValueComparingNonnullRefPtr<UnsetStyleValue> the()
     {
-        static NonnullRefPtr<UnsetStyleValue> instance = adopt_ref(*new UnsetStyleValue);
+        static ValueComparingNonnullRefPtr<UnsetStyleValue> instance = adopt_ref(*new UnsetStyleValue);
         return instance;
     }
     virtual ~UnsetStyleValue() override = default;
 
     ErrorOr<String> to_string() const override { return String::from_utf8("unset"sv); }
 
-    bool equals(UnsetStyleValue const&) const { return true; }
+    bool properties_equal(UnsetStyleValue const&) const { return true; }
 
 private:
     UnsetStyleValue()
@@ -1972,11 +2034,11 @@ public:
         Space,
         Comma,
     };
-    static NonnullRefPtr<StyleValueList> create(NonnullRefPtrVector<StyleValue>&& values, Separator separator) { return adopt_ref(*new StyleValueList(move(values), separator)); }
+    static ValueComparingNonnullRefPtr<StyleValueList> create(StyleValueVector&& values, Separator separator) { return adopt_ref(*new StyleValueList(move(values), separator)); }
 
     size_t size() const { return m_properties.values.size(); }
-    NonnullRefPtrVector<StyleValue> const& values() const { return m_properties.values; }
-    NonnullRefPtr<StyleValue> value_at(size_t i, bool allow_loop) const
+    StyleValueVector const& values() const { return m_properties.values; }
+    ValueComparingNonnullRefPtr<StyleValue> value_at(size_t i, bool allow_loop) const
     {
         if (allow_loop)
             return m_properties.values[i % size()];
@@ -1985,10 +2047,10 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool equals(StyleValueList const& other) const { return m_properties == other.m_properties; }
+    bool properties_equal(StyleValueList const& other) const { return m_properties == other.m_properties; }
 
 private:
-    StyleValueList(NonnullRefPtrVector<StyleValue>&& values, Separator separator)
+    StyleValueList(StyleValueVector&& values, Separator separator)
         : StyleValueWithDefaultOperators(Type::ValueList)
         , m_properties { .separator = separator, .values = move(values) }
     {
@@ -1996,14 +2058,14 @@ private:
 
     struct Properties {
         Separator separator;
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         bool operator==(Properties const&) const;
     } m_properties;
 };
 
 class RectStyleValue : public StyleValueWithDefaultOperators<RectStyleValue> {
 public:
-    static NonnullRefPtr<RectStyleValue> create(EdgeRect rect);
+    static ValueComparingNonnullRefPtr<RectStyleValue> create(EdgeRect rect);
     virtual ~RectStyleValue() override = default;
 
     EdgeRect rect() const { return m_rect; }
@@ -2011,7 +2073,7 @@ public:
     virtual bool has_rect() const override { return true; }
     virtual EdgeRect to_rect() const override { return m_rect; }
 
-    bool equals(RectStyleValue const& other) const { return m_rect == other.m_rect; }
+    bool properties_equal(RectStyleValue const& other) const { return m_rect == other.m_rect; }
 
 private:
     explicit RectStyleValue(EdgeRect rect)

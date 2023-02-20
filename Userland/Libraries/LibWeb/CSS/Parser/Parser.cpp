@@ -3997,7 +3997,7 @@ RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValu
     if (!first || !tokens.has_next_token())
         return first;
 
-    NonnullRefPtrVector<StyleValue> values;
+    StyleValueVector values;
     values.append(first.release_nonnull());
 
     while (tokens.has_next_token()) {
@@ -4027,13 +4027,13 @@ RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<Compon
 
 RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
-    NonnullRefPtrVector<StyleValue> background_images;
-    NonnullRefPtrVector<StyleValue> background_positions;
-    NonnullRefPtrVector<StyleValue> background_sizes;
-    NonnullRefPtrVector<StyleValue> background_repeats;
-    NonnullRefPtrVector<StyleValue> background_attachments;
-    NonnullRefPtrVector<StyleValue> background_clips;
-    NonnullRefPtrVector<StyleValue> background_origins;
+    StyleValueVector background_images;
+    StyleValueVector background_positions;
+    StyleValueVector background_sizes;
+    StyleValueVector background_repeats;
+    StyleValueVector background_attachments;
+    StyleValueVector background_clips;
+    StyleValueVector background_origins;
     RefPtr<StyleValue> background_color;
 
     // Per-layer values
@@ -4778,8 +4778,8 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
         }
     }
 
-    NonnullRefPtrVector<StyleValue> content_values;
-    NonnullRefPtrVector<StyleValue> alt_text_values;
+    StyleValueVector content_values;
+    StyleValueVector alt_text_values;
     bool in_alt_text = false;
 
     for (auto const& value : component_values) {
@@ -5239,7 +5239,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     // eg, these are equivalent:
     //     font-family: my cool     font\!, serif;
     //     font-family: "my cool font!", serif;
-    NonnullRefPtrVector<StyleValue> font_families;
+    StyleValueVector font_families;
     Vector<DeprecatedString> current_name_parts;
     for (size_t i = start_index; i < component_values.size(); ++i) {
         auto const& part = component_values[i];
@@ -5642,7 +5642,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
 
 RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<ComponentValue>& tokens)
 {
-    NonnullRefPtrVector<StyleValue> style_values;
+    StyleValueVector style_values;
 
     while (tokens.has_next_token()) {
         auto const& token = tokens.next_token();
@@ -5681,7 +5681,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<Componen
 
 RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
-    NonnullRefPtrVector<StyleValue> transformations;
+    StyleValueVector transformations;
     auto tokens = TokenStream { component_values };
     tokens.skip_whitespace();
 
@@ -5706,7 +5706,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         auto function = maybe_function.release_value();
         auto function_metadata = transform_function_metadata(function);
 
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         auto argument_tokens = TokenStream { part.function().values() };
         argument_tokens.skip_whitespace();
         size_t argument_index = 0;
@@ -5851,7 +5851,7 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
     };
 
     auto make_list = [](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> NonnullRefPtr<StyleValueList> {
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         values.append(x_value);
         values.append(y_value);
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
@@ -6615,7 +6615,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
     // We have multiple values, so treat them as a StyleValueList.
     if (property_maximum_value_count(property_id) > 1) {
-        NonnullRefPtrVector<StyleValue> parsed_values;
+        StyleValueVector parsed_values;
         for (auto& component_value : component_values) {
             auto parsed_value = parse_css_value(component_value);
             if (!parsed_value || !property_accepts_value(property_id, *parsed_value))

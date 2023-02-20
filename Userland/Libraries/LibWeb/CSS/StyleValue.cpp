@@ -291,14 +291,14 @@ StyleValueList const& StyleValue::as_value_list() const
 }
 
 BackgroundStyleValue::BackgroundStyleValue(
-    NonnullRefPtr<StyleValue> color,
-    NonnullRefPtr<StyleValue> image,
-    NonnullRefPtr<StyleValue> position,
-    NonnullRefPtr<StyleValue> size,
-    NonnullRefPtr<StyleValue> repeat,
-    NonnullRefPtr<StyleValue> attachment,
-    NonnullRefPtr<StyleValue> origin,
-    NonnullRefPtr<StyleValue> clip)
+    ValueComparingNonnullRefPtr<StyleValue> color,
+    ValueComparingNonnullRefPtr<StyleValue> image,
+    ValueComparingNonnullRefPtr<StyleValue> position,
+    ValueComparingNonnullRefPtr<StyleValue> size,
+    ValueComparingNonnullRefPtr<StyleValue> repeat,
+    ValueComparingNonnullRefPtr<StyleValue> attachment,
+    ValueComparingNonnullRefPtr<StyleValue> origin,
+    ValueComparingNonnullRefPtr<StyleValue> clip)
     : StyleValueWithDefaultOperators(Type::Background)
     , m_properties {
         .color = move(color),
@@ -335,7 +335,7 @@ ErrorOr<String> BackgroundStyleValue::to_string() const
         return String::formatted("{} {} {} {} {} {} {} {}", TRY(m_properties.color->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.position->to_string()), TRY(m_properties.size->to_string()), TRY(m_properties.repeat->to_string()), TRY(m_properties.attachment->to_string()), TRY(m_properties.origin->to_string()), TRY(m_properties.clip->to_string()));
     }
 
-    auto get_layer_value_string = [](NonnullRefPtr<StyleValue> const& style_value, size_t index) {
+    auto get_layer_value_string = [](ValueComparingNonnullRefPtr<StyleValue> const& style_value, size_t index) {
         if (style_value->is_value_list())
             return style_value->as_value_list().value_at(index, true)->to_string();
         return style_value->to_string();
@@ -574,7 +574,7 @@ ErrorOr<String> CalculatedStyleValue::to_string() const
     return String::formatted("calc({})", TRY(m_expression->to_string()));
 }
 
-bool CalculatedStyleValue::operator==(StyleValue const& other) const
+bool CalculatedStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -1549,7 +1549,7 @@ ErrorOr<String> ImageStyleValue::to_string() const
     return serialize_a_url(m_url.to_deprecated_string());
 }
 
-bool ImageStyleValue::operator==(StyleValue const& other) const
+bool ImageStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -1640,7 +1640,7 @@ ErrorOr<String> LinearGradientStyleValue::to_string() const
     return builder.to_string();
 }
 
-bool LinearGradientStyleValue::operator==(StyleValue const& other_) const
+bool LinearGradientStyleValue::equals(StyleValue const& other_) const
 {
     if (type() != other_.type())
         return false;
@@ -1981,7 +1981,7 @@ void RadialGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPix
     };
 }
 
-bool RadialGradientStyleValue::operator==(StyleValue const& other) const
+bool RadialGradientStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -2033,7 +2033,7 @@ void ConicGradientStyleValue::paint(PaintContext& context, DevicePixelRect const
     Painting::paint_conic_gradient(context, dest_rect, m_resolved->data, context.rounded_device_point(m_resolved->position));
 }
 
-bool ConicGradientStyleValue::operator==(StyleValue const& other) const
+bool ConicGradientStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -2131,7 +2131,7 @@ ErrorOr<String> UnresolvedStyleValue::to_string() const
     return builder.to_string();
 }
 
-bool UnresolvedStyleValue::operator==(StyleValue const& other) const
+bool UnresolvedStyleValue::equals(StyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -2161,7 +2161,7 @@ ErrorOr<String> StyleValueList::to_string() const
     return String::from_deprecated_string(DeprecatedString::join(separator, m_properties.values));
 }
 
-NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
+ValueComparingNonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
 {
     if (color.value() == 0) {
         static auto transparent = adopt_ref(*new ColorStyleValue(color));
@@ -2181,32 +2181,32 @@ NonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
     return adopt_ref(*new ColorStyleValue(color));
 }
 
-NonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
+ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
 {
     return adopt_ref(*new GridTemplateAreaStyleValue(grid_template_area));
 }
 
-NonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement grid_track_placement)
+ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement grid_track_placement)
 {
     return adopt_ref(*new GridTrackPlacementStyleValue(grid_track_placement));
 }
 
-NonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(CSS::GridTrackSizeList grid_track_size_list)
+ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(CSS::GridTrackSizeList grid_track_size_list)
 {
     return adopt_ref(*new GridTrackSizeStyleValue(grid_track_size_list));
 }
 
-NonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::make_auto()
+ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::make_auto()
 {
     return adopt_ref(*new GridTrackSizeStyleValue(CSS::GridTrackSizeList()));
 }
 
-NonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
+ValueComparingNonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
 {
     return adopt_ref(*new RectStyleValue(rect));
 }
 
-NonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
+ValueComparingNonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
 {
     if (length.is_auto()) {
         static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_auto()));
@@ -2236,19 +2236,19 @@ static Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPi
     return {};
 }
 
-NonnullRefPtr<StyleValue> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels) const
+ValueComparingNonnullRefPtr<StyleValue> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels) const
 {
     return *this;
 }
 
-NonnullRefPtr<StyleValue> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+ValueComparingNonnullRefPtr<StyleValue> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size); length.has_value())
         return LengthStyleValue::create(length.release_value());
     return *this;
 }
 
-NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+ValueComparingNonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     auto absolutized_offset_x = absolutized_length(m_properties.offset_x, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.offset_x);
     auto absolutized_offset_y = absolutized_length(m_properties.offset_y, viewport_rect, font_metrics, font_size, root_font_size).value_or(m_properties.offset_y);
@@ -2257,7 +2257,7 @@ NonnullRefPtr<StyleValue> ShadowStyleValue::absolutized(CSSPixelRect const& view
     return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
 }
 
-NonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+ValueComparingNonnullRefPtr<StyleValue> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
 {
     if (m_properties.horizontal_radius.is_percentage() && m_properties.vertical_radius.is_percentage())
         return *this;
