@@ -33,6 +33,7 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibSyntax/Highlighter.h>
+#include <LibUnicode/Segmentation.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -276,7 +277,7 @@ void TextEditor::mousedown_event(MouseEvent& event)
 
     m_in_drag_select = true;
 
-    set_cursor(text_position_at(event.position()));
+    set_cursor_to_text_position(event.position());
 
     if (!(event.modifiers() & Mod_Shift)) {
         if (!has_selection())
@@ -306,7 +307,7 @@ void TextEditor::mousemove_event(MouseEvent& event)
     m_last_mousemove_position = event.position();
     if (m_in_drag_select) {
         auto constrained = event.position().constrained(widget_inner_rect());
-        set_cursor(text_position_at(constrained));
+        set_cursor_to_text_position(constrained);
         m_selection.set_end(m_cursor);
         did_update_selection();
         update();
@@ -336,7 +337,7 @@ void TextEditor::automatic_scrolling_timer_did_fire()
         set_automatic_scrolling_timer_active(false);
         return;
     }
-    set_cursor(text_position_at(m_last_mousemove_position));
+    set_cursor_to_text_position(m_last_mousemove_position);
     m_selection.set_end(m_cursor);
     did_update_selection();
     update();
@@ -1393,6 +1394,25 @@ void TextEditor::set_cursor(TextPosition const& a_position)
         m_highlighter->cursor_did_change();
     if (m_relative_line_number)
         update();
+}
+
+void TextEditor::set_cursor_to_text_position(Gfx::IntPoint position)
+{
+    auto visual_position = text_position_at(position);
+    size_t physical_column = 0;
+
+    auto const& line = document().line(visual_position.line());
+    size_t boundary_index = 0;
+
+    Unicode::for_each_grapheme_segmentation_boundary(line.view(), [&](auto boundary) {
+        physical_column = boundary;
+
+        if (boundary_index++ >= visual_position.column())
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+
+    set_cursor({ visual_position.line(), physical_column });
 }
 
 void TextEditor::focusin_event(FocusEvent& event)
