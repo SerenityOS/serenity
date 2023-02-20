@@ -1217,15 +1217,15 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, JPEGLoading
                 continue;
             }
             Marker marker = 0xFF00 | current_byte;
-            if (marker == JPEG_EOI)
-                return {};
             if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
                 context.huffman_stream.stream.append(marker);
                 current_byte = TRY(stream.read_value<u8>());
                 continue;
             }
-            dbgln_if(JPEG_DEBUG, "{}: Invalid marker: {:x}!", TRY(stream.tell()), marker);
-            return Error::from_string_literal("Invalid marker");
+
+            // Rollback the marker we just read
+            TRY(stream.seek(-2, AK::SeekMode::FromCurrentPosition));
+            return {};
         } else {
             context.huffman_stream.stream.append(last_byte);
         }
