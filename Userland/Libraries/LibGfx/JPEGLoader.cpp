@@ -1099,6 +1099,55 @@ static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblo
     return {};
 }
 
+static bool is_app_marker(Marker const marker)
+{
+    return marker >= JPEG_APPN0 && marker <= JPEG_APPNF;
+}
+
+static bool is_miscellaneous_or_table_marker(Marker const marker)
+{
+    // B.6 - Summary
+    // See: Figure B.17 – Flow of marker segment
+
+    bool const is_misc = marker == JPEG_COM || marker == JPEG_DRI || is_app_marker(marker);
+    bool const is_table = marker == JPEG_DQT || marker == JPEG_DAC || marker == JPEG_DHT;
+
+    return is_misc || is_table;
+}
+
+static ErrorOr<void> handle_miscellaneous_or_table(AK::SeekableStream& stream, JPEGLoadingContext& context, Marker const marker)
+{
+    if (is_app_marker(marker)) {
+        TRY(read_app_marker(stream, context, marker - JPEG_APPN0));
+        return {};
+    }
+
+    switch (marker) {
+    case JPEG_COM:
+    case JPEG_DAC:
+        dbgln_if(JPEG_DEBUG, "TODO: implement marker \"{:x}\"", marker);
+        if (auto result = skip_segment(stream); result.is_error()) {
+            dbgln_if(JPEG_DEBUG, "{}: Error skipping marker: {:x}!", TRY(stream.tell()), marker);
+            return result.release_error();
+        }
+        break;
+    case JPEG_DHT:
+        TRY(read_huffman_table(stream, context));
+        break;
+    case JPEG_DQT:
+        TRY(read_quantization_table(stream, context));
+        break;
+    case JPEG_DRI:
+        TRY(read_restart_interval(stream, context));
+        break;
+    default:
+        dbgln("Unexpected marker: {:x}", marker);
+        VERIFY_NOT_REACHED();
+    }
+
+    return {};
+}
+
 static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     auto marker = TRY(read_marker_at_cursor(stream));
@@ -1108,6 +1157,11 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
     }
     for (;;) {
         marker = TRY(read_marker_at_cursor(stream));
+
+        if (is_miscellaneous_or_table_marker(marker)) {
+            TRY(handle_miscellaneous_or_table(stream, context, marker));
+            continue;
+        }
 
         // Set frame type if the marker marks a new frame.
         if (is_frame_marker(marker))
@@ -1127,36 +1181,9 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
         case JPEG_EOI:
             dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Unexpected marker");
-        case JPEG_APPN0:
-        case JPEG_APPN1:
-        case JPEG_APPN2:
-        case JPEG_APPN3:
-        case JPEG_APPN4:
-        case JPEG_APPN5:
-        case JPEG_APPN6:
-        case JPEG_APPN7:
-        case JPEG_APPN8:
-        case JPEG_APPN9:
-        case JPEG_APPNA:
-        case JPEG_APPNB:
-        case JPEG_APPNC:
-        case JPEG_APPND:
-        case JPEG_APPNE:
-        case JPEG_APPNF:
-            TRY(read_app_marker(stream, context, marker - JPEG_APPN0));
-            break;
         case JPEG_SOF0:
             TRY(read_start_of_frame(stream, context));
             context.state = JPEGLoadingContext::FrameDecoded;
-            break;
-        case JPEG_DQT:
-            TRY(read_quantization_table(stream, context));
-            break;
-        case JPEG_DRI:
-            TRY(read_restart_interval(stream, context));
-            break;
-        case JPEG_DHT:
-            TRY(read_huffman_table(stream, context));
             break;
         case JPEG_SOS:
             return read_start_of_scan(stream, context);
