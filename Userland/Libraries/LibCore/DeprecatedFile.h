@@ -29,7 +29,7 @@ public:
     static ErrorOr<NonnullRefPtr<DeprecatedFile>> open(DeprecatedString filename, OpenMode, mode_t = 0644);
 
     DeprecatedString filename() const { return m_filename; }
-    void set_filename(const DeprecatedString filename) { m_filename = move(filename); }
+    void set_filename(DeprecatedString filename) { m_filename = move(filename); }
 
     bool is_directory() const;
     static bool is_directory(DeprecatedString const& filename);
