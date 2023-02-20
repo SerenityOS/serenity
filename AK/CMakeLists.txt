@@ -33,6 +33,7 @@ set(AK_SOURCES
     URL.cpp
     URLParser.cpp
     Utf16View.cpp
+    Utf32View.cpp
     Utf8View.cpp
     UUID.cpp
 )

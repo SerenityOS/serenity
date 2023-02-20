@@ -8,6 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -117,6 +118,11 @@ private:
 
     u32 const* m_code_points { nullptr };
     size_t m_length { 0 };
+};
+
+template<>
+struct Formatter<Utf32View> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder&, Utf32View const&);
 };
 
 }
