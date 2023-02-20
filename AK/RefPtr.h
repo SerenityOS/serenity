@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,14 +35,14 @@ public:
     };
 
     RefPtr() = default;
-    RefPtr(T const* ptr)
-        : m_ptr(const_cast<T*>(ptr))
+    RefPtr(T* ptr)
+        : m_ptr(ptr)
     {
         ref_if_not_null(m_ptr);
     }
 
-    RefPtr(T const& object)
-        : m_ptr(const_cast<T*>(&object))
+    RefPtr(T& object)
+        : m_ptr(&object)
     {
         m_ptr->ref();
     }
@@ -58,7 +58,7 @@ public:
     }
 
     ALWAYS_INLINE RefPtr(NonnullRefPtr<T> const& other)
-        : m_ptr(const_cast<T*>(other.ptr()))
+        : m_ptr(other.ptr())
     {
         m_ptr->ref();
     }
@@ -66,7 +66,7 @@ public:
     template<typename U>
     ALWAYS_INLINE RefPtr(NonnullRefPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_ptr(const_cast<T*>(static_cast<T const*>(other.ptr())))
+        : m_ptr(static_cast<T*>(other.ptr()))
     {
         m_ptr->ref();
     }
@@ -94,7 +94,7 @@ public:
     template<typename U>
     RefPtr(RefPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_ptr(const_cast<T*>(static_cast<T const*>(other.ptr())))
+        : m_ptr(static_cast<T*>(other.ptr()))
     {
         ref_if_not_null(m_ptr);
     }
@@ -181,14 +181,14 @@ public:
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(T const* ptr)
+    ALWAYS_INLINE RefPtr& operator=(T* ptr)
     {
         RefPtr tmp { ptr };
         swap(tmp);
         return *this;
     }
 
-    ALWAYS_INLINE RefPtr& operator=(T const& object)
+    ALWAYS_INLINE RefPtr& operator=(T& object)
     {
         RefPtr tmp { object };
         swap(tmp);
@@ -304,13 +304,13 @@ struct Traits<RefPtr<T>> : public GenericTraits<RefPtr<T>> {
 template<typename T, typename U>
 inline NonnullRefPtr<T> static_ptr_cast(NonnullRefPtr<U> const& ptr)
 {
-    return NonnullRefPtr<T>(static_cast<T const&>(*ptr));
+    return NonnullRefPtr<T>(static_cast<T&>(*ptr));
 }
 
 template<typename T, typename U>
 inline RefPtr<T> static_ptr_cast(RefPtr<U> const& ptr)
 {
-    return RefPtr<T>(static_cast<T const*>(ptr.ptr()));
+    return RefPtr<T>(static_cast<T*>(ptr.ptr()));
 }
 
 template<typename T, typename U>
