@@ -47,8 +47,8 @@ struct CodingIndependentCodePoints {
 static_assert(AssertSize<CodingIndependentCodePoints, 4>());
 
 struct EmbeddedICCProfile {
-    StringView profile_name;
-    ReadonlyBytes compressed_data;
+    ByteBuffer profile_name;
+    ByteBuffer compressed_data;
 };
 
 struct Scanline {
@@ -871,7 +871,9 @@ static ErrorOr<void> process_iCCP(ReadonlyBytes data, PNGLoadingContext& context
     if (compression_method != 0)
         return Error::from_string_literal("Unknown profile compression method");
 
-    context.embedded_icc_profile = EmbeddedICCProfile { { data.data(), profile_name_length }, data.slice(profile_name_length + 2) };
+    auto profile_name = TRY(ByteBuffer::copy(data.trim(profile_name_length)));
+    auto compressed_data = TRY(ByteBuffer::copy(data.slice(profile_name_length + 2)));
+    context.embedded_icc_profile = EmbeddedICCProfile { profile_name, compressed_data };
 
     return {};
 }
