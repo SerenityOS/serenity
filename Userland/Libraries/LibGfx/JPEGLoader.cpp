@@ -363,11 +363,8 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
     return {};
 }
 
-static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPEGLoadingContext& context)
+static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    Vector<Macroblock> macroblocks;
-    macroblocks.resize(context.mblock_meta.padded_total);
-
     if constexpr (JPEG_DEBUG) {
         dbgln("Image width: {}", context.frame.width);
         dbgln("Image height: {}", context.frame.height);
@@ -416,8 +413,7 @@ static ErrorOr<Vector<Macroblock>> decode_huffman_stream(JPEGLoadingContext& con
             }
         }
     }
-
-    return macroblocks;
+    return {};
 }
 
 static inline ErrorOr<void> ensure_bounds_okay(const size_t cursor, const size_t delta, const size_t bound)
@@ -1252,6 +1248,9 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
     // See: Figure B.16 – Flow of compressed data syntax
     // This function handles the "Multi-scan" loop.
 
+    Vector<Macroblock> macroblocks;
+    macroblocks.resize(context.mblock_meta.padded_total);
+
     Marker marker = TRY(read_marker_at_cursor(*context.stream));
     while (true) {
         if (is_miscellaneous_or_table_marker(marker)) {
@@ -1259,7 +1258,8 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
         } else if (marker == JPEG_SOS) {
             TRY(read_start_of_scan(*context.stream, context));
             TRY(scan_huffman_stream(*context.stream, context));
-            return TRY(decode_huffman_stream(context));
+            TRY(decode_huffman_stream(context, macroblocks));
+            return macroblocks;
         } else {
             dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(context.stream->tell()), marker);
             return Error::from_string_literal("Unexpected marker");
