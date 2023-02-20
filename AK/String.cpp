@@ -9,6 +9,7 @@
 #include <AK/FlyString.h>
 #include <AK/Format.h>
 #include <AK/MemMem.h>
+#include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -23,6 +24,7 @@ public:
     static ErrorOr<NonnullRefPtr<StringData>> create_uninitialized(size_t, u8*& buffer);
     static ErrorOr<NonnullRefPtr<StringData>> create_substring(StringData const& superstring, size_t start, size_t byte_count);
     static ErrorOr<NonnullRefPtr<StringData>> from_utf8(char const* utf8_bytes, size_t);
+    static ErrorOr<NonnullRefPtr<StringData>> from_stream(Stream&, size_t byte_count);
 
     struct SubstringData {
         StringData const* superstring { nullptr };
@@ -141,6 +143,23 @@ ErrorOr<NonnullRefPtr<StringData>> StringData::from_utf8(char const* utf8_data, 
     return new_string_data;
 }
 
+ErrorOr<NonnullRefPtr<StringData>> StringData::from_stream(Stream& stream, size_t byte_count)
+{
+    // Strings of MAX_SHORT_STRING_BYTE_COUNT bytes or less should be handled by the String short string optimization.
+    VERIFY(byte_count > String::MAX_SHORT_STRING_BYTE_COUNT);
+
+    u8* buffer = nullptr;
+    auto new_string_data = TRY(create_uninitialized(byte_count, buffer));
+    Bytes new_string_bytes = { buffer, byte_count };
+    TRY(stream.read(new_string_bytes));
+
+    Utf8View view(StringView { new_string_bytes });
+    if (!view.validate())
+        return Error::from_string_literal("StringData::from_stream: Input was not valid UTF-8");
+
+    return new_string_data;
+}
+
 ErrorOr<NonnullRefPtr<StringData>> StringData::create_substring(StringData const& superstring, size_t start, size_t byte_count)
 {
     // Strings of MAX_SHORT_STRING_BYTE_COUNT bytes or less should be handled by the String short string optimization.
@@ -219,6 +238,19 @@ ErrorOr<String> String::from_utf8(StringView view)
         return String { short_string };
     }
     auto data = TRY(Detail::StringData::from_utf8(view.characters_without_null_termination(), view.length()));
+    return String { move(data) };
+}
+
+ErrorOr<String> String::from_stream(Stream& stream, size_t byte_count)
+{
+    if (byte_count <= MAX_SHORT_STRING_BYTE_COUNT) {
+        ShortString short_string;
+        if (byte_count > 0)
+            TRY(stream.read({ short_string.storage, byte_count }));
+        short_string.byte_count_and_short_string_flag = (byte_count << 1) | SHORT_STRING_FLAG;
+        return String { short_string };
+    }
+    auto data = TRY(Detail::StringData::from_stream(stream, byte_count));
     return String { move(data) };
 }
 

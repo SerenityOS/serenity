@@ -10,6 +10,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
@@ -65,6 +66,54 @@ TEST_CASE(long_strings)
     EXPECT_EQ(string.is_short_string(), false);
     EXPECT_EQ(string.bytes().size(), 8u);
     EXPECT_EQ(string.bytes_as_string_view(), "abcdefgh"sv);
+}
+
+TEST_CASE(long_streams)
+{
+    {
+        u8 bytes[64] = {};
+        constexpr auto test_view = "Well, hello friends"sv;
+        FixedMemoryStream stream(Bytes { bytes, sizeof(bytes) });
+        MUST(stream.write(test_view.bytes()));
+        MUST(stream.seek(0));
+
+        auto string = MUST(String::from_stream(stream, test_view.length()));
+
+        EXPECT_EQ(string.is_short_string(), false);
+        EXPECT_EQ(string.bytes().size(), 19u);
+        EXPECT_EQ(string.bytes_as_string_view(), test_view);
+    }
+
+    {
+        AllocatingMemoryStream stream;
+        MUST(stream.write(("abc"sv).bytes()));
+
+        auto string = MUST(String::from_stream(stream, 3u));
+
+        EXPECT_EQ(string.is_short_string(), true);
+        EXPECT_EQ(string.bytes().size(), 3u);
+        EXPECT_EQ(string.bytes_as_string_view(), "abc"sv);
+    }
+
+    {
+        AllocatingMemoryStream stream;
+        MUST(stream.write(("0123456789"sv).bytes()));
+
+        auto string = MUST(String::from_stream(stream, 9u));
+
+        EXPECT_EQ(string.is_short_string(), false);
+        EXPECT_EQ(string.bytes().size(), 9u);
+        EXPECT_EQ(string.bytes_as_string_view(), "012345678"sv);
+    }
+
+    {
+        AllocatingMemoryStream stream;
+        MUST(stream.write_value(0xffffffff));
+        MUST(stream.write_value(0xffffffff));
+        MUST(stream.write_value(0xffffffff));
+        auto error_or_string = String::from_stream(stream, stream.used_buffer_size());
+        EXPECT_EQ(error_or_string.is_error(), true);
+    }
 }
 
 TEST_CASE(from_code_points)
