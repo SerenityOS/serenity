@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,10 +28,9 @@ public:
 
     virtual ~Button() override;
 
-    void set_icon(RefPtr<Gfx::Bitmap>);
+    void set_icon(RefPtr<Gfx::Bitmap const>);
     void set_icon_from_path(DeprecatedString const&);
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
-    Gfx::Bitmap* icon() { return m_icon.ptr(); }
 
     void set_text_alignment(Gfx::TextAlignment text_alignment) { m_text_alignment = text_alignment; }
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
@@ -78,7 +77,7 @@ protected:
 private:
     virtual void timer_event(Core::TimerEvent&) override;
 
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     RefPtr<GUI::Menu> m_menu;
     Gfx::ButtonStyle m_button_style { Gfx::ButtonStyle::Normal };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };

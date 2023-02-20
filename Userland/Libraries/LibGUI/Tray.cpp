@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -33,7 +33,7 @@ Gfx::IntRect Tray::Item::rect(Tray const& tray) const
     };
 }
 
-size_t Tray::add_item(DeprecatedString text, RefPtr<Gfx::Bitmap> bitmap, DeprecatedString custom_data)
+size_t Tray::add_item(DeprecatedString text, RefPtr<Gfx::Bitmap const> bitmap, DeprecatedString custom_data)
 {
     auto new_index = m_items.size();
 

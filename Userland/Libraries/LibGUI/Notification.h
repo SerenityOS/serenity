@@ -57,7 +57,7 @@ private:
     bool m_title_dirty;
     DeprecatedString m_text;
     bool m_text_dirty;
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     bool m_icon_dirty;
 
     bool m_destroyed { false };

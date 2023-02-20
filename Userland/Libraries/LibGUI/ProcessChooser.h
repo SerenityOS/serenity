@@ -31,7 +31,7 @@ private:
 
     DeprecatedString m_window_title;
     String m_button_label;
-    RefPtr<Gfx::Bitmap> m_window_icon;
+    RefPtr<Gfx::Bitmap const> m_window_icon;
     RefPtr<TableView> m_table_view;
     RefPtr<RunningProcessesModel> m_process_model;
 

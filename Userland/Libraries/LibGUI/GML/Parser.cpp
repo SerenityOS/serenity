@@ -82,7 +82,7 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
                 else if (peek() == Token::Type::JsonValue)
                     value = TRY(try_make_ref_counted<JsonValueNode>(TRY(JsonValueNode::from_string(tokens.dequeue().m_view))));
 
-                auto property = TRY(try_make_ref_counted<KeyValuePair>(property_name.m_view, value.release_nonnull()));
+                auto property = TRY(try_make_ref_counted<KeyValuePair const>(property_name.m_view, value.release_nonnull()));
                 TRY(object->add_property_child(property));
             } else if (peek() == Token::Type::Comment) {
                 pending_comments.append(TRY(Node::from_token<Comment>(tokens.dequeue())));

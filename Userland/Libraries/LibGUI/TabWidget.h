@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -148,7 +148,7 @@ private:
     struct TabData {
         int width(Gfx::Font const&) const;
         DeprecatedString title;
-        RefPtr<Gfx::Bitmap> icon;
+        RefPtr<Gfx::Bitmap const> icon;
         Widget* widget { nullptr };
         bool modified { false };
     };

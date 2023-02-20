@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-DropEvent::DropEvent(Gfx::IntPoint position, DeprecatedString const& text, NonnullRefPtr<Core::MimeData> mime_data)
+DropEvent::DropEvent(Gfx::IntPoint position, DeprecatedString const& text, NonnullRefPtr<Core::MimeData const> mime_data)
     : Event(Event::Drop)
     , m_position(position)
     , m_text(text)

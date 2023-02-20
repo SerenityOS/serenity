@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -31,7 +31,7 @@ private:
     AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
 
     DeprecatedString m_name;
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     DeprecatedString m_version_string;
 };
 }

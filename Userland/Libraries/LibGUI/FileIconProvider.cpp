@@ -205,7 +205,7 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
     for (auto const& icon_section : icon_sections) {
         auto section = image.lookup_section(icon_section.section_name);
 
-        RefPtr<Gfx::Bitmap> bitmap;
+        RefPtr<Gfx::Bitmap const> bitmap;
         if (!section.has_value()) {
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {

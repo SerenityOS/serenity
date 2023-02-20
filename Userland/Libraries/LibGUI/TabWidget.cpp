@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2022, Cameron Youell <cameronyouell@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -332,7 +332,7 @@ public:
     void do_layout();
 
     Gfx::Palette palette() const;
-    void set_palette(Gfx::Palette const&);
+    void set_palette(Gfx::Palette&);
 
     DeprecatedString title() const;
     void set_title(DeprecatedString);
@@ -349,8 +349,8 @@ public:
 
     virtual Gfx::IntRect children_clip_rect() const;
 
-    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& override_cursor() const { return m_override_cursor; }
-    void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>>);
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& override_cursor() const { return m_override_cursor; }
+    void set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>>);
 
     using UnregisteredChildHandler = ErrorOr<NonnullRefPtr<Core::Object>>(DeprecatedString const&);
     ErrorOr<void> load_from_gml(StringView);
@@ -363,7 +363,7 @@ public:
     bool has_pending_drop() const;
 
     // In order for others to be able to call this, it needs to be public.
-    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler);
+    virtual ErrorOr<void> load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast, UnregisteredChildHandler);
 
     ErrorOr<void> add_spacer();
 
@@ -439,7 +439,7 @@ private:
     Gfx::IntRect m_relative_rect;
     Gfx::ColorRole m_background_role;
     Gfx::ColorRole m_foreground_role;
-    NonnullRefPtr<Gfx::Font> m_font;
+    NonnullRefPtr<Gfx::Font const> m_font;
     DeprecatedString m_tooltip;
 
     UISize m_min_size { SpecialDimension::Shrink };
@@ -464,7 +464,7 @@ private:
     Vector<WeakPtr<Widget>> m_focus_delegators;
     FocusPolicy m_focus_policy { FocusPolicy::NoFocus };
 
-    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_override_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_override_cursor { Gfx::StandardCursor::None };
 };
 
 inline Widget* Widget::parent_widget()

@@ -221,7 +221,7 @@ void AbstractView::notify_selection_changed(Badge<ModelSelection>)
         update();
 }
 
-NonnullRefPtr<Gfx::Font> AbstractView::font_for_index(ModelIndex const& index) const
+NonnullRefPtr<Gfx::Font const> AbstractView::font_for_index(ModelIndex const& index) const
 {
     if (!model())
         return font();

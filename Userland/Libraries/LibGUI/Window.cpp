@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -336,13 +336,13 @@ void Window::make_window_manager(unsigned event_mask)
     GUI::ConnectionToWindowManagerServer::the().async_set_manager_window(m_window_id);
 }
 
-bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& right) const
+bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& right) const
 {
     if (left.has<Gfx::StandardCursor>() != right.has<Gfx::StandardCursor>())
         return false;
     if (left.has<Gfx::StandardCursor>())
         return left.get<Gfx::StandardCursor>() == right.get<Gfx::StandardCursor>();
-    return left.get<NonnullRefPtr<Gfx::Bitmap>>().ptr() == right.get<NonnullRefPtr<Gfx::Bitmap>>().ptr();
+    return left.get<NonnullRefPtr<Gfx::Bitmap const>>().ptr() == right.get<NonnullRefPtr<Gfx::Bitmap const>>().ptr();
 }
 
 void Window::set_cursor(Gfx::StandardCursor cursor)
@@ -353,7 +353,7 @@ void Window::set_cursor(Gfx::StandardCursor cursor)
     update_cursor();
 }
 
-void Window::set_cursor(NonnullRefPtr<Gfx::Bitmap> cursor)
+void Window::set_cursor(NonnullRefPtr<Gfx::Bitmap const> cursor)
 {
     if (are_cursors_the_same(m_cursor, cursor))
         return;
@@ -987,11 +987,12 @@ void Window::set_icon(Gfx::Bitmap const* icon)
 
     Gfx::IntSize icon_size = icon ? icon->size() : Gfx::IntSize(16, 16);
 
-    m_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, icon_size).release_value_but_fixme_should_propagate_errors();
+    auto new_icon = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, icon_size).release_value_but_fixme_should_propagate_errors();
     if (icon) {
-        Painter painter(*m_icon);
+        Painter painter(*new_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());
     }
+    m_icon = move(new_icon);
 
     apply_icon();
 }
@@ -1252,7 +1253,7 @@ void Window::update_cursor()
     auto new_cursor = m_cursor;
 
     auto is_usable_cursor = [](auto& cursor) {
-        return cursor.template has<NonnullRefPtr<Gfx::Bitmap>>() || cursor.template get<Gfx::StandardCursor>() != Gfx::StandardCursor::None;
+        return cursor.template has<NonnullRefPtr<Gfx::Bitmap const>>() || cursor.template get<Gfx::StandardCursor>() != Gfx::StandardCursor::None;
     };
 
     // NOTE: If there's an automatic cursor tracking widget, we retain its cursor until tracking stops.
@@ -1268,8 +1269,8 @@ void Window::update_cursor()
         return;
     m_effective_cursor = new_cursor;
 
-    if (new_cursor.has<NonnullRefPtr<Gfx::Bitmap>>())
-        ConnectionToWindowServer::the().async_set_window_custom_cursor(m_window_id, new_cursor.get<NonnullRefPtr<Gfx::Bitmap>>()->to_shareable_bitmap());
+    if (new_cursor.has<NonnullRefPtr<Gfx::Bitmap const>>())
+        ConnectionToWindowServer::the().async_set_window_custom_cursor(m_window_id, new_cursor.get<NonnullRefPtr<Gfx::Bitmap const>>()->to_shareable_bitmap());
     else
         ConnectionToWindowServer::the().async_set_window_cursor(m_window_id, (u32)new_cursor.get<Gfx::StandardCursor>());
 }
