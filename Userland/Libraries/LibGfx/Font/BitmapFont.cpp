@@ -357,7 +357,9 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
     int width = 0;
     int longest_width = 0;
 
-    for (u32 code_point : view) {
+    for (auto it = view.begin(); it != view.end(); ++it) {
+        auto code_point = *it;
+
         if (code_point == '\n' || code_point == '\r') {
             first = true;
             longest_width = max(width, longest_width);
@@ -367,8 +369,10 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
         if (!first)
             width += glyph_spacing();
         first = false;
-        width += glyph_or_emoji_width(code_point);
+
+        width += glyph_or_emoji_width(it);
     }
+
     longest_width = max(width, longest_width);
     return longest_width;
 }

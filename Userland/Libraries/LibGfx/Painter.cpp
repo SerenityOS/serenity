@@ -1518,7 +1518,9 @@ void draw_text_line(FloatRect const& a_rect, Utf8View const& text, Font const& f
         if (kerning != 0.0f)
             point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
 
-        FloatSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.pixel_size());
+        auto it_copy = it; // The callback function will advance the iterator, so create a copy for this lookup.
+        FloatSize glyph_size(font.glyph_or_emoji_width(it_copy) + font.glyph_spacing(), font.pixel_size());
+
         if (direction == TextDirection::RTL)
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, it);
@@ -2480,11 +2482,11 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
             if (utf8_view.byte_offset_of(it) >= underline_offset.value()) {
                 int y = text_rect.bottom() + 1;
                 int x1 = text_rect.left() + width;
-                int x2 = x1 + font.glyph_or_emoji_width(*it);
+                int x2 = x1 + font.glyph_or_emoji_width(it);
                 draw_line({ x1, y }, { x2, y }, color);
                 break;
             }
-            width += font.glyph_or_emoji_width(*it) + font.glyph_spacing();
+            width += font.glyph_or_emoji_width(it) + font.glyph_spacing();
         }
     }
 }
@@ -2514,7 +2516,7 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
         // FIXME: this is probably not the real space taken for complex emojis
         x += font.glyphs_horizontal_kerning(last_code_point, code_point);
         draw_glyph_or_emoji(FloatPoint { x, y }, code_point_iterator, font, color);
-        x += font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
+        x += font.glyph_or_emoji_width(code_point_iterator) + font.glyph_spacing();
         last_code_point = code_point;
     }
 }
