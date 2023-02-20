@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -211,7 +211,7 @@ void Application::set_system_palette(Core::AnonymousBuffer& buffer)
         m_palette = m_system_palette;
 }
 
-void Application::set_palette(Palette const& palette)
+void Application::set_palette(Palette& palette)
 {
     m_palette = palette.impl();
 }

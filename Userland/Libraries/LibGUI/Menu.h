@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -74,7 +74,7 @@ private:
 
     int m_menu_id { -1 };
     DeprecatedString m_name;
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     NonnullOwnPtrVector<MenuItem> m_items;
     WeakPtr<Action> m_current_default_action;
     bool m_visible { false };

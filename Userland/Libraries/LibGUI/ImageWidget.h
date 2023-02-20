@@ -19,7 +19,6 @@ public:
     virtual ~ImageWidget() override = default;
 
     void set_bitmap(Gfx::Bitmap const*);
-    Gfx::Bitmap* bitmap() { return m_bitmap.ptr(); }
     Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
 
     void set_should_stretch(bool value) { m_should_stretch = value; }
@@ -43,7 +42,7 @@ protected:
     virtual void paint_event(PaintEvent&) override;
 
 private:
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap const> m_bitmap;
     bool m_should_stretch { false };
     bool m_auto_resize { false };
 

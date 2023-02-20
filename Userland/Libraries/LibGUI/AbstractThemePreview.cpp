@@ -67,7 +67,7 @@ void AbstractThemePreview::load_theme_bitmaps()
     load_bitmap(m_preview_palette.tooltip_shadow_path(), m_last_tooltip_shadow_path, m_tooltip_shadow);
 }
 
-void AbstractThemePreview::set_preview_palette(Gfx::Palette const& palette)
+void AbstractThemePreview::set_preview_palette(Gfx::Palette& palette)
 {
     m_preview_palette = palette;
     palette_changed();

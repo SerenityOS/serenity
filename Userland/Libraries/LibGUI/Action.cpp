@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@ NonnullRefPtr<Action> Action::create(DeprecatedString text, Function<void(Action
     return adopt_ref(*new Action(move(text), move(callback), parent));
 }
 
-NonnullRefPtr<Action> Action::create(DeprecatedString text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+NonnullRefPtr<Action> Action::create(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
     return adopt_ref(*new Action(move(text), move(icon), move(callback), parent));
 }
@@ -33,12 +33,12 @@ NonnullRefPtr<Action> Action::create(DeprecatedString text, Shortcut const& shor
     return adopt_ref(*new Action(move(text), shortcut, alternate_shortcut, move(callback), parent));
 }
 
-NonnullRefPtr<Action> Action::create(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+NonnullRefPtr<Action> Action::create(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
     return adopt_ref(*new Action(move(text), shortcut, Shortcut {}, move(icon), move(callback), parent));
 }
 
-NonnullRefPtr<Action> Action::create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+NonnullRefPtr<Action> Action::create(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
     return adopt_ref(*new Action(move(text), shortcut, alternate_shortcut, move(icon), move(callback), parent));
 }
@@ -48,7 +48,7 @@ NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Function<v
     return adopt_ref(*new Action(move(text), move(callback), parent, true));
 }
 
-NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
     return adopt_ref(*new Action(move(text), move(icon), move(callback), parent, true));
 }
@@ -58,7 +58,7 @@ NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Shortcut c
     return adopt_ref(*new Action(move(text), shortcut, move(callback), parent, true));
 }
 
-NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
+NonnullRefPtr<Action> Action::create_checkable(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
     return adopt_ref(*new Action(move(text), shortcut, Shortcut {}, move(icon), move(callback), parent, true));
 }
@@ -86,7 +86,7 @@ Action::Action(DeprecatedString text, Function<void(Action&)> on_activation_call
 {
 }
 
-Action::Action(DeprecatedString text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+Action::Action(DeprecatedString text, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
     : Action(move(text), Shortcut {}, Shortcut {}, move(icon), move(on_activation_callback), parent, checkable)
 {
 }
@@ -101,7 +101,7 @@ Action::Action(DeprecatedString text, Shortcut const& shortcut, Shortcut const& 
 {
 }
 
-Action::Action(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+Action::Action(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))
     , m_text(move(text))

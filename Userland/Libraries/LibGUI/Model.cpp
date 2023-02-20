@@ -100,7 +100,7 @@ WeakPtr<PersistentHandle> Model::register_persistent_index(Badge<PersistentModel
 RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
 {
     auto mime_data = Core::MimeData::construct();
-    RefPtr<Gfx::Bitmap> bitmap;
+    RefPtr<Gfx::Bitmap const> bitmap;
 
     StringBuilder text_builder;
     StringBuilder data_builder;

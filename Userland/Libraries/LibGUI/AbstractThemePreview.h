@@ -22,8 +22,8 @@ class AbstractThemePreview : public GUI::Frame {
 public:
     virtual ~AbstractThemePreview() override = default;
 
-    Gfx::Palette const& preview_palette() const { return m_preview_palette; }
-    void set_preview_palette(Gfx::Palette const&);
+    Gfx::Palette& preview_palette() { return m_preview_palette; }
+    void set_preview_palette(Gfx::Palette&);
     ErrorOr<void> set_theme_from_file(StringView path, NonnullOwnPtr<Core::File>);
     void set_theme(Core::AnonymousBuffer const&);
 

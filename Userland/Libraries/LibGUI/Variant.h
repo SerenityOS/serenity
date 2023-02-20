@@ -21,7 +21,7 @@ namespace Detail {
 struct Boolean {
     bool value;
 };
-using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, DeprecatedString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap>, NonnullRefPtr<Gfx::Font>, GUI::Icon>;
+using VariantUnderlyingType = AK::Variant<Empty, Boolean, float, i32, i64, u32, u64, DeprecatedString, Color, Gfx::IntPoint, Gfx::IntSize, Gfx::IntRect, Gfx::TextAlignment, Gfx::ColorRole, Gfx::AlignmentRole, Gfx::FlagRole, Gfx::MetricRole, Gfx::PathRole, NonnullRefPtr<Gfx::Bitmap const>, NonnullRefPtr<Gfx::Font const>, GUI::Icon>;
 }
 
 class Variant : public Detail::VariantUnderlyingType {
@@ -57,7 +57,7 @@ public:
 
     template<OneOfIgnoringCV<Gfx::Bitmap, Gfx::Font> T>
     Variant(T const& value)
-        : Variant(NonnullRefPtr<RemoveCV<T>>(value))
+        : Variant(NonnullRefPtr<RemoveCV<T> const>(value))
     {
     }
     template<OneOfIgnoringCV<Gfx::Bitmap, Gfx::Font> T>
@@ -77,13 +77,13 @@ public:
     bool is_u64() const { return has<u64>(); }
     bool is_float() const { return has<float>(); }
     bool is_string() const { return has<DeprecatedString>(); }
-    bool is_bitmap() const { return has<NonnullRefPtr<Gfx::Bitmap>>(); }
+    bool is_bitmap() const { return has<NonnullRefPtr<Gfx::Bitmap const>>(); }
     bool is_color() const { return has<Color>(); }
     bool is_icon() const { return has<GUI::Icon>(); }
     bool is_point() const { return has<Gfx::IntPoint>(); }
     bool is_size() const { return has<Gfx::IntSize>(); }
     bool is_rect() const { return has<Gfx::IntRect>(); }
-    bool is_font() const { return has<NonnullRefPtr<Gfx::Font>>(); }
+    bool is_font() const { return has<NonnullRefPtr<Gfx::Font const>>(); }
     bool is_text_alignment() const { return has<Gfx::TextAlignment>(); }
     bool is_color_role() const { return has<Gfx::ColorRole>(); }
     bool is_alignment_role() const { return has<Gfx::AlignmentRole>(); }
@@ -103,7 +103,7 @@ public:
             [](Gfx::IntPoint const& v) { return !v.is_zero(); },
             [](OneOf<Gfx::IntRect, Gfx::IntSize> auto const& v) { return !v.is_empty(); },
             [](Enum auto const&) { return true; },
-            [](OneOf<float, DeprecatedString, Color, NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Gfx::Bitmap>, GUI::Icon> auto const&) { return true; });
+            [](OneOf<float, DeprecatedString, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) { return true; });
     }
 
     i32 as_i32() const { return get<i32>(); }
@@ -126,7 +126,7 @@ public:
                     return v.to_int<T>().value_or(0);
             },
             [](Enum auto const&) -> T { return 0; },
-            [](OneOf<Gfx::IntPoint, Gfx::IntRect, Gfx::IntSize, Color, NonnullRefPtr<Gfx::Font>, NonnullRefPtr<Gfx::Bitmap>, GUI::Icon> auto const&) -> T { return 0; });
+            [](OneOf<Gfx::IntPoint, Gfx::IntRect, Gfx::IntSize, Color, NonnullRefPtr<Gfx::Font const>, NonnullRefPtr<Gfx::Bitmap const>, GUI::Icon> auto const&) -> T { return 0; });
     }
 
     i32 to_i32() const { return to_integer<i32>(); }
@@ -144,10 +144,10 @@ public:
     Gfx::IntSize as_size() const { return get<Gfx::IntSize>(); }
     Gfx::IntRect as_rect() const { return get<Gfx::IntRect>(); }
     DeprecatedString as_string() const { return get<DeprecatedString>(); }
-    Gfx::Bitmap const& as_bitmap() const { return *get<NonnullRefPtr<Gfx::Bitmap>>(); }
+    Gfx::Bitmap const& as_bitmap() const { return *get<NonnullRefPtr<Gfx::Bitmap const>>(); }
     GUI::Icon as_icon() const { return get<GUI::Icon>(); }
     Color as_color() const { return get<Color>(); }
-    Gfx::Font const& as_font() const { return *get<NonnullRefPtr<Gfx::Font>>(); }
+    Gfx::Font const& as_font() const { return *get<NonnullRefPtr<Gfx::Font const>>(); }
 
     Gfx::TextAlignment to_text_alignment(Gfx::TextAlignment default_value) const
     {
@@ -211,8 +211,8 @@ public:
             [](Gfx::FlagRole v) { return DeprecatedString::formatted("Gfx::FlagRole::{}", Gfx::to_string(v)); },
             [](Gfx::MetricRole v) { return DeprecatedString::formatted("Gfx::MetricRole::{}", Gfx::to_string(v)); },
             [](Gfx::PathRole v) { return DeprecatedString::formatted("Gfx::PathRole::{}", Gfx::to_string(v)); },
-            [](NonnullRefPtr<Gfx::Font> const& font) { return DeprecatedString::formatted("[Font: {}]", font->name()); },
-            [](NonnullRefPtr<Gfx::Bitmap> const&) -> DeprecatedString { return "[Gfx::Bitmap]"; },
+            [](NonnullRefPtr<Gfx::Font const> const& font) { return DeprecatedString::formatted("[Font: {}]", font->name()); },
+            [](NonnullRefPtr<Gfx::Bitmap const> const&) -> DeprecatedString { return "[Gfx::Bitmap]"; },
             [](GUI::Icon const&) -> DeprecatedString { return "[GUI::Icon]"; },
             [](Detail::Boolean v) { return DeprecatedString::formatted("{}", v.value); },
             [](auto const& v) { return DeprecatedString::formatted("{}", v); });

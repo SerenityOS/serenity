@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, networkException <networkexception@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
@@ -562,12 +562,12 @@ void TextEditor::paint_event(PaintEvent& event)
                 auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
                 if (is_displayonly() && is_focused())
                     unspanned_color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
-                RefPtr<Gfx::Font> unspanned_font = this->font();
+                RefPtr<Gfx::Font const> unspanned_font = this->font();
 
                 size_t next_column = 0;
                 Gfx::IntRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
 
-                auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font>& font, Gfx::TextAttributes text_attributes) {
+                auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font const>& font, Gfx::TextAttributes text_attributes) {
                     size_t length = end - start;
                     if (length == 0)
                         return;
