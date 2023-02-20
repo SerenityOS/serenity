@@ -579,10 +579,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     draw_text(span_rect, text, *font, m_text_alignment, text_attributes);
                     span_rect.translate_by(span_rect.width(), 0);
                 };
-                for (;;) {
-                    if (span_index >= document().spans().size()) {
-                        break;
-                    }
+                while (span_index < document().spans().size()) {
                     auto& span = document().spans()[span_index];
                     if (span.range.start().line() > line_index
                         || (span.range.start().line() == line_index && span.range.start().column() >= start_of_visual_line + visual_line_text.length())) {
