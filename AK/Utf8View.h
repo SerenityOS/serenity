@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -162,6 +163,11 @@ public:
 private:
     DeprecatedString m_string;
     Utf8CodePointIterator m_it;
+};
+
+template<>
+struct Formatter<Utf8View> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder&, Utf8View const&);
 };
 
 }
