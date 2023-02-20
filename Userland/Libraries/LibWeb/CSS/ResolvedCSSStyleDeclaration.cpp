@@ -54,7 +54,7 @@ static RefPtr<StyleValue> style_value_for_display(CSS::Display display)
         return IdentifierStyleValue::create(CSS::ValueID::None);
 
     if (display.is_outside_and_inside()) {
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         switch (display.outside()) {
         case CSS::Display::Outside::Inline:
             values.append(IdentifierStyleValue::create(CSS::ValueID::Inline));
@@ -288,7 +288,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         if (box_shadow_layers.size() == 1)
             return make_box_shadow_style_value(box_shadow_layers.first());
 
-        NonnullRefPtrVector<StyleValue> box_shadow;
+        StyleValueVector box_shadow;
         box_shadow.ensure_capacity(box_shadow_layers.size());
         for (auto const& layer : box_shadow_layers)
             box_shadow.append(make_box_shadow_style_value(layer));
@@ -412,7 +412,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().list_style_type()));
     case CSS::PropertyID::Margin: {
         auto margin = layout_node.computed_values().margin();
-        auto values = NonnullRefPtrVector<StyleValue> {};
+        auto values = StyleValueVector {};
         values.append(style_value_for_length_percentage(margin.top()));
         values.append(style_value_for_length_percentage(margin.right()));
         values.append(style_value_for_length_percentage(margin.bottom()));
@@ -445,7 +445,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().overflow_y()));
     case CSS::PropertyID::Padding: {
         auto padding = layout_node.computed_values().padding();
-        auto values = NonnullRefPtrVector<StyleValue> {};
+        auto values = StyleValueVector {};
         values.append(style_value_for_length_percentage(padding.top()));
         values.append(style_value_for_length_percentage(padding.right()));
         values.append(style_value_for_length_percentage(padding.bottom()));
@@ -472,7 +472,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         auto text_decoration_lines = layout_node.computed_values().text_decoration_line();
         if (text_decoration_lines.is_empty())
             return IdentifierStyleValue::create(ValueID::None);
-        NonnullRefPtrVector<StyleValue> style_values;
+        StyleValueVector style_values;
         for (auto const& line : text_decoration_lines) {
             style_values.append(IdentifierStyleValue::create(to_value_id(line)));
         }
@@ -505,7 +505,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         //        https://w3c.github.io/csswg-drafts/css-transforms-2/#serialization-of-the-computed-value
         auto affine_matrix = paintable_box->stacking_context()->affine_transform_matrix();
 
-        NonnullRefPtrVector<StyleValue> parameters;
+        StyleValueVector parameters;
         parameters.ensure_capacity(6);
         parameters.append(NumericStyleValue::create_float(affine_matrix.a()));
         parameters.append(NumericStyleValue::create_float(affine_matrix.b()));
@@ -517,7 +517,7 @@ RefPtr<StyleValue> ResolvedCSSStyleDeclaration::style_value_for_property(Layout:
         NonnullRefPtr<StyleValue> matrix_function = TransformationStyleValue::create(TransformFunction::Matrix, move(parameters));
         // Elsewhere we always store the transform property's value as a StyleValueList of TransformationStyleValues,
         // so this is just for consistency.
-        NonnullRefPtrVector<StyleValue> matrix_functions;
+        StyleValueVector matrix_functions;
         matrix_functions.append(matrix_function);
         return StyleValueList::create(move(matrix_functions), StyleValueList::Separator::Space);
     }
