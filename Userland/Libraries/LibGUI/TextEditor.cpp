@@ -606,11 +606,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         // draw unspanned text between spans
                         draw_text_helper(next_column, span_start, unspanned_font, { unspanned_color });
                     }
-                    auto font = unspanned_font;
-                    if (span.attributes.bold) {
-                        if (auto bold_font = Gfx::FontDatabase::the().get(font->family(), font->presentation_size(), 700, font->width(), 0))
-                            font = bold_font;
-                    }
+                    auto font = span.attributes.bold ? unspanned_font->bold_variant() : unspanned_font;
                     draw_text_helper(span_start, span_end, font, span.attributes);
                     next_column = span_end;
                     if (!span_consumed) {
