@@ -194,7 +194,6 @@ struct JPEGLoadingContext {
     StartOfFrame frame;
     u8 hsample_factor { 0 };
     u8 vsample_factor { 0 };
-    u8 component_count { 0 };
     Vector<ComponentSpec, 3> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_restart_interval { 0 };
@@ -290,7 +289,7 @@ static inline i32* get_component(Macroblock& block, unsigned component)
  */
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
-    for (unsigned component_i = 0; component_i < context.component_count; component_i++) {
+    for (unsigned component_i = 0; component_i < context.components.size(); component_i++) {
         auto& component = context.components[component_i];
 
         if (component.dc_destination_id >= context.dc_tables.size())
@@ -517,15 +516,14 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
     u8 component_count = TRY(stream.read_value<u8>());
-    if (component_count != context.component_count) {
+    if (component_count != context.components.size()) {
         dbgln_if(JPEG_DEBUG, "{}: Unsupported number of components: {}!", TRY(stream.tell()), component_count);
         return Error::from_string_literal("Unsupported number of components");
     }
 
-    for (int i = 0; i < component_count; i++) {
+    for (auto& component : context.components) {
         u8 component_id = TRY(stream.read_value<u8>());
 
-        auto& component = context.components[i];
         if (component.id != component_id) {
             dbgln("JPEG decode failed (component.id != component_id)");
             return Error::from_string_literal("JPEG decode failed (component.id != component_id)");
@@ -782,13 +780,13 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
 
     set_macroblock_metadata(context);
 
-    context.component_count = TRY(stream.read_value<u8>());
-    if (context.component_count != 1 && context.component_count != 3) {
-        dbgln_if(JPEG_DEBUG, "{}: Unsupported number of components in SOF: {}!", TRY(stream.tell()), context.component_count);
+    auto component_count = TRY(stream.read_value<u8>());
+    if (component_count != 1 && component_count != 3) {
+        dbgln_if(JPEG_DEBUG, "{}: Unsupported number of components in SOF: {}!", TRY(stream.tell()), component_count);
         return Error::from_string_literal("Unsupported number of components in SOF");
     }
 
-    for (u8 i = 0; i < context.component_count; i++) {
+    for (u8 i = 0; i < component_count; i++) {
         ComponentSpec component;
         component.id = TRY(stream.read_value<u8>());
 
@@ -799,7 +797,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
         if (i == 0) {
             // If there is only a single component, i.e. grayscale, the macroblocks will not be interleaved, even if
             // the horizontal or vertical sample factor is larger than 1.
-            if (context.component_count == 1) {
+            if (component_count == 1) {
                 component.hsample_factor = 1;
                 component.vsample_factor = 1;
             }
@@ -881,7 +879,7 @@ static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblo
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u32 i = 0; i < context.component_count; i++) {
+            for (u32 i = 0; i < context.components.size(); i++) {
                 auto& component = context.components[i];
                 u32 const* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
@@ -917,7 +915,7 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u32 component_i = 0; component_i < context.component_count; component_i++) {
+            for (u32 component_i = 0; component_i < context.components.size(); component_i++) {
                 auto& component = context.components[component_i];
                 for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
