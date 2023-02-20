@@ -141,9 +141,9 @@ set(KERNEL_SOURCES
     FileSystem/Plan9FS/FileSystem.cpp
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp
-    FileSystem/ProcFS/ComponentRegistry.cpp
     FileSystem/ProcFS/FileSystem.cpp
     FileSystem/ProcFS/Inode.cpp
+    FileSystem/ProcFS/ProcessExposed.cpp
     FileSystem/RAMFS/FileSystem.cpp
     FileSystem/RAMFS/Inode.cpp
     FileSystem/SysFS/Component.cpp
@@ -255,10 +255,7 @@ set(KERNEL_SOURCES
     Net/UDPSocket.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
-    ProcessExposed.cpp
-    ProcessSpecificExposed.cpp
     ProcessGroup.cpp
-    ProcessProcFSTraits.cpp
     Random.cpp
     Scheduler.cpp
     ScopedCritical.cpp

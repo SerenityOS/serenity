@@ -32,7 +32,6 @@
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/ProcessExposed.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
@@ -159,8 +158,6 @@ public:
     };
 
 public:
-    class ProcessProcFSTraits;
-
     static Process& current()
     {
         auto* current_thread = Processor::current_thread();
@@ -639,7 +636,8 @@ private:
     ErrorOr<FlatPtr> read_impl(int fd, Userspace<u8*> buffer, size_t size);
 
 public:
-    NonnullLockRefPtr<ProcessProcFSTraits> procfs_traits() const { return *m_procfs_traits; }
+    ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
+    ErrorOr<NonnullLockRefPtr<Inode>> lookup_as_directory(ProcFS&, StringView name) const;
     ErrorOr<void> procfs_get_fds_stats(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_perf_events(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_unveil_stats(KBufferBuilder& builder) const;
@@ -651,11 +649,11 @@ public:
     mode_t binary_link_required_mode() const;
     ErrorOr<void> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_stacks_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_stacks_directory(ProcFS const&, StringView name) const;
+    ErrorOr<NonnullLockRefPtr<Inode>> lookup_stacks_directory(ProcFS&, StringView name) const;
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_file_descriptions_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS const&, StringView name) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_children_directory(ProcFS const&, StringView name) const;
+    ErrorOr<NonnullLockRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS&, StringView name) const;
+    ErrorOr<NonnullLockRefPtr<Inode>> lookup_children_directory(ProcFS&, StringView name) const;
     ErrorOr<void> traverse_children_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<size_t> procfs_get_child_process_link(ProcessID child_pid, KBufferBuilder& builder) const;
 
@@ -809,32 +807,6 @@ public:
         OpenFileDescriptionAndFlags* m_description { nullptr };
     };
 
-    class ProcessProcFSTraits : public ProcFSExposedComponent {
-    public:
-        static ErrorOr<NonnullLockRefPtr<ProcessProcFSTraits>> try_create(Badge<Process>, LockWeakPtr<Process> process)
-        {
-            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) ProcessProcFSTraits(move(process)));
-        }
-
-        virtual InodeIndex component_index() const override;
-        virtual ErrorOr<NonnullLockRefPtr<ProcFSInode>> to_inode(ProcFS const& procfs_instance) const override;
-        virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-        virtual mode_t required_mode() const override { return 0555; }
-
-        virtual UserID owner_user() const override;
-        virtual GroupID owner_group() const override;
-
-    private:
-        explicit ProcessProcFSTraits(LockWeakPtr<Process> process)
-            : m_process(move(process))
-        {
-        }
-
-        // NOTE: We need to weakly hold on to the process, because otherwise
-        //       we would be creating a reference cycle.
-        LockWeakPtr<Process> m_process;
-    };
-
     MutexProtected<OpenFileDescriptions>& fds() { return m_fds; }
     MutexProtected<OpenFileDescriptions> const& fds() const { return m_fds; }
 
@@ -913,7 +885,6 @@ private:
     SpinlockProtected<Array<CoredumpProperty, 4>, LockRank::None> m_coredump_properties {};
     NonnullLockRefPtrVector<Thread> m_threads_for_coredump;
 
-    mutable LockRefPtr<ProcessProcFSTraits> m_procfs_traits;
     struct SignalActionData {
         VirtualAddress handler_or_sigaction;
         int flags { 0 };

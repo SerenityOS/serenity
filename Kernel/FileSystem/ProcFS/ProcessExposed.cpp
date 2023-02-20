@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2023, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,10 +14,29 @@
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
-#include <Kernel/ProcessExposed.h>
 #include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
+
+ErrorOr<void> Process::traverse_as_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
+{
+    TRY(callback({ main_process_directory_root_entry.name, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), main_process_directory_root_entry) }, main_process_directory_root_entry.file_type }));
+    TRY(callback({ ".."sv, { fsid, ProcFSInode::create_index_from_global_directory_entry(global_inode_ids[0]) }, global_inode_ids[0].file_type }));
+
+    for (auto& entry : main_process_directory_entries) {
+        TRY(callback({ entry.name, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), entry) }, entry.file_type }));
+    }
+    return {};
+}
+
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_as_directory(ProcFS& procfs, StringView name) const
+{
+    for (auto& entry : main_process_directory_entries) {
+        if (entry.name == name)
+            return procfs.get_inode({ procfs.fsid(), ProcFSInode::create_index_from_process_directory_entry(pid(), entry) });
+    }
+    return ENOENT;
+}
 
 ErrorOr<void> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const
 {
@@ -44,33 +63,36 @@ ErrorOr<void> Process::procfs_get_thread_stack(ThreadID thread_id, KBufferBuilde
 
 ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ "."sv, { fsid, SegmentedProcFSIndex::build_segmented_index_for_main_property(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Stacks, SegmentedProcFSIndex::MainProcessProperty::Reserved) }, 0 }));
-    TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), process_stacks_subdirectory_root_entry) }, DT_DIR }));
+    TRY(callback({ ".."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), main_process_directory_root_entry) }, main_process_directory_root_entry.file_type }));
 
     return thread_list().with([&](auto& list) -> ErrorOr<void> {
         for (auto const& thread : list) {
-            int tid = thread.tid().value();
-            InodeIdentifier identifier = { fsid, SegmentedProcFSIndex::build_segmented_index_for_thread_stack(pid(), thread.tid()) };
-            auto name = TRY(KString::number(tid));
+            // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
+            auto entry = segmented_process_directory_entry { {}, DT_REG, process_stacks_subdirectory_root_entry.subdirectory, static_cast<u32>(thread.tid().value() + 1) };
+            InodeIdentifier identifier = { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), entry) };
+            auto name = TRY(KString::number(thread.tid().value()));
             TRY(callback({ name->view(), identifier, 0 }));
         }
         return {};
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const& procfs, StringView name) const
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS& procfs, StringView name) const
 {
     auto maybe_needle = name.to_uint();
     if (!maybe_needle.has_value())
         return ENOENT;
     auto needle = maybe_needle.release_value();
 
-    ErrorOr<NonnullLockRefPtr<ProcFSInode>> thread_stack_inode { ENOENT };
+    ErrorOr<NonnullLockRefPtr<Inode>> thread_stack_inode { ENOENT };
     for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
         if (needle == (unsigned)tid) {
-            thread_stack_inode = ProcFSInode::try_create_as_thread_stack_inode(procfs, thread.tid(), pid());
+            // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
+            auto entry = segmented_process_directory_entry { {}, DT_REG, process_stacks_subdirectory_root_entry.subdirectory, static_cast<u32>(thread.tid().value() + 1) };
+            thread_stack_inode = procfs.get_inode({ procfs.fsid(), ProcFSInode::create_index_from_process_directory_entry(pid(), entry) });
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -83,19 +105,21 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS const&
 
 ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ "."sv, { fsid, SegmentedProcFSIndex::build_segmented_index_for_sub_directory(pid(), SegmentedProcFSIndex::ProcessSubDirectory::Children) }, 0 }));
-    TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
+    TRY(callback({ "."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), process_children_subdirectory_root_entry) }, DT_DIR }));
+    TRY(callback({ ".."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), main_process_directory_root_entry) }, main_process_directory_root_entry.file_type }));
     return Process::for_each_in_same_jail([&](Process& process) -> ErrorOr<void> {
         if (process.ppid() == pid()) {
-            StringBuilder builder;
-            builder.appendff("{}", process.pid());
-            TRY(callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_children(pid(), process.pid()) }, DT_LNK }));
+            auto name = TRY(KString::number(process.pid().value()));
+            // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
+            auto entry = segmented_process_directory_entry { {}, DT_LNK, process_children_subdirectory_root_entry.subdirectory, static_cast<u32>(process.pid().value() + 1) };
+            InodeIdentifier identifier = { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), entry) };
+            TRY(callback({ name->view(), identifier, DT_LNK }));
         }
         return {};
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS const& procfs, StringView name) const
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS& procfs, StringView name) const
 {
     auto maybe_pid = name.to_uint();
     if (!maybe_pid.has_value())
@@ -105,7 +129,9 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS cons
     if (!child_process || child_process->ppid() != pid())
         return ENOENT;
 
-    return TRY(ProcFSInode::try_create_as_child_process_link_inode(procfs, *maybe_pid, pid()));
+    // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
+    auto entry = segmented_process_directory_entry { {}, DT_LNK, process_children_subdirectory_root_entry.subdirectory, (maybe_pid.value() + 1) };
+    return procfs.get_inode({ procfs.fsid(), ProcFSInode::create_index_from_process_directory_entry(pid(), entry) });
 }
 
 ErrorOr<size_t> Process::procfs_get_child_process_link(ProcessID child_pid, KBufferBuilder& builder) const
@@ -125,26 +151,28 @@ ErrorOr<size_t> Process::procfs_get_file_description_link(unsigned fd, KBufferBu
 
 ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
-    TRY(callback({ "."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
-    TRY(callback({ ".."sv, { fsid, m_procfs_traits->component_index() }, 0 }));
-    size_t count = 0;
-    fds().with_shared([&](auto& fds) {
-        fds.enumerate([&](auto& file_description_metadata) {
+    TRY(callback({ "."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), process_fd_subdirectory_root_entry) }, DT_DIR }));
+    TRY(callback({ ".."sv, { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), main_process_directory_root_entry) }, main_process_directory_root_entry.file_type }));
+    u32 count = 0;
+    TRY(fds().with_shared([&](auto& fds) -> ErrorOr<void> {
+        return fds.try_enumerate([&](auto& file_description_metadata) -> ErrorOr<void> {
             if (!file_description_metadata.is_valid()) {
                 count++;
-                return;
+                return {};
             }
-            StringBuilder builder;
-            builder.appendff("{}", count);
-            // FIXME: Propagate errors from callback.
-            (void)callback({ builder.string_view(), { fsid, SegmentedProcFSIndex::build_segmented_index_for_file_description(pid(), count) }, DT_LNK });
+            auto name = TRY(KString::number(count));
+            // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
+            auto entry = segmented_process_directory_entry { {}, DT_LNK, process_fd_subdirectory_root_entry.subdirectory, count + 1 };
+            InodeIdentifier identifier = { fsid, ProcFSInode::create_index_from_process_directory_entry(pid(), entry) };
+            TRY(callback({ name->view(), identifier, DT_LNK }));
             count++;
+            return {};
         });
-    });
+    }));
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS const& procfs, StringView name) const
+ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())
@@ -153,7 +181,9 @@ ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_file_descriptions_directory(Pr
     if (!m_fds.with_shared([&](auto& fds) { return fds.get_if_valid(*maybe_index); }))
         return ENOENT;
 
-    return TRY(ProcFSInode::try_create_as_file_description_link_inode(procfs, *maybe_index, pid()));
+    // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.
+    auto entry = segmented_process_directory_entry { {}, DT_LNK, process_fd_subdirectory_root_entry.subdirectory, (maybe_index.value() + 1) };
+    return procfs.get_inode({ procfs.fsid(), ProcFSInode::create_index_from_process_directory_entry(pid(), entry) });
 }
 
 ErrorOr<void> Process::procfs_get_pledge_stats(KBufferBuilder& builder) const
@@ -328,7 +358,7 @@ mode_t Process::binary_link_required_mode() const
 {
     if (!executable())
         return 0;
-    return m_procfs_traits->required_mode();
+    return 0555;
 }
 
 ErrorOr<void> Process::procfs_get_binary_link(KBufferBuilder& builder) const
