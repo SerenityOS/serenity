@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +34,7 @@ public:
 
     // ^Gfx::Font
     virtual NonnullRefPtr<Font> clone() const override { return MUST(try_clone()); } // FIXME: clone() should not need to be implemented
-    virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return *this; }
+    virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return const_cast<ScaledFont&>(*this); }
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual float pixel_size() const override { return m_point_height * 1.33333333f; }
     virtual Gfx::FontPixelMetrics pixel_metrics() const override;
