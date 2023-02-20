@@ -39,7 +39,7 @@ public:
         return gallery;
     }
 
-    void set_preview_palette(Gfx::Palette const& palette)
+    void set_preview_palette(Gfx::Palette& palette)
     {
         set_palette(palette);
         Function<void(GUI::Widget&)> recurse = [&](GUI::Widget& parent_widget) {

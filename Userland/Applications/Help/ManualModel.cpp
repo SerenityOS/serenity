@@ -149,7 +149,7 @@ GUI::ModelIndex ManualModel::parent_index(const GUI::ModelIndex& index) const
         return {};
     auto children = maybe_children.release_value();
     for (size_t row = 0; row < children.size(); row++) {
-        Manual::Node* child_at_row = children[row];
+        Manual::Node const* child_at_row = children[row];
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }

@@ -48,7 +48,7 @@ public:
 
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
-    RefPtr<Gfx::Bitmap> get_piece_graphic(Chess::Piece const& piece) const;
+    RefPtr<Gfx::Bitmap const> get_piece_graphic(Chess::Piece const& piece) const;
 
     bool show_available_moves() const { return m_show_available_moves; }
     void set_show_available_moves(bool e) { m_show_available_moves = e; }
@@ -128,7 +128,7 @@ private:
     Color m_marking_alternate_color { Color::from_argb(0x66ffaa00) };
     Color m_marking_secondary_color { Color::from_argb(0x6655dd55) };
     Chess::Color m_side { Chess::Color::White };
-    HashMap<Chess::Piece, RefPtr<Gfx::Bitmap>> m_pieces;
+    HashMap<Chess::Piece, RefPtr<Gfx::Bitmap const>> m_pieces;
     DeprecatedString m_piece_set;
     Chess::Square m_moving_square { 50, 50 };
     Gfx::IntPoint m_drag_point;

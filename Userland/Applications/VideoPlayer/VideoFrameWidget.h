@@ -26,7 +26,6 @@ public:
     virtual ~VideoFrameWidget() override = default;
 
     void set_bitmap(Gfx::Bitmap const*);
-    Gfx::Bitmap* bitmap() { return m_bitmap.ptr(); }
     Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
 
     void set_sizing_mode(VideoSizingMode value) { m_sizing_mode = value; }
@@ -44,7 +43,7 @@ protected:
     virtual void paint_event(GUI::PaintEvent&) override;
 
 private:
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap const> m_bitmap;
     VideoSizingMode m_sizing_mode { VideoSizingMode::Fit };
     bool m_auto_resize { false };
 };
