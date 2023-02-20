@@ -18,6 +18,7 @@
 #ifdef KERNEL
 #    include <Kernel/Process.h>
 #    include <Kernel/Thread.h>
+#    include <Kernel/Time/TimeManagement.h>
 #else
 #    include <math.h>
 #    include <stdio.h>
