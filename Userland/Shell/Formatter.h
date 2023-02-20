@@ -117,8 +117,8 @@ private:
     StringView m_source;
     size_t m_output_cursor { 0 };
     ssize_t m_cursor { -1 };
-    RefPtr<AST::Node> m_root_node;
-    AST::Node* m_hit_node { nullptr };
+    RefPtr<AST::Node const> m_root_node;
+    AST::Node const* m_hit_node { nullptr };
 
     const AST::Node* m_parent_node { nullptr };
     const AST::Node* m_last_visited_node { nullptr };

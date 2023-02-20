@@ -554,7 +554,7 @@ int Shell::builtin_export(int argc, char const** argv)
         if (parts.size() == 1) {
             auto value = lookup_local_variable(parts[0]);
             if (value) {
-                auto values = value->resolve_as_list(*this);
+                auto values = const_cast<AST::Value&>(*value).resolve_as_list(*this);
                 StringBuilder builder;
                 builder.join(' ', values);
                 parts.append(builder.to_deprecated_string());
@@ -946,9 +946,9 @@ int Shell::builtin_shift(int argc, char const** argv)
     }
 
     if (!argv_->is_list())
-        argv_ = adopt_ref(*new AST::ListValue({ argv_.release_nonnull() }));
+        argv_ = adopt_ref(*new AST::ListValue({ const_cast<AST::Value&>(*argv_) }));
 
-    auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
+    auto& values = const_cast<AST::ListValue*>(static_cast<AST::ListValue const*>(argv_.ptr()))->values();
     if ((size_t)count > values.size()) {
         warnln("shift: shift count must not be greater than {}", values.size());
         return 1;
@@ -975,7 +975,7 @@ int Shell::builtin_source(int argc, char const** argv)
     auto previous_argv = lookup_local_variable("ARGV"sv);
     ScopeGuard guard { [&] {
         if (!args.is_empty())
-            set_local_variable("ARGV", move(previous_argv));
+            set_local_variable("ARGV", const_cast<AST::Value&>(*previous_argv));
     } };
 
     if (!args.is_empty())
@@ -1337,7 +1337,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     auto enlist = [&](auto name, auto value) -> NonnullRefPtr<AST::Value> {
         auto variable = lookup_local_variable(name);
         if (variable) {
-            auto list = variable->resolve_as_list(*this);
+            auto list = const_cast<AST::Value&>(*variable).resolve_as_list(*this);
             auto new_value = value->resolve_as_string(*this);
             list.append(move(new_value));
             return make_ref_counted<AST::ListValue>(move(list));

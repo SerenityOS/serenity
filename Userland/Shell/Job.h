@@ -63,7 +63,7 @@ public:
     bool should_announce_signal() const { return m_should_announce_signal; }
     bool is_suspended() const { return m_is_suspended; }
     bool shell_did_continue() const { return m_shell_did_continue; }
-    void unblock() const;
+    void unblock();
 
     Core::ElapsedTimer& timer() { return m_command_timer; }
 

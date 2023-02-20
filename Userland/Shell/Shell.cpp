@@ -350,7 +350,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::lookup_local_variable(StringView name) const
+RefPtr<AST::Value const> Shell::lookup_local_variable(StringView name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -361,7 +361,7 @@ RefPtr<AST::Value> Shell::lookup_local_variable(StringView name) const
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::get_argument(size_t index) const
+RefPtr<AST::Value const> Shell::get_argument(size_t index) const
 {
     if (index == 0)
         return adopt_ref(*new AST::StringValue(current_script));
@@ -369,7 +369,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     --index;
     if (auto argv = lookup_local_variable("ARGV"sv)) {
         if (argv->is_list_without_resolution()) {
-            AST::ListValue* list = static_cast<AST::ListValue*>(argv.ptr());
+            AST::ListValue const* list = static_cast<AST::ListValue const*>(argv.ptr());
             if (list->values().size() <= index)
                 return nullptr;
 
@@ -390,7 +390,7 @@ DeprecatedString Shell::local_variable_or(StringView name, DeprecatedString cons
     auto value = lookup_local_variable(name);
     if (value) {
         StringBuilder builder;
-        builder.join(' ', value->resolve_as_list(*this));
+        builder.join(' ', const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)));
         return builder.to_deprecated_string();
     }
     return replacement;
@@ -1068,7 +1068,7 @@ bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const
     if (!value)
         return false;
 
-    return value->resolve_as_list(*this).contains_slow(command.argv[0]);
+    return const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).contains_slow(command.argv[0]);
 }
 
 void Shell::restore_ios()
@@ -1093,7 +1093,7 @@ void Shell::block_on_pipeline(RefPtr<AST::Pipeline> pipeline)
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
-    TemporaryChange<Job const*> current_job { m_current_job, job.ptr() };
+    TemporaryChange<Job*> current_job { m_current_job, job.ptr() };
 
     if (!job)
         return;
@@ -1671,7 +1671,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         if (!node)
             return Error::from_string_literal("Cannot complete");
 
-        program_name_storage = node->run(*this)->resolve_as_string(*this);
+        program_name_storage = const_cast<AST::Node&>(*node).run(*this)->resolve_as_string(*this);
         known_program_name = program_name_storage;
     }
 
@@ -2281,7 +2281,7 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-Job const* Shell::find_job(u64 id, bool is_pid)
+Job* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
         if (is_pid) {
