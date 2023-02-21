@@ -30,6 +30,9 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
         if (executable.exported_blocks->contains(*entry.value.begin()))
             continue;
 
+        if (!entry.key->is_terminated())
+            continue;
+
         if (entry.key->terminator()->type() != Instruction::Type::Jump)
             continue;
 
