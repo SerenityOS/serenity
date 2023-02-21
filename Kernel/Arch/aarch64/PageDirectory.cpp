@@ -49,12 +49,14 @@ LockRefPtr<PageDirectory> PageDirectory::find_current()
 void activate_kernel_page_directory(PageDirectory const& page_directory)
 {
     Aarch64::Asm::set_ttbr0_el1(page_directory.ttbr0());
+    Processor::flush_entire_tlb_local();
 }
 
 void activate_page_directory(PageDirectory const& page_directory, Thread* current_thread)
 {
     current_thread->regs().ttbr0_el1 = page_directory.ttbr0();
     Aarch64::Asm::set_ttbr0_el1(page_directory.ttbr0());
+    Processor::flush_entire_tlb_local();
 }
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<PageDirectory> PageDirectory::must_create_kernel_page_directory()

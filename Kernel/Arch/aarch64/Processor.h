@@ -273,6 +273,8 @@ public:
 
     static void set_thread_specific_data(VirtualAddress thread_specific_data);
 
+    static void flush_entire_tlb_local();
+
 private:
     Processor(Processor const&) = delete;
 

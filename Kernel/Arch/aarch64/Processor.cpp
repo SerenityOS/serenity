@@ -113,7 +113,15 @@ void Processor::flush_tlb_local(VirtualAddress, size_t)
 {
     // FIXME: Figure out how to flush a single page
     asm volatile("dsb ishst");
-    asm volatile("tlbi vmalle1is");
+    asm volatile("tlbi vmalle1");
+    asm volatile("dsb ish");
+    asm volatile("isb");
+}
+
+void Processor::flush_entire_tlb_local()
+{
+    asm volatile("dsb ishst");
+    asm volatile("tlbi vmalle1");
     asm volatile("dsb ish");
     asm volatile("isb");
 }
@@ -529,8 +537,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
-    if (from_regs.ttbr0_el1 != to_regs.ttbr0_el1)
+    if (from_regs.ttbr0_el1 != to_regs.ttbr0_el1) {
         Aarch64::Asm::set_ttbr0_el1(to_regs.ttbr0_el1);
+        Processor::flush_entire_tlb_local();
+    }
 
     to_thread->set_cpu(Processor::current().id());
 
