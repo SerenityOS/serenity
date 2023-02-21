@@ -777,7 +777,10 @@ JS::GCPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_
 AK::URL Document::fallback_base_url() const
 {
     // FIXME: 1. If document is an iframe srcdoc document, then return the document base URL of document's browsing context's container document.
-    // FIXME: 2. If document's URL is about:blank, and document's browsing context's creator base URL is non-null, then return that creator base URL.
+
+    // 2. If document's URL is about:blank, and document's browsing context's creator base URL is non-null, then return that creator base URL.
+    if (m_url == "about:blank"sv && browsing_context() && browsing_context()->creator_url().has_value())
+        return browsing_context()->creator_url().value();
 
     // 3. Return document's URL.
     return m_url;
