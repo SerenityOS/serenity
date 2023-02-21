@@ -212,6 +212,10 @@ public:
             VERIFY(!(SHIFTED_INT32_TAG & (static_cast<i32>(value) & 0xFFFFFFFFul)));
             m_value.encoded = SHIFTED_INT32_TAG | (static_cast<i32>(value) & 0xFFFFFFFFul);
         } else {
+#ifdef AK_OS_NETBSD
+            // Use standard namespace, otherwise it won't find isnan() on NetBSD.
+            using namespace std;
+#endif
             if (isnan(value)) [[unlikely]]
                 m_value.encoded = CANON_NAN_BITS;
             else
