@@ -227,7 +227,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    args_parser.print_usage(stderr, arguments.argv[0]);
+    args_parser.print_usage(stderr, arguments.strings[0]);
 
     return 1;
 }

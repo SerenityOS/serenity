@@ -52,8 +52,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .long_name = "header-include-path",
         .short_name = 'i',
         .value_name = "path",
-        .accept_value = [&](char const* s) {
-            s_header_search_paths.append({ s, strlen(s) });
+        .accept_value = [&](StringView s) {
+            s_header_search_paths.append(s);
             return true;
         },
     });

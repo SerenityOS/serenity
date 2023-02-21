@@ -35,12 +35,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "body-numbering",
         'b',
         "style",
-        [&number_style](char const* s) {
-            if (!strcmp(s, "t"))
+        [&number_style](StringView s) {
+            if (s == "t"sv)
                 number_style = NumberNonEmptyLines;
-            else if (!strcmp(s, "a"))
+            else if (s == "a"sv)
                 number_style = NumberAllLines;
-            else if (!strcmp(s, "n"))
+            else if (s == "n"sv)
                 number_style = NumberNoLines;
             else
                 return false;

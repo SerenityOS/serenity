@@ -33,12 +33,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (resize.is_empty() && reference.is_empty()) {
-        args_parser.print_usage(stderr, arguments.argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
     if (!resize.is_empty() && !reference.is_empty()) {
-        args_parser.print_usage(stderr, arguments.argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto size_opt = str.to_int<off_t>();
         if (!size_opt.has_value()) {
-            args_parser.print_usage(stderr, arguments.argv[0]);
+            args_parser.print_usage(stderr, arguments.strings[0]);
             return 1;
         }
         size = size_opt.value();

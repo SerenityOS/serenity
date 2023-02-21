@@ -169,19 +169,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (selected_options_count == 0) {
         warnln("cut: you must specify a list of bytes, or fields");
-        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
     if (selected_options_count > 1) {
         warnln("cut: you must specify only one of bytes, or fields");
-        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
     if (delimiter.length() != 1) {
         warnln("cut: the delimiter must be a single character");
-        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
@@ -200,7 +200,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto expansion_successful = expand_list(ranges_list, ranges_vector);
 
     if (!expansion_successful) {
-        args_parser.print_usage(stderr, arguments.strings[0].characters_without_null_termination());
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 

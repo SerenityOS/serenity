@@ -150,7 +150,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (arguments.strings.size() <= 2 && arguments.strings[1] != "list"sv) {
-        args_parser.print_usage_terminal(stderr, arguments.argv[0]);
+        args_parser.print_usage_terminal(stderr, arguments.strings[0]);
         return 0;
     }
 

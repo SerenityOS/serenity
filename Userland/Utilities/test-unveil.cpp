@@ -25,8 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .long_name = "unveil",
         .short_name = 'u',
         .value_name = "path",
-        .accept_value = [&](auto* s) {
-            StringView path { s, strlen(s) };
+        .accept_value = [&](StringView path) {
             if (path.is_empty())
                 return false;
             auto maybe_error = Core::System::unveil(path, permissions);
@@ -41,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .help_string = "Lock the veil",
         .long_name = "lock",
         .short_name = 'l',
-        .accept_value = [&](auto*) {
+        .accept_value = [&](StringView) {
             auto maybe_error = Core::System::unveil(nullptr, nullptr);
             if (maybe_error.is_error()) {
                 warnln("unveil(nullptr, nullptr): {}", maybe_error.error());
@@ -54,8 +53,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .name = "path",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](auto* s) {
-            auto maybe_error = Core::System::access({ s, strlen(s) }, X_OK);
+        .accept_value = [&](StringView s) {
+            auto maybe_error = Core::System::access(s, X_OK);
             if (maybe_error.is_error())
                 warnln("'{}' - fail: {}", s, maybe_error.error());
             else

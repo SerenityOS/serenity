@@ -31,6 +31,11 @@ using Test::Crash;
 
 int main(int argc, char** argv)
 {
+    Vector<StringView> arguments;
+    arguments.ensure_capacity(argc);
+    for (auto i = 0; i < argc; ++i)
+        arguments.append({ argv[i], strlen(argv[i]) });
+
     bool do_all_crash_types = false;
     bool do_segmentation_violation = false;
     bool do_division_by_zero = false;
@@ -84,11 +89,11 @@ int main(int argc, char** argv)
     if (argc == 1) {
         do_all_crash_types = true;
     } else if (argc != 2) {
-        args_parser.print_usage(stderr, argv[0]);
+        args_parser.print_usage(stderr, arguments[0]);
         exit(1);
     }
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Crash::RunType run_type = do_all_crash_types ? Crash::RunType::UsingChildProcess
                                                  : Crash::RunType::UsingCurrentProcess;

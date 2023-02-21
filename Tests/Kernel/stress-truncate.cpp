@@ -13,6 +13,11 @@
 
 int main(int argc, char** argv)
 {
+    Vector<StringView> arguments;
+    arguments.ensure_capacity(argc);
+    for (auto i = 0; i < argc; ++i)
+        arguments.append({ argv[i], strlen(argv[i]) });
+
     char const* target = nullptr;
     int max_file_size = 1024 * 1024;
     int count = 1024;
@@ -21,7 +26,7 @@ int main(int argc, char** argv)
     args_parser.add_option(max_file_size, "Maximum file size to generate", "max-size", 's', "size");
     args_parser.add_option(count, "Number of truncations to run", "number", 'n', "number");
     args_parser.add_positional_argument(target, "Target file path", "target");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     int fd = creat(target, 0666);
     if (fd < 0) {

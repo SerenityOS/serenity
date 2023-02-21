@@ -33,7 +33,7 @@ public:
     }
 
     int run(NonnullRefPtrVector<TestCase> const&);
-    int main(DeprecatedString const& suite_name, int argc, char** argv);
+    int main(DeprecatedString const& suite_name, Span<StringView> arguments);
     NonnullRefPtrVector<TestCase> find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks);
     void add_case(NonnullRefPtr<TestCase> const& test_case)
     {
