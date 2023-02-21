@@ -151,7 +151,7 @@ ErrorOr<NonnullRefPtr<StringData>> StringData::from_stream(Stream& stream, size_
     u8* buffer = nullptr;
     auto new_string_data = TRY(create_uninitialized(byte_count, buffer));
     Bytes new_string_bytes = { buffer, byte_count };
-    TRY(stream.read(new_string_bytes));
+    TRY(stream.read_entire_buffer(new_string_bytes));
 
     Utf8View view(StringView { new_string_bytes });
     if (!view.validate())
@@ -246,7 +246,7 @@ ErrorOr<String> String::from_stream(Stream& stream, size_t byte_count)
     if (byte_count <= MAX_SHORT_STRING_BYTE_COUNT) {
         ShortString short_string;
         if (byte_count > 0)
-            TRY(stream.read({ short_string.storage, byte_count }));
+            TRY(stream.read_entire_buffer({ short_string.storage, byte_count }));
         short_string.byte_count_and_short_string_flag = (byte_count << 1) | SHORT_STRING_FLAG;
         return String { short_string };
     }
