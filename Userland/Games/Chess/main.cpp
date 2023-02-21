@@ -118,10 +118,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     show_available_moves_action->set_checked(widget->show_available_moves());
     TRY(game_menu->try_add_action(show_available_moves_action));
     TRY(game_menu->try_add_separator());
-
-    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([&widget](auto&) {
+        // FIXME: Remove this widget call once we figure out why m_engine's
+        // destructor isn't called when we either use the quit action or close
+        // the window.
+        widget->set_engine(nullptr);
         GUI::Application::the()->quit();
     })));
+    // FIXME: Remove this once we figure out why m_engine's destructor isn't
+    // called when we either use the quit action or close the window.
+    window->on_close = [&widget]() {
+        widget->set_engine(nullptr);
+    };
 
     auto engine_menu = TRY(window->try_add_menu("&Engine"));
 
