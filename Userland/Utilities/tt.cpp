@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (*test_name == 'k')
         return kill_test();
     if (*test_name != 'n') {
-        args_parser.print_usage(stdout, arguments.argv[0]);
+        args_parser.print_usage(stdout, arguments.strings[0]);
         return 1;
     }
 

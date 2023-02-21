@@ -56,7 +56,7 @@ void set_suite_setup_function(Function<void()> setup)
     TestSuite::the().set_suite_setup(move(setup));
 }
 
-int TestSuite::main(DeprecatedString const& suite_name, int argc, char** argv)
+int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> arguments)
 {
     m_suite_name = suite_name;
 
@@ -71,7 +71,7 @@ int TestSuite::main(DeprecatedString const& suite_name, int argc, char** argv)
     args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
     args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
     args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     if (m_setup)
         m_setup();

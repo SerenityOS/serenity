@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (pid_argument.is_empty() && command.is_empty() && !all_processes) {
-        args_parser.print_usage(stdout, arguments.argv[0]);
+        args_parser.print_usage(stdout, arguments.strings[0]);
         print_types();
         return 0;
     }

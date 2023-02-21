@@ -31,15 +31,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "preserve",
         'p',
         "attributes",
-        [&preserve](char const* s) {
-            if (!s) {
+        [&preserve](StringView s) {
+            if (s.is_empty()) {
                 preserve = Core::DeprecatedFile::PreserveMode::Permissions | Core::DeprecatedFile::PreserveMode::Ownership | Core::DeprecatedFile::PreserveMode::Timestamps;
                 return true;
             }
 
             bool values_ok = true;
 
-            StringView { s, strlen(s) }.for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
+            s.for_each_split_view(',', SplitBehavior::Nothing, [&](StringView value) {
                 if (value == "mode"sv) {
                     preserve |= Core::DeprecatedFile::PreserveMode::Permissions;
                 } else if (value == "ownership"sv) {

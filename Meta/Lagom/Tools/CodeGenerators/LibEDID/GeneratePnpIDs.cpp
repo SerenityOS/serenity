@@ -283,7 +283,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto open_file = [&](StringView path, Core::File::OpenMode mode = Core::File::OpenMode::Read) -> ErrorOr<NonnullOwnPtr<Core::File>> {
         if (path.is_empty()) {
-            args_parser.print_usage(stderr, arguments.argv[0]);
+            args_parser.print_usage(stderr, arguments.strings[0]);
             return Error::from_string_literal("Must provide all command line options");
         }
 

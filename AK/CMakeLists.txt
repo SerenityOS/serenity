@@ -2,9 +2,9 @@ set(AK_SOURCES
     Assertions.cpp
     Base64.cpp
     CircularBuffer.cpp
+    DOSPackedTime.cpp
     DeprecatedFlyString.cpp
     DeprecatedString.cpp
-    DOSPackedTime.cpp
     Error.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp
@@ -16,10 +16,10 @@ set(AK_SOURCES
     JsonParser.cpp
     JsonPath.cpp
     JsonValue.cpp
-    kmalloc.cpp
     LexicalPath.cpp
     MemoryStream.cpp
     NumberFormat.cpp
+    OptionParser.cpp
     Random.cpp
     StackInfo.cpp
     Stream.cpp
@@ -32,10 +32,11 @@ set(AK_SOURCES
     Time.cpp
     URL.cpp
     URLParser.cpp
+    UUID.cpp
     Utf16View.cpp
     Utf32View.cpp
     Utf8View.cpp
-    UUID.cpp
+    kmalloc.cpp
 )
 # AK sources are included from many different places, such as the Kernel, LibC, and Loader
 list(TRANSFORM AK_SOURCES PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/")

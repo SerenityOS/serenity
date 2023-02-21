@@ -111,19 +111,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!transform_flag && !delete_flag && !squeeze_flag) {
         warnln("tr: Missing operand");
-        args_parser.print_usage(stderr, arguments.argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
     if (delete_flag && squeeze_flag && to_chars.is_empty()) {
         warnln("tr: Combined delete and squeeze operations need two sets of characters");
-        args_parser.print_usage(stderr, arguments.argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 
     if (delete_flag && !squeeze_flag && !to_chars.is_empty()) {
         warnln("tr: Only one set of characters may be given when deleting without squeezing");
-        args_parser.print_usage(stderr, arguments.argv[0]);
+        args_parser.print_usage(stderr, arguments.strings[0]);
         return 1;
     }
 

@@ -45,8 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         "monochrome",
         'm',
         nullptr,
-        [](char const* s) {
-            VERIFY(s == nullptr);
+        [](StringView s) {
+            VERIFY(s.is_empty());
             use_color = false;
             return true;
         },

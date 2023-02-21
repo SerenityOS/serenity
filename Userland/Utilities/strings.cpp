@@ -108,8 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         nullptr,
         't',
         "format",
-        [&string_offset_format](char const* s) {
-            StringView value = { s, strlen(s) };
+        [&string_offset_format](StringView value) {
             if (value == "d") {
                 string_offset_format = StringOffsetFormat::Decimal;
             } else if (value == "o") {

@@ -589,6 +589,11 @@ constexpr int exit_read_file_failure = 3;
 
 int main(int argc, char** argv)
 {
+    Vector<StringView> arguments;
+    arguments.ensure_capacity(argc);
+    for (auto i = 0; i < argc; ++i)
+        arguments.append({ argv[i], strlen(argv[i]) });
+
     int timeout = 10;
     bool enable_debug_printing = false;
     bool disable_core_dumping = false;
@@ -602,7 +607,7 @@ int main(int argc, char** argv)
     args_parser.add_option(timeout, "Seconds before test should timeout", "timeout", 't', "seconds");
     args_parser.add_option(enable_debug_printing, "Enable debug printing", "debug", 'd');
     args_parser.add_option(disable_core_dumping, "Disable core dumping", "disable-core-dump", 0);
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)
     if (disable_core_dumping && prctl(PR_SET_DUMPABLE, 0, 0) < 0) {

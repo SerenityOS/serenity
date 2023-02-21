@@ -226,8 +226,7 @@ ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](auto value_ptr) -> bool {
-            StringView value { value_ptr, strlen(value_ptr) };
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -598,8 +597,7 @@ ErrorOr<int> Shell::builtin_fg(Main::Arguments arguments)
         .name = "job-id",
         .min_values = 0,
         .max_values = 1,
-        .accept_value = [&](auto const* value_ptr) -> bool {
-            StringView value { value_ptr, strlen(value_ptr) };
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_id = number.value();
@@ -670,8 +668,7 @@ ErrorOr<int> Shell::builtin_disown(Main::Arguments arguments)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](auto const* value_ptr) -> bool {
-            StringView value { value_ptr, strlen(value_ptr) };
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -955,7 +952,7 @@ ErrorOr<int> Shell::builtin_shift(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_source(Main::Arguments arguments)
 {
-    char const* file_to_source = nullptr;
+    StringView file_to_source;
     Vector<StringView> args;
 
     Core::ArgsParser parser;
@@ -1084,8 +1081,7 @@ ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
         .name = "job-id",
         .min_values = 0,
         .max_values = INT_MAX,
-        .accept_value = [&](auto const* value_ptr) -> bool {
-            StringView value { value_ptr, strlen(value_ptr) };
+        .accept_value = [&](StringView value) -> bool {
             // Check if it's a pid (i.e. literal integer)
             if (auto number = value.to_uint(); number.has_value()) {
                 job_ids.append(number.value());
@@ -1299,7 +1295,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
     Core::ArgsParser user_parser;
 
-    Vector<char const*> descriptors;
+    Vector<StringView> descriptors;
     Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
     DeprecatedString current_variable;
     // if max > 1 or min < 1, or explicit `--list`.
@@ -1369,8 +1365,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     warnln("Defined option must have at least one of --long-name or --short-name");
                     return false;
                 }
-                option.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = MUST(try_convert({ value, strlen(value) }, type));
+                option.accept_value = [&, current_variable, treat_arg_as_list, type](StringView value) {
+                    auto result = MUST(try_convert(value, type));
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
@@ -1391,8 +1387,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     warnln("Defined positional argument must have a name");
                     return false;
                 }
-                arg.accept_value = [&, current_variable, treat_arg_as_list, type](auto value) {
-                    auto result = MUST(try_convert({ value, strlen(value) }, type));
+                arg.accept_value = [&, current_variable, treat_arg_as_list, type](StringView value) {
+                    auto result = MUST(try_convert(value, type));
                     if (result.has_value()) {
                         auto value = result.release_value();
                         if (treat_arg_as_list)
@@ -1427,8 +1423,9 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the general help string for the parser",
         .long_name = "general-help",
         .value_name = "string",
-        .accept_value = [&](auto value) {
-            user_parser.set_general_help(value);
+        .accept_value = [&](StringView value) {
+            VERIFY(strlen(value.characters_without_null_termination()) == value.length());
+            user_parser.set_general_help(value.characters_without_null_termination());
             return true;
         },
     });
@@ -1469,13 +1466,12 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Define the type of the option or argument being described",
         .long_name = "type",
         .value_name = "type",
-        .accept_value = [&](auto name) {
+        .accept_value = [&](StringView ty) {
             if (current.has<Empty>()) {
                 warnln("Must be defining an argument or option to use --type");
                 return false;
             }
 
-            StringView ty { name, strlen(name) };
             if (ty == "bool") {
                 if (auto option = current.get_pointer<Core::ArgsParser::Option>()) {
                     if (option->value_name != nullptr) {
@@ -1513,14 +1509,15 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the help string of the option or argument being defined",
         .long_name = "help-string",
         .value_name = "string",
-        .accept_value = [&](auto value) {
+        .accept_value = [&](StringView value) {
             return current.visit(
                 [](Empty) {
                     warnln("Must be defining an option or argument to use --help-string");
                     return false;
                 },
                 [&](auto& option) {
-                    option.help_string = value;
+                    VERIFY(value.length() == strlen(value.characters_without_null_termination()));
+                    option.help_string = value.characters_without_null_termination();
                     return true;
                 });
         },
@@ -1530,7 +1527,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the long name of the option being defined",
         .long_name = "long-name",
         .value_name = "name",
-        .accept_value = [&](auto value) {
+        .accept_value = [&](StringView value) {
             auto option = current.get_pointer<Core::ArgsParser::Option>();
             if (!option) {
                 warnln("Must be defining an option to use --long-name");
@@ -1540,7 +1537,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 warnln("Repeated application of --long-name is not allowed, current option has long name set to \"{}\"", option->long_name);
                 return false;
             }
-            option->long_name = value;
+            VERIFY(value.length() == strlen(value.characters_without_null_termination()));
+            option->long_name = value.characters_without_null_termination();
             return true;
         },
     });
@@ -1549,13 +1547,13 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the short name of the option being defined",
         .long_name = "short-name",
         .value_name = "char",
-        .accept_value = [&](auto value) {
+        .accept_value = [&](StringView value) {
             auto option = current.get_pointer<Core::ArgsParser::Option>();
             if (!option) {
                 warnln("Must be defining an option to use --short-name");
                 return false;
             }
-            if (strlen(value) != 1) {
+            if (value.length() != 1) {
                 warnln("Option short name ('{}') must be exactly one character long", value);
                 return false;
             }
@@ -1572,7 +1570,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the value name of the option being defined",
         .long_name = "value-name",
         .value_name = "string",
-        .accept_value = [&](auto value) {
+        .accept_value = [&](StringView value) {
             return current.visit(
                 [](Empty) {
                     warnln("Must be defining an option or a positional argument to use --value-name");
@@ -1588,7 +1586,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         return false;
                     }
 
-                    option.value_name = value;
+                    VERIFY(value.length() == strlen(value.characters_without_null_termination()));
+                    option.value_name = value.characters_without_null_termination();
                     return true;
                 },
                 [&](Core::ArgsParser::Arg& arg) {
@@ -1597,7 +1596,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         return false;
                     }
 
-                    arg.name = value;
+                    VERIFY(value.length() == strlen(value.characters_without_null_termination()));
+                    arg.name = value.characters_without_null_termination();
                     return true;
                 });
         },
@@ -1626,14 +1626,14 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the minimum required number of positional descriptors for the argument being described",
         .long_name = "min",
         .value_name = "n",
-        .accept_value = [&](auto value) {
+        .accept_value = [&](StringView value) {
             auto arg = current.get_pointer<Core::ArgsParser::Arg>();
             if (!arg) {
                 warnln("Must be describing a positional argument to use --min");
                 return false;
             }
 
-            auto number = StringView { value, strlen(value) }.to_uint();
+            auto number = value.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for --min: '{}', expected a non-negative number", value);
                 return false;
@@ -1654,14 +1654,14 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
         .help_string = "Set the maximum required number of positional descriptors for the argument being described",
         .long_name = "max",
         .value_name = "n",
-        .accept_value = [&](auto value) {
+        .accept_value = [&](StringView value) {
             auto arg = current.get_pointer<Core::ArgsParser::Arg>();
             if (!arg) {
                 warnln("Must be describing a positional argument to use --max");
                 return false;
             }
 
-            auto number = StringView { value, strlen(value) }.to_uint();
+            auto number = value.to_uint();
             if (!number.has_value()) {
                 warnln("Invalid value for --max: '{}', expected a non-negative number", value);
                 return false;
@@ -1702,7 +1702,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
     if (!commit())
         return 2;
 
-    if (!user_parser.parse(static_cast<int>(descriptors.size()), const_cast<char* const*>(descriptors.data()), Core::ArgsParser::FailureBehavior::Ignore))
+    if (!user_parser.parse(descriptors, Core::ArgsParser::FailureBehavior::Ignore))
         return 1;
 
     return 0;

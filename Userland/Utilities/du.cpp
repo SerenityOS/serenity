@@ -66,8 +66,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
         "time",
         0,
         "time-type",
-        [&du_option](auto const* option_ptr) {
-            StringView option { option_ptr, strlen(option_ptr) };
+        [&du_option](StringView option) {
             if (option == "mtime"sv || option == "modification"sv)
                 du_option.time_type = DuOption::TimeType::Modification;
             else if (option == "ctime"sv || option == "status"sv || option == "use"sv)
@@ -87,7 +86,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
         nullptr,
         'k',
         nullptr,
-        [&du_option](auto const*) {
+        [&du_option](StringView) {
             du_option.block_size = 1024;
             return true;
         }

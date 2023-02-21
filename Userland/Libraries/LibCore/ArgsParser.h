@@ -51,7 +51,7 @@ public:
         char const* long_name { nullptr };
         char short_name { 0 };
         char const* value_name { nullptr };
-        Function<bool(char const*)> accept_value;
+        Function<bool(StringView)> accept_value;
         OptionHideMode hide_mode { OptionHideMode::None };
 
         DeprecatedString name_for_display() const
@@ -67,34 +67,21 @@ public:
         char const* name { nullptr };
         int min_values { 0 };
         int max_values { 1 };
-        Function<bool(char const*)> accept_value;
+        Function<bool(StringView)> accept_value;
     };
 
-    bool parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
+    bool parse(Span<StringView> arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
     bool parse(Main::Arguments const& arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit)
     {
-        if (arguments.argv == nullptr && arguments.argc == 0) {
-            // Allocate the data from arguments.strings instead.
-            Vector<DeprecatedString> strings;
-            Vector<char const*> data;
-            strings.ensure_capacity(arguments.strings.size());
-            data.ensure_capacity(arguments.strings.size());
-            for (auto& entry : arguments.strings) {
-                strings.append(entry);
-                data.append(strings.last().characters());
-            }
-            return parse(data.size(), const_cast<char* const*>(data.data()), failure_behavior);
-        }
-
-        return parse(arguments.argc, arguments.argv, failure_behavior);
+        return parse(arguments.strings, failure_behavior);
     }
 
     // *Without* trailing newline!
     void set_general_help(char const* help_string) { m_general_help = help_string; };
     void set_stop_on_first_non_option(bool stop_on_first_non_option) { m_stop_on_first_non_option = stop_on_first_non_option; }
-    void print_usage(FILE*, char const* argv0);
-    void print_usage_terminal(FILE*, char const* argv0);
-    void print_usage_markdown(FILE*, char const* argv0);
+    void print_usage(FILE*, StringView argv0);
+    void print_usage_terminal(FILE*, StringView argv0);
+    void print_usage_markdown(FILE*, StringView argv0);
     void print_version(FILE*);
 
     void add_option(Option&&);
@@ -125,7 +112,7 @@ public:
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
-    void autocomplete(FILE*, StringView program_name, ReadonlySpan<char const*> remaining_arguments);
+    void autocomplete(FILE*, StringView program_name, ReadonlySpan<StringView> remaining_arguments);
 
     Vector<Option> m_options;
     Vector<Arg> m_positional_args;

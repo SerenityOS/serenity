@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .long_name = "regexp",
         .short_name = 'e',
         .value_name = "Pattern",
-        .accept_value = [&](auto* str) {
+        .accept_value = [&](StringView str) {
             patterns.append(str);
             return true;
         },
@@ -97,7 +97,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Action to take for binary files ([binary], text, skip)",
         .long_name = "binary-mode",
-        .accept_value = [&](auto* str) {
+        .accept_value = [&](StringView str) {
             if ("text"sv == str)
                 binary_mode = BinaryFileMode::Text;
             else if ("binary"sv == str)
@@ -135,7 +135,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .long_name = "color",
         .short_name = 0,
         .value_name = "WHEN",
-        .accept_value = [&](auto* str) {
+        .accept_value = [&](StringView str) {
             if ("never"sv == str)
                 colored_output = false;
             else if ("always"sv == str)

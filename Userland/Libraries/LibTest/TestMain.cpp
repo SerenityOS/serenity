@@ -22,7 +22,13 @@ int TEST_MAIN(int argc, char** argv)
         warnln("Test main does not have a valid test name!");
         return 1;
     }
-    int ret = ::Test::TestSuite::the().main(argv[0], argc, argv);
+
+    Vector<StringView> arguments;
+    arguments.ensure_capacity(argc);
+    for (auto i = 0; i < argc; ++i)
+        arguments.append({ argv[i], strlen(argv[i]) });
+
+    int ret = ::Test::TestSuite::the().main(argv[0], arguments);
     ::Test::TestSuite::release();
     return ret;
 }

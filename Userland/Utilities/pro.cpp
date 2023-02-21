@@ -172,8 +172,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .long_name = "header",
         .short_name = 'H',
         .value_name = "key:value",
-        .accept_value = [&](auto* s) {
-            StringView header { s, strlen(s) };
+        .accept_value = [&](StringView header) {
             auto split = header.find(':');
             if (!split.has_value())
                 return false;
@@ -186,8 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .long_name = "auth",
         .short_name = 'u',
         .value_name = "username:password",
-        .accept_value = [&](auto* s) {
-            StringView input { s, strlen(s) };
+        .accept_value = [&](StringView input) {
             if (!input.contains(':'))
                 return false;
 
