@@ -420,6 +420,13 @@ void TextEditor::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), widget_background_color);
 
+    Gfx::TextAttributes unspanned_text_attributes;
+    if (is_displayonly() && is_focused()) {
+        unspanned_text_attributes.color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
+    } else {
+        unspanned_text_attributes.color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
+    }
+
     // NOTE: This lambda and TextEditor::text_width_for_font() are used to substitute all glyphs with m_substitution_code_point if necessary.
     //       Painter::draw_text() and Gfx::Font::width() should not be called directly, but using this lambda and TextEditor::text_width_for_font().
     auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextAttributes attributes, bool substitute = true) {
@@ -558,29 +565,21 @@ void TextEditor::paint_event(PaintEvent& event)
                 draw_text(line_rect, placeholder(), font(), m_text_alignment, { palette().color(Gfx::ColorRole::PlaceholderText) }, false);
             } else if (!document().has_spans()) {
                 // Fast-path for plain text
-                auto color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
-                if (is_displayonly() && is_focused())
-                    color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
-                draw_text(visual_line_rect, visual_line_text, font(), m_text_alignment, { color });
+                draw_text(visual_line_rect, visual_line_text, font(), m_text_alignment, unspanned_text_attributes);
             } else {
-                auto unspanned_color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
-                if (is_displayonly() && is_focused())
-                    unspanned_color = palette().color(is_enabled() ? Gfx::ColorRole::SelectionText : Gfx::ColorRole::DisabledText);
-                RefPtr<Gfx::Font const> unspanned_font = this->font();
-
                 size_t next_column = 0;
                 Gfx::IntRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
 
-                auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font const>& font, Gfx::TextAttributes text_attributes) {
+                auto draw_text_helper = [&](size_t start, size_t end, Gfx::Font const& font, Gfx::TextAttributes text_attributes) {
                     size_t length = end - start;
                     if (length == 0)
                         return;
                     auto text = visual_line_text.substring_view(start, length);
-                    span_rect.set_width(font->width(text) + font->glyph_spacing());
+                    span_rect.set_width(font.width(text) + font.glyph_spacing());
                     if (text_attributes.background_color.has_value()) {
                         painter.fill_rect(span_rect, text_attributes.background_color.value());
                     }
-                    draw_text(span_rect, text, *font, m_text_alignment, text_attributes);
+                    draw_text(span_rect, text, font, m_text_alignment, text_attributes);
                     span_rect.translate_by(span_rect.width(), 0);
                 };
                 while (span_index < document().spans().size()) {
@@ -612,10 +611,10 @@ void TextEditor::paint_event(PaintEvent& event)
 
                     if (span_start != next_column) {
                         // draw unspanned text between spans
-                        draw_text_helper(next_column, span_start, unspanned_font, { unspanned_color });
+                        draw_text_helper(next_column, span_start, font(), unspanned_text_attributes);
                     }
-                    auto font = span.attributes.bold ? unspanned_font->bold_variant() : unspanned_font;
-                    draw_text_helper(span_start, span_end, font, span.attributes);
+                    auto& span_font = span.attributes.bold ? font().bold_variant() : font();
+                    draw_text_helper(span_start, span_end, span_font, span.attributes);
                     next_column = span_end;
                     if (!span_consumed) {
                         // continue with same span on next line
@@ -626,7 +625,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
                 // draw unspanned text after last span
                 if (next_column < visual_line_text.length()) {
-                    draw_text_helper(next_column, visual_line_text.length(), unspanned_font, { unspanned_color });
+                    draw_text_helper(next_column, visual_line_text.length(), font(), unspanned_text_attributes);
                 }
             }
 
