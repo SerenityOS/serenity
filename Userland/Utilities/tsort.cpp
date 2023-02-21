@@ -76,7 +76,7 @@ static void prioritize_nodes(Node& start, NodeMap& node_map, NodeStack& stack, b
             node.status = NodeStatus::Prioritized;
             outln("{}", stack.take_last().name);
         } else {
-            auto next_ancestor_name = node.ancestors.pop();
+            auto next_ancestor_name = node.ancestors.take_last();
             auto& next_ancestor = node_map.get(next_ancestor_name).release_value();
             if (next_ancestor.status == NodeStatus::Seen)
                 // If the same node is seen multiple times, this represents a cycle in

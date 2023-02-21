@@ -358,16 +358,16 @@ TEST_CASE(ordered_deletion_and_reinsertion)
     EXPECT_EQ(it, table.end());
 }
 
-TEST_CASE(ordered_pop)
+TEST_CASE(ordered_take_last)
 {
     OrderedHashTable<int> table;
     table.set(1);
     table.set(2);
     table.set(3);
 
-    EXPECT_EQ(table.pop(), 3);
-    EXPECT_EQ(table.pop(), 2);
-    EXPECT_EQ(table.pop(), 1);
+    EXPECT_EQ(table.take_last(), 3);
+    EXPECT_EQ(table.take_last(), 2);
+    EXPECT_EQ(table.take_last(), 1);
     EXPECT(table.is_empty());
 }
 
@@ -381,4 +381,32 @@ TEST_CASE(ordered_iterator_removal)
     map.remove(it);
     EXPECT_EQ(it, map.end());
     EXPECT_EQ(map.size(), 1u);
+}
+
+TEST_CASE(ordered_remove_from_head)
+{
+    OrderedHashTable<int> map;
+    map.set(1);
+    map.set(2);
+    map.set(3);
+    map.set(4);
+    map.set(5);
+    map.set(6);
+
+    EXPECT_EQ(map.size(), 6u);
+
+    auto it = map.begin();
+    map.remove(it);
+    it = map.begin();
+    map.remove(it);
+    it = map.begin();
+    map.remove(it);
+    it = map.begin();
+    map.remove(it);
+    it = map.begin();
+    map.remove(it);
+    it = map.begin();
+    map.remove(it);
+
+    EXPECT_EQ(map.size(), 0u);
 }
