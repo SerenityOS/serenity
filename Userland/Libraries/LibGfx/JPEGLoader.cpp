@@ -297,6 +297,47 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     return {};
 }
 
+static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ComponentSpec const& component, unsigned component_index)
+{
+    auto& ac_table = context.ac_tables.find(component.ac_destination_id)->value;
+    auto* select_component = get_component(macroblock, component_index);
+
+    // Compute the AC coefficients.
+    for (int j = 1; j < 64;) {
+        // AC symbols encode 2 pieces of information, the high 4 bits represent
+        // number of zeroes to be stuffed before reading the coefficient. Low 4
+        // bits represent the magnitude of the coefficient.
+        auto ac_symbol = TRY(get_next_symbol(context.huffman_stream, ac_table));
+        if (ac_symbol == 0)
+            break;
+
+        // ac_symbol = 0xF0 means we need to skip 16 zeroes.
+        u8 run_length = ac_symbol == 0xF0 ? 16 : ac_symbol >> 4;
+        j += run_length;
+
+        if (j >= 64) {
+            dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
+            return Error::from_string_literal("Run-length exceeded boundaries");
+        }
+
+        u8 coeff_length = ac_symbol & 0x0F;
+        if (coeff_length > 10) {
+            dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
+            return Error::from_string_literal("AC coefficient too long");
+        }
+
+        if (coeff_length != 0) {
+            i32 ac_coefficient = TRY(read_huffman_bits(context.huffman_stream, coeff_length));
+            if (ac_coefficient < (1 << (coeff_length - 1)))
+                ac_coefficient -= (1 << coeff_length) - 1;
+
+            select_component[zigzag_map[j++]] = ac_coefficient;
+        }
+    }
+
+    return {};
+}
+
 /**
  * Build the macroblocks possible by reading single (MCU) subsampled pair of CbCr.
  * Depending on the sampling factors, we may not see triples of y, cb, cr in that
@@ -328,42 +369,7 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                 Macroblock& block = macroblocks[mb_index];
 
                 TRY(add_dc(context, block, component, component_i));
-
-                auto& ac_table = context.ac_tables.find(component.ac_destination_id)->value;
-                auto* select_component = get_component(block, component_i);
-
-                // Compute the AC coefficients.
-                for (int j = 1; j < 64;) {
-                    // AC symbols encode 2 pieces of information, the high 4 bits represent
-                    // number of zeroes to be stuffed before reading the coefficient. Low 4
-                    // bits represent the magnitude of the coefficient.
-                    auto ac_symbol = TRY(get_next_symbol(context.huffman_stream, ac_table));
-                    if (ac_symbol == 0)
-                        break;
-
-                    // ac_symbol = 0xF0 means we need to skip 16 zeroes.
-                    u8 run_length = ac_symbol == 0xF0 ? 16 : ac_symbol >> 4;
-                    j += run_length;
-
-                    if (j >= 64) {
-                        dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
-                        return Error::from_string_literal("Run-length exceeded boundaries");
-                    }
-
-                    u8 coeff_length = ac_symbol & 0x0F;
-                    if (coeff_length > 10) {
-                        dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
-                        return Error::from_string_literal("AC coefficient too long");
-                    }
-
-                    if (coeff_length != 0) {
-                        i32 ac_coefficient = TRY(read_huffman_bits(context.huffman_stream, coeff_length));
-                        if (ac_coefficient < (1 << (coeff_length - 1)))
-                            ac_coefficient -= (1 << coeff_length) - 1;
-
-                        select_component[zigzag_map[j++]] = ac_coefficient;
-                    }
-                }
+                TRY(add_ac(context, block, component, component_i));
             }
         }
     }
