@@ -265,6 +265,8 @@ public:
     // https://html.spec.whatwg.org/multipage/window-object.html#close-a-browsing-context
     void close();
 
+    Optional<AK::URL> const& creator_url() const { return m_creator_url; }
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
