@@ -654,8 +654,12 @@ private:
             if constexpr (IsOrdered) {
                 if (bucket->previous)
                     bucket->previous->next = bucket;
+                else
+                    m_collection_data.head = bucket;
                 if (bucket->next)
                     bucket->next->previous = bucket;
+                else
+                    m_collection_data.tail = bucket;
             }
         };
 
