@@ -306,7 +306,11 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
     auto* select_component = get_component(macroblock, component_index);
 
     // Compute the AC coefficients.
-    for (int j = 1; j < 64;) {
+
+    // 0th coefficient is the dc, which is already handled
+    auto first_coefficient = max(1, context.spectral_selection_start);
+
+    for (int j = first_coefficient; j <= context.spectral_selection_end;) {
         // AC symbols encode 2 pieces of information, the high 4 bits represent
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
@@ -318,7 +322,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         u8 run_length = ac_symbol == 0xF0 ? 16 : ac_symbol >> 4;
         j += run_length;
 
-        if (j >= 64) {
+        if (j > context.spectral_selection_end) {
             dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
             return Error::from_string_literal("Run-length exceeded boundaries");
         }
@@ -371,7 +375,8 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 Macroblock& block = macroblocks[mb_index];
 
-                TRY(add_dc(context, block, component, component_i));
+                if (context.spectral_selection_start == 0)
+                    TRY(add_dc(context, block, component, component_i));
                 TRY(add_ac(context, block, component, component_i));
             }
         }
