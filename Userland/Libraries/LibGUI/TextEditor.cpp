@@ -585,6 +585,10 @@ void TextEditor::paint_event(PaintEvent& event)
                 };
                 while (span_index < document().spans().size()) {
                     auto& span = document().spans()[span_index];
+                    if (span.range.end().line() < line_index) {
+                        ++span_index;
+                        continue;
+                    }
                     if (span.range.start().line() > line_index
                         || (span.range.start().line() == line_index && span.range.start().column() >= start_of_visual_line + visual_line_text.length())) {
                         // no more spans in this line, moving on
@@ -623,16 +627,6 @@ void TextEditor::paint_event(PaintEvent& event)
                 // draw unspanned text after last span
                 if (next_column < visual_line_text.length()) {
                     draw_text_helper(next_column, visual_line_text.length(), unspanned_font, { unspanned_color });
-                }
-                // consume all spans that should end this line
-                // this is necessary since the spans can include the new line character
-                while (is_last_visual_line && span_index < document().spans().size()) {
-                    auto& span = document().spans()[span_index];
-                    if (span.range.end().line() == line_index) {
-                        ++span_index;
-                    } else {
-                        break;
-                    }
                 }
             }
 
