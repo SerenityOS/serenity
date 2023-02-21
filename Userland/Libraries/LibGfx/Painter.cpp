@@ -33,6 +33,7 @@
 #include <LibGfx/Quad.h>
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextLayout.h>
+#include <LibUnicode/CharacterTypes.h>
 #include <stdio.h>
 
 #if defined(AK_COMPILER_GCC)
@@ -1395,36 +1396,31 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, u32 code_point, Font const& 
 
 void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font, Color color)
 {
-    // FIXME: These should live somewhere else.
-    constexpr u32 text_variation_selector = 0xFE0E;
-    constexpr u32 emoji_variation_selector = 0xFE0F;
-    constexpr u32 regional_indicator_symbol_a = 0x1F1E6;
-    constexpr u32 regional_indicator_symbol_z = 0x1F1FF;
+    static auto const emoji_component_property = Unicode::property_from_string("Emoji_Component"sv);
+    static auto const variation_selector = Unicode::property_from_string("Variation_Selector"sv);
 
-    auto initial_it = it;
     u32 code_point = *it;
     auto next_code_point = it.peek(1);
 
-    ScopeGuard consume_variation_selector = [&] {
+    ScopeGuard consume_variation_selector = [&, initial_it = it] {
         // If we advanced the iterator to consume an emoji sequence, don't look for another variation selector.
         if (initial_it != it)
             return;
+
         // Otherwise, discard one code point if it's a variation selector.
-        auto next_code_point = it.peek(1);
-        if (next_code_point == text_variation_selector || next_code_point == emoji_variation_selector)
+        if (next_code_point.has_value() && Unicode::code_point_has_property(*next_code_point, *variation_selector))
             ++it;
     };
 
-    auto code_point_is_regional_indicator = code_point >= regional_indicator_symbol_a && code_point <= regional_indicator_symbol_z;
     auto font_contains_glyph = font.contains_glyph(code_point);
+    auto check_for_emoji = false;
 
-    auto check_for_emoji = false
-        // Flag emojis consist of two regional indicators.
-        || code_point_is_regional_indicator
-        // U+00A9 (copyright) or U+00AE (registered) are text glyphs by default,
-        // keycap emojis ({#,*,0-9} U+FE0F U+20E3) start with a regular ASCII character.
-        // Both cases are handled by peeking for the variation selector.
-        || next_code_point == emoji_variation_selector;
+    if (emoji_component_property.has_value()) {
+        auto code_point_is_emoji_component = Unicode::code_point_has_property(code_point, *emoji_component_property);
+        auto next_code_point_is_emoji_component = next_code_point.has_value() && Unicode::code_point_has_property(*next_code_point, *emoji_component_property);
+
+        check_for_emoji = code_point_is_emoji_component || next_code_point_is_emoji_component;
+    }
 
     // If the font contains the glyph, and we know it's not the start of an emoji, draw a text glyph.
     if (font_contains_glyph && !check_for_emoji) {
