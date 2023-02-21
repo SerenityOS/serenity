@@ -532,6 +532,7 @@ void WebContentView::show_inspector()
     ensure_inspector_widget();
     m_inspector_widget->show();
     inspect_dom_tree();
+    inspect_accessibility_tree();
 }
 
 void WebContentView::update_zoom()
@@ -797,8 +798,10 @@ void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK
 void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
 {
     m_url = url;
-    if (is_inspector_open())
+    if (is_inspector_open()) {
         inspect_dom_tree();
+        inspect_accessibility_tree();
+    }
     if (on_load_finish)
         on_load_finish(url);
 }
@@ -1050,9 +1053,10 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
     (void)event_was_accepted;
 }
 
-void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const&)
+void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_json)
 {
-    dbgln("TODO: support accessibility tree in Ladybird");
+    if (m_inspector_widget)
+        m_inspector_widget->set_accessibility_json(accessibility_json);
 }
 
 ErrorOr<String> WebContentView::dump_layout_tree()
