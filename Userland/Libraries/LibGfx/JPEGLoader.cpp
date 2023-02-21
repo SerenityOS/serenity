@@ -272,6 +272,31 @@ static inline i32* get_component(Macroblock& block, unsigned component)
     }
 }
 
+static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ComponentSpec const& component, unsigned component_index)
+{
+    auto& dc_table = context.dc_tables.find(component.dc_destination_id)->value;
+
+    // For DC coefficients, symbol encodes the length of the coefficient.
+    auto dc_length = TRY(get_next_symbol(context.huffman_stream, dc_table));
+    if (dc_length > 11) {
+        dbgln_if(JPEG_DEBUG, "DC coefficient too long: {}!", dc_length);
+        return Error::from_string_literal("DC coefficient too long");
+    }
+
+    // DC coefficients are encoded as the difference between previous and current DC values.
+    i32 dc_diff = TRY(read_huffman_bits(context.huffman_stream, dc_length));
+
+    // If MSB in diff is 0, the difference is -ve. Otherwise +ve.
+    if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
+        dc_diff -= (1 << dc_length) - 1;
+
+    auto* select_component = get_component(macroblock, component_index);
+    auto& previous_dc = context.previous_dc_values[component_index];
+    select_component[0] = previous_dc += dc_diff;
+
+    return {};
+}
+
 /**
  * Build the macroblocks possible by reading single (MCU) subsampled pair of CbCr.
  * Depending on the sampling factors, we may not see triples of y, cb, cr in that
@@ -302,26 +327,10 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 Macroblock& block = macroblocks[mb_index];
 
-                auto& dc_table = context.dc_tables.find(component.dc_destination_id)->value;
+                TRY(add_dc(context, block, component, component_i));
+
                 auto& ac_table = context.ac_tables.find(component.ac_destination_id)->value;
-
-                // For DC coefficients, symbol encodes the length of the coefficient.
-                auto dc_length = TRY(get_next_symbol(context.huffman_stream, dc_table));
-                if (dc_length > 11) {
-                    dbgln_if(JPEG_DEBUG, "DC coefficient too long: {}!", dc_length);
-                    return Error::from_string_literal("DC coefficient too long");
-                }
-
-                // DC coefficients are encoded as the difference between previous and current DC values.
-                i32 dc_diff = TRY(read_huffman_bits(context.huffman_stream, dc_length));
-
-                // If MSB in diff is 0, the difference is -ve. Otherwise +ve.
-                if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
-                    dc_diff -= (1 << dc_length) - 1;
-
-                auto select_component = get_component(block, component_i);
-                auto& previous_dc = context.previous_dc_values[component_i];
-                select_component[0] = previous_dc += dc_diff;
+                auto* select_component = get_component(block, component_i);
 
                 // Compute the AC coefficients.
                 for (int j = 1; j < 64;) {
