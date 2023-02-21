@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -47,16 +47,16 @@ public:
 
     enum AdoptTag { Adopt };
 
-    ALWAYS_INLINE NonnullRefPtr(T& object)
-        : m_ptr(&object)
+    ALWAYS_INLINE NonnullRefPtr(T const& object)
+        : m_ptr(const_cast<T*>(&object))
     {
         m_ptr->ref();
     }
 
     template<typename U>
-    ALWAYS_INLINE NonnullRefPtr(U& object)
+    ALWAYS_INLINE NonnullRefPtr(U const& object)
     requires(IsConvertible<U*, T*>)
-        : m_ptr(static_cast<T*>(&object))
+        : m_ptr(const_cast<T*>(static_cast<T const*>(&object)))
     {
         m_ptr->ref();
     }
@@ -79,7 +79,7 @@ public:
     }
 
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr const& other)
-        : m_ptr(other.ptr())
+        : m_ptr(const_cast<T*>(other.ptr()))
     {
         m_ptr->ref();
     }
@@ -87,7 +87,7 @@ public:
     template<typename U>
     ALWAYS_INLINE NonnullRefPtr(NonnullRefPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_ptr(static_cast<T*>(other.ptr()))
+        : m_ptr(const_cast<T*>(static_cast<T const*>(other.ptr())))
     {
         m_ptr->ref();
     }
@@ -145,7 +145,7 @@ public:
         return *this;
     }
 
-    NonnullRefPtr& operator=(T& object)
+    NonnullRefPtr& operator=(T const& object)
     {
         NonnullRefPtr tmp { object };
         swap(tmp);
