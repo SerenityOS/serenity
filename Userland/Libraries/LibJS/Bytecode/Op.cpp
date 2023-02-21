@@ -939,9 +939,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                         return result_object;
                     }
 
-                    auto it = items.begin();
-                    auto key = *it;
-                    items.remove(it);
+                    auto key = items.take_first();
 
                     // If the key was already seen, skip over it (invariant no. 4)
                     auto result = seen_items.set(key);
