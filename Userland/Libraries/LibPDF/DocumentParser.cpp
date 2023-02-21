@@ -111,8 +111,21 @@ PDFErrorOr<void> DocumentParser::parse_header()
 
 PDFErrorOr<DocumentParser::LinearizationResult> DocumentParser::initialize_linearization_dict()
 {
-    // parse_header() is called immediately before this, so we are at the right location
-    auto indirect_value = Value(*TRY(parse_indirect_value()));
+    // parse_header() is called immediately before this, so we are at the right location.
+    // There may not actually be a linearization dict, or even a valid PDF object here.
+    // If that is the case, this file may be completely valid but not linearized.
+
+    // If there is indeed a linearization dict, there should be an object number here.
+    if (!m_reader.matches_number())
+        return LinearizationResult::NotLinearized;
+
+    // At this point, we still don't know for sure if we are dealing with a valid object.
+    auto indirect_value_or_error = parse_indirect_value();
+    if (indirect_value_or_error.is_error())
+        return LinearizationResult::NotLinearized;
+
+    auto indirect_value = indirect_value_or_error.value();
+
     auto dict_value = TRY(m_document->resolve(indirect_value));
     if (!dict_value.has<NonnullRefPtr<Object>>())
         return error("Expected linearization object to be a dictionary");
