@@ -194,6 +194,9 @@ struct JPEGLoadingContext {
     StartOfFrame frame;
     u8 hsample_factor { 0 };
     u8 vsample_factor { 0 };
+    u8 spectral_selection_start {};
+    u8 spectral_selection_end {};
+    u8 successive_approximation {};
     Vector<ComponentSpec, 3> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_restart_interval { 0 };
@@ -565,17 +568,17 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         }
     }
 
-    u8 spectral_selection_start = TRY(stream.read_value<u8>());
-    u8 spectral_selection_end = TRY(stream.read_value<u8>());
-    u8 successive_approximation = TRY(stream.read_value<u8>());
+    context.spectral_selection_start = TRY(stream.read_value<u8>());
+    context.spectral_selection_end = TRY(stream.read_value<u8>());
+    context.successive_approximation = TRY(stream.read_value<u8>());
 
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
-    if (spectral_selection_start != 0 || spectral_selection_end != 63 || successive_approximation != 0) {
+    if (context.spectral_selection_start != 0 || context.spectral_selection_end != 63 || context.successive_approximation != 0) {
         dbgln_if(JPEG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
             TRY(stream.tell()),
-            spectral_selection_start,
-            spectral_selection_end,
-            successive_approximation);
+            context.spectral_selection_start,
+            context.spectral_selection_end,
+            context.successive_approximation);
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
     return {};
