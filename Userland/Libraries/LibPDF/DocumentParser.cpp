@@ -23,7 +23,15 @@ DocumentParser::DocumentParser(Document* document, ReadonlyBytes bytes)
 
 PDFErrorOr<void> DocumentParser::initialize()
 {
-    TRY(parse_header());
+    m_reader.set_reading_forwards();
+    if (m_reader.remaining() == 0)
+        return error("Empty PDF document");
+
+    auto maybe_error = parse_header();
+    if (maybe_error.is_error()) {
+        warnln("{}", maybe_error.error().message());
+        warnln("No valid PDF header detected, continuing anyway.");
+    }
 
     auto const linearization_result = TRY(initialize_linearization_dict());
 
@@ -68,10 +76,6 @@ PDFErrorOr<Value> DocumentParser::parse_object_with_index(u32 index)
 PDFErrorOr<void> DocumentParser::parse_header()
 {
     // FIXME: Do something with the version?
-    m_reader.set_reading_forwards();
-    if (m_reader.remaining() == 0)
-        return error("Empty PDF document");
-
     m_reader.move_to(0);
     if (m_reader.remaining() < 8 || !m_reader.matches("%PDF-"))
         return error("Not a PDF document");
