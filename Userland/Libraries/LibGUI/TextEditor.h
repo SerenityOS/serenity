@@ -423,7 +423,7 @@ private:
     void for_each_visual_line(size_t line_index, Callback) const;
 
     struct LineVisualData {
-        Vector<size_t, 1> visual_line_breaks;
+        Vector<Utf32View> visual_lines;
         Gfx::IntRect visual_rect;
     };
 

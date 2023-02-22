@@ -533,7 +533,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 first_visual_line_with_selection = visual_line_containing(line_index, selection.start().column());
 
             if (selection.end().line() > line_index)
-                last_visual_line_with_selection = m_line_visual_data[line_index].visual_line_breaks.size();
+                last_visual_line_with_selection = m_line_visual_data[line_index].visual_lines.size();
             else
                 last_visual_line_with_selection = visual_line_containing(line_index, selection.end().column());
         }
@@ -1891,27 +1891,33 @@ void TextEditor::recompute_visual_lines(size_t line_index)
     size_t line_width_so_far = 0;
 
     auto& visual_data = m_line_visual_data[line_index];
-    visual_data.visual_line_breaks.clear_with_capacity();
+    visual_data.visual_lines.clear_with_capacity();
 
     auto available_width = visible_text_rect_in_inner_coordinates().width();
     auto glyph_spacing = font().glyph_spacing();
 
     auto wrap_visual_lines_anywhere = [&]() {
+        size_t start_of_visual_line = 0;
         for (auto it = line.view().begin(); it != line.view().end(); ++it) {
             auto it_before_computing_glyph_width = it;
             auto glyph_width = font().glyph_or_emoji_width(it);
 
             if (line_width_so_far + glyph_width + glyph_spacing > available_width) {
-                visual_data.visual_line_breaks.append(line.view().iterator_offset(it_before_computing_glyph_width));
+                auto start_of_next_visual_line = line.view().iterator_offset(it_before_computing_glyph_width);
+                visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, start_of_next_visual_line - start_of_visual_line));
                 line_width_so_far = 0;
+                start_of_visual_line = start_of_next_visual_line;
             }
 
             line_width_so_far += glyph_width + glyph_spacing;
         }
+
+        visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
     };
 
     auto wrap_visual_lines_at_words = [&]() {
         size_t last_boundary = 0;
+        size_t start_of_visual_line = 0;
 
         Unicode::for_each_word_segmentation_boundary(line.view(), [&](auto boundary) {
             if (boundary == 0)
@@ -1921,8 +1927,9 @@ void TextEditor::recompute_visual_lines(size_t line_index)
             auto word_width = font().width(word);
 
             if (line_width_so_far + word_width + glyph_spacing > available_width) {
-                visual_data.visual_line_breaks.append(last_boundary);
+                visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, last_boundary - start_of_visual_line));
                 line_width_so_far = 0;
+                start_of_visual_line = last_boundary;
             }
 
             line_width_so_far += word_width + glyph_spacing;
@@ -1930,10 +1937,13 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 
             return IterationDecision::Continue;
         });
+
+        visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
     };
 
     switch (wrapping_mode()) {
     case WrappingMode::NoWrap:
+        visual_data.visual_lines.append(line.view());
         break;
     case WrappingMode::WrapAnywhere:
         wrap_visual_lines_anywhere();
@@ -1943,10 +1953,8 @@ void TextEditor::recompute_visual_lines(size_t line_index)
         break;
     }
 
-    visual_data.visual_line_breaks.append(line.length());
-
     if (is_wrapping_enabled())
-        visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data.visual_line_breaks.size()) * line_height() };
+        visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data.visual_lines.size()) * line_height() };
     else
         visual_data.visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
 }
@@ -1955,14 +1963,12 @@ template<typename Callback>
 void TextEditor::for_each_visual_line(size_t line_index, Callback callback) const
 {
     auto editor_visible_text_rect = visible_text_rect_in_inner_coordinates();
-    size_t start_of_line = 0;
     size_t visual_line_index = 0;
 
     auto& line = document().line(line_index);
     auto& visual_data = m_line_visual_data[line_index];
 
-    for (auto visual_line_break : visual_data.visual_line_breaks) {
-        auto visual_line_view = Utf32View(line.code_points() + start_of_line, visual_line_break - start_of_line);
+    for (auto visual_line_view : visual_data.visual_lines) {
         Gfx::IntRect visual_line_rect {
             visual_data.visual_rect.x(),
             visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
@@ -1976,9 +1982,9 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
             if (m_icon)
                 visual_line_rect.translate_by(icon_size() + icon_padding(), 0);
         }
-        if (callback(visual_line_rect, visual_line_view, start_of_line, visual_line_index == visual_data.visual_line_breaks.size() - 1) == IterationDecision::Break)
+        size_t start_of_line = visual_line_view.code_points() - line.code_points();
+        if (callback(visual_line_rect, visual_line_view, start_of_line, visual_line_index == visual_data.visual_lines.size() - 1) == IterationDecision::Break)
             break;
-        start_of_line = visual_line_break;
         ++visual_line_index;
     }
 }
