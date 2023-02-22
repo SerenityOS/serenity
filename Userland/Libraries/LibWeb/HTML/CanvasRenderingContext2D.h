@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -90,7 +91,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     struct PreparedTextGlyph {
-        unsigned int c;
+        String glyph;
         Gfx::IntPoint position;
     };
 

@@ -10,6 +10,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
+#include <LibUnicode/Segmentation.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -451,9 +452,10 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     auto& font = Platform::FontPlugin::the().default_font();
     size_t width = 0;
     size_t height = font.pixel_size();
-    for (auto c : Utf8View { replaced_text }) {
-        width += font.glyph_or_emoji_width(c);
-    }
+
+    Utf8View replaced_text_view { replaced_text };
+    for (auto it = replaced_text_view.begin(); it != replaced_text_view.end(); ++it)
+        width += font.glyph_or_emoji_width(it);
 
     // 6. If maxWidth was provided and the hypothetical width of the inline box in the hypothetical line box is greater than maxWidth CSS pixels, then change font to have a more condensed font (if one is available or if a reasonably readable one can be synthesized by applying a horizontal scale factor to the font) or a smaller font, and return to the previous step.
     // FIXME: Record the font size used for this piece of text, and actually retry with a smaller size if needed.
@@ -478,11 +480,17 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(De
     PreparedText prepared_text { {}, physical_alignment, { 0, 0, static_cast<int>(width), static_cast<int>(height) } };
     prepared_text.glyphs.ensure_capacity(replaced_text.length());
 
-    size_t offset = 0;
-    for (auto c : Utf8View { replaced_text }) {
-        prepared_text.glyphs.append({ c, { static_cast<int>(offset), 0 } });
-        offset += font.glyph_or_emoji_width(c);
-    }
+    size_t previous_grapheme_boundary = 0;
+    Unicode::for_each_grapheme_segmentation_boundary(replaced_text_view, [&](auto boundary) {
+        if (boundary == 0)
+            return IterationDecision::Continue;
+
+        auto glyph_view = replaced_text_view.substring_view(previous_grapheme_boundary, boundary - previous_grapheme_boundary);
+        auto glyph = String::from_utf8(glyph_view.as_string()).release_value_but_fixme_should_propagate_errors();
+
+        prepared_text.glyphs.append({ move(glyph), { static_cast<int>(boundary), 0 } });
+        return IterationDecision::Continue;
+    });
 
     // 9. Return result, physical alignment, and the inline box.
     return prepared_text;
