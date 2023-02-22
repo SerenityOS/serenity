@@ -49,7 +49,7 @@ inode_usage() {
     find "$1" | wc -l
 }
 
-INODE_SIZE=128
+INODE_SIZE=256
 INODE_COUNT=$(($(inode_usage "$SERENITY_SOURCE_DIR/Base") + $(inode_usage Root)))
 INODE_COUNT=$((INODE_COUNT + 2000))  # Some additional inodes for toolchain files, could probably also be calculated
 DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root)) * 1024))
