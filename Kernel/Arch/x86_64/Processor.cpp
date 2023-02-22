@@ -626,7 +626,7 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
         g_total_processors.fetch_add(1u, AK::MemoryOrder::memory_order_acq_rel);
     }
 
-    deferred_call_pool_init();
+    m_deferred_call_pool.init();
 
     cpu_setup();
     gdt_init();
@@ -948,7 +948,7 @@ void Processor::exit_trap(TrapFrame& trap)
 
     // Process the deferred call queue. Among other things, this ensures
     // that any pending thread unblocks happen before we enter the scheduler.
-    deferred_call_execute_pending();
+    m_deferred_call_pool.execute_pending();
 
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
@@ -1345,92 +1345,6 @@ void Processor::Processor::halt()
     halt_this();
 }
 
-UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
-{
-    size_t pool_count = sizeof(m_deferred_call_pool) / sizeof(m_deferred_call_pool[0]);
-    for (size_t i = 0; i < pool_count; i++) {
-        auto& entry = m_deferred_call_pool[i];
-        entry.next = i < pool_count - 1 ? &m_deferred_call_pool[i + 1] : nullptr;
-        new (entry.handler_storage) DeferredCallEntry::HandlerFunction;
-        entry.was_allocated = false;
-    }
-    m_pending_deferred_calls = nullptr;
-    m_free_deferred_call_pool_entry = &m_deferred_call_pool[0];
-}
-
-void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
-{
-    VERIFY(m_in_critical);
-    VERIFY(!entry->was_allocated);
-
-    entry->handler_value() = {};
-
-    entry->next = m_free_deferred_call_pool_entry;
-    m_free_deferred_call_pool_entry = entry;
-}
-
-DeferredCallEntry* Processor::deferred_call_get_free()
-{
-    VERIFY(m_in_critical);
-
-    if (m_free_deferred_call_pool_entry) {
-        // Fast path, we have an entry in our pool
-        auto* entry = m_free_deferred_call_pool_entry;
-        m_free_deferred_call_pool_entry = entry->next;
-        VERIFY(!entry->was_allocated);
-        return entry;
-    }
-
-    auto* entry = new DeferredCallEntry;
-    new (entry->handler_storage) DeferredCallEntry::HandlerFunction;
-    entry->was_allocated = true;
-    return entry;
-}
-
-void Processor::deferred_call_execute_pending()
-{
-    VERIFY(m_in_critical);
-
-    if (!m_pending_deferred_calls)
-        return;
-    auto* pending_list = m_pending_deferred_calls;
-    m_pending_deferred_calls = nullptr;
-
-    // We pulled the stack of pending deferred calls in LIFO order, so we need to reverse the list first
-    auto reverse_list =
-        [](DeferredCallEntry* list) -> DeferredCallEntry* {
-        DeferredCallEntry* rev_list = nullptr;
-        while (list) {
-            auto next = list->next;
-            list->next = rev_list;
-            rev_list = list;
-            list = next;
-        }
-        return rev_list;
-    };
-    pending_list = reverse_list(pending_list);
-
-    do {
-        pending_list->invoke_handler();
-
-        // Return the entry back to the pool, or free it
-        auto* next = pending_list->next;
-        if (pending_list->was_allocated) {
-            pending_list->handler_value().~Function();
-            delete pending_list;
-        } else
-            deferred_call_return_to_pool(pending_list);
-        pending_list = next;
-    } while (pending_list);
-}
-
-void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
-{
-    VERIFY(m_in_critical);
-    entry->next = m_pending_deferred_calls;
-    m_pending_deferred_calls = entry;
-}
-
 void Processor::deferred_call_queue(Function<void()> callback)
 {
     // NOTE: If we are called outside of a critical section and outside
@@ -1438,10 +1352,10 @@ void Processor::deferred_call_queue(Function<void()> callback)
     ScopedCritical critical;
     auto& cur_proc = Processor::current();
 
-    auto* entry = cur_proc.deferred_call_get_free();
+    auto* entry = cur_proc.m_deferred_call_pool.get_free();
     entry->handler_value() = move(callback);
 
-    cur_proc.deferred_call_queue_entry(entry);
+    cur_proc.m_deferred_call_pool.queue_entry(entry);
 }
 
 UNMAP_AFTER_INIT void Processor::gdt_init()
@@ -1601,7 +1515,7 @@ void Processor::do_leave_critical()
     VERIFY(m_in_critical > 0);
     if (m_in_critical == 1) {
         if (m_in_irq == 0) {
-            deferred_call_execute_pending();
+            m_deferred_call_pool.execute_pending();
             VERIFY(m_in_critical == 1);
         }
         m_in_critical = 0;

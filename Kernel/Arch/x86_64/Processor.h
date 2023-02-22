@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/DeferredCallEntry.h>
+#include <Kernel/Arch/DeferredCallPool.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/x86_64/ASM_wrapper.h>
 #include <Kernel/Arch/x86_64/CPUID.h>
@@ -102,9 +103,7 @@ class Processor {
     bool m_in_scheduler;
     Atomic<bool> m_halt_requested;
 
-    DeferredCallEntry* m_pending_deferred_calls; // in reverse order
-    DeferredCallEntry* m_free_deferred_call_pool_entry;
-    DeferredCallEntry m_deferred_call_pool[5];
+    DeferredCallPool m_deferred_call_pool {};
 
     void* m_processor_specific_data[(size_t)ProcessorSpecificDataID::__Count];
 
@@ -121,12 +120,6 @@ class Processor {
     static void smp_broadcast_message(ProcessorMessage& msg);
     static void smp_broadcast_wait_sync(ProcessorMessage& msg);
     static void smp_broadcast_halt();
-
-    void deferred_call_pool_init();
-    void deferred_call_execute_pending();
-    DeferredCallEntry* deferred_call_get_free();
-    void deferred_call_return_to_pool(DeferredCallEntry*);
-    void deferred_call_queue_entry(DeferredCallEntry*);
 
     void cpu_detect();
     void cpu_setup();

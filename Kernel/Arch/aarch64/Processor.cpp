@@ -91,6 +91,8 @@ void Processor::early_initialize(u32 cpu)
 
 void Processor::initialize(u32)
 {
+    m_deferred_call_pool.init();
+
     dmesgln("CPU[{}]: Supports {}", m_cpu, build_cpu_feature_names(m_features));
     dmesgln("CPU[{}]: Physical address bit width: {}", m_cpu, m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", m_cpu, m_virtual_address_bit_width);
@@ -132,7 +134,7 @@ void Processor::do_leave_critical()
     VERIFY(m_in_critical > 0);
     if (m_in_critical == 1) {
         if (m_in_irq == 0) {
-            // FIXME: Call deferred_call_execute_pending()!
+            m_deferred_call_pool.execute_pending();
             VERIFY(m_in_critical == 1);
         }
         m_in_critical = 0;
@@ -402,6 +404,10 @@ void Processor::exit_trap(TrapFrame& trap)
     // FIXME: Figure out if we need prev_irq_level, see duplicated code in Kernel/Arch/x86/common/Processor.cpp
     m_in_irq = 0;
 
+    // Process the deferred call queue. Among other things, this ensures
+    // that any pending thread unblocks happen before we enter the scheduler.
+    m_deferred_call_pool.execute_pending();
+
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
@@ -540,6 +546,19 @@ StringView Processor::platform_string()
 void Processor::set_thread_specific_data(VirtualAddress thread_specific_data)
 {
     Aarch64::Asm::set_tpidr_el0(thread_specific_data.get());
+}
+
+void Processor::deferred_call_queue(Function<void()> callback)
+{
+    // NOTE: If we are called outside of a critical section and outside
+    // of an irq handler, the function will be executed before we return!
+    ScopedCritical critical;
+    auto& cur_proc = Processor::current();
+
+    auto* entry = cur_proc.m_deferred_call_pool.get_free();
+    entry->handler_value() = move(callback);
+
+    cur_proc.m_deferred_call_pool.queue_entry(entry);
 }
 
 }

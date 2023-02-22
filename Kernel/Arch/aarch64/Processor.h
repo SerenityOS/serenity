@@ -11,6 +11,8 @@
 #include <AK/Function.h>
 #include <AK/Types.h>
 
+#include <Kernel/Arch/DeferredCallEntry.h>
+#include <Kernel/Arch/DeferredCallPool.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/aarch64/CPUID.h>
 #include <Kernel/Arch/aarch64/Registers.h>
@@ -255,10 +257,7 @@ public:
         return Processor::current_id() == 0;
     }
 
-    static void deferred_call_queue(Function<void()> /* callback */)
-    {
-        TODO_AARCH64();
-    }
+    static void deferred_call_queue(Function<void()>);
 
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
@@ -281,6 +280,8 @@ private:
     Processor(Processor const&) = delete;
 
     void do_leave_critical();
+
+    DeferredCallPool m_deferred_call_pool {};
 
     u32 m_cpu;
     CPUFeature::Type m_features;
