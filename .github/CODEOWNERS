@@ -12,6 +12,7 @@
 /Userland/Applications/Spreadsheet @alimpfard
 /Userland/Libraries/LibC @bgianfo
 /Userland/Libraries/LibCrypto @alimpfard
+/Userland/Libraries/LibGfx/Font/Emoji.* @linusg
 /Userland/Libraries/LibGL @GMTA
 /Userland/Libraries/LibGPU @GMTA
 /Userland/Libraries/LibHTTP @alimpfard
