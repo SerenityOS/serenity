@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/WaitQueue.h>
@@ -28,6 +29,13 @@ UNMAP_AFTER_INIT WorkQueue::WorkQueue(StringView name)
     if (name_kstring.is_error())
         TODO();
     (void)Process::create_kernel_process(thread, name_kstring.release_value(), [this] {
+#if ARCH(AARCH64)
+        // FIXME: This function expects to be executed with interrupts disabled, however on
+        //        aarch64 we spawn (kernel) threads with interrupts enabled, so we need to disable them.
+        //        This code should be written in a way that it is able to be executed with interrupts enabled.
+        Processor::disable_interrupts();
+#endif
+
         for (;;) {
             WorkItem* item;
             bool have_more;
