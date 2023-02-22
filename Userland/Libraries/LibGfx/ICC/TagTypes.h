@@ -335,6 +335,8 @@ public:
         VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_input_channels);
         VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_output_channels);
         VERIFY(m_b_curves.size() == m_number_of_output_channels);
+
+        VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
         VERIFY(m_a_curves.has_value() == m_clut.has_value());
         VERIFY(m_m_curves.has_value() == m_e.has_value());
     }
@@ -387,8 +389,10 @@ public:
         VERIFY(m_b_curves.size() == m_number_of_input_channels);
         VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_input_channels);
         VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_output_channels);
+
         VERIFY(m_e.has_value() == m_m_curves.has_value());
         VERIFY(m_clut.has_value() == m_a_curves.has_value());
+        VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }

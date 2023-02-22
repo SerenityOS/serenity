@@ -47,10 +47,13 @@ static ErrorOr<ByteBuffer> encode_cipc(CicpTagData const& tag_data)
     return bytes;
 }
 
-static ErrorOr<ByteBuffer> encode_curve(CurveTagData const& tag_data)
+static u32 curve_encoded_size(CurveTagData const& tag_data)
 {
-    // ICC v4, 10.6 curveType
-    auto bytes = TRY(ByteBuffer::create_uninitialized(3 * sizeof(u32) + tag_data.values().size() * sizeof(u16)));
+    return 3 * sizeof(u32) + tag_data.values().size() * sizeof(u16);
+}
+
+static void encode_curve_to(CurveTagData const& tag_data, Bytes bytes)
+{
     *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(CurveTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
     *bit_cast<BigEndian<u32>*>(bytes.data() + 8) = tag_data.values().size();
@@ -58,7 +61,13 @@ static ErrorOr<ByteBuffer> encode_curve(CurveTagData const& tag_data)
     auto* values = bit_cast<BigEndian<u16>*>(bytes.data() + 12);
     for (size_t i = 0; i < tag_data.values().size(); ++i)
         values[i] = tag_data.values()[i];
+}
 
+static ErrorOr<ByteBuffer> encode_curve(CurveTagData const& tag_data)
+{
+    // ICC v4, 10.6 curveType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(curve_encoded_size(tag_data)));
+    encode_curve_to(tag_data, bytes.bytes());
     return bytes;
 }
 
@@ -124,6 +133,190 @@ static ErrorOr<ByteBuffer> encode_lut_8(Lut8TagData const& tag_data)
     values += clut_values_size;
 
     memcpy(values, tag_data.output_tables().data(), output_tables_size);
+
+    return bytes;
+}
+
+static u32 curve_encoded_size(CurveTagData const&);
+static void encode_curve_to(CurveTagData const&, Bytes);
+static u32 parametric_curve_encoded_size(ParametricCurveTagData const&);
+static void encode_parametric_curve_to(ParametricCurveTagData const&, Bytes);
+
+static u32 byte_size_of_curve(LutCurveType const& curve)
+{
+    VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
+    if (curve->type() == Gfx::ICC::CurveTagData::Type)
+        return curve_encoded_size(static_cast<CurveTagData const&>(*curve));
+    return parametric_curve_encoded_size(static_cast<ParametricCurveTagData const&>(*curve));
+}
+
+static u32 byte_size_of_curves(Vector<LutCurveType> const& curves)
+{
+    u32 size = 0;
+    for (auto const& curve : curves)
+        size += align_up_to(byte_size_of_curve(curve), 4);
+    return size;
+}
+
+static void write_curve(Bytes bytes, LutCurveType const& curve)
+{
+    VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
+    if (curve->type() == Gfx::ICC::CurveTagData::Type)
+        encode_curve_to(static_cast<CurveTagData const&>(*curve), bytes);
+    if (curve->type() == Gfx::ICC::ParametricCurveTagData::Type)
+        encode_parametric_curve_to(static_cast<ParametricCurveTagData const&>(*curve), bytes);
+}
+
+static void write_curves(Bytes bytes, Vector<LutCurveType> const& curves)
+{
+    u32 offset = 0;
+    for (auto const& curve : curves) {
+        u32 size = byte_size_of_curve(curve);
+        write_curve(bytes.slice(offset, size), curve);
+        offset += align_up_to(size, 4);
+    }
+}
+
+static u32 byte_size_of_clut(CLUTData const& clut)
+{
+    u32 data_size = clut.values.visit(
+        [](Vector<u8> const& v) { return v.size(); },
+        [](Vector<u16> const& v) { return 2 * v.size(); });
+    return align_up_to(sizeof(CLUTHeader) + data_size, 4);
+}
+
+static void write_clut(Bytes bytes, CLUTData const& clut)
+{
+    auto& clut_header = *bit_cast<CLUTHeader*>(bytes.data());
+    memset(clut_header.number_of_grid_points_in_dimension, 0, sizeof(clut_header.number_of_grid_points_in_dimension));
+    VERIFY(clut.number_of_grid_points_in_dimension.size() <= sizeof(clut_header.number_of_grid_points_in_dimension));
+    for (size_t i = 0; i < clut.number_of_grid_points_in_dimension.size(); ++i)
+        clut_header.number_of_grid_points_in_dimension[i] = clut.number_of_grid_points_in_dimension[i];
+
+    clut_header.precision_of_data_elements = clut.values.visit(
+        [](Vector<u8> const&) { return 1; },
+        [](Vector<u16> const&) { return 2; });
+
+    memset(clut_header.reserved_for_padding, 0, sizeof(clut_header.reserved_for_padding));
+
+    clut.values.visit(
+        [&bytes](Vector<u8> const& v) {
+            memcpy(bytes.data() + sizeof(CLUTHeader), v.data(), v.size());
+        },
+        [&bytes](Vector<u16> const& v) {
+            auto* raw_clut = bit_cast<BigEndian<u16>*>(bytes.data() + sizeof(CLUTHeader));
+            for (size_t i = 0; i < v.size(); ++i)
+                raw_clut[i] = v[i];
+        });
+}
+
+static void write_matrix(Bytes bytes, EMatrix3x4 const& e_matrix)
+{
+    auto* raw_e = bit_cast<BigEndian<s15Fixed16Number>*>(bytes.data());
+    for (int i = 0; i < 12; ++i)
+        raw_e[i] = e_matrix.e[i].raw();
+}
+
+static ErrorOr<ByteBuffer> encode_lut_a_to_b(LutAToBTagData const& tag_data)
+{
+    // ICC v4, 10.12 lutAToBType
+    u32 a_curves_size = tag_data.a_curves().map(byte_size_of_curves).value_or(0);
+    u32 clut_size = tag_data.clut().map(byte_size_of_clut).value_or(0);
+    u32 m_curves_size = tag_data.m_curves().map(byte_size_of_curves).value_or(0);
+    u32 e_matrix_size = tag_data.e_matrix().has_value() ? 12 * sizeof(s15Fixed16Number) : 0;
+    u32 b_curves_size = byte_size_of_curves(tag_data.b_curves());
+
+    auto bytes = TRY(ByteBuffer::create_zeroed(2 * sizeof(u32) + sizeof(AdvancedLUTHeader) + a_curves_size + clut_size + m_curves_size + e_matrix_size + b_curves_size));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(LutAToBTagData::Type);
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<AdvancedLUTHeader*>(bytes.data() + 8);
+    header.number_of_input_channels = tag_data.number_of_input_channels();
+    header.number_of_output_channels = tag_data.number_of_output_channels();
+    header.reserved_for_padding = 0;
+    header.offset_to_b_curves = 0;
+    header.offset_to_matrix = 0;
+    header.offset_to_m_curves = 0;
+    header.offset_to_clut = 0;
+    header.offset_to_a_curves = 0;
+
+    u32 offset = 2 * sizeof(u32) + sizeof(AdvancedLUTHeader);
+    auto advance = [&offset](BigEndian<u32>& header_slot, u32 size) {
+        header_slot = offset;
+        VERIFY(size % 4 == 0);
+        offset += size;
+    };
+
+    if (auto const& a_curves = tag_data.a_curves(); a_curves.has_value()) {
+        write_curves(bytes.bytes().slice(offset, a_curves_size), a_curves.value());
+        advance(header.offset_to_a_curves, a_curves_size);
+    }
+    if (auto const& clut = tag_data.clut(); clut.has_value()) {
+        write_clut(bytes.bytes().slice(offset, clut_size), clut.value());
+        advance(header.offset_to_clut, clut_size);
+    }
+    if (auto const& m_curves = tag_data.m_curves(); m_curves.has_value()) {
+        write_curves(bytes.bytes().slice(offset, m_curves_size), m_curves.value());
+        advance(header.offset_to_m_curves, m_curves_size);
+    }
+    if (auto const& e_matrix = tag_data.e_matrix(); e_matrix.has_value()) {
+        write_matrix(bytes.bytes().slice(offset, e_matrix_size), e_matrix.value());
+        advance(header.offset_to_matrix, e_matrix_size);
+    }
+    write_curves(bytes.bytes().slice(offset, b_curves_size), tag_data.b_curves());
+    advance(header.offset_to_b_curves, b_curves_size);
+
+    return bytes;
+}
+
+static ErrorOr<ByteBuffer> encode_lut_b_to_a(LutBToATagData const& tag_data)
+{
+    // ICC v4, 10.13 lutBToAType
+    u32 b_curves_size = byte_size_of_curves(tag_data.b_curves());
+    u32 e_matrix_size = tag_data.e_matrix().has_value() ? 12 * sizeof(s15Fixed16Number) : 0;
+    u32 m_curves_size = tag_data.m_curves().map(byte_size_of_curves).value_or(0);
+    u32 clut_size = tag_data.clut().map(byte_size_of_clut).value_or(0);
+    u32 a_curves_size = tag_data.a_curves().map(byte_size_of_curves).value_or(0);
+
+    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + sizeof(AdvancedLUTHeader) + b_curves_size + e_matrix_size + m_curves_size + clut_size + a_curves_size));
+    *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(LutBToATagData::Type);
+    *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
+
+    auto& header = *bit_cast<AdvancedLUTHeader*>(bytes.data() + 8);
+    header.number_of_input_channels = tag_data.number_of_input_channels();
+    header.number_of_output_channels = tag_data.number_of_output_channels();
+    header.reserved_for_padding = 0;
+    header.offset_to_b_curves = 0;
+    header.offset_to_matrix = 0;
+    header.offset_to_m_curves = 0;
+    header.offset_to_clut = 0;
+    header.offset_to_a_curves = 0;
+
+    u32 offset = 2 * sizeof(u32) + sizeof(AdvancedLUTHeader);
+    auto advance = [&offset](BigEndian<u32>& header_slot, u32 size) {
+        header_slot = offset;
+        VERIFY(size % 4 == 0);
+        offset += size;
+    };
+
+    write_curves(bytes.bytes().slice(offset, b_curves_size), tag_data.b_curves());
+    advance(header.offset_to_b_curves, b_curves_size);
+    if (auto const& e_matrix = tag_data.e_matrix(); e_matrix.has_value()) {
+        write_matrix(bytes.bytes().slice(offset, e_matrix_size), e_matrix.value());
+        advance(header.offset_to_matrix, e_matrix_size);
+    }
+    if (auto const& m_curves = tag_data.m_curves(); m_curves.has_value()) {
+        write_curves(bytes.bytes().slice(offset, m_curves_size), m_curves.value());
+        advance(header.offset_to_m_curves, m_curves_size);
+    }
+    if (auto const& clut = tag_data.clut(); clut.has_value()) {
+        write_clut(bytes.bytes().slice(offset, clut_size), clut.value());
+        advance(header.offset_to_clut, clut_size);
+    }
+    if (auto const& a_curves = tag_data.a_curves(); a_curves.has_value()) {
+        write_curves(bytes.bytes().slice(offset, a_curves_size), a_curves.value());
+        advance(header.offset_to_a_curves, a_curves_size);
+    }
 
     return bytes;
 }
@@ -227,10 +420,13 @@ static ErrorOr<ByteBuffer> encode_named_color_2(NamedColor2TagData const& tag_da
     return bytes;
 }
 
-static ErrorOr<ByteBuffer> encode_parametric_curve(ParametricCurveTagData const& tag_data)
+static u32 parametric_curve_encoded_size(ParametricCurveTagData const& tag_data)
 {
-    // ICC v4, 10.18 parametricCurveType
-    auto bytes = TRY(ByteBuffer::create_uninitialized(2 * sizeof(u32) + 2 * sizeof(u16) + tag_data.parameter_count() * sizeof(s15Fixed16Number)));
+    return 2 * sizeof(u32) + 2 * sizeof(u16) + tag_data.parameter_count() * sizeof(s15Fixed16Number);
+}
+
+static void encode_parametric_curve_to(ParametricCurveTagData const& tag_data, Bytes bytes)
+{
     *bit_cast<BigEndian<u32>*>(bytes.data()) = static_cast<u32>(ParametricCurveTagData::Type);
     *bit_cast<BigEndian<u32>*>(bytes.data() + 4) = 0;
 
@@ -240,7 +436,13 @@ static ErrorOr<ByteBuffer> encode_parametric_curve(ParametricCurveTagData const&
     auto* parameters = bit_cast<BigEndian<s15Fixed16Number>*>(bytes.data() + 12);
     for (size_t i = 0; i < tag_data.parameter_count(); ++i)
         parameters[i] = tag_data.parameter(i).raw();
+}
 
+static ErrorOr<ByteBuffer> encode_parametric_curve(ParametricCurveTagData const& tag_data)
+{
+    // ICC v4, 10.18 parametricCurveType
+    auto bytes = TRY(ByteBuffer::create_uninitialized(parametric_curve_encoded_size(tag_data)));
+    encode_parametric_curve_to(tag_data, bytes.bytes());
     return bytes;
 }
 
@@ -380,6 +582,10 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_lut_16(static_cast<Lut16TagData const&>(tag_data));
     case Lut8TagData::Type:
         return encode_lut_8(static_cast<Lut8TagData const&>(tag_data));
+    case LutAToBTagData::Type:
+        return encode_lut_a_to_b(static_cast<LutAToBTagData const&>(tag_data));
+    case LutBToATagData::Type:
+        return encode_lut_b_to_a(static_cast<LutBToATagData const&>(tag_data));
     case MeasurementTagData::Type:
         return encode_measurement(static_cast<MeasurementTagData const&>(tag_data));
     case MultiLocalizedUnicodeTagData::Type:
