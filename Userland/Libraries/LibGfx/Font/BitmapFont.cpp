@@ -326,14 +326,6 @@ static float glyph_or_emoji_width_impl(BitmapFont const& font, CodePointIterator
     return font.glyph_width(*it);
 }
 
-float BitmapFont::glyph_or_emoji_width(u32 code_point) const
-{
-    Utf32View code_point_view { &code_point, 1 };
-    auto it = code_point_view.begin();
-
-    return glyph_or_emoji_width_impl(*this, it);
-}
-
 float BitmapFont::glyph_or_emoji_width(Utf8CodePointIterator& it) const
 {
     return glyph_or_emoji_width_impl(*this, it);
