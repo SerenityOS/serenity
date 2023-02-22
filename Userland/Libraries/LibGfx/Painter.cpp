@@ -2492,7 +2492,7 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
     auto pixel_metrics = font.pixel_metrics();
     float x = baseline_start.x();
     float y = baseline_start.y() - pixel_metrics.ascent;
-    float space_width = font.glyph_or_emoji_width(' ');
+    float space_width = font.glyph_width(' ');
 
     u32 last_code_point = 0;
 
