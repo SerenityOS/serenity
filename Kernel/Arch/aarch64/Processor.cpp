@@ -121,6 +121,28 @@ void Processor::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, si
     flush_tlb_local(vaddr, page_count);
 }
 
+void Processor::leave_critical()
+{
+    InterruptDisabler disabler;
+    current().do_leave_critical();
+}
+
+void Processor::do_leave_critical()
+{
+    VERIFY(m_in_critical > 0);
+    if (m_in_critical == 1) {
+        if (m_in_irq == 0) {
+            // FIXME: Call deferred_call_execute_pending()!
+            VERIFY(m_in_critical == 1);
+        }
+        m_in_critical = 0;
+        if (m_in_irq == 0)
+            check_invoke_scheduler();
+    } else {
+        m_in_critical = m_in_critical - 1;
+    }
+}
+
 u32 Processor::clear_critical()
 {
     InterruptDisabler disabler;
