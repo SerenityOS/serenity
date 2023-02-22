@@ -404,6 +404,7 @@ if (BUILD_LAGOM)
         list(APPEND lagom_standard_libraries Web)
 
         # WebView
+        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/AccessibilityTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/StylePropertiesModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ViewImplementation.cpp")
