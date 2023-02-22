@@ -169,20 +169,23 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
         for_each_visual_line(line_index, [&](Gfx::IntRect const& rect, auto& view, size_t start_of_line, [[maybe_unused]] bool is_last_visual_line) {
             if (is_multi_line() && !rect.contains_vertically(position.y()) && !is_last_visual_line)
                 return IterationDecision::Continue;
+
             column_index = start_of_line;
+            int glyph_x = 0;
+
             if (position.x() <= 0) {
                 // We're outside the text on the left side, put cursor at column 0 on this visual line.
-            } else {
-                int glyph_x = 0;
-                size_t i = 0;
-                for (; i < view.length(); ++i) {
-                    int advance = font().glyph_or_emoji_width(view.code_points()[i]) + font().glyph_spacing();
-                    if ((glyph_x + (advance / 2)) >= position.x())
-                        break;
-                    glyph_x += advance;
-                }
-                column_index += i;
+                return IterationDecision::Break;
             }
+
+            for (auto it = view.begin(); it != view.end(); ++it, ++column_index) {
+                int advance = font().glyph_or_emoji_width(it) + font().glyph_spacing();
+                if ((glyph_x + (advance / 2)) >= position.x())
+                    break;
+
+                glyph_x += advance;
+            }
+
             return IterationDecision::Break;
         });
         break;
