@@ -5,6 +5,10 @@ set(TEST_SOURCES
     TestImageDecoder.cpp
 )
 
+if (SERENITYOS)
+    list(APPEND TEST_SOURCES TestEmoji.cpp)
+endif()
+
 foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibGfx LIBS LibGfx)
 endforeach()
