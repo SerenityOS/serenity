@@ -98,23 +98,20 @@ float ScaledFont::glyph_width(u32 code_point) const
     return metrics.advance_width;
 }
 
-float ScaledFont::glyph_or_emoji_width(u32 code_point) const
-{
-    auto id = glyph_id_for_code_point(code_point);
-    auto metrics = glyph_metrics(id);
-    return metrics.advance_width;
-}
-
 float ScaledFont::glyph_or_emoji_width(Utf8CodePointIterator& it) const
 {
     // FIXME: Support multi-code point emoji with scaled fonts.
-    return glyph_or_emoji_width(*it);
+    auto id = glyph_id_for_code_point(*it);
+    auto metrics = glyph_metrics(id);
+    return metrics.advance_width;
 }
 
 float ScaledFont::glyph_or_emoji_width(Utf32CodePointIterator& it) const
 {
     // FIXME: Support multi-code point emoji with scaled fonts.
-    return glyph_or_emoji_width(*it);
+    auto id = glyph_id_for_code_point(*it);
+    auto metrics = glyph_metrics(id);
+    return metrics.advance_width;
 }
 
 float ScaledFont::glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const
