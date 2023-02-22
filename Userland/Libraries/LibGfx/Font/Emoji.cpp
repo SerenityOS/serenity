@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Span.h>
@@ -52,6 +53,8 @@ static Bitmap const* emoji_for_code_point_iterator_impl(CodePointIterator& it)
     // into a certain range in the loop below (emojis, modifiers, variation selectors, ZWJ),
     // and bailing out early if not. Current worst case is 10 file lookups for any sequence of
     // code points (if the first glyph isn't part of the font in regular text rendering).
+    if (is_ascii(*it))
+        return nullptr;
 
     constexpr size_t max_emoji_code_point_sequence_length = 10;
 
