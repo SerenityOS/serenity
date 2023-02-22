@@ -188,12 +188,7 @@ public:
         current_processor.m_in_critical = current_processor.m_in_critical + 1;
     }
 
-    ALWAYS_INLINE static void leave_critical()
-    {
-        auto& current_processor = current();
-        current_processor.m_in_critical = current_processor.m_in_critical - 1;
-    }
-
+    static void leave_critical();
     static u32 clear_critical();
 
     ALWAYS_INLINE static void restore_critical(u32 prev_critical)
@@ -283,6 +278,8 @@ public:
 
 private:
     Processor(Processor const&) = delete;
+
+    void do_leave_critical();
 
     u32 m_cpu;
     CPUFeature::Type m_features;
