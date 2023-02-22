@@ -59,9 +59,20 @@ static bool could_be_emoji(CodePointIterator const& it)
     }
 
     static auto const emoji_property = Unicode::property_from_string("Emoji"sv);
-    if (!emoji_property.has_value()) {
+    static auto const variation_selector_property = Unicode::property_from_string("Variation_Selector"sv);
+    if (!emoji_property.has_value() || !variation_selector_property.has_value()) {
         // This means Unicode data generation is disabled. Always check the disk in that case.
         return true;
+    }
+
+    if (is_ascii_digit(*it) || *it == '#' || *it == '*') {
+        // Avoid slow path for keypad characters that are really just ASCII and not emojis.
+        auto peeked_code_point = it.peek(1);
+        constexpr auto combining_enclosing_keycap = 0x20E3u;
+        if (peeked_code_point.has_value() && *peeked_code_point != combining_enclosing_keycap
+            && !Unicode::code_point_has_property(*peeked_code_point, *variation_selector_property)) {
+            return false;
+        }
     }
 
     return Unicode::code_point_has_property(*it, *emoji_property);
