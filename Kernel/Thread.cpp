@@ -1115,23 +1115,20 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         if (action.flags & SA_SIGINFO)
             fill_signal_info_for_signal(signal_info);
 
-#if ARCH(X86_64)
-        constexpr static FlatPtr thread_red_zone_size = 128;
-#elif ARCH(AARCH64)
-        constexpr static FlatPtr thread_red_zone_size = 0; // FIXME
-        TODO_AARCH64();
-#else
-#    error Unknown architecture in dispatch_signal
-#endif
-
         // Align the stack to 16 bytes.
         // Note that we push some elements on to the stack before the return address,
         // so we need to account for this here.
         constexpr static FlatPtr elements_pushed_on_stack_before_handler_address = 1; // one slot for a saved register
         FlatPtr const extra_bytes_pushed_on_stack_before_handler_address = sizeof(ucontext) + sizeof(signal_info);
         FlatPtr stack_alignment = (stack - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
+        stack -= stack_alignment;
+
+#if ARCH(X86_64)
         // Also note that we have to skip the thread red-zone (if needed), so do that here.
-        stack -= thread_red_zone_size + stack_alignment;
+        constexpr static FlatPtr thread_red_zone_size = 128;
+        stack -= thread_red_zone_size;
+#endif
+
         auto start_of_stack = stack;
 
         TRY(push_value_on_user_stack(stack, 0)); // syscall return value slot
