@@ -1878,42 +1878,60 @@ size_t TextEditor::visual_line_containing(size_t line_index, size_t column) cons
 
 void TextEditor::recompute_visual_lines(size_t line_index)
 {
-    auto& line = document().line(line_index);
-    auto& visual_data = m_line_visual_data[line_index];
+    auto const& line = document().line(line_index);
+    size_t line_width_so_far = 0;
 
+    auto& visual_data = m_line_visual_data[line_index];
     visual_data.visual_line_breaks.clear_with_capacity();
 
-    int available_width = visible_text_rect_in_inner_coordinates().width();
+    auto available_width = visible_text_rect_in_inner_coordinates().width();
+    auto glyph_spacing = font().glyph_spacing();
 
-    if (is_wrapping_enabled()) {
-        int line_width_so_far = 0;
+    auto wrap_visual_lines_anywhere = [&]() {
+        for (auto it = line.view().begin(); it != line.view().end(); ++it) {
+            auto it_before_computing_glyph_width = it;
+            auto glyph_width = font().glyph_or_emoji_width(it);
 
-        size_t last_whitespace_index = 0;
-        size_t line_width_since_last_whitespace = 0;
-        auto glyph_spacing = font().glyph_spacing();
-        for (size_t i = 0; i < line.length(); ++i) {
-            auto code_point = line.code_points()[i];
-            if (is_ascii_space(code_point)) {
-                last_whitespace_index = i;
-                line_width_since_last_whitespace = 0;
+            if (line_width_so_far + glyph_width + glyph_spacing > available_width) {
+                visual_data.visual_line_breaks.append(line.view().iterator_offset(it_before_computing_glyph_width));
+                line_width_so_far = 0;
             }
-            auto glyph_width = font().glyph_or_emoji_width(code_point);
-            line_width_since_last_whitespace += glyph_width + glyph_spacing;
-            if ((line_width_so_far + glyph_width + glyph_spacing) > available_width) {
-                if (m_wrapping_mode == WrappingMode::WrapAtWords && last_whitespace_index != 0) {
-                    // Plus 1 to get the first letter of the word.
-                    visual_data.visual_line_breaks.append(last_whitespace_index + 1);
-                    line_width_so_far = line_width_since_last_whitespace;
-                    last_whitespace_index = 0;
-                    line_width_since_last_whitespace = 0;
-                } else {
-                    visual_data.visual_line_breaks.append(i);
-                    line_width_so_far = glyph_width + glyph_spacing;
-                }
-                continue;
-            }
+
             line_width_so_far += glyph_width + glyph_spacing;
         }
+    };
+
+    auto wrap_visual_lines_at_words = [&]() {
+        size_t last_boundary = 0;
+
+        Unicode::for_each_word_segmentation_boundary(line.view(), [&](auto boundary) {
+            if (boundary == 0)
+                return IterationDecision::Continue;
+
+            auto word = line.view().substring_view(last_boundary, boundary - last_boundary);
+            auto word_width = font().width(word);
+
+            if (line_width_so_far + word_width + glyph_spacing > available_width) {
+                visual_data.visual_line_breaks.append(last_boundary);
+                line_width_so_far = 0;
+            }
+
+            line_width_so_far += word_width + glyph_spacing;
+            last_boundary = boundary;
+
+            return IterationDecision::Continue;
+        });
+    };
+
+    switch (wrapping_mode()) {
+    case WrappingMode::NoWrap:
+        break;
+    case WrappingMode::WrapAnywhere:
+        wrap_visual_lines_anywhere();
+        break;
+    case WrappingMode::WrapAtWords:
+        wrap_visual_lines_at_words();
+        break;
     }
 
     visual_data.visual_line_breaks.append(line.length());
