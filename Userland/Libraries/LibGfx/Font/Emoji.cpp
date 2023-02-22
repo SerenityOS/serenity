@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Span.h>
@@ -13,6 +12,7 @@
 #include <AK/Utf8View.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
+#include <LibUnicode/CharacterTypes.h>
 
 namespace Gfx {
 
@@ -47,13 +47,34 @@ Bitmap const* Emoji::emoji_for_code_points(ReadonlySpan<u32> const& code_points)
 }
 
 template<typename CodePointIterator>
+static bool could_be_emoji(CodePointIterator const& it)
+{
+    if (it.done())
+        return false;
+
+    static constexpr u32 supplementary_private_use_area_b_first_code_point = 0x100000;
+    if (*it >= supplementary_private_use_area_b_first_code_point) {
+        // We use Supplementary Private Use Area-B for custom Serenity emoji.
+        return true;
+    }
+
+    static auto const emoji_property = Unicode::property_from_string("Emoji"sv);
+    if (!emoji_property.has_value()) {
+        // This means Unicode data generation is disabled. Always check the disk in that case.
+        return true;
+    }
+
+    return Unicode::code_point_has_property(*it, *emoji_property);
+}
+
+template<typename CodePointIterator>
 static Bitmap const* emoji_for_code_point_iterator_impl(CodePointIterator& it)
 {
     // NOTE: I'm sure this could be more efficient, e.g. by checking if each code point falls
     // into a certain range in the loop below (emojis, modifiers, variation selectors, ZWJ),
     // and bailing out early if not. Current worst case is 10 file lookups for any sequence of
     // code points (if the first glyph isn't part of the font in regular text rendering).
-    if (is_ascii(*it))
+    if (!could_be_emoji(it))
         return nullptr;
 
     constexpr size_t max_emoji_code_point_sequence_length = 10;
