@@ -124,7 +124,7 @@ Action::Action(DeprecatedString text, Shortcut const& shortcut, Shortcut const& 
 
 Action::~Action()
 {
-    if (m_shortcut.is_valid() && m_scope == ShortcutScope::ApplicationGlobal) {
+    if (m_scope == ShortcutScope::ApplicationGlobal) {
         if (auto* app = Application::the())
             app->unregister_global_shortcut_action({}, *this);
     }
