@@ -746,7 +746,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            active_layer->create_mask();
+
+            if (auto maybe_error = active_layer->create_mask(); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer mask: {}", maybe_error.release_error()));
+                return;
+            }
+
             editor->did_complete_action("Add Mask");
             editor->update();
             m_layer_list_widget->repaint();

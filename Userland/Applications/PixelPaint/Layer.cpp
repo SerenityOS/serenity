@@ -309,11 +309,12 @@ void Layer::update_cached_bitmap()
     }
 }
 
-void Layer::create_mask()
+ErrorOr<void> Layer::create_mask()
 {
-    m_mask_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size()));
+    m_mask_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size()));
     m_mask_bitmap->fill(Gfx::Color::White);
     update_cached_bitmap();
+    return {};
 }
 
 Gfx::Bitmap& Layer::currently_edited_bitmap()
