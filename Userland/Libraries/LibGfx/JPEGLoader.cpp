@@ -177,6 +177,14 @@ struct ICCMultiChunkState {
     FixedArray<ByteBuffer> chunks;
 };
 
+struct Scan {
+    // B.2.3 - Scan header syntax
+
+    u8 spectral_selection_start {};
+    u8 spectral_selection_end {};
+    u8 successive_approximation {};
+};
+
 struct JPEGLoadingContext {
     enum State {
         NotDecoded = 0,
@@ -194,9 +202,9 @@ struct JPEGLoadingContext {
     StartOfFrame frame;
     u8 hsample_factor { 0 };
     u8 vsample_factor { 0 };
-    u8 spectral_selection_start {};
-    u8 spectral_selection_end {};
-    u8 successive_approximation {};
+
+    Scan current_scan;
+
     Vector<ComponentSpec, 3> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_restart_interval { 0 };
@@ -308,9 +316,9 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
     // Compute the AC coefficients.
 
     // 0th coefficient is the dc, which is already handled
-    auto first_coefficient = max(1, context.spectral_selection_start);
+    auto first_coefficient = max(1, context.current_scan.spectral_selection_start);
 
-    for (int j = first_coefficient; j <= context.spectral_selection_end;) {
+    for (int j = first_coefficient; j <= context.current_scan.spectral_selection_end;) {
         // AC symbols encode 2 pieces of information, the high 4 bits represent
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
@@ -322,7 +330,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         u8 run_length = ac_symbol == 0xF0 ? 16 : ac_symbol >> 4;
         j += run_length;
 
-        if (j > context.spectral_selection_end) {
+        if (j > context.current_scan.spectral_selection_end) {
             dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
             return Error::from_string_literal("Run-length exceeded boundaries");
         }
@@ -375,7 +383,7 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 Macroblock& block = macroblocks[mb_index];
 
-                if (context.spectral_selection_start == 0)
+                if (context.current_scan.spectral_selection_start == 0)
                     TRY(add_dc(context, block, component, component_i));
                 TRY(add_ac(context, block, component, component_i));
             }
@@ -572,20 +580,24 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
             return Error::from_string_literal("AC table does not exist");
         }
     }
+    Scan current_scan;
 
-    context.spectral_selection_start = TRY(stream.read_value<u8>());
-    context.spectral_selection_end = TRY(stream.read_value<u8>());
-    context.successive_approximation = TRY(stream.read_value<u8>());
+    current_scan.spectral_selection_start = TRY(stream.read_value<u8>());
+    current_scan.spectral_selection_end = TRY(stream.read_value<u8>());
+    current_scan.successive_approximation = TRY(stream.read_value<u8>());
 
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
-    if (context.spectral_selection_start != 0 || context.spectral_selection_end != 63 || context.successive_approximation != 0) {
+    if (current_scan.spectral_selection_start != 0 || current_scan.spectral_selection_end != 63 || current_scan.successive_approximation != 0) {
         dbgln_if(JPEG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
             TRY(stream.tell()),
-            context.spectral_selection_start,
-            context.spectral_selection_end,
-            context.successive_approximation);
+            current_scan.spectral_selection_start,
+            current_scan.spectral_selection_end,
+            current_scan.successive_approximation);
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
+
+    context.current_scan = current_scan;
+
     return {};
 }
 
