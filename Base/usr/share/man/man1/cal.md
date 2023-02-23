@@ -5,12 +5,13 @@ cal - Display a calendar
 ## Synopsis
 
 ```**sh
-$ cal [[[day] month] year]
+$ cal [[month] year]
 ```
 
 ## Description
 
 This program displays a simple calendar. If no arguments are specified, the current month is displayed with the current day highlighted.
+An overview of a whole year is displayed when a `year` is passed without a `month`.
 
 Days, months and years are specified with numbers. Week starts at Sunday.
 
