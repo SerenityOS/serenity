@@ -595,6 +595,11 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
     current_scan.spectral_selection_end = TRY(stream.read_value<u8>());
     current_scan.successive_approximation = TRY(stream.read_value<u8>());
 
+    dbgln_if(JPEG_DEBUG, "Start of Selection: {}, End of Selection: {}, Successive Approximation: {}",
+        current_scan.spectral_selection_start,
+        current_scan.spectral_selection_end,
+        current_scan.successive_approximation);
+
     // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
     if (current_scan.spectral_selection_start != 0 || current_scan.spectral_selection_end != 63 || current_scan.successive_approximation != 0) {
         dbgln_if(JPEG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
