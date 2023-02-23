@@ -729,9 +729,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
 
                 generate_to_cpp(dictionary_generator, member, member_property_value_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
-                dictionary_generator.append(R"~~~(
+                if (optional && interface.extended_attributes.contains("UseNewAKString")) {
+                    dictionary_generator.append(R"~~~(
+    if (@member_value_name@.has_value())
+        @cpp_name@.@member_name@ = @member_value_name@.release_value();
+)~~~");
+                } else {
+                    dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
+                }
                 if (!member.required && !member.default_value.has_value()) {
                     dictionary_generator.append(R"~~~(
     }
