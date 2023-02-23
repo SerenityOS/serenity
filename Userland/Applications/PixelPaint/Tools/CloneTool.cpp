@@ -66,9 +66,9 @@ void CloneTool::on_mousemove(Layer* layer, MouseEvent& event)
         return;
 
     if (m_cursor_offset.has_value()) {
+        auto old_sample_marker_rect = sample_marker_rect();
         m_sample_location = image_event.position() - m_cursor_offset.value();
-        // FIXME: This is a really inefficient way to update the marker's location
-        m_editor->update();
+        update_sample_marker(old_sample_marker_rect);
     }
 
     BrushTool::on_mousemove(layer, event);
@@ -78,10 +78,10 @@ void CloneTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
     auto& image_event = event.image_event();
     if (image_event.alt()) {
+        auto old_sample_marker_rect = sample_marker_rect();
         m_sample_location = image_event.position();
         m_cursor_offset = {};
-        // FIXME: This is a really dumb way to get the marker to show up
-        m_editor->update();
+        update_sample_marker(old_sample_marker_rect);
         return;
     }
 
@@ -102,16 +102,8 @@ void CloneTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
 
-    auto sample_pos = m_editor->content_to_frame_position(m_sample_location.value());
-    // We don't want the marker to be a single pixel and hide the color.
-    auto offset = AK::max(2, size() / 2);
-    Gfx::IntRect rect = {
-        (int)sample_pos.x() - offset,
-        (int)sample_pos.y() - offset,
-        offset * 2,
-        offset * 2
-    };
-    painter.draw_ellipse_intersecting(rect, m_marker_color, 1);
+    auto rect = sample_marker_rect();
+    painter.draw_ellipse_intersecting(rect.value(), m_marker_color, 1);
 }
 
 bool CloneTool::on_keydown(GUI::KeyEvent& event)
@@ -175,6 +167,32 @@ ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
     }
 
     return m_properties_widget.ptr();
+}
+
+Optional<Gfx::IntRect> CloneTool::sample_marker_rect()
+{
+    if (!m_sample_location.has_value())
+        return {};
+
+    auto sample_pos = m_editor->content_to_frame_position(m_sample_location.value());
+    // We don't want the marker to be a single pixel and hide the color.
+    auto offset = AK::max(2, size() / 2);
+    return Gfx::IntRect {
+        (int)sample_pos.x() - offset,
+        (int)sample_pos.y() - offset,
+        offset * 2,
+        offset * 2
+    };
+}
+
+void CloneTool::update_sample_marker(Optional<Gfx::IntRect> old_rect)
+{
+    if (old_rect.has_value())
+        m_editor->update(old_rect.value().inflated(2, 2));
+
+    auto current_rect = sample_marker_rect();
+    if (current_rect.has_value())
+        m_editor->update(current_rect.value().inflated(2, 2));
 }
 
 }

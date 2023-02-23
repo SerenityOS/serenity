@@ -32,6 +32,8 @@ protected:
 
 private:
     virtual StringView tool_name() const override { return "Clone Tool"sv; }
+    Optional<Gfx::IntRect> sample_marker_rect();
+    void update_sample_marker(Optional<Gfx::IntRect> old_rect);
 
     RefPtr<GUI::Widget> m_properties_widget;
 
