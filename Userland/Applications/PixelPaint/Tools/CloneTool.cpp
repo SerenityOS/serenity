@@ -144,7 +144,9 @@ ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
         size_slider->set_value(size());
 
         size_slider->on_change = [this](int value) {
+            auto old_sample_marker_rect = sample_marker_rect();
             set_size(value);
+            update_sample_marker(old_sample_marker_rect);
         };
         set_primary_slider(size_slider);
 
