@@ -94,14 +94,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    int day = 0;
     int month = 0;
     int year = 0;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
-    // FIXME: This should ensure two values get parsed as month + year
-    args_parser.add_positional_argument(day, "Day of year", "day", Core::ArgsParser::Required::No);
+    // FIXME: This should ensure one value gets parsed as just a year
     args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -109,22 +107,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
 
-    // Hack: workaround two values parsing as day + month.
-    if (day && month && !year) {
+    // Hack: workaround one value parsing as a month
+    if (month && !year) {
         year = month;
-        month = day;
-        day = 0;
+        month = 0;
     }
 
-    bool year_mode = !day && !month && year;
+    bool year_mode = !month && year;
 
     if (!year)
         year = tm->tm_year + 1900;
     if (!month)
         month = tm->tm_mon + 1;
-    if (!day)
-        day = tm->tm_mday;
 
+    // FIXME: Those are really _target_ year and month values - not current ones
     current_year = year;
     current_month = month;
 
