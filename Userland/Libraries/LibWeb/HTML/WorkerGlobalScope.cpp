@@ -49,7 +49,7 @@ void WorkerGlobalScope::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#importing-scripts-and-libraries
-WebIDL::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<DeprecatedString> urls)
+WebIDL::ExceptionOr<void> WorkerGlobalScope::import_scripts(Vector<String> urls)
 {
     // The algorithm may optionally be customized by supplying custom perform the fetch hooks,
     // which if provided will be used when invoking fetch a classic worker-imported script.
@@ -104,7 +104,7 @@ ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin
-DeprecatedString WorkerGlobalScope::origin() const
+String WorkerGlobalScope::origin() const
 {
     // FIXME: The origin getter steps are to return this's relevant settings object's origin, serialized.
     return {};
@@ -127,14 +127,14 @@ bool WorkerGlobalScope::cross_origin_isolated() const
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-btoa
-WebIDL::ExceptionOr<DeprecatedString> WorkerGlobalScope::btoa(DeprecatedString const& data) const
+WebIDL::ExceptionOr<String> WorkerGlobalScope::btoa(String const& data) const
 {
     // FIXME: This is the same as the implementation in Bindings/WindowObject.cpp
     //     Find a way to share this implementation, since they come from the same mixin.
 
     // The btoa(data) method must throw an "InvalidCharacterError" DOMException if data contains any character whose code point is greater than U+00FF.
     Vector<u8> byte_string;
-    byte_string.ensure_capacity(data.length());
+    byte_string.ensure_capacity(data.bytes().size());
     for (u32 code_point : Utf8View(data)) {
         if (code_point > 0xff)
             return WebIDL::InvalidCharacterError::create(realm(), "Data contains characters outside the range U+0000 and U+00FF");
@@ -143,17 +143,17 @@ WebIDL::ExceptionOr<DeprecatedString> WorkerGlobalScope::btoa(DeprecatedString c
 
     // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data,
     // and then must apply forgiving-base64 encode to that byte sequence and return the result.
-    return TRY_OR_THROW_OOM(vm(), encode_base64(byte_string.span())).to_deprecated_string();
+    return TRY_OR_THROW_OOM(vm(), encode_base64(byte_string.span()));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob
-WebIDL::ExceptionOr<DeprecatedString> WorkerGlobalScope::atob(DeprecatedString const& data) const
+WebIDL::ExceptionOr<String> WorkerGlobalScope::atob(String const& data) const
 {
     // FIXME: This is the same as the implementation in Bindings/WindowObject.cpp
     //     Find a way to share this implementation, since they come from the same mixin.
 
     // 1. Let decodedData be the result of running forgiving-base64 decode on data.
-    auto decoded_data = decode_base64(data.view());
+    auto decoded_data = decode_base64(data.bytes_as_string_view());
 
     // 2. If decodedData is failure, then throw an "InvalidCharacterError" DOMException.
     if (decoded_data.is_error())
