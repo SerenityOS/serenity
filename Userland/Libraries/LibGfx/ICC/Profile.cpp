@@ -72,6 +72,11 @@ ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
     if (header.profile_size > icc_bytes.size())
         return Error::from_string_literal("ICC::Profile: Profile size larger than input data");
 
+    // ICC v4, 7.1.2:
+    // "NOTE 1 This implies that the length is required to be a multiple of four."
+    if (header.profile_size % 4 != 0)
+        return Error::from_string_literal("ICC::Profile: Profile size not a multiple of four");
+
     return header.profile_size;
 }
 
