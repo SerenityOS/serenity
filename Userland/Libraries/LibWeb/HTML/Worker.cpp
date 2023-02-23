@@ -17,7 +17,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
-Worker::Worker(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+Worker::Worker(String const& script_url, WorkerOptions const options, DOM::Document& document)
     : DOM::EventTarget(document.realm())
     , m_script_url(script_url)
     , m_options(options)
@@ -47,7 +47,7 @@ void Worker::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(String const& script_url, WorkerOptions const options, DOM::Document& document)
 {
     dbgln_if(WEB_WORKER_DEBUG, "WebWorker: Creating worker with script_url = {}", script_url);
 
@@ -66,7 +66,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> Worker::create(DeprecatedFlyString
     auto& outside_settings = document.relevant_settings_object();
 
     // 3. Parse the scriptURL argument relative to outside settings.
-    auto url = document.parse_url(script_url);
+    auto url = document.parse_url(script_url.to_deprecated_string());
 
     // 4. If this fails, throw a "SyntaxError" DOMException.
     if (!url.is_valid()) {
