@@ -32,6 +32,8 @@ public:
     TextPosition const& start() const { return m_start; }
     TextPosition const& end() const { return m_end; }
 
+    size_t line_count() const { return normalized_end().line() - normalized_start().line() + 1; }
+
     TextRange normalized() const { return TextRange(normalized_start(), normalized_end()); }
 
     void set_start(TextPosition const& position) { m_start = position; }
