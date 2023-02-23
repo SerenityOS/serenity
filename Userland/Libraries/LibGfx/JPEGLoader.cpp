@@ -435,14 +435,6 @@ static void reset_decoder(JPEGLoadingContext& context)
 
 static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    if constexpr (JPEG_DEBUG) {
-        dbgln("Image width: {}", context.frame.width);
-        dbgln("Image height: {}", context.frame.height);
-        dbgln("Macroblocks in a row: {}", context.mblock_meta.hpadded_count);
-        dbgln("Macroblocks in a column: {}", context.mblock_meta.vpadded_count);
-        dbgln("Macroblock meta padded total: {}", context.mblock_meta.padded_total);
-    }
-
     // Compute huffman codes for DC and AC tables.
     for (auto it = context.dc_tables.begin(); it != context.dc_tables.end(); ++it)
         generate_huffman_codes(it->value);
@@ -1311,6 +1303,15 @@ static ErrorOr<void> decode_header(JPEGLoadingContext& context)
             context.state = JPEGLoadingContext::State::Error;
             return result.release_error();
         }
+
+        if constexpr (JPEG_DEBUG) {
+            dbgln("Image width: {}", context.frame.width);
+            dbgln("Image height: {}", context.frame.height);
+            dbgln("Macroblocks in a row: {}", context.mblock_meta.hpadded_count);
+            dbgln("Macroblocks in a column: {}", context.mblock_meta.vpadded_count);
+            dbgln("Macroblock meta padded total: {}", context.mblock_meta.padded_total);
+        }
+
         context.state = JPEGLoadingContext::State::HeaderDecoded;
     }
     return {};
