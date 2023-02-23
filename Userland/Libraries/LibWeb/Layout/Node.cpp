@@ -578,7 +578,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 if (value->has_length())
                     return value->to_length().to_px(*this).value();
                 if (value->is_identifier()) {
-                    // FIXME: These values should depend on something, e.g. a font size.
+                    // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {
                     case CSS::ValueID::Thin:
                         return 1.0f;
