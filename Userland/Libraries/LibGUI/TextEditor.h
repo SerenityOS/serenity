@@ -281,6 +281,7 @@ protected:
     int fixed_elements_width() const { return gutter_width() + ruler_width() + folding_indicator_width(); }
 
     virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(Syntax::HighlighterClient::span_collection_index, move(spans)); }
+    virtual void highlighter_did_set_folding_regions(Vector<TextDocumentFoldingRegion> folding_regions) final;
 
 private:
     friend class TextDocumentLine;
@@ -299,6 +300,8 @@ private:
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
     virtual Vector<TextDocumentSpan> const& spans() const final { return document().spans(); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
+    virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() final { return document().folding_regions(); };
+    virtual Vector<GUI::TextDocumentFoldingRegion> const& folding_regions() const final { return document().folding_regions(); };
     virtual void highlighter_did_request_update() final { update(); }
     virtual DeprecatedString highlighter_did_request_text() const final { return text(); }
     virtual GUI::TextDocument& highlighter_did_request_document() final { return document(); }

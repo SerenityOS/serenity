@@ -2483,4 +2483,10 @@ void TextEditor::on_search_results(GUI::TextRange current, Vector<GUI::TextRange
     update();
 }
 
+void TextEditor::highlighter_did_set_folding_regions(Vector<GUI::TextDocumentFoldingRegion> folding_regions)
+{
+    document().set_folding_regions(move(folding_regions));
+    recompute_all_visual_lines();
+}
+
 }

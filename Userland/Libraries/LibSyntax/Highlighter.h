@@ -132,13 +132,18 @@ private:
     virtual Vector<GUI::TextDocumentSpan> const& spans() const override { return m_spans; }
     virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) override { m_spans.at(index) = move(span); }
 
+    virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() override { return m_folding_regions; }
+    virtual Vector<GUI::TextDocumentFoldingRegion> const& folding_regions() const override { return m_folding_regions; }
+
     virtual DeprecatedString highlighter_did_request_text() const override { return m_text; }
     virtual void highlighter_did_request_update() override { }
     virtual GUI::TextDocument& highlighter_did_request_document() override { return m_document; }
     virtual GUI::TextPosition highlighter_did_request_cursor() const override { return {}; }
     virtual void highlighter_did_set_spans(Vector<GUI::TextDocumentSpan> spans) override { m_spans = move(spans); }
+    virtual void highlighter_did_set_folding_regions(Vector<GUI::TextDocumentFoldingRegion> folding_regions) override { m_folding_regions = folding_regions; }
 
     Vector<GUI::TextDocumentSpan> m_spans;
+    Vector<GUI::TextDocumentFoldingRegion> m_folding_regions;
     GUI::TextDocument& m_document;
     StringView m_text;
     GUI::TextPosition m_start;
