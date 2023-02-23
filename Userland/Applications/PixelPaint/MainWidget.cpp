@@ -747,6 +747,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (!active_layer)
                 return;
             active_layer->create_mask();
+            editor->did_complete_action("Add Mask");
             editor->update();
             m_layer_list_widget->repaint();
         }));
