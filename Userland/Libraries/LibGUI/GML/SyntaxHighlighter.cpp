@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +45,11 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     Lexer lexer(text);
     auto tokens = lexer.lex();
 
+    Vector<Token> folding_region_start_tokens;
+
     Vector<GUI::TextDocumentSpan> spans;
+    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
+
     for (auto& token : tokens) {
         GUI::TextDocumentSpan span;
         span.range.set_start({ token.m_start.line, token.m_start.column });
@@ -55,8 +60,22 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         span.is_skippable = false;
         span.data = static_cast<u64>(token.m_type);
         spans.append(span);
+
+        // Create folding regions for {} blocks
+        if (token.m_type == Token::Type::LeftCurly) {
+            folding_region_start_tokens.append(token);
+        } else if (token.m_type == Token::Type::RightCurly) {
+            if (!folding_region_start_tokens.is_empty()) {
+                auto left_curly = folding_region_start_tokens.take_last();
+                GUI::TextDocumentFoldingRegion region;
+                region.range.set_start({ left_curly.m_end.line, left_curly.m_end.column });
+                region.range.set_end({ token.m_start.line, token.m_start.column });
+                folding_regions.append(region);
+            }
+        }
     }
     m_client->do_set_spans(move(spans));
+    m_client->do_set_folding_regions(move(folding_regions));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
