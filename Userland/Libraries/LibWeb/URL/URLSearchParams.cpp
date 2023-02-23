@@ -149,6 +149,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::construc
     return URLSearchParams::create(realm, url_decode(stripped_init));
 }
 
+// https://url.spec.whatwg.org/#dom-urlsearchparams-size
+size_t URLSearchParams::size() const
+{
+    // The size getter steps are to return this’s list’s size.
+    return m_list.size();
+}
+
 void URLSearchParams::append(DeprecatedString const& name, DeprecatedString const& value)
 {
     // 1. Append a new name-value pair whose name is name and value is value, to list.
