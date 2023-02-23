@@ -124,13 +124,23 @@ struct MacroblockMeta {
     u32 vpadded_count { 0 };
 };
 
-struct ComponentSpec {
-    u8 id { 0 };
-    u8 hsample_factor { 1 }; // Horizontal sampling factor.
-    u8 vsample_factor { 1 }; // Vertical sampling factor.
-    u8 ac_destination_id { 0 };
-    u8 dc_destination_id { 0 };
-    u8 qtable_id { 0 }; // Quantization table id.
+// In the JPEG format, components are defined first at the frame level, then
+// referenced in each scan and aggregated with scan-specific information. The
+// two following structs mimic this hierarchy.
+
+struct Component {
+    // B.2.2 - Frame header syntax
+    u8 id { 0 };             // Ci, Component identifier
+    u8 hsample_factor { 1 }; // Hi, Horizontal sampling factor
+    u8 vsample_factor { 1 }; // Vi, Vertical sampling factor
+    u8 qtable_id { 0 };      // Tqi, Quantization table destination selector
+};
+
+struct ScanComponent {
+    // B.2.3 - Scan header syntax
+    Component& component;
+    u8 dc_destination_id { 0 }; // Tdj, DC entropy coding table destination selector
+    u8 ac_destination_id { 0 }; // Taj, AC entropy coding table destination selector
 };
 
 struct StartOfFrame {
@@ -179,6 +189,7 @@ struct ICCMultiChunkState {
 
 struct Scan {
     // B.2.3 - Scan header syntax
+    Vector<ScanComponent, 3> components;
 
     u8 spectral_selection_start {};
     u8 spectral_selection_end {};
@@ -205,7 +216,7 @@ struct JPEGLoadingContext {
 
     Scan current_scan;
 
-    Vector<ComponentSpec, 3> components;
+    Vector<Component, 3> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_restart_interval { 0 };
     HashMap<u8, HuffmanTableSpec> dc_tables;
@@ -283,9 +294,9 @@ static inline i32* get_component(Macroblock& block, unsigned component)
     }
 }
 
-static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ComponentSpec const& component, unsigned component_index)
+static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component, unsigned component_index)
 {
-    auto& dc_table = context.dc_tables.find(component.dc_destination_id)->value;
+    auto& dc_table = context.dc_tables.find(scan_component.dc_destination_id)->value;
 
     // For DC coefficients, symbol encodes the length of the coefficient.
     auto dc_length = TRY(get_next_symbol(context.huffman_stream, dc_table));
@@ -308,9 +319,9 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     return {};
 }
 
-static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ComponentSpec const& component, unsigned component_index)
+static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component, unsigned component_index)
 {
-    auto& ac_table = context.ac_tables.find(component.ac_destination_id)->value;
+    auto& ac_table = context.ac_tables.find(scan_component.ac_destination_id)->value;
     auto* select_component = get_component(macroblock, component_index);
 
     // Compute the AC coefficients.
@@ -370,22 +381,22 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  */
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
-    for (unsigned component_i = 0; component_i < context.components.size(); component_i++) {
-        auto& component = context.components[component_i];
+    for (unsigned component_i = 0; component_i < context.current_scan.components.size(); component_i++) {
+        auto& scan_component = context.current_scan.components[component_i];
 
-        if (component.dc_destination_id >= context.dc_tables.size())
+        if (scan_component.dc_destination_id >= context.dc_tables.size())
             return Error::from_string_literal("DC destination ID is greater than number of DC tables");
-        if (component.ac_destination_id >= context.ac_tables.size())
+        if (scan_component.ac_destination_id >= context.ac_tables.size())
             return Error::from_string_literal("AC destination ID is greater than number of AC tables");
 
-        for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
-            for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
+        for (u8 vfactor_i = 0; vfactor_i < scan_component.component.vsample_factor; vfactor_i++) {
+            for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 Macroblock& block = macroblocks[mb_index];
 
                 if (context.current_scan.spectral_selection_start == 0)
-                    TRY(add_dc(context, block, component, component_i));
-                TRY(add_ac(context, block, component, component_i));
+                    TRY(add_dc(context, block, scan_component, component_i));
+                TRY(add_ac(context, block, scan_component, component_i));
             }
         }
     }
@@ -552,6 +563,8 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         return Error::from_string_literal("Unsupported number of components");
     }
 
+    Scan current_scan;
+
     for (auto& component : context.components) {
         u8 component_id = TRY(stream.read_value<u8>());
 
@@ -562,25 +575,25 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
 
         u8 table_ids = TRY(stream.read_value<u8>());
 
-        component.dc_destination_id = table_ids >> 4;
-        component.ac_destination_id = table_ids & 0x0F;
+        ScanComponent scan_component { component, static_cast<u8>(table_ids >> 4), static_cast<u8>(table_ids & 0x0F) };
 
         if (context.dc_tables.size() != context.ac_tables.size()) {
             dbgln_if(JPEG_DEBUG, "{}: DC & AC table count mismatch!", TRY(stream.tell()));
             return Error::from_string_literal("DC & AC table count mismatch");
         }
 
-        if (!context.dc_tables.contains(component.dc_destination_id)) {
-            dbgln_if(JPEG_DEBUG, "DC table (id: {}) does not exist!", component.dc_destination_id);
+        if (!context.dc_tables.contains(scan_component.dc_destination_id)) {
+            dbgln_if(JPEG_DEBUG, "DC table (id: {}) does not exist!", scan_component.dc_destination_id);
             return Error::from_string_literal("DC table does not exist");
         }
 
-        if (!context.ac_tables.contains(component.ac_destination_id)) {
-            dbgln_if(JPEG_DEBUG, "AC table (id: {}) does not exist!", component.ac_destination_id);
+        if (!context.ac_tables.contains(scan_component.ac_destination_id)) {
+            dbgln_if(JPEG_DEBUG, "AC table (id: {}) does not exist!", scan_component.ac_destination_id);
             return Error::from_string_literal("AC table does not exist");
         }
+
+        current_scan.components.append(scan_component);
     }
-    Scan current_scan;
 
     current_scan.spectral_selection_start = TRY(stream.read_value<u8>());
     current_scan.spectral_selection_end = TRY(stream.read_value<u8>());
@@ -596,7 +609,7 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
 
-    context.current_scan = current_scan;
+    context.current_scan = move(current_scan);
 
     return {};
 }
@@ -754,7 +767,7 @@ static ErrorOr<void> read_app_marker(SeekableStream& stream, JPEGLoadingContext&
     return stream.discard(bytes_to_read);
 }
 
-static inline bool validate_luma_and_modify_context(ComponentSpec const& luma, JPEGLoadingContext& context)
+static inline bool validate_luma_and_modify_context(Component const& luma, JPEGLoadingContext& context)
 {
     if ((luma.hsample_factor == 1 || luma.hsample_factor == 2) && (luma.vsample_factor == 1 || luma.vsample_factor == 2)) {
         context.mblock_meta.hpadded_count += luma.hsample_factor == 1 ? 0 : context.mblock_meta.hcount % 2;
@@ -822,7 +835,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
     }
 
     for (u8 i = 0; i < component_count; i++) {
-        ComponentSpec component;
+        Component component;
         component.id = TRY(stream.read_value<u8>());
 
         u8 subsample_factors = TRY(stream.read_value<u8>());
