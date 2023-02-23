@@ -28,6 +28,7 @@ public:
 
     virtual ~URLSearchParams() override;
 
+    size_t size() const;
     void append(DeprecatedString const& name, DeprecatedString const& value);
     void delete_(DeprecatedString const& name);
     DeprecatedString get(DeprecatedString const& name);
