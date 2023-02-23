@@ -47,6 +47,7 @@ bool TextDocument::set_text(StringView text, AllowCallback allow_callback)
     m_client_notifications_enabled = false;
     m_undo_stack.clear();
     m_spans.clear();
+    m_folding_regions.clear();
     remove_all_lines();
 
     ArmedScopeGuard clear_text_guard([this]() {
@@ -1434,6 +1435,86 @@ void TextDocument::merge_span_collections()
         previous_span = span.span;
         m_spans.append(move(span.span));
     }
+}
+
+void TextDocument::set_folding_regions(Vector<TextDocumentFoldingRegion> folding_regions)
+{
+    // Remove any regions that don't span at least 3 lines.
+    // Currently, we can't do anything useful with them, and our implementation gets very confused by
+    // single-line regions, so drop them.
+    folding_regions.remove_all_matching([](TextDocumentFoldingRegion const& region) {
+        return region.range.line_count() < 3;
+    });
+
+    quick_sort(folding_regions, [](TextDocumentFoldingRegion const& a, TextDocumentFoldingRegion const& b) {
+        return a.range.start() < b.range.start();
+    });
+
+    for (auto& folding_region : folding_regions) {
+        folding_region.line_ptr = &line(folding_region.range.start().line());
+
+        // Map the new folding region to an old one, to preserve which regions were folded.
+        // FIXME: This is O(n*n).
+        for (auto const& existing_folding_region : m_folding_regions) {
+            // We treat two folding regions as the same if they start on the same TextDocumentLine,
+            // and have the same line count. The actual line *numbers* might change, but the pointer
+            // and count should not.
+            if (existing_folding_region.line_ptr
+                && existing_folding_region.line_ptr == folding_region.line_ptr
+                && existing_folding_region.range.line_count() == folding_region.range.line_count()) {
+                folding_region.is_folded = existing_folding_region.is_folded;
+                break;
+            }
+        }
+    }
+
+    // FIXME: Remove any regions that partially overlap another region, since these are invalid.
+
+    m_folding_regions = move(folding_regions);
+
+    if constexpr (TEXTEDITOR_DEBUG) {
+        dbgln("TextDocument got {} fold regions:", m_folding_regions.size());
+        for (auto const& item : m_folding_regions) {
+            dbgln("- {} (ptr: {:p}, folded: {})", item.range, item.line_ptr, item.is_folded);
+        }
+    }
+}
+
+Optional<TextDocumentFoldingRegion&> TextDocument::folding_region_starting_on_line(size_t line)
+{
+    return m_folding_regions.first_matching([line](auto& region) {
+        return region.range.start().line() == line;
+    });
+}
+
+bool TextDocument::line_is_visible(size_t line) const
+{
+    // FIXME: line_is_visible() gets called a lot.
+    //        We could avoid a lot of repeated work if we saved this state on the TextDocumentLine.
+    return !any_of(m_folding_regions, [line](auto& region) {
+        return region.is_folded
+            && line > region.range.start().line()
+            && line < region.range.end().line();
+    });
+}
+
+Vector<TextDocumentFoldingRegion const&> TextDocument::currently_folded_regions() const
+{
+    Vector<TextDocumentFoldingRegion const&> folded_regions;
+
+    for (auto& region : m_folding_regions) {
+        if (region.is_folded) {
+            // Only add this region if it's not contained within a previous folded region.
+            // Because regions are sorted by their start position, and regions cannot partially overlap,
+            // we can just see if it starts inside the last region we appended.
+            if (!folded_regions.is_empty() && folded_regions.last().range.contains(region.range.start()))
+                continue;
+
+            folded_regions.append(region);
+        }
+    }
+
+    return folded_regions;
 }
 
 }

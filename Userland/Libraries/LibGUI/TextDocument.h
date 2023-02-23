@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,6 +34,13 @@ struct TextDocumentSpan {
     Gfx::TextAttributes attributes;
     u64 data { 0 };
     bool is_skippable { false };
+};
+
+struct TextDocumentFoldingRegion {
+    TextRange range;
+    bool is_folded { false };
+    // This pointer is only used to identify that two TDFRs are the same.
+    RawPtr<class TextDocumentLine> line_ptr;
 };
 
 class TextDocument : public RefCounted<TextDocument> {
@@ -78,6 +86,16 @@ public:
     void set_span_at_index(size_t index, TextDocumentSpan span) { m_spans[index] = move(span); }
 
     TextDocumentSpan const* span_at(TextPosition const&) const;
+
+    void set_folding_regions(Vector<TextDocumentFoldingRegion>);
+    bool has_folding_regions() const { return !m_folding_regions.is_empty(); }
+    Vector<TextDocumentFoldingRegion>& folding_regions() { return m_folding_regions; }
+    Vector<TextDocumentFoldingRegion> const& folding_regions() const { return m_folding_regions; }
+    Optional<TextDocumentFoldingRegion&> folding_region_starting_on_line(size_t line);
+    // Returns all folded FoldingRegions that are not contained inside another folded region.
+    Vector<TextDocumentFoldingRegion const&> currently_folded_regions() const;
+    // Returns true if any part of the line is currently visible. (Not inside a folded FoldingRegion.)
+    bool line_is_visible(size_t line) const;
 
     void append_line(NonnullOwnPtr<TextDocumentLine>);
     NonnullOwnPtr<TextDocumentLine> take_line(size_t line_index);
@@ -148,6 +166,7 @@ private:
     NonnullOwnPtrVector<TextDocumentLine> m_lines;
     HashMap<u32, Vector<TextDocumentSpan>> m_span_collections;
     Vector<TextDocumentSpan> m_spans;
+    Vector<TextDocumentFoldingRegion> m_folding_regions;
 
     HashTable<Client*> m_clients;
     bool m_client_notifications_enabled { true };
