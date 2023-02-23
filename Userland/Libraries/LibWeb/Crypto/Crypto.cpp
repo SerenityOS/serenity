@@ -68,8 +68,10 @@ WebIDL::ExceptionOr<JS::Value> Crypto::get_random_values(JS::Value array) const
 }
 
 // https://w3c.github.io/webcrypto/#dfn-Crypto-method-randomUUID
-DeprecatedString Crypto::random_uuid() const
+WebIDL::ExceptionOr<String> Crypto::random_uuid() const
 {
+    auto& vm = realm().vm();
+
     // 1. Let bytes be a byte sequence of length 16.
     u8 bytes[16];
 
@@ -111,12 +113,12 @@ DeprecatedString Crypto::random_uuid() const
         ».
         */
     StringBuilder builder;
-    builder.appendff("{:02x}{:02x}{:02x}{:02x}-", bytes[0], bytes[1], bytes[2], bytes[3]);
-    builder.appendff("{:02x}{:02x}-", bytes[4], bytes[5]);
-    builder.appendff("{:02x}{:02x}-", bytes[6], bytes[7]);
-    builder.appendff("{:02x}{:02x}-", bytes[8], bytes[9]);
-    builder.appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
-    return builder.to_deprecated_string();
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}{:02x}{:02x}-", bytes[0], bytes[1], bytes[2], bytes[3]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[4], bytes[5]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[6], bytes[7]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[8], bytes[9]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]));
+    return TRY_OR_THROW_OOM(vm, builder.to_string());
 }
 
 void Crypto::visit_edges(Cell::Visitor& visitor)
