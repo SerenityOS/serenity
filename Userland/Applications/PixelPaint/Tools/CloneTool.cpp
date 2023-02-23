@@ -176,7 +176,7 @@ Optional<Gfx::IntRect> CloneTool::sample_marker_rect()
     if (!m_sample_location.has_value())
         return {};
 
-    auto offset = AK::max(2, size() / 2);
+    auto offset = AK::max(2, size());
     Gfx::IntRect content_rect = {
         m_sample_location.value().x() - offset,
         m_sample_location.value().y() - offset,
