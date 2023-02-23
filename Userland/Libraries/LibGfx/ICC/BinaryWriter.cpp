@@ -717,10 +717,13 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
         offset += align_up_to(bytes.size(), 4);
     }
 
-    // Omit padding after last element.
-    size_t total_size = offsets.last() + tag_data_bytes.last().size();
-
-    auto bytes = TRY(ByteBuffer::create_zeroed(total_size));
+    // Include padding after last element. Use create_zeroed() to fill padding bytes with null bytes.
+    // ICC v4, 7.1.2:
+    // "c) all tagged element data, including the last, shall be padded by no more than three following pad bytes to
+    //  reach a 4-byte boundary;
+    //  d) all pad bytes shall be NULL (as defined in ISO/IEC 646, character 0/0).
+    // NOTE 1 This implies that the length is required to be a multiple of four."
+    auto bytes = TRY(ByteBuffer::create_zeroed(offset));
 
     for (size_t i = 0; i < tag_data_bytes.size(); ++i)
         memcpy(bytes.data() + offsets[i], tag_data_bytes[i].data(), tag_data_bytes[i].size());
