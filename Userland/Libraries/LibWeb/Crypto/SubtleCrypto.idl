@@ -1,4 +1,4 @@
-[SecureContext,Exposed=(Window,Worker)]
+[SecureContext,Exposed=(Window,Worker), UseNewAKString]
 interface SubtleCrypto {
     // FIXME: Add support for AlgorithmIdentifier ("typedef (object or DOMString)")
     Promise<any> digest(DOMString algorithm, BufferSource data);
