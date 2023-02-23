@@ -569,7 +569,7 @@ static ErrorOr<ByteBuffer> encode_xyz(XYZTagData const& tag_data)
     return bytes;
 }
 
-static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
+static ErrorOr<Optional<ByteBuffer>> encode_tag_data(TagData const& tag_data)
 {
     switch (tag_data.type()) {
     case ChromaticityTagData::Type:
@@ -608,10 +608,7 @@ static ErrorOr<ByteBuffer> encode_tag_data(TagData const& tag_data)
         return encode_xyz(static_cast<XYZTagData const&>(tag_data));
     }
 
-    // FIXME: If this gets hit, we always write an invalid icc output file.
-    // Make this return an Optional and don't write tags that have types we can't encode.
-    // Not ideal, but better than writing invalid outputs.
-    return ByteBuffer {};
+    return OptionalNone {};
 }
 
 static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile, HashMap<TagData*, size_t>& tag_data_map)
@@ -623,29 +620,37 @@ static ErrorOr<Vector<ByteBuffer>> encode_tag_datas(Profile const& profile, Hash
         if (tag_data_map.contains(tag_data.ptr()))
             return {};
 
-        tag_data_bytes.append(TRY(encode_tag_data(tag_data)));
+        auto encoded_tag_data = TRY(encode_tag_data(tag_data));
+        if (!encoded_tag_data.has_value())
+            return {};
+
+        tag_data_bytes.append(encoded_tag_data.release_value());
         TRY(tag_data_map.try_set(tag_data.ptr(), tag_data_bytes.size() - 1));
         return {};
     }));
     return tag_data_bytes;
 }
 
-static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile, Vector<size_t> const& offsets, Vector<ByteBuffer> const& tag_data_bytes, HashMap<TagData*, size_t> const& tag_data_map)
+static ErrorOr<void> encode_tag_table(ByteBuffer& bytes, Profile const& profile, u32 number_of_serialized_tags, Vector<size_t> const& offsets,
+    Vector<ByteBuffer> const& tag_data_bytes, HashMap<TagData*, size_t> const& tag_data_map)
 {
     // ICC v4, 7.3 Tag table
     // ICC v4, 7.3.1 Overview
-    VERIFY(bytes.size() >= sizeof(ICCHeader) + sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry));
+    VERIFY(bytes.size() >= sizeof(ICCHeader) + sizeof(u32) + number_of_serialized_tags * sizeof(TagTableEntry));
 
-    *bit_cast<BigEndian<u32>*>(bytes.data() + sizeof(ICCHeader)) = profile.tag_count();
+    *bit_cast<BigEndian<u32>*>(bytes.data() + sizeof(ICCHeader)) = number_of_serialized_tags;
 
     TagTableEntry* tag_table_entries = bit_cast<TagTableEntry*>(bytes.data() + sizeof(ICCHeader) + sizeof(u32));
     int i = 0;
     profile.for_each_tag([&](auto tag_signature, auto tag_data) {
+        auto index = tag_data_map.get(tag_data.ptr());
+        if (!index.has_value())
+            return;
+
         tag_table_entries[i].tag_signature = tag_signature;
 
-        auto index = tag_data_map.get(tag_data.ptr()).value();
-        tag_table_entries[i].offset_to_beginning_of_tag_data_element = offsets[index];
-        tag_table_entries[i].size_of_tag_data_element = tag_data_bytes[index].size();
+        tag_table_entries[i].offset_to_beginning_of_tag_data_element = offsets[index.value()];
+        tag_table_entries[i].size_of_tag_data_element = tag_data_bytes[index.value()].size();
         ++i;
     });
 
@@ -709,7 +714,16 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
     HashMap<TagData*, size_t> tag_data_map;
     Vector<ByteBuffer> tag_data_bytes = TRY(encode_tag_datas(profile, tag_data_map));
 
-    size_t tag_table_size = sizeof(u32) + profile.tag_count() * sizeof(TagTableEntry);
+    u32 number_of_serialized_tags = 0;
+    profile.for_each_tag([&](auto tag_signature, auto tag_data) {
+        if (!tag_data_map.contains(tag_data.ptr())) {
+            dbgln("ICC serialization: dropping tag {} because it has unknown type {}", tag_signature, tag_data->type());
+            return;
+        }
+        number_of_serialized_tags++;
+    });
+
+    size_t tag_table_size = sizeof(u32) + number_of_serialized_tags * sizeof(TagTableEntry);
     size_t offset = sizeof(ICCHeader) + tag_table_size;
     Vector<size_t> offsets;
     for (auto const& bytes : tag_data_bytes) {
@@ -728,7 +742,7 @@ ErrorOr<ByteBuffer> encode(Profile const& profile)
     for (size_t i = 0; i < tag_data_bytes.size(); ++i)
         memcpy(bytes.data() + offsets[i], tag_data_bytes[i].data(), tag_data_bytes[i].size());
 
-    TRY(encode_tag_table(bytes, profile, offsets, tag_data_bytes, tag_data_map));
+    TRY(encode_tag_table(bytes, profile, number_of_serialized_tags, offsets, tag_data_bytes, tag_data_map));
     TRY(encode_header(bytes, profile));
 
     return bytes;
