@@ -34,6 +34,7 @@
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextLayout.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Emoji.h>
 #include <stdio.h>
 
 #if defined(AK_COMPILER_GCC)
@@ -1396,13 +1397,14 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, u32 code_point, Font const& 
 
 void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font, Color color)
 {
-    static auto const emoji_component_property = Unicode::property_from_string("Emoji_Component"sv);
-    static auto const variation_selector = Unicode::property_from_string("Variation_Selector"sv);
-
     u32 code_point = *it;
     auto next_code_point = it.peek(1);
 
     ScopeGuard consume_variation_selector = [&, initial_it = it] {
+        static auto const variation_selector = Unicode::property_from_string("Variation_Selector"sv);
+        if (!variation_selector.has_value())
+            return;
+
         // If we advanced the iterator to consume an emoji sequence, don't look for another variation selector.
         if (initial_it != it)
             return;
@@ -1413,14 +1415,7 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, F
     };
 
     auto font_contains_glyph = font.contains_glyph(code_point);
-    auto check_for_emoji = false;
-
-    if (emoji_component_property.has_value()) {
-        auto code_point_is_emoji_component = Unicode::code_point_has_property(code_point, *emoji_component_property);
-        auto next_code_point_is_emoji_component = next_code_point.has_value() && Unicode::code_point_has_property(*next_code_point, *emoji_component_property);
-
-        check_for_emoji = code_point_is_emoji_component || next_code_point_is_emoji_component;
-    }
+    auto check_for_emoji = Unicode::could_be_start_of_emoji_sequence(it);
 
     // If the font contains the glyph, and we know it's not the start of an emoji, draw a text glyph.
     if (font_contains_glyph && !check_for_emoji) {
