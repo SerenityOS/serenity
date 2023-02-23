@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Span.h>
@@ -13,6 +14,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Emoji.h>
 
 namespace Gfx {
 
@@ -20,7 +22,7 @@ namespace Gfx {
 // https://unicode.org/emoji/charts/emoji-list.html
 // https://unicode.org/emoji/charts/emoji-zwj-sequences.html
 
-static HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> s_emojis;
+static HashMap<StringView, RefPtr<Gfx::Bitmap>> s_emojis;
 
 Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 {
@@ -29,20 +31,23 @@ Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 
 Bitmap const* Emoji::emoji_for_code_points(ReadonlySpan<u32> const& code_points)
 {
-    // FIXME: This function is definitely not fast.
-    auto basename = DeprecatedString::join('_', code_points, "U+{:X}"sv);
+    auto emoji = Unicode::find_emoji_for_code_points(code_points);
+    if (!emoji.has_value() || !emoji->image_path.has_value())
+        return nullptr;
 
-    auto it = s_emojis.find(basename);
-    if (it != s_emojis.end())
-        return (*it).value.ptr();
+    auto emoji_path = emoji->image_path.value();
+    if (auto it = s_emojis.find(emoji_path); it != s_emojis.end())
+        return it->value.ptr();
 
-    auto bitmap_or_error = Bitmap::load_from_file(DeprecatedString::formatted("/res/emoji/{}.png", basename));
+    auto bitmap_or_error = Bitmap::load_from_file(emoji_path);
     if (bitmap_or_error.is_error()) {
-        s_emojis.set(basename, nullptr);
+        dbgln_if(EMOJI_DEBUG, "Generated emoji data has path {}, but could not load image: {}", emoji_path, bitmap_or_error.error());
+        s_emojis.set(emoji_path, nullptr);
         return nullptr;
     }
+
     auto bitmap = bitmap_or_error.release_value();
-    s_emojis.set(basename, bitmap);
+    s_emojis.set(emoji_path, bitmap);
     return bitmap.ptr();
 }
 
