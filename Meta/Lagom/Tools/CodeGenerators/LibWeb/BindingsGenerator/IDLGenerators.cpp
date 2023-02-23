@@ -343,7 +343,7 @@ static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterT
     })~~~");
         if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
             scoped_generator.append(R"~~~( else {
-        @cpp_name@ = TRY_OR_THROW_OOM(vm, String::from_utf8(@parameter.optional_default_value@));
+        @cpp_name@ = TRY_OR_THROW_OOM(vm, String::from_utf8(@parameter.optional_default_value@sv));
     }
 )~~~");
         } else {
