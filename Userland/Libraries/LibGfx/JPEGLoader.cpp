@@ -134,6 +134,12 @@ struct Component {
     u8 hsample_factor { 1 }; // Hi, Horizontal sampling factor
     u8 vsample_factor { 1 }; // Vi, Vertical sampling factor
     u8 qtable_id { 0 };      // Tqi, Quantization table destination selector
+
+    // The JPEG specification does not specify which component correspond to
+    // Y, Cb or Cr. This field (actually the index in the parent Vector) will
+    // act as an authority to determine the *real* component.
+    // Please note that this is implementation specific.
+    u8 index { 0 };
 };
 
 struct ScanComponent {
@@ -294,7 +300,7 @@ static inline i32* get_component(Macroblock& block, unsigned component)
     }
 }
 
-static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component, unsigned component_index)
+static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto& dc_table = context.dc_tables.find(scan_component.dc_destination_id)->value;
 
@@ -312,17 +318,17 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
         dc_diff -= (1 << dc_length) - 1;
 
-    auto* select_component = get_component(macroblock, component_index);
-    auto& previous_dc = context.previous_dc_values[component_index];
+    auto* select_component = get_component(macroblock, scan_component.component.index);
+    auto& previous_dc = context.previous_dc_values[scan_component.component.index];
     select_component[0] = previous_dc += dc_diff;
 
     return {};
 }
 
-static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component, unsigned component_index)
+static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto& ac_table = context.ac_tables.find(scan_component.ac_destination_id)->value;
-    auto* select_component = get_component(macroblock, component_index);
+    auto* select_component = get_component(macroblock, scan_component.component.index);
 
     // Compute the AC coefficients.
 
@@ -381,9 +387,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  */
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
-    for (unsigned component_i = 0; component_i < context.current_scan.components.size(); component_i++) {
-        auto& scan_component = context.current_scan.components[component_i];
-
+    for (auto const& scan_component : context.current_scan.components) {
         if (scan_component.dc_destination_id >= context.dc_tables.size())
             return Error::from_string_literal("DC destination ID is greater than number of DC tables");
         if (scan_component.ac_destination_id >= context.ac_tables.size())
@@ -395,8 +399,8 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                 Macroblock& block = macroblocks[mb_index];
 
                 if (context.current_scan.spectral_selection_start == 0)
-                    TRY(add_dc(context, block, scan_component, component_i));
-                TRY(add_ac(context, block, scan_component, component_i));
+                    TRY(add_dc(context, block, scan_component));
+                TRY(add_ac(context, block, scan_component));
             }
         }
     }
@@ -837,6 +841,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
     for (u8 i = 0; i < component_count; i++) {
         Component component;
         component.id = TRY(stream.read_value<u8>());
+        component.index = i;
 
         u8 subsample_factors = TRY(stream.read_value<u8>());
         component.hsample_factor = subsample_factors >> 4;
