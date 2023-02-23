@@ -42,6 +42,8 @@ REGISTER_WIDGET(GUI, TextEditor)
 
 namespace GUI {
 
+static constexpr StringView folded_region_summary_text = " ..."sv;
+
 TextEditor::TextEditor(Type type)
     : m_type(type)
 {
@@ -151,16 +153,29 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
     size_t line_index = 0;
 
     if (position.y() >= 0) {
+        size_t last_visible_line_index = 0;
+        // FIXME: Oh boy is this a slow way of calculating this!
+        // NOTE: Offset by 1 in calculations is because we can't do `i >= 0` with an unsigned type.
+        for (size_t i = line_count(); i > 0; --i) {
+            if (document().line_is_visible(i - 1)) {
+                last_visible_line_index = i - 1;
+                break;
+            }
+        }
+
         for (size_t i = 0; i < line_count(); ++i) {
+            if (!document().line_is_visible(i))
+                continue;
+
             auto& rect = m_line_visual_data[i].visual_rect;
             if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
                 line_index = i;
                 break;
             }
             if (position.y() > rect.bottom())
-                line_index = line_count() - 1;
+                line_index = last_visible_line_index;
         }
-        line_index = max((size_t)0, min(line_index, line_count() - 1));
+        line_index = max((size_t)0, min(line_index, last_visible_line_index));
     }
 
     size_t column_index = 0;
@@ -259,6 +274,23 @@ void TextEditor::mousedown_event(MouseEvent& event)
         return;
     }
 
+    auto text_position = text_position_at(event.position());
+    if (event.modifiers() == 0 && folding_indicator_rect(text_position.line()).contains(event.position())) {
+        if (auto folding_region = document().folding_region_starting_on_line(text_position.line()); folding_region.has_value()) {
+            folding_region->is_folded = !folding_region->is_folded;
+            dbgln_if(TEXTEDITOR_DEBUG, "TextEditor: {} region {}.", folding_region->is_folded ? "Folding"sv : "Unfolding"sv, folding_region->range);
+
+            if (folding_region->is_folded && folding_region->range.contains(cursor())) {
+                // Cursor is now within a hidden range, so move it outside.
+                set_cursor(folding_region->range.start());
+            }
+
+            recompute_all_visual_lines();
+            update();
+            return;
+        }
+    }
+
     if (on_mousedown)
         on_mousedown();
 
@@ -319,6 +351,14 @@ void TextEditor::mousemove_event(MouseEvent& event)
 
     if (m_ruler_visible && ruler_rect_in_inner_coordinates().contains(event.position())) {
         set_override_cursor(Gfx::StandardCursor::None);
+    } else if (m_ruler_visible && folding_indicator_rect_in_inner_coordinates().contains(event.position())) {
+        auto text_position = text_position_at(event.position());
+        if (document().folding_region_starting_on_line(text_position.line()).has_value()
+            && folding_indicator_rect(text_position.line()).contains(event.position())) {
+            set_override_cursor(Gfx::StandardCursor::Hand);
+        } else {
+            set_override_cursor(Gfx::StandardCursor::None);
+        }
     } else if (m_gutter_visible && gutter_rect_in_inner_coordinates().contains(event.position())) {
         set_override_cursor(Gfx::StandardCursor::None);
     } else {
@@ -346,6 +386,11 @@ void TextEditor::automatic_scrolling_timer_did_fire()
     update();
 }
 
+int TextEditor::folding_indicator_width() const
+{
+    return document().has_folding_regions() ? line_height() : 0;
+}
+
 int TextEditor::ruler_width() const
 {
     if (!m_ruler_visible)
@@ -367,6 +412,7 @@ Gfx::IntRect TextEditor::gutter_content_rect(size_t line_index) const
 {
     if (!m_gutter_visible)
         return {};
+
     return {
         0,
         line_content_rect(line_index).y() - vertical_scrollbar().value(),
@@ -379,10 +425,24 @@ Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
 {
     if (!m_ruler_visible)
         return {};
+
     return {
         gutter_width(),
         line_content_rect(line_index).y() - vertical_scrollbar().value(),
         ruler_width(),
+        line_content_rect(line_index).height()
+    };
+}
+
+Gfx::IntRect TextEditor::folding_indicator_rect(size_t line_index) const
+{
+    if (!m_ruler_visible || !document().has_folding_regions())
+        return {};
+
+    return {
+        gutter_width() + ruler_width(),
+        line_content_rect(line_index).y() - vertical_scrollbar().value(),
+        folding_indicator_width(),
         line_content_rect(line_index).height()
     };
 }
@@ -395,6 +455,11 @@ Gfx::IntRect TextEditor::gutter_rect_in_inner_coordinates() const
 Gfx::IntRect TextEditor::ruler_rect_in_inner_coordinates() const
 {
     return { gutter_width(), 0, ruler_width(), widget_inner_rect().height() };
+}
+
+Gfx::IntRect TextEditor::folding_indicator_rect_in_inner_coordinates() const
+{
+    return { gutter_width() + ruler_width(), 0, folding_indicator_width(), widget_inner_rect().height() };
 }
 
 Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
@@ -426,6 +491,9 @@ void TextEditor::paint_event(PaintEvent& event)
     } else {
         unspanned_text_attributes.color = palette().color(is_enabled() ? foreground_role() : Gfx::ColorRole::DisabledText);
     }
+
+    auto& folded_region_summary_font = font().bold_variant();
+    Gfx::TextAttributes folded_region_summary_attributes { palette().color(Gfx::ColorRole::SyntaxComment) };
 
     // NOTE: This lambda and TextEditor::text_width_for_font() are used to substitute all glyphs with m_substitution_code_point if necessary.
     //       Painter::draw_text() and Gfx::Font::width() should not be called directly, but using this lambda and TextEditor::text_width_for_font().
@@ -469,9 +537,21 @@ void TextEditor::paint_event(PaintEvent& event)
     }
 
     if (m_ruler_visible) {
-        auto ruler_rect = ruler_rect_in_inner_coordinates();
+        auto ruler_rect = ruler_rect_in_inner_coordinates().inflated(0, folding_indicator_width(), 0, 0);
         painter.fill_rect(ruler_rect, palette().ruler());
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
+
+        // Paint +/- buttons for folding regions
+        for (auto const& folding_region : document().folding_regions()) {
+            auto start_line = folding_region.range.start().line();
+            if (!document().line_is_visible(start_line))
+                continue;
+            auto fold_indicator_rect = folding_indicator_rect(start_line).shrunken(4, 4);
+            fold_indicator_rect.set_height(fold_indicator_rect.width());
+            painter.draw_rect(fold_indicator_rect, palette().ruler_inactive_text());
+            auto fold_symbol = folding_region.is_folded ? "+"sv : "-"sv;
+            painter.draw_text(fold_indicator_rect, fold_symbol, font(), Gfx::TextAlignment::Center, palette().ruler_inactive_text());
+        }
     }
 
     size_t first_visible_line = text_position_at(event.rect().top_left()).line();
@@ -482,6 +562,9 @@ void TextEditor::paint_event(PaintEvent& event)
 
     if (m_ruler_visible) {
         for (size_t i = first_visible_line; i <= last_visible_line; ++i) {
+            if (!document().line_is_visible(i))
+                continue;
+
             bool is_current_line = i == m_cursor.line();
             auto ruler_line_rect = ruler_content_rect(i);
             // NOTE: Shrink the rectangle to be only on the first visual line.
@@ -582,9 +665,14 @@ void TextEditor::paint_event(PaintEvent& event)
                     draw_text(span_rect, text, font, m_text_alignment, text_attributes);
                     span_rect.translate_by(span_rect.width(), 0);
                 };
+
+                bool started_new_folded_region = false;
                 while (span_index < document().spans().size()) {
                     auto& span = document().spans()[span_index];
-                    if (span.range.end().line() < line_index) {
+                    // Skip spans that have ended before this point.
+                    // That is, for spans that are for lines inside a folded region.
+                    if ((span.range.end().line() < line_index)
+                        || (span.range.end().line() == line_index && span.range.end().column() <= start_of_visual_line)) {
                         ++span_index;
                         continue;
                     }
@@ -624,8 +712,17 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                 }
                 // draw unspanned text after last span
-                if (next_column < visual_line_text.length()) {
+                if (!started_new_folded_region && next_column < visual_line_text.length()) {
                     draw_text_helper(next_column, visual_line_text.length(), font(), unspanned_text_attributes);
+                }
+
+                // Paint "..." at the end of the line if it starts a folded region.
+                // FIXME: This doesn't wrap.
+                if (is_last_visual_line) {
+                    if (auto folded_region = document().folding_region_starting_on_line(line_index); folded_region.has_value() && folded_region->is_folded) {
+                        span_rect.set_width(folded_region_summary_font.width(folded_region_summary_text));
+                        draw_text(span_rect, folded_region_summary_text, folded_region_summary_font, m_text_alignment, folded_region_summary_attributes);
+                    }
                 }
             }
 
@@ -1853,8 +1950,10 @@ void TextEditor::recompute_all_visual_lines()
     m_reflow_requested = false;
 
     int y_offset = 0;
+    auto folded_regions = document().currently_folded_regions();
+    auto folded_region_iterator = folded_regions.begin();
     for (size_t line_index = 0; line_index < line_count(); ++line_index) {
-        recompute_visual_lines(line_index);
+        recompute_visual_lines(line_index, folded_region_iterator);
         m_line_visual_data[line_index].visual_rect.set_y(y_offset);
         y_offset += m_line_visual_data[line_index].visual_rect.height();
     }
@@ -1885,7 +1984,7 @@ size_t TextEditor::visual_line_containing(size_t line_index, size_t column) cons
     return visual_line_index;
 }
 
-void TextEditor::recompute_visual_lines(size_t line_index)
+void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFoldingRegion const&>::Iterator& folded_region_iterator)
 {
     auto const& line = document().line(line_index);
     size_t line_width_so_far = 0;
@@ -1895,6 +1994,19 @@ void TextEditor::recompute_visual_lines(size_t line_index)
 
     auto available_width = visible_text_rect_in_inner_coordinates().width();
     auto glyph_spacing = font().glyph_spacing();
+
+    while (!folded_region_iterator.is_end() && folded_region_iterator->range.end() < TextPosition { line_index, 0 })
+        ++folded_region_iterator;
+    bool line_is_visible = true;
+    if (!folded_region_iterator.is_end()) {
+        if (folded_region_iterator->range.start().line() < line_index) {
+            if (folded_region_iterator->range.end().line() > line_index) {
+                line_is_visible = false;
+            } else if (folded_region_iterator->range.end().line() == line_index) {
+                ++folded_region_iterator;
+            }
+        }
+    }
 
     auto wrap_visual_lines_anywhere = [&]() {
         size_t start_of_visual_line = 0;
@@ -1941,16 +2053,18 @@ void TextEditor::recompute_visual_lines(size_t line_index)
         visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
     };
 
-    switch (wrapping_mode()) {
-    case WrappingMode::NoWrap:
-        visual_data.visual_lines.append(line.view());
-        break;
-    case WrappingMode::WrapAnywhere:
-        wrap_visual_lines_anywhere();
-        break;
-    case WrappingMode::WrapAtWords:
-        wrap_visual_lines_at_words();
-        break;
+    if (line_is_visible) {
+        switch (wrapping_mode()) {
+        case WrappingMode::NoWrap:
+            visual_data.visual_lines.append(line.view());
+            break;
+        case WrappingMode::WrapAnywhere:
+            wrap_visual_lines_anywhere();
+            break;
+        case WrappingMode::WrapAtWords:
+            wrap_visual_lines_at_words();
+            break;
+        }
     }
 
     if (is_wrapping_enabled())

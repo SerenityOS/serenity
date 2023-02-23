@@ -269,6 +269,7 @@ protected:
     virtual void cursor_did_change();
     Gfx::IntRect gutter_content_rect(size_t line) const;
     Gfx::IntRect ruler_content_rect(size_t line) const;
+    Gfx::IntRect folding_indicator_rect(size_t line) const;
 
     TextPosition text_position_at(Gfx::IntPoint) const;
     bool ruler_visible() const { return m_ruler_visible; }
@@ -276,7 +277,8 @@ protected:
     Gfx::IntRect content_rect_for_position(TextPosition const&) const;
     int gutter_width() const;
     int ruler_width() const;
-    int fixed_elements_width() const { return gutter_width() + ruler_width(); }
+    int folding_indicator_width() const;
+    int fixed_elements_width() const { return gutter_width() + ruler_width() + folding_indicator_width(); }
 
     virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(Syntax::HighlighterClient::span_collection_index, move(spans)); }
 
@@ -352,13 +354,14 @@ private:
     int content_x_for_position(TextPosition const&) const;
     Gfx::IntRect gutter_rect_in_inner_coordinates() const;
     Gfx::IntRect ruler_rect_in_inner_coordinates() const;
+    Gfx::IntRect folding_indicator_rect_in_inner_coordinates() const;
     Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
     void rehighlight_if_needed();
 
     size_t visual_line_containing(size_t line_index, size_t column) const;
-    void recompute_visual_lines(size_t line_index);
+    void recompute_visual_lines(size_t line_index, Vector<TextDocumentFoldingRegion const&>::Iterator& folded_region_iterator);
 
     template<class T, class... Args>
     inline void execute(Args&&... args)
