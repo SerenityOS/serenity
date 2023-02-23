@@ -32,6 +32,7 @@ enum class EmojiGroup : u8 {
 
 struct Emoji {
     StringView name;
+    Optional<StringView> image_path;
     EmojiGroup group { EmojiGroup::Unknown };
     u32 display_order { 0 };
     ReadonlySpan<u32> code_points;
