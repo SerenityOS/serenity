@@ -59,7 +59,18 @@ bool Node::is_out_of_flow(FormattingContext const& formatting_context) const
 
 bool Node::can_contain_boxes_with_position_absolute() const
 {
-    return computed_values().position() != CSS::Position::Static || is<InitialContainingBlock>(*this);
+    if (computed_values().position() != CSS::Position::Static)
+        return true;
+
+    if (is<InitialContainingBlock>(*this))
+        return true;
+
+    // https://w3c.github.io/csswg-drafts/css-transforms-1/#propdef-transform
+    // Any computed value other than none for the transform affects containing block and stacking context
+    if (!computed_values().transformations().is_empty())
+        return true;
+
+    return false;
 }
 
 static Box const* nearest_ancestor_capable_of_forming_a_containing_block(Node const& node)
