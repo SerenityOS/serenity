@@ -23,7 +23,7 @@ public:
     JS::NonnullGCPtr<SubtleCrypto> subtle() const;
 
     WebIDL::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
-    DeprecatedString random_uuid() const;
+    WebIDL::ExceptionOr<String> random_uuid() const;
 
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
