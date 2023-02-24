@@ -39,7 +39,7 @@
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
-#include <Kernel/TimerQueue.h>
+#include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel {
 

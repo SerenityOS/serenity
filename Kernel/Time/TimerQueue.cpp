@@ -9,7 +9,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/TimerQueue.h>
+#include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel {
 

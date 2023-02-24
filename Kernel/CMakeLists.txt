@@ -358,7 +358,7 @@ set(KERNEL_SOURCES
     Tasks/WaitQueue.cpp
     Tasks/WorkQueue.cpp
     Time/TimeManagement.cpp
-    TimerQueue.cpp
+    Time/TimerQueue.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
