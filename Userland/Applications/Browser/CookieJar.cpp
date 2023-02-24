@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  *
@@ -11,6 +11,7 @@
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <AK/Time.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/Promise.h>
@@ -140,9 +141,9 @@ void CookieJar::dump_cookies()
         builder.appendff("{}{}{}\n", key_color, cookie.path, no_color);
 
         builder.appendff("\t{}Value{} = {}\n", attribute_color, no_color, cookie.value);
-        builder.appendff("\t{}CreationTime{} = {}\n", attribute_color, no_color, cookie.creation_time.to_deprecated_string());
-        builder.appendff("\t{}LastAccessTime{} = {}\n", attribute_color, no_color, cookie.last_access_time.to_deprecated_string());
-        builder.appendff("\t{}ExpiryTime{} = {}\n", attribute_color, no_color, cookie.expiry_time.to_deprecated_string());
+        builder.appendff("\t{}CreationTime{} = {}\n", attribute_color, no_color, cookie.creation_time_to_string());
+        builder.appendff("\t{}LastAccessTime{} = {}\n", attribute_color, no_color, cookie.last_access_time_to_string());
+        builder.appendff("\t{}ExpiryTime{} = {}\n", attribute_color, no_color, cookie.expiry_time_to_string());
         builder.appendff("\t{}Secure{} = {:s}\n", attribute_color, no_color, cookie.secure);
         builder.appendff("\t{}HttpOnly{} = {:s}\n", attribute_color, no_color, cookie.http_only);
         builder.appendff("\t{}HostOnly{} = {:s}\n", attribute_color, no_color, cookie.host_only);
@@ -275,7 +276,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
     Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value, parsed_cookie.same_site_attribute };
-    cookie.creation_time = Core::DateTime::now();
+    cookie.creation_time = Time::now_realtime();
     cookie.last_access_time = cookie.creation_time;
 
     if (parsed_cookie.expiry_time_from_max_age_attribute.has_value()) {
@@ -289,9 +290,9 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
         cookie.persistent = true;
         cookie.expiry_time = parsed_cookie.expiry_time_from_expires_attribute.value();
     } else {
-        // Set the cookie's persistent-flag to false. Set the cookie's expiry-time to the latest representable gddate.
+        // Set the cookie's persistent-flag to false. Set the cookie's expiry-time to the latest representable date.
         cookie.persistent = false;
-        cookie.expiry_time = Core::DateTime::create(9999, 12, 31, 23, 59, 59);
+        cookie.expiry_time = Time::max();
     }
 
     // 4. If the cookie-attribute-list contains an attribute with an attribute-name of "Domain":
@@ -396,13 +397,13 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
         //   - Cookies with longer paths are listed before cookies with shorter paths.
         //   - Among cookies that have equal-length path fields, cookies with earlier creation-times are listed before cookies with later creation-times.
         auto cookie_path_length = cookie.path.length();
-        auto cookie_creation_time = cookie.creation_time.timestamp();
+        auto cookie_creation_time = cookie.creation_time;
 
         cookie_list.insert_before_matching(move(cookie), [cookie_path_length, cookie_creation_time](auto const& entry) {
             if (cookie_path_length > entry.path.length()) {
                 return true;
             } else if (cookie_path_length == entry.path.length()) {
-                if (cookie_creation_time < entry.creation_time.timestamp())
+                if (cookie_creation_time < entry.creation_time)
                     return true;
             }
             return false;
@@ -410,7 +411,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
     });
 
     // 3. Update the last-access-time of each cookie in the cookie-list to the current date and time.
-    auto now = Core::DateTime::now();
+    auto now = Time::now_realtime();
 
     for (auto& cookie : cookie_list) {
         cookie.last_access_time = now;
@@ -450,8 +451,8 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
         if (value.type() != SQL::SQLType::Integer)
             return Error::from_string_view(name);
 
-        auto time = value.to_int<time_t>().value();
-        field = Core::DateTime::from_timestamp(time);
+        auto time = value.to_int<i64>().value();
+        field = Time::from_seconds(time);
         return {};
     };
 
@@ -492,9 +493,9 @@ void CookieJar::insert_cookie_into_database(Web::Cookie::Cookie const& cookie)
         cookie.name,
         cookie.value,
         to_underlying(cookie.same_site),
-        cookie.creation_time.timestamp(),
-        cookie.last_access_time.timestamp(),
-        cookie.expiry_time.timestamp(),
+        cookie.creation_time.to_seconds(),
+        cookie.last_access_time.to_seconds(),
+        cookie.expiry_time.to_seconds(),
         cookie.domain,
         cookie.path,
         cookie.secure,
@@ -509,9 +510,9 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
         m_statements.update_cookie, {}, [this]() { purge_expired_cookies(); }, {},
         cookie.value,
         to_underlying(cookie.same_site),
-        cookie.creation_time.timestamp(),
-        cookie.last_access_time.timestamp(),
-        cookie.expiry_time.timestamp(),
+        cookie.creation_time.to_seconds(),
+        cookie.last_access_time.to_seconds(),
+        cookie.expiry_time.to_seconds(),
         cookie.secure,
         cookie.http_only,
         cookie.host_only,
@@ -581,7 +582,8 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
 
 void CookieJar::purge_expired_cookies()
 {
-    auto now = Core::DateTime::now().timestamp();
+    auto now = Time::now_realtime().to_seconds();
     m_database.execute_statement(m_statements.expire_cookie, {}, {}, {}, now);
 }
+
 }

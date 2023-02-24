@@ -3,13 +3,14 @@
  * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Value.h>
@@ -54,7 +55,7 @@ static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
     serialized_cookie.set("domain"sv, cookie.domain);
     serialized_cookie.set("secure"sv, cookie.secure);
     serialized_cookie.set("httpOnly"sv, cookie.http_only);
-    serialized_cookie.set("expiry"sv, cookie.expiry_time.timestamp());
+    serialized_cookie.set("expiry"sv, cookie.expiry_time.to_seconds());
     serialized_cookie.set("sameSite"sv, Web::Cookie::same_site_to_string(cookie.same_site));
 
     return serialized_cookie;
@@ -1593,7 +1594,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     if (data.has("expiry"sv)) {
         // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
         auto expiry = TRY(get_property<u32>(data, "expiry"sv));
-        cookie.expiry_time_from_expires_attribute = Core::DateTime::from_timestamp(expiry);
+        cookie.expiry_time_from_expires_attribute = Time::from_seconds(expiry);
     }
 
     // Cookie same site
@@ -1985,7 +1986,7 @@ void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
         // -> name is equal to cookie name
         if (!name.has_value() || name.value() == cookie.name) {
             // Set the cookie expiry time to a Unix timestamp in the past.
-            cookie.expiry_time = Core::DateTime::from_timestamp(0);
+            cookie.expiry_time = Time::from_seconds(0);
             m_page_client.page_did_update_cookie(move(cookie));
         }
         // -> Otherwise
