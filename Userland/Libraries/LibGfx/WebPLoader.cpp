@@ -301,6 +301,9 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
 ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
 {
     TRY(decode_webp_chunks(*m_context));
+
+    // FIXME: "If this chunk is not present, sRGB SHOULD be assumed."
+
     return m_context->icc_data;
 }
 
