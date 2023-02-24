@@ -77,7 +77,7 @@ ErrorOr<void> Client::drain_socket()
     auto buffer = TRY(ByteBuffer::create_uninitialized(1024));
 
     while (TRY(m_socket->can_read_without_blocking())) {
-        auto read_bytes = TRY(m_socket->read(buffer));
+        auto read_bytes = TRY(m_socket->read_some(buffer));
 
         m_parser.write(StringView { read_bytes });
 
@@ -161,7 +161,8 @@ ErrorOr<void> Client::send_data(StringView data)
     }
 
     if (fast) {
-        TRY(m_socket->write({ data.characters_without_null_termination(), data.length() }));
+        // FIXME: This should write the entire span.
+        TRY(m_socket->write_some({ data.characters_without_null_termination(), data.length() }));
         return {};
     }
 
@@ -183,7 +184,8 @@ ErrorOr<void> Client::send_data(StringView data)
     }
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    TRY(m_socket->write(builder_contents));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(builder_contents));
     return {};
 }
 
@@ -204,7 +206,8 @@ ErrorOr<void> Client::send_commands(Vector<Command> commands)
     }
 
     VERIFY(TRY(stream.tell()) == buffer.size());
-    TRY(m_socket->write({ buffer.data(), buffer.size() }));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some({ buffer.data(), buffer.size() }));
     return {};
 }
 

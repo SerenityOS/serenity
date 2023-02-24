@@ -113,21 +113,22 @@ ErrorOr<void> ZlibCompressor::write_header(ZlibCompressionMethod compression_met
 
     // FIXME: Support pre-defined dictionaries.
 
-    TRY(m_output_stream->write(header.as_u16.bytes()));
+    // FIXME: This should write the entire span.
+    TRY(m_output_stream->write_some(header.as_u16.bytes()));
 
     return {};
 }
 
-ErrorOr<Bytes> ZlibCompressor::read(Bytes)
+ErrorOr<Bytes> ZlibCompressor::read_some(Bytes)
 {
     return Error::from_errno(EBADF);
 }
 
-ErrorOr<size_t> ZlibCompressor::write(ReadonlyBytes bytes)
+ErrorOr<size_t> ZlibCompressor::write_some(ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
 
-    size_t n_written = TRY(m_compressor->write(bytes));
+    size_t n_written = TRY(m_compressor->write_some(bytes));
     m_adler32_checksum.update(bytes.trim(n_written));
     return n_written;
 }
@@ -154,7 +155,8 @@ ErrorOr<void> ZlibCompressor::finish()
         TRY(static_cast<DeflateCompressor*>(m_compressor.ptr())->final_flush());
 
     NetworkOrdered<u32> adler_sum = m_adler32_checksum.digest();
-    TRY(m_output_stream->write(adler_sum.bytes()));
+    // FIXME: This should write the entire span.
+    TRY(m_output_stream->write_some(adler_sum.bytes()));
 
     m_finished = true;
 

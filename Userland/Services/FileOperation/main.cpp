@@ -237,10 +237,11 @@ ErrorOr<int> execute_work_items(Vector<WorkItem> const& items)
 
             while (true) {
                 print_progress();
-                auto bytes_read = TRY(source_file->read(buffer.bytes()));
+                auto bytes_read = TRY(source_file->read_some(buffer.bytes()));
                 if (bytes_read.is_empty())
                     break;
-                if (auto result = destination_file->write(bytes_read); result.is_error()) {
+                // FIXME: This should write the entire span.
+                if (auto result = destination_file->write_some(bytes_read); result.is_error()) {
                     // FIXME: Return the formatted string directly. There is no way to do this right now without the temporary going out of scope and being destroyed.
                     report_warning(DeprecatedString::formatted("Failed to write to destination file: {}", result.error()));
                     return result.release_error();

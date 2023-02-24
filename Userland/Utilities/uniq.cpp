@@ -17,10 +17,11 @@ static ErrorOr<void> write_line_content(StringView line, size_t count, bool dupl
     if (duplicates_only && count <= 1)
         return {};
 
+    // FIXME: This should write the entire span.
     if (print_count)
-        TRY(outfile.write(DeprecatedString::formatted("{} {}\n", count, line).bytes()));
+        TRY(outfile.write_some(DeprecatedString::formatted("{} {}\n", count, line).bytes()));
     else
-        TRY(outfile.write(DeprecatedString::formatted("{}\n", line).bytes()));
+        TRY(outfile.write_some(DeprecatedString::formatted("{}\n", line).bytes()));
     return {};
 }
 

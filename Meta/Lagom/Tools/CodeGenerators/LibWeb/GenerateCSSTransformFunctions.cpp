@@ -96,7 +96,8 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction);
 
     generator.appendln("\n}");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -205,6 +206,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction transfor
 
     generator.appendln("\n}");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }

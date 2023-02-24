@@ -174,7 +174,8 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
 
                 auto output_file = MUST(Core::File::open(output_file_path, Core::File::OpenMode::Write));
                 auto image_buffer = MUST(Gfx::PNGWriter::encode(*screenshot));
-                MUST(output_file->write(image_buffer.bytes()));
+                // FIXME: This should write the entire buffer.
+                MUST(output_file->write_some(image_buffer.bytes()));
             } else {
                 warnln("No screenshot available");
             }

@@ -469,7 +469,8 @@ namespace TimeZone {
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -801,7 +802,8 @@ Vector<StringView> time_zones_in_region(StringView region)
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 

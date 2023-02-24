@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Array<u8, 32768> buffer;
     for (auto const& file : files) {
         while (!file->is_eof()) {
-            auto const buffer_span = TRY(file->read(buffer));
+            auto const buffer_span = TRY(file->read_some(buffer));
             out("{:s}", buffer_span);
         }
     }

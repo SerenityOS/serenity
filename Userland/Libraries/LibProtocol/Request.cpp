@@ -45,7 +45,7 @@ void Request::stream_into(Stream& stream)
         constexpr size_t buffer_size = 256 * KiB;
         static char buf[buffer_size];
         do {
-            auto result = m_internal_stream_data->read_stream->read({ buf, buffer_size });
+            auto result = m_internal_stream_data->read_stream->read_some({ buf, buffer_size });
             if (result.is_error() && (!result.error().is_errno() || (result.error().is_errno() && result.error().code() != EINTR)))
                 break;
             if (result.is_error())

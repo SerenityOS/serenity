@@ -1724,7 +1724,8 @@ namespace Locale {
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -2397,7 +2398,8 @@ Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone,
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 

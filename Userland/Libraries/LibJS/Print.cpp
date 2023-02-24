@@ -148,7 +148,7 @@ ErrorOr<void> js_out(JS::PrintContext& print_context, CheckedFormatString<Args..
 
     auto bytes = formatted.bytes();
     while (!bytes.is_empty())
-        bytes = bytes.slice(TRY(print_context.stream.write(bytes)));
+        bytes = bytes.slice(TRY(print_context.stream.write_some(bytes)));
 
     return {};
 }

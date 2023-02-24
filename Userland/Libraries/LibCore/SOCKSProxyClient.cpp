@@ -102,12 +102,14 @@ ErrorOr<void> send_version_identifier_and_method_selection_message(Core::Socket&
         .method_count = 1,
         .methods = { to_underlying(method) },
     };
-    auto size = TRY(socket.write({ &message, sizeof(message) }));
+    // FIXME: This should write the entire span.
+    auto size = TRY(socket.write_some({ &message, sizeof(message) }));
     if (size != sizeof(message))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send version identifier and method selection message");
 
     Socks5InitialResponse response;
-    size = TRY(socket.read({ &response, sizeof(response) })).size();
+    // FIXME: This should read the entire span.
+    size = TRY(socket.read_some({ &response, sizeof(response) })).size();
     if (size != sizeof(response))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive initial response");
 
@@ -133,7 +135,8 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
         .port = htons(port),
     };
 
-    auto size = TRY(stream.write({ &header, sizeof(header) }));
+    // FIXME: This should write the entire span.
+    auto size = TRY(stream.write_some({ &header, sizeof(header) }));
     if (size != sizeof(header))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request header");
 
@@ -142,10 +145,12 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
             u8 address_data[2];
             address_data[0] = to_underlying(AddressType::DomainName);
             address_data[1] = hostname.length();
-            auto size = TRY(stream.write({ address_data, sizeof(address_data) }));
+            // FIXME: This should write the entire span.
+            auto size = TRY(stream.write_some({ address_data, sizeof(address_data) }));
             if (size != array_size(address_data))
                 return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request address data");
-            TRY(stream.write({ hostname.characters(), hostname.length() }));
+            // FIXME: This should write the entire span.
+            TRY(stream.write_some({ hostname.characters(), hostname.length() }));
             return {};
         },
         [&](u32 ipv4) -> ErrorOr<void> {
@@ -153,25 +158,29 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
             address_data[0] = to_underlying(AddressType::IPV4);
             u32 network_ordered_ipv4 = NetworkOrdered<u32>(ipv4);
             memcpy(address_data + 1, &network_ordered_ipv4, sizeof(network_ordered_ipv4));
-            auto size = TRY(stream.write({ address_data, sizeof(address_data) }));
+            // FIXME: This should write the entire span.
+            auto size = TRY(stream.write_some({ address_data, sizeof(address_data) }));
             if (size != array_size(address_data))
                 return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request address data");
             return {};
         }));
 
-    size = TRY(stream.write({ &trailer, sizeof(trailer) }));
+    // FIXME: This should write the entire span.
+    size = TRY(stream.write_some({ &trailer, sizeof(trailer) }));
     if (size != sizeof(trailer))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request trailer");
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
     TRY(stream.read_entire_buffer(buffer.bytes()));
 
-    size = TRY(socket.write({ buffer.data(), buffer.size() }));
+    // FIXME: This should write the entire span.
+    size = TRY(socket.write_some({ buffer.data(), buffer.size() }));
     if (size != buffer.size())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request");
 
     Socks5ConnectResponseHeader response_header;
-    size = TRY(socket.read({ &response_header, sizeof(response_header) })).size();
+    // FIXME: This should read the entire span.
+    size = TRY(socket.read_some({ &response_header, sizeof(response_header) })).size();
     if (size != sizeof(response_header))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response header");
 
@@ -179,26 +188,30 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
         return Error::from_string_literal("SOCKS negotiation failed: Invalid version identifier");
 
     u8 response_address_type;
-    size = TRY(socket.read({ &response_address_type, sizeof(response_address_type) })).size();
+    // FIXME: This should read the entire span.
+    size = TRY(socket.read_some({ &response_address_type, sizeof(response_address_type) })).size();
     if (size != sizeof(response_address_type))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address type");
 
     switch (AddressType(response_address_type)) {
     case AddressType::IPV4: {
         u8 response_address_data[4];
-        size = TRY(socket.read({ response_address_data, sizeof(response_address_data) })).size();
+        // FIXME: This should read the entire span.
+        size = TRY(socket.read_some({ response_address_data, sizeof(response_address_data) })).size();
         if (size != sizeof(response_address_data))
             return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address data");
         break;
     }
     case AddressType::DomainName: {
         u8 response_address_length;
-        size = TRY(socket.read({ &response_address_length, sizeof(response_address_length) })).size();
+        // FIXME: This should read the entire span.
+        size = TRY(socket.read_some({ &response_address_length, sizeof(response_address_length) })).size();
         if (size != sizeof(response_address_length))
             return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address length");
         ByteBuffer buffer;
         buffer.resize(response_address_length);
-        size = TRY(socket.read(buffer)).size();
+        // FIXME: This should read the entire span.
+        size = TRY(socket.read_some(buffer)).size();
         if (size != response_address_length)
             return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response address data");
         break;
@@ -209,7 +222,8 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
     }
 
     u16 bound_port;
-    size = TRY(socket.read({ &bound_port, sizeof(bound_port) })).size();
+    // FIXME: This should read the entire span.
+    size = TRY(socket.read_some({ &bound_port, sizeof(bound_port) })).size();
     if (size != sizeof(bound_port))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive connect response bound port");
 
@@ -221,37 +235,44 @@ ErrorOr<u8> send_username_password_authentication_message(Core::Socket& socket, 
     AllocatingMemoryStream stream;
 
     u8 version = 0x01;
-    auto size = TRY(stream.write({ &version, sizeof(version) }));
+    // FIXME: This should write the entire span.
+    auto size = TRY(stream.write_some({ &version, sizeof(version) }));
     if (size != sizeof(version))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     u8 username_length = auth_data.username.length();
-    size = TRY(stream.write({ &username_length, sizeof(username_length) }));
+    // FIXME: This should write the entire span.
+    size = TRY(stream.write_some({ &username_length, sizeof(username_length) }));
     if (size != sizeof(username_length))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
-    size = TRY(stream.write({ auth_data.username.characters(), auth_data.username.length() }));
+    // FIXME: This should write the entire span.
+    size = TRY(stream.write_some({ auth_data.username.characters(), auth_data.username.length() }));
     if (size != auth_data.username.length())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     u8 password_length = auth_data.password.length();
-    size = TRY(stream.write({ &password_length, sizeof(password_length) }));
+    // FIXME: This should write the entire span.
+    size = TRY(stream.write_some({ &password_length, sizeof(password_length) }));
     if (size != sizeof(password_length))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
-    size = TRY(stream.write({ auth_data.password.characters(), auth_data.password.length() }));
+    // FIXME: This should write the entire span.
+    size = TRY(stream.write_some({ auth_data.password.characters(), auth_data.password.length() }));
     if (size != auth_data.password.length())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
     TRY(stream.read_entire_buffer(buffer.bytes()));
 
-    size = TRY(socket.write(buffer));
+    // FIXME: This should write the entire span.
+    size = TRY(socket.write_some(buffer));
     if (size != buffer.size())
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     Socks5UsernamePasswordResponse response;
-    size = TRY(socket.read({ &response, sizeof(response) })).size();
+    // FIXME: This should read the entire span.
+    size = TRY(socket.read_some({ &response, sizeof(response) })).size();
     if (size != sizeof(response))
         return Error::from_string_literal("SOCKS negotiation failed: Failed to receive username/password authentication response");
 

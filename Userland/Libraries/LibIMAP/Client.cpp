@@ -60,7 +60,8 @@ ErrorOr<void> Client::on_ready_to_receive()
 
     auto pending_bytes = TRY(m_socket->pending_bytes());
     auto receive_buffer = TRY(m_buffer.get_bytes_for_writing(pending_bytes));
-    TRY(m_socket->read(receive_buffer));
+    // FIXME: This should read the entire span.
+    TRY(m_socket->read_some(receive_buffer));
 
     // Once we get server hello we can start sending.
     if (m_connect_pending) {
@@ -145,8 +146,9 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
 
 ErrorOr<void> Client::send_raw(StringView data)
 {
-    TRY(m_socket->write(data.bytes()));
-    TRY(m_socket->write("\r\n"sv.bytes()));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(data.bytes()));
+    TRY(m_socket->write_some("\r\n"sv.bytes()));
 
     return {};
 }

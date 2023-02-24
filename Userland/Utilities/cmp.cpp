@@ -75,8 +75,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     while (true) {
-        TRY(file1->read(buffer1));
-        TRY(file2->read(buffer2));
+        TRY(file1->read_some(buffer1));
+        TRY(file2->read_some(buffer2));
 
         if (file1->is_eof() && file2->is_eof())
             break;

@@ -573,7 +573,7 @@ size_t BrotliDecompressionStream::literal_code_index_from_context()
     return literal_code_index;
 }
 
-ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
+ErrorOr<Bytes> BrotliDecompressionStream::read_some(Bytes output_buffer)
 {
     size_t bytes_read = 0;
     while (bytes_read < output_buffer.size()) {
@@ -653,7 +653,7 @@ ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
                 Bytes temp_bytes { temp_buffer, 4096 };
                 while (skip_length > 0) {
                     Bytes temp_bytes_slice = temp_bytes.slice(0, min(4096, skip_length));
-                    auto metadata_bytes = TRY(m_input_stream.read(temp_bytes_slice));
+                    auto metadata_bytes = TRY(m_input_stream.read_some(temp_bytes_slice));
                     if (metadata_bytes.is_empty())
                         return Error::from_string_literal("eof");
                     if (metadata_bytes.last() == 0)
@@ -741,7 +741,7 @@ ErrorOr<Bytes> BrotliDecompressionStream::read(Bytes output_buffer)
             size_t number_of_fitting_bytes = min(output_buffer.size() - bytes_read, m_bytes_left);
             VERIFY(number_of_fitting_bytes > 0);
 
-            auto uncompressed_bytes = TRY(m_input_stream.read(output_buffer.slice(bytes_read, number_of_fitting_bytes)));
+            auto uncompressed_bytes = TRY(m_input_stream.read_some(output_buffer.slice(bytes_read, number_of_fitting_bytes)));
             if (uncompressed_bytes.is_empty())
                 return Error::from_string_literal("eof");
 

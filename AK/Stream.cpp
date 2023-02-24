@@ -18,7 +18,7 @@ ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
         if (is_eof())
             return Error::from_string_view_or_print_error_and_return_errno("Reached end-of-file before filling the entire buffer"sv, EIO);
 
-        auto result = read(buffer.slice(nread));
+        auto result = read_some(buffer.slice(nread));
         if (result.is_error()) {
             if (result.error().is_errno() && result.error().code() == EINTR) {
                 continue;
@@ -50,7 +50,7 @@ ErrorOr<ByteBuffer> Stream::read_until_eof_impl(size_t block_size, size_t expect
             buffer = TRY(data.get_bytes_for_writing(block_size));
         }
 
-        auto nread = TRY(read(buffer)).size();
+        auto nread = TRY(read_some(buffer)).size();
         total_read += nread;
         buffer = buffer.slice(nread);
     }
@@ -71,7 +71,7 @@ ErrorOr<void> Stream::discard(size_t discarded_bytes)
         if (is_eof())
             return Error::from_string_view_or_print_error_and_return_errno("Reached end-of-file before reading all discarded bytes"sv, EIO);
 
-        auto slice = TRY(read(buffer.span().slice(0, min(discarded_bytes, continuous_read_size))));
+        auto slice = TRY(read_some(buffer.span().slice(0, min(discarded_bytes, continuous_read_size))));
         discarded_bytes -= slice.size();
     }
 
@@ -82,7 +82,7 @@ ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
 {
     size_t nwritten = 0;
     while (nwritten < buffer.size()) {
-        auto result = write(buffer.slice(nwritten));
+        auto result = write_some(buffer.slice(nwritten));
         if (result.is_error()) {
             if (result.error().is_errno() && result.error().code() == EINTR) {
                 continue;

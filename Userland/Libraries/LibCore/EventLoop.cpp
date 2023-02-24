@@ -169,7 +169,7 @@ private:
 #ifdef AK_OS_SERENITY
         m_socket->on_ready_to_read = [this] {
             u32 length;
-            auto maybe_bytes_read = m_socket->read({ (u8*)&length, sizeof(length) });
+            auto maybe_bytes_read = m_socket->read_some({ (u8*)&length, sizeof(length) });
             if (maybe_bytes_read.is_error()) {
                 dbgln("InspectorServerConnection: Failed to read message length from inspector server connection: {}", maybe_bytes_read.error());
                 shutdown();
@@ -186,7 +186,7 @@ private:
             VERIFY(bytes_read.size() == sizeof(length));
 
             auto request_buffer = ByteBuffer::create_uninitialized(length).release_value();
-            maybe_bytes_read = m_socket->read(request_buffer.bytes());
+            maybe_bytes_read = m_socket->read_some(request_buffer.bytes());
             if (maybe_bytes_read.is_error()) {
                 dbgln("InspectorServerConnection: Failed to read message content from inspector server connection: {}", maybe_bytes_read.error());
                 shutdown();
@@ -221,10 +221,11 @@ public:
         auto bytes_to_send = serialized.bytes();
         u32 length = bytes_to_send.size();
         // FIXME: Propagate errors
-        auto sent = MUST(m_socket->write({ (u8 const*)&length, sizeof(length) }));
+        // FIXME: This should write the entire span.
+        auto sent = MUST(m_socket->write_some({ (u8 const*)&length, sizeof(length) }));
         VERIFY(sent == sizeof(length));
         while (!bytes_to_send.is_empty()) {
-            size_t bytes_sent = MUST(m_socket->write(bytes_to_send));
+            size_t bytes_sent = MUST(m_socket->write_some(bytes_to_send));
             bytes_to_send = bytes_to_send.slice(bytes_sent);
         }
     }

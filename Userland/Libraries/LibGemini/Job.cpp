@@ -65,7 +65,7 @@ ErrorOr<String> Job::read_line(size_t size)
 ErrorOr<ByteBuffer> Job::receive(size_t size)
 {
     ByteBuffer buffer = TRY(ByteBuffer::create_uninitialized(size));
-    auto nread = TRY(m_socket->read(buffer)).size();
+    auto nread = TRY(m_socket->read_some(buffer)).size();
     return buffer.slice(0, nread);
 }
 

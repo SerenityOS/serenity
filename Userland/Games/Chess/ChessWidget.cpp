@@ -632,24 +632,25 @@ ErrorOr<void> ChessWidget::import_pgn(Core::File& file)
 ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
 {
     // Tag Pair Section
-    TRY(file.write("[Event \"Casual Game\"]\n"sv.bytes()));
-    TRY(file.write("[Site \"SerenityOS Chess\"]\n"sv.bytes()));
-    TRY(file.write(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)).bytes()));
-    TRY(file.write("[Round \"1\"]\n"sv.bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some("[Event \"Casual Game\"]\n"sv.bytes()));
+    TRY(file.write_some("[Site \"SerenityOS Chess\"]\n"sv.bytes()));
+    TRY(file.write_some(DeprecatedString::formatted("[Date \"{}\"]\n", Core::DateTime::now().to_deprecated_string("%Y.%m.%d"sv)).bytes()));
+    TRY(file.write_some("[Round \"1\"]\n"sv.bytes()));
 
     DeprecatedString username(getlogin());
     auto const player1 = (!username.is_empty() ? username.view() : "?"sv.bytes());
     auto const player2 = (!m_engine.is_null() ? "SerenityOS ChessEngine"sv.bytes() : "?"sv.bytes());
-    TRY(file.write(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2).bytes()));
-    TRY(file.write(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2).bytes()));
+    TRY(file.write_some(DeprecatedString::formatted("[White \"{}\"]\n", m_side == Chess::Color::White ? player1 : player2).bytes()));
+    TRY(file.write_some(DeprecatedString::formatted("[Black \"{}\"]\n", m_side == Chess::Color::Black ? player1 : player2).bytes()));
 
-    TRY(file.write(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn())).bytes()));
-    TRY(file.write("[WhiteElo \"?\"]\n"sv.bytes()));
-    TRY(file.write("[BlackElo \"?\"]\n"sv.bytes()));
-    TRY(file.write("[Variant \"Standard\"]\n"sv.bytes()));
-    TRY(file.write("[TimeControl \"-\"]\n"sv.bytes()));
-    TRY(file.write("[Annotator \"SerenityOS Chess\"]\n"sv.bytes()));
-    TRY(file.write("\n"sv.bytes()));
+    TRY(file.write_some(DeprecatedString::formatted("[Result \"{}\"]\n", Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn())).bytes()));
+    TRY(file.write_some("[WhiteElo \"?\"]\n"sv.bytes()));
+    TRY(file.write_some("[BlackElo \"?\"]\n"sv.bytes()));
+    TRY(file.write_some("[Variant \"Standard\"]\n"sv.bytes()));
+    TRY(file.write_some("[TimeControl \"-\"]\n"sv.bytes()));
+    TRY(file.write_some("[Annotator \"SerenityOS Chess\"]\n"sv.bytes()));
+    TRY(file.write_some("\n"sv.bytes()));
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
@@ -657,17 +658,17 @@ ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
 
         if (i + 1 < m_board.moves().size()) {
             const DeprecatedString black = m_board.moves().at(i + 1).to_algebraic();
-            TRY(file.write(DeprecatedString::formatted("{}. {} {} ", move_no, white, black).bytes()));
+            TRY(file.write_some(DeprecatedString::formatted("{}. {} {} ", move_no, white, black).bytes()));
         } else {
-            TRY(file.write(DeprecatedString::formatted("{}. {} ", move_no, white).bytes()));
+            TRY(file.write_some(DeprecatedString::formatted("{}. {} ", move_no, white).bytes()));
         }
     }
 
-    TRY(file.write("{ "sv.bytes()));
-    TRY(file.write(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()).bytes()));
-    TRY(file.write(" } "sv.bytes()));
-    TRY(file.write(Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn()).bytes()));
-    TRY(file.write("\n"sv.bytes()));
+    TRY(file.write_some("{ "sv.bytes()));
+    TRY(file.write_some(Chess::Board::result_to_string(m_board.game_result(), m_board.turn()).bytes()));
+    TRY(file.write_some(" } "sv.bytes()));
+    TRY(file.write_some(Chess::Board::result_to_points_string(m_board.game_result(), m_board.turn()).bytes()));
+    TRY(file.write_some("\n"sv.bytes()));
 
     return {};
 }

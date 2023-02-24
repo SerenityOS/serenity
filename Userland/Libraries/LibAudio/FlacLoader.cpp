@@ -111,7 +111,8 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     // Parse checksum into a buffer first
     [[maybe_unused]] u128 md5_checksum;
     VERIFY(streaminfo_data.is_aligned_to_byte_boundary());
-    auto md5_bytes_read = LOADER_TRY(streaminfo_data.read(md5_checksum.bytes()));
+    // FIXME: This should read the entire span.
+    auto md5_bytes_read = LOADER_TRY(streaminfo_data.read_some(md5_checksum.bytes()));
     FLAC_VERIFY(md5_bytes_read.size() == sizeof(md5_checksum), LoaderError::Category::IO, "MD5 Checksum size");
     md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
 
@@ -228,7 +229,7 @@ ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(Big
     // Blocks might exceed our buffer size.
     auto bytes_left_to_read = block_data.bytes();
     while (bytes_left_to_read.size()) {
-        auto read_bytes = LOADER_TRY(bit_input.read(bytes_left_to_read));
+        auto read_bytes = LOADER_TRY(bit_input.read_some(bytes_left_to_read));
         bytes_left_to_read = bytes_left_to_read.slice(read_bytes.size());
     }
 
@@ -870,7 +871,8 @@ ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
     u64 character;
     u8 buffer = 0;
     Bytes buffer_bytes { &buffer, 1 };
-    TRY(input.read(buffer_bytes));
+    // FIXME: This should read the entire span.
+    TRY(input.read_some(buffer_bytes));
     u8 start_byte = buffer_bytes[0];
     // Signal byte is zero: ASCII character
     if ((start_byte & 0b10000000) == 0) {
@@ -886,7 +888,8 @@ ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
     u8 start_byte_bitmask = AK::exp2(bits_from_start_byte) - 1;
     character = start_byte_bitmask & start_byte;
     for (u8 i = length - 1; i > 0; --i) {
-        TRY(input.read(buffer_bytes));
+        // FIXME: This should read the entire span.
+        TRY(input.read_some(buffer_bytes));
         u8 current_byte = buffer_bytes[0];
         character = (character << 6) | (current_byte & 0b00111111);
     }

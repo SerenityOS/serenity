@@ -51,7 +51,8 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
         // the suggestion list to fit in the prompt line.
         auto start = max_line_count - m_prompt_lines_at_suggestion_initiation;
         for (size_t i = start; i < max_line_count; ++i)
-            TRY(stderr_stream->write("\n"sv.bytes()));
+            // FIXME: This should write the entire span.
+            TRY(stderr_stream->write_some("\n"sv.bytes()));
         lines_used += max_line_count;
         longest_suggestion_length = 0;
     }
@@ -99,7 +100,8 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
         if (next_column > m_num_columns) {
             auto lines = (suggestion.text_view.length() + m_num_columns - 1) / m_num_columns;
             lines_used += lines;
-            TRY(stderr_stream->write("\n"sv.bytes()));
+            // FIXME: This should write the entire span.
+            TRY(stderr_stream->write_some("\n"sv.bytes()));
             num_printed = 0;
         }
 
@@ -115,11 +117,13 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
 
         if (spans_entire_line) {
             num_printed += m_num_columns;
-            TRY(stderr_stream->write(suggestion.text_string.bytes()));
-            TRY(stderr_stream->write(suggestion.display_trivia_string.bytes()));
+            // FIXME: This should write the entire span.
+            TRY(stderr_stream->write_some(suggestion.text_string.bytes()));
+            TRY(stderr_stream->write_some(suggestion.display_trivia_string.bytes()));
         } else {
             auto field = DeprecatedString::formatted("{: <{}}  {}", suggestion.text_string, longest_suggestion_byte_length_without_trivia, suggestion.display_trivia_string);
-            TRY(stderr_stream->write(DeprecatedString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()));
+            // FIXME: This should write the entire span.
+            TRY(stderr_stream->write_some(DeprecatedString::formatted("{: <{}}", field, longest_suggestion_byte_length + 2).bytes()));
             num_printed += longest_suggestion_length + 2;
         }
 
@@ -150,7 +154,8 @@ ErrorOr<void> XtermSuggestionDisplay::display(SuggestionManager const& manager)
 
         TRY(VT::move_absolute(m_origin_row + lines_used, m_num_columns - string.length() - 1, *stderr_stream));
         TRY(VT::apply_style({ Style::Background(Style::XtermColor::Green) }, *stderr_stream));
-        TRY(stderr_stream->write(string.bytes()));
+        // FIXME: This should write the entire span.
+        TRY(stderr_stream->write_some(string.bytes()));
         TRY(VT::apply_style(Style::reset_style(), *stderr_stream));
     }
 

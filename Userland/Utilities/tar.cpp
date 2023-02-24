@@ -127,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 Array<u8, buffer_size> buffer;
 
                 while (!file_stream.is_eof()) {
-                    auto slice = TRY(file_stream.read(buffer));
+                    auto slice = TRY(file_stream.read_some(buffer));
                     long_name.append(reinterpret_cast<char*>(slice.data()), slice.size());
                 }
 
@@ -162,7 +162,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                     Array<u8, buffer_size> buffer;
                     while (!file_stream.is_eof()) {
-                        auto slice = TRY(file_stream.read(buffer));
+                        auto slice = TRY(file_stream.read_some(buffer));
                         TRY(Core::System::write(fd, slice));
                     }
 

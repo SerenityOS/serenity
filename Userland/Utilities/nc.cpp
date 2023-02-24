@@ -82,7 +82,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto nread = TRY(Core::System::read(STDIN_FILENO, buffer_span));
             buffer_span = buffer_span.trim(nread);
 
-            TRY(socket->write({ buffer_span.data(), static_cast<size_t>(nread) }));
+            // FIXME: This should write the entire span.
+            TRY(socket->write_some({ buffer_span.data(), static_cast<size_t>(nread) }));
         }
     }
 

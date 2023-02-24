@@ -23,16 +23,17 @@ public:
     }
 
     // ^Stream
-    virtual ErrorOr<Bytes> read(Bytes bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes bytes) override
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
-            return m_stream->read(bytes.slice(1));
+            // FIXME: This accidentally slices off the first byte of the returned span.
+            return m_stream->read_some(bytes.slice(1));
         }
         align_to_byte_boundary();
-        return m_stream->read(bytes);
+        return m_stream->read_some(bytes);
     }
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream->write(bytes); }
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override { return m_stream->write_some(bytes); }
     virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override { return m_stream->write_entire_buffer(bytes); }
     virtual bool is_eof() const override { return m_stream->is_eof() && !m_current_byte.has_value(); }
     virtual bool is_open() const override { return m_stream->is_open(); }
@@ -91,7 +92,9 @@ public:
                 }
             } else {
                 auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                TRY(m_stream->read(temp_buffer.bytes()));
+                // FIXME: This should read the entire span.
+                // FIXME: This should just write into m_current_byte directly.
+                TRY(m_stream->read_some(temp_buffer.bytes()));
                 m_current_byte = temp_buffer[0];
                 m_bit_offset = 0;
             }
@@ -127,16 +130,17 @@ public:
     }
 
     // ^Stream
-    virtual ErrorOr<Bytes> read(Bytes bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes bytes) override
     {
         if (m_current_byte.has_value() && is_aligned_to_byte_boundary()) {
             bytes[0] = m_current_byte.release_value();
-            return m_stream->read(bytes.slice(1));
+            // FIXME: This accidentally slices off the first byte of the returned span.
+            return m_stream->read_some(bytes.slice(1));
         }
         align_to_byte_boundary();
-        return m_stream->read(bytes);
+        return m_stream->read_some(bytes);
     }
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override { return m_stream->write(bytes); }
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override { return m_stream->write_some(bytes); }
     virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override { return m_stream->write_entire_buffer(bytes); }
     virtual bool is_eof() const override { return m_stream->is_eof() && !m_current_byte.has_value(); }
     virtual bool is_open() const override { return m_stream->is_open(); }
@@ -191,7 +195,9 @@ public:
                 }
             } else {
                 auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                auto read_bytes = TRY(m_stream->read(temp_buffer.bytes()));
+                // FIXME: This should read the entire span.
+                // FIXME: This should just write into m_current_byte directly.
+                auto read_bytes = TRY(m_stream->read_some(temp_buffer.bytes()));
                 if (read_bytes.is_empty())
                     return Error::from_string_literal("eof");
                 m_current_byte = temp_buffer[0];
@@ -230,15 +236,15 @@ public:
     {
     }
 
-    virtual ErrorOr<Bytes> read(Bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes) override
     {
         return Error::from_errno(EBADF);
     }
 
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override
     {
         VERIFY(m_bit_offset == 0);
-        return m_stream->write(bytes);
+        return m_stream->write_some(bytes);
     }
 
     template<Unsigned T>
@@ -255,7 +261,8 @@ public:
             m_bit_offset++;
 
             if (m_bit_offset > 7) {
-                TRY(m_stream->write({ &m_current_byte, sizeof(m_current_byte) }));
+                // FIXME: This should write the entire span.
+                TRY(m_stream->write_some({ &m_current_byte, sizeof(m_current_byte) }));
                 m_bit_offset = 0;
                 m_current_byte = 0;
             }
@@ -308,15 +315,15 @@ public:
     {
     }
 
-    virtual ErrorOr<Bytes> read(Bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes) override
     {
         return Error::from_errno(EBADF);
     }
 
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override
     {
         VERIFY(m_bit_offset == 0);
-        return m_stream->write(bytes);
+        return m_stream->write_some(bytes);
     }
 
     template<Unsigned T>
@@ -333,7 +340,8 @@ public:
             m_bit_offset++;
 
             if (m_bit_offset > 7) {
-                TRY(m_stream->write({ &m_current_byte, sizeof(m_current_byte) }));
+                // FIXME: This should write the entire span.
+                TRY(m_stream->write_some({ &m_current_byte, sizeof(m_current_byte) }));
                 m_bit_offset = 0;
                 m_current_byte = 0;
             }

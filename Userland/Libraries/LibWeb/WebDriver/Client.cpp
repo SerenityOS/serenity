@@ -213,7 +213,7 @@ ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
         if (!TRY(m_socket->can_read_without_blocking()))
             break;
 
-        auto data = TRY(m_socket->read(buffer));
+        auto data = TRY(m_socket->read_some(buffer));
         TRY(builder.try_append(StringView { data }));
 
         if (m_socket->is_eof())
@@ -279,10 +279,11 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
     builder.append("\r\n"sv);
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    TRY(m_socket->write(builder_contents));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(builder_contents));
 
     while (!content.is_empty()) {
-        auto bytes_sent = TRY(m_socket->write(content.bytes()));
+        auto bytes_sent = TRY(m_socket->write_some(content.bytes()));
         content = content.substring_view(bytes_sent);
     }
 
@@ -319,8 +320,9 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
     header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
     header_builder.append("\r\n"sv);
 
-    TRY(m_socket->write(TRY(header_builder.to_byte_buffer())));
-    TRY(m_socket->write(TRY(content_builder.to_byte_buffer())));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(TRY(header_builder.to_byte_buffer())));
+    TRY(m_socket->write_some(TRY(content_builder.to_byte_buffer())));
 
     log_response(error.http_status);
     return {};

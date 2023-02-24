@@ -76,7 +76,7 @@ void WebSocketImplSerenity::connect(ConnectionInfo const& connection_info)
 ErrorOr<ByteBuffer> WebSocketImplSerenity::read(int max_size)
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(max_size));
-    auto read_bytes = TRY(m_socket->read(buffer));
+    auto read_bytes = TRY(m_socket->read_some(buffer));
     return buffer.slice(0, read_bytes.size());
 }
 

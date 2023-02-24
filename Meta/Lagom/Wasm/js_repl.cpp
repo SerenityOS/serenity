@@ -63,8 +63,8 @@ void displayln(CheckedFormatString<Args...> format_string, Args const&... args)
 void displayln() { user_display("\n", 1); }
 
 class UserDisplayStream final : public Stream {
-    virtual ErrorOr<Bytes> read(Bytes) override { return Error::from_string_view("Not readable"sv); };
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes) override { return Error::from_string_view("Not readable"sv); };
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override
     {
         user_display(bit_cast<char const*>(bytes.data()), bytes.size());
         return bytes.size();

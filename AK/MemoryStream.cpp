@@ -43,7 +43,7 @@ ErrorOr<void> FixedMemoryStream::truncate(size_t)
     return Error::from_errno(EBADF);
 }
 
-ErrorOr<Bytes> FixedMemoryStream::read(Bytes bytes)
+ErrorOr<Bytes> FixedMemoryStream::read_some(Bytes bytes)
 {
     auto to_read = min(remaining(), bytes.size());
     if (to_read == 0)
@@ -79,7 +79,7 @@ ErrorOr<size_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
     return m_offset;
 }
 
-ErrorOr<size_t> FixedMemoryStream::write(ReadonlyBytes bytes)
+ErrorOr<size_t> FixedMemoryStream::write_some(ReadonlyBytes bytes)
 {
     VERIFY(m_writing_enabled);
 
@@ -94,7 +94,7 @@ ErrorOr<void> FixedMemoryStream::write_entire_buffer(ReadonlyBytes bytes)
     if (remaining() < bytes.size())
         return Error::from_string_view_or_print_error_and_return_errno("Write of entire buffer ends past the memory area"sv, EINVAL);
 
-    TRY(write(bytes));
+    TRY(write_some(bytes));
     return {};
 }
 
@@ -118,7 +118,7 @@ size_t FixedMemoryStream::remaining() const
     return m_bytes.size() - m_offset;
 }
 
-ErrorOr<Bytes> AllocatingMemoryStream::read(Bytes bytes)
+ErrorOr<Bytes> AllocatingMemoryStream::read_some(Bytes bytes)
 {
     size_t read_bytes = 0;
 
@@ -140,7 +140,7 @@ ErrorOr<Bytes> AllocatingMemoryStream::read(Bytes bytes)
     return bytes.trim(read_bytes);
 }
 
-ErrorOr<size_t> AllocatingMemoryStream::write(ReadonlyBytes bytes)
+ErrorOr<size_t> AllocatingMemoryStream::write_some(ReadonlyBytes bytes)
 {
     size_t written_bytes = 0;
 

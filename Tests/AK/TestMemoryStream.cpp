@@ -16,7 +16,7 @@ TEST_CASE(allocating_memory_stream_empty)
 
     {
         Array<u8, 32> array;
-        auto read_bytes = MUST(stream.read(array));
+        auto read_bytes = MUST(stream.read_some(array));
         EXPECT_EQ(read_bytes.size(), 0ul);
     }
 

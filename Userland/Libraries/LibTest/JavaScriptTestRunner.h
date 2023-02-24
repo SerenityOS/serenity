@@ -220,7 +220,8 @@ inline ByteBuffer load_entire_file(StringView path)
         auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto file_size = TRY(file->size());
         auto content = TRY(ByteBuffer::create_uninitialized(file_size));
-        TRY(file->read(content.bytes()));
+        // FIXME: This should read the entire span.
+        TRY(file->read_some(content.bytes()));
         return content;
     };
 

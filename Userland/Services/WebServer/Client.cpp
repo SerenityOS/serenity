@@ -192,18 +192,19 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
     builder.append("\r\n"sv);
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    TRY(m_socket->write(builder_contents));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(builder_contents));
     log_response(200, request);
 
     char buffer[PAGE_SIZE];
     do {
-        auto size = TRY(response.read({ buffer, sizeof(buffer) })).size();
+        auto size = TRY(response.read_some({ buffer, sizeof(buffer) })).size();
         if (response.is_eof() && size == 0)
             break;
 
         ReadonlyBytes write_buffer { buffer, size };
         while (!write_buffer.is_empty()) {
-            auto nwritten = TRY(m_socket->write(write_buffer));
+            auto nwritten = TRY(m_socket->write_some(write_buffer));
 
             if (nwritten == 0) {
                 dbgln("EEEEEE got 0 bytes written!");
@@ -234,7 +235,8 @@ ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest 
     builder.append("\r\n"sv);
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    TRY(m_socket->write(builder_contents));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(builder_contents));
 
     log_response(301, request);
     return {};
@@ -363,8 +365,9 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
     header_builder.append("Content-Type: text/html; charset=UTF-8\r\n"sv);
     header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
     header_builder.append("\r\n"sv);
-    TRY(m_socket->write(TRY(header_builder.to_byte_buffer())));
-    TRY(m_socket->write(TRY(content_builder.to_byte_buffer())));
+    // FIXME: This should write the entire span.
+    TRY(m_socket->write_some(TRY(header_builder.to_byte_buffer())));
+    TRY(m_socket->write_some(TRY(content_builder.to_byte_buffer())));
 
     log_response(code, request);
     return {};

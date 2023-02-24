@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (algorithm == "crc32") {
             Crypto::Checksum::CRC32 crc32;
             while (!file->is_eof()) {
-                auto data_or_error = file->read(buffer);
+                auto data_or_error = file->read_some(buffer);
                 if (data_or_error.is_error()) {
                     warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, data_or_error.error());
                     fail = true;
@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else if (algorithm == "adler32") {
             Crypto::Checksum::Adler32 adler32;
             while (!file->is_eof()) {
-                auto data_or_error = file->read(buffer);
+                auto data_or_error = file->read_some(buffer);
                 if (data_or_error.is_error()) {
                     warnln("{}: Failed to read {}: {}", arguments.strings[0], filepath, data_or_error.error());
                     fail = true;

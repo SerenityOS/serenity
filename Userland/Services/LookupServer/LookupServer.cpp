@@ -239,10 +239,11 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
     auto udp_socket = TRY(Core::UDPSocket::connect(nameserver, 53, Time::from_seconds(1)));
     TRY(udp_socket->set_blocking(true));
 
-    TRY(udp_socket->write(buffer));
+    // FIXME: This should write the entire span.
+    TRY(udp_socket->write_some(buffer));
 
     u8 response_buffer[4096];
-    int nrecv = TRY(udp_socket->read({ response_buffer, sizeof(response_buffer) })).size();
+    int nrecv = TRY(udp_socket->read_some({ response_buffer, sizeof(response_buffer) })).size();
     if (udp_socket->is_eof())
         return Vector<Answer> {};
 

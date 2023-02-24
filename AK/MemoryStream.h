@@ -23,11 +23,11 @@ public:
     virtual bool is_open() const override;
     virtual void close() override;
     virtual ErrorOr<void> truncate(size_t) override;
-    virtual ErrorOr<Bytes> read(Bytes bytes) override;
+    virtual ErrorOr<Bytes> read_some(Bytes bytes) override;
 
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override;
 
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override;
     virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override;
 
     Bytes bytes();
@@ -45,8 +45,8 @@ private:
 /// and reading back the written data afterwards.
 class AllocatingMemoryStream final : public Stream {
 public:
-    virtual ErrorOr<Bytes> read(Bytes) override;
-    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual ErrorOr<Bytes> read_some(Bytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
     virtual ErrorOr<void> discard(size_t) override;
     virtual bool is_eof() const override;
     virtual bool is_open() const override;
