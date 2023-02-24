@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

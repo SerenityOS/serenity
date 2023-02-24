@@ -28,11 +28,11 @@
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
-#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Security/Credentials.h>
 #include <Kernel/Security/Jail.h>
 #include <Kernel/Tasks/AtomicEdgeAction.h>
 #include <Kernel/Tasks/FutexQueue.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/UnixTypes.h>

@@ -31,10 +31,10 @@
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

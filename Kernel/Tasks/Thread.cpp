@@ -21,8 +21,8 @@
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
-#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

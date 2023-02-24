@@ -258,7 +258,6 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    PerformanceEventBuffer.cpp
     Syscall.cpp
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
@@ -347,6 +346,7 @@ set(KERNEL_SOURCES
     Tasks/CrashHandler.cpp
     Tasks/FinalizerTask.cpp
     Tasks/FutexQueue.cpp
+    Tasks/PerformanceEventBuffer.cpp
     Tasks/Process.cpp
     Tasks/ProcessGroup.cpp
     Tasks/ProcessList.cpp

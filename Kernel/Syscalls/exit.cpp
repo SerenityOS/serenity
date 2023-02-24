@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/KSyms.h>
-#include <Kernel/PerformanceManager.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
 

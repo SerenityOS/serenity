@@ -8,8 +8,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Memory/Region.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 

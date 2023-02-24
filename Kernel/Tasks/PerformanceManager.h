@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Time/TimeManagement.h>

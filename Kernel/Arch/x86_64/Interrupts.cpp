@@ -16,9 +16,9 @@
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Library/Panic.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

@@ -10,8 +10,8 @@
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/ThreadTracer.h>
