@@ -8,7 +8,7 @@
 
 #include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/VirtIOGPU/DisplayConnector.h>
-#include <Kernel/TimerQueue.h>
+#include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
