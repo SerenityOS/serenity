@@ -119,7 +119,6 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     IOWindow.cpp
-    Jail.cpp
     SanCov.cpp
     DoubleBuffer.cpp
     FileSystem/AnonymousFile.cpp
@@ -270,6 +269,7 @@ set(KERNEL_SOURCES
     ScopedCritical.cpp
     StdLib.cpp
     Syscall.cpp
+    Security/Jail.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
