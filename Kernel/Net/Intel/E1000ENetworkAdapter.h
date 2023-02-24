@@ -13,7 +13,7 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 

@@ -14,8 +14,8 @@
 
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Random.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>

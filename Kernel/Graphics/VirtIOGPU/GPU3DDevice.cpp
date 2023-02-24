@@ -11,7 +11,7 @@
 #include <Kernel/Graphics/VirtIOGPU/GPU3DDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 

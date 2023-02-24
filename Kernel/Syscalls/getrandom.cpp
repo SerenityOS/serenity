@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
