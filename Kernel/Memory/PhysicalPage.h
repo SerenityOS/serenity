@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel::Memory {
 

@@ -9,7 +9,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Vector.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 #include <LibC/elf.h>
 
 #ifndef KERNEL

@@ -13,8 +13,8 @@
 #include <Kernel/Interrupts/PCIIRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalPage.h>
-#include <Kernel/PhysicalAddress.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/WaitQueue.h>

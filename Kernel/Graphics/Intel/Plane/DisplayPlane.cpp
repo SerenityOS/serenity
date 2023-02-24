@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Graphics/Intel/Plane/DisplayPlane.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 

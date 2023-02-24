@@ -9,8 +9,8 @@
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PageFaultResponse.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/VMObject.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Memory {
 

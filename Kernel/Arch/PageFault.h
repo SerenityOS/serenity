@@ -10,7 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/ExecutionMode.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 
 namespace Kernel {
 

@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Library/LockWeakable.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 class GenericGraphicsAdapter

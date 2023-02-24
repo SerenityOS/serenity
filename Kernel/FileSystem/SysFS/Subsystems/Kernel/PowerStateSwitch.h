@@ -13,9 +13,9 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Memory/MappedROM.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/Region.h>
-#include <Kernel/PhysicalAddress.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 
 namespace Kernel {
 

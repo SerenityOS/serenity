@@ -10,8 +10,8 @@
 #include <AK/IntrusiveRedBlackTree.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/Memory/VirtualRange.h>
-#include <Kernel/VirtualAddress.h>
 
 namespace Kernel::Memory {
 

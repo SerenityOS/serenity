@@ -14,10 +14,10 @@
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/PhysicalAddress.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/Memory/VirtualAddress.h>
 
 namespace Kernel::ACPI {
 

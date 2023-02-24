@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel::ACPI {
 

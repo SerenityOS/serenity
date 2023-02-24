@@ -12,8 +12,8 @@
 #include <Kernel/Graphics/VMWare/Definitions.h>
 #include <Kernel/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

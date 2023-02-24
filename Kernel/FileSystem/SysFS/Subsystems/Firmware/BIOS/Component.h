@@ -11,7 +11,8 @@
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/KBuffer.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 
