@@ -140,20 +140,21 @@ static ErrorOr<void> parse_emoji_serenity_data(Core::BufferedFile& file, EmojiDa
         emoji.group = Unicode::EmojiGroup::SerenityOS;
         emoji.display_order = display_order++;
 
-        line.for_each_split_view(' ', SplitBehavior::Nothing, [&](auto segment) {
+        TRY(line.for_each_split_view(' ', SplitBehavior::Nothing, [&](auto segment) -> ErrorOr<void> {
             if (segment.starts_with(code_point_header)) {
                 segment = segment.substring_view(code_point_header.length());
 
                 auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segment);
                 VERIFY(code_point.has_value());
 
-                emoji.code_points.append(*code_point);
+                TRY(emoji.code_points.try_append(*code_point));
             } else {
                 if (!builder.is_empty())
-                    builder.append(' ');
-                builder.append(segment);
+                    TRY(builder.try_append(' '));
+                TRY(builder.try_append(segment));
             }
-        });
+            return {};
+        }));
 
         auto name = builder.to_deprecated_string();
         if (!any_of(name, is_ascii_lower_alpha))
