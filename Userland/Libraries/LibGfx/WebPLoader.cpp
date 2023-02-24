@@ -68,6 +68,13 @@ struct WebPLoadingContext {
     RefPtr<Gfx::Bitmap> bitmap;
 
     Optional<ReadonlyBytes> icc_data;
+
+    template<size_t N>
+    [[nodiscard]] class Error error(char const (&string_literal)[N])
+    {
+        state = WebPLoadingContext::State::Error;
+        return Error::from_string_literal(string_literal);
+    }
 };
 
 // https://developers.google.com/speed/webp/docs/riff_container#webp_file_header
@@ -76,31 +83,23 @@ static ErrorOr<void> decode_webp_header(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::HeaderDecoded)
         return {};
 
-    if (context.data.size() < sizeof(WebPFileHeader)) {
-        context.state = WebPLoadingContext::State::Error;
-        return Error::from_string_literal("Missing WebP header");
-    }
+    if (context.data.size() < sizeof(WebPFileHeader))
+        return context.error("Missing WebP header");
 
     auto& header = *bit_cast<WebPFileHeader const*>(context.data.data());
-    if (header.riff != FourCC("RIFF") || header.webp != FourCC("WEBP")) {
-        context.state = WebPLoadingContext::State::Error;
-        return Error::from_string_literal("Invalid WebP header");
-    }
+    if (header.riff != FourCC("RIFF") || header.webp != FourCC("WEBP"))
+        return context.error("Invalid WebP header");
 
     // "File Size: [...] The size of the file in bytes starting at offset 8. The maximum value of this field is 2^32 minus 10 bytes."
     u32 const maximum_webp_file_size = 0xffff'ffff - 9;
-    if (header.file_size > maximum_webp_file_size) {
-        context.state = WebPLoadingContext::State::Error;
-        return Error::from_string_literal("WebP header file size over maximum");
-    }
+    if (header.file_size > maximum_webp_file_size)
+        return context.error("WebP header file size over maximum");
 
     // "The file size in the header is the total size of the chunks that follow plus 4 bytes for the 'WEBP' FourCC.
     //  The file SHOULD NOT contain any data after the data specified by File Size.
     //  Readers MAY parse such files, ignoring the trailing data."
-    if (context.data.size() - 8 < header.file_size) {
-        context.state = WebPLoadingContext::State::Error;
-        return Error::from_string_literal("WebP data too small for size in header");
-    }
+    if (context.data.size() - 8 < header.file_size)
+        return context.error("WebP data too small for size in header");
     if (context.data.size() - 8 > header.file_size) {
         dbgln_if(WEBP_DEBUG, "WebP has {} bytes of data, but header needs only {}. Trimming.", context.data.size(), header.file_size + 8);
         context.data = context.data.trim(header.file_size + 8);
@@ -113,18 +112,14 @@ static ErrorOr<void> decode_webp_header(WebPLoadingContext& context)
 // https://developers.google.com/speed/webp/docs/riff_container#riff_file_format
 static ErrorOr<Chunk> decode_webp_chunk_header(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
-    if (chunks.size() < sizeof(ChunkHeader)) {
-        context.state = WebPLoadingContext::State::Error;
-        return Error::from_string_literal("Not enough data for WebP chunk header");
-    }
+    if (chunks.size() < sizeof(ChunkHeader))
+        return context.error("Not enough data for WebP chunk header");
 
     auto const& header = *bit_cast<ChunkHeader const*>(chunks.data());
     dbgln_if(WEBP_DEBUG, "chunk {} size {}", header.chunk_type, header.chunk_size);
 
-    if (chunks.size() < sizeof(ChunkHeader) + header.chunk_size) {
-        context.state = WebPLoadingContext::State::Error;
-        return Error::from_string_literal("Not enough data for WebP chunk");
-    }
+    if (chunks.size() < sizeof(ChunkHeader) + header.chunk_size)
+        return context.error("Not enough data for WebP chunk");
 
     return Chunk { header.chunk_type, { chunks.data() + sizeof(ChunkHeader), header.chunk_size } };
 }
@@ -141,14 +136,10 @@ static ErrorOr<Chunk> decode_webp_advance_chunk(WebPLoadingContext& context, Rea
     chunks = chunks.slice(sizeof(ChunkHeader) + chunk.data.size());
 
     if (chunk.data.size() % 2 != 0) {
-        if (chunks.is_empty()) {
-            context.state = WebPLoadingContext::State::Error;
-            return Error::from_string_literal("Missing data for padding byte");
-        }
-        if (*chunks.data() != 0) {
-            context.state = WebPLoadingContext::State::Error;
-            return Error::from_string_literal("Padding byte is not 0");
-        }
+        if (chunks.is_empty())
+            return context.error("Missing data for padding byte");
+        if (*chunks.data() != 0)
+            return context.error("Padding byte is not 0");
         chunks = chunks.slice(1);
     }
 
@@ -225,7 +216,7 @@ static ErrorOr<void> decode_webp_chunks(WebPLoadingContext& context)
     if (first_chunk.type == FourCC("VP8X"))
         return decode_webp_extended(context, first_chunk, chunks);
 
-    return Error::from_string_literal("WebPImageDecoderPlugin: Invalid first chunk type");
+    return context.error("WebPImageDecoderPlugin: Invalid first chunk type");
 }
 
 WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLoadingContext> context)
