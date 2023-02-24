@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 

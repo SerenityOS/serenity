@@ -6,7 +6,7 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Graphics/Intel/Auxiliary/GMBusConnector.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel {
 

@@ -19,9 +19,9 @@
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/ScatterGatherList.h>
-#include <Kernel/PhysicalAddress.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/WaitQueue.h>

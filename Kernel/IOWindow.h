@@ -13,8 +13,8 @@
 #    include <Kernel/Arch/x86_64/IO.h>
 #endif
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

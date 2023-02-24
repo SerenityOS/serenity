@@ -11,7 +11,7 @@
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
 #include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <LibEDID/EDID.h>
 
 namespace Kernel {
