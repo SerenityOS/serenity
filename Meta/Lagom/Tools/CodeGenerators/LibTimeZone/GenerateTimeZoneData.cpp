@@ -397,13 +397,14 @@ static ErrorOr<void> parse_time_zone_coordinates(Core::BufferedFile& file, TimeZ
 
         time_zone_data.time_zone_coordinates.set(zone, { latitude, longitude });
 
-        regions.for_each_split_view(',', SplitBehavior::Nothing, [&](auto region) {
+        TRY(regions.for_each_split_view(',', SplitBehavior::Nothing, [&](auto region) -> ErrorOr<void> {
             auto index = time_zone_data.unique_strings.ensure(zone);
-            time_zone_data.time_zone_regions.ensure(region).append(index);
+            TRY(time_zone_data.time_zone_regions.ensure(region).try_append(index));
 
             if (!time_zone_data.time_zone_region_names.contains_slow(region))
-                time_zone_data.time_zone_region_names.append(region);
-        });
+                TRY(time_zone_data.time_zone_region_names.try_append(region));
+            return {};
+        }));
     }
 
     return {};
