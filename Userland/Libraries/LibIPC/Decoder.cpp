@@ -63,6 +63,13 @@ ErrorOr<JsonValue> decode(Decoder& decoder)
 }
 
 template<>
+ErrorOr<Time> decode(Decoder& decoder)
+{
+    auto nanoseconds = TRY(decoder.decode<i64>());
+    return AK::Time::from_nanoseconds(nanoseconds);
+}
+
+template<>
 ErrorOr<URL> decode(Decoder& decoder)
 {
     auto url = TRY(decoder.decode<DeprecatedString>());
