@@ -73,6 +73,8 @@ StringView guess_mime_type_based_on_filename(StringView path)
         return "image/svg+xml"sv;
     if (path.ends_with(".tga"sv, CaseSensitivity::CaseInsensitive))
         return "image/x-targa"sv;
+    if (path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive))
+        return "image/webp"sv;
     if (path.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
         return "text/markdown"sv;
     if (path.ends_with(".html"sv, CaseSensitivity::CaseInsensitive) || path.ends_with(".htm"sv, CaseSensitivity::CaseInsensitive))
@@ -152,6 +154,7 @@ StringView guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff", 0, 4, 'M', 'M', 0x00, '*')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(wasm, "application/wasm", 0, 4, 0x00, 'a', 's', 'm')                                                            \
     __ENUMERATE_MIME_TYPE_HEADER(wav, "audio/wave", 8, 4, 'W', 'A', 'V', 'E')                                                                    \
+    __ENUMERATE_MIME_TYPE_HEADER(webp, "image/webp", 8, 4, 'W', 'E', 'B', 'P')                                                                   \
     __ENUMERATE_MIME_TYPE_HEADER(win_31x_archive, "extra/win-31x-compressed", 0, 4, 'K', 'W', 'A', 'J')                                          \
     __ENUMERATE_MIME_TYPE_HEADER(win_95_archive, "extra/win-95-compressed", 0, 4, 'S', 'Z', 'D', 'D')                                            \
     __ENUMERATE_MIME_TYPE_HEADER(zlib_0, "extra/raw-zlib", 0, 2, 0x78, 0x01)                                                                     \

@@ -17,6 +17,7 @@
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/QOILoader.h>
 #include <LibGfx/TGALoader.h>
+#include <LibGfx/WebPLoader.h>
 
 namespace Gfx {
 
@@ -36,6 +37,7 @@ static constexpr ImagePluginInitializer s_initializers[] = {
     { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
     { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
     { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
+    { WebPImageDecoderPlugin::sniff, WebPImageDecoderPlugin::create },
 };
 
 struct ImagePluginWithMIMETypeInitializer {
