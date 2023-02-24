@@ -17,7 +17,7 @@
 #include <AK/Types.h>
 #include <Kernel/KString.h>
 #include <Kernel/Locking/SpinlockProtected.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

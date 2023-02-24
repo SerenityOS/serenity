@@ -7,7 +7,7 @@
 #include <AK/ByteBuffer.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

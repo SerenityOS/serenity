@@ -8,8 +8,8 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/TCP.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

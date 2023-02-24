@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/FutexQueue.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/FutexQueue.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
 

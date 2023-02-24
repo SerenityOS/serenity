@@ -9,8 +9,8 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/kstdio.h>
 
 // Delay.cpp

@@ -12,7 +12,7 @@
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Socket.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

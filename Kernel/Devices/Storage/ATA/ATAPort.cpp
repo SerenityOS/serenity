@@ -9,7 +9,7 @@
 #include <Kernel/Devices/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/ATA/ATAPort.h>
 #include <Kernel/Devices/Storage/ATA/Definitions.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 

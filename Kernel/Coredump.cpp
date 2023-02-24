@@ -18,7 +18,7 @@
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <LibC/elf.h>
 #include <LibELF/Core.h>
 

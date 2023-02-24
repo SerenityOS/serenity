@@ -15,9 +15,9 @@
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/IOWindow.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 

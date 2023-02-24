@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

@@ -18,23 +18,23 @@
 #include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>
-#include <Kernel/AtomicEdgeAction.h>
 #include <Kernel/Credentials.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
-#include <Kernel/FutexQueue.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/ProcessGroup.h>
 #include <Kernel/Security/Jail.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/AtomicEdgeAction.h>
+#include <Kernel/Tasks/FutexQueue.h>
+#include <Kernel/Tasks/ProcessGroup.h>
+#include <Kernel/Tasks/Thread.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/elf.h>
 

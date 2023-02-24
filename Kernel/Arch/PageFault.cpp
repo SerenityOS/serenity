@@ -10,7 +10,7 @@
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
 

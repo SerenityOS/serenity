@@ -14,7 +14,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
-#include <Kernel/WaitQueue.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 

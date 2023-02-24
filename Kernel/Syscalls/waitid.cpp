@@ -6,7 +6,7 @@
 
 #include <AK/Variant.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

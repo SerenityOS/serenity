@@ -13,7 +13,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

@@ -17,7 +17,7 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
-#include <Kernel/WaitQueue.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 

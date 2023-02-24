@@ -7,7 +7,7 @@
 #include <AK/NumericLimits.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

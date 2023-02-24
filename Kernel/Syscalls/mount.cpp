@@ -14,7 +14,7 @@
 #include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

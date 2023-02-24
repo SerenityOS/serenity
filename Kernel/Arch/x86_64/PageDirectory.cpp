@@ -11,10 +11,10 @@
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel::Memory {
 

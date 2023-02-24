@@ -17,9 +17,9 @@
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>

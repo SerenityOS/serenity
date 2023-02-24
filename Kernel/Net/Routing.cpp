@@ -12,7 +12,7 @@
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
 

@@ -27,8 +27,8 @@
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/HardwareTimer.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>

@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Graphics/VMWare/Console.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 
