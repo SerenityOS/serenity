@@ -46,7 +46,7 @@ TEST_CASE(file_write_bytes)
 
     constexpr auto some_words = "These are some words"sv;
     ReadonlyBytes buffer { some_words.characters_without_null_termination(), some_words.length() };
-    auto result = file->write(buffer);
+    auto result = file->write_some(buffer);
     EXPECT(!result.is_error());
 }
 
@@ -62,7 +62,7 @@ TEST_CASE(file_read_bytes)
     EXPECT(!maybe_buffer.is_error());
     auto buffer = maybe_buffer.release_value();
 
-    auto result = file->read(buffer);
+    auto result = file->read_some(buffer);
     EXPECT(!result.is_error());
     EXPECT_EQ(result.value().size(), 131ul);
 
@@ -185,7 +185,7 @@ TEST_CASE(tcp_socket_read)
     auto maybe_server_socket = tcp_server->accept();
     EXPECT(!maybe_server_socket.is_error());
     auto server_socket = maybe_server_socket.release_value();
-    EXPECT(!server_socket->write({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
+    EXPECT(!server_socket->write_some({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
     server_socket->close();
 
     EXPECT(client_socket->can_read_without_blocking(100).release_value());
@@ -194,7 +194,7 @@ TEST_CASE(tcp_socket_read)
     auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
     EXPECT(!maybe_receive_buffer.is_error());
     auto receive_buffer = maybe_receive_buffer.release_value();
-    auto maybe_read_bytes = client_socket->read(receive_buffer);
+    auto maybe_read_bytes = client_socket->read_some(receive_buffer);
     EXPECT(!maybe_read_bytes.is_error());
     auto read_bytes = maybe_read_bytes.release_value();
 
@@ -227,7 +227,7 @@ TEST_CASE(tcp_socket_write)
     auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
     EXPECT(!maybe_receive_buffer.is_error());
     auto receive_buffer = maybe_receive_buffer.release_value();
-    auto maybe_read_bytes = server_socket->read(receive_buffer);
+    auto maybe_read_bytes = server_socket->read_some(receive_buffer);
     EXPECT(!maybe_read_bytes.is_error());
     auto read_bytes = maybe_read_bytes.release_value();
 
@@ -263,7 +263,7 @@ TEST_CASE(tcp_socket_eof)
     auto maybe_receive_buffer = ByteBuffer::create_uninitialized(1);
     EXPECT(!maybe_receive_buffer.is_error());
     auto receive_buffer = maybe_receive_buffer.release_value();
-    EXPECT(client_socket->read(receive_buffer).release_value().is_empty());
+    EXPECT(client_socket->read_some(receive_buffer).release_value().is_empty());
     EXPECT(client_socket->is_eof());
 }
 
@@ -307,12 +307,12 @@ TEST_CASE(udp_socket_read_write)
 
     // Testing that supplying a smaller buffer than required causes a failure.
     auto small_buffer = ByteBuffer::create_uninitialized(8).release_value();
-    EXPECT_EQ(client_socket->read(small_buffer).error().code(), EMSGSIZE);
+    EXPECT_EQ(client_socket->read_some(small_buffer).error().code(), EMSGSIZE);
 
     auto maybe_client_receive_buffer = ByteBuffer::create_uninitialized(64);
     EXPECT(!maybe_client_receive_buffer.is_error());
     auto client_receive_buffer = maybe_client_receive_buffer.release_value();
-    auto maybe_read_bytes = client_socket->read(client_receive_buffer);
+    auto maybe_read_bytes = client_socket->read_some(client_receive_buffer);
     EXPECT(!maybe_read_bytes.is_error());
     auto read_bytes = maybe_read_bytes.release_value();
 
@@ -330,7 +330,7 @@ TEST_CASE(local_socket_read)
     EXPECT(local_server->listen("/tmp/test-socket"));
 
     local_server->on_accept = [&](NonnullOwnPtr<Core::LocalSocket> server_socket) {
-        EXPECT(!server_socket->write(sent_data.bytes()).is_error());
+        EXPECT(!server_socket->write_some(sent_data.bytes()).is_error());
 
         event_loop.quit(0);
         event_loop.pump();
@@ -356,7 +356,7 @@ TEST_CASE(local_socket_read)
             auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
             EXPECT(!maybe_receive_buffer.is_error());
             auto receive_buffer = maybe_receive_buffer.release_value();
-            auto maybe_read_bytes = client_socket->read(receive_buffer);
+            auto maybe_read_bytes = client_socket->read_some(receive_buffer);
             EXPECT(!maybe_read_bytes.is_error());
             auto read_bytes = maybe_read_bytes.release_value();
 
@@ -387,7 +387,7 @@ TEST_CASE(local_socket_write)
         auto maybe_receive_buffer = ByteBuffer::create_uninitialized(pending_bytes);
         EXPECT(!maybe_receive_buffer.is_error());
         auto receive_buffer = maybe_receive_buffer.release_value();
-        auto maybe_read_bytes = server_socket->read(receive_buffer);
+        auto maybe_read_bytes = server_socket->read_some(receive_buffer);
         EXPECT(!maybe_read_bytes.is_error());
         EXPECT_EQ(maybe_read_bytes.value().size(), sent_data.length());
 
@@ -578,7 +578,7 @@ TEST_CASE(buffered_tcp_socket_read)
     auto maybe_server_socket = tcp_server->accept();
     EXPECT(!maybe_server_socket.is_error());
     auto server_socket = maybe_server_socket.release_value();
-    EXPECT(!server_socket->write({ buffered_sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
+    EXPECT(!server_socket->write_some({ buffered_sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
 
     EXPECT(client_socket->can_read_without_blocking(100).release_value());
 

@@ -213,7 +213,8 @@ static ErrorOr<void> generate_emoji_data_header(Core::BufferedFile& file, EmojiD
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -334,7 +335,8 @@ Optional<Emoji> find_emoji_for_code_points(ReadonlySpan<u32> code_points)
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -379,7 +381,8 @@ static ErrorOr<void> generate_emoji_installation(Core::BufferedFile& file, Emoji
         generator.append(" @name@ (@status@)\n"sv);
     }
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 

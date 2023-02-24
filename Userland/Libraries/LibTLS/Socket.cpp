@@ -18,7 +18,7 @@ constexpr static size_t MaximumApplicationDataChunkSize = 16 * KiB;
 
 namespace TLS {
 
-ErrorOr<Bytes> TLSv12::read(Bytes bytes)
+ErrorOr<Bytes> TLSv12::read_some(Bytes bytes)
 {
     m_eof = false;
     auto size_to_read = min(bytes.size(), m_context.application_buffer.size());
@@ -53,7 +53,7 @@ DeprecatedString TLSv12::read_line(size_t max_size)
     return line;
 }
 
-ErrorOr<size_t> TLSv12::write(ReadonlyBytes bytes)
+ErrorOr<size_t> TLSv12::write_some(ReadonlyBytes bytes)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
         dbgln_if(TLS_DEBUG, "write request while not connected");
@@ -190,7 +190,7 @@ ErrorOr<void> TLSv12::read_from_socket()
     Bytes read_bytes {};
     auto& stream = underlying_stream();
     do {
-        auto result = stream.read(bytes);
+        auto result = stream.read_some(bytes);
         if (result.is_error()) {
             if (result.error().is_errno() && result.error().code() != EINTR) {
                 if (result.error().code() != EAGAIN)
@@ -291,7 +291,7 @@ ErrorOr<bool> TLSv12::flush()
     Optional<AK::Error> error;
     size_t written;
     do {
-        auto result = stream.write(out_bytes);
+        auto result = stream.write_some(out_bytes);
         if (result.is_error() && result.error().code() != EINTR && result.error().code() != EAGAIN) {
             error = result.release_error();
             dbgln("TLS Socket write error: {}", *error);

@@ -53,12 +53,14 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
     if (always_print_stack)
         config.dump_stack();
     if (always_print_instruction) {
-        g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes()).release_value_but_fixme_should_propagate_errors();
+        // FIXME: This should write the entire span.
+        g_stdout->write_some(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes()).release_value_but_fixme_should_propagate_errors();
         g_printer->print(instr);
     }
     if (g_continue)
         return true;
-    g_stdout->write(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes()).release_value_but_fixme_should_propagate_errors();
+    // FIXME: This should write the entire span.
+    g_stdout->write_some(DeprecatedString::formatted("{:0>4} ", ip.value()).bytes()).release_value_but_fixme_should_propagate_errors();
     g_printer->print(instr);
     DeprecatedString last_command = "";
     for (;;) {
@@ -214,7 +216,8 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                 if (!result.values().is_empty())
                     warnln("Returned:");
                 for (auto& value : result.values()) {
-                    g_stdout->write("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
+                    // FIXME: This should write the entire span.
+                    g_stdout->write_some("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
                     g_printer->print(value);
                 }
             }
@@ -454,15 +457,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto print_func = [&](auto const& address) {
             Wasm::FunctionInstance* fn = machine.store().get(address);
-            g_stdout->write(DeprecatedString::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes()).release_value_but_fixme_should_propagate_errors();
+            // FIXME: This should write the entire span.
+            g_stdout->write_some(DeprecatedString::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes()).release_value_but_fixme_should_propagate_errors();
             if (fn) {
-                g_stdout->write(DeprecatedString::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes()).release_value_but_fixme_should_propagate_errors();
+                // FIXME: This should write the entire span.
+                g_stdout->write_some(DeprecatedString::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes()).release_value_but_fixme_should_propagate_errors();
                 fn->visit(
                     [&](Wasm::WasmFunction const& func) {
                         Wasm::Printer printer { *g_stdout, 3 };
-                        g_stdout->write("    type:\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
+                        // FIXME: This should write the entire span.
+                        g_stdout->write_some("    type:\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
                         printer.print(func.type());
-                        g_stdout->write("    code:\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
+                        g_stdout->write_some("    code:\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
                         printer.print(func.code());
                     },
                     [](Wasm::HostFunction const&) {});
@@ -526,7 +532,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!result.values().is_empty())
                     warnln("Returned:");
                 for (auto& value : result.values()) {
-                    g_stdout->write("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
+                    // FIXME: This should write the entire span.
+                    g_stdout->write_some("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
                     g_printer->print(value);
                 }
             }

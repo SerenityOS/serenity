@@ -236,7 +236,7 @@ private:
         auto const fillable_slice = temporary_buffer.span().trim(min(temporary_buffer.size(), m_buffer.empty_space()));
         size_t nread = 0;
         do {
-            auto result = stream().read(fillable_slice);
+            auto result = stream().read_some(fillable_slice);
             if (result.is_error()) {
                 if (!result.error().is_errno())
                     return result.release_error();
@@ -274,8 +274,8 @@ public:
     BufferedSeekable(BufferedSeekable&& other) = default;
     BufferedSeekable& operator=(BufferedSeekable&& other) = default;
 
-    virtual ErrorOr<Bytes> read(Bytes buffer) override { return m_helper.read(move(buffer)); }
-    virtual ErrorOr<size_t> write(ReadonlyBytes buffer) override { return m_helper.stream().write(buffer); }
+    virtual ErrorOr<Bytes> read_some(Bytes buffer) override { return m_helper.read(move(buffer)); }
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes buffer) override { return m_helper.stream().write_some(buffer); }
     virtual bool is_eof() const override { return m_helper.is_eof(); }
     virtual bool is_open() const override { return m_helper.stream().is_open(); }
     virtual void close() override { m_helper.stream().close(); }

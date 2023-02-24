@@ -81,7 +81,7 @@ public:
     void unread(ReadonlyBytes data) { m_buffer.append(data.data(), data.size()); }
 
 private:
-    virtual ErrorOr<Bytes> read(Bytes bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes bytes) override
     {
         auto original_bytes = bytes;
 
@@ -95,7 +95,7 @@ private:
             bytes_read_from_buffer = read_size;
         }
 
-        return original_bytes.trim(TRY(m_stream.read(bytes)).size() + bytes_read_from_buffer);
+        return original_bytes.trim(TRY(m_stream.read_some(bytes)).size() + bytes_read_from_buffer);
     }
 
     virtual bool is_eof() const override
@@ -116,7 +116,7 @@ private:
         return m_stream.discard(count - bytes_discarded_from_buffer);
     }
 
-    virtual ErrorOr<size_t> write(ReadonlyBytes) override
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override
     {
         return Error::from_errno(EBADF);
     }
@@ -144,10 +144,10 @@ public:
     }
 
 private:
-    ErrorOr<Bytes> read(Bytes bytes) override
+    ErrorOr<Bytes> read_some(Bytes bytes) override
     {
         auto to_read = min(m_bytes_left, bytes.size());
-        auto read_bytes = TRY(m_stream.read(bytes.slice(0, to_read)));
+        auto read_bytes = TRY(m_stream.read_some(bytes.slice(0, to_read)));
         m_bytes_left -= read_bytes.size();
         return read_bytes;
     }
@@ -165,7 +165,7 @@ private:
         return m_stream.discard(count);
     }
 
-    virtual ErrorOr<size_t> write(ReadonlyBytes) override
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override
     {
         return Error::from_errno(EBADF);
     }

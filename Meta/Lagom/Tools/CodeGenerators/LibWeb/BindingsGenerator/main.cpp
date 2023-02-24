@@ -160,7 +160,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (global_mixin_implementation_mode)
         IDL::generate_global_mixin_implementation(interface, output_builder);
 
-    TRY(output_file->write(output_builder.string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(output_file->write_some(output_builder.string_view().bytes()));
 
     if (!depfile_path.is_null()) {
         auto depfile = TRY(Core::File::open_file_or_standard_stream(depfile_path, Core::File::OpenMode::Write));
@@ -173,7 +174,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             depfile_builder.append(path);
         }
         depfile_builder.append('\n');
-        TRY(depfile->write(depfile_builder.string_view().bytes()));
+        // FIXME: This should write the entire span.
+        TRY(depfile->write_some(depfile_builder.string_view().bytes()));
     }
     return 0;
 }

@@ -91,7 +91,8 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
     TRY(seek_block(block));
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(BLOCKSIZE));
-    auto bytes = TRY(m_file->read(buffer));
+    // FIXME: This should read the entire span.
+    auto bytes = TRY(m_file->read_some(buffer));
 
     dbgln_if(SQL_DEBUG, "{:hex-dump}", bytes.trim(8));
     TRY(buffer.try_resize(bytes.size()));
@@ -123,7 +124,8 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
     }
 
     dbgln_if(SQL_DEBUG, "{:hex-dump}", buffer.bytes().trim(8));
-    TRY(m_file->write(buffer));
+    // FIXME: This should write the entire span.
+    TRY(m_file->write_some(buffer));
 
     if (block == m_end_of_file)
         m_end_of_file++;

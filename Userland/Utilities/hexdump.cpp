@@ -86,7 +86,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
 
         bytes = contents.span().slice(0, bytes_to_read);
-        bytes = TRY(file->read(bytes));
+        bytes = TRY(file->read_some(bytes));
 
         total_bytes_read += bytes.size();
 

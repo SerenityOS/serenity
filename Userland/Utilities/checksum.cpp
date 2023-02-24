@@ -66,13 +66,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Array<u8, PAGE_SIZE> buffer;
         if (!verify_from_paths) {
             while (!file->is_eof())
-                hash.update(TRY(file->read(buffer)));
+                hash.update(TRY(file->read_some(buffer)));
             outln("{:hex-dump}  {}", hash.digest().bytes(), path);
         } else {
             StringBuilder checksum_list_contents;
             Array<u8, 1> checksum_list_buffer;
             while (!file->is_eof())
-                checksum_list_contents.append(TRY(file->read(checksum_list_buffer)).data()[0]);
+                checksum_list_contents.append(TRY(file->read_some(checksum_list_buffer)).data()[0]);
             Vector<StringView> const lines = checksum_list_contents.string_view().split_view("\n"sv);
 
             for (size_t i = 0; i < lines.size(); ++i) {
@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 auto file_from_filename = file_from_filename_or_error.release_value();
                 hash.reset();
                 while (!file_from_filename->is_eof())
-                    hash.update(TRY(file_from_filename->read(buffer)));
+                    hash.update(TRY(file_from_filename->read_some(buffer)));
                 if (DeprecatedString::formatted("{:hex-dump}", hash.digest().bytes()) == line[0])
                     outln("{}: OK", filename);
                 else {

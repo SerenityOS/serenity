@@ -795,7 +795,7 @@ ParseResult<CustomSection> CustomSection::parse(Stream& stream)
 
     while (!stream.is_eof()) {
         char buf[16];
-        auto span_or_error = stream.read({ buf, 16 });
+        auto span_or_error = stream.read_some({ buf, 16 });
         if (span_or_error.is_error())
             break;
         auto size = span_or_error.release_value().size();

@@ -284,7 +284,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         auto byte_buffer = byte_buffer_or_error.release_value();
 
-        if (auto result = file->write(byte_buffer); result.is_error())
+        // FIXME: This should write the entire span.
+        if (auto result = file->write_some(byte_buffer); result.is_error())
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", result.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
     save_backtrace_button.set_enabled(false);

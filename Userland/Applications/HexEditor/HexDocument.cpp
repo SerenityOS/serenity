@@ -62,10 +62,12 @@ void HexDocumentMemory::clear_changes()
 ErrorOr<void> HexDocumentMemory::write_to_file(Core::File& file)
 {
     TRY(file.seek(0, SeekMode::SetPosition));
-    TRY(file.write(m_buffer));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(m_buffer));
     for (auto& change : m_changes) {
         TRY(file.seek(change.key, SeekMode::SetPosition));
-        TRY(file.write({ &change.value, 1 }));
+        // FIXME: This should write the entire span.
+        TRY(file.write_some({ &change.value, 1 }));
     }
     return {};
 }
@@ -87,7 +89,8 @@ ErrorOr<void> HexDocumentFile::write_to_file()
 {
     for (auto& change : m_changes) {
         TRY(m_file->seek(change.key, SeekMode::SetPosition));
-        TRY(m_file->write({ &change.value, 1 }));
+        // FIXME: This should write the entire span.
+        TRY(m_file->write_some({ &change.value, 1 }));
     }
     clear_changes();
     // make sure the next get operation triggers a read
@@ -104,15 +107,17 @@ ErrorOr<void> HexDocumentFile::write_to_file(Core::File& file)
 
     while (true) {
         Array<u8, 64 * KiB> buffer;
-        auto copy_buffer = TRY(m_file->read(buffer));
+        auto copy_buffer = TRY(m_file->read_some(buffer));
         if (copy_buffer.size() == 0)
             break;
-        TRY(file.write(copy_buffer));
+       // FIXME: This should write the entire span.
+        TRY(file.write_some(copy_buffer));
     }
 
     for (auto& change : m_changes) {
         TRY(file.seek(change.key, SeekMode::SetPosition));
-        TRY(file.write({ &change.value, 1 }));
+        // FIXME: This should write the entire span.
+        TRY(file.write_some({ &change.value, 1 }));
     }
 
     return {};
@@ -181,7 +186,8 @@ void HexDocumentFile::ensure_position_in_buffer(size_t position)
 {
     if (position < m_buffer_file_pos || position >= m_buffer_file_pos + m_buffer.size()) {
         m_file->seek(position, SeekMode::SetPosition).release_value_but_fixme_should_propagate_errors();
-        m_file->read(m_buffer).release_value_but_fixme_should_propagate_errors();
+        // FIXME: This seems wrong. We don't track how much of the buffer is actually filled.
+        m_file->read_some(m_buffer).release_value_but_fixme_should_propagate_errors();
         m_buffer_file_pos = position;
     }
 }

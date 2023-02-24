@@ -74,7 +74,8 @@ StringView string_from_value_id(ValueID);
 
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -134,6 +135,7 @@ StringView string_from_value_id(ValueID value_id) {
 } // namespace Web::CSS
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }

@@ -59,9 +59,9 @@ public:
         return *this;
     }
 
-    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<Bytes> read_some(Bytes) override;
     virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096) override;
-    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
     virtual bool is_eof() const override;
     virtual bool is_open() const override;
     virtual void close() override;

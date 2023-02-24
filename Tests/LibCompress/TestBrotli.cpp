@@ -104,7 +104,7 @@ TEST_CASE(brotli_decompress_zero_one_bin)
 
     size_t bytes_read = 0;
     while (true) {
-        size_t nread = MUST(brotli_stream.read(buffer)).size();
+        size_t nread = MUST(brotli_stream.read_some(buffer)).size();
         if (nread == 0)
             break;
 

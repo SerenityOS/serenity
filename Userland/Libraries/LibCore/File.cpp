@@ -99,7 +99,7 @@ ErrorOr<void> File::open_path(StringView filename, mode_t permissions)
     return {};
 }
 
-ErrorOr<Bytes> File::read(Bytes buffer)
+ErrorOr<Bytes> File::read_some(Bytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Read)) {
         // NOTE: POSIX says that if the fd is not open for reading, the call
@@ -121,7 +121,7 @@ ErrorOr<ByteBuffer> File::read_until_eof(size_t block_size)
     return read_until_eof_impl(block_size, potential_file_size);
 }
 
-ErrorOr<size_t> File::write(ReadonlyBytes buffer)
+ErrorOr<size_t> File::write_some(ReadonlyBytes buffer)
 {
     if (!has_flag(m_mode, OpenMode::Write)) {
         // NOTE: Same deal as Read.

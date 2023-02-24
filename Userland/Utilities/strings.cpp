@@ -72,7 +72,7 @@ static ErrorOr<void> process_strings_in_file(StringView path, bool show_paths, S
     size_t string_offset_position = 0;
     bool did_show_path = false;
     while (!file->is_eof()) {
-        auto buffer_span = TRY(file->read(buffer));
+        auto buffer_span = TRY(file->read_some(buffer));
         while (!buffer_span.is_empty()) {
             string_offset_position += processed_characters;
             processed_characters = process_characters_in_span(output_characters, buffer_span);

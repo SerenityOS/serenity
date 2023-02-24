@@ -112,18 +112,18 @@ public:
     {
     }
 
-    virtual ErrorOr<Bytes> read(Bytes) override
+    virtual ErrorOr<Bytes> read_some(Bytes) override
     {
         return Error::from_errno(EBADF);
     }
 
-    virtual ErrorOr<size_t> write(ReadonlyBytes bytes) override
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override
     {
         // Pretend that we wrote the whole buffer if the condition is untrue.
         if (!m_condition())
             return bytes.size();
 
-        return m_stream->write(bytes);
+        return m_stream->write_some(bytes);
     }
 
     virtual bool is_eof() const override

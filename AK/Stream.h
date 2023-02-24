@@ -23,7 +23,7 @@ public:
     /// The amount of bytes read can be smaller than the size of the buffer.
     /// Returns either the bytes that were read, or an errno in the case of
     /// failure.
-    virtual ErrorOr<Bytes> read(Bytes) = 0;
+    virtual ErrorOr<Bytes> read_some(Bytes) = 0;
     /// Tries to fill the entire buffer through reading. Returns whether the
     /// buffer was filled without an error.
     virtual ErrorOr<void> read_entire_buffer(Bytes);
@@ -41,7 +41,7 @@ public:
     /// Tries to write the entire contents of the buffer. It is possible for
     /// less than the full buffer to be written. Returns either the amount of
     /// bytes written into the stream, or an errno in the case of failure.
-    virtual ErrorOr<size_t> write(ReadonlyBytes) = 0;
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes) = 0;
     /// Same as write, but does not return until either the entire buffer
     /// contents are written or an error occurs.
     virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);

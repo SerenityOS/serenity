@@ -18,7 +18,7 @@ TarFileStream::TarFileStream(TarInputStream& tar_stream)
 {
 }
 
-ErrorOr<Bytes> TarFileStream::read(Bytes bytes)
+ErrorOr<Bytes> TarFileStream::read_some(Bytes bytes)
 {
     // Verify that the stream has not advanced.
     VERIFY(m_tar_stream.m_generation == m_generation);
@@ -27,7 +27,7 @@ ErrorOr<Bytes> TarFileStream::read(Bytes bytes)
 
     auto to_read = min(bytes.size(), header_size - m_tar_stream.m_file_offset);
 
-    auto slice = TRY(m_tar_stream.m_stream->read(bytes.trim(to_read)));
+    auto slice = TRY(m_tar_stream.m_stream->read_some(bytes.trim(to_read)));
     m_tar_stream.m_file_offset += slice.size();
 
     return slice;
@@ -47,7 +47,7 @@ bool TarFileStream::is_eof() const
         || m_tar_stream.m_file_offset >= header_size;
 }
 
-ErrorOr<size_t> TarFileStream::write(ReadonlyBytes)
+ErrorOr<size_t> TarFileStream::write_some(ReadonlyBytes)
 {
     return Error::from_errno(EBADF);
 }
@@ -92,7 +92,8 @@ ErrorOr<void> TarInputStream::load_next_header()
 {
     size_t number_of_consecutive_zero_blocks = 0;
     while (true) {
-        auto header_span = TRY(m_stream->read(Bytes(&m_header, sizeof(m_header))));
+        // FIXME: This should read the entire span.
+        auto header_span = TRY(m_stream->read_some(Bytes(&m_header, sizeof(m_header))));
         if (header_span.size() != sizeof(m_header))
             return Error::from_string_literal("Failed to read the entire header");
 
@@ -175,7 +176,7 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, mode_t mode, ReadonlyBy
     TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - sizeof(header) }));
     size_t n_written = 0;
     while (n_written < bytes.size()) {
-        n_written += MUST(m_stream->write(bytes.slice(n_written, min(bytes.size() - n_written, block_size))));
+        n_written += MUST(m_stream->write_some(bytes.slice(n_written, min(bytes.size() - n_written, block_size))));
     }
     TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
     return {};

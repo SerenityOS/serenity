@@ -184,7 +184,7 @@ ErrorOr<ByteBuffer> Job::receive(size_t size)
     auto buffer = TRY(ByteBuffer::create_uninitialized(size));
     size_t nread;
     do {
-        auto result = m_socket->read(buffer);
+        auto result = m_socket->read_some(buffer);
         if (result.is_error() && result.error().is_errno() && result.error().code() == EINTR)
             continue;
         nread = TRY(result).size();

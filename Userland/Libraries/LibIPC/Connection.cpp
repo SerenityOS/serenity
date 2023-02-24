@@ -74,7 +74,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     int writes_done = 0;
     size_t initial_size = bytes_to_write.size();
     while (!bytes_to_write.is_empty()) {
-        auto maybe_nwritten = m_socket->write(bytes_to_write);
+        auto maybe_nwritten = m_socket->write_some(bytes_to_write);
         writes_done++;
         if (maybe_nwritten.is_error()) {
             auto error = maybe_nwritten.release_error();

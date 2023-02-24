@@ -57,7 +57,7 @@ protected:
     void did_fail(Error);
     void did_progress(Optional<u32> total_size, u32 downloaded);
 
-    ErrorOr<size_t> do_write(ReadonlyBytes bytes) { return m_output_stream.write(bytes); }
+    ErrorOr<size_t> do_write(ReadonlyBytes bytes) { return m_output_stream.write_some(bytes); }
 
 private:
     RefPtr<NetworkResponse> m_response;

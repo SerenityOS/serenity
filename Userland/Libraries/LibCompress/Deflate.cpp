@@ -181,7 +181,7 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
 
     Array<u8, 4096> temporary_buffer;
     auto readable_bytes = temporary_buffer.span().trim(min(m_bytes_remaining, m_decompressor.m_output_buffer.empty_space()));
-    auto read_bytes = TRY(m_decompressor.m_input_stream->read(readable_bytes));
+    auto read_bytes = TRY(m_decompressor.m_input_stream->read_some(readable_bytes));
     auto written_bytes = m_decompressor.m_output_buffer.write(read_bytes);
     VERIFY(read_bytes.size() == written_bytes);
 
@@ -209,7 +209,7 @@ DeflateDecompressor::~DeflateDecompressor()
         m_uncompressed_block.~UncompressedBlock();
 }
 
-ErrorOr<Bytes> DeflateDecompressor::read(Bytes bytes)
+ErrorOr<Bytes> DeflateDecompressor::read_some(Bytes bytes)
 {
     size_t total_read = 0;
     while (total_read < bytes.size()) {
@@ -225,9 +225,10 @@ ErrorOr<Bytes> DeflateDecompressor::read(Bytes bytes)
             if (block_type == 0b00) {
                 m_input_stream->align_to_byte_boundary();
 
+                // FIXME: This should read the entire span.
                 LittleEndian<u16> length, negated_length;
-                TRY(m_input_stream->read(length.bytes()));
-                TRY(m_input_stream->read(negated_length.bytes()));
+                TRY(m_input_stream->read_some(length.bytes()));
+                TRY(m_input_stream->read_some(negated_length.bytes()));
 
                 if ((length ^ 0xffff) != negated_length)
                     return Error::from_string_literal("Calculated negated length does not equal stored negated length");
@@ -301,7 +302,7 @@ ErrorOr<Bytes> DeflateDecompressor::read(Bytes bytes)
 
 bool DeflateDecompressor::is_eof() const { return m_state == State::Idle && m_read_final_bock; }
 
-ErrorOr<size_t> DeflateDecompressor::write(ReadonlyBytes)
+ErrorOr<size_t> DeflateDecompressor::write_some(ReadonlyBytes)
 {
     return Error::from_errno(EBADF);
 }
@@ -323,7 +324,7 @@ ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!deflate_stream->is_eof()) {
-        auto const slice = TRY(deflate_stream->read(buffer));
+        auto const slice = TRY(deflate_stream->read_some(buffer));
         TRY(output_stream.write_entire_buffer(slice));
     }
 
@@ -468,12 +469,12 @@ DeflateCompressor::~DeflateCompressor()
     VERIFY(m_finished);
 }
 
-ErrorOr<Bytes> DeflateCompressor::read(Bytes)
+ErrorOr<Bytes> DeflateCompressor::read_some(Bytes)
 {
     return Error::from_errno(EBADF);
 }
 
-ErrorOr<size_t> DeflateCompressor::write(ReadonlyBytes bytes)
+ErrorOr<size_t> DeflateCompressor::write_some(ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
 

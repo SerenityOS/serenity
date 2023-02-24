@@ -1593,8 +1593,9 @@ ErrorOr<void> TextEditor::write_to_file(Core::File& file)
         // A size 0 file doesn't need a data copy.
     } else {
         for (size_t i = 0; i < line_count(); ++i) {
-            TRY(file.write(line(i).to_utf8().bytes()));
-            TRY(file.write("\n"sv.bytes()));
+            // FIXME: This should write the entire span.
+            TRY(file.write_some(line(i).to_utf8().bytes()));
+            TRY(file.write_some("\n"sv.bytes()));
         }
     }
     document().set_unmodified();

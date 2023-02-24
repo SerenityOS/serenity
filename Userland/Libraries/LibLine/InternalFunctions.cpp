@@ -534,7 +534,7 @@ void Editor::edit_in_external_editor()
         builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
         auto bytes = builder.string_view().bytes();
         while (!bytes.is_empty()) {
-            auto nwritten = stream->write(bytes).release_value_but_fixme_should_propagate_errors();
+            auto nwritten = stream->write_some(bytes).release_value_but_fixme_should_propagate_errors();
             bytes = bytes.slice(nwritten);
         }
         lseek(fd, 0, SEEK_SET);

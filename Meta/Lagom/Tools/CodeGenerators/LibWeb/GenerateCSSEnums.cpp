@@ -95,7 +95,8 @@ enum class ValueID;
 
     generator.appendln("}");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -199,6 +200,7 @@ StringView to_string(@name:titlecase@ value)
 
     generator.appendln("}");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }

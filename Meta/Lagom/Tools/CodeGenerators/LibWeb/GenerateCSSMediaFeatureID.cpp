@@ -80,7 +80,8 @@ bool media_feature_accepts_identifier(MediaFeatureID, ValueID);
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -290,6 +291,7 @@ bool media_feature_accepts_identifier(MediaFeatureID media_feature_id, ValueID i
 }
 )~~~");
 
-    TRY(file.write(generator.as_string_view().bytes()));
+    // FIXME: This should write the entire span.
+    TRY(file.write_some(generator.as_string_view().bytes()));
     return {};
 }

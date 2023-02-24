@@ -60,7 +60,7 @@ GzipDecompressor::~GzipDecompressor()
     m_current_member.clear();
 }
 
-ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
+ErrorOr<Bytes> GzipDecompressor::read_some(Bytes bytes)
 {
     size_t total_read = 0;
     while (total_read < bytes.size()) {
@@ -70,14 +70,15 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
         auto slice = bytes.slice(total_read);
 
         if (m_current_member) {
-            auto current_slice = TRY(current_member().m_stream->read(slice));
+            auto current_slice = TRY(current_member().m_stream->read_some(slice));
             current_member().m_checksum.update(current_slice);
             current_member().m_nread += current_slice.size();
 
             if (current_slice.size() < slice.size()) {
+                // FIXME: This should read the entire span.
                 LittleEndian<u32> crc32, input_size;
-                TRY(m_input_stream->read(crc32.bytes()));
-                TRY(m_input_stream->read(input_size.bytes()));
+                TRY(m_input_stream->read_some(crc32.bytes()));
+                TRY(m_input_stream->read_some(input_size.bytes()));
 
                 if (crc32 != current_member().m_checksum.digest())
                     return Error::from_string_literal("Stored CRC32 does not match the calculated CRC32 of the current member");
@@ -95,7 +96,7 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
             continue;
         } else {
             auto current_partial_header_slice = Bytes { m_partial_header, sizeof(BlockHeader) }.slice(m_partial_header_offset);
-            auto current_partial_header_data = TRY(m_input_stream->read(current_partial_header_slice));
+            auto current_partial_header_data = TRY(m_input_stream->read_some(current_partial_header_slice));
             m_partial_header_offset += current_partial_header_data.size();
 
             if (is_eof())
@@ -115,16 +116,18 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
                 return Error::from_string_literal("Header is not supported by implementation");
 
             if (header.flags & Flags::FEXTRA) {
+                // FIXME: This should read the entire span.
                 LittleEndian<u16> subfield_id, length;
-                TRY(m_input_stream->read(subfield_id.bytes()));
-                TRY(m_input_stream->read(length.bytes()));
+                TRY(m_input_stream->read_some(subfield_id.bytes()));
+                TRY(m_input_stream->read_some(length.bytes()));
                 TRY(m_input_stream->discard(length));
             }
 
             auto discard_string = [&]() -> ErrorOr<void> {
                 char next_char;
                 do {
-                    TRY(m_input_stream->read({ &next_char, sizeof(next_char) }));
+                    // FIXME: This should read the entire span.
+                    TRY(m_input_stream->read_some({ &next_char, sizeof(next_char) }));
                 } while (next_char);
 
                 return {};
@@ -137,8 +140,9 @@ ErrorOr<Bytes> GzipDecompressor::read(Bytes bytes)
                 TRY(discard_string());
 
             if (header.flags & Flags::FHCRC) {
+                // FIXME: This should read the entire span.
                 LittleEndian<u16> crc16;
-                TRY(m_input_stream->read(crc16.bytes()));
+                TRY(m_input_stream->read_some(crc16.bytes()));
                 // FIXME: we should probably verify this instead of just assuming it matches
             }
 
@@ -170,7 +174,7 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!gzip_stream->is_eof()) {
-        auto const data = TRY(gzip_stream->read(buffer));
+        auto const data = TRY(gzip_stream->read_some(buffer));
         TRY(output_stream.write_entire_buffer(data));
     }
 
@@ -181,7 +185,7 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
 
 bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
 
-ErrorOr<size_t> GzipDecompressor::write(ReadonlyBytes)
+ErrorOr<size_t> GzipDecompressor::write_some(ReadonlyBytes)
 {
     return Error::from_errno(EBADF);
 }
@@ -191,12 +195,12 @@ GzipCompressor::GzipCompressor(MaybeOwned<Stream> stream)
 {
 }
 
-ErrorOr<Bytes> GzipCompressor::read(Bytes)
+ErrorOr<Bytes> GzipCompressor::read_some(Bytes)
 {
     return Error::from_errno(EBADF);
 }
 
-ErrorOr<size_t> GzipCompressor::write(ReadonlyBytes bytes)
+ErrorOr<size_t> GzipCompressor::write_some(ReadonlyBytes bytes)
 {
     BlockHeader header;
     header.identification_1 = 0x1f;

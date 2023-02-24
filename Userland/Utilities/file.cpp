@@ -187,7 +187,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else if (!file_size_in_bytes) {
             outln("{}: empty", path);
         } else {
-            auto bytes = TRY(file->read(buffer));
+            auto bytes = TRY(file->read_some(buffer));
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
             auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes).value_or(file_name_guess);
             auto human_readable_description = get_description_from_mime_type(mime_type, path).value_or(mime_type);
