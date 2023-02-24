@@ -8,6 +8,7 @@
     }
 
     @GUI::Widget {
+        name: "bottom_container"
         max_height: 50
         layout: @GUI::VerticalBoxLayout {}
 
@@ -52,6 +53,15 @@
                     min: 0
                     max: 100
                     fixed_width: 100
+                }
+
+                @GUI::VerticalSeparator {}
+
+                @GUI::Button {
+                    name: "fullscreen"
+                    icon: "/res/icons/16x16/fullscreen.png"
+                    fixed_width: 24
+                    button_style: "Coolbar"
                 }
             }
         }

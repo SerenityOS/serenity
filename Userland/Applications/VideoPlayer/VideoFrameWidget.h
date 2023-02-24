@@ -35,11 +35,13 @@ public:
     bool auto_resize() const { return m_auto_resize; }
 
     Function<void()> on_click;
+    Function<void()> on_doubleclick;
 
 protected:
     explicit VideoFrameWidget();
 
     virtual void mousedown_event(GUI::MouseEvent&) override;
+    virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
 
 private:
