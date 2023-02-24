@@ -55,6 +55,7 @@ set(SOURCES
     TextLayout.cpp
     TGALoader.cpp
     Triangle.cpp
+    WebPLoader.cpp
     WindowTheme.cpp
 )
 
