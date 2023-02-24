@@ -604,21 +604,24 @@ ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
 
 ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
 {
+    VERIFY(!cropped_rect.is_empty());
+
     Vector<NonnullRefPtr<Layer>> cropped_layers;
     TRY(cropped_layers.try_ensure_capacity(m_layers.size()));
 
     VERIFY(m_layers.size() > 0);
 
-    size_t selected_layer_index = 0;
-    for (size_t i = 0; i < m_layers.size(); ++i) {
-        auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
-
+    RefPtr<Layer> selected_layer;
+    for (auto const& layer : m_layers) {
         if (layer->is_selected())
-            selected_layer_index = i;
+            selected_layer = layer;
 
-        auto layer_location = new_layer->location();
-        auto layer_local_crop_rect = new_layer->relative_rect().intersected(cropped_rect).translated(-layer_location.x(), -layer_location.y());
+        auto layer_location = layer->location();
+        auto layer_local_crop_rect = layer->relative_rect().intersected(cropped_rect).translated(-layer_location.x(), -layer_location.y());
+        if (!layer->rect().intersects(layer_local_crop_rect))
+            continue;
+
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
         TRY(new_layer->crop(layer_local_crop_rect, Layer::NotifyClients::No));
 
         auto new_layer_x = max(0, layer_location.x() - cropped_rect.x());
@@ -629,11 +632,23 @@ ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
         cropped_layers.unchecked_append(new_layer);
     }
 
-    m_layers = move(cropped_layers);
-    for (auto& layer : m_layers)
-        layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
+    if (cropped_layers.is_empty()) {
+        auto layer_name = selected_layer ? selected_layer->name() : "Background";
+        auto new_layer = TRY(Layer::create_with_size(*this, cropped_rect.size(), layer_name));
+        new_layer->set_selected(true);
+        cropped_layers.append(new_layer);
+    }
 
-    select_layer(m_layers[selected_layer_index]);
+    auto new_selected_layer = cropped_layers.last_matching([](auto& layer) {
+        return layer->is_selected();
+    });
+    selected_layer = new_selected_layer.has_value() ? new_selected_layer.release_value() : cropped_layers.first();
+    selected_layer->set_selected(true);
+
+    m_layers = move(cropped_layers);
+
+    select_layer(selected_layer);
+    did_modify_layer_stack();
 
     m_size = { cropped_rect.width(), cropped_rect.height() };
     did_change_rect(cropped_rect);
