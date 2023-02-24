@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <Kernel/API/prctl_numbers.h>
 #include <sys/cdefs.h>
-#include <sys/prctl_numbers.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS

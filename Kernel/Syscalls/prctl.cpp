@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/prctl_numbers.h>
 #include <Kernel/Process.h>
-#include <LibC/sys/prctl_numbers.h>
 
 namespace Kernel {
 
