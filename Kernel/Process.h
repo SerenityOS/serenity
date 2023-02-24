@@ -25,7 +25,6 @@
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
-#include <Kernel/Jail.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/Mutex.h>
@@ -33,6 +32,7 @@
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
+#include <Kernel/Security/Jail.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
 #include <Kernel/UnixTypes.h>
