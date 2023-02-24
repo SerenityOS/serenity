@@ -673,6 +673,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (editor->image().selection().is_empty())
                 return;
             auto crop_rect = editor->image().rect().intersected(editor->image().selection().bounding_rect());
+            // FIXME: It is only possible to hit this condition, as transforming the image (crop, rotate etc.), does not update the selection.
+            //        We should ensure that image transformations also transform the selection, so that its relative size and position are maintained.
+            if (crop_rect.is_empty())
+                return;
             auto image_crop_or_error = editor->image().crop(crop_rect);
             if (image_crop_or_error.is_error()) {
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to crop image: {}", image_crop_or_error.release_error())));
