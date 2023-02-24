@@ -42,6 +42,8 @@ the ``BuildFuzzers.sh`` script with no arguments. The script does the equivalent
 
 (Note that we require clang >= 13, see the pick_clang() function in the script for the paths that are searched)
 
+The fuzzing build's CMake cache can be manipulated with commands like `cmake -B Build/fuzzers -S . -DENABLE_LAGOM_LIBWEB=OFF`.
+
 Any fuzzing results (particularly slow inputs, crashes, etc.) will be dropped in the current directory.
 
 clang emits different warnings than gcc, so you may have to remove `-Werror` in CMakeLists.txt and Meta/Lagom/CMakeLists.txt.
