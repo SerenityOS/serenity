@@ -126,7 +126,7 @@ void MoveTool::on_mouseup(Layer* layer, MouseEvent& event)
     if (m_scaling) {
         auto scaled_layer_or_error = m_editor->active_layer()->scale(m_new_layer_rect, Gfx::Painter::ScalingMode::BilinearBlend);
         if (scaled_layer_or_error.is_error())
-            GUI::MessageBox::show_error(m_editor->window(), MUST(String::formatted("Failed to resize layer: {}", scaled_layer_or_error.error().string_literal())));
+            GUI::MessageBox::show_error(m_editor->window(), MUST(String::formatted("Failed to resize layer: {}", scaled_layer_or_error.release_error())));
         else
             m_editor->layers_did_change();
     }
