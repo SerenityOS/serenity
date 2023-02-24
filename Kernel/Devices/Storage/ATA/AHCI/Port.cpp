@@ -17,7 +17,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScatterGatherList.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 

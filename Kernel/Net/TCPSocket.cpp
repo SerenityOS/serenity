@@ -17,8 +17,8 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

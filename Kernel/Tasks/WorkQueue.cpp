@@ -6,10 +6,10 @@
  */
 
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
-#include <Kernel/WaitQueue.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 

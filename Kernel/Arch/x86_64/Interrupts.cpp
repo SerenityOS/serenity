@@ -17,12 +17,12 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
-#include <Kernel/ThreadTracer.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/PageFault.h>

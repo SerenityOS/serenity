@@ -13,8 +13,8 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

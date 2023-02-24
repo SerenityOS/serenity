@@ -8,7 +8,7 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCSpeaker.h>
 #endif
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

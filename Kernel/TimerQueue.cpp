@@ -6,8 +6,8 @@
 
 #include <AK/Singleton.h>
 #include <AK/Time.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 

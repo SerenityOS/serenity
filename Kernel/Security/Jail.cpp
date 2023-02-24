@@ -7,8 +7,8 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Singleton.h>
 #include <Kernel/API/Jail.h>
-#include <Kernel/Process.h>
 #include <Kernel/Security/Jail.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

@@ -19,7 +19,7 @@
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <LibELF/Validation.h>
 
 #if ARCH(X86_64)

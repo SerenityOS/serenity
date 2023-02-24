@@ -14,9 +14,9 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
 static constexpr u8 RETRY_COUNTER_RELOAD = 3;

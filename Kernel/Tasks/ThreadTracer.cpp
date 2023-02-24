@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/RegisterState.h>
-#include <Kernel/ThreadTracer.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 namespace Kernel {
 

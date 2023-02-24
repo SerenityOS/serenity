@@ -6,7 +6,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/ProcessGroup.h>
+#include <Kernel/Tasks/ProcessGroup.h>
 
 namespace Kernel {
 

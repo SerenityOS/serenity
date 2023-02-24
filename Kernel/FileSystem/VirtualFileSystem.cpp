@@ -20,8 +20,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

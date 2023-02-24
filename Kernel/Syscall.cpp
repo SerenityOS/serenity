@@ -11,10 +11,10 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/ThreadTracer.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 namespace Kernel {
 

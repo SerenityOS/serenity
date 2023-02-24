@@ -8,7 +8,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Inode.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

@@ -9,10 +9,10 @@
 #include <AK/IntrusiveList.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
-#include <Kernel/Process.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/WaitQueue.h>
 #include <Kernel/UserOrKernelBuffer.h>
-#include <Kernel/WaitQueue.h>
 
 namespace Kernel {
 

@@ -7,7 +7,7 @@
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeDefinitions.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeInterruptQueue.h>
-#include <Kernel/WorkQueue.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 

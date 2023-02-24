@@ -10,7 +10,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Library/LockWeakPtr.h>
-#include <Kernel/ProcessGroup.h>
+#include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
 
 #define TTY_BUFFER_SIZE 1024

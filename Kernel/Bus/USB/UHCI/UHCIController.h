@@ -19,7 +19,7 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel::USB {

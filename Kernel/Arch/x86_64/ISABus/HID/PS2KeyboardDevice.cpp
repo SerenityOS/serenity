@@ -12,6 +12,9 @@
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/HID/ScanCodeEvent.h>
 #include <Kernel/Sections.h>
+#include <Kernel/TTY/ConsoleManagement.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/WorkQueue.h>
 
 namespace Kernel {
 

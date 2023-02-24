@@ -7,7 +7,7 @@
 
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

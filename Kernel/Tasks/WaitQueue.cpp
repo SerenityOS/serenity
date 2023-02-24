@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/Debug.h>
-#include <Kernel/Thread.h>
-#include <Kernel/WaitQueue.h>
+#include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 

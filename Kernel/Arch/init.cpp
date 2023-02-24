@@ -43,17 +43,17 @@
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
+#include <Kernel/Tasks/WorkQueue.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
 
 #if ARCH(X86_64)

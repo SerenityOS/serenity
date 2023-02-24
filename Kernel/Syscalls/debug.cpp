@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/KSyms.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/kstdio.h>
 

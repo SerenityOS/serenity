@@ -9,9 +9,9 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/Socket.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
 

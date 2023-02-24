@@ -6,8 +6,8 @@
  */
 
 #include <Kernel/API/Syscall.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 

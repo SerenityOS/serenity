@@ -8,7 +8,7 @@
 
 #include <AK/Atomic.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
 

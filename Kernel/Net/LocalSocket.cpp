@@ -14,8 +14,8 @@
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

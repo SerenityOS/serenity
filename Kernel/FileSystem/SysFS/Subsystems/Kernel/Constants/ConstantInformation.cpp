@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.h>
-#include <Kernel/Process.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

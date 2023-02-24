@@ -17,7 +17,7 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 

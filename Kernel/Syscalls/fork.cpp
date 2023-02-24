@@ -9,9 +9,9 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/TTY/TTY.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 

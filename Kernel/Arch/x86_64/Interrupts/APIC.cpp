@@ -20,9 +20,9 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/Thread.h>
 
 #define IRQ_APIC_TIMER (0xfc - IRQ_VECTOR_BASE)
 #define IRQ_APIC_IPI (0xfd - IRQ_VECTOR_BASE)

@@ -7,7 +7,7 @@
 #include <AK/Assertions.h>
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Panic.h>
-#include <Kernel/Process.h>
+#include <Kernel/Tasks/Process.h>
 
 using namespace Kernel;
 

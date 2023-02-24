@@ -216,7 +216,6 @@ set(KERNEL_SOURCES
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/MultiProcessor/Parser.cpp
-    FutexQueue.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
@@ -261,11 +260,7 @@ set(KERNEL_SOURCES
     Net/UDPSocket.cpp
     Panic.cpp
     PerformanceEventBuffer.cpp
-    Process.cpp
-    ProcessGroup.cpp
-    ProcessList.cpp
     Random.cpp
-    Scheduler.cpp
     ScopedCritical.cpp
     StdLib.cpp
     Syscall.cpp
@@ -349,16 +344,21 @@ set(KERNEL_SOURCES
     TTY/TTY.cpp
     TTY/VirtualConsole.cpp
     Tasks/FinalizerTask.cpp
+    Tasks/FutexQueue.cpp
+    Tasks/Process.cpp
+    Tasks/ProcessGroup.cpp
+    Tasks/ProcessList.cpp
+    Tasks/Scheduler.cpp
     Tasks/SyncTask.cpp
-    Thread.cpp
-    ThreadBlockers.cpp
-    ThreadTracer.cpp
+    Tasks/Thread.cpp
+    Tasks/ThreadBlockers.cpp
+    Tasks/ThreadTracer.cpp
+    Tasks/WaitQueue.cpp
+    Tasks/WorkQueue.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
     UBSanitizer.cpp
     UserOrKernelBuffer.cpp
-    WaitQueue.cpp
-    WorkQueue.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")

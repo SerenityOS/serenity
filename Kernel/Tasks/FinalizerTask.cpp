@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 

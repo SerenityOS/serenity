@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Tasks/Process.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {

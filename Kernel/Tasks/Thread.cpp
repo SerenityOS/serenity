@@ -22,11 +22,11 @@
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/Process.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
-#include <Kernel/ThreadTracer.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/kstdio.h>
 
