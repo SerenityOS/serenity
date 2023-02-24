@@ -43,7 +43,6 @@ set(KERNEL_SOURCES
     CommandLine.cpp
     Coredump.cpp
     CrashHandler.cpp
-    Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
     Devices/Audio/Channel.cpp
@@ -263,6 +262,7 @@ set(KERNEL_SOURCES
     StdLib.cpp
     Syscall.cpp
     Security/AddressSanitizer.cpp
+    Security/Credentials.cpp
     Security/Random.cpp
     Security/Jail.cpp
     Security/UBSanitizer.cpp

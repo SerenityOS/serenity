@@ -18,7 +18,6 @@
 #include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>
-#include <Kernel/Credentials.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/UnveilNode.h>
@@ -29,6 +28,7 @@
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/Security/Credentials.h>
 #include <Kernel/Security/Jail.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Tasks/AtomicEdgeAction.h>
