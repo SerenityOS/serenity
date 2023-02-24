@@ -14,8 +14,8 @@
 #    include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #endif
 #include <Kernel/Devices/Generic/RandomDevice.h>
-#include <Kernel/Random.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {

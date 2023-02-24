@@ -13,7 +13,7 @@
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 

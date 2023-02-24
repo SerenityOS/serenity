@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 

@@ -10,7 +10,7 @@
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 class PS2MouseDevice : public IRQHandler

@@ -260,10 +260,10 @@ set(KERNEL_SOURCES
     Net/UDPSocket.cpp
     Panic.cpp
     PerformanceEventBuffer.cpp
-    Random.cpp
     ScopedCritical.cpp
     StdLib.cpp
     Syscall.cpp
+    Security/Random.cpp
     Security/Jail.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp

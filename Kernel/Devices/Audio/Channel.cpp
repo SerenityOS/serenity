@@ -8,8 +8,8 @@
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
-#include <Kernel/Random.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 

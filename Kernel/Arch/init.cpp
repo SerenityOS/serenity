@@ -43,8 +43,8 @@
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Prekernel/Prekernel.h>
-#include <Kernel/Random.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>

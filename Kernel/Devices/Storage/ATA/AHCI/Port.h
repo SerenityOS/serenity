@@ -22,8 +22,8 @@
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/ScatterGatherList.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/Random.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {

@@ -9,7 +9,7 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/PhysicalZone.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel::Memory {
 

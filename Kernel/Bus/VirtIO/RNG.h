@@ -9,7 +9,7 @@
 #include <AK/AtomicRefCounted.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel::VirtIO {
 

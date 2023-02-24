@@ -28,7 +28,7 @@
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/PhysicalAddress.h>
-#include <Kernel/Random.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
