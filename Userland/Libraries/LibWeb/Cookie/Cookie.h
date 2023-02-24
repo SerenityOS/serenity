@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <LibCore/DateTime.h>
+#include <AK/Time.h>
 #include <LibIPC/Forward.h>
 
 namespace Web::Cookie {
@@ -25,12 +25,16 @@ enum class Source {
 };
 
 struct Cookie {
+    DeprecatedString creation_time_to_string() const;
+    DeprecatedString last_access_time_to_string() const;
+    DeprecatedString expiry_time_to_string() const;
+
     DeprecatedString name;
     DeprecatedString value;
     SameSite same_site;
-    Core::DateTime creation_time {};
-    Core::DateTime last_access_time {};
-    Core::DateTime expiry_time {};
+    Time creation_time {};
+    Time last_access_time {};
+    Time expiry_time {};
     DeprecatedString domain {};
     DeprecatedString path {};
     bool secure { false };
