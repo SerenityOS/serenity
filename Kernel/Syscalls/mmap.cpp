@@ -17,8 +17,8 @@
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/PerformanceManager.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <LibELF/Validation.h>
 

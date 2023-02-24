@@ -12,7 +12,7 @@
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Library/KBufferBuilder.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 

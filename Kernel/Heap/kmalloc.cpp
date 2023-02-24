@@ -15,8 +15,8 @@
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 
 #if ARCH(X86_64) || ARCH(AARCH64)
 static constexpr size_t CHUNK_SIZE = 64;

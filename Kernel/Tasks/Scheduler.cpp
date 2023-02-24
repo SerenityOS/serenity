@@ -12,8 +12,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Library/Panic.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>
