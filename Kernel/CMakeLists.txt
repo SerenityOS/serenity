@@ -16,7 +16,6 @@ set(KERNEL_HEAP_SOURCES
 )
 
 set(KERNEL_SOURCES
-    AddressSanitizer.cpp
     Arch/init.cpp
     Arch/PageFault.cpp
     Arch/DeferredCallPool.cpp
@@ -263,8 +262,10 @@ set(KERNEL_SOURCES
     ScopedCritical.cpp
     StdLib.cpp
     Syscall.cpp
+    Security/AddressSanitizer.cpp
     Security/Random.cpp
     Security/Jail.cpp
+    Security/UBSanitizer.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
     Syscalls/beep.cpp
@@ -357,7 +358,6 @@ set(KERNEL_SOURCES
     Tasks/WorkQueue.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
-    UBSanitizer.cpp
     UserOrKernelBuffer.cpp
 )
 

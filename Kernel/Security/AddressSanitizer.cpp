@@ -6,7 +6,7 @@
 
 #if defined(__SANITIZE_ADDRESS__)
 
-#    include <Kernel/AddressSanitizer.h>
+#    include <Kernel/Security/AddressSanitizer.h>
 
 void Kernel::AddressSanitizer::shadow_va_check_load(unsigned long address, size_t size, void* return_address)
 {
