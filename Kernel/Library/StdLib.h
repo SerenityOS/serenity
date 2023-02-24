@@ -11,7 +11,7 @@
 #include <AK/Forward.h>
 #include <AK/Time.h>
 #include <AK/Userspace.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/UnixTypes.h>
 
 ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*>, size_t);

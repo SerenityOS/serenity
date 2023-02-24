@@ -8,7 +8,7 @@
 
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel {
 

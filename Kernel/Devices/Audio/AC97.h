@@ -12,8 +12,8 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Controller.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {

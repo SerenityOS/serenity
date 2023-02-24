@@ -11,7 +11,7 @@
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>

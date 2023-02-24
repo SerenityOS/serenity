@@ -16,7 +16,7 @@
 #include <Kernel/FileSystem/ISO9660FS/Definitions.h>
 #include <Kernel/FileSystem/ISO9660FS/DirectoryEntry.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 
 namespace Kernel {

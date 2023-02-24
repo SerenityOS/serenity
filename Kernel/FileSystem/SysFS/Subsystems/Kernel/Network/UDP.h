@@ -9,8 +9,8 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
-#include <Kernel/KBufferBuilder.h>
-#include <Kernel/UserOrKernelBuffer.h>
+#include <Kernel/Library/KBufferBuilder.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

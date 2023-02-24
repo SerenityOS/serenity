@@ -1,6 +1,6 @@
 set(SOURCES
     UBSanitizer.cpp
-    ../MiniStdLib.cpp
+    ../Library/MiniStdLib.cpp
     boot.S
     multiboot.S
     init.cpp

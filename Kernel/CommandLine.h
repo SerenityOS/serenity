@@ -9,7 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel {
 

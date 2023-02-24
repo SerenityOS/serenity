@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/StdLib.h>
+#include <Kernel/Library/StdLib.h>
 
 extern "C" {
 

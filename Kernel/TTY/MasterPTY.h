@@ -8,7 +8,7 @@
 
 #include <AK/Badge.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/DoubleBuffer.h>
+#include <Kernel/Library/DoubleBuffer.h>
 
 namespace Kernel {
 

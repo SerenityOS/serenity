@@ -9,10 +9,10 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stack.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

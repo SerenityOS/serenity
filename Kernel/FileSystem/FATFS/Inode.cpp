@@ -7,7 +7,7 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FATFS/Inode.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 
 namespace Kernel {
 

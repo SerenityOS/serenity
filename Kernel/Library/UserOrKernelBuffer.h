@@ -10,8 +10,8 @@
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 #include <Kernel/API/POSIX/errno.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

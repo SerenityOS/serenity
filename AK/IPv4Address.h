@@ -14,7 +14,7 @@
 
 #ifdef KERNEL
 #    include <AK/Error.h>
-#    include <Kernel/KString.h>
+#    include <Kernel/Library/KString.h>
 #else
 #    include <AK/DeprecatedString.h>
 #    include <AK/String.h>

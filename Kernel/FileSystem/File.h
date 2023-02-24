@@ -13,9 +13,9 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/UnixTypes.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

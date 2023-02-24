@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <Kernel/Arch/CPU.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Process.h>
 
 using namespace Kernel;

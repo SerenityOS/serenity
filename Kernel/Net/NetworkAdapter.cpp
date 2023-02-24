@@ -6,10 +6,10 @@
 
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/InterruptDisabler.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

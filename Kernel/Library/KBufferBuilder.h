@@ -8,7 +8,7 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 
 namespace Kernel {
 

@@ -14,7 +14,7 @@
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/BootInfo.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 
 // Documentation here for Aarch64 Address Translations

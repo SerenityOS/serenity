@@ -12,7 +12,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::PCI {

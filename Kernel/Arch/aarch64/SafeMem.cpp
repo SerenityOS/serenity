@@ -7,7 +7,7 @@
 
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/SafeMem.h>
-#include <Kernel/StdLib.h>
+#include <Kernel/Library/StdLib.h>
 
 #define CODE_SECTION(section_name) __attribute__((section(section_name)))
 

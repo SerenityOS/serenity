@@ -30,7 +30,7 @@
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <LibPartition/EBRPartitionTable.h>
 #include <LibPartition/GUIDPartitionTable.h>
 #include <LibPartition/MBRPartitionTable.h>

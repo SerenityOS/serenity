@@ -6,9 +6,9 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 
-// FIXME: Merge the code in this file with Kernel/Panic.cpp once the proper abstractions are in place.
+// FIXME: Merge the code in this file with Kernel/Library/Panic.cpp once the proper abstractions are in place.
 
 // Note: This is required here, since __assertion_failed should be out of the Kernel namespace,
 //       but the PANIC macro uses functions that require the Kernel namespace.

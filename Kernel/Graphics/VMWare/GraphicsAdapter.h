@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VMWare/Definitions.h>
-#include <Kernel/IOWindow.h>
+#include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/TypedMapping.h>

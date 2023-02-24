@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Tasks/Thread.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

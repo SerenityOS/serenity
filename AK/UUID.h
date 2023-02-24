@@ -12,7 +12,7 @@
 #include <AK/Types.h>
 
 #ifdef KERNEL
-#    include <Kernel/KString.h>
+#    include <Kernel/Library/KString.h>
 #else
 #    include <AK/String.h>
 #endif

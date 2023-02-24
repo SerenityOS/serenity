@@ -7,7 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/Audio/IntelHDA/Timing.h>
-#include <Kernel/IOWindow.h>
+#include <Kernel/Library/IOWindow.h>
 
 namespace Kernel::Audio::IntelHDA {
 

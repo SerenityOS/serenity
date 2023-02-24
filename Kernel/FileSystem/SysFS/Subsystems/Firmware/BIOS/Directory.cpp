@@ -10,7 +10,7 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/DMI/Definitions.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.h>
 #include <Kernel/Firmware/BIOS.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>

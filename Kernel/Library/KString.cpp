@@ -6,7 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 extern bool g_in_early_boot;
 

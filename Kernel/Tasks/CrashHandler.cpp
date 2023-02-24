@@ -7,7 +7,7 @@
 #include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/RegisterState.h>
 
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
 

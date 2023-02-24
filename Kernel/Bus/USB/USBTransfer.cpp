@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/Bus/USB/USBTransfer.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

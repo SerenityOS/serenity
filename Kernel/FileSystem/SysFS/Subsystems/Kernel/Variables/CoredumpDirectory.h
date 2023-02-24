@@ -9,7 +9,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.h>
-#include <Kernel/UserOrKernelBuffer.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

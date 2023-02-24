@@ -22,7 +22,7 @@
 #include <Kernel/Arch/ThreadRegisters.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>

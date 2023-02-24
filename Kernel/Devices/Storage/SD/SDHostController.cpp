@@ -10,7 +10,6 @@
 #include <Kernel/Devices/Storage/SD/Commands.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Time/TimeManagement.h>
 #if ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/SDHostController.h>

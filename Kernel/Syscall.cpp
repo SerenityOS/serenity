@@ -8,8 +8,8 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/TrapFrame.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>

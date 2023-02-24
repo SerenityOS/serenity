@@ -9,8 +9,8 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/StdLib.h>
 
 ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<char const*> user_str, size_t user_str_size)
 {

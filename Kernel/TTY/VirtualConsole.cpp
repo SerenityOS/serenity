@@ -16,8 +16,8 @@
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <LibVT/Color.h>

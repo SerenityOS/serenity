@@ -6,7 +6,7 @@
 
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/Time/APICTimer.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
 

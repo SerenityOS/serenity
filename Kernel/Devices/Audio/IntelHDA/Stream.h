@@ -11,7 +11,7 @@
 #include <AK/OwnPtr.h>
 #include <Kernel/Devices/Audio/IntelHDA/Codec.h>
 #include <Kernel/Devices/Audio/IntelHDA/Format.h>
-#include <Kernel/IOWindow.h>
+#include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel::Audio::IntelHDA {

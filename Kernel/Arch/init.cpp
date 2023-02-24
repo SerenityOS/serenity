@@ -37,11 +37,11 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>

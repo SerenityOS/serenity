@@ -5,7 +5,7 @@
  */
 
 #include <AK/StdLibExtras.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 
 namespace Kernel {
 

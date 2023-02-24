@@ -13,9 +13,9 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

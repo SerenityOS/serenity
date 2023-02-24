@@ -15,7 +15,7 @@
 #include <AK/Vector.h>
 
 #ifdef KERNEL
-#    include <Kernel/StdLib.h>
+#    include <Kernel/Library/StdLib.h>
 #else
 #    include <AK/DeprecatedString.h>
 #    include <AK/FloatingPointStringConversions.h>

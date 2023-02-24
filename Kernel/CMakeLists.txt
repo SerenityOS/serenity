@@ -114,9 +114,7 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/Console.cpp
     Graphics/VirtIOGPU/GPU3DDevice.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
-    IOWindow.cpp
     SanCov.cpp
-    DoubleBuffer.cpp
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
     FileSystem/Custody.cpp
@@ -217,9 +215,6 @@ set(KERNEL_SOURCES
     Interrupts/PCIIRQHandler.cpp
     Interrupts/SharedIRQHandler.cpp
     Interrupts/UnhandledInterruptHandler.cpp
-    KBufferBuilder.cpp
-    KLexicalPath.cpp
-    KString.cpp
     KSyms.cpp
     Memory/AddressSpace.cpp
     Memory/AnonymousVMObject.cpp
@@ -238,9 +233,18 @@ set(KERNEL_SOURCES
     Memory/SharedInodeVMObject.cpp
     Memory/VMObject.cpp
     Memory/VirtualRange.cpp
-    MiniStdLib.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
+    Library/DoubleBuffer.cpp
+    Library/IOWindow.cpp
+    Library/MiniStdLib.cpp
+    Library/Panic.cpp
+    Library/ScopedCritical.cpp
+    Library/StdLib.cpp
+    Library/KBufferBuilder.cpp
+    Library/KLexicalPath.cpp
+    Library/KString.cpp
+    Library/UserOrKernelBuffer.cpp
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
@@ -254,10 +258,7 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    Panic.cpp
     PerformanceEventBuffer.cpp
-    ScopedCritical.cpp
-    StdLib.cpp
     Syscall.cpp
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
@@ -358,7 +359,6 @@ set(KERNEL_SOURCES
     Tasks/WorkQueue.cpp
     Time/TimeManagement.cpp
     TimerQueue.cpp
-    UserOrKernelBuffer.cpp
 )
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
@@ -405,7 +405,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         # TODO: Share these with the aarch64 build
         Interrupts/SpuriousInterruptHandler.cpp
-        kprintf.cpp
+        kprintf.cpp        
     )
 
     set(KERNEL_SOURCES
@@ -599,7 +599,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
 
     # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
-    set_source_files_properties(MiniStdLib.cpp
+    set_source_files_properties(Library/MiniStdLib.cpp
         PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
 
     add_link_options(LINKER:-z,pack-relative-relocs)

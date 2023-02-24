@@ -5,7 +5,7 @@
  */
 
 #include <AK/Vector.h>
-#include <Kernel/KLexicalPath.h>
+#include <Kernel/Library/KLexicalPath.h>
 
 namespace Kernel::KLexicalPath {
 
