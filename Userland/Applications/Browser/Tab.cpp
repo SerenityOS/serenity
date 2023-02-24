@@ -610,6 +610,12 @@ void Tab::did_become_active()
         m_statusbar->set_text(url);
     };
 
+    BookmarksBarWidget::the().on_bookmark_add = [this](auto& url) {
+        auto current_url = this->url().to_deprecated_string();
+        if (current_url == url)
+            update_bookmark_button(current_url);
+    };
+
     BookmarksBarWidget::the().remove_from_parent();
     m_toolbar_container->add_child(BookmarksBarWidget::the());
 
