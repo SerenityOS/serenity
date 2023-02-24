@@ -88,6 +88,9 @@ template<>
 ErrorOr<JsonValue> decode(Decoder&);
 
 template<>
+ErrorOr<Time> decode(Decoder&);
+
+template<>
 ErrorOr<URL> decode(Decoder&);
 
 template<>
