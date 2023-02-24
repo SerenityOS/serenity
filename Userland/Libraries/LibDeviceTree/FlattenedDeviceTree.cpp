@@ -117,7 +117,7 @@ static ErrorOr<ReadonlyBytes> slow_get_property_raw(StringView name, FlattenedDe
             return Error::from_errno(ENAMETOOLONG);
         }
         // This can never fail as all entries go into the inline buffer, enforced by the check above.
-        MUST(path.try_append(view));
+        path.unchecked_append(view);
         return {};
     }));
 
