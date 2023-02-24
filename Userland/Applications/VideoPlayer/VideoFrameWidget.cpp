@@ -45,6 +45,12 @@ void VideoFrameWidget::mousedown_event(GUI::MouseEvent&)
         on_click();
 }
 
+void VideoFrameWidget::doubleclick_event(GUI::MouseEvent&)
+{
+    if (on_doubleclick)
+        on_doubleclick();
+}
+
 void VideoFrameWidget::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);

@@ -35,6 +35,7 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
 {
     m_video_display = find_descendant_of_type_named<VideoPlayer::VideoFrameWidget>("video_frame");
     m_video_display->on_click = [&]() { toggle_pause(); };
+    m_video_display->on_doubleclick = [&]() { toggle_fullscreen(); };
 
     m_seek_slider = find_descendant_of_type_named<GUI::HorizontalSlider>("seek_slider");
     m_seek_slider->on_drag_start = [&]() {
@@ -72,10 +73,15 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
         cycle_sizing_modes();
     });
 
+    m_toggle_fullscreen_action = GUI::CommonActions::make_fullscreen_action([&](auto&) {
+        toggle_fullscreen();
+    });
+
     m_timestamp_label = find_descendant_of_type_named<GUI::Label>("timestamp");
     m_volume_slider = find_descendant_of_type_named<GUI::HorizontalSlider>("volume_slider");
     find_descendant_of_type_named<GUI::Button>("playback")->set_action(*m_play_pause_action);
     find_descendant_of_type_named<GUI::Button>("sizing")->set_action(*m_cycle_sizing_modes_action);
+    find_descendant_of_type_named<GUI::Button>("fullscreen")->set_action(*m_toggle_fullscreen_action);
 
     return {};
 }
@@ -250,6 +256,16 @@ void VideoPlayerWidget::cycle_sizing_modes()
     m_video_display->update();
 }
 
+void VideoPlayerWidget::toggle_fullscreen()
+{
+    auto* parent_window = window();
+    parent_window->set_fullscreen(!parent_window->is_fullscreen());
+    auto* bottom_container = find_descendant_of_type_named<GUI::Widget>("bottom_container");
+    bottom_container->set_visible(!parent_window->is_fullscreen());
+    auto* video_frame = find_descendant_of_type_named<VideoFrameWidget>("video_frame");
+    video_frame->set_frame_thickness(parent_window->is_fullscreen() ? 0 : 2);
+}
+
 void VideoPlayerWidget::update_title()
 {
     StringBuilder string_builder;
@@ -297,6 +313,10 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {});
     TRY(playback_menu->try_add_action(*m_use_fast_seeking));
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
+
+    // View menu
+    auto view_menu = TRY(window.try_add_menu("&View"));
+    TRY(view_menu->try_add_action(*m_toggle_fullscreen_action));
 
     // Help menu
     auto help_menu = TRY(window.try_add_menu("&Help"));
