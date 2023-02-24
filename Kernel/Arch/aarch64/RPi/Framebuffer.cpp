@@ -8,7 +8,7 @@
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/FramebufferMailboxMessages.h>
-#include <Kernel/BootInfo.h>
+#include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::RPi {

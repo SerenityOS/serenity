@@ -5,10 +5,10 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/Sections.h>
 

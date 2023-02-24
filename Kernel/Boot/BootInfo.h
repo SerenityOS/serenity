@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/StringView.h>
+#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/VirtualAddress.h>
-#include <Kernel/Multiboot.h>
 
 namespace Kernel::Memory {
 class PageTableEntry;

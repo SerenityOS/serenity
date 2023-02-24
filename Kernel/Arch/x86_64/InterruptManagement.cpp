@@ -11,7 +11,7 @@
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>

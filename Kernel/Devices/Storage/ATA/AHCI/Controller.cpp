@@ -9,8 +9,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/InterruptHandler.h>
 #include <Kernel/Library/LockRefPtr.h>

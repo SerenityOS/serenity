@@ -7,9 +7,9 @@
 #pragma once
 
 #ifdef __cplusplus
+#    include <Kernel/Boot/Multiboot.h>
 #    include <Kernel/Memory/PhysicalAddress.h>
 #    include <Kernel/Memory/VirtualAddress.h>
-#    include <Kernel/Multiboot.h>
 #endif
 
 #define MAX_KERNEL_SIZE 0x4000000

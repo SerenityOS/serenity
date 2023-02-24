@@ -16,10 +16,10 @@
 #if ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/SDHostController.h>
 #endif
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Storage/ATA/AHCI/Controller.h>
