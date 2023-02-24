@@ -6,10 +6,10 @@
 
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/x86_64/IO.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/Panic.h>

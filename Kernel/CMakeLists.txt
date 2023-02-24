@@ -19,6 +19,7 @@ set(KERNEL_SOURCES
     Arch/init.cpp
     Arch/PageFault.cpp
     Arch/DeferredCallPool.cpp
+    Boot/CommandLine.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
@@ -40,7 +41,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Device.cpp
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
-    CommandLine.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
     Devices/Audio/Channel.cpp

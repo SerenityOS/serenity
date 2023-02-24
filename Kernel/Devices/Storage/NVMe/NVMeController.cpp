@@ -10,8 +10,8 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/SafeMem.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>

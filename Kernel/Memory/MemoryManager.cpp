@@ -10,7 +10,8 @@
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
-#include <Kernel/BootInfo.h>
+#include <Kernel/Boot/BootInfo.h>
+#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/InterruptDisabler.h>
@@ -21,7 +22,6 @@
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Multiboot.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>

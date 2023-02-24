@@ -5,7 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

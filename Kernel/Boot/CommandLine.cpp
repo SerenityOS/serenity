@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <Kernel/CommandLine.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Sections.h>

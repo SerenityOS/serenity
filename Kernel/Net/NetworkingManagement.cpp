@@ -5,11 +5,11 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/Boot/CommandLine.h>
+#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Library/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Multiboot.h>
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>

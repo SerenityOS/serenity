@@ -7,12 +7,13 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/BootInfo.h>
+#include <Kernel/Boot/BootInfo.h>
+#include <Kernel/Boot/CommandLine.h>
+#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/VirtIO/Device.h>
-#include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
@@ -39,7 +40,6 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Multiboot.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Prekernel/Prekernel.h>

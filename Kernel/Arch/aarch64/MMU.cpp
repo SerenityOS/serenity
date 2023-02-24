@@ -13,7 +13,7 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
-#include <Kernel/BootInfo.h>
+#include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 
