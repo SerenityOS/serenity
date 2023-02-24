@@ -22,7 +22,7 @@ class WorkerNavigator : public Bindings::PlatformObject
     WEB_PLATFORM_OBJECT(WorkerNavigator, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<WorkerNavigator> create(WorkerGlobalScope&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WorkerNavigator>> create(WorkerGlobalScope&);
 
     virtual ~WorkerNavigator() override;
 

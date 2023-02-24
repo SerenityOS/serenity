@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLOptionElementPrototype.h>
 #include <LibWeb/Bindings/OptionConstructor.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -47,7 +48,8 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> OptionConstructor::construct
     auto& document = window.associated_document();
 
     // 2. Let option be the result of creating an element given document, option, and the HTML namespace.
-    JS::NonnullGCPtr<HTML::HTMLOptionElement> option_element = verify_cast<HTML::HTMLOptionElement>(*DOM::create_element(document, HTML::TagNames::option, Namespace::HTML));
+    auto element = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return DOM::create_element(document, HTML::TagNames::option, Namespace::HTML); }));
+    JS::NonnullGCPtr<HTML::HTMLOptionElement> option_element = verify_cast<HTML::HTMLOptionElement>(*element);
 
     // 3. If text is not the empty string, then append to option a new Text node whose data is text.
     if (vm.argument_count() > 0) {

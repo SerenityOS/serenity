@@ -18,7 +18,7 @@ class AbortSignal final : public EventTarget {
     WEB_PLATFORM_OBJECT(AbortSignal, EventTarget);
 
 public:
-    static JS::NonnullGCPtr<AbortSignal> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<AbortSignal>> construct_impl(JS::Realm&);
 
     virtual ~AbortSignal() override = default;
 

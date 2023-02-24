@@ -53,6 +53,8 @@ public:
 
     ReadyState ready_state();
 
+    DeprecatedString subprotocol_in_use();
+
     void send(ByteBuffer binary_or_text_message, bool is_text);
     void send(StringView text_message);
     void close(u16 code = 1005, DeprecatedString reason = {});

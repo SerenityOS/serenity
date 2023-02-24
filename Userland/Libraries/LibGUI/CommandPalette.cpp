@@ -186,8 +186,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     main_widget->set_frame_shape(Gfx::FrameShape::Window);
     main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(4);
+    main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
     m_text_box = main_widget->add<GUI::TextBox>();
     m_table_view = main_widget->add<GUI::TableView>();

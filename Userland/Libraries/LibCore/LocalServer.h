@@ -8,7 +8,6 @@
 
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 
 namespace Core {
 
@@ -21,9 +20,9 @@ public:
     bool is_listening() const { return m_listening; }
     bool listen(DeprecatedString const& address);
 
-    ErrorOr<NonnullOwnPtr<Stream::LocalSocket>> accept();
+    ErrorOr<NonnullOwnPtr<LocalSocket>> accept();
 
-    Function<void(NonnullOwnPtr<Stream::LocalSocket>)> on_accept;
+    Function<void(NonnullOwnPtr<LocalSocket>)> on_accept;
     Function<void(Error)> on_accept_error;
 
 private:

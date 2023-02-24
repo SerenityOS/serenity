@@ -48,7 +48,7 @@ public:
     static void set_fixed_width_font_query(DeprecatedString);
     static void set_default_fonts_lookup_path(DeprecatedString);
 
-    RefPtr<Gfx::Font> get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
+    RefPtr<Gfx::Font> get(DeprecatedFlyString const& family, float point_size, unsigned weight, unsigned width, unsigned slope, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get(DeprecatedFlyString const& family, DeprecatedFlyString const& variant, float point_size, Font::AllowInexactSizeMatch = Font::AllowInexactSizeMatch::No);
     RefPtr<Gfx::Font> get_by_name(StringView);
     void for_each_font(Function<void(Gfx::Font const&)>);

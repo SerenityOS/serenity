@@ -12,7 +12,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
@@ -87,13 +87,19 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
             });
     } else {
         auto program_node = program.visit(
-            [](auto& visitor) -> NonnullRefPtr<JS::Program> {
+            [](auto& visitor) -> NonnullRefPtr<JS::Program const> {
                 return visitor->parse_node();
             });
 
-        auto unit_result = JS::Bytecode::Generator::generate(program_node);
-        if (unit_result.is_error()) {
-            result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), DeprecatedString::formatted("TODO({})", unit_result.error().to_deprecated_string())));
+        auto& vm = interpreter.vm();
+
+        if (auto unit_result = JS::Bytecode::Generator::generate(program_node); unit_result.is_error()) {
+            if (auto error_string = unit_result.error().to_string(); error_string.is_error())
+                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
+            else if (error_string = String::formatted("TODO({})", error_string.value()); error_string.is_error())
+                result = vm.template throw_completion<JS::InternalError>(vm.error_message(JS::VM::ErrorMessage::OutOfMemory));
+            else
+                result = JS::throw_completion(JS::InternalError::create(interpreter.realm(), error_string.release_value()));
         } else {
             auto unit = unit_result.release_value();
             auto optimization_level = s_enable_bytecode_optimizations ? JS::Bytecode::Interpreter::OptimizationLevel::Optimize : JS::Bytecode::Interpreter::OptimizationLevel::Default;
@@ -112,22 +118,22 @@ static Result<void, TestError> run_program(InterpreterT& interpreter, ScriptOrMo
 
             auto name = object.get_without_side_effects("name");
             if (!name.is_empty() && !name.is_accessor()) {
-                error.type = name.to_string_without_side_effects();
+                error.type = name.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
             } else {
                 auto constructor = object.get_without_side_effects("constructor");
                 if (constructor.is_object()) {
                     name = constructor.as_object().get_without_side_effects("name");
                     if (!name.is_undefined())
-                        error.type = name.to_string_without_side_effects();
+                        error.type = name.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
                 }
             }
 
             auto message = object.get_without_side_effects("message");
             if (!message.is_empty() && !message.is_accessor())
-                error.details = message.to_string_without_side_effects();
+                error.details = message.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
         }
         if (error.type.is_empty())
-            error.type = error_value.to_string_without_side_effects();
+            error.type = error_value.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
         return error;
     }
     return {};
@@ -139,7 +145,7 @@ static Result<StringView, TestError> read_harness_file(StringView harness_file)
 {
     auto cache = s_cached_harness_files.find(harness_file);
     if (cache == s_cached_harness_files.end()) {
-        auto file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}{}", s_harness_file_directory, harness_file), Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(DeprecatedString::formatted("{}{}", s_harness_file_directory, harness_file), Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             return TestError {
                 NegativePhase::Harness,
@@ -679,12 +685,12 @@ int main(int argc, char** argv)
 #define DISARM_TIMER() \
     alarm(0)
 
-    auto standard_input_or_error = Core::Stream::File::standard_input();
+    auto standard_input_or_error = Core::File::standard_input();
     if (standard_input_or_error.is_error())
         return exit_setup_input_failure;
 
     Array<u8, 1024> input_buffer {};
-    auto buffered_standard_input_or_error = Core::Stream::BufferedFile::create(standard_input_or_error.release_value());
+    auto buffered_standard_input_or_error = Core::BufferedFile::create(standard_input_or_error.release_value());
     if (buffered_standard_input_or_error.is_error())
         return exit_setup_input_failure;
 
@@ -708,7 +714,7 @@ int main(int argc, char** argv)
             VERIFY(!s_harness_file_directory.is_empty());
         }
 
-        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Could not open file: {}", path);
             return exit_read_file_failure;

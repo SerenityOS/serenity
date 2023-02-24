@@ -96,7 +96,7 @@ void Job::set_signalled(int sig)
         on_exit(*this);
 }
 
-void Job::unblock() const
+void Job::unblock()
 {
     if (!m_exited && on_exit)
         on_exit(*this);

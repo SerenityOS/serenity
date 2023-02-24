@@ -1,6 +1,7 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -129,9 +130,8 @@ public:
 
     void insert_at_cursor_or_replace_selection(StringView);
     void replace_all_text_without_resetting_undo_stack(StringView text);
-    bool write_to_file(DeprecatedString const& path);
-    bool write_to_file(Core::File&);
-    ErrorOr<void> write_to_file(Core::Stream::File&);
+    ErrorOr<void> write_to_file(StringView path);
+    ErrorOr<void> write_to_file(Core::File&);
     bool has_selection() const { return m_selection.is_valid(); }
     DeprecatedString selected_text() const;
     size_t number_of_words() const;
@@ -190,6 +190,7 @@ public:
     void set_cursor_and_focus_line(size_t line, size_t column);
     void set_cursor(size_t line, size_t column);
     virtual void set_cursor(TextPosition const&);
+    void set_cursor_to_text_position(Gfx::IntPoint);
 
     Syntax::Highlighter* syntax_highlighter();
     Syntax::Highlighter const* syntax_highlighter() const;
@@ -265,15 +266,16 @@ protected:
     virtual void resize_event(ResizeEvent&) override;
     virtual void theme_change_event(ThemeChangeEvent&) override;
     virtual void cursor_did_change();
-    Gfx::IntRect ruler_content_rect(size_t line) const;
     Gfx::IntRect gutter_content_rect(size_t line) const;
+    Gfx::IntRect ruler_content_rect(size_t line) const;
 
     TextPosition text_position_at(Gfx::IntPoint) const;
     bool ruler_visible() const { return m_ruler_visible; }
     bool gutter_visible() const { return m_gutter_visible; }
     Gfx::IntRect content_rect_for_position(TextPosition const&) const;
-    int ruler_width() const;
     int gutter_width() const;
+    int ruler_width() const;
+    int fixed_elements_width() const { return gutter_width() + ruler_width(); }
 
     virtual void highlighter_did_set_spans(Vector<TextDocumentSpan> spans) final { document().set_spans(Syntax::HighlighterClient::span_collection_index, move(spans)); }
 
@@ -347,8 +349,8 @@ private:
     Gfx::IntRect line_widget_rect(size_t line_index) const;
     void delete_selection();
     int content_x_for_position(TextPosition const&) const;
-    Gfx::IntRect ruler_rect_in_inner_coordinates() const;
     Gfx::IntRect gutter_rect_in_inner_coordinates() const;
+    Gfx::IntRect ruler_rect_in_inner_coordinates() const;
     Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
@@ -437,7 +439,7 @@ private:
 
     Gfx::IntPoint m_last_mousemove_position;
 
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
 
     bool m_text_is_secret { false };
 

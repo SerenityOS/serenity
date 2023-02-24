@@ -40,10 +40,10 @@ public:
     void did_request_certificates();
     void set_response_headers(HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> const&);
     void set_downloaded_size(size_t size) { m_downloaded_size = size; }
-    Core::Stream::File const& output_stream() const { return *m_output_stream; }
+    Core::File const& output_stream() const { return *m_output_stream; }
 
 protected:
-    explicit Request(ConnectionFromClient&, NonnullOwnPtr<Core::Stream::File>&&);
+    explicit Request(ConnectionFromClient&, NonnullOwnPtr<Core::File>&&);
 
 private:
     ConnectionFromClient& m_client;
@@ -52,7 +52,7 @@ private:
     Optional<u32> m_status_code;
     Optional<u32> m_total_size {};
     size_t m_downloaded_size { 0 };
-    NonnullOwnPtr<Core::Stream::File> m_output_stream;
+    NonnullOwnPtr<Core::File> m_output_stream;
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
 };
 

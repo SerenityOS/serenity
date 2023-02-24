@@ -16,7 +16,7 @@ class Storage : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Storage, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Storage> create(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> create(JS::Realm&);
     ~Storage();
 
     size_t length() const;

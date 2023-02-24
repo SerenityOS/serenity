@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
+#include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attr.h>
@@ -26,6 +27,11 @@
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::DOM {
+
+struct ShadowRootInit {
+    Bindings::ShadowRootMode mode;
+    bool delegates_focus = false;
+};
 
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrolloptions
 struct ScrollOptions {
@@ -78,6 +84,9 @@ public:
 
     DOMTokenList* class_list();
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> attach_shadow(ShadowRootInit init);
+    JS::GCPtr<ShadowRoot> shadow_root() const;
+
     WebIDL::ExceptionOr<bool> matches(StringView selectors) const;
     WebIDL::ExceptionOr<DOM::Element const*> closest(StringView selectors) const;
 
@@ -113,6 +122,7 @@ public:
 
     DeprecatedString name() const { return attribute(HTML::AttributeNames::name); }
 
+    CSS::StyleProperties* computed_css_values() { return m_computed_css_values.ptr(); }
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
     void set_computed_css_values(RefPtr<CSS::StyleProperties> style) { m_computed_css_values = move(style); }
     NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
@@ -131,8 +141,9 @@ public:
 
     JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(DeprecatedFlyString const&);
 
-    ShadowRoot* shadow_root() { return m_shadow_root.ptr(); }
-    ShadowRoot const* shadow_root() const { return m_shadow_root.ptr(); }
+    bool is_shadow_host() const;
+    ShadowRoot* shadow_root_internal() { return m_shadow_root.ptr(); }
+    ShadowRoot const* shadow_root_internal() const { return m_shadow_root.ptr(); }
     void set_shadow_root(JS::GCPtr<ShadowRoot>);
 
     void set_custom_properties(HashMap<DeprecatedFlyString, CSS::StyleProperty> custom_properties) { m_custom_properties = move(custom_properties); }

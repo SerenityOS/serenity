@@ -8,9 +8,9 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<IDLEventListener> IDLEventListener::create(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::CallbackType> callback)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<IDLEventListener>> IDLEventListener::create(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::CallbackType> callback)
 {
-    return realm.heap().allocate<IDLEventListener>(realm, realm, move(callback)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<IDLEventListener>(realm, realm, move(callback)));
 }
 
 IDLEventListener::IDLEventListener(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::CallbackType> callback)

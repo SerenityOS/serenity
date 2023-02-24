@@ -33,11 +33,13 @@ static bool is_standard_latin_font(DeprecatedFlyString const& font)
 
 PDFErrorOr<void> PDFFont::CommonData::load_from_dict(Document* document, NonnullRefPtr<DictObject> dict, float font_size)
 {
-    base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
-    if ((is_standard_font = is_standard_latin_font(base_font_name))) {
-        auto replacement = replacement_for_standard_latin_font(base_font_name.to_lowercase());
-        font = Gfx::FontDatabase::the().get(replacement.get<0>(), replacement.get<1>(), font_size);
-        VERIFY(font);
+    auto base_font = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
+    if ((is_standard_font = is_standard_latin_font(base_font))) {
+        auto replacement = replacement_for_standard_latin_font(base_font);
+        float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
+        font = Gfx::FontDatabase::the().get(replacement.get<0>(), replacement.get<1>(), point_size);
+        if (!font)
+            return Error(Error::Type::Internal, DeprecatedString::formatted("Failed to load {} {} at {}pt", replacement.get<0>(), replacement.get<1>(), point_size));
     }
 
     if (dict->contains(CommonNames::Encoding)) {
@@ -89,8 +91,17 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> PDFFont::create(Document* document, NonnullRe
 
 Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_latin_font(StringView name)
 {
-    bool is_bold = name.contains("bold"sv);
-    bool is_italic = name.contains("italic"sv);
+    bool is_bold = name.contains("bold"sv, CaseSensitivity::CaseInsensitive);
+    bool is_italic = name.contains("italic"sv, CaseSensitivity::CaseInsensitive);
+
+    DeprecatedString font_family;
+    if (name.contains("times"sv, CaseSensitivity::CaseInsensitive)) {
+        font_family = "Liberation Serif";
+    } else if (name.contains("courier"sv, CaseSensitivity::CaseInsensitive)) {
+        font_family = "Liberation Mono";
+    } else {
+        font_family = "Liberation Sans";
+    }
 
     DeprecatedString font_variant;
 
@@ -104,7 +115,7 @@ Tuple<DeprecatedString, DeprecatedString> PDFFont::replacement_for_standard_lati
         font_variant = "Regular";
     }
 
-    return { "Liberation Serif", font_variant };
+    return { font_family, font_variant };
 }
 
 }

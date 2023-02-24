@@ -7,6 +7,7 @@
 #include "ChessEngine.h"
 #include "MCTSTree.h"
 #include <AK/Random.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/ElapsedTimer.h>
 
 using namespace Chess::UCI;

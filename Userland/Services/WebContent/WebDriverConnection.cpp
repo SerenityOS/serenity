@@ -314,20 +314,20 @@ static bool fire_an_event(DeprecatedString name, Optional<Web::DOM::Element&> ta
     if (!target.has_value())
         return false;
 
-    auto event = T::create(target->realm(), name);
-    return target->dispatch_event(*event);
+    auto event = T::create(target->realm(), name).release_value_but_fixme_should_propagate_errors();
+    return target->dispatch_event(event);
 }
 
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
-    auto socket = TRY(Core::Stream::LocalSocket::connect(webdriver_ipc_path));
+    auto socket = TRY(Core::LocalSocket::connect(webdriver_ipc_path));
 
     dbgln_if(WEBDRIVER_DEBUG, "Connected to WebDriver");
     return adopt_nonnull_ref_or_enomem(new (nothrow) WebDriverConnection(move(socket), page_client));
 }
 
-WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Web::PageClient& page_client)
+WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::LocalSocket> socket, Web::PageClient& page_client)
     : IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket))
     , m_page_client(page_client)
     , m_current_window_handle("main"sv)
@@ -996,7 +996,7 @@ Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get
     auto* element = TRY(get_known_connected_element(element_id));
 
     // 4. Let shadow root be element's shadow root.
-    auto* shadow_root = element->shadow_root();
+    auto* shadow_root = element->shadow_root_internal();
 
     // 5. If shadow root is null, return error with error code no such shadow root.
     if (!shadow_root)
@@ -1256,6 +1256,25 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
     if (role.has_value())
         return Web::ARIA::role_name(*role);
     return ""sv;
+}
+
+// 12.4.10 Get Computed Label, https://w3c.github.io/webdriver/#get-computed-label
+Messages::WebDriverClient::GetComputedLabelResponse WebDriverConnection::get_computed_label(DeprecatedString const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
+    // 3. Let element be the result of trying to get a known element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let label be the result of a Accessible Name and Description Computation for the Accessible Name of the element.
+    auto label = element->accessible_name(element->document()).release_value_but_fixme_should_propagate_errors();
+
+    // 5. Return success with data label.
+    return label.to_deprecated_string();
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click

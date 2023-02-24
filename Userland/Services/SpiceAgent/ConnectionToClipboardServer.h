@@ -23,7 +23,7 @@ public:
     void set_bitmap(Gfx::Bitmap const& bitmap);
 
 private:
-    ConnectionToClipboardServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionToClipboardServer(NonnullOwnPtr<Core::LocalSocket> socket)
         : IPC::ConnectionToServer<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, move(socket))
     {
     }

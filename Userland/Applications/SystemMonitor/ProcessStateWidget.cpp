@@ -95,8 +95,7 @@ private:
 
 ProcessStateWidget::ProcessStateWidget()
 {
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins(4);
+    set_layout<GUI::VerticalBoxLayout>(4);
     m_table_view = add<GUI::TableView>();
     m_table_view->set_model(adopt_ref(*new ProcessStateModel(ProcessModel::the(), 0)));
     m_table_view->column_header().set_visible(false);

@@ -41,6 +41,7 @@ set(KERNEL_SOURCES
     Bus/VirtIO/RNG.cpp
     CommandLine.cpp
     Coredump.cpp
+    CrashHandler.cpp
     Credentials.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
@@ -74,6 +75,13 @@ set(KERNEL_SOURCES
     Graphics/DisplayConnector.cpp
     Graphics/Generic/DisplayConnector.cpp
     Graphics/GraphicsManagement.cpp
+    Graphics/Intel/Auxiliary/GMBusConnector.cpp
+    Graphics/Intel/Plane/DisplayPlane.cpp
+    Graphics/Intel/Plane/G33DisplayPlane.cpp
+    Graphics/Intel/Transcoder/AnalogDisplayTranscoder.cpp
+    Graphics/Intel/Transcoder/DisplayTranscoder.cpp
+    Graphics/Intel/Transcoder/PLL.cpp
+    Graphics/Intel/DisplayConnectorGroup.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
     Graphics/VMWare/Console.cpp
@@ -101,6 +109,8 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeInterruptQueue.cpp
     Storage/NVMe/NVMePollQueue.cpp
     Storage/NVMe/NVMeQueue.cpp
+    Storage/Ramdisk/Controller.cpp
+    Storage/Ramdisk/Device.cpp
     Storage/DiskPartition.cpp
     Storage/StorageController.cpp
     Storage/StorageDevice.cpp
@@ -134,6 +144,8 @@ set(KERNEL_SOURCES
     FileSystem/ProcFS/ComponentRegistry.cpp
     FileSystem/ProcFS/FileSystem.cpp
     FileSystem/ProcFS/Inode.cpp
+    FileSystem/RAMFS/FileSystem.cpp
+    FileSystem/RAMFS/Inode.cpp
     FileSystem/SysFS/Component.cpp
     FileSystem/SysFS/DirectoryInode.cpp
     FileSystem/SysFS/FileSystem.cpp
@@ -164,7 +176,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/CommandLine.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
@@ -172,8 +183,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/LoadBase.cpp
-    FileSystem/SysFS/Subsystems/Kernel/SystemMode.cpp
     FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp
     FileSystem/SysFS/Subsystems/Kernel/Log.cpp
     FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp
@@ -188,6 +197,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/Route.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/TCP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
@@ -195,8 +206,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.cpp
-    FileSystem/TmpFS/FileSystem.cpp
-    FileSystem/TmpFS/Inode.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/BIOS.cpp
     Firmware/ACPI/Initialize.cpp
@@ -410,7 +419,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CrashHandler.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/PageDirectory.cpp
@@ -451,7 +459,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/boot.S
         Arch/aarch64/BootPPMParser.cpp
         Arch/aarch64/CPUID.cpp
-        Arch/aarch64/CrashHandler.cpp
         Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/init.cpp
@@ -479,12 +486,16 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 endif()
 
 set(AK_SOURCES
+    ../AK/DOSPackedTime.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
+    ../AK/MemoryStream.cpp
+    ../AK/Stream.cpp
     ../AK/StringBuilder.cpp
     ../AK/StringUtils.cpp
     ../AK/StringView.cpp
     ../AK/Time.cpp
+    ../AK/Error.cpp
     ../AK/Format.cpp
     ../AK/UUID.cpp
 )
@@ -622,6 +633,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     set(KCOV_EXCLUDED_SOURCES
         # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
         # otherwise we'll end up with recursive calls to that function.
+        ../AK/Error.cpp
         ../AK/Format.cpp
         ../AK/StringBuilder.cpp
         ../Kernel/Arch/x86_64/Processor.cpp
@@ -724,6 +736,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     embed_resource(Kernel serenity_boot_logo "Arch/aarch64/SerenityLogoRGB.ppm")
+    embed_resource(Kernel disk_image "../Build/aarch64/_disk_image")
     add_custom_command(
             TARGET Kernel POST_BUILD
             COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img

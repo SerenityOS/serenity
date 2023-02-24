@@ -6,8 +6,8 @@
  */
 
 #include <DevTools/SQLStudio/SQLStudioGML.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -45,7 +45,7 @@ static Vector<DeprecatedString> lookup_database_names()
     static constexpr auto database_extension = ".db"sv;
 
     auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
-    if (!Core::File::exists(database_path))
+    if (!Core::DeprecatedFile::exists(database_path))
         return {};
 
     Core::DirIterator iterator(move(database_path), Core::DirIterator::SkipParentAndBaseDir);
@@ -227,12 +227,11 @@ MainWidget::MainWidget()
     m_action_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("action_tab_widget"sv);
 
     m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results");
-    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
-    m_query_results_widget->layout()->set_margins(6);
+    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>(6);
     m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 
     m_action_tab_widget->on_tab_close_click = [this](auto&) {
-        m_action_tab_widget->set_fixed_height(0);
+        m_action_tab_widget->set_visible(false);
     };
 
     m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar"sv);
@@ -253,30 +252,33 @@ MainWidget::MainWidget()
     };
 
     m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
-    m_sql_client->on_execution_success = [this](auto, auto, auto, auto, auto, auto) {
+    m_sql_client->on_execution_success = [this](auto result) {
+        m_result_column_names = move(result.column_names);
         read_next_sql_statement_of_editor();
     };
-    m_sql_client->on_execution_error = [this](auto, auto, auto, auto message) {
+    m_sql_client->on_execution_error = [this](auto result) {
         auto* editor = active_editor();
         VERIFY(editor);
 
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Error executing {}\n{}", editor->path(), message));
+        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Error executing {}\n{}", editor->path(), result.error_message));
     };
-    m_sql_client->on_next_result = [this](auto, auto, auto row) {
+    m_sql_client->on_next_result = [this](auto result) {
         m_results.append({});
-        m_results.last().ensure_capacity(row.size());
+        m_results.last().ensure_capacity(result.values.size());
 
-        for (auto const& value : row)
+        for (auto const& value : result.values)
             m_results.last().unchecked_append(value.to_deprecated_string());
     };
-    m_sql_client->on_results_exhausted = [this](auto, auto, auto) {
+    m_sql_client->on_results_exhausted = [this](auto) {
         if (m_results.size() == 0)
             return;
         if (m_results[0].size() == 0)
             return;
+
         Vector<GUI::JsonArrayModel::FieldSpec> query_result_fields;
-        for (size_t i = 0; i < m_results[0].size(); i++)
-            query_result_fields.empend(DeprecatedString::formatted("column_{}", i + 1), DeprecatedString::formatted("Column {}", i + 1), Gfx::TextAlignment::CenterLeft);
+        for (auto& column_name : m_result_column_names)
+            query_result_fields.empend(column_name, column_name, Gfx::TextAlignment::CenterLeft);
+
         auto query_results_model = GUI::JsonArrayModel::create("{}", move(query_result_fields));
         m_query_results_table_view->set_model(MUST(GUI::SortingProxyModel::create(*query_results_model)));
         for (auto& result_row : m_results) {
@@ -285,7 +287,7 @@ MainWidget::MainWidget()
                 individual_result_as_json.append(result_row_column);
             query_results_model->add(move(individual_result_as_json));
         }
-        m_action_tab_widget->set_fixed_height(200);
+        m_action_tab_widget->set_visible(true);
     };
 }
 

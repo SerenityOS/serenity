@@ -11,7 +11,6 @@
 #include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
-#include <LibCore/Stream.h>
 #include <LibDSP/MDCT.h>
 
 namespace Audio {
@@ -56,7 +55,7 @@ private:
     static void process_stereo(MP3::MP3Frame&, size_t granule_index);
     static void transform_samples_to_time(Array<float, 576> const& input, size_t input_offset, Array<float, 36>& output, MP3::BlockType block_type);
     static void synthesis(Array<float, 1024>& V, Array<float, 32>& samples, Array<float, 32>& result);
-    static Span<MP3::Tables::ScaleFactorBand const> get_scalefactor_bands(MP3::Granule const&, int samplerate);
+    static ReadonlySpan<MP3::Tables::ScaleFactorBand> get_scalefactor_bands(MP3::Granule const&, int samplerate);
 
     AK::Vector<AK::Tuple<size_t, int>> m_seek_table;
     AK::Array<AK::Array<AK::Array<float, 18>, 32>, 2> m_last_values {};

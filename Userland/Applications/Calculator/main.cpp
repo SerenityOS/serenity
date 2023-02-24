@@ -53,7 +53,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (clipboard.mime_type == "text/plain") {
             if (!clipboard.data.is_empty()) {
                 auto const number = StringView(clipboard.data);
-                widget->set_entry(Crypto::BigFraction(number));
+                widget->set_typed_entry(Crypto::BigFraction(number));
             }
         }
     }));
@@ -62,13 +62,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto const power = Crypto::NumberTheory::Power("10"_bigint, "10"_bigint);
 
     constants_menu.add_action(GUI::Action::create("&Pi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/pi.png"sv)), [&](auto&) {
-        widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(31415926535), power });
+        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(31415926535), power });
     }));
     constants_menu.add_action(GUI::Action::create("&Euler's Number", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/eulers_number.png"sv)), [&](auto&) {
-        widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(27182818284), power });
+        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(27182818284), power });
     }));
     constants_menu.add_action(GUI::Action::create("&Phi", TRY(Gfx::Bitmap::load_from_file("/res/icons/calculator/phi.png"sv)), [&](auto&) {
-        widget->set_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
+        widget->set_typed_entry(Crypto::BigFraction { Crypto::SignedBigInteger(16180339887), power });
     }));
 
     auto& round_menu = window->add_menu("&Round");

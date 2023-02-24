@@ -1,129 +1,110 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
+ * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
-#include <AK/Error.h>
-#include <LibCore/IODevice.h>
-#include <sys/stat.h>
-
-// FIXME: Make this a bit prettier.
-#define DEFAULT_PATH "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
-#define DEFAULT_PATH_SV "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv
+#include <AK/Badge.h>
+#include <AK/BufferedStream.h>
+#include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Stream.h>
+#include <LibCore/Forward.h>
+#include <LibIPC/Forward.h>
 
 namespace Core {
 
-///
-/// Use of Core::File for reading/writing data is deprecated.
-/// Please use Core::Stream::File and Core::Stream::BufferedFile instead.
-///
-class File final : public IODevice {
-    C_OBJECT(File)
+class File final : public SeekableStream {
+    AK_MAKE_NONCOPYABLE(File);
+
 public:
-    virtual ~File() override;
-
-    static ErrorOr<NonnullRefPtr<File>> open(DeprecatedString filename, OpenMode, mode_t = 0644);
-
-    DeprecatedString filename() const { return m_filename; }
-    void set_filename(const DeprecatedString filename) { m_filename = move(filename); }
-
-    bool is_directory() const;
-    static bool is_directory(DeprecatedString const& filename);
-    static bool is_directory(int fd);
-
-    bool is_device() const;
-    static bool is_device(DeprecatedString const& filename);
-    static bool is_device(int fd);
-    bool is_block_device() const;
-    static bool is_block_device(DeprecatedString const& filename);
-    bool is_char_device() const;
-    static bool is_char_device(DeprecatedString const& filename);
-
-    bool is_link() const;
-    static bool is_link(DeprecatedString const& filename);
-
-    bool looks_like_shared_library() const;
-    static bool looks_like_shared_library(DeprecatedString const& filename);
-
-    static bool exists(StringView filename);
-    static ErrorOr<size_t> size(DeprecatedString const& filename);
-    static DeprecatedString current_working_directory();
-    static DeprecatedString absolute_path(DeprecatedString const& path);
-    static bool can_delete_or_move(StringView path);
-
-    enum class RecursionMode {
-        Allowed,
-        Disallowed
+    enum class OpenMode : unsigned {
+        NotOpen = 0,
+        Read = 1,
+        Write = 2,
+        ReadWrite = 3,
+        Append = 4,
+        Truncate = 8,
+        MustBeNew = 16,
+        KeepOnExec = 32,
+        Nonblocking = 64,
     };
 
-    enum class LinkMode {
-        Allowed,
-        Disallowed
-    };
-
-    enum class AddDuplicateFileMarker {
+    enum class ShouldCloseFileDescriptor {
         Yes,
         No,
     };
 
-    enum class PreserveMode {
-        Nothing = 0,
-        Permissions = (1 << 0),
-        Ownership = (1 << 1),
-        Timestamps = (1 << 2),
-    };
+    static ErrorOr<NonnullOwnPtr<File>> open(StringView filename, OpenMode, mode_t = 0644);
+    static ErrorOr<NonnullOwnPtr<File>> adopt_fd(int fd, OpenMode, ShouldCloseFileDescriptor = ShouldCloseFileDescriptor::Yes);
 
-    struct CopyError : public Error {
-        CopyError(int error_code, bool t)
-            : Error(error_code)
-            , tried_recursing(t)
-        {
-        }
-        bool tried_recursing;
-    };
+    static ErrorOr<NonnullOwnPtr<File>> standard_input();
+    static ErrorOr<NonnullOwnPtr<File>> standard_output();
+    static ErrorOr<NonnullOwnPtr<File>> standard_error();
+    static ErrorOr<NonnullOwnPtr<File>> open_file_or_standard_stream(StringView filename, OpenMode mode);
 
-    static ErrorOr<void, CopyError> copy_file(DeprecatedString const& dst_path, struct stat const& src_stat, File& source, PreserveMode = PreserveMode::Nothing);
-    static ErrorOr<void, CopyError> copy_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, struct stat const& src_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
-    static ErrorOr<void, CopyError> copy_file_or_directory(DeprecatedString const& dst_path, DeprecatedString const& src_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
+    File(File&& other) { operator=(move(other)); }
 
-    static DeprecatedString real_path_for(DeprecatedString const& filename);
-    static ErrorOr<DeprecatedString> read_link(DeprecatedString const& link_path);
-    static ErrorOr<void> link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path);
+    File& operator=(File&& other)
+    {
+        if (&other == this)
+            return *this;
 
-    static ErrorOr<void> remove(StringView path, RecursionMode);
+        m_mode = exchange(other.m_mode, OpenMode::NotOpen);
+        m_fd = exchange(other.m_fd, -1);
+        m_last_read_was_eof = exchange(other.m_last_read_was_eof, false);
+        return *this;
+    }
 
-    virtual bool open(OpenMode) override;
+    virtual ErrorOr<Bytes> read(Bytes) override;
+    virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096) override;
+    virtual ErrorOr<size_t> write(ReadonlyBytes) override;
+    virtual bool is_eof() const override;
+    virtual bool is_open() const override;
+    virtual void close() override;
+    virtual ErrorOr<size_t> seek(i64 offset, SeekMode) override;
+    virtual ErrorOr<void> truncate(size_t length) override;
 
-    enum class ShouldCloseFileDescriptor {
-        No = 0,
-        Yes
-    };
-    bool open(int fd, OpenMode, ShouldCloseFileDescriptor);
-    [[nodiscard]] int leak_fd();
+    template<OneOf<::IPC::File, ::Core::MappedFile> VIP>
+    int leak_fd(Badge<VIP>)
+    {
+        m_should_close_file_descriptor = ShouldCloseFileDescriptor::No;
+        return m_fd;
+    }
 
-    static NonnullRefPtr<File> standard_input();
-    static NonnullRefPtr<File> standard_output();
-    static NonnullRefPtr<File> standard_error();
+    int fd() const
+    {
+        return m_fd;
+    }
 
-    static Optional<DeprecatedString> resolve_executable_from_environment(StringView filename);
+    virtual ~File() override
+    {
+        if (m_should_close_file_descriptor == ShouldCloseFileDescriptor::Yes)
+            close();
+    }
+
+    static int open_mode_to_options(OpenMode mode);
 
 private:
-    File(Object* parent = nullptr)
-        : IODevice(parent)
+    File(OpenMode mode, ShouldCloseFileDescriptor should_close = ShouldCloseFileDescriptor::Yes)
+        : m_mode(mode)
+        , m_should_close_file_descriptor(should_close)
     {
     }
-    explicit File(DeprecatedString filename, Object* parent = nullptr);
 
-    bool open_impl(OpenMode, mode_t);
+    ErrorOr<void> open_path(StringView filename, mode_t);
 
-    DeprecatedString m_filename;
+    OpenMode m_mode { OpenMode::NotOpen };
+    int m_fd { -1 };
+    bool m_last_read_was_eof { false };
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
 };
 
-AK_ENUM_BITWISE_OPERATORS(File::PreserveMode);
+AK_ENUM_BITWISE_OPERATORS(File::OpenMode)
+
+using BufferedFile = BufferedSeekable<File>;
 
 }

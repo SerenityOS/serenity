@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
-#include <math.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS::Parser {
 
@@ -195,52 +195,54 @@ static inline bool is_E(u32 code_point)
     return code_point == 0x45;
 }
 
-Tokenizer::Tokenizer(StringView input, DeprecatedString const& encoding)
+Tokenizer::Tokenizer(StringView input, StringView encoding)
 {
     // https://www.w3.org/TR/css-syntax-3/#css-filter-code-points
-    auto filter_code_points = [](StringView input, auto const& encoding) -> DeprecatedString {
-        auto* decoder = TextCodec::decoder_for(encoding);
-        VERIFY(decoder);
+    auto filter_code_points = [](StringView input, auto encoding) -> ErrorOr<String> {
+        auto decoder = TextCodec::decoder_for(encoding);
+        VERIFY(decoder.has_value());
 
         StringBuilder builder { input.length() };
         bool last_was_carriage_return = false;
 
         // To filter code points from a stream of (unfiltered) code points input:
-        decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) {
-            // Replace any U+000D CARRIAGE RETURN (CR) code points,
-            // U+000C FORM FEED (FF) code points,
-            // or pairs of U+000D CARRIAGE RETURN (CR) followed by U+000A LINE FEED (LF)
-            // in input by a single U+000A LINE FEED (LF) code point.
-            if (code_point == '\r') {
-                if (last_was_carriage_return) {
-                    builder.append('\n');
-                } else {
-                    last_was_carriage_return = true;
-                }
-            } else {
-                if (last_was_carriage_return)
-                    builder.append('\n');
+        decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) -> ErrorOr<void> {
+                   // Replace any U+000D CARRIAGE RETURN (CR) code points,
+                   // U+000C FORM FEED (FF) code points,
+                   // or pairs of U+000D CARRIAGE RETURN (CR) followed by U+000A LINE FEED (LF)
+                   // in input by a single U+000A LINE FEED (LF) code point.
+                   if (code_point == '\r') {
+                       if (last_was_carriage_return) {
+                           TRY(builder.try_append('\n'));
+                       } else {
+                           last_was_carriage_return = true;
+                       }
+                   } else {
+                       if (last_was_carriage_return)
+                           TRY(builder.try_append('\n'));
 
-                if (code_point == '\n') {
-                    if (!last_was_carriage_return)
-                        builder.append('\n');
+                       if (code_point == '\n') {
+                           if (!last_was_carriage_return)
+                               TRY(builder.try_append('\n'));
 
-                } else if (code_point == '\f') {
-                    builder.append('\n');
-                    // Replace any U+0000 NULL or surrogate code points in input with U+FFFD REPLACEMENT CHARACTER (�).
-                } else if (code_point == 0x00 || (code_point >= 0xD800 && code_point <= 0xDFFF)) {
-                    builder.append_code_point(REPLACEMENT_CHARACTER);
-                } else {
-                    builder.append_code_point(code_point);
-                }
+                       } else if (code_point == '\f') {
+                           TRY(builder.try_append('\n'));
+                           // Replace any U+0000 NULL or surrogate code points in input with U+FFFD REPLACEMENT CHARACTER (�).
+                       } else if (code_point == 0x00 || (code_point >= 0xD800 && code_point <= 0xDFFF)) {
+                           TRY(builder.try_append_code_point(REPLACEMENT_CHARACTER));
+                       } else {
+                           TRY(builder.try_append_code_point(code_point));
+                       }
 
-                last_was_carriage_return = false;
-            }
-        });
-        return builder.to_deprecated_string();
+                       last_was_carriage_return = false;
+                   }
+                   return {};
+               })
+            .release_value_but_fixme_should_propagate_errors();
+        return builder.to_string();
     };
 
-    m_decoded_input = filter_code_points(input, encoding);
+    m_decoded_input = filter_code_points(input, encoding).release_value_but_fixme_should_propagate_errors();
     m_utf8_view = Utf8View(m_decoded_input);
     m_utf8_iterator = m_utf8_view.begin();
 }
@@ -352,7 +354,7 @@ Token Tokenizer::create_eof_token()
     return create_new_token(Token::Type::EndOfFile);
 }
 
-Token Tokenizer::create_value_token(Token::Type type, DeprecatedString value)
+Token Tokenizer::create_value_token(Token::Type type, FlyString&& value)
 {
     Token token;
     token.m_type = type;
@@ -364,10 +366,7 @@ Token Tokenizer::create_value_token(Token::Type type, u32 value)
 {
     Token token = {};
     token.m_type = type;
-    // FIXME: Avoid temporary StringBuilder here
-    StringBuilder builder;
-    builder.append_code_point(value);
-    token.m_value = builder.to_deprecated_string();
+    token.m_value = String::from_code_point(value);
     return token;
 }
 
@@ -400,7 +399,7 @@ u32 Tokenizer::consume_escaped_code_point()
         }
 
         // Interpret the hex digits as a hexadecimal number.
-        auto unhexed = strtoul(builder.to_deprecated_string().characters(), nullptr, 16);
+        auto unhexed = AK::StringUtils::convert_to_uint_from_hex<u32>(builder.string_view()).value_or(0);
         // If this number is zero, or is for a surrogate, or is greater than the maximum allowed
         // code point, return U+FFFD REPLACEMENT CHARACTER (�).
         if (unhexed == 0 || is_unicode_surrogate(unhexed) || is_greater_than_maximum_allowed_code_point(unhexed)) {
@@ -430,11 +429,11 @@ Token Tokenizer::consume_an_ident_like_token()
     // It returns an <ident-token>, <function-token>, <url-token>, or <bad-url-token>.
 
     // Consume an ident sequence, and let string be the result.
-    auto string = consume_an_ident_sequence();
+    auto string = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
 
     // If string’s value is an ASCII case-insensitive match for "url", and the next input code
     // point is U+0028 LEFT PARENTHESIS ((), consume it.
-    if (string.equals_ignoring_case("url"sv) && is_left_paren(peek_code_point())) {
+    if (Infra::is_ascii_case_insensitive_match(string, "url"sv) && is_left_paren(peek_code_point())) {
         (void)next_code_point();
 
         // While the next two input code points are whitespace, consume the next input code point.
@@ -452,7 +451,7 @@ Token Tokenizer::consume_an_ident_like_token()
         // <function-token> with its value set to string and return it.
         auto next_two = peek_twin();
         if (is_quotation_mark(next_two.first) || is_apostrophe(next_two.first) || (is_whitespace(next_two.first) && (is_quotation_mark(next_two.second) || is_apostrophe(next_two.second)))) {
-            return create_value_token(Token::Type::Function, string);
+            return create_value_token(Token::Type::Function, move(string));
         }
 
         // Otherwise, consume a url token, and return it.
@@ -464,11 +463,11 @@ Token Tokenizer::consume_an_ident_like_token()
         (void)next_code_point();
 
         // Create a <function-token> with its value set to string and return it.
-        return create_value_token(Token::Type::Function, string);
+        return create_value_token(Token::Type::Function, move(string));
     }
 
     // Otherwise, create an <ident-token> with its value set to string and return it.
-    return create_value_token(Token::Type::Ident, string);
+    return create_value_token(Token::Type::Ident, move(string));
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-number
@@ -576,7 +575,7 @@ float Tokenizer::convert_a_string_to_a_number(StringView string)
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-name
-DeprecatedString Tokenizer::consume_an_ident_sequence()
+ErrorOr<FlyString> Tokenizer::consume_an_ident_sequence()
 {
     // This section describes how to consume an ident sequence from a stream of code points.
     // It returns a string containing the largest name that can be formed from adjacent
@@ -600,14 +599,14 @@ DeprecatedString Tokenizer::consume_an_ident_sequence()
         // name code point
         if (is_ident_code_point(input)) {
             // Append the code point to result.
-            result.append_code_point(input);
+            TRY(result.try_append_code_point(input));
             continue;
         }
 
         // the stream starts with a valid escape
         if (is_valid_escape_sequence(start_of_input_stream_twin())) {
             // Consume an escaped code point. Append the returned code point to result.
-            result.append_code_point(consume_escaped_code_point());
+            TRY(result.try_append_code_point(consume_escaped_code_point()));
             continue;
         }
 
@@ -617,7 +616,7 @@ DeprecatedString Tokenizer::consume_an_ident_sequence()
         break;
     }
 
-    return result.to_deprecated_string();
+    return result.to_fly_string();
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-url-token
@@ -640,7 +639,7 @@ Token Tokenizer::consume_a_url_token()
     consume_as_much_whitespace_as_possible();
 
     auto make_token = [&]() {
-        token.m_value = builder.to_deprecated_string();
+        token.m_value = FlyString::from_utf8(builder.string_view()).release_value_but_fixme_should_propagate_errors();
         return token;
     };
 
@@ -781,7 +780,7 @@ Token Tokenizer::consume_a_numeric_token()
         token.m_number_value = number;
 
         // 2. Consume an ident sequence. Set the <dimension-token>’s unit to the returned value.
-        auto unit = consume_an_ident_sequence();
+        auto unit = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
         VERIFY(!unit.is_empty());
         // NOTE: We intentionally store this in the `value`, to save space.
         token.m_value = move(unit);
@@ -931,7 +930,7 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
     StringBuilder builder;
 
     auto make_token = [&]() {
-        token.m_value = builder.to_deprecated_string();
+        token.m_value = FlyString::from_utf8(builder.string_view()).release_value_but_fixme_should_propagate_errors();
         return token;
     };
 
@@ -1068,7 +1067,7 @@ Token Tokenizer::consume_a_token()
                 token.m_hash_type = Token::HashType::Id;
 
             // 3. Consume an ident sequence, and set the <hash-token>’s value to the returned string.
-            auto name = consume_an_ident_sequence();
+            auto name = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
             token.m_value = move(name);
 
             // 4. Return the <hash-token>.
@@ -1204,8 +1203,8 @@ Token Tokenizer::consume_a_token()
         // If the next 3 input code points would start an ident sequence, consume an ident sequence, create
         // an <at-keyword-token> with its value set to the returned value, and return it.
         if (would_start_an_ident_sequence(peek_triplet())) {
-            auto name = consume_an_ident_sequence();
-            return create_value_token(Token::Type::AtKeyword, name);
+            auto name = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
+            return create_value_token(Token::Type::AtKeyword, move(name));
         }
 
         // Otherwise, return a <delim-token> with its value set to the current input code point.

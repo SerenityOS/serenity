@@ -7,9 +7,9 @@
 #include <AK/Vector.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
@@ -158,7 +158,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto buffer = TRY(ByteBuffer::create_uninitialized(0x9006));
 
     for (auto const& path : paths) {
-        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             perror(path.characters());
             all_ok = false;

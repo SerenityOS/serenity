@@ -63,9 +63,9 @@ ErrorOr<void> HexEditor::open_new_file(size_t size)
     return {};
 }
 
-void HexEditor::open_file(NonnullRefPtr<Core::File> file)
+void HexEditor::open_file(NonnullOwnPtr<Core::File> file)
 {
-    m_document = make<HexDocumentFile>(file);
+    m_document = HexDocumentFile::create(move(file)).release_value_but_fixme_should_propagate_errors();
     set_content_length(m_document->size());
     m_position = 0;
     m_cursor_at_low_nibble = false;
@@ -135,33 +135,31 @@ void HexEditor::set_selection(size_t position, size_t length)
     scroll_position_into_view(position);
     update_status();
 }
-bool HexEditor::save_as(NonnullRefPtr<Core::File> new_file)
+
+ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::File> new_file)
 {
     if (m_document->type() == HexDocument::Type::File) {
         auto& file_document = static_cast<HexDocumentFile&>(*m_document);
-        if (!file_document.write_to_file(new_file))
-            return false;
-        file_document.set_file(new_file);
+        TRY(file_document.write_to_file(*new_file));
+        TRY(file_document.set_file(move(new_file)));
     } else {
         auto& memory_document = static_cast<HexDocumentMemory&>(*m_document);
-        if (!memory_document.write_to_file(new_file))
-            return false;
-        m_document = make<HexDocumentFile>(new_file);
+        TRY(memory_document.write_to_file(*new_file));
+        m_document = HexDocumentFile::create(move(new_file)).release_value_but_fixme_should_propagate_errors();
     }
 
     update();
 
-    return true;
+    return {};
 }
 
-bool HexEditor::save()
+ErrorOr<void> HexEditor::save()
 {
-    if (m_document->type() != HexDocument::Type::File) {
-        return false;
-    }
+    if (m_document->type() != HexDocument::Type::File)
+        return Error::from_string_literal("Unable to save from a memory document");
 
-    static_cast<HexDocumentFile*>(m_document.ptr())->write_to_file();
-    return true;
+    TRY(static_cast<HexDocumentFile*>(m_document.ptr())->write_to_file());
+    return {};
 }
 
 size_t HexEditor::selection_size()
@@ -245,6 +243,18 @@ Optional<u8> HexEditor::get_byte(size_t position)
         return m_document->get(position).value;
 
     return {};
+}
+
+ByteBuffer HexEditor::get_selected_bytes()
+{
+    auto num_selected_bytes = m_selection_end - m_selection_start;
+    ByteBuffer data;
+    data.ensure_capacity(num_selected_bytes);
+
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
+        data.append(m_document->get(i).value);
+
+    return data;
 }
 
 void HexEditor::mousedown_event(GUI::MouseEvent& event)

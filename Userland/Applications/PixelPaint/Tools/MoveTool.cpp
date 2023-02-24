@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +20,9 @@
 #include <LibGfx/Filters/ContrastFilter.h>
 
 namespace PixelPaint {
+
+constexpr int resize_anchor_min_size = 5;
+constexpr int resize_anchor_max_size = 20;
 
 void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
 {
@@ -41,7 +44,7 @@ void MoveTool::on_mousedown(Layer* layer, MouseEvent& event)
     m_layer_being_moved = *layer;
     m_event_origin = image_event.position();
     m_layer_origin = layer->location();
-    m_new_layer_rect = m_editor->active_layer()->rect();
+    m_new_layer_rect = m_editor->active_layer()->relative_rect();
 }
 
 void MoveTool::on_mousemove(Layer* layer, MouseEvent& event)
@@ -188,17 +191,52 @@ void MoveTool::on_keyup(GUI::KeyEvent& event)
 
 void MoveTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 {
-    if (layer != m_layer_being_moved.ptr() || !m_scaling)
-        return;
-
+    VERIFY(m_editor);
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    auto rect_in_editor = m_editor->content_to_frame_rect(m_new_layer_rect).to_rounded<int>();
-    painter.draw_rect(rect_in_editor, Color::Black);
-    if (!m_cached_preview_bitmap.is_null() || !update_cached_preview_bitmap(layer).is_error()) {
+    auto content_rect = m_scaling ? m_new_layer_rect : m_editor->active_layer()->relative_rect();
+    auto rect_in_editor = m_editor->content_to_frame_rect(content_rect).to_type<int>();
+    if (m_scaling && (!m_cached_preview_bitmap.is_null() || !update_cached_preview_bitmap(layer).is_error())) {
+        Gfx::PainterStateSaver saver(painter);
         painter.add_clip_rect(m_editor->content_rect());
         painter.draw_scaled_bitmap(rect_in_editor, *m_cached_preview_bitmap, m_cached_preview_bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
     }
+    painter.draw_rect_with_thickness(rect_in_editor, Color::Black, 3);
+    painter.draw_rect_with_thickness(rect_in_editor, Color::White, 1);
+    auto size = resize_anchor_size(rect_in_editor);
+    if (size < resize_anchor_min_size)
+        return;
+
+    auto resize_anchors = resize_anchor_rects(rect_in_editor, size);
+    for (auto const& resize_anchor_rect : resize_anchors) {
+        painter.draw_rect_with_thickness(resize_anchor_rect, Color::Black, 3);
+        painter.draw_rect_with_thickness(resize_anchor_rect, Color::White, 1);
+    }
+}
+
+Gfx::IntRect MoveTool::resize_anchor_rect_from_position(Gfx::IntPoint position, int size)
+{
+    auto resize_anchor_rect_top_left = position.translated(-size / 2);
+    return Gfx::IntRect(resize_anchor_rect_top_left, Gfx::IntSize(size, size));
+}
+
+int MoveTool::resize_anchor_size(Gfx::IntRect layer_rect_in_frame_coordinates)
+{
+    auto shortest_side = min(layer_rect_in_frame_coordinates.width(), layer_rect_in_frame_coordinates.height());
+    if (shortest_side <= 1)
+        return 1;
+    int x = ceilf(shortest_side / 3.0f);
+    return min(resize_anchor_max_size, x);
+}
+
+Array<Gfx::IntRect, 4> MoveTool::resize_anchor_rects(Gfx::IntRect layer_rect_in_frame_coordinates, int resize_anchor_size)
+{
+    return Array {
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_left(), resize_anchor_size),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.top_right().translated(1, 0), resize_anchor_size),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_left().translated(0, 1), resize_anchor_size),
+        resize_anchor_rect_from_position(layer_rect_in_frame_coordinates.bottom_right().translated(1), resize_anchor_size)
+    };
 }
 
 ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
@@ -217,14 +255,14 @@ ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
 
 Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_cursor_position(Layer const* layer, MouseEvent& event)
 {
-    auto cursor_within_resize_anchor_rect = [&](Gfx::IntPoint layer_position) {
-        constexpr int sensitivity = 20;
-        auto resize_anchor_rect_center = m_editor->content_to_frame_position(layer_position).to_rounded<int>();
-        auto resize_anchor_rect_top_left = resize_anchor_rect_center.translated(-sensitivity / 2);
-        auto resize_anchor_rect = Gfx::IntRect(resize_anchor_rect_top_left, Gfx::IntSize(sensitivity, sensitivity));
+    auto layer_rect = m_editor->content_to_frame_rect(layer->relative_rect()).to_type<int>();
+    auto size = max(resize_anchor_min_size, resize_anchor_size(layer_rect));
+
+    auto cursor_within_resize_anchor_rect = [&event, size](Gfx::IntPoint layer_position_in_frame_coordinates) {
+        auto resize_anchor_rect = resize_anchor_rect_from_position(layer_position_in_frame_coordinates, size);
         return resize_anchor_rect.contains(event.raw_event().position());
     };
-    auto layer_rect = layer->relative_rect();
+
     if (cursor_within_resize_anchor_rect(layer_rect.top_left()))
         return ResizeAnchorLocation::TopLeft;
     if (cursor_within_resize_anchor_rect(layer_rect.top_right().translated(1, 0)))
@@ -236,7 +274,7 @@ Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_curso
     return {};
 }
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> MoveTool::cursor()
 {
     if (m_resize_anchor_location.has_value()) {
         switch (m_resize_anchor_location.value()) {
@@ -251,33 +289,34 @@ Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> MoveTool::cursor()
     return Gfx::StandardCursor::Move;
 }
 
-GUI::Widget* MoveTool::get_properties_widget()
+ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& selection_mode_container = m_properties_widget->add<GUI::Widget>();
-        selection_mode_container.set_layout<GUI::HorizontalBoxLayout>();
-        selection_mode_container.set_fixed_height(46);
-        auto& selection_mode_label = selection_mode_container.add<GUI::Label>("Selection Mode:");
-        selection_mode_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        selection_mode_label.set_fixed_size(80, 40);
+        auto selection_mode_container = TRY(properties_widget->try_add<GUI::Widget>());
+        (void)TRY(selection_mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        selection_mode_container->set_fixed_height(46);
+        auto selection_mode_label = TRY(selection_mode_container->try_add<GUI::Label>("Selection Mode:"));
+        selection_mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        selection_mode_label->set_fixed_size(80, 40);
 
-        auto& mode_radio_container = selection_mode_container.add<GUI::Widget>();
-        mode_radio_container.set_layout<GUI::VerticalBoxLayout>();
-        m_selection_mode_foreground = mode_radio_container.add<GUI::RadioButton>("Foreground");
+        auto mode_radio_container = TRY(selection_mode_container->try_add<GUI::Widget>());
+        (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
+        m_selection_mode_foreground = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Foreground"sv))));
 
-        m_selection_mode_active = mode_radio_container.add<GUI::RadioButton>("Active Layer");
+        m_selection_mode_active = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Active Layer"sv))));
 
-        m_selection_mode_foreground->on_checked = [&](bool) {
+        m_selection_mode_foreground->on_checked = [this](bool) {
             m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;
         };
-        m_selection_mode_active->on_checked = [&](bool) {
+        m_selection_mode_active->on_checked = [this](bool) {
             m_layer_selection_mode = LayerSelectionMode::ActiveLayer;
         };
 
         m_selection_mode_foreground->set_checked(true);
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();

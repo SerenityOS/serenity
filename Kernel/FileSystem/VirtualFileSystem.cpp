@@ -26,7 +26,7 @@
 namespace Kernel {
 
 static Singleton<VirtualFileSystem> s_the;
-static constexpr int root_mount_flags = MS_NODEV | MS_NOSUID | MS_RDONLY;
+static constexpr int root_mount_flags = 0;
 
 UNMAP_AFTER_INIT void VirtualFileSystem::initialize()
 {

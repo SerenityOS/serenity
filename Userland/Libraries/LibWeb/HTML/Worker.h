@@ -26,9 +26,9 @@
 namespace Web::HTML {
 
 struct WorkerOptions {
-    DeprecatedString type { "classic" };
-    DeprecatedString credentials { "same-origin" };
-    DeprecatedString name { "" };
+    String type { String::from_utf8("classic"sv).release_value_but_fixme_should_propagate_errors() };
+    String credentials { String::from_utf8("same-origin"sv).release_value_but_fixme_should_propagate_errors() };
+    String name { String {} };
 };
 
 // https://html.spec.whatwg.org/multipage/workers.html#dedicated-workers-and-the-worker-interface
@@ -36,8 +36,8 @@ class Worker : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(Worker, DOM::EventTarget);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(DeprecatedFlyString const& script_url, WorkerOptions const options, DOM::Document& document);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, DeprecatedFlyString const& script_url, WorkerOptions const options)
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> create(String const& script_url, WorkerOptions const options, DOM::Document& document);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Worker>> construct_impl(JS::Realm& realm, String const& script_url, WorkerOptions const options)
     {
         auto& window = verify_cast<HTML::Window>(realm.global_object());
         return Worker::create(script_url, options, window.associated_document());
@@ -60,7 +60,7 @@ public:
 #undef __ENUMERATE
 
 protected:
-    Worker(DeprecatedFlyString const&, const WorkerOptions, DOM::Document&);
+    Worker(String const&, const WorkerOptions, DOM::Document&);
 
 private:
     static HTML::EventLoop& get_vm_event_loop(JS::VM& target_vm)
@@ -71,7 +71,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    DeprecatedFlyString m_script_url;
+    String m_script_url;
     WorkerOptions m_options;
 
     JS::GCPtr<DOM::Document> m_document;

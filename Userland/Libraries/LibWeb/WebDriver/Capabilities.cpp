@@ -52,7 +52,7 @@ static Response deserialize_as_ladybird_options(JsonValue value)
 
     auto const& object = value.as_object();
 
-    if (auto headless = object.get_bool("headless"sv); headless.has_value())
+    if (auto headless = object.get("headless"sv); headless.has_value() && !headless->is_bool())
         return Error::from_code(ErrorCode::InvalidArgument, "Extension capability serenity:ladybird/headless must be a boolean"sv);
 
     return value;

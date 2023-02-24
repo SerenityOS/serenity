@@ -5,7 +5,7 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibTest/TestCase.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -81,7 +81,7 @@ TEST_CASE(test_change_file_location)
     ftruncate(fd, 0);
     EXPECT(fchmod(fd, 06755) != -1);
 
-    auto suid_path_or_error = Core::File::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
+    auto suid_path_or_error = Core::DeprecatedFile::read_link(DeprecatedString::formatted("/proc/{}/fd/{}", getpid(), fd));
     EXPECT(!suid_path_or_error.is_error());
 
     auto suid_path = suid_path_or_error.release_value();

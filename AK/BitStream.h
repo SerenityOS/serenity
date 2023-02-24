@@ -17,9 +17,9 @@ namespace AK {
 /// in big-endian order from another stream.
 class BigEndianInputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<BigEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
+    explicit BigEndianInputBitStream(MaybeOwned<Stream> stream)
+        : m_stream(move(stream))
     {
-        return adopt_nonnull_own_or_enomem<BigEndianInputBitStream>(new BigEndianInputBitStream(move(stream)));
     }
 
     // ^Stream
@@ -112,11 +112,6 @@ public:
     ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_offset == 0; }
 
 private:
-    BigEndianInputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
-    {
-    }
-
     Optional<u8> m_current_byte;
     size_t m_bit_offset { 0 };
     MaybeOwned<Stream> m_stream;
@@ -126,12 +121,7 @@ private:
 /// in little-endian order from another stream.
 class LittleEndianInputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<LittleEndianInputBitStream>> construct(MaybeOwned<Stream> stream)
-    {
-        return adopt_nonnull_own_or_enomem<LittleEndianInputBitStream>(new LittleEndianInputBitStream(move(stream)));
-    }
-
-    LittleEndianInputBitStream(MaybeOwned<Stream> stream)
+    explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream)
         : m_stream(move(stream))
     {
     }
@@ -235,9 +225,9 @@ private:
 /// in big-endian order to another stream.
 class BigEndianOutputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<BigEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
+    explicit BigEndianOutputBitStream(MaybeOwned<Stream> stream)
+        : m_stream(move(stream))
     {
-        return adopt_nonnull_own_or_enomem<BigEndianOutputBitStream>(new BigEndianOutputBitStream(move(stream)));
     }
 
     virtual ErrorOr<Bytes> read(Bytes) override
@@ -304,11 +294,6 @@ public:
     }
 
 private:
-    BigEndianOutputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
-    {
-    }
-
     MaybeOwned<Stream> m_stream;
     u8 m_current_byte { 0 };
     size_t m_bit_offset { 0 };
@@ -318,9 +303,9 @@ private:
 /// in little-endian order to another stream.
 class LittleEndianOutputBitStream : public Stream {
 public:
-    static ErrorOr<NonnullOwnPtr<LittleEndianOutputBitStream>> construct(MaybeOwned<Stream> stream)
+    explicit LittleEndianOutputBitStream(MaybeOwned<Stream> stream)
+        : m_stream(move(stream))
     {
-        return adopt_nonnull_own_or_enomem<LittleEndianOutputBitStream>(new LittleEndianOutputBitStream(move(stream)));
     }
 
     virtual ErrorOr<Bytes> read(Bytes) override
@@ -387,11 +372,6 @@ public:
     }
 
 private:
-    LittleEndianOutputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
-    {
-    }
-
     MaybeOwned<Stream> m_stream;
     u8 m_current_byte { 0 };
     size_t m_bit_offset { 0 };

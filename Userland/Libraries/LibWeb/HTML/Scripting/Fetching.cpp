@@ -401,7 +401,7 @@ void fetch_single_module_script(AK::URL const& url, EnvironmentSettingsObject&, 
             }
 
             if (MimeSniff::is_javascript_mime_type_essence_match(*content_type_header) && module_type == "javascript"sv) {
-                auto module_script = JavaScriptModuleScript::create(url.basename(), data, module_map_settings_object, url);
+                auto module_script = JavaScriptModuleScript::create(url.basename(), data, module_map_settings_object, url).release_value_but_fixme_should_propagate_errors();
                 module_map.set(url, module_type, { ModuleMap::EntryType::ModuleScript, module_script });
                 on_complete(module_script);
                 return;
@@ -448,7 +448,7 @@ void fetch_inline_module_script_graph(DeprecatedString const& filename, Deprecat
     settings_object.disallow_further_import_maps();
 
     // 2. Let script be the result of creating a JavaScript module script using source text, settings object, base URL, and options.
-    auto script = JavaScriptModuleScript::create(filename, source_text.view(), settings_object, base_url);
+    auto script = JavaScriptModuleScript::create(filename, source_text.view(), settings_object, base_url).release_value_but_fixme_should_propagate_errors();
 
     // 3. If script is null, run onComplete given null, and return.
     if (!script) {

@@ -10,9 +10,8 @@
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/NumberFormat.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ModelIndex.h>
@@ -32,7 +31,7 @@ ProcessModel::ProcessModel()
     VERIFY(!s_the);
     s_the = this;
 
-    auto file = Core::File::construct("/sys/kernel/cpuinfo");
+    auto file = Core::DeprecatedFile::construct("/sys/kernel/cpuinfo");
     if (file->open(Core::OpenMode::ReadOnly)) {
         auto buffer = file->read_all();
         auto json = JsonValue::from_string({ buffer });
@@ -410,7 +409,7 @@ Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned fla
 
 static ErrorOr<DeprecatedString> try_read_command_line(pid_t pid)
 {
-    auto file = TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::File::OpenMode::Read));
     auto data = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(StringView { data.bytes() }));
     auto array = json.as_array().values();

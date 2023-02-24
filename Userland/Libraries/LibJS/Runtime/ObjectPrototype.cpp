@@ -72,11 +72,11 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 
     // 1. If the this value is undefined, return "[object Undefined]".
     if (this_value.is_undefined())
-        return PrimitiveString::create(vm, "[object Undefined]");
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "[object Undefined]"sv));
 
     // 2. If the this value is null, return "[object Null]".
     if (this_value.is_null())
-        return PrimitiveString::create(vm, "[object Null]");
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "[object Null]"sv));
 
     // 3. Let O be ! ToObject(this value).
     auto* object = MUST(this_value.to_object(vm));
@@ -187,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 
     auto getter = vm.argument(1);
     if (!getter.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, getter.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, getter.to_string_without_side_effects()));
 
     auto descriptor = PropertyDescriptor { .get = &getter.as_function(), .enumerable = true, .configurable = true };
 
@@ -205,7 +205,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 
     auto setter = vm.argument(1);
     if (!setter.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, setter.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, setter.to_string_without_side_effects()));
 
     auto descriptor = PropertyDescriptor { .set = &setter.as_function(), .enumerable = true, .configurable = true };
 

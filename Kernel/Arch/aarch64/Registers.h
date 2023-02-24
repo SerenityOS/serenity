@@ -700,11 +700,11 @@ static_assert(sizeof(SCTLR_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
 // MIDR_EL1, Main ID Register
 struct alignas(u64) MIDR_EL1 {
-    int Revision : 4;
-    int PartNum : 12;
-    int Architecture : 4;
-    int Variant : 4;
-    int Implementer : 8;
+    u8 Revision : 4;
+    u16 PartNum : 12;
+    u8 Architecture : 4;
+    u8 Variant : 4;
+    u8 Implementer : 8;
     int : 32;
 
     static inline MIDR_EL1 read()
@@ -1162,6 +1162,21 @@ static inline bool exception_class_is_data_abort(u8 exception_class)
     return exception_class == 0x24 || exception_class == 0x25;
 }
 
+static inline bool exception_class_is_instruction_abort(u8 exception_class)
+{
+    return exception_class == 0x20 || exception_class == 0x21;
+}
+
+static inline bool exception_class_is_data_or_instruction_abort_from_lower_exception_level(u8 exception_class)
+{
+    return exception_class == 0x20 || exception_class == 0x24;
+}
+
+static inline bool exception_class_is_svc_instruction_execution(u8 exception_class)
+{
+    return exception_class == 0x11 || exception_class == 0x15;
+}
+
 // D17.2.37 ESR_EL1, Exception Syndrome Register (EL1)
 // ISS encoding for an exception from a Data Abort
 // DFSC, bits [5:0]
@@ -1328,5 +1343,25 @@ struct alignas(u64) PMCCNTR_EL0 {
     }
 };
 static_assert(sizeof(PMCCNTR_EL0) == 8);
+
+// D17.2.30 CPACR_EL1, Architectural Feature Access Control Register
+struct alignas(u64) CPACR_EL1 {
+    int _reserved0 : 16 = 0;
+    int ZEN : 2;
+    int _reserved18 : 2 = 0;
+    int FPEN : 2;
+    int _reserved22 : 2 = 0;
+    int SMEN : 2;
+    int _reserved26 : 2 = 0;
+    int TTA : 1;
+    int _reserved29 : 3 = 0;
+    int _reserved32 : 32 = 0;
+
+    static inline void write(CPACR_EL1 cpacr_el1)
+    {
+        asm("msr cpacr_el1, %[value]" ::[value] "r"(cpacr_el1));
+    }
+};
+static_assert(sizeof(CPACR_EL1) == 8);
 
 }

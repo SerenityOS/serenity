@@ -6,10 +6,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/HashTable.h>
 #include <AK/IDAllocator.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Runtime/FunctionObject.h>
+#include <LibRegex/Regex.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/NodePrototype.h>
 #include <LibWeb/DOM/Comment.h>
@@ -32,6 +34,7 @@
 #include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -247,7 +250,7 @@ void Node::invalidate_style()
         node.m_needs_style_update = true;
         if (node.has_children())
             node.m_child_needs_style_update = true;
-        if (auto* shadow_root = node.is_element() ? static_cast<DOM::Element&>(node).shadow_root() : nullptr) {
+        if (auto* shadow_root = node.is_element() ? static_cast<DOM::Element&>(node).shadow_root_internal() : nullptr) {
             node.m_child_needs_style_update = true;
             shadow_root->m_needs_style_update = true;
             if (shadow_root->has_children())
@@ -391,7 +394,9 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
         // 2. Queue a tree mutation record for node with « », nodes, null, and null.
         // NOTE: This step intentionally does not pay attention to the suppress observers flag.
-        node->queue_tree_mutation_record(StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), nodes), nullptr, nullptr);
+        auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), nodes).release_value_but_fixme_should_propagate_errors();
+        node->queue_tree_mutation_record(added_node_list, removed_node_list, nullptr, nullptr);
     }
 
     // 5. If child is non-null, then:
@@ -452,8 +457,11 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
     }
 
     // 8. If suppress observers flag is unset, then queue a tree mutation record for parent with nodes, « », previousSibling, and child.
-    if (!suppress_observers)
-        queue_tree_mutation_record(StaticNodeList::create(realm(), move(nodes)), StaticNodeList::create(realm(), {}), previous_sibling.ptr(), child.ptr());
+    if (!suppress_observers) {
+        auto added_node_list = StaticNodeList::create(realm(), move(nodes)).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        queue_tree_mutation_record(added_node_list, removed_node_list, previous_sibling.ptr(), child.ptr());
+    }
 
     // 9. Run the children changed steps for parent.
     children_changed();
@@ -605,7 +613,9 @@ void Node::remove(bool suppress_observers)
     if (!suppress_observers) {
         Vector<JS::Handle<Node>> removed_nodes;
         removed_nodes.append(JS::make_handle(*this));
-        parent->queue_tree_mutation_record(StaticNodeList::create(realm(), {}), StaticNodeList::create(realm(), move(removed_nodes)), old_previous_sibling.ptr(), old_next_sibling.ptr());
+        auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
+        parent->queue_tree_mutation_record(added_node_list, removed_node_list, old_previous_sibling.ptr(), old_next_sibling.ptr());
     }
 
     // 21. Run the children changed steps for parent.
@@ -697,7 +707,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::replace_child(JS::NonnullGCPtr
     insert_before(node, reference_child, true);
 
     // 14. Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
-    queue_tree_mutation_record(StaticNodeList::create(realm(), move(nodes)), StaticNodeList::create(realm(), move(removed_nodes)), previous_sibling.ptr(), reference_child.ptr());
+    auto added_node_list = TRY(StaticNodeList::create(realm(), move(nodes)));
+    auto removed_node_list = TRY(StaticNodeList::create(realm(), move(removed_nodes)));
+    queue_tree_mutation_record(added_node_list, removed_node_list, previous_sibling.ptr(), reference_child.ptr());
 
     // 15. Return child.
     return child;
@@ -715,7 +727,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     if (is<Element>(this)) {
         // 1. Let copy be the result of creating an element, given document, node’s local name, node’s namespace, node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset.
         auto& element = *verify_cast<Element>(this);
-        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_() /* FIXME: node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset */);
+        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_() /* FIXME: node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset */).release_value_but_fixme_should_propagate_errors();
 
         // 2. For each attribute in node’s attribute list:
         element.for_each_attribute([&](auto& name, auto& value) {
@@ -730,7 +742,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     else if (is<Document>(this)) {
         // Document
         auto document_ = verify_cast<Document>(this);
-        auto document_copy = Document::create(this->realm(), document_->url());
+        auto document_copy = Document::create(this->realm(), document_->url()).release_value_but_fixme_should_propagate_errors();
 
         // Set copy’s encoding, content type, URL, origin, type, and mode to those of node.
         document_copy->set_encoding(document_->encoding());
@@ -890,7 +902,7 @@ JS::NonnullGCPtr<NodeList> Node::child_nodes()
     if (!m_child_nodes) {
         m_child_nodes = LiveNodeList::create(realm(), *this, [this](auto& node) {
             return is_parent_of(node);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_child_nodes;
 }
@@ -1167,8 +1179,11 @@ void Node::replace_all(JS::GCPtr<Node> node)
         insert_before(*node, nullptr, true);
 
     // 7. If either addedNodes or removedNodes is not empty, then queue a tree mutation record for parent with addedNodes, removedNodes, null, and null.
-    if (!added_nodes.is_empty() || !removed_nodes.is_empty())
-        queue_tree_mutation_record(StaticNodeList::create(realm(), move(added_nodes)), StaticNodeList::create(realm(), move(removed_nodes)), nullptr, nullptr);
+    if (!added_nodes.is_empty() || !removed_nodes.is_empty()) {
+        auto added_node_list = StaticNodeList::create(realm(), move(added_nodes)).release_value_but_fixme_should_propagate_errors();
+        auto removed_node_list = StaticNodeList::create(realm(), move(removed_nodes)).release_value_but_fixme_should_propagate_errors();
+        queue_tree_mutation_record(added_node_list, removed_node_list, nullptr, nullptr);
+    }
 }
 
 // https://dom.spec.whatwg.org/#string-replace-all
@@ -1428,7 +1443,7 @@ void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedStri
     for (auto& interested_observer : interested_observers) {
         // 1. Let record be a new MutationRecord object with its type set to type, target set to target, attributeName set to name, attributeNamespace set to namespace, oldValue set to mappedOldValue,
         //    addedNodes set to addedNodes, removedNodes set to removedNodes, previousSibling set to previousSibling, and nextSibling set to nextSibling.
-        auto record = MutationRecord::create(realm(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value);
+        auto record = MutationRecord::create(realm(), type, *this, added_nodes, removed_nodes, previous_sibling, next_sibling, attribute_name, attribute_namespace, /* mappedOldValue */ interested_observer.value).release_value_but_fixme_should_propagate_errors();
 
         // 2. Enqueue record to observer’s record queue.
         interested_observer.key->enqueue_record({}, move(record));
@@ -1565,7 +1580,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
             return;
 
         if (element->include_in_accessibility_tree()) {
-            auto current_node = AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this);
+            auto current_node = AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this).release_value_but_fixme_should_propagate_errors();
             parent.append_child(current_node);
             if (has_child_nodes()) {
                 for_each_child([&current_node](DOM::Node& child) {
@@ -1578,13 +1593,248 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
             });
         }
     } else if (is_text()) {
-        parent.append_child(AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this));
+        parent.append_child(AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this).release_value_but_fixme_should_propagate_errors());
         if (has_child_nodes()) {
             for_each_child([&parent](DOM::Node& child) {
                 child.build_accessibility_tree(parent);
             });
         }
     }
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_te
+ErrorOr<String> Node::name_or_description(NameOrDescription target, Document const& document, HashTable<i32>& visited_nodes) const
+{
+    // The text alternative for a given element is computed as follows:
+    // 1. Set the root node to the given element, the current node to the root node, and the total accumulated text to the empty string (""). If the root node's role prohibits naming, return the empty string ("").
+    auto const* root_node = this;
+    auto const* current_node = root_node;
+    StringBuilder total_accumulated_text;
+    visited_nodes.set(id());
+
+    if (is_element()) {
+        auto const* element = static_cast<DOM::Element const*>(this);
+        // 2. Compute the text alternative for the current node:
+        // A. If the current node is hidden and is not directly referenced by aria-labelledby or aria-describedby, nor directly referenced by a native host language text alternative element (e.g. label in HTML) or attribute, return the empty string.
+        // FIXME: Check for references
+        if (element->aria_hidden() == "true" || !layout_node())
+            return String {};
+        // B. Otherwise:
+        // - if computing a name, and the current node has an aria-labelledby attribute that contains at least one valid IDREF, and the current node is not already part of an aria-labelledby traversal,
+        //   process its IDREFs in the order they occur:
+        // - or, if computing a description, and the current node has an aria-describedby attribute that contains at least one valid IDREF, and the current node is not already part of an aria-describedby traversal,
+        //   process its IDREFs in the order they occur:
+        if ((target == NameOrDescription::Name && Node::first_valid_id(element->aria_labelled_by(), document).has_value())
+            || (target == NameOrDescription::Description && Node::first_valid_id(element->aria_described_by(), document).has_value())) {
+
+            // i. Set the accumulated text to the empty string.
+            total_accumulated_text.clear();
+
+            Vector<StringView> id_list;
+            if (target == NameOrDescription::Name) {
+                id_list = element->aria_labelled_by().split_view(Infra::is_ascii_whitespace);
+            } else {
+                id_list = element->aria_described_by().split_view(Infra::is_ascii_whitespace);
+            }
+            // ii. For each IDREF:
+            for (auto const& id_ref : id_list) {
+                auto node = document.get_element_by_id(id_ref);
+                if (!node)
+                    continue;
+
+                if (visited_nodes.contains(node->id()))
+                    continue;
+                // a. Set the current node to the node referenced by the IDREF.
+                current_node = node;
+                // b. Compute the text alternative of the current node beginning with step 2. Set the result to that text alternative.
+                auto result = TRY(node->name_or_description(target, document, visited_nodes));
+                // c. Append the result, with a space, to the accumulated text.
+                TRY(Node::append_with_space(total_accumulated_text, result));
+            }
+            // iii. Return the accumulated text.
+            return total_accumulated_text.to_string();
+        }
+        // C. Otherwise, if computing a name, and if the current node has an aria-label attribute whose value is not the empty string, nor, when trimmed of white space, is not the empty string:
+        if (target == NameOrDescription::Name && !element->aria_label().is_empty() && !element->aria_label().trim_whitespace().is_empty()) {
+            // TODO: - If traversal of the current node is due to recursion and the current node is an embedded control as defined in step 2E, ignore aria-label and skip to rule 2E.
+            // - Otherwise, return the value of aria-label.
+            return String::from_deprecated_string(element->aria_label());
+        }
+        // TODO: D. Otherwise, if the current node's native markup provides an attribute (e.g. title) or element (e.g. HTML label) that defines a text alternative,
+        //      return that alternative in the form of a flat string as defined by the host language, unless the element is marked as presentational (role="presentation" or role="none").
+
+        // TODO: E. Otherwise, if the current node is a control embedded within the label (e.g. the label element in HTML or any element directly referenced by aria-labelledby) for another widget, where the user can adjust the embedded
+        //          control's value, then include the embedded control as part of the text alternative in the following manner:
+        //   - If the embedded control has role textbox, return its value.
+        //   - If the embedded control has role menu button, return the text alternative of the button.
+        //   - If the embedded control has role combobox or listbox, return the text alternative of the chosen option.
+        //   - If the embedded control has role range (e.g., a spinbutton or slider):
+        //      - If the aria-valuetext property is present, return its value,
+        //      - Otherwise, if the aria-valuenow property is present, return its value,
+        //      - Otherwise, use the value as specified by a host language attribute.
+
+        // F. Otherwise, if the current node's role allows name from content, or if the current node is referenced by aria-labelledby, aria-describedby, or is a native host language text alternative element (e.g. label in HTML), or is a descendant of a native host language text alternative element:
+        auto role = element->role_or_default();
+        if (role.has_value() && ARIA::allows_name_from_content(role.value())) {
+            // i. Set the accumulated text to the empty string.
+            total_accumulated_text.clear();
+            // ii. Check for CSS generated textual content associated with the current node and include it in the accumulated text. The CSS :before and :after pseudo elements [CSS2] can provide textual content for elements that have a content model.
+            auto before = element->get_pseudo_element_node(CSS::Selector::PseudoElement::Before);
+            auto after = element->get_pseudo_element_node(CSS::Selector::PseudoElement::After);
+            // - For :before pseudo elements, User agents MUST prepend CSS textual content, without a space, to the textual content of the current node.
+            if (before)
+                TRY(Node::prepend_without_space(total_accumulated_text, before->computed_values().content().data));
+
+            // - For :after pseudo elements, User agents MUST append CSS textual content, without a space, to the textual content of the current node.
+            if (after)
+                TRY(Node::append_without_space(total_accumulated_text, after->computed_values().content().data));
+
+            // iii. For each child node of the current node:
+            element->for_each_child([&total_accumulated_text, current_node, target, &document, visited_nodes](
+                                        DOM::Node const& child_node) mutable {
+                if (visited_nodes.contains(child_node.id()))
+                    return;
+
+                // a. Set the current node to the child node.
+                current_node = &child_node;
+
+                // b. Compute the text alternative of the current node beginning with step 2. Set the result to that text alternative.
+                auto result = MUST(current_node->name_or_description(target, document, visited_nodes));
+
+                // c. Append the result to the accumulated text.
+                total_accumulated_text.append(result);
+            });
+            // iv. Return the accumulated text.
+            return total_accumulated_text.to_string();
+            // Important: Each node in the subtree is consulted only once. If text has been collected from a descendant, but is referenced by another IDREF in some descendant node, then that second, or subsequent, reference is not followed. This is done to avoid infinite loops.
+        }
+    }
+
+    // G. Otherwise, if the current node is a Text node, return its textual contents.
+    if (is_text()) {
+        auto const* text_node = static_cast<DOM::Text const*>(this);
+        return String::from_deprecated_string(text_node->data());
+    }
+    // TODO: H. Otherwise, if the current node is a descendant of an element whose Accessible Name or Accessible Description is being computed, and contains descendants, proceed to 2F.i.
+
+    // I. Otherwise, if the current node has a Tooltip attribute, return its value.
+    // https://www.w3.org/TR/accname-1.2/#dfn-tooltip-attribute
+    // Any host language attribute that would result in a user agent generating a tooltip such as in response to a mouse hover in desktop user agents.
+    // FIXME: Support SVG tooltips and CSS tooltips
+    if (is<HTML::HTMLElement>(this)) {
+        auto const* element = static_cast<HTML::HTMLElement const*>(this);
+        auto tooltip = element->title();
+        if (!tooltip.is_empty() && !tooltip.is_null())
+            return String::from_deprecated_string(tooltip);
+    }
+    // Append the result of each step above, with a space, to the total accumulated text.
+    //
+    // After all steps are completed, the total accumulated text is used as the accessible name or accessible description of the element that initiated the computation.
+    return total_accumulated_text.to_string();
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_name
+ErrorOr<String> Node::accessible_name(Document const& document) const
+{
+    HashTable<i32> visited_nodes;
+    // User agents MUST compute an accessible name using the rules outlined below in the section titled Accessible Name and Description Computation.
+    return name_or_description(NameOrDescription::Name, document, visited_nodes);
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_description
+ErrorOr<String> Node::accessible_description(Document const& document) const
+{
+    // If aria-describedby is present, user agents MUST compute the accessible description by concatenating the text alternatives for elements referenced by an aria-describedby attribute on the current element.
+    // The text alternatives for the referenced elements are computed using a number of methods, outlined below in the section titled Accessible Name and Description Computation.
+    if (is_element()) {
+        HashTable<i32> visited_nodes;
+        StringBuilder builder;
+        auto const* element = static_cast<Element const*>(this);
+        auto id_list = element->aria_described_by().split_view(Infra::is_ascii_whitespace);
+        for (auto const& id : id_list) {
+            if (auto description_element = document.get_element_by_id(id)) {
+                auto description = TRY(
+                    description_element->name_or_description(NameOrDescription::Description, document,
+                        visited_nodes));
+                if (!description.is_empty()) {
+                    if (builder.is_empty()) {
+                        builder.append(description);
+                    } else {
+                        builder.append(" "sv);
+                        builder.append(description);
+                    }
+                }
+            }
+        }
+        return builder.to_string();
+    }
+    return String {};
+}
+
+Optional<StringView> Node::first_valid_id(DeprecatedString const& value, Document const& document)
+{
+    auto id_list = value.split_view(Infra::is_ascii_whitespace);
+    for (auto const& id : id_list) {
+        if (document.get_element_by_id(id))
+            return id;
+    }
+    return {};
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_te
+ErrorOr<void> Node::append_without_space(StringBuilder x, StringView const& result)
+{
+    // - If X is empty, copy the result to X.
+    // - If X is non-empty, copy the result to the end of X.
+    TRY(x.try_append(result));
+    return {};
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_te
+ErrorOr<void> Node::append_with_space(StringBuilder x, StringView const& result)
+{
+    // - If X is empty, copy the result to X.
+    if (x.is_empty()) {
+        TRY(x.try_append(result));
+    } else {
+        // - If X is non-empty, add a space to the end of X and then copy the result to X after the space.
+        TRY(x.try_append(" "sv));
+        TRY(x.try_append(result));
+    }
+    return {};
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_te
+ErrorOr<void> Node::prepend_without_space(StringBuilder x, StringView const& result)
+{
+    // - If X is empty, copy the result to X.
+    if (x.is_empty()) {
+        x.append(result);
+    } else {
+        // - If X is non-empty, copy the result to the start of X.
+        auto temp = TRY(x.to_string());
+        x.clear();
+        TRY(x.try_append(result));
+        TRY(x.try_append(temp));
+    }
+    return {};
+}
+
+// https://www.w3.org/TR/accname-1.2/#mapping_additional_nd_te
+ErrorOr<void> Node::prepend_with_space(StringBuilder x, StringView const& result)
+{
+    // - If X is empty, copy the result to X.
+    if (x.is_empty()) {
+        TRY(x.try_append(result));
+    } else {
+        // - If X is non-empty, copy the result to the start of X, and add a space after the copy.
+        auto temp = TRY(x.to_string());
+        x.clear();
+        TRY(x.try_append(result));
+        TRY(x.try_append(" "sv));
+        TRY(x.try_append(temp));
+    }
+    return {};
 }
 
 }

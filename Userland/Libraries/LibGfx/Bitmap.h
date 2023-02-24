@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,22 +11,23 @@
 #include <AK/Function.h>
 #include <AK/RefCounted.h>
 #include <LibCore/AnonymousBuffer.h>
+#include <LibCore/Forward.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
 
-#define ENUMERATE_IMAGE_FORMATS            \
-    __ENUMERATE_IMAGE_FORMAT(pbm, ".pbm")  \
-    __ENUMERATE_IMAGE_FORMAT(pgm, ".pgm")  \
-    __ENUMERATE_IMAGE_FORMAT(png, ".png")  \
-    __ENUMERATE_IMAGE_FORMAT(ppm, ".ppm")  \
-    __ENUMERATE_IMAGE_FORMAT(gif, ".gif")  \
-    __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")  \
-    __ENUMERATE_IMAGE_FORMAT(ico, ".ico")  \
-    __ENUMERATE_IMAGE_FORMAT(jpg, ".jpg")  \
-    __ENUMERATE_IMAGE_FORMAT(jpg, ".jpeg") \
-    __ENUMERATE_IMAGE_FORMAT(dds, ".dds")  \
-    __ENUMERATE_IMAGE_FORMAT(qoi, ".qoi")  \
+#define ENUMERATE_IMAGE_FORMATS             \
+    __ENUMERATE_IMAGE_FORMAT(pbm, ".pbm")   \
+    __ENUMERATE_IMAGE_FORMAT(pgm, ".pgm")   \
+    __ENUMERATE_IMAGE_FORMAT(png, ".png")   \
+    __ENUMERATE_IMAGE_FORMAT(ppm, ".ppm")   \
+    __ENUMERATE_IMAGE_FORMAT(gif, ".gif")   \
+    __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")   \
+    __ENUMERATE_IMAGE_FORMAT(ico, ".ico")   \
+    __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpg")  \
+    __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpeg") \
+    __ENUMERATE_IMAGE_FORMAT(dds, ".dds")   \
+    __ENUMERATE_IMAGE_FORMAT(qoi, ".qoi")   \
     __ENUMERATE_IMAGE_FORMAT(tga, ".tga")
 
 namespace Gfx {
@@ -97,7 +98,7 @@ public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_shareable(BitmapFormat, IntSize, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(StringView path, int scale_factor = 1);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_fd_and_close(int fd, StringView path);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, IntSize, int intrinsic_scale, Vector<ARGB32> const& palette);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_bytes(ReadonlyBytes);
     static ErrorOr<NonnullRefPtr<Bitmap>> create_from_serialized_byte_buffer(ByteBuffer&&);
@@ -121,11 +122,11 @@ public:
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> scaled(float sx, float sy) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> cropped(Gfx::IntRect, Optional<BitmapFormat> new_bitmap_format = {}) const;
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_bitmap_backed_by_anonymous_buffer() const;
-    [[nodiscard]] ByteBuffer serialize_to_byte_buffer() const;
+    [[nodiscard]] ErrorOr<ByteBuffer> serialize_to_byte_buffer() const;
 
     [[nodiscard]] ShareableBitmap to_shareable_bitmap() const;
 
-    void invert();
+    ErrorOr<NonnullRefPtr<Gfx::Bitmap>> inverted() const;
 
     ~Bitmap();
 

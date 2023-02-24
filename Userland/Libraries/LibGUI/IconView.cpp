@@ -59,6 +59,12 @@ void IconView::resize_event(ResizeEvent& event)
     }
 }
 
+void IconView::did_change_font()
+{
+    AbstractView::did_change_font();
+    rebuild_item_cache();
+}
+
 void IconView::rebuild_item_cache() const
 {
     auto prev_item_count = m_item_data_cache.size();

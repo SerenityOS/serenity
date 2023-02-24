@@ -8,7 +8,6 @@
 
 #include <AK/HashMap.h>
 #include <LibCore/NetworkJob.h>
-#include <LibCore/Stream.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
@@ -31,7 +30,7 @@ public:
     Function<Vector<TLS::Certificate>()> on_certificate_requested;
 
 private:
-    explicit HttpsJob(HttpRequest&& request, AK::Stream& output_stream)
+    explicit HttpsJob(HttpRequest&& request, Stream& output_stream)
         : Job(move(request), output_stream)
     {
     }

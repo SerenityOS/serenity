@@ -162,7 +162,7 @@ void Player::remove_cards(NonnullRefPtrVector<Card> const& cards)
 {
     for (auto& card : cards) {
         hand.remove_first_matching([&card](auto& other_card) {
-            return other_card == card;
+            return other_card.ptr() == &card;
         });
     }
 }

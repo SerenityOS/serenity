@@ -26,6 +26,7 @@ public:
     virtual ~WebSocketClientSocketAdapter() override;
 
     virtual Web::WebSockets::WebSocket::ReadyState ready_state() override;
+    virtual DeprecatedString subprotocol_in_use() override;
 
     virtual void send(ByteBuffer binary_or_text_message, bool is_text) override;
     virtual void send(StringView text_message) override;
@@ -43,7 +44,7 @@ public:
 
     virtual ~WebSocketClientManagerAdapter() override;
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const AK::URL&, DeprecatedString const& origin) override;
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(const AK::URL&, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols) override;
 
 private:
     WebSocketClientManagerAdapter(NonnullRefPtr<Protocol::WebSocketClient>);

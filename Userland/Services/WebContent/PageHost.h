@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -29,7 +29,7 @@ public:
 
     virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&) override;
 
-    void set_palette_impl(Gfx::PaletteImpl const&);
+    void set_palette_impl(Gfx::PaletteImpl&);
     void set_viewport_rect(Web::DevicePixelRect const&);
     void set_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index].to_type<Web::DevicePixels>(); }
     void set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) { m_device_pixels_per_css_pixel = device_pixels_per_css_pixel; }

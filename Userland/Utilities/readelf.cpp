@@ -9,7 +9,6 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibELF/DynamicLoader.h>

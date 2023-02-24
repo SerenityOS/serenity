@@ -9,9 +9,8 @@
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <Applications/Run/RunGML.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Event.h>
@@ -143,9 +142,9 @@ bool RunWindow::run_via_launch(DeprecatedString const& run_input)
     auto url = URL::create_with_url_or_path(run_input);
 
     if (url.scheme() == "file") {
-        auto real_path = Core::File::real_path_for(url.path());
+        auto real_path = Core::DeprecatedFile::real_path_for(url.path());
         if (real_path.is_null()) {
-            // errno *should* be preserved from Core::File::real_path_for().
+            // errno *should* be preserved from Core::DeprecatedFile::real_path_for().
             warnln("Failed to launch '{}': {}", url.path(), strerror(errno));
             return false;
         }
@@ -170,8 +169,8 @@ DeprecatedString RunWindow::history_file_path()
 ErrorOr<void> RunWindow::load_history()
 {
     m_path_history.clear();
-    auto file = TRY(Core::Stream::File::open(history_file_path(), Core::Stream::OpenMode::Read));
-    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto file = TRY(Core::File::open(history_file_path(), Core::File::OpenMode::Read));
+    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> line_buffer;
 
     while (!buffered_file->is_eof()) {
@@ -184,7 +183,7 @@ ErrorOr<void> RunWindow::load_history()
 
 ErrorOr<void> RunWindow::save_history()
 {
-    auto file = TRY(Core::Stream::File::open(history_file_path(), Core::Stream::OpenMode::Write));
+    auto file = TRY(Core::File::open(history_file_path(), Core::File::OpenMode::Write));
 
     // Write the first 25 items of history
     for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)

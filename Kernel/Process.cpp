@@ -334,7 +334,11 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
         protected_data.credentials = move(credentials);
     });
 
-    dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
+    if constexpr (PROCESS_DEBUG) {
+        this->name().with([&](auto& process_name) {
+            dbgln("Created new process {}({})", process_name->view(), this->pid().value());
+        });
+    }
 }
 
 ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, LockRefPtr<Thread>& first_thread, Process* fork_parent)
@@ -413,7 +417,7 @@ void signal_trampoline_dummy()
         // Current stack state is just saved_rax, ucontext, signal_info, fpu_state.
         // syscall SC_sigreturn
         "mov rax, %P0\n"
-        "int 0x82\n"
+        "syscall\n"
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax"
@@ -452,10 +456,12 @@ void create_signal_trampoline()
     g_signal_trampoline_region->remap();
 }
 
-void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
+void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of_memory)
 {
     VERIFY(!is_dead());
     VERIFY(&Process::current() == this);
+
+    auto ip = regs.has_value() ? regs->ip() : 0;
 
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
@@ -466,6 +472,20 @@ void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
         } else {
             dbgln("\033[31;1m{:p}  (?)\033[0m\n", ip);
         }
+#if ARCH(X86_64)
+        constexpr bool userspace_backtrace = false;
+#elif ARCH(AARCH64)
+        constexpr bool userspace_backtrace = true;
+#else
+#    error "Unknown architecture"
+#endif
+        if constexpr (userspace_backtrace) {
+            dbgln("Userspace backtrace:");
+            auto bp = regs.has_value() ? regs->bp() : 0;
+            dump_backtrace_from_base_pointer(bp);
+        }
+
+        dbgln("Kernel backtrace:");
         dump_backtrace();
     }
     with_mutable_protected_data([&](auto& protected_data) {
@@ -671,7 +691,9 @@ ErrorOr<void> Process::dump_core()
         dbgln("Generating coredump for pid {} failed because coredump directory was not set.", pid().value());
         return {};
     }
-    auto coredump_path = TRY(KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), name(), pid().value(), kgettimeofday().to_truncated_seconds()));
+    auto coredump_path = TRY(name().with([&](auto& process_name) {
+        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name->view(), pid().value(), kgettimeofday().to_truncated_seconds());
+    }));
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
     return coredump->write();
 }
@@ -683,7 +705,9 @@ ErrorOr<void> Process::dump_perfcore()
     dbgln("Generating perfcore for pid: {}", pid().value());
 
     // Try to generate a filename which isn't already used.
-    auto base_filename = TRY(KString::formatted("{}_{}", name(), pid().value()));
+    auto base_filename = TRY(name().with([&](auto& process_name) {
+        return KString::formatted("{}_{}", process_name->view(), pid().value());
+    }));
     auto perfcore_filename = TRY(KString::formatted("{}.profile", base_filename));
     LockRefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
@@ -721,8 +745,11 @@ void Process::finalize()
 
     dbgln_if(PROCESS_DEBUG, "Finalizing process {}", *this);
 
-    if (veil_state() == VeilState::Dropped)
-        dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", name());
+    if (veil_state() == VeilState::Dropped) {
+        name().with([&](auto& process_name) {
+            dbgln("\x1b[01;31mProcess '{}' exited with the veil left open\x1b[0m", process_name->view());
+        });
+    }
 
     if (g_init_pid != 0 && pid() == g_init_pid)
         PANIC("Init process quit unexpectedly. Exit code: {}", termination_status());
@@ -831,11 +858,20 @@ void Process::die()
             auto& process = *it;
             ++it;
             if (process.has_tracee_thread(pid())) {
-                dbgln_if(PROCESS_DEBUG, "Process {} ({}) is attached by {} ({}) which will exit", process.name(), process.pid(), name(), pid());
+                if constexpr (PROCESS_DEBUG) {
+                    process.name().with([&](auto& process_name) {
+                        name().with([&](auto& name) {
+                            dbgln("Process {} ({}) is attached by {} ({}) which will exit", process_name->view(), process.pid(), name->view(), pid());
+                        });
+                    });
+                }
                 process.stop_tracing();
                 auto err = process.send_signal(SIGSTOP, this);
-                if (err.is_error())
-                    dbgln("Failed to send the SIGSTOP signal to {} ({})", process.name(), process.pid());
+                if (err.is_error()) {
+                    process.name().with([&](auto& process_name) {
+                        dbgln("Failed to send the SIGSTOP signal to {} ({})", process_name->view(), process.pid());
+                    });
+                }
             }
         }
     });
@@ -1075,6 +1111,18 @@ ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
     if (!base_description->custody())
         return EINVAL;
     return *base_description->custody();
+}
+
+SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> const& Process::name() const
+{
+    return m_name;
+}
+
+void Process::set_name(NonnullOwnPtr<KString> name)
+{
+    m_name.with([&](auto& this_name) {
+        this_name = move(name);
+    });
 }
 
 }

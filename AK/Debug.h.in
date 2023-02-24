@@ -238,8 +238,8 @@
 #cmakedefine01 JOB_DEBUG
 #endif
 
-#ifndef JPG_DEBUG
-#cmakedefine01 JPG_DEBUG
+#ifndef JPEG_DEBUG
+#cmakedefine01 JPEG_DEBUG
 #endif
 
 #ifndef JS_BYTECODE_DEBUG
@@ -408,6 +408,10 @@
 
 #ifndef SHELL_JOB_DEBUG
 #cmakedefine01 SHELL_JOB_DEBUG
+#endif
+
+#ifndef SHELL_POSIX_PARSER_DEBUG
+#cmakedefine01 SHELL_POSIX_PARSER_DEBUG
 #endif
 
 #ifndef SOLITAIRE_DEBUG

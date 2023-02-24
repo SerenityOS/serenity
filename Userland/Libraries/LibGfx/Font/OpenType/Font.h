@@ -37,6 +37,7 @@ public:
     virtual DeprecatedString family() const override;
     virtual DeprecatedString variant() const override;
     virtual u16 weight() const override;
+    virtual u16 width() const override;
     virtual u8 slope() const override;
     virtual bool is_fixed_width() const override;
 

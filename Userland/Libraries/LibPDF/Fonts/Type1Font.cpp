@@ -63,18 +63,6 @@ Type1Font::Type1Font(Data data)
     m_is_standard_font = m_data.is_standard_font;
 }
 
-u32 Type1Font::char_code_to_code_point(u16 char_code) const
-{
-    if (m_data.to_unicode)
-        TODO();
-
-    if (m_data.encoding->should_map_to_bullet(char_code))
-        return 8226; // Bullet.
-
-    auto descriptor = m_data.encoding->get_char_code_descriptor(char_code);
-    return descriptor.code_point;
-}
-
 float Type1Font::get_char_width(u16 char_code) const
 {
     u16 width;
@@ -98,7 +86,8 @@ void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float w
         return;
     }
 
-    auto translation = m_data.font_program->glyph_translation(char_code, width);
+    auto char_name = m_data.encoding->get_name(char_code);
+    auto translation = m_data.font_program->glyph_translation(char_name, width);
     point = point.translated(translation);
 
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(point);
@@ -109,7 +98,7 @@ void Type1Font::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float w
     if (maybe_bitmap.has_value()) {
         bitmap = maybe_bitmap.value();
     } else {
-        bitmap = m_data.font_program->rasterize_glyph(char_code, width, glyph_position.subpixel_offset);
+        bitmap = m_data.font_program->rasterize_glyph(char_name, width, glyph_position.subpixel_offset);
         m_glyph_cache.set(index, bitmap);
     }
 

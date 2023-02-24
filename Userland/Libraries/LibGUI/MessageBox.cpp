@@ -49,9 +49,12 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
     if (parent_window)
         box->set_icon(parent_window->icon());
 
-    box->m_yes_button->set_text(path.is_empty() ? "Save As..." : "Save");
-    box->m_no_button->set_text("Discard");
-    box->m_cancel_button->set_text("Cancel");
+    if (path.is_empty())
+        box->m_yes_button->set_text(String::from_utf8("Save As..."sv).release_value_but_fixme_should_propagate_errors());
+    else
+        box->m_yes_button->set_text(String::from_utf8_short_string("Save"sv));
+    box->m_no_button->set_text(String::from_utf8_short_string("Discard"sv));
+    box->m_cancel_button->set_text(String::from_utf8_short_string("Cancel"sv));
 
     return box->exec();
 }
@@ -118,15 +121,11 @@ void MessageBox::build()
     int total_text_height = number_of_lines * padded_text_height;
     int icon_width = 0;
 
-    widget->set_layout<VerticalBoxLayout>();
+    widget->set_layout<VerticalBoxLayout>(8, 6);
     widget->set_fill_with_background_color(true);
 
-    widget->layout()->set_margins(8);
-    widget->layout()->set_spacing(6);
-
     auto& message_container = widget->add<Widget>();
-    message_container.set_layout<HorizontalBoxLayout>();
-    message_container.layout()->set_spacing(8);
+    message_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 8);
 
     if (m_type != Type::None) {
         auto& icon_image = message_container.add<ImageWidget>();
@@ -144,34 +143,33 @@ void MessageBox::build()
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& button_container = widget->add<Widget>();
-    button_container.set_layout<HorizontalBoxLayout>();
+    button_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 8);
     button_container.set_fixed_height(24);
-    button_container.layout()->set_spacing(8);
 
     constexpr int button_width = 80;
     int button_count = 0;
 
-    auto add_button = [&](DeprecatedString label, ExecResult result) -> GUI::Button& {
+    auto add_button = [&](String label, ExecResult result) -> GUI::Button& {
         auto& button = button_container.add<Button>();
         button.set_fixed_width(button_width);
-        button.set_text(label);
-        button.on_click = [this, label, result](auto) {
+        button.set_text(move(label));
+        button.on_click = [this, result](auto) {
             done(result);
         };
         ++button_count;
         return button;
     };
 
-    button_container.layout()->add_spacer();
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
     if (should_include_ok_button())
-        m_ok_button = add_button("OK", ExecResult::OK);
+        m_ok_button = add_button(String::from_utf8_short_string("OK"sv), ExecResult::OK);
     if (should_include_yes_button())
-        m_yes_button = add_button("Yes", ExecResult::Yes);
+        m_yes_button = add_button(String::from_utf8_short_string("Yes"sv), ExecResult::Yes);
     if (should_include_no_button())
-        m_no_button = add_button("No", ExecResult::No);
+        m_no_button = add_button(String::from_utf8_short_string("No"sv), ExecResult::No);
     if (should_include_cancel_button())
-        m_cancel_button = add_button("Cancel", ExecResult::Cancel);
-    button_container.layout()->add_spacer();
+        m_cancel_button = add_button(String::from_utf8_short_string("Cancel"sv), ExecResult::Cancel);
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
     width = max(width, text_width + icon_width + 56);

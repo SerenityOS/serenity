@@ -12,7 +12,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -330,7 +330,7 @@ ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigac
     return {};
 }
 
-#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD) || defined(AK_OS_FREEBSD)
+#if defined(AK_OS_BSD_GENERIC)
 ErrorOr<sig_t> signal(int signal, sig_t handler)
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler)
@@ -403,7 +403,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
-#elif defined(AK_OS_MACOS) || defined(AK_OS_EMSCRIPTEN) || defined(AK_OS_OPENBSD)
+#elif defined(AK_OS_MACOS) || defined(AK_OS_EMSCRIPTEN) || defined(AK_OS_OPENBSD) || defined(AK_OS_NETBSD)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     auto name = DeprecatedString::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
@@ -503,7 +503,7 @@ ErrorOr<struct stat> lstat(StringView path)
     HANDLE_SYSCALL_RETURN_VALUE("lstat", rc, st);
 #else
     DeprecatedString path_string = path;
-    if (::stat(path_string.characters(), &st) < 0)
+    if (::lstat(path_string.characters(), &st) < 0)
         return Error::from_syscall("lstat"sv, -errno);
     return st;
 #endif
@@ -1113,7 +1113,7 @@ ErrorOr<u64> create_jail(StringView jail_name)
 }
 #endif
 
-ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath search_in_path, Optional<Span<StringView>> environment)
+ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath search_in_path, Optional<ReadonlySpan<StringView>> environment)
 {
 #ifdef AK_OS_SERENITY
     Syscall::SC_execve_params params;
@@ -1156,7 +1156,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
     DeprecatedString exec_filename;
 
     if (search_in_path == SearchInPath::Yes) {
-        auto maybe_executable = Core::File::resolve_executable_from_environment(filename);
+        auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename);
 
         if (!maybe_executable.has_value())
             return ENOENT;
@@ -1195,7 +1195,7 @@ ErrorOr<void> exec(StringView filename, Span<StringView> arguments, SearchInPath
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
-            auto maybe_executable = Core::File::resolve_executable_from_environment(filename_string);
+            auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename_string);
 
             if (!maybe_executable.has_value()) {
                 errno_rollback.set_override_rollback_value(ENOENT);
@@ -1399,7 +1399,7 @@ ErrorOr<Vector<gid_t>> getgroups()
     return groups;
 }
 
-ErrorOr<void> setgroups(Span<gid_t const> gids)
+ErrorOr<void> setgroups(ReadonlySpan<gid_t> gids)
 {
     if (::setgroups(gids.size(), gids.data()) < 0)
         return Error::from_syscall("setgroups"sv, -errno);
@@ -1430,15 +1430,31 @@ ErrorOr<void> mkfifo(StringView pathname, mode_t mode)
 
 ErrorOr<void> setenv(StringView name, StringView value, bool overwrite)
 {
+    auto builder = TRY(StringBuilder::create());
+    TRY(builder.try_append(name));
+    TRY(builder.try_append('\0'));
+    TRY(builder.try_append(value));
+    TRY(builder.try_append('\0'));
+    // Note the explicit null terminators above.
+    auto c_name = builder.string_view().characters_without_null_termination();
+    auto c_value = c_name + name.length() + 1;
+    auto rc = ::setenv(c_name, c_value, overwrite);
+    if (rc < 0)
+        return Error::from_errno(errno);
+    return {};
+}
+
+ErrorOr<void> putenv(StringView env)
+{
 #ifdef AK_OS_SERENITY
-    auto const rc = ::serenity_setenv(name.characters_without_null_termination(), name.length(), value.characters_without_null_termination(), value.length(), overwrite);
+    auto rc = serenity_putenv(env.characters_without_null_termination(), env.length());
 #else
-    DeprecatedString name_string = name;
-    DeprecatedString value_string = value;
-    auto const rc = ::setenv(name_string.characters(), value_string.characters(), overwrite);
+    // Leak somewhat unavoidable here due to the putenv API.
+    auto leaked_new_env = strndup(env.characters_without_null_termination(), env.length());
+    auto rc = ::putenv(leaked_new_env);
 #endif
     if (rc < 0)
-        return Error::from_syscall("setenv"sv, -errno);
+        return Error::from_errno(errno);
     return {};
 }
 

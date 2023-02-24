@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,11 +29,13 @@ static bool is_platform_object(Type const& type)
         "Attr"sv,
         "Blob"sv,
         "CanvasGradient"sv,
+        "CanvasPattern"sv,
         "CanvasRenderingContext2D"sv,
         "Document"sv,
         "DocumentType"sv,
         "EventTarget"sv,
         "FileList"sv,
+        "FormData"sv,
         "ImageData"sv,
         "MutationRecord"sv,
         "NamedNodeMap"sv,
@@ -99,8 +102,12 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (is_platform_object(type))
         return { .name = DeprecatedString::formatted("JS::Handle<{}>", type.name()), .sequence_storage_type = SequenceStorageType::MarkedVector };
 
-    if (type.is_string())
+    if (type.is_string()) {
+        if (interface.extended_attributes.contains("UseNewAKString"))
+            return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
+
         return { .name = "DeprecatedString", .sequence_storage_type = SequenceStorageType::Vector };
+    }
 
     if (type.name() == "double" && !type.is_nullable())
         return { .name = "double", .sequence_storage_type = SequenceStorageType::Vector };
@@ -131,6 +138,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 
     if (type.name() == "BufferSource")
         return { .name = "JS::Handle<JS::Object>", .sequence_storage_type = SequenceStorageType::MarkedVector };
+
+    if (type.name() == "File")
+        return { .name = "JS::Handle<FileAPI::File>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.name() == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
@@ -246,6 +256,104 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
 }
 
 template<typename ParameterType>
+static void generate_to_deprecated_string(SourceGenerator& scoped_generator, ParameterType const& parameter, bool variadic, bool optional, Optional<DeprecatedString> const& optional_default_value)
+{
+    if (variadic) {
+        scoped_generator.append(R"~~~(
+    Vector<DeprecatedString> @cpp_name@;
+    @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
+
+    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
+        auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
+        @cpp_name@.append(move(to_string_result));
+    }
+)~~~");
+    } else if (!optional) {
+        if (!parameter.type->is_nullable()) {
+            scoped_generator.append(R"~~~(
+    DeprecatedString @cpp_name@;
+    if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
+        @cpp_name@ = DeprecatedString::empty();
+    } else {
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
+    }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    DeprecatedString @cpp_name@;
+    if (!@js_name@@js_suffix@.is_nullish())
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
+)~~~");
+        }
+    } else {
+        scoped_generator.append(R"~~~(
+    DeprecatedString @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
+            @cpp_name@ = DeprecatedString::empty();
+        else
+            @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
+    })~~~");
+        if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
+            scoped_generator.append(R"~~~( else {
+        @cpp_name@ = @parameter.optional_default_value@;
+    }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+)~~~");
+        }
+    }
+}
+
+template<typename ParameterType>
+static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterType const& parameter, bool variadic, bool optional, Optional<DeprecatedString> const& optional_default_value)
+{
+    if (variadic) {
+        scoped_generator.append(R"~~~(
+    Vector<String> @cpp_name@;
+    @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
+
+    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
+        auto to_string_result = TRY(vm.argument(i).to_string(vm));
+        @cpp_name@.append(move(to_string_result));
+    }
+)~~~");
+    } else if (!optional) {
+        if (!parameter.type->is_nullable()) {
+            scoped_generator.append(R"~~~(
+    String @cpp_name@;
+    if (!@legacy_null_to_empty_string@ || !@js_name@@js_suffix@.is_null()) {
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+    }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    Optional<String> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_nullish())
+        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+)~~~");
+        }
+    } else {
+        scoped_generator.append(R"~~~(
+    Optional<String> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined()) {
+        if (!@legacy_null_to_empty_string@ || !@js_name@@js_suffix@.is_null())
+            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+    })~~~");
+        if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
+            scoped_generator.append(R"~~~( else {
+        @cpp_name@ = TRY_OR_THROW_OOM(vm, String::from_utf8(@parameter.optional_default_value@sv));
+    }
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+)~~~");
+        }
+    }
+}
+
+template<typename ParameterType>
 static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, DeprecatedString const& js_name, DeprecatedString const& js_suffix, DeprecatedString const& cpp_name, IDL::Interface const& interface, bool legacy_null_to_empty_string = false, bool optional = false, Optional<DeprecatedString> optional_default_value = {}, bool variadic = false, size_t recursion_depth = 0)
 {
     auto scoped_generator = generator.fork();
@@ -261,52 +369,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
     // FIXME: Add support for optional, variadic, nullable and default values to all types
     if (parameter.type->is_string()) {
-        if (variadic) {
-            scoped_generator.append(R"~~~(
-    Vector<DeprecatedString> @cpp_name@;
-    @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
-
-    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
-        @cpp_name@.append(move(to_string_result));
-    }
-)~~~");
-        } else if (!optional) {
-            if (!parameter.type->is_nullable()) {
-                scoped_generator.append(R"~~~(
-    DeprecatedString @cpp_name@;
-    if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@) {
-        @cpp_name@ = DeprecatedString::empty();
-    } else {
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-    }
-)~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-    DeprecatedString @cpp_name@;
-    if (!@js_name@@js_suffix@.is_nullish())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-)~~~");
-            }
-        } else {
-            scoped_generator.append(R"~~~(
-    DeprecatedString @cpp_name@;
-    if (!@js_name@@js_suffix@.is_undefined()) {
-        if (@js_name@@js_suffix@.is_null() && @legacy_null_to_empty_string@)
-            @cpp_name@ = DeprecatedString::empty();
+        bool use_new_ak_string = interface.extended_attributes.contains("UseNewAKString");
+        if (!use_new_ak_string)
+            generate_to_deprecated_string(scoped_generator, parameter, variadic, optional, optional_default_value);
         else
-            @cpp_name@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
-    })~~~");
-            if (optional_default_value.has_value() && (!parameter.type->is_nullable() || optional_default_value.value() != "null")) {
-                scoped_generator.append(R"~~~( else {
-        @cpp_name@ = @parameter.optional_default_value@;
-    }
-)~~~");
-            } else {
-                scoped_generator.append(R"~~~(
-)~~~");
-            }
-        }
+            generate_to_new_string(scoped_generator, parameter, variadic, optional, optional_default_value);
     } else if (parameter.type->name().is_one_of("EventListener", "NodeFilter")) {
         // FIXME: Replace this with support for callback interfaces. https://webidl.spec.whatwg.org/#idl-callback-interface
 
@@ -320,16 +387,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     @cpp_type@* @cpp_name@ = nullptr;
     if (!@js_name@@js_suffix@.is_nullish()) {
         if (!@js_name@@js_suffix@.is_object())
-            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+            return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
         auto callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
-        @cpp_name@ = @cpp_type@::create(realm, *callback_type).ptr();
+        @cpp_name@ = TRY(throw_dom_exception_if_needed(vm, [&] { return @cpp_type@::create(realm, *callback_type); }));
     }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
     auto callback_type = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
     auto @cpp_name@ = adopt_ref(*new @cpp_type@(callback_type));
@@ -662,9 +729,16 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                 }
 
                 generate_to_cpp(dictionary_generator, member, member_property_value_name, "", member_value_name, interface, member.extended_attributes.contains("LegacyNullToEmptyString"), !member.required, member.default_value);
-                dictionary_generator.append(R"~~~(
+                if (optional && interface.extended_attributes.contains("UseNewAKString")) {
+                    dictionary_generator.append(R"~~~(
+    if (@member_value_name@.has_value())
+        @cpp_name@.@member_name@ = @member_value_name@.release_value();
+)~~~");
+                } else {
+                    dictionary_generator.append(R"~~~(
     @cpp_name@.@member_name@ = @member_value_name@;
 )~~~");
+                }
                 if (!member.required && !member.default_value.has_value()) {
                     dictionary_generator.append(R"~~~(
     }
@@ -687,7 +761,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (!callback_function.is_legacy_treat_non_object_as_null) {
             callback_function_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 )~~~");
         }
         // 2. Return the IDL callback function type value that represents a reference to the same object that V represents, with the incumbent settings object as the callback context.
@@ -752,11 +826,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         sequence_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
     auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(vm, *vm.well_known_symbol_iterator()));
     if (!iterator_method@recursion_depth@)
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 )~~~");
 
         parameterized_type.generate_sequence_from_iterable(sequence_generator, DeprecatedString::formatted("{}{}", acceptable_cpp_name, optional ? "_non_optional" : ""), DeprecatedString::formatted("{}{}", js_name, js_suffix), DeprecatedString::formatted("iterator_method{}", recursion_depth), interface, recursion_depth + 1);
@@ -801,7 +875,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (recursion_depth == 0) {
             record_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, @js_name@@js_suffix@.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
     auto& @js_name@@js_suffix@_object = @js_name@@js_suffix@.as_object();
 )~~~");
@@ -849,7 +923,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // 3. Let types be the flattened member types of the union type.
         auto types = union_type.flattened_member_types();
 
-        RefPtr<Type> dictionary_type;
+        RefPtr<Type const> dictionary_type;
         for (auto& dictionary : interface.dictionaries) {
             for (auto& type : types) {
                 if (type.name() == dictionary.key) {
@@ -1011,7 +1085,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         // 10. If Type(V) is Object, then:
         //     1. If types includes a sequence type, then:
-        RefPtr<IDL::ParameterizedType> sequence_type;
+        RefPtr<IDL::ParameterizedType const> sequence_type;
         for (auto& type : types) {
             if (type.name() == "sequence") {
                 sequence_type = verify_cast<IDL::ParameterizedType>(type);
@@ -1051,7 +1125,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
 
         // 4. If types includes a record type, then return the result of converting V to that record type.
-        RefPtr<IDL::ParameterizedType> record_type;
+        RefPtr<IDL::ParameterizedType const> record_type;
         for (auto& type : types) {
             if (type.name() == "record") {
                 record_type = verify_cast<IDL::ParameterizedType>(type);
@@ -1099,7 +1173,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
         }
 
-        RefPtr<IDL::Type> numeric_type;
+        RefPtr<IDL::Type const> numeric_type;
         for (auto& type : types) {
             if (type.is_numeric()) {
                 numeric_type = type;
@@ -1211,7 +1285,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             // 19. Throw a TypeError.
             // FIXME: Replace the error message with something more descriptive.
             union_generator.append(R"~~~(
-        return vm.throw_completion<JS::TypeError>("No union types matched");
+        return vm.throw_completion<JS::TypeError>("No union types matched"sv);
 )~~~");
         }
 
@@ -1728,7 +1802,7 @@ static EffectiveOverloadSet compute_the_effective_overload_set(auto const& overl
         int argument_count = (int)arguments.size();
 
         // 3. Let types be a type list.
-        NonnullRefPtrVector<Type> types;
+        NonnullRefPtrVector<Type const> types;
 
         // 4. Let optionalityValues be an optionality list.
         Vector<Optionality> optionality_values;
@@ -1845,7 +1919,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Parameterized: {
         auto const& parameterized_type = type.as_parameterized();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type const> {{", type.name(), type.is_nullable());
         append_type_list(builder, parameterized_type.parameters());
         builder.append("})"sv);
         return builder.to_deprecated_string();
@@ -1853,7 +1927,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Union: {
         auto const& union_type = type.as_union();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type const> {{", type.name(), type.is_nullable());
         append_type_list(builder, union_type.member_types());
         builder.append("})"sv);
         return builder.to_deprecated_string();
@@ -1912,7 +1986,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
                 continue;
 
             StringBuilder types_builder;
-            types_builder.append("NonnullRefPtrVector<IDL::Type> { "sv);
+            types_builder.append("NonnullRefPtrVector<IDL::Type const> { "sv);
             StringBuilder optionality_builder;
             optionality_builder.append("Vector<IDL::Optionality> { "sv);
 
@@ -2575,7 +2649,7 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "@name@"), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@name@"sv)), JS::Attribute::Configurable);
 
     MUST_OR_THROW_OOM(Object::initialize(realm));
     return {};
@@ -2728,7 +2802,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
 )~~~");
         if (interface.stringifier_attribute.has_value()) {
             stringifier_generator.append(R"~~~(
-    auto retval = impl->@attribute.cpp_getter_name@();
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_getter_name@(); }));
 )~~~");
         } else {
             stringifier_generator.append(R"~~~(
@@ -2749,7 +2823,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
 {
     auto* impl = TRY(impl_from(vm));
 
-    return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue).ptr();
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue); }));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
@@ -2759,7 +2833,7 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
 
     auto callback = vm.argument(0);
     if (!callback.is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, callback.to_string_without_side_effects());
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, callback.to_string_without_side_effects()));
 
     auto this_value = vm.this_value();
     TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
@@ -2778,14 +2852,14 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
 {
     auto* impl = TRY(impl_from(vm));
 
-    return @iterator_name@::create(*impl, Object::PropertyKind::Key).ptr();
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Key);  }));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
 {
     auto* impl = TRY(impl_from(vm));
 
-    return @iterator_name@::create(*impl, Object::PropertyKind::Value).ptr();
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Value); }));
 }
 )~~~");
     }
@@ -2889,7 +2963,7 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Object::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), JS::PrimitiveString::create(vm, "Iterator"), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
 
     return {};
 }

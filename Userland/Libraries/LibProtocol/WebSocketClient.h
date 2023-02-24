@@ -24,12 +24,13 @@ public:
     RefPtr<WebSocket> connect(const URL&, DeprecatedString const& origin = {}, Vector<DeprecatedString> const& protocols = {}, Vector<DeprecatedString> const& extensions = {}, HashMap<DeprecatedString, DeprecatedString> const& request_headers = {});
 
     u32 ready_state(Badge<WebSocket>, WebSocket&);
+    DeprecatedString subprotocol_in_use(Badge<WebSocket>, WebSocket&);
     void send(Badge<WebSocket>, WebSocket&, ByteBuffer, bool is_text);
     void close(Badge<WebSocket>, WebSocket&, u16 code, DeprecatedString reason);
     bool set_certificate(Badge<WebSocket>, WebSocket&, DeprecatedString, DeprecatedString);
 
 private:
-    WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    WebSocketClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual void connected(i32) override;
     virtual void received(i32, bool, ByteBuffer const&) override;

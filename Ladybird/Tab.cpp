@@ -89,6 +89,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
         }
 
         m_location_edit->setText(url.to_deprecated_string().characters());
+        m_location_edit->setCursorPosition(0);
 
         // Don't add to history if back or forward is pressed
         if (!m_is_history_navigation) {

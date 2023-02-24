@@ -7,12 +7,11 @@
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtr.h>
 #include <LibArchive/TarStream.h>
-#include <LibCore/Stream.h>
 #include <stdio.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
-    auto input_stream_or_error = FixedMemoryStream::construct({ data, size });
+    auto input_stream_or_error = try_make<FixedMemoryStream>(ReadonlyBytes { data, size });
 
     if (input_stream_or_error.is_error())
         return 0;

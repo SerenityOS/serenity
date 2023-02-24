@@ -27,7 +27,7 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
 
     // FIXME: Actually do the decompression of the data using streams, instead of all at once when everything has been
     //        received. This will require that some of the decompression algorithms are implemented in a streaming way.
-    //        Gzip and Deflate are implemented using AK::Stream, while Brotli uses the newer Core::Stream. The Gzip and
+    //        Gzip and Deflate are implemented using Stream, while Brotli uses the newer Core::Stream. The Gzip and
     //        Deflate implementations will likely need to be changed to LibCore::Stream for this to work easily.
 
     if (content_encoding == "gzip") {
@@ -70,8 +70,8 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
     } else if (content_encoding == "br") {
         dbgln_if(JOB_DEBUG, "Job::handle_content_encoding: buf is brotli compressed!");
 
-        auto bufstream = TRY(FixedMemoryStream::construct({ buf.data(), buf.size() }));
-        auto brotli_stream = Compress::BrotliDecompressionStream { *bufstream };
+        FixedMemoryStream bufstream { buf };
+        auto brotli_stream = Compress::BrotliDecompressionStream { bufstream };
 
         auto uncompressed = TRY(brotli_stream.read_until_eof());
         if constexpr (JOB_DEBUG) {
@@ -86,16 +86,16 @@ static ErrorOr<ByteBuffer> handle_content_encoding(ByteBuffer const& buf, Deprec
     return buf;
 }
 
-Job::Job(HttpRequest&& request, AK::Stream& output_stream)
+Job::Job(HttpRequest&& request, Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(move(request))
 {
 }
 
-void Job::start(Core::Stream::Socket& socket)
+void Job::start(Core::Socket& socket)
 {
     VERIFY(!m_socket);
-    m_socket = static_cast<Core::Stream::BufferedSocketBase*>(&socket);
+    m_socket = static_cast<Core::BufferedSocketBase*>(&socket);
     dbgln_if(HTTPJOB_DEBUG, "Reusing previous connection for {}", url());
     deferred_invoke([this] {
         dbgln_if(HTTPJOB_DEBUG, "HttpJob: on_connected callback");

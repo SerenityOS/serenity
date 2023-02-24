@@ -20,7 +20,7 @@ namespace WebDriver {
 Atomic<unsigned> Client::s_next_session_id;
 NonnullOwnPtrVector<Session> Client::s_sessions;
 
-ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
+ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
 {
     if (!callbacks.launch_browser || !callbacks.launch_headless_browser)
         return Error::from_string_view("All callbacks to launch a browser must be provided"sv);
@@ -29,7 +29,7 @@ ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::Stream::Bu
     return adopt_nonnull_ref_or_enomem(new (nothrow) Client(move(socket), move(callbacks), parent));
 }
 
-Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
+Client::Client(NonnullOwnPtr<Core::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
     : Web::WebDriver::Client(move(socket), parent)
     , m_callbacks(move(callbacks))
 {
@@ -540,6 +540,15 @@ Web::WebDriver::Response Client::get_computed_role(Web::WebDriver::Parameters pa
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/element/<element id>/computedrole");
     auto* session = TRY(find_session_with_id(parameters[0]));
     return session->web_content_connection().get_computed_role(parameters[1]);
+}
+
+// 12.4.10 Get Computed Label, https://w3c.github.io/webdriver/#get-computed-label
+// GET /session/{session id}/element/{element id}/computedlabel
+Web::WebDriver::Response Client::get_computed_label(Web::WebDriver::Parameters parameters, JsonValue)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/element/<element id>/computedlabel");
+    auto* session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().get_computed_label(parameters[1]);
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click

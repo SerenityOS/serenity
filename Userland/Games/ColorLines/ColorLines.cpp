@@ -40,7 +40,7 @@ ColorLines::BitmapArray ColorLines::build_marble_color_bitmaps()
 ColorLines::BitmapArray ColorLines::build_marble_trace_bitmaps()
 {
     // Use "Paw Prints" Unicode Character (U+1F43E)
-    auto trace_bitmap = NonnullRefPtr<Gfx::Bitmap>(*Gfx::Emoji::emoji_for_code_point(0x1F43E));
+    auto trace_bitmap = NonnullRefPtr<Gfx::Bitmap const>(*Gfx::Emoji::emoji_for_code_point(0x1F43E));
     BitmapArray result;
     result.ensure_capacity(number_of_marble_trace_bitmaps);
     result.append(trace_bitmap);

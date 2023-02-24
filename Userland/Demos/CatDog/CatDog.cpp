@@ -6,6 +6,7 @@
  */
 
 #include "CatDog.h"
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
@@ -55,7 +56,7 @@ ErrorOr<NonnullRefPtr<CatDog>> CatDog::create()
 }
 
 CatDog::CatDog()
-    : m_proc_all(MUST(Core::Stream::File::open("/sys/kernel/processes"sv, Core::Stream::OpenMode::Read)))
+    : m_proc_all(MUST(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read)))
 {
     m_idle_sleep_timer.start();
 }

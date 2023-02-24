@@ -41,8 +41,8 @@ public:
     static Key get_table_key(DeprecatedString const&, DeprecatedString const&);
     ResultOr<NonnullRefPtr<TableDef>> get_table(DeprecatedString const&, DeprecatedString const&);
 
-    ErrorOr<Vector<Row>> select_all(TableDef const&);
-    ErrorOr<Vector<Row>> match(TableDef const&, Key const&);
+    ErrorOr<Vector<Row>> select_all(TableDef&);
+    ErrorOr<Vector<Row>> match(TableDef&, Key const&);
     ErrorOr<void> insert(Row&);
     ErrorOr<void> remove(Row&);
     ErrorOr<void> update(Row&);

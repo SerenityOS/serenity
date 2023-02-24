@@ -25,11 +25,14 @@
         @GUI::Label {
             text: "Filename:"
             text_alignment: "CenterRight"
-            fixed_height: 24
+            fixed_height: 22
         }
 
-        @GUI::Widget {
-            fixed_height: 20
+        @GUI::Label {
+            name: "allowed_file_types_label"
+            text: "Files of Type:"
+            text_alignment: "CenterRight"
+            fixed_height: 22
         }
     }
 
@@ -68,10 +71,6 @@
                     name: "filename_textbox"
                 }
 
-                @GUI::Widget {
-                    fixed_width: 20
-                }
-
                 @GUI::DialogButton {
                     name: "ok_button"
                     text: "OK"
@@ -82,7 +81,10 @@
                 fixed_height: 22
                 layout: @GUI::HorizontalBoxLayout {}
 
-                @GUI::Layout::Spacer {}
+                @GUI::ComboBox {
+                    name: "allowed_file_type_filters_combo"
+                    model_only: true
+                }
 
                 @GUI::DialogButton {
                     name: "cancel_button"

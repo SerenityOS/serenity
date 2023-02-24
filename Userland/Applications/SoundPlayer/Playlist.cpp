@@ -10,7 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Random.h>
 #include <LibAudio/Loader.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibGUI/MessageBox.h>
 
 bool Playlist::load(StringView path)
@@ -39,11 +39,11 @@ void Playlist::try_fill_missing_info(Vector<M3UEntry>& entries, StringView path)
             entry.path = DeprecatedString::formatted("{}/{}", playlist_path.dirname(), entry.path);
 
         if (!entry.extended_info->file_size_in_bytes.has_value()) {
-            auto size = Core::File::size(entry.path);
+            auto size = Core::DeprecatedFile::size(entry.path);
             if (size.is_error())
                 continue;
             entry.extended_info->file_size_in_bytes = size.value();
-        } else if (!Core::File::exists(entry.path)) {
+        } else if (!Core::DeprecatedFile::exists(entry.path)) {
             to_delete.append(&entry);
             continue;
         }

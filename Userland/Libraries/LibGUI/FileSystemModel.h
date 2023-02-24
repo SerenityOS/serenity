@@ -146,6 +146,9 @@ public:
     bool should_show_dotfiles() const { return m_should_show_dotfiles; }
     void set_should_show_dotfiles(bool);
 
+    Optional<Vector<DeprecatedString>> allowed_file_extensions() const { return m_allowed_file_extensions; }
+    void set_allowed_file_extensions(Optional<Vector<DeprecatedString>> const& allowed_file_extensions);
+
 private:
     FileSystemModel(DeprecatedString root_path, Mode);
 
@@ -168,6 +171,8 @@ private:
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };
+
+    Optional<Vector<DeprecatedString>> m_allowed_file_extensions;
 
     bool m_should_show_dotfiles { false };
 

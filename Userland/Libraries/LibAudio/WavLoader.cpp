@@ -13,6 +13,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/Try.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -25,7 +26,7 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -35,7 +36,7 @@ Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Stri
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(Bytes buffer)
 {
-    auto stream = LOADER_TRY(FixedMemoryStream::construct(buffer));
+    auto stream = LOADER_TRY(try_make<FixedMemoryStream>(buffer));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -51,7 +52,7 @@ MaybeLoaderError WavLoaderPlugin::initialize()
 }
 
 template<typename SampleReader>
-MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(AK::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
+MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
 {
     switch (m_num_channels) {
     case 1:
@@ -72,7 +73,7 @@ MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(AK::Stream& stream, S
 }
 
 // There's no i24 type + we need to do the endianness conversion manually anyways.
-static ErrorOr<double> read_sample_int24(AK::Stream& stream)
+static ErrorOr<double> read_sample_int24(Stream& stream)
 {
     u8 byte = 0;
     TRY(stream.read(Bytes { &byte, 1 }));
@@ -93,7 +94,7 @@ static ErrorOr<double> read_sample_int24(AK::Stream& stream)
 }
 
 template<typename T>
-static ErrorOr<double> read_sample(AK::Stream& stream)
+static ErrorOr<double> read_sample(Stream& stream)
 {
     T sample { 0 };
     TRY(stream.read(Bytes { &sample, sizeof(T) }));
@@ -115,23 +116,23 @@ static ErrorOr<double> read_sample(AK::Stream& stream)
 LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const
 {
     FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
-    auto stream = LOADER_TRY(FixedMemoryStream::construct(move(data)));
+    FixedMemoryStream stream { data };
 
     switch (m_sample_format) {
     case PcmSampleFormat::Uint8:
-        TRY(read_samples_from_stream(*stream, read_sample<u8>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<u8>, samples));
         break;
     case PcmSampleFormat::Int16:
-        TRY(read_samples_from_stream(*stream, read_sample<i16>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<i16>, samples));
         break;
     case PcmSampleFormat::Int24:
-        TRY(read_samples_from_stream(*stream, read_sample_int24, samples));
+        TRY(read_samples_from_stream(stream, read_sample_int24, samples));
         break;
     case PcmSampleFormat::Float32:
-        TRY(read_samples_from_stream(*stream, read_sample<float>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<float>, samples));
         break;
     case PcmSampleFormat::Float64:
-        TRY(read_samples_from_stream(*stream, read_sample<double>, samples));
+        TRY(read_samples_from_stream(stream, read_sample<double>, samples));
         break;
     default:
         VERIFY_NOT_REACHED();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -88,7 +88,7 @@ Box const* Node::containing_block() const
             ancestor = ancestor->parent();
         while (ancestor && ancestor->is_anonymous())
             ancestor = nearest_ancestor_capable_of_forming_a_containing_block(*ancestor);
-        return static_cast<BlockContainer const*>(ancestor);
+        return static_cast<Box const*>(ancestor);
     }
 
     if (position == CSS::Position::Fixed)
@@ -277,7 +277,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 return 1;
         };
 
-        auto value_for_layer = [](auto& style_value, size_t layer_index) -> RefPtr<CSS::StyleValue> {
+        auto value_for_layer = [](auto& style_value, size_t layer_index) -> RefPtr<CSS::StyleValue const> {
             if (style_value->is_value_list())
                 return style_value->as_value_list().value_at(layer_index, true);
             return style_value;
@@ -301,7 +301,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             if (auto image_value = value_for_layer(images, layer_index); image_value) {
                 if (image_value->is_abstract_image()) {
                     layer.background_image = image_value->as_abstract_image();
-                    layer.background_image->load_any_resources(document());
+                    const_cast<CSS::AbstractImageStyleValue&>(*layer.background_image).load_any_resources(document());
                 }
             }
 
@@ -517,7 +517,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     auto list_style_image = computed_style.property(CSS::PropertyID::ListStyleImage);
     if (list_style_image->is_abstract_image()) {
         m_list_style_image = list_style_image->as_abstract_image();
-        m_list_style_image->load_any_resources(document());
+        const_cast<CSS::AbstractImageStyleValue&>(*m_list_style_image).load_any_resources(document());
     }
 
     computed_values.set_color(computed_style.color_or_fallback(CSS::PropertyID::Color, *this, CSS::InitialValues::color()));
@@ -574,11 +574,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             auto resolve_border_width = [&]() {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return CSS::Length::make_calculated(value->as_calculated()).to_px(*this).value();
+                    return CSS::Length::make_calculated(const_cast<CSS::CalculatedStyleValue&>(value->as_calculated())).to_px(*this).value();
                 if (value->has_length())
                     return value->to_length().to_px(*this).value();
                 if (value->is_identifier()) {
-                    // FIXME: These values should depend on something, e.g. a font size.
+                    // https://www.w3.org/TR/css-backgrounds-3/#valdef-line-width-thin
                     switch (value->to_identifier()) {
                     case CSS::ValueID::Thin:
                         return 1.0f;

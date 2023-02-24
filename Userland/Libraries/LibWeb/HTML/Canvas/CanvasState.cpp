@@ -42,14 +42,14 @@ bool CanvasState::is_context_lost()
 
 NonnullRefPtr<Gfx::PaintStyle> CanvasState::FillOrStrokeStyle::to_gfx_paint_style()
 {
-    return m_fill_or_stoke_style.visit(
+    return m_fill_or_stroke_style.visit(
         [&](Gfx::Color color) -> NonnullRefPtr<Gfx::PaintStyle> {
             if (!m_color_paint_style)
                 m_color_paint_style = Gfx::SolidColorPaintStyle::create(color);
             return m_color_paint_style.release_nonnull();
         },
-        [&](JS::Handle<CanvasGradient> gradient) {
-            return gradient->to_gfx_paint_style();
+        [&](auto handle) {
+            return handle->to_gfx_paint_style();
         });
 }
 
@@ -60,7 +60,7 @@ Gfx::Color CanvasState::FillOrStrokeStyle::to_color_but_fixme_should_accept_any_
 
 Optional<Gfx::Color> CanvasState::FillOrStrokeStyle::as_color() const
 {
-    if (auto* color = m_fill_or_stoke_style.get_pointer<Gfx::Color>())
+    if (auto* color = m_fill_or_stroke_style.get_pointer<Gfx::Color>())
         return *color;
     return {};
 }

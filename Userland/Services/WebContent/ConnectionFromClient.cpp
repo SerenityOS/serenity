@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
@@ -38,7 +38,7 @@
 
 namespace WebContent {
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket), 1)
     , m_page_host(PageHost::create(*this))
 {
@@ -117,7 +117,7 @@ void ConnectionFromClient::set_viewport_rect(Gfx::IntRect const& rect)
 
 void ConnectionFromClient::add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap const& bitmap)
 {
-    m_backing_stores.set(backing_store_id, *bitmap.bitmap());
+    m_backing_stores.set(backing_store_id, *const_cast<Gfx::ShareableBitmap&>(bitmap).bitmap());
 }
 
 void ConnectionFromClient::remove_backing_store(i32 backing_store_id)
@@ -562,13 +562,12 @@ Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClien
 
 void ConnectionFromClient::handle_file_return(i32 error, Optional<IPC::File> const& file, i32 request_id)
 {
-    auto file_request = m_requested_files.get(request_id);
+    auto file_request = m_requested_files.take(request_id);
 
     VERIFY(file_request.has_value());
     VERIFY(file_request.value().on_file_request_finish);
 
     file_request.value().on_file_request_finish(error != 0 ? Error::from_errno(error) : ErrorOr<i32> { file->take_fd() });
-    m_requested_files.remove(request_id);
 }
 
 void ConnectionFromClient::request_file(Web::FileRequest file_request)

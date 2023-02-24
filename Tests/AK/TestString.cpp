@@ -10,6 +10,7 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
@@ -67,6 +68,54 @@ TEST_CASE(long_strings)
     EXPECT_EQ(string.bytes_as_string_view(), "abcdefgh"sv);
 }
 
+TEST_CASE(long_streams)
+{
+    {
+        u8 bytes[64] = {};
+        constexpr auto test_view = "Well, hello friends"sv;
+        FixedMemoryStream stream(Bytes { bytes, sizeof(bytes) });
+        MUST(stream.write(test_view.bytes()));
+        MUST(stream.seek(0));
+
+        auto string = MUST(String::from_stream(stream, test_view.length()));
+
+        EXPECT_EQ(string.is_short_string(), false);
+        EXPECT_EQ(string.bytes().size(), 19u);
+        EXPECT_EQ(string.bytes_as_string_view(), test_view);
+    }
+
+    {
+        AllocatingMemoryStream stream;
+        MUST(stream.write(("abc"sv).bytes()));
+
+        auto string = MUST(String::from_stream(stream, 3u));
+
+        EXPECT_EQ(string.is_short_string(), true);
+        EXPECT_EQ(string.bytes().size(), 3u);
+        EXPECT_EQ(string.bytes_as_string_view(), "abc"sv);
+    }
+
+    {
+        AllocatingMemoryStream stream;
+        MUST(stream.write(("0123456789"sv).bytes()));
+
+        auto string = MUST(String::from_stream(stream, 9u));
+
+        EXPECT_EQ(string.is_short_string(), false);
+        EXPECT_EQ(string.bytes().size(), 9u);
+        EXPECT_EQ(string.bytes_as_string_view(), "012345678"sv);
+    }
+
+    {
+        AllocatingMemoryStream stream;
+        MUST(stream.write_value(0xffffffff));
+        MUST(stream.write_value(0xffffffff));
+        MUST(stream.write_value(0xffffffff));
+        auto error_or_string = String::from_stream(stream, stream.used_buffer_size());
+        EXPECT_EQ(error_or_string.is_error(), true);
+    }
+}
+
 TEST_CASE(from_code_points)
 {
     for (u32 code_point = 0; code_point < 0x80; ++code_point) {
@@ -95,6 +144,17 @@ TEST_CASE(substring)
 
     auto long_substring = MUST(superstring.substring_from_byte_offset(0, 10));
     EXPECT_EQ(long_substring, "Hello I am"sv);
+}
+
+TEST_CASE(substring_with_shared_superstring)
+{
+    auto superstring = MUST(String::from_utf8("Hello I am a long string"sv));
+
+    auto substring1 = MUST(superstring.substring_from_byte_offset_with_shared_superstring(0, 5));
+    EXPECT_EQ(substring1, "Hello"sv);
+
+    auto substring2 = MUST(superstring.substring_from_byte_offset_with_shared_superstring(0, 10));
+    EXPECT_EQ(substring2, "Hello I am"sv);
 }
 
 TEST_CASE(code_points)
@@ -211,7 +271,7 @@ TEST_CASE(to_titlecase)
     {
         auto string = MUST(String::from_utf8("f\"oo\" b'ar'"sv));
         auto result = MUST(string.to_titlecase());
-        EXPECT_EQ(result, "F\"Oo\" B'Ar'"sv);
+        EXPECT_EQ(result, "F\"Oo\" B'ar'"sv);
     }
     {
         auto string = MUST(String::from_utf8("123dollars"sv));

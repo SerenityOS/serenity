@@ -77,24 +77,24 @@ public:
 
         CodingIndependentCodePoints to_cicp() const
         {
-            Video::ColorRange color_range;
+            Video::VideoFullRangeFlag video_full_range_flag;
             switch (range) {
             case ColorRange::Full:
-                color_range = Video::ColorRange::Full;
+                video_full_range_flag = Video::VideoFullRangeFlag::Full;
                 break;
             case ColorRange::Broadcast:
-                color_range = Video::ColorRange::Studio;
+                video_full_range_flag = Video::VideoFullRangeFlag::Studio;
                 break;
             case ColorRange::Unspecified:
             case ColorRange::UseCICP:
                 // FIXME: Figure out what UseCICP should do here. Matroska specification did not
                 //        seem to explain in the 'colour' section. When this is fixed, change
                 //        replace_code_points_if_specified to match.
-                color_range = Video::ColorRange::Unspecified;
+                video_full_range_flag = Video::VideoFullRangeFlag::Unspecified;
                 break;
             }
 
-            return { color_primaries, transfer_characteristics, matrix_coefficients, color_range };
+            return { color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag };
         }
     };
 

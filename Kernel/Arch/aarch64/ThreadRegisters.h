@@ -8,11 +8,13 @@
 
 #include <AK/Types.h>
 #include <Kernel/Memory/AddressSpace.h>
+#include <Kernel/StdLib.h>
 
 namespace Kernel {
 
 struct ThreadRegisters {
     u64 x[31];
+    u64 spsr_el1;
     u64 elr_el1;
     u64 sp_el0;
     u64 ttbr0_el1;
@@ -22,10 +24,11 @@ struct ThreadRegisters {
 
     void set_sp(FlatPtr value) { sp_el0 = value; }
 
-    void set_initial_state(bool, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
+    void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
     {
         set_sp(kernel_stack_top);
         ttbr0_el1 = space.page_directory().ttbr0();
+        set_spsr_el1(is_kernel_process);
     }
 
     void set_entry_function(FlatPtr entry_ip, FlatPtr entry_data)
@@ -36,10 +39,24 @@ struct ThreadRegisters {
 
     void set_exec_state(FlatPtr entry_ip, FlatPtr userspace_sp, Memory::AddressSpace& space)
     {
-        (void)entry_ip;
-        (void)userspace_sp;
-        (void)space;
-        TODO_AARCH64();
+        set_ip(entry_ip);
+        set_sp(userspace_sp);
+        ttbr0_el1 = space.page_directory().ttbr0();
+        set_spsr_el1(false);
+    }
+
+    void set_spsr_el1(bool is_kernel_process)
+    {
+        Aarch64::SPSR_EL1 saved_program_status_register_el1 = {};
+
+        // Don't mask any interrupts, so all interrupts are enabled when transfering into the new context
+        saved_program_status_register_el1.D = 0;
+        saved_program_status_register_el1.A = 0;
+        saved_program_status_register_el1.I = 0;
+        saved_program_status_register_el1.F = 0;
+
+        saved_program_status_register_el1.M = is_kernel_process ? Aarch64::SPSR_EL1::Mode::EL1h : Aarch64::SPSR_EL1::Mode::EL0t;
+        memcpy(&spsr_el1, &saved_program_status_register_el1, sizeof(u64));
     }
 };
 

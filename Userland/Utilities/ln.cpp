@@ -33,7 +33,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto stat = Core::System::lstat(path);
 
     if (stat.is_error() && stat.error().code() != ENOENT)
-        return stat.error();
+        return stat.release_error();
 
     if (!stat.is_error() && S_ISDIR(stat.value().st_mode)) {
         // The target path is a directory, so we presumably want <path>/<filename> as the effective path.

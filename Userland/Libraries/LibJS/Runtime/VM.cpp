@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -10,8 +10,9 @@
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -80,7 +81,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
         return resolve_imported_module(move(referencing_script_or_module), specifier);
     };
 
-    host_import_module_dynamically = [&](ScriptOrModule, ModuleRequest const&, PromiseCapability const& promise_capability) {
+    host_import_module_dynamically = [&](ScriptOrModule, ModuleRequest const&, PromiseCapability const& promise_capability) -> ThrowCompletionOr<void> {
         // By default, we throw on dynamic imports this is to prevent arbitrary file access by scripts.
         VERIFY(current_realm());
         auto& realm = *current_realm();
@@ -89,7 +90,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
         // If you are here because you want to enable dynamic module importing make sure it won't be a security problem
         // by checking the default implementation of HostImportModuleDynamically and creating your own hook or calling
         // vm.enable_default_host_import_module_dynamically_hook().
-        promise->reject(Error::create(realm, ErrorType::DynamicImportNotAllowed.message()));
+        promise->reject(MUST_OR_THROW_OOM(Error::create(realm, ErrorType::DynamicImportNotAllowed.message())));
 
         promise->perform_then(
             NativeFunction::create(realm, "", [](auto&) -> ThrowCompletionOr<Value> {
@@ -105,6 +106,8 @@ VM::VM(OwnPtr<CustomData> custom_data)
                 return js_undefined();
             }),
             {});
+
+        return {};
     };
 
     host_finish_dynamic_import = [&](ScriptOrModule referencing_script_or_module, ModuleRequest const& specifier, PromiseCapability const& promise_capability, Promise* promise) {
@@ -149,9 +152,21 @@ VM::VM(OwnPtr<CustomData> custom_data)
     };
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    m_well_known_symbol_##snake_name = Symbol::create(*this, "Symbol." #SymbolName, false);
+    m_well_known_symbol_##snake_name = Symbol::create(*this, String::from_utf8("Symbol." #SymbolName##sv).release_value_but_fixme_should_propagate_errors(), false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
+
+    m_error_messages[to_underlying(ErrorMessage::OutOfMemory)] = String::from_utf8(ErrorType::OutOfMemory.message()).release_value_but_fixme_should_propagate_errors();
+}
+
+String const& VM::error_message(ErrorMessage type) const
+{
+    VERIFY(type < ErrorMessage::__Count);
+
+    auto const& message = m_error_messages[to_underlying(type)];
+    VERIFY(!message.is_empty());
+
+    return message;
 }
 
 void VM::enable_default_host_import_module_dynamically_hook()
@@ -260,7 +275,7 @@ ThrowCompletionOr<Value> VM::named_evaluation_if_anonymous_function(ASTNode cons
 }
 
 // 13.15.5.2 Runtime Semantics: DestructuringAssignmentEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-destructuringassignmentevaluation
-ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern> const& target, Value value)
+ThrowCompletionOr<void> VM::destructuring_assignment_evaluation(NonnullRefPtr<BindingPattern const> const& target, Value value)
 {
     // Note: DestructuringAssignmentEvaluation is just like BindingInitialization without an environment
     //       And it allows member expressions. We thus trust the parser to disallow member expressions
@@ -277,7 +292,7 @@ ThrowCompletionOr<void> VM::binding_initialization(DeprecatedFlyString const& ta
 }
 
 // 8.5.2 Runtime Semantics: BindingInitialization, https://tc39.es/ecma262/#sec-runtime-semantics-bindinginitialization
-ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern> const& target, Value value, Environment* environment)
+ThrowCompletionOr<void> VM::binding_initialization(NonnullRefPtr<BindingPattern const> const& target, Value value, Environment* environment)
 {
     auto& vm = *this;
 
@@ -333,9 +348,9 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
         if (property.is_rest) {
             Reference assignment_target;
-            if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier>>()) {
+            if (auto identifier_ptr = property.name.get_pointer<NonnullRefPtr<Identifier const>>()) {
                 assignment_target = TRY(resolve_binding((*identifier_ptr)->string(), environment));
-            } else if (auto member_ptr = property.alias.get_pointer<NonnullRefPtr<MemberExpression>>()) {
+            } else if (auto member_ptr = property.alias.get_pointer<NonnullRefPtr<MemberExpression const>>()) {
                 assignment_target = TRY((*member_ptr)->to_reference(interpreter()));
             } else {
                 VERIFY_NOT_REACHED();
@@ -353,19 +368,19 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
         auto name = TRY(property.name.visit(
             [&](Empty) -> ThrowCompletionOr<PropertyKey> { VERIFY_NOT_REACHED(); },
-            [&](NonnullRefPtr<Identifier> const& identifier) -> ThrowCompletionOr<PropertyKey> {
+            [&](NonnullRefPtr<Identifier const> const& identifier) -> ThrowCompletionOr<PropertyKey> {
                 return identifier->string();
             },
-            [&](NonnullRefPtr<Expression> const& expression) -> ThrowCompletionOr<PropertyKey> {
+            [&](NonnullRefPtr<Expression const> const& expression) -> ThrowCompletionOr<PropertyKey> {
                 auto result = TRY(expression->execute(interpreter())).release_value();
                 return result.to_property_key(vm);
             }));
 
         seen_names.set(name);
 
-        if (property.name.has<NonnullRefPtr<Identifier>>() && property.alias.has<Empty>()) {
+        if (property.name.has<NonnullRefPtr<Identifier const>>() && property.alias.has<Empty>()) {
             // FIXME: this branch and not taking this have a lot in common we might want to unify it more (like it was before).
-            auto& identifier = *property.name.get<NonnullRefPtr<Identifier>>();
+            auto& identifier = *property.name.get<NonnullRefPtr<Identifier const>>();
             auto reference = TRY(resolve_binding(identifier.string(), environment));
 
             auto value_to_assign = TRY(object->get(name));
@@ -382,23 +397,23 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
 
         auto reference_to_assign_to = TRY(property.alias.visit(
             [&](Empty) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
-            [&](NonnullRefPtr<Identifier> const& identifier) -> ThrowCompletionOr<Optional<Reference>> {
+            [&](NonnullRefPtr<Identifier const> const& identifier) -> ThrowCompletionOr<Optional<Reference>> {
                 return TRY(resolve_binding(identifier->string(), environment));
             },
-            [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
-            [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
+            [&](NonnullRefPtr<BindingPattern const> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
+            [&](NonnullRefPtr<MemberExpression const> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
                 return TRY(member_expression->to_reference(interpreter()));
             }));
 
         auto value_to_assign = TRY(object->get(name));
         if (property.initializer && value_to_assign.is_undefined()) {
-            if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier>>())
+            if (auto* identifier_ptr = property.alias.get_pointer<NonnullRefPtr<Identifier const>>())
                 value_to_assign = TRY(named_evaluation_if_anonymous_function(*property.initializer, (*identifier_ptr)->string()));
             else
                 value_to_assign = TRY(property.initializer->execute(interpreter())).release_value();
         }
 
-        if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
+        if (auto* binding_ptr = property.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
             TRY(binding_initialization(*binding_ptr, value_to_assign, environment));
         } else {
             VERIFY(reference_to_assign_to.has_value());
@@ -426,11 +441,11 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 
         auto assignment_target = TRY(entry.alias.visit(
             [&](Empty) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
-            [&](NonnullRefPtr<Identifier> const& identifier) -> ThrowCompletionOr<Optional<Reference>> {
+            [&](NonnullRefPtr<Identifier const> const& identifier) -> ThrowCompletionOr<Optional<Reference>> {
                 return TRY(resolve_binding(identifier->string(), environment));
             },
-            [&](NonnullRefPtr<BindingPattern> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
-            [&](NonnullRefPtr<MemberExpression> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
+            [&](NonnullRefPtr<BindingPattern const> const&) -> ThrowCompletionOr<Optional<Reference>> { return Optional<Reference> {}; },
+            [&](NonnullRefPtr<MemberExpression const> const& member_expression) -> ThrowCompletionOr<Optional<Reference>> {
                 return TRY(member_expression->to_reference(interpreter()));
             }));
 
@@ -529,13 +544,13 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
 
         if (value.is_undefined() && entry.initializer) {
             VERIFY(!entry.is_rest);
-            if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier>>())
+            if (auto* identifier_ptr = entry.alias.get_pointer<NonnullRefPtr<Identifier const>>())
                 value = TRY(named_evaluation_if_anonymous_function(*entry.initializer, (*identifier_ptr)->string()));
             else
                 value = TRY(entry.initializer->execute(interpreter())).release_value();
         }
 
-        if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern>>()) {
+        if (auto* binding_ptr = entry.alias.get_pointer<NonnullRefPtr<BindingPattern const>>()) {
             TRY(binding_initialization(*binding_ptr, value, environment));
         } else if (!entry.alias.has<Empty>()) {
             VERIFY(assignment_target.has_value());
@@ -832,18 +847,18 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
     auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
     if (module_type == "json"sv)
         extensions = { "json"sv };
-    if (!Core::File::exists(filename)) {
+    if (!Core::DeprecatedFile::exists(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo.ext"
             auto resolved_filepath = DeprecatedString::formatted("{}.{}", filename, extension);
-            if (Core::File::exists(resolved_filepath))
+            if (Core::DeprecatedFile::exists(resolved_filepath))
                 return resolved_filepath;
         }
-    } else if (Core::File::is_directory(filename)) {
+    } else if (Core::DeprecatedFile::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
             auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
-            if (Core::File::exists(resolved_filepath))
+            if (Core::DeprecatedFile::exists(resolved_filepath))
                 return resolved_filepath;
         }
     }
@@ -915,7 +930,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
-    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
 
     if (file_or_error.is_error()) {
         return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);
@@ -958,7 +973,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 }
 
 // 16.2.1.8 HostImportModuleDynamically ( referencingScriptOrModule, specifier, promiseCapability ), https://tc39.es/ecma262/#sec-hostimportmoduledynamically
-void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability)
+ThrowCompletionOr<void> VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability)
 {
     auto& realm = *current_realm();
 
@@ -988,8 +1003,8 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
         // If there is no ScriptOrModule in any of the execution contexts
         if (referencing_script_or_module.has<Empty>()) {
             // Throw an error for now
-            promise->reject(InternalError::create(realm, DeprecatedString::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier)));
-            return;
+            promise->reject(InternalError::create(realm, TRY_OR_THROW_OOM(*this, String::formatted(ErrorType::ModuleNotFoundNoReferencingScript.message(), module_request.module_specifier))));
+            return {};
         }
     }
 
@@ -1013,6 +1028,7 @@ void VM::import_module_dynamically(ScriptOrModule referencing_script_or_module, 
 
     // It must return unused.
     // Note: Just return void always since the resulting value cannot be accessed by user code.
+    return {};
 }
 
 // 16.2.1.9 FinishDynamicImport ( referencingScriptOrModule, specifier, promiseCapability, innerPromise ), https://tc39.es/ecma262/#sec-finishdynamicimport

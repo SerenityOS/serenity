@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <LibCore/Stream.h>
+#include <AK/Vector.h>
 #include <unistd.h>
 
 namespace Core {

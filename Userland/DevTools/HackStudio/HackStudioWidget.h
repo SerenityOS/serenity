@@ -248,11 +248,12 @@ private:
     RefPtr<GUI::Action> m_toggle_semantic_highlighting_action;
     RefPtr<GUI::Action> m_open_project_configuration_action;
 
-    RefPtr<Gfx::Font> read_editor_font_from_config();
-    void change_editor_font(RefPtr<Gfx::Font>);
-    RefPtr<Gfx::Font> m_editor_font;
+    RefPtr<Gfx::Font const> read_editor_font_from_config();
+    void change_editor_font(RefPtr<Gfx::Font const>);
+    RefPtr<Gfx::Font const> m_editor_font;
     RefPtr<GUI::Action> m_editor_font_action;
 
+    GUI::TextEditor::WrappingMode m_wrapping_mode { GUI::TextEditor::NoWrap };
     GUI::ActionGroup m_wrapping_mode_actions;
     RefPtr<GUI::Action> m_no_wrapping_action;
     RefPtr<GUI::Action> m_wrap_anywhere_action;

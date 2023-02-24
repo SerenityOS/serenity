@@ -19,13 +19,13 @@ PDFErrorOr<PDFFont::CommonData> TrueTypeFont::parse_data(Document* document, Non
     TRY(data.load_from_dict(document, dict, font_size));
 
     if (!data.is_standard_font) {
-        auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
-        if (!descriptor->contains(CommonNames::FontFile2))
-            return data;
-
-        auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
-        auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
-        data.font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, font_size, font_size));
+        auto descriptor = TRY(dict->get_dict(document, CommonNames::FontDescriptor));
+        if (descriptor->contains(CommonNames::FontFile2)) {
+            auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
+            auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
+            float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
+            data.font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
+        }
     }
 
     return data;
@@ -41,18 +41,6 @@ TrueTypeFont::TrueTypeFont(PDFFont::CommonData data)
     : m_data(data)
 {
     m_is_standard_font = m_data.is_standard_font;
-}
-
-u32 TrueTypeFont::char_code_to_code_point(u16 char_code) const
-{
-    if (m_data.to_unicode)
-        TODO();
-
-    if (m_data.encoding->should_map_to_bullet(char_code))
-        return 8226; // Bullet.
-
-    auto descriptor = m_data.encoding->get_char_code_descriptor(char_code);
-    return descriptor.code_point;
 }
 
 float TrueTypeFont::get_char_width(u16 char_code) const

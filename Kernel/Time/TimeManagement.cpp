@@ -237,6 +237,12 @@ Time TimeManagement::boot_time()
 #endif
 }
 
+Time TimeManagement::clock_resolution() const
+{
+    long nanoseconds_per_tick = 1'000'000'000 / m_time_keeper_timer->ticks_per_second();
+    return Time::from_nanoseconds(nanoseconds_per_tick);
+}
+
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
 {

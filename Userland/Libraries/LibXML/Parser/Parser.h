@@ -139,9 +139,9 @@ private:
 
     ErrorOr<void, ParseError> expect(StringView);
     template<typename Pred>
-    requires(IsCallableWithArguments<Pred, char>) ErrorOr<StringView, ParseError> expect(Pred, StringView description);
+    requires(IsCallableWithArguments<Pred, bool, char>) ErrorOr<StringView, ParseError> expect(Pred, StringView description);
     template<typename Pred>
-    requires(IsCallableWithArguments<Pred, char>) ErrorOr<StringView, ParseError> expect_many(Pred, StringView description);
+    requires(IsCallableWithArguments<Pred, bool, char>) ErrorOr<StringView, ParseError> expect_many(Pred, StringView description);
 
     static size_t s_debug_indent_level;
     [[nodiscard]] auto rollback_point(SourceLocation location = SourceLocation::current())

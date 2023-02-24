@@ -38,7 +38,7 @@ public:
     Vector<DeprecatedString> launcher_mime_types() const;
     Vector<DeprecatedString> launcher_file_types() const;
     Vector<DeprecatedString> launcher_protocols() const;
-    bool spawn() const;
+    bool spawn(ReadonlySpan<StringView> arguments = {}) const;
 
 private:
     explicit AppFile(StringView path);

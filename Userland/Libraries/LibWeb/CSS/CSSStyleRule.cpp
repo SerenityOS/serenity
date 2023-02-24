@@ -8,12 +8,13 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
-CSSStyleRule* CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleRule>> CSSStyleRule::create(JS::Realm& realm, NonnullRefPtrVector<Web::CSS::Selector>&& selectors, CSSStyleDeclaration& declaration)
 {
-    return realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<CSSStyleRule>(realm, realm, move(selectors), declaration));
 }
 
 CSSStyleRule::CSSStyleRule(JS::Realm& realm, NonnullRefPtrVector<Selector>&& selectors, CSSStyleDeclaration& declaration)
@@ -50,7 +51,7 @@ DeprecatedString CSSStyleRule::serialized() const
 
     // 1. Let s initially be the result of performing serialize a group of selectors on the rule’s associated selectors,
     //    followed by the string " {", i.e., a single SPACE (U+0020), followed by LEFT CURLY BRACKET (U+007B).
-    builder.append(serialize_a_group_of_selectors(selectors()));
+    builder.append(serialize_a_group_of_selectors(selectors()).release_value_but_fixme_should_propagate_errors());
     builder.append(" {"sv);
 
     // 2. Let decls be the result of performing serialize a CSS declaration block on the rule’s associated declarations, or null if there are no such declarations.
@@ -91,7 +92,7 @@ DeprecatedString CSSStyleRule::serialized() const
 DeprecatedString CSSStyleRule::selector_text() const
 {
     // The selectorText attribute, on getting, must return the result of serializing the associated group of selectors.
-    return serialize_a_group_of_selectors(selectors());
+    return serialize_a_group_of_selectors(selectors()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-selectortext

@@ -42,7 +42,7 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
     Application::the()->set_system_palette(buffer);
 }
 
-ConnectionToWindowServer::ConnectionToWindowServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionToWindowServer::ConnectionToWindowServer(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionToServer<WindowClientEndpoint, WindowServerEndpoint>(*this, move(socket))
 {
     // NOTE: WindowServer automatically sends a "fast_greet" message to us when we connect.

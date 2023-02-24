@@ -10,19 +10,18 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/Stream.h>
 
 #include "Command.h"
 #include "Parser.h"
 
 class Client : public RefCounted<Client> {
 public:
-    static ErrorOr<NonnullRefPtr<Client>> create(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd);
+    static ErrorOr<NonnullRefPtr<Client>> create(int id, NonnullOwnPtr<Core::TCPSocket> socket, int ptm_fd);
 
     Function<void()> on_exit;
 
 private:
-    Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd);
+    Client(int id, NonnullOwnPtr<Core::TCPSocket> socket, int ptm_fd);
 
     ErrorOr<void> drain_socket();
     ErrorOr<void> drain_pty();
@@ -38,7 +37,7 @@ private:
     // client id
     int m_id { 0 };
     // client resources
-    NonnullOwnPtr<Core::Stream::TCPSocket> m_socket;
+    NonnullOwnPtr<Core::TCPSocket> m_socket;
     Parser m_parser;
     // pty resources
     int m_ptm_fd { -1 };

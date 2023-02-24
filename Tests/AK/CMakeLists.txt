@@ -19,7 +19,6 @@ set(AK_TEST_SOURCES
     TestCircularDeque.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
-    TestDeprecatedMemoryStream.cpp
     TestDeprecatedString.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
@@ -58,14 +57,17 @@ set(AK_TEST_SOURCES
     TestOwnPtr.cpp
     TestPrint.cpp
     TestQueue.cpp
+    TestQuickSelect.cpp
     TestQuickSort.cpp
     TestRedBlackTree.cpp
     TestRefPtr.cpp
+    TestSIMD.cpp
     TestSinglyLinkedList.cpp
     TestSourceGenerator.cpp
     TestSourceLocation.cpp
     TestSpan.cpp
     TestStack.cpp
+    TestStatistics.cpp
     TestStdLibExtras.cpp
     TestString.cpp
     TestStringFloatingPointConversions.cpp

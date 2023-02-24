@@ -15,7 +15,7 @@ namespace Web::Encoding {
 WebIDL::ExceptionOr<JS::NonnullGCPtr<TextDecoder>> TextDecoder::construct_impl(JS::Realm& realm, DeprecatedFlyString encoding)
 {
     auto decoder = TextCodec::decoder_for(encoding);
-    if (!decoder)
+    if (!decoder.has_value())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Invalid encoding {}", encoding) };
 
     return MUST_OR_THROW_OOM(realm.heap().allocate<TextDecoder>(realm, realm, *decoder, move(encoding), false, false));
@@ -50,7 +50,7 @@ WebIDL::ExceptionOr<DeprecatedString> TextDecoder::decode(JS::Handle<JS::Object>
     if (data_buffer_or_error.is_error())
         return WebIDL::OperationError::create(realm(), "Failed to copy bytes from ArrayBuffer");
     auto& data_buffer = data_buffer_or_error.value();
-    return m_decoder.to_utf8({ data_buffer.data(), data_buffer.size() });
+    return TRY_OR_THROW_OOM(vm(), m_decoder.to_utf8({ data_buffer.data(), data_buffer.size() }));
 }
 
 }

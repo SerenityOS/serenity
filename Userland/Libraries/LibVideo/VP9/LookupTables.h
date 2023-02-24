@@ -132,10 +132,14 @@ static constexpr int tx_size_16_tree[4] = {
     -Transform_8x8, -Transform_16x16
 };
 static constexpr int tx_size_8_tree[2] = { -Transform_4x4, -Transform_8x8 };
+inline constexpr int inter_mode(PredictionMode mode)
+{
+    return to_underlying(mode) - to_underlying(PredictionMode::NearestMv);
+}
 static constexpr int inter_mode_tree[6] = {
-    -to_underlying(PredictionMode::ZeroMv), 2,
-    -to_underlying(PredictionMode::NearestMv), 4,
-    -to_underlying(PredictionMode::NearMv), -to_underlying(PredictionMode::NewMv)
+    -inter_mode(PredictionMode::ZeroMv), 2,
+    -inter_mode(PredictionMode::NearestMv), 4,
+    -inter_mode(PredictionMode::NearMv), -inter_mode(PredictionMode::NewMv)
 };
 static constexpr int interp_filter_tree[4] = {
     -EightTap, 2,

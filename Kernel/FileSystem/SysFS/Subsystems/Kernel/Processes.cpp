@@ -79,7 +79,7 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
             TRY(process_object.add("tty"sv, ""));
         }
         TRY(process_object.add("nfds"sv, process.fds().with_shared([](auto& fds) { return fds.open_count(); })));
-        TRY(process_object.add("name"sv, process.name()));
+        TRY(process.name().with([&](auto& process_name) { return process_object.add("name"sv, process_name->view()); }));
         TRY(process_object.add("executable"sv, process.executable() ? TRY(process.executable()->try_serialize_absolute_path())->view() : ""sv));
 
         size_t amount_virtual = 0;
@@ -118,7 +118,7 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
             TRY(thread_object.add("lock_count"sv, thread.lock_count()));
 #endif
             TRY(thread_object.add("tid"sv, thread.tid().value()));
-            TRY(thread_object.add("name"sv, thread.name()));
+            TRY(thread.name().with([&](auto& thread_name) { return thread_object.add("name"sv, thread_name->view()); }));
             TRY(thread_object.add("times_scheduled"sv, thread.times_scheduled()));
             TRY(thread_object.add("time_user"sv, thread.time_in_user()));
             TRY(thread_object.add("time_kernel"sv, thread.time_in_kernel()));

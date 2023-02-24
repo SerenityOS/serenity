@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Julius Heijmen <julius.heijmen@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -21,7 +21,7 @@ public:
     ~IconImpl() = default;
 
     Gfx::Bitmap const* bitmap_for_size(int) const;
-    void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap>&&);
+    void set_bitmap_for_size(int, RefPtr<Gfx::Bitmap const>&&);
 
     Vector<int> sizes() const
     {
@@ -33,14 +33,14 @@ public:
 
 private:
     IconImpl() = default;
-    HashMap<int, RefPtr<Gfx::Bitmap>> m_bitmaps;
+    HashMap<int, RefPtr<Gfx::Bitmap const>> m_bitmaps;
 };
 
 class Icon {
 public:
     Icon();
-    explicit Icon(RefPtr<Gfx::Bitmap>&&);
-    explicit Icon(RefPtr<Gfx::Bitmap>&&, RefPtr<Gfx::Bitmap>&&);
+    explicit Icon(RefPtr<Gfx::Bitmap const>&&);
+    explicit Icon(RefPtr<Gfx::Bitmap const>&&, RefPtr<Gfx::Bitmap const>&&);
     explicit Icon(IconImpl const&);
     Icon(Icon const&);
     ~Icon() = default;
@@ -56,7 +56,7 @@ public:
     }
 
     Gfx::Bitmap const* bitmap_for_size(int size) const { return m_impl->bitmap_for_size(size); }
-    void set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
+    void set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap const>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
 
     IconImpl const& impl() const { return *m_impl; }
 

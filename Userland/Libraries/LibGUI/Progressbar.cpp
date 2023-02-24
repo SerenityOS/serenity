@@ -27,6 +27,8 @@ Progressbar::Progressbar(Orientation orientation)
         { Format::ValueSlashMax, "ValueSlashMax" });
     REGISTER_INT_PROPERTY("min", min, set_min);
     REGISTER_INT_PROPERTY("max", max, set_max);
+
+    set_preferred_size(SpecialDimension::Fit);
 }
 
 void Progressbar::set_value(int value)
@@ -79,6 +81,13 @@ void Progressbar::set_orientation(Orientation value)
         return;
     m_orientation = value;
     update();
+}
+
+Optional<UISize> Progressbar::calculated_preferred_size() const
+{
+    if (orientation() == Gfx::Orientation::Vertical)
+        return { { 22, SpecialDimension::OpportunisticGrow } };
+    return { { SpecialDimension::OpportunisticGrow, 22 } };
 }
 
 }

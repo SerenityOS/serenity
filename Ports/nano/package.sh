@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='nano'
-version='6.3'
-files="https://www.nano-editor.org/dist/v6/nano-${version}.tar.xz nano-${version}.tar.xz eb532da4985672730b500f685dbaab885a466d08fbbf7415832b95805e6f8687"
+version='7.2'
+files="https://www.nano-editor.org/dist/v7/nano-${version}.tar.xz nano-${version}.tar.xz 86f3442768bd2873cec693f83cdf80b4b444ad3cc14760b74361474fc87a4526"
 auth_type='sha256'
 useconfigure='true'
 use_fresh_config_sub='true'

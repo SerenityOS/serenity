@@ -60,8 +60,7 @@ private:
 
 Breadcrumbbar::Breadcrumbbar()
 {
-    auto& layout = set_layout<HorizontalBoxLayout>();
-    layout.set_spacing(0);
+    set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 }
 
 void Breadcrumbbar::clear_segments()
@@ -75,7 +74,7 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
 {
     auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::Coolbar);
-    button.set_text(text);
+    button.set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
     button.set_icon(icon);
     button.set_tooltip(move(tooltip));
     button.set_focus_policy(FocusPolicy::TabFocus);
@@ -86,6 +85,10 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
             on_segment_click(index);
         if (on_segment_change && m_selected_segment != index)
             on_segment_change(index);
+    };
+    button.on_double_click = [this](auto modifiers) {
+        if (on_doubleclick)
+            on_doubleclick(modifiers);
     };
     button.on_focus_change = [this, index = m_segments.size()](auto has_focus, auto) {
         if (has_focus && on_segment_change && m_selected_segment != index)
@@ -100,21 +103,14 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
             on_segment_drag_enter(index, event);
     };
 
-    auto button_text_width = button.font().width(text);
-    auto icon_width = icon ? icon->width() : 0;
-    auto icon_padding = icon ? 4 : 0;
-
-    int const max_button_width = 100;
-
-    auto button_width = min(button_text_width + icon_width + icon_padding + 16, max_button_width);
-    auto shrunken_width = icon_width + icon_padding + (icon ? 4 : 16);
-
-    button.set_max_size(static_cast<int>(ceilf(button_width)), 16 + 8);
-    button.set_min_size(shrunken_width, 16 + 8);
-
-    Segment segment { icon, text, data, static_cast<int>(ceilf(button_width)), shrunken_width, button.make_weak_ptr<GUI::Button>() };
-
-    m_segments.append(move(segment));
+    m_segments.append(Segment {
+        .icon = icon,
+        .text = move(text),
+        .data = move(data),
+        .width = 0,
+        .shrunken_width = 0,
+        .button = button.make_weak_ptr<GUI::Button>(),
+    });
     relayout();
 }
 
@@ -162,7 +158,7 @@ void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
 void Breadcrumbbar::doubleclick_event(MouseEvent& event)
 {
     if (on_doubleclick)
-        on_doubleclick(event);
+        on_doubleclick(event.modifiers());
 }
 
 void Breadcrumbbar::resize_event(ResizeEvent&)
@@ -170,12 +166,36 @@ void Breadcrumbbar::resize_event(ResizeEvent&)
     relayout();
 }
 
+void Breadcrumbbar::did_change_font()
+{
+    Widget::did_change_font();
+    relayout();
+}
+
 void Breadcrumbbar::relayout()
 {
-    auto remaining_width = 0;
+    auto total_width = 0;
+    for (auto& segment : m_segments) {
+        VERIFY(segment.button);
+        auto& button = *segment.button;
+        // NOTE: We use our own font instead of the button's font here in case we're being notified about
+        //       a system font change, and the button hasn't been notified yet.
+        auto button_text_width = font().width(segment.text);
+        auto icon_width = button.icon() ? button.icon()->width() : 0;
+        auto icon_padding = button.icon() ? 4 : 0;
 
-    for (auto& segment : m_segments)
-        remaining_width += segment.width;
+        int const max_button_width = 100;
+
+        segment.width = static_cast<int>(ceilf(min(button_text_width + icon_width + icon_padding + 16, max_button_width)));
+        segment.shrunken_width = icon_width + icon_padding + (button.icon() ? 4 : 16);
+
+        button.set_max_size(segment.width, 16 + 8);
+        button.set_min_size(segment.shrunken_width, 16 + 8);
+
+        total_width += segment.width;
+    }
+
+    auto remaining_width = total_width;
 
     for (auto& segment : m_segments) {
         if (remaining_width > width() && !segment.button->is_checked()) {

@@ -13,8 +13,8 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibMain/Main.h>
@@ -104,9 +104,9 @@ private:
 
 /// Wraps a stream to silently ignore writes when the condition isn't true.
 template<typename ConditionT>
-class ConditionalOutputStream final : public AK::Stream {
+class ConditionalOutputStream final : public Stream {
 public:
-    ConditionalOutputStream(ConditionT&& condition, MaybeOwned<AK::Stream> stream)
+    ConditionalOutputStream(ConditionT&& condition, MaybeOwned<Stream> stream)
         : m_stream(move(stream))
         , m_condition(condition)
     {
@@ -141,7 +141,7 @@ public:
     }
 
 private:
-    MaybeOwned<AK::Stream> m_stream;
+    MaybeOwned<Stream> m_stream;
     ConditionT m_condition;
 };
 
@@ -242,7 +242,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     RefPtr<Protocol::Request> request;
     auto protocol_client = TRY(Protocol::RequestClient::try_create());
-    auto output_stream = ConditionalOutputStream { [&] { return should_save_stream_data; }, TRY(Core::Stream::File::adopt_fd(output_fd, Core::Stream::OpenMode::Write)) };
+    auto output_stream = ConditionalOutputStream { [&] { return should_save_stream_data; }, TRY(Core::File::adopt_fd(output_fd, Core::File::OpenMode::Write)) };
 
     // https://httpwg.org/specs/rfc9110.html#authentication
     auto const has_credentials = !credentials.is_empty();
@@ -339,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         if (i > -1)
                             output_name = DeprecatedString::formatted("{}.{}", output_name, i);
                         ++i;
-                    } while (Core::File::exists(output_name));
+                    } while (Core::DeprecatedFile::exists(output_name));
                 }
 
                 int target_file_fd = open(output_name.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0644);

@@ -23,16 +23,6 @@ FixedMemoryStream::FixedMemoryStream(ReadonlyBytes bytes)
 {
 }
 
-ErrorOr<NonnullOwnPtr<FixedMemoryStream>> FixedMemoryStream::construct(Bytes bytes)
-{
-    return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
-}
-
-ErrorOr<NonnullOwnPtr<FixedMemoryStream>> FixedMemoryStream::construct(ReadonlyBytes bytes)
-{
-    return adopt_nonnull_own_or_enomem<FixedMemoryStream>(new (nothrow) FixedMemoryStream(bytes));
-}
-
 bool FixedMemoryStream::is_eof() const
 {
     return m_offset >= m_bytes.size();
@@ -48,7 +38,7 @@ void FixedMemoryStream::close()
     // FIXME: It doesn't make sense to close a memory stream. Therefore, we don't do anything here. Is that fine?
 }
 
-ErrorOr<void> FixedMemoryStream::truncate(off_t)
+ErrorOr<void> FixedMemoryStream::truncate(size_t)
 {
     return Error::from_errno(EBADF);
 }
@@ -69,19 +59,19 @@ ErrorOr<size_t> FixedMemoryStream::seek(i64 offset, SeekMode seek_mode)
     switch (seek_mode) {
     case SeekMode::SetPosition:
         if (offset > static_cast<i64>(m_bytes.size()))
-            return Error::from_string_literal("Offset past the end of the stream memory");
+            return Error::from_string_view_or_print_error_and_return_errno("Offset past the end of the stream memory"sv, EINVAL);
 
         m_offset = offset;
         break;
     case SeekMode::FromCurrentPosition:
         if (offset + static_cast<i64>(m_offset) > static_cast<i64>(m_bytes.size()))
-            return Error::from_string_literal("Offset past the end of the stream memory");
+            return Error::from_string_view_or_print_error_and_return_errno("Offset past the end of the stream memory"sv, EINVAL);
 
         m_offset += offset;
         break;
     case SeekMode::FromEndPosition:
         if (offset > static_cast<i64>(m_bytes.size()))
-            return Error::from_string_literal("Offset past the start of the stream memory");
+            return Error::from_string_view_or_print_error_and_return_errno("Offset past the start of the stream memory"sv, EINVAL);
 
         m_offset = m_bytes.size() - offset;
         break;
@@ -102,7 +92,7 @@ ErrorOr<size_t> FixedMemoryStream::write(ReadonlyBytes bytes)
 ErrorOr<void> FixedMemoryStream::write_entire_buffer(ReadonlyBytes bytes)
 {
     if (remaining() < bytes.size())
-        return Error::from_string_literal("Write of entire buffer ends past the memory area");
+        return Error::from_string_view_or_print_error_and_return_errno("Write of entire buffer ends past the memory area"sv, EINVAL);
 
     TRY(write(bytes));
     return {};
@@ -173,7 +163,7 @@ ErrorOr<void> AllocatingMemoryStream::discard(size_t count)
     VERIFY(m_write_offset >= m_read_offset);
 
     if (count > used_buffer_size())
-        return Error::from_string_literal("Number of discarded bytes is higher than the number of allocated bytes");
+        return Error::from_string_view_or_print_error_and_return_errno("Number of discarded bytes is higher than the number of allocated bytes"sv, EINVAL);
 
     m_read_offset += count;
 

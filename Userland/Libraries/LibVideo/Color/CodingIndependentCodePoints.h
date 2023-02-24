@@ -72,20 +72,20 @@ enum class MatrixCoefficients : u8 {
     // All other values are Reserved for later use.
 };
 
-enum class ColorRange : u8 {
-    Unspecified,
-    Studio, // Y range 16..235, UV range 16..240
-    Full,   // 0..255
+enum class VideoFullRangeFlag : u8 {
+    Studio = 0,      // Y range 16..235, UV range 16..240
+    Full = 1,        // 0..255
+    Unspecified = 2, // Not part of the spec, serenity-specific addition for convenience.
 };
 
 // https://en.wikipedia.org/wiki/Coding-independent_code_points
 struct CodingIndependentCodePoints {
 public:
-    constexpr CodingIndependentCodePoints(ColorPrimaries color_primaries, TransferCharacteristics transfer_characteristics, MatrixCoefficients matrix_coefficients, ColorRange color_range)
+    constexpr CodingIndependentCodePoints(ColorPrimaries color_primaries, TransferCharacteristics transfer_characteristics, MatrixCoefficients matrix_coefficients, VideoFullRangeFlag video_full_range_flag)
         : m_color_primaries(color_primaries)
         , m_transfer_characteristics(transfer_characteristics)
         , m_matrix_coefficients(matrix_coefficients)
-        , m_color_range(color_range)
+        , m_video_full_range_flag(video_full_range_flag)
     {
     }
 
@@ -95,8 +95,8 @@ public:
     constexpr void set_transfer_characteristics(TransferCharacteristics value) { m_transfer_characteristics = value; }
     constexpr MatrixCoefficients matrix_coefficients() const { return m_matrix_coefficients; }
     constexpr void set_matrix_coefficients(MatrixCoefficients value) { m_matrix_coefficients = value; }
-    constexpr ColorRange color_range() const { return m_color_range; }
-    constexpr void set_color_range(ColorRange value) { m_color_range = value; }
+    constexpr VideoFullRangeFlag video_full_range_flag() const { return m_video_full_range_flag; }
+    constexpr void set_video_full_range_flag(VideoFullRangeFlag value) { m_video_full_range_flag = value; }
 
     constexpr void default_code_points_if_unspecified(CodingIndependentCodePoints cicp)
     {
@@ -106,8 +106,8 @@ public:
             set_transfer_characteristics(cicp.transfer_characteristics());
         if (matrix_coefficients() == MatrixCoefficients::Unspecified)
             set_matrix_coefficients(cicp.matrix_coefficients());
-        if (color_range() == ColorRange::Unspecified)
-            set_color_range(cicp.color_range());
+        if (video_full_range_flag() == VideoFullRangeFlag::Unspecified)
+            set_video_full_range_flag(cicp.video_full_range_flag());
     }
 
     constexpr void adopt_specified_values(CodingIndependentCodePoints cicp)
@@ -118,15 +118,15 @@ public:
             set_transfer_characteristics(cicp.transfer_characteristics());
         if (cicp.matrix_coefficients() != MatrixCoefficients::Unspecified)
             set_matrix_coefficients(cicp.matrix_coefficients());
-        if (cicp.color_range() != ColorRange::Unspecified)
-            set_color_range(cicp.color_range());
+        if (cicp.video_full_range_flag() != VideoFullRangeFlag::Unspecified)
+            set_video_full_range_flag(cicp.video_full_range_flag());
     }
 
 private:
     ColorPrimaries m_color_primaries;
     TransferCharacteristics m_transfer_characteristics;
     MatrixCoefficients m_matrix_coefficients;
-    ColorRange m_color_range;
+    VideoFullRangeFlag m_video_full_range_flag;
 };
 
 constexpr StringView color_primaries_to_string(ColorPrimaries color_primaries)
@@ -238,6 +238,19 @@ constexpr StringView matrix_coefficients_to_string(MatrixCoefficients matrix_coe
         return "BT.2100 ICtCp"sv;
     }
     return "Reserved"sv;
+};
+
+constexpr StringView video_full_range_flag_to_string(VideoFullRangeFlag video_full_range_flag)
+{
+    switch (video_full_range_flag) {
+    case VideoFullRangeFlag::Studio:
+        return "Studio"sv;
+    case VideoFullRangeFlag::Full:
+        return "Full"sv;
+    case VideoFullRangeFlag::Unspecified: // Not part of the spec, serenity-specific addition for convenience.
+        return "Unspecified"sv;
+    }
+    return "Unknown"sv;
 };
 
 }

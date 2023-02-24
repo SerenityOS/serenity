@@ -9,7 +9,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>
 #include <LibGfx/Painter.h>
@@ -257,7 +257,7 @@ ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
     memcpy(header.name, m_name.characters(), min(m_name.length(), sizeof(header.name) - 1));
     memcpy(header.family, m_family.characters(), min(m_family.length(), sizeof(header.family) - 1));
 
-    auto stream = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write));
+    auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
     TRY(stream->write_entire_buffer({ &header, sizeof(header) }));
     TRY(stream->write_entire_buffer({ m_range_mask, m_range_mask_size }));
@@ -314,23 +314,34 @@ float BitmapFont::glyph_width(u32 code_point) const
     return m_fixed_width || !index.has_value() ? m_glyph_width : m_glyph_widths[index.value()];
 }
 
-int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) const
+template<typename CodePointIterator>
+static float glyph_or_emoji_width_impl(BitmapFont const& font, CodePointIterator& it)
 {
-    // FIXME: This is a hack in lieu of proper code point identification.
-    // 0xFFFF is arbitrary but also the end of the Basic Multilingual Plane.
-    if (code_point < 0xFFFF) {
-        auto index = glyph_index(code_point);
-        if (!index.has_value())
-            return glyph_width(0xFFFD);
-        if (m_glyph_widths[index.value()] > 0)
-            return glyph_width(code_point);
-        return glyph_width(0xFFFD);
-    }
+    if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it))
+        return font.pixel_size() * emoji->width() / emoji->height();
 
-    auto const* emoji = Emoji::emoji_for_code_point(code_point);
-    if (emoji == nullptr)
-        return glyph_width(0xFFFD);
-    return glyph_height() * emoji->width() / emoji->height();
+    if (font.is_fixed_width())
+        return font.glyph_fixed_width();
+
+    return font.glyph_width(*it);
+}
+
+float BitmapFont::glyph_or_emoji_width(u32 code_point) const
+{
+    Utf32View code_point_view { &code_point, 1 };
+    auto it = code_point_view.begin();
+
+    return glyph_or_emoji_width_impl(*this, it);
+}
+
+float BitmapFont::glyph_or_emoji_width(Utf8CodePointIterator& it) const
+{
+    return glyph_or_emoji_width_impl(*this, it);
+}
+
+float BitmapFont::glyph_or_emoji_width(Utf32CodePointIterator& it) const
+{
+    return glyph_or_emoji_width_impl(*this, it);
 }
 
 float BitmapFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
@@ -346,7 +357,9 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
     int width = 0;
     int longest_width = 0;
 
-    for (u32 code_point : view) {
+    for (auto it = view.begin(); it != view.end(); ++it) {
+        auto code_point = *it;
+
         if (code_point == '\n' || code_point == '\r') {
             first = true;
             longest_width = max(width, longest_width);
@@ -356,8 +369,10 @@ ALWAYS_INLINE int BitmapFont::unicode_view_width(T const& view) const
         if (!first)
             width += glyph_spacing();
         first = false;
-        width += glyph_or_emoji_width(code_point);
+
+        width += glyph_or_emoji_width(it);
     }
+
     longest_width = max(width, longest_width);
     return longest_width;
 }
@@ -381,11 +396,16 @@ DeprecatedString BitmapFont::variant() const
     return builder.to_deprecated_string();
 }
 
+RefPtr<Font> BitmapFont::with_size(float point_size) const
+{
+    return Gfx::FontDatabase::the().get(family(), point_size, weight(), width(), slope());
+}
+
 Font const& Font::bold_variant() const
 {
     if (m_bold_variant)
         return *m_bold_variant;
-    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, 0);
+    m_bold_variant = Gfx::FontDatabase::the().get(family(), presentation_size(), 700, Gfx::FontWidth::Normal, 0);
     if (!m_bold_variant)
         m_bold_variant = this;
     return *m_bold_variant;

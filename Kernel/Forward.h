@@ -49,6 +49,7 @@ class ProcFSSystemBoolean;
 class ProcFSSystemDirectory;
 class Process;
 class ProcessGroup;
+class RAMFS;
 template<LockRank Rank>
 class RecursiveSpinlock;
 class Scheduler;
@@ -64,7 +65,7 @@ class TCPSocket;
 class TTY;
 class Thread;
 class ThreadTracer;
-class TmpFSInode;
+class RAMFSInode;
 class UDPSocket;
 class UserOrKernelBuffer;
 class VirtualFileSystem;

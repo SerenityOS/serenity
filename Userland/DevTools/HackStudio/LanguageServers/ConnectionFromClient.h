@@ -21,7 +21,7 @@ namespace LanguageServers {
 
 class ConnectionFromClient : public IPC::ConnectionFromClient<LanguageClientEndpoint, LanguageServerEndpoint> {
 public:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
     ~ConnectionFromClient() override = default;
 
     virtual void die() override;

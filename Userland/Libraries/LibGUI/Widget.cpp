@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -815,25 +815,25 @@ void Widget::set_font(Gfx::Font const* font)
 
 void Widget::set_font_family(DeprecatedString const& family)
 {
-    set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight(), m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(family, m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_size(unsigned size)
 {
-    set_font(Gfx::FontDatabase::the().get(m_font->family(), size, m_font->weight(), m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), size, m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_weight(unsigned weight)
 {
-    set_font(Gfx::FontDatabase::the().get(m_font->family(), m_font->presentation_size(), weight, m_font->slope()));
+    set_font(Gfx::FontDatabase::the().get(m_font->family(), m_font->presentation_size(), weight, m_font->width(), m_font->slope()));
 }
 
 void Widget::set_font_fixed_width(bool fixed_width)
 {
     if (fixed_width)
-        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family(), m_font->presentation_size(), m_font->weight(), m_font->slope()));
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_fixed_width_font().family(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
     else
-        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->slope()));
+        set_font(Gfx::FontDatabase::the().get(Gfx::FontDatabase::the().default_font().family(), m_font->presentation_size(), m_font->weight(), m_font->width(), m_font->slope()));
 }
 
 void Widget::set_min_size(UISize const& size)
@@ -1042,7 +1042,7 @@ Vector<Widget&> Widget::child_widgets() const
     return widgets;
 }
 
-void Widget::set_palette(Palette const& palette)
+void Widget::set_palette(Palette& palette)
 {
     m_palette = palette.impl();
     update();
@@ -1126,14 +1126,14 @@ Gfx::IntRect Widget::children_clip_rect() const
     return rect();
 }
 
-void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor)
+void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor)
 {
-    auto const& are_cursors_the_same = [](AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& a, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const& b) {
-        if (a.has<Gfx::StandardCursor>() != b.has<Gfx::StandardCursor>())
+    auto const& are_cursors_the_same = [](auto const& a, auto const& b) {
+        if (a.template has<Gfx::StandardCursor>() != b.template has<Gfx::StandardCursor>())
             return false;
-        if (a.has<Gfx::StandardCursor>())
-            return a.get<Gfx::StandardCursor>() == b.get<Gfx::StandardCursor>();
-        return a.get<NonnullRefPtr<Gfx::Bitmap>>().ptr() == b.get<NonnullRefPtr<Gfx::Bitmap>>().ptr();
+        if (a.template has<Gfx::StandardCursor>())
+            return a.template get<Gfx::StandardCursor>() == b.template get<Gfx::StandardCursor>();
+        return a.template get<NonnullRefPtr<Gfx::Bitmap const>>().ptr() == b.template get<NonnullRefPtr<Gfx::Bitmap const>>().ptr();
     };
 
     if (are_cursors_the_same(m_override_cursor, cursor))
@@ -1159,19 +1159,19 @@ ErrorOr<void> Widget::load_from_gml(StringView gml_string, UnregisteredChildHand
     return load_from_gml_ast(value, unregistered_child_handler);
 }
 
-ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, UnregisteredChildHandler unregistered_child_handler)
+ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node const> ast, UnregisteredChildHandler unregistered_child_handler)
 {
     if (is<GUI::GML::GMLFile>(ast.ptr()))
-        return load_from_gml_ast(static_ptr_cast<GUI::GML::GMLFile>(ast)->main_class(), unregistered_child_handler);
+        return load_from_gml_ast(static_cast<GUI::GML::GMLFile const&>(*ast).main_class(), unregistered_child_handler);
 
     VERIFY(is<GUI::GML::Object>(ast.ptr()));
-    auto object = static_ptr_cast<GUI::GML::Object>(ast);
+    auto const& object = static_cast<GUI::GML::Object const&>(*ast);
 
-    object->for_each_property([&](auto key, auto value) {
+    object.for_each_property([&](auto key, auto value) {
         set_property(key, value);
     });
 
-    auto layout = object->layout_object();
+    auto layout = object.layout_object();
     if (!layout.is_null()) {
         auto class_name = layout->name();
         if (class_name.is_null()) {
@@ -1198,8 +1198,8 @@ ErrorOr<void> Widget::load_from_gml_ast(NonnullRefPtr<GUI::GML::Node> ast, Unreg
 
     auto& widget_class = *Core::ObjectClassRegistration::find("GUI::Widget"sv);
     bool is_tab_widget = is<TabWidget>(*this);
-    TRY(object->try_for_each_child_object([&](auto child_data) -> ErrorOr<void> {
-        auto class_name = child_data->name();
+    TRY(object.try_for_each_child_object([&](auto const& child_data) -> ErrorOr<void> {
+        auto class_name = child_data.name();
 
         // It is very questionable if this pseudo object should exist, but it works fine like this for now.
         if (class_name == "GUI::Layout::Spacer") {
@@ -1264,6 +1264,12 @@ bool Widget::has_pending_drop() const
 bool Widget::is_visible_for_timer_purposes() const
 {
     return is_visible() && Object::is_visible_for_timer_purposes();
+}
+
+ErrorOr<void> Widget::add_spacer()
+{
+    VERIFY(layout());
+    return layout()->try_add_spacer();
 }
 
 }

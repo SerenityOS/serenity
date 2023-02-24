@@ -6,8 +6,8 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <string.h>
@@ -62,18 +62,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto open_file = [](DeprecatedString const& path, auto& file, int file_number) {
-        auto file_or_error = Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Failed to open file{} '{}': {}", file_number, path, file_or_error.error());
             return false;
         }
 
-        if (path != "-" && Core::File::is_directory(path)) {
+        if (path != "-" && Core::DeprecatedFile::is_directory(path)) {
             warnln("Failed to open file{} '{}': is a directory", file_number, path);
             return false;
         }
 
-        auto buffered_file_or_error = Core::Stream::BufferedFile::create(file_or_error.release_value());
+        auto buffered_file_or_error = Core::BufferedFile::create(file_or_error.release_value());
         if (buffered_file_or_error.is_error()) {
             warnln("Failed to create buffer for file{} '{}': {}", file_number, path, buffered_file_or_error.error());
             return false;
@@ -83,8 +83,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return true;
     };
 
-    OwnPtr<Core::Stream::BufferedFile> file1;
-    OwnPtr<Core::Stream::BufferedFile> file2;
+    OwnPtr<Core::BufferedFile> file1;
+    OwnPtr<Core::BufferedFile> file2;
     if (!(open_file(file1_path, file1, 1) && open_file(file2_path, file2, 2)))
         return 1;
 

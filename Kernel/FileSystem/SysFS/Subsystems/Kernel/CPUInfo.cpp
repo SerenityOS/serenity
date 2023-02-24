@@ -40,13 +40,9 @@ ErrorOr<void> SysFSCPUInformation::try_generate(KBufferBuilder& builder)
             auto features_array = TRY(obj.add_array("features"sv));
             auto keep_empty = SplitBehavior::KeepEmpty;
 
-            ErrorOr<void> result; // FIXME: Make this nicer
-            info.features_string().for_each_split_view(' ', keep_empty, [&](StringView feature) {
-                if (result.is_error())
-                    return;
-                result = features_array.add(feature);
-            });
-            TRY(result);
+            TRY(info.features_string().for_each_split_view(' ', keep_empty, [&](StringView feature) {
+                return features_array.add(feature);
+            }));
 
             TRY(features_array.finish());
 

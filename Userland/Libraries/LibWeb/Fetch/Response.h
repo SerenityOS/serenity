@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/BodyInit.h>
@@ -31,7 +32,7 @@ class Response final
     WEB_PLATFORM_OBJECT(Response, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Response> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> create(JS::Realm&, JS::NonnullGCPtr<Infrastructure::Response>, Headers::Guard);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> construct_impl(JS::Realm&, Optional<BodyInit> const& body = {}, ResponseInit const& init = {});
 
     virtual ~Response() override;

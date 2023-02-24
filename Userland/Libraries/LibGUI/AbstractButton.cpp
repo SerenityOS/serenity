@@ -15,7 +15,7 @@
 
 namespace GUI {
 
-AbstractButton::AbstractButton(DeprecatedString text)
+AbstractButton::AbstractButton(String text)
 {
     set_text(move(text));
 
@@ -28,13 +28,20 @@ AbstractButton::AbstractButton(DeprecatedString text)
         click();
     };
 
-    REGISTER_STRING_PROPERTY("text", text, set_text);
+    // FIXME: Port JsonValue to the new String class.
+    register_property(
+        "text",
+        [this]() { return this->text().to_deprecated_string(); },
+        [this](auto& value) {
+            this->set_text(String::from_deprecated_string(value.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
+            return true;
+        });
     REGISTER_BOOL_PROPERTY("checked", is_checked, set_checked);
     REGISTER_BOOL_PROPERTY("checkable", is_checkable, set_checkable);
     REGISTER_BOOL_PROPERTY("exclusive", is_exclusive, set_exclusive);
 }
 
-void AbstractButton::set_text(DeprecatedString text)
+void AbstractButton::set_text(String text)
 {
     if (m_text == text)
         return;
@@ -151,6 +158,12 @@ void AbstractButton::mouseup_event(MouseEvent& event)
         }
     }
     Widget::mouseup_event(event);
+}
+
+void AbstractButton::doubleclick_event(GUI::MouseEvent& event)
+{
+    double_click(event.modifiers());
+    Widget::doubleclick_event(event);
 }
 
 void AbstractButton::enter_event(Core::Event&)

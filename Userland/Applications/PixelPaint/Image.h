@@ -72,9 +72,9 @@ public:
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect, float scale) const;
 
     ErrorOr<void> serialize_as_json(JsonObjectSerializer<StringBuilder>& json) const;
-    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_png_to_file(NonnullOwnPtr<AK::Stream>, bool preserve_alpha_channel) const;
-    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<AK::Stream>) const;
+    ErrorOr<void> export_bmp_to_file(NonnullOwnPtr<Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_png_to_file(NonnullOwnPtr<Stream>, bool preserve_alpha_channel) const;
+    ErrorOr<void> export_qoi_to_file(NonnullOwnPtr<Stream>) const;
 
     void move_layer_to_front(Layer&);
     void move_layer_to_back(Layer&);
@@ -83,10 +83,10 @@ public:
     void change_layer_index(size_t old_index, size_t new_index);
     void remove_layer(Layer&);
     void select_layer(Layer*);
-    void flatten_all_layers();
-    void merge_visible_layers();
-    void merge_active_layer_up(Layer& layer);
-    void merge_active_layer_down(Layer& layer);
+    ErrorOr<void> flatten_all_layers();
+    ErrorOr<void> merge_visible_layers();
+    ErrorOr<void> merge_active_layer_up(Layer& layer);
+    ErrorOr<void> merge_active_layer_down(Layer& layer);
 
     void add_client(ImageClient&);
     void remove_client(ImageClient&);
@@ -106,11 +106,24 @@ public:
     Color color_at(Gfx::IntPoint point) const;
 
 private:
+    enum class LayerMergeMode {
+        All,
+        VisibleOnly
+    };
+
+    enum class LayerMergeDirection {
+        Up,
+        Down
+    };
+
     explicit Image(Gfx::IntSize);
 
     void did_change(Gfx::IntRect const& modified_rect = {});
     void did_change_rect(Gfx::IntRect const& modified_rect = {});
     void did_modify_layer_stack();
+
+    ErrorOr<void> merge_layers(LayerMergeMode);
+    ErrorOr<void> merge_active_layer(NonnullRefPtr<Layer> const&, LayerMergeDirection);
 
     Gfx::IntSize m_size;
     NonnullRefPtrVector<Layer> m_layers;

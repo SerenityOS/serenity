@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -60,7 +60,7 @@ Gfx::Palette PageHost::palette() const
     return Gfx::Palette(*m_palette_impl);
 }
 
-void PageHost::set_palette_impl(Gfx::PaletteImpl const& impl)
+void PageHost::set_palette_impl(Gfx::PaletteImpl& impl)
 {
     m_palette_impl = impl;
     if (auto* document = page().top_level_browsing_context().active_document())

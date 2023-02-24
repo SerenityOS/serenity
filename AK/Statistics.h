@@ -8,10 +8,14 @@
 
 #include <AK/Concepts.h>
 #include <AK/Math.h>
+#include <AK/QuickSelect.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
 
 namespace AK {
+
+static constexpr int ODD_NAIVE_MEDIAN_CUTOFF = 200;
+static constexpr int EVEN_NAIVE_MEDIAN_CUTOFF = 350;
 
 template<Arithmetic T = float>
 class Statistics {
@@ -27,10 +31,24 @@ public:
     }
 
     T const sum() const { return m_sum; }
-    float average() const { return (float)sum() / size(); }
+
+    // FIXME: Unclear Wording, average can mean a lot of different things
+    // Median, Arithmetic Mean (which this is), Geometric Mean, Harmonic Mean etc
+    float average() const
+    {
+        // Let's assume the average of an empty dataset is 0
+        if (size() == 0)
+            return 0;
+
+        // TODO: sum might overflow so maybe do multiple partial sums and intermediate divisions here
+        return (float)sum() / size();
+    }
 
     T const min() const
     {
+        // Lets Rather fail than read over the end of a collection
+        VERIFY(size() != 0);
+
         T minimum = m_values[0];
         for (T number : values()) {
             if (number < minimum) {
@@ -42,6 +60,9 @@ public:
 
     T const max() const
     {
+        // Lets Rather fail than read over the end of a collection
+        VERIFY(size() != 0);
+
         T maximum = m_values[0];
         for (T number : values()) {
             if (number > maximum) {
@@ -51,16 +72,26 @@ public:
         return maximum;
     }
 
-    // FIXME: Implement a better algorithm
     T const median()
     {
-        quick_sort(m_values);
+        // Let's assume the Median of an empty dataset is 0
+        if (size() == 0)
+            return 0;
+
         // If the number of values is even, the median is the arithmetic mean of the two middle values
-        if (size() % 2 == 0) {
+        if (size() <= EVEN_NAIVE_MEDIAN_CUTOFF && size() % 2 == 0) {
+            quick_sort(m_values);
+            return (m_values.at(size() / 2) + m_values.at(size() / 2 - 1)) / 2;
+        } else if (size() <= ODD_NAIVE_MEDIAN_CUTOFF && size() % 2 == 1) {
+            quick_sort(m_values);
+            return m_values.at(m_values.size() / 2);
+        } else if (size() % 2 == 0) {
             auto index = size() / 2;
-            return (m_values.at(index) + m_values.at(index + 1)) / 2;
+            auto median1 = m_values.at(AK::quickselect_inplace(m_values, index));
+            auto median2 = m_values.at(AK::quickselect_inplace(m_values, index - 1));
+            return (median1 + median2) / 2;
         }
-        return m_values.at(size() / 2);
+        return m_values.at(AK::quickselect_inplace(m_values, size() / 2));
     }
 
     float standard_deviation() const { return sqrt(variance()); }

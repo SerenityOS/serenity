@@ -57,7 +57,7 @@ ErrorOr<void> Program::link(GPU::Device& device)
     // Link vertex shader objects
 
     Vector<GLSL::ObjectFile const*> vertex_shader_object_files;
-    for (auto vertex_shader : m_vertex_shaders)
+    for (auto const& vertex_shader : m_vertex_shaders)
         vertex_shader_object_files.append(vertex_shader->object_file());
 
     auto linked_vertex_shader_or_error = linker.link(vertex_shader_object_files);
@@ -65,7 +65,7 @@ ErrorOr<void> Program::link(GPU::Device& device)
     if (linked_vertex_shader_or_error.is_error()) {
         m_link_status = false;
         m_info_log = linker.messages();
-        return linked_vertex_shader_or_error.error();
+        return linked_vertex_shader_or_error.release_error();
     }
 
     m_linked_vertex_shader = linked_vertex_shader_or_error.release_value();
@@ -81,7 +81,7 @@ ErrorOr<void> Program::link(GPU::Device& device)
     if (linked_fragment_shader_or_error.is_error()) {
         m_link_status = false;
         m_info_log = linker.messages();
-        return linked_fragment_shader_or_error.error();
+        return linked_fragment_shader_or_error.release_error();
     }
 
     m_linked_fragment_shader = linked_fragment_shader_or_error.release_value();

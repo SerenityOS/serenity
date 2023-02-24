@@ -47,7 +47,7 @@ private:
     void restart_timer(int milliseconds);
 
     using Point = Gfx::IntPoint;
-    using BitmapArray = Vector<NonnullRefPtr<Gfx::Bitmap>>;
+    using BitmapArray = Vector<NonnullRefPtr<Gfx::Bitmap const>>;
 
     StringView const m_app_name;
     GameState m_game_state { GameState::Idle };

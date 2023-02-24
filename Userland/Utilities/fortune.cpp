@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
@@ -27,16 +27,15 @@ public:
             return {};
         auto& entry = value.as_object();
         Quote q;
-        if (!entry.has("quote"sv) || !entry.has("author"sv) || !entry.has("utc_time"sv) || !entry.has("url"sv))
+        if (!entry.has_string("quote"sv) || !entry.has_string("author"sv) || !entry.has_u64("utc_time"sv) || !entry.has_string("url"sv))
             return {};
         // From here on, trust that it's probably fine.
-        q.m_quote = entry.get_deprecated("quote"sv).as_string();
-        q.m_author = entry.get_deprecated("author"sv).as_string();
-        // It is sometimes parsed as u32, sometimes as u64, depending on how large the number is.
-        q.m_utc_time = entry.get_deprecated("utc_time"sv).to_number<u64>();
-        q.m_url = entry.get_deprecated("url"sv).as_string();
+        q.m_quote = entry.get_deprecated_string("quote"sv).value();
+        q.m_author = entry.get_deprecated_string("author"sv).value();
+        q.m_utc_time = entry.get_u64("utc_time"sv).value();
+        q.m_url = entry.get_deprecated_string("url"sv).value();
         if (entry.has("context"sv))
-            q.m_context = entry.get_deprecated("context"sv).as_string();
+            q.m_context = entry.get_deprecated_string("context"sv).value();
 
         return q;
     }
@@ -82,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Path to JSON file with quotes (/res/fortunes.json by default)", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
 
     TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));

@@ -10,7 +10,6 @@
 #include <AK/Forward.h>
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
-#include <LibCore/Stream.h>
 
 namespace Debug::Dwarf {
 
@@ -24,12 +23,13 @@ class AddressRangesV5 {
     AK_MAKE_NONMOVABLE(AddressRangesV5);
 
 public:
-    AddressRangesV5(NonnullOwnPtr<AK::Stream> range_lists_stream, CompilationUnit const& compilation_unit);
+    // FIXME: This should be fine with using a non-owned stream.
+    AddressRangesV5(NonnullOwnPtr<Stream> range_lists_stream, CompilationUnit const& compilation_unit);
 
     ErrorOr<void> for_each_range(Function<void(Range)>);
 
 private:
-    NonnullOwnPtr<AK::Stream> m_range_lists_stream;
+    NonnullOwnPtr<Stream> m_range_lists_stream;
     CompilationUnit const& m_compilation_unit;
 };
 
@@ -38,12 +38,12 @@ class AddressRangesV4 {
     AK_MAKE_NONMOVABLE(AddressRangesV4);
 
 public:
-    AddressRangesV4(NonnullOwnPtr<AK::Stream> ranges_stream, CompilationUnit const&);
+    AddressRangesV4(NonnullOwnPtr<Stream> ranges_stream, CompilationUnit const&);
 
     ErrorOr<void> for_each_range(Function<void(Range)>);
 
 private:
-    NonnullOwnPtr<AK::Stream> m_ranges_stream;
+    NonnullOwnPtr<Stream> m_ranges_stream;
     CompilationUnit const& m_compilation_unit;
 };
 

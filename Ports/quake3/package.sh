@@ -12,23 +12,28 @@ launcher_category="Games"
 launcher_command=/usr/local/games/quake3/ioquake3
 icon_file="misc/quake3.png"
 
+install_dir='/usr/local/games/quake3'
+
 install() {
-    run make COPYDIR=${SERENITY_INSTALL_ROOT}/usr/local/games/quake3/ copyfiles
+    run make COPYDIR=${SERENITY_INSTALL_ROOT}${install_dir}/ copyfiles
 }
 
 post_install() {
-	# Let's create a more Serenity friendly `autoexec.cfg` file :^)
-	cat <<- 'EOF' > ${SERENITY_INSTALL_ROOT}/usr/local/games/quake3/baseq3/autoexec.cfg
+    # Allow ioquake3 to use anonymous executable memory
+    bin_path="${install_dir}/ioquake3"
+    mkdir -p "${SERENITY_INSTALL_ROOT}/etc/fstab.d"
+    echo "${bin_path}	${bin_path}	bind	bind,nodev,nosuid,wxallowed" > "${SERENITY_INSTALL_ROOT}/etc/fstab.d/${port}"
+
+    # Let's create a more Serenity friendly `autoexec.cfg` file :^)
+    cat <<- 'EOF' > ${SERENITY_INSTALL_ROOT}${install_dir}/baseq3/autoexec.cfg
 set cl_renderer "opengl1"
 set r_fullscreen "0"
 set cg_drawfps "1"
 EOF
 
-echo ""
-echo ""
-echo "==== Post installation instructions ===="
-echo "Please remember to install baseq3 from your Quake3 install"
-echo "into /usr/local/games/quake3/"
-echo "Don't forget to add the following to Base/etc/fstab/:"
-echo "/usr/local/games/quake3	/usr/local/games/quake3	bind	bind,nodev,nosuid,wxallowed"
+    echo
+    echo
+    echo '==== Post installation instructions ===='
+    echo 'Please remember to install baseq3 from your Quake3 install'
+    echo "into ${install_dir}/"
 }

@@ -39,10 +39,7 @@ ToolboxWidget::ToolboxWidget()
     set_fill_with_background_color(true);
 
     set_fixed_width(26);
-
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_spacing(0);
-    layout()->set_margins(2);
+    set_layout<GUI::VerticalBoxLayout>(2, 0);
 
     m_action_group.set_exclusive(true);
     m_action_group.set_unchecking_allowed(false);

@@ -22,8 +22,7 @@ namespace SystemMonitor {
 NetworkStatisticsWidget::NetworkStatisticsWidget()
 {
     on_first_show = [this](auto&) {
-        set_layout<GUI::VerticalBoxLayout>();
-        layout()->set_margins(4);
+        set_layout<GUI::VerticalBoxLayout>(4);
         set_fill_with_background_color(true);
 
         m_network_connected_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/network-connected.png"sv).release_value_but_fixme_should_propagate_errors();
@@ -38,8 +37,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         }
 
         auto& adapters_group_box = add<GUI::GroupBox>("Adapters"sv);
-        adapters_group_box.set_layout<GUI::VerticalBoxLayout>();
-        adapters_group_box.layout()->set_margins(6);
+        adapters_group_box.set_layout<GUI::VerticalBoxLayout>(6);
         adapters_group_box.set_fixed_height(120);
 
         m_adapter_table_view = adapters_group_box.add<GUI::TableView>();
@@ -94,8 +92,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         };
 
         auto& tcp_sockets_group_box = add<GUI::GroupBox>("TCP Sockets"sv);
-        tcp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
-        tcp_sockets_group_box.layout()->set_margins(6);
+        tcp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>(6);
 
         m_tcp_socket_table_view = tcp_sockets_group_box.add<GUI::TableView>();
 
@@ -115,8 +112,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         m_tcp_socket_table_view->set_model(MUST(GUI::SortingProxyModel::create(*m_tcp_socket_model)));
 
         auto& udp_sockets_group_box = add<GUI::GroupBox>("UDP Sockets"sv);
-        udp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
-        udp_sockets_group_box.layout()->set_margins(6);
+        udp_sockets_group_box.set_layout<GUI::VerticalBoxLayout>(6);
 
         m_udp_socket_table_view = udp_sockets_group_box.add<GUI::TableView>();
 

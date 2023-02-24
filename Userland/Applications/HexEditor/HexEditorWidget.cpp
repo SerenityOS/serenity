@@ -17,7 +17,6 @@
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
@@ -34,6 +33,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
+#include <LibTextCodec/Decoder.h>
 #include <string.h>
 
 REGISTER_WIDGET(HexEditor, HexEditor);
@@ -100,7 +100,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](const GUI::Action&) {
         DeprecatedString value;
-        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
+        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:"sv, "New file size"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto file_size = value.to_uint();
             if (!file_size.has_value()) {
                 GUI::MessageBox::show(window(), "Invalid file size entered."sv, "Error"sv, GUI::MessageBox::Type::Error);
@@ -121,19 +121,19 @@ HexEditorWidget::HexEditorWidget()
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window(), {}, Core::StandardPaths::home_directory(), Core::OpenMode::ReadWrite);
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), {}, Core::StandardPaths::home_directory(), Core::File::OpenMode::ReadWrite);
         if (response.is_error())
             return;
 
-        open_file(response.value());
+        open_file(response.value().filename(), response.value().release_stream());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.is_empty())
             return m_save_as_action->activate();
 
-        if (!m_editor->save()) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        if (auto result = m_editor->save(); result.is_error()) {
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
         } else {
             window()->set_modified(false);
             m_editor->update();
@@ -142,18 +142,18 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_name, m_extension, Core::OpenMode::ReadWrite | Core::OpenMode::Truncate);
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, m_extension, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
         if (response.is_error())
             return;
         auto file = response.release_value();
-        if (!m_editor->save_as(file)) {
-            GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
+        if (auto result = m_editor->save_as(file.release_stream()); result.is_error()) {
+            GUI::MessageBox::show(window(), DeprecatedString::formatted("Unable to save file: {}\n"sv, result.error()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
         window()->set_modified(false);
-        set_path(file->filename());
-        dbgln("Wrote document to {}", file->filename());
+        set_path(file.filename());
+        dbgln("Wrote document to {}", file.filename());
     });
 
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
@@ -243,7 +243,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_fill_selection_action = GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         DeprecatedString value;
-        if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv) == GUI::InputBox::ExecResult::OK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Fill byte (hex):"sv, "Fill Selection"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
             auto result = m_editor->fill_selection(fill_byte);
             if (result.is_error())
@@ -366,7 +366,7 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8, utf8_view.unicode_substring_view(0, 1).as_string());
 
     if (byte_read_count % 2 == 0) {
-        Utf16View utf16_view { Span<u16 const> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
+        Utf16View utf16_view { ReadonlySpan<u16> { reinterpret_cast<u16 const*>(&unsigned_64_bit_int), 4 } };
         size_t valid_code_units;
         utf16_view.validate(valid_code_units);
         if (valid_code_units == 0)
@@ -377,7 +377,23 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
     }
 
+    auto selected_bytes = m_editor->get_selected_bytes();
+
+    auto ascii_string = DeprecatedString { ReadonlyBytes { selected_bytes } };
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string);
+
+    Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
+    utf8_string_view.validate(valid_bytes);
+    if (valid_bytes == 0)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, "");
+    else
+        // FIXME: replace control chars with something else - we don't want line breaks here ;)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_string_view.as_string());
+
     // FIXME: Parse as other values like Timestamp etc
+
+    DeprecatedString utf16_string = TextCodec::decoder_for("utf-16le"sv)->to_utf8(StringView(selected_bytes.span())).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_string);
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
@@ -525,11 +541,11 @@ void HexEditorWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-void HexEditorWidget::open_file(NonnullRefPtr<Core::File> file)
+void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     window()->set_modified(false);
-    m_editor->open_file(file);
-    set_path(file->filename());
+    m_editor->open_file(move(file));
+    set_path(filename.to_deprecated_string());
 }
 
 bool HexEditorWidget::request_close()
@@ -586,9 +602,9 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
-        open_file(response.value());
+        open_file(response.value().filename(), response.value().release_stream());
     }
 }

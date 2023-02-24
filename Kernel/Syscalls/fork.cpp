@@ -27,7 +27,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         }
     };
 
-    auto child_name = TRY(m_name->try_clone());
+    auto child_name = TRY(name().with([](auto& name) { return name->try_clone(); }));
     auto credentials = this->credentials();
     auto child = TRY(Process::try_create(child_first_thread, move(child_name), credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), m_tty, this));
 

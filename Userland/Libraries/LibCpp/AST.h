@@ -36,7 +36,7 @@ public:
     template<typename T>
     bool fast_is() const = delete;
 
-    ASTNode* parent() const { return m_parent; }
+    ASTNode const* parent() const { return m_parent; }
     Position start() const
     {
         VERIFY(m_start.has_value());
@@ -52,9 +52,9 @@ public:
         return m_filename;
     }
     void set_end(Position const& end) { m_end = end; }
-    void set_parent(ASTNode& parent) { m_parent = &parent; }
+    void set_parent(ASTNode const& parent) { m_parent = &parent; }
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const { return {}; }
+    virtual NonnullRefPtrVector<Declaration const> declarations() const { return {}; }
 
     virtual bool is_identifier() const { return false; }
     virtual bool is_member_expression() const { return false; }
@@ -66,7 +66,7 @@ public:
     virtual bool is_dummy_node() const { return false; }
 
 protected:
-    ASTNode(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    ASTNode(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : m_parent(parent)
         , m_start(start)
         , m_end(end)
@@ -75,7 +75,7 @@ protected:
     }
 
 private:
-    ASTNode* m_parent { nullptr };
+    ASTNode const* m_parent { nullptr };
     Optional<Position> m_start;
     Optional<Position> m_end;
     DeprecatedFlyString m_filename;
@@ -87,17 +87,17 @@ public:
     virtual ~TranslationUnit() override = default;
     virtual StringView class_name() const override { return "TranslationUnit"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_declarations; }
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override { return m_declarations; }
 
-    TranslationUnit(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    TranslationUnit(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
 
-    void set_declarations(NonnullRefPtrVector<Declaration>&& declarations) { m_declarations = move(declarations); }
+    void set_declarations(NonnullRefPtrVector<Declaration const>&& declarations) { m_declarations = move(declarations); }
 
 private:
-    NonnullRefPtrVector<Declaration> m_declarations;
+    NonnullRefPtrVector<Declaration const> m_declarations;
 };
 
 class Statement : public ASTNode {
@@ -105,10 +105,10 @@ public:
     virtual ~Statement() override = default;
     virtual StringView class_name() const override { return "Statement"sv; }
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
 
 protected:
-    Statement(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Statement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
@@ -129,15 +129,15 @@ public:
     bool is_member() const { return parent() != nullptr && parent()->is_declaration() && verify_cast<Declaration>(parent())->is_struct_or_class(); }
     Name const* name() const { return m_name; }
     StringView full_name() const;
-    void set_name(RefPtr<Name> name) { m_name = move(name); }
+    void set_name(RefPtr<Name const> name) { m_name = move(name); }
 
 protected:
-    Declaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Declaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
 
-    RefPtr<Name> m_name;
+    RefPtr<Name const> m_name;
     mutable Optional<DeprecatedString> m_full_name;
 };
 
@@ -146,7 +146,7 @@ class InvalidDeclaration : public Declaration {
 public:
     virtual ~InvalidDeclaration() override = default;
     virtual StringView class_name() const override { return "InvalidDeclaration"sv; }
-    InvalidDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    InvalidDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Declaration(parent, start, end, filename)
     {
     }
@@ -160,28 +160,28 @@ public:
     virtual bool is_function() const override { return true; }
     virtual bool is_constructor() const { return false; }
     virtual bool is_destructor() const { return false; }
-    RefPtr<FunctionDefinition> definition() { return m_definition; }
+    RefPtr<FunctionDefinition const> definition() { return m_definition; }
 
-    FunctionDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    FunctionDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Declaration(parent, start, end, filename)
     {
     }
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
     Vector<StringView> const& qualifiers() const { return m_qualifiers; }
     void set_qualifiers(Vector<StringView> const& qualifiers) { m_qualifiers = qualifiers; }
     Type const* return_type() const { return m_return_type.ptr(); }
-    void set_return_type(RefPtr<Type> const& return_type) { m_return_type = return_type; }
-    NonnullRefPtrVector<Parameter> const& parameters() const { return m_parameters; }
-    void set_parameters(NonnullRefPtrVector<Parameter> const& parameters) { m_parameters = parameters; }
+    void set_return_type(RefPtr<Type const> const& return_type) { m_return_type = return_type; }
+    NonnullRefPtrVector<Parameter const> const& parameters() const { return m_parameters; }
+    void set_parameters(NonnullRefPtrVector<Parameter const> const& parameters) { m_parameters = parameters; }
     FunctionDefinition const* definition() const { return m_definition.ptr(); }
-    void set_definition(RefPtr<FunctionDefinition>&& definition) { m_definition = move(definition); }
+    void set_definition(RefPtr<FunctionDefinition const>&& definition) { m_definition = move(definition); }
 
 private:
     Vector<StringView> m_qualifiers;
-    RefPtr<Type> m_return_type;
-    NonnullRefPtrVector<Parameter> m_parameters;
-    RefPtr<FunctionDefinition> m_definition;
+    RefPtr<Type const> m_return_type;
+    NonnullRefPtrVector<Parameter const> m_parameters;
+    RefPtr<FunctionDefinition const> m_definition;
 };
 
 class VariableOrParameterDeclaration : public Declaration {
@@ -189,16 +189,16 @@ public:
     virtual ~VariableOrParameterDeclaration() override = default;
     virtual bool is_variable_or_parameter_declaration() const override { return true; }
 
-    void set_type(RefPtr<Type>&& type) { m_type = move(type); }
+    void set_type(RefPtr<Type const>&& type) { m_type = move(type); }
     Type const* type() const { return m_type.ptr(); }
 
 protected:
-    VariableOrParameterDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    VariableOrParameterDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Declaration(parent, start, end, filename)
     {
     }
 
-    RefPtr<Type> m_type;
+    RefPtr<Type const> m_type;
 };
 
 class Parameter : public VariableOrParameterDeclaration {
@@ -208,7 +208,7 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_parameter() const override { return true; }
 
-    Parameter(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, RefPtr<Name> name)
+    Parameter(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, RefPtr<Name const> name)
         : VariableOrParameterDeclaration(parent, start, end, filename)
     {
         m_name = name;
@@ -237,7 +237,7 @@ public:
     void set_qualifiers(Vector<StringView>&& qualifiers) { m_qualifiers = move(qualifiers); }
 
 protected:
-    Type(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Type(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
@@ -254,16 +254,16 @@ public:
     virtual DeprecatedString to_deprecated_string() const override;
     virtual bool is_named_type() const override { return true; }
 
-    NamedType(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    NamedType(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Type(parent, start, end, filename)
     {
     }
 
     Name const* name() const { return m_name.ptr(); }
-    void set_name(RefPtr<Name>&& name) { m_name = move(name); }
+    void set_name(RefPtr<Name const>&& name) { m_name = move(name); }
 
 private:
-    RefPtr<Name> m_name;
+    RefPtr<Name const> m_name;
 };
 
 class Pointer : public Type {
@@ -273,16 +273,16 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual DeprecatedString to_deprecated_string() const override;
 
-    Pointer(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Pointer(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Type(parent, start, end, filename)
     {
     }
 
     Type const* pointee() const { return m_pointee.ptr(); }
-    void set_pointee(RefPtr<Type>&& pointee) { m_pointee = move(pointee); }
+    void set_pointee(RefPtr<Type const>&& pointee) { m_pointee = move(pointee); }
 
 private:
-    RefPtr<Type> m_pointee;
+    RefPtr<Type const> m_pointee;
 };
 
 class Reference : public Type {
@@ -297,14 +297,14 @@ public:
         Rvalue,
     };
 
-    Reference(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, Kind kind)
+    Reference(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, Kind kind)
         : Type(parent, start, end, filename)
         , m_kind(kind)
     {
     }
 
     Type const* referenced_type() const { return m_referenced_type.ptr(); }
-    void set_referenced_type(RefPtr<Type>&& pointee) { m_referenced_type = move(pointee); }
+    void set_referenced_type(RefPtr<Type const>&& pointee) { m_referenced_type = move(pointee); }
     Kind kind() const { return m_kind; }
 
 private:
@@ -319,17 +319,17 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual DeprecatedString to_deprecated_string() const override;
 
-    FunctionType(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    FunctionType(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Type(parent, start, end, filename)
     {
     }
 
     void set_return_type(Type& type) { m_return_type = type; }
-    void set_parameters(NonnullRefPtrVector<Parameter> parameters) { m_parameters = move(parameters); }
+    void set_parameters(NonnullRefPtrVector<Parameter const> parameters) { m_parameters = move(parameters); }
 
 private:
-    RefPtr<Type> m_return_type;
-    NonnullRefPtrVector<Parameter> m_parameters;
+    RefPtr<Type const> m_return_type;
+    NonnullRefPtrVector<Parameter const> m_parameters;
 };
 
 class FunctionDefinition : public ASTNode {
@@ -338,24 +338,24 @@ public:
     virtual StringView class_name() const override { return "FunctionDefinition"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    FunctionDefinition(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    FunctionDefinition(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
-    NonnullRefPtrVector<Statement> const& statements() { return m_statements; }
-    void add_statement(NonnullRefPtr<Statement>&& statement) { m_statements.append(move(statement)); }
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    NonnullRefPtrVector<Statement const> const& statements() { return m_statements; }
+    void add_statement(NonnullRefPtr<Statement const>&& statement) { m_statements.append(move(statement)); }
 
 private:
-    NonnullRefPtrVector<Statement> m_statements;
+    NonnullRefPtrVector<Statement const> m_statements;
 };
 
 class InvalidStatement : public Statement {
 public:
     virtual ~InvalidStatement() override = default;
     virtual StringView class_name() const override { return "InvalidStatement"sv; }
-    InvalidStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    InvalidStatement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
@@ -367,7 +367,7 @@ public:
     virtual StringView class_name() const override { return "Expression"sv; }
 
 protected:
-    Expression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Expression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
@@ -377,7 +377,7 @@ class InvalidExpression : public Expression {
 public:
     virtual ~InvalidExpression() override = default;
     virtual StringView class_name() const override { return "InvalidExpression"sv; }
-    InvalidExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    InvalidExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -389,7 +389,7 @@ public:
     virtual StringView class_name() const override { return "VariableDeclaration"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    VariableDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    VariableDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : VariableOrParameterDeclaration(parent, start, end, filename)
     {
     }
@@ -397,10 +397,10 @@ public:
     virtual bool is_variable_declaration() const override { return true; }
 
     Expression const* initial_value() const { return m_initial_value; }
-    void set_initial_value(RefPtr<Expression>&& initial_value) { m_initial_value = move(initial_value); }
+    void set_initial_value(RefPtr<Expression const>&& initial_value) { m_initial_value = move(initial_value); }
 
 private:
-    RefPtr<Expression> m_initial_value;
+    RefPtr<Expression const> m_initial_value;
 };
 
 class Identifier : public Expression {
@@ -409,12 +409,12 @@ public:
     virtual StringView class_name() const override { return "Identifier"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    Identifier(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, StringView name)
+    Identifier(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, StringView name)
         : Expression(parent, start, end, filename)
         , m_name(name)
     {
     }
-    Identifier(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Identifier(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Identifier(parent, start, end, filename, {})
     {
     }
@@ -436,21 +436,21 @@ public:
     virtual bool is_name() const override { return true; }
     virtual bool is_templatized() const { return false; }
 
-    Name(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Name(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
     virtual StringView full_name() const;
 
     Identifier const* name() const { return m_name.ptr(); }
-    void set_name(RefPtr<Identifier>&& name) { m_name = move(name); }
-    NonnullRefPtrVector<Identifier> const& scope() const { return m_scope; }
-    void set_scope(NonnullRefPtrVector<Identifier> scope) { m_scope = move(scope); }
-    void add_to_scope(NonnullRefPtr<Identifier>&& part) { m_scope.append(move(part)); }
+    void set_name(RefPtr<Identifier const>&& name) { m_name = move(name); }
+    NonnullRefPtrVector<Identifier const> const& scope() const { return m_scope; }
+    void set_scope(NonnullRefPtrVector<Identifier const> scope) { m_scope = move(scope); }
+    void add_to_scope(NonnullRefPtr<Identifier const>&& part) { m_scope.append(move(part)); }
 
 private:
-    RefPtr<Identifier> m_name;
-    NonnullRefPtrVector<Identifier> m_scope;
+    RefPtr<Identifier const> m_name;
+    NonnullRefPtrVector<Identifier const> m_scope;
     mutable Optional<DeprecatedString> m_full_name;
 };
 
@@ -461,15 +461,15 @@ public:
     virtual bool is_templatized() const override { return true; }
     virtual StringView full_name() const override;
 
-    TemplatizedName(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    TemplatizedName(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Name(parent, start, end, filename)
     {
     }
 
-    void add_template_argument(NonnullRefPtr<Type>&& type) { m_template_arguments.append(move(type)); }
+    void add_template_argument(NonnullRefPtr<Type const>&& type) { m_template_arguments.append(move(type)); }
 
 private:
-    NonnullRefPtrVector<Type> m_template_arguments;
+    NonnullRefPtrVector<Type const> m_template_arguments;
     mutable Optional<DeprecatedString> m_full_name;
 };
 
@@ -479,7 +479,7 @@ public:
     virtual StringView class_name() const override { return "NumericLiteral"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    NumericLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, StringView value)
+    NumericLiteral(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, StringView value)
         : Expression(parent, start, end, filename)
         , m_value(value)
     {
@@ -495,7 +495,7 @@ public:
     virtual StringView class_name() const override { return "NullPointerLiteral"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    NullPointerLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    NullPointerLiteral(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -507,7 +507,7 @@ public:
     virtual StringView class_name() const override { return "BooleanLiteral"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    BooleanLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, bool value)
+    BooleanLiteral(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, bool value)
         : Expression(parent, start, end, filename)
         , m_value(value)
     {
@@ -541,7 +541,7 @@ enum class BinaryOp {
 
 class BinaryExpression : public Expression {
 public:
-    BinaryExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    BinaryExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -553,14 +553,14 @@ public:
     BinaryOp op() const { return m_op; }
     void set_op(BinaryOp op) { m_op = op; }
     Expression const* lhs() const { return m_lhs.ptr(); }
-    void set_lhs(RefPtr<Expression>&& e) { m_lhs = move(e); }
+    void set_lhs(RefPtr<Expression const>&& e) { m_lhs = move(e); }
     Expression const* rhs() const { return m_rhs.ptr(); }
-    void set_rhs(RefPtr<Expression>&& e) { m_rhs = move(e); }
+    void set_rhs(RefPtr<Expression const>&& e) { m_rhs = move(e); }
 
 private:
     BinaryOp m_op;
-    RefPtr<Expression> m_lhs;
-    RefPtr<Expression> m_rhs;
+    RefPtr<Expression const> m_lhs;
+    RefPtr<Expression const> m_rhs;
 };
 
 enum class AssignmentOp {
@@ -571,7 +571,7 @@ enum class AssignmentOp {
 
 class AssignmentExpression : public Expression {
 public:
-    AssignmentExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    AssignmentExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -583,19 +583,19 @@ public:
     AssignmentOp op() const { return m_op; }
     void set_op(AssignmentOp op) { m_op = op; }
     Expression const* lhs() const { return m_lhs; }
-    void set_lhs(RefPtr<Expression>&& e) { m_lhs = move(e); }
+    void set_lhs(RefPtr<Expression const>&& e) { m_lhs = move(e); }
     Expression const* rhs() const { return m_rhs; }
-    void set_rhs(RefPtr<Expression>&& e) { m_rhs = move(e); }
+    void set_rhs(RefPtr<Expression const>&& e) { m_rhs = move(e); }
 
 private:
     AssignmentOp m_op {};
-    RefPtr<Expression> m_lhs;
-    RefPtr<Expression> m_rhs;
+    RefPtr<Expression const> m_lhs;
+    RefPtr<Expression const> m_rhs;
 };
 
 class FunctionCall : public Expression {
 public:
-    FunctionCall(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    FunctionCall(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -606,19 +606,19 @@ public:
     virtual bool is_function_call() const override { return true; }
 
     Expression const* callee() const { return m_callee.ptr(); }
-    void set_callee(RefPtr<Expression>&& callee) { m_callee = move(callee); }
+    void set_callee(RefPtr<Expression const>&& callee) { m_callee = move(callee); }
 
-    void add_argument(NonnullRefPtr<Expression>&& arg) { m_arguments.append(move(arg)); }
-    NonnullRefPtrVector<Expression> const& arguments() const { return m_arguments; }
+    void add_argument(NonnullRefPtr<Expression const>&& arg) { m_arguments.append(move(arg)); }
+    NonnullRefPtrVector<Expression const> const& arguments() const { return m_arguments; }
 
 private:
-    RefPtr<Expression> m_callee;
-    NonnullRefPtrVector<Expression> m_arguments;
+    RefPtr<Expression const> m_callee;
+    NonnullRefPtrVector<Expression const> m_arguments;
 };
 
 class StringLiteral final : public Expression {
 public:
-    StringLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    StringLiteral(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -639,17 +639,17 @@ public:
     virtual ~ReturnStatement() override = default;
     virtual StringView class_name() const override { return "ReturnStatement"sv; }
 
-    ReturnStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    ReturnStatement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
     Expression const* value() const { return m_value.ptr(); }
-    void set_value(RefPtr<Expression>&& value) { m_value = move(value); }
+    void set_value(RefPtr<Expression const>&& value) { m_value = move(value); }
 
 private:
-    RefPtr<Expression> m_value;
+    RefPtr<Expression const> m_value;
 };
 
 class EnumDeclaration : public Declaration {
@@ -659,7 +659,7 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_enum() const override { return true; }
 
-    EnumDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    EnumDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Declaration(parent, start, end, filename)
     {
     }
@@ -670,13 +670,13 @@ public:
     };
 
     void set_type(Type type) { m_type = type; }
-    void add_entry(StringView entry, RefPtr<Expression> value = nullptr) { m_entries.append({ entry, move(value) }); }
+    void add_entry(StringView entry, RefPtr<Expression const> value = nullptr) { m_entries.append({ entry, move(value) }); }
 
 private:
     Type m_type { Type::RegularEnum };
     struct EnumerationEntry {
         StringView name;
-        RefPtr<Expression> value;
+        RefPtr<Expression const> value;
     };
     Vector<EnumerationEntry> m_entries;
 };
@@ -689,29 +689,29 @@ public:
     virtual bool is_struct_or_class() const override { return true; }
     virtual bool is_struct() const override { return m_type == Type::Struct; }
     virtual bool is_class() const override { return m_type == Type::Class; }
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
 
     enum class Type {
         Struct,
         Class
     };
 
-    StructOrClassDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, StructOrClassDeclaration::Type type)
+    StructOrClassDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename, StructOrClassDeclaration::Type type)
         : Declaration(parent, start, end, filename)
         , m_type(type)
     {
     }
 
-    NonnullRefPtrVector<Declaration> const& members() const { return m_members; }
-    void set_members(NonnullRefPtrVector<Declaration>&& members) { m_members = move(members); }
+    NonnullRefPtrVector<Declaration const> const& members() const { return m_members; }
+    void set_members(NonnullRefPtrVector<Declaration const>&& members) { m_members = move(members); }
 
-    NonnullRefPtrVector<Name> const& baseclasses() const { return m_baseclasses; }
-    void set_baseclasses(NonnullRefPtrVector<Name>&& baseclasses) { m_baseclasses = move(baseclasses); }
+    NonnullRefPtrVector<Name const> const& baseclasses() const { return m_baseclasses; }
+    void set_baseclasses(NonnullRefPtrVector<Name const>&& baseclasses) { m_baseclasses = move(baseclasses); }
 
 private:
     StructOrClassDeclaration::Type m_type;
-    NonnullRefPtrVector<Declaration> m_members;
-    NonnullRefPtrVector<Name> m_baseclasses;
+    NonnullRefPtrVector<Declaration const> m_members;
+    NonnullRefPtrVector<Name const> m_baseclasses;
 };
 
 enum class UnaryOp {
@@ -726,7 +726,7 @@ enum class UnaryOp {
 
 class UnaryExpression : public Expression {
 public:
-    UnaryExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    UnaryExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -736,16 +736,16 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
     void set_op(UnaryOp op) { m_op = op; }
-    void set_lhs(RefPtr<Expression>&& e) { m_lhs = move(e); }
+    void set_lhs(RefPtr<Expression const>&& e) { m_lhs = move(e); }
 
 private:
     UnaryOp m_op;
-    RefPtr<Expression> m_lhs;
+    RefPtr<Expression const> m_lhs;
 };
 
 class MemberExpression : public Expression {
 public:
-    MemberExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    MemberExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -756,18 +756,18 @@ public:
     virtual bool is_member_expression() const override { return true; }
 
     Expression const* object() const { return m_object.ptr(); }
-    void set_object(RefPtr<Expression>&& object) { m_object = move(object); }
+    void set_object(RefPtr<Expression const>&& object) { m_object = move(object); }
     Expression const* property() const { return m_property.ptr(); }
-    void set_property(RefPtr<Expression>&& property) { m_property = move(property); }
+    void set_property(RefPtr<Expression const>&& property) { m_property = move(property); }
 
 private:
-    RefPtr<Expression> m_object;
-    RefPtr<Expression> m_property;
+    RefPtr<Expression const> m_object;
+    RefPtr<Expression const> m_property;
 };
 
 class ForStatement : public Statement {
 public:
-    ForStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    ForStatement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
@@ -776,24 +776,24 @@ public:
     virtual StringView class_name() const override { return "ForStatement"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
 
-    void set_init(RefPtr<VariableDeclaration>&& init) { m_init = move(init); }
-    void set_test(RefPtr<Expression>&& test) { m_test = move(test); }
-    void set_update(RefPtr<Expression>&& update) { m_update = move(update); }
-    void set_body(RefPtr<Statement>&& body) { m_body = move(body); }
+    void set_init(RefPtr<VariableDeclaration const>&& init) { m_init = move(init); }
+    void set_test(RefPtr<Expression const>&& test) { m_test = move(test); }
+    void set_update(RefPtr<Expression const>&& update) { m_update = move(update); }
+    void set_body(RefPtr<Statement const>&& body) { m_body = move(body); }
     Statement const* body() const { return m_body.ptr(); }
 
 private:
-    RefPtr<VariableDeclaration> m_init;
-    RefPtr<Expression> m_test;
-    RefPtr<Expression> m_update;
-    RefPtr<Statement> m_body;
+    RefPtr<VariableDeclaration const> m_init;
+    RefPtr<Expression const> m_test;
+    RefPtr<Expression const> m_update;
+    RefPtr<Statement const> m_body;
 };
 
 class BlockStatement final : public Statement {
 public:
-    BlockStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    BlockStatement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
@@ -802,17 +802,17 @@ public:
     virtual StringView class_name() const override { return "BlockStatement"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
 
-    void add_statement(NonnullRefPtr<Statement>&& statement) { m_statements.append(move(statement)); }
+    void add_statement(NonnullRefPtr<Statement const>&& statement) { m_statements.append(move(statement)); }
 
 private:
-    NonnullRefPtrVector<Statement> m_statements;
+    NonnullRefPtrVector<Statement const> m_statements;
 };
 
 class Comment final : public Statement {
 public:
-    Comment(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Comment(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
@@ -823,7 +823,7 @@ public:
 
 class IfStatement : public Statement {
 public:
-    IfStatement(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    IfStatement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Statement(parent, start, end, filename)
     {
     }
@@ -831,19 +831,19 @@ public:
     virtual ~IfStatement() override = default;
     virtual StringView class_name() const override { return "IfStatement"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual NonnullRefPtrVector<Declaration> declarations() const override;
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
 
-    void set_predicate(RefPtr<Expression>&& predicate) { m_predicate = move(predicate); }
-    void set_then_statement(RefPtr<Statement>&& then) { m_then = move(then); }
-    void set_else_statement(RefPtr<Statement>&& _else) { m_else = move(_else); }
+    void set_predicate(RefPtr<Expression const>&& predicate) { m_predicate = move(predicate); }
+    void set_then_statement(RefPtr<Statement const>&& then) { m_then = move(then); }
+    void set_else_statement(RefPtr<Statement const>&& _else) { m_else = move(_else); }
 
     Statement const* then_statement() const { return m_then.ptr(); }
     Statement const* else_statement() const { return m_else.ptr(); }
 
 private:
-    RefPtr<Expression> m_predicate;
-    RefPtr<Statement> m_then;
-    RefPtr<Statement> m_else;
+    RefPtr<Expression const> m_predicate;
+    RefPtr<Statement const> m_then;
+    RefPtr<Statement const> m_else;
 };
 
 class NamespaceDeclaration : public Declaration {
@@ -853,21 +853,21 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_namespace() const override { return true; }
 
-    NamespaceDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    NamespaceDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Declaration(parent, start, end, filename)
     {
     }
 
-    virtual NonnullRefPtrVector<Declaration> declarations() const override { return m_declarations; }
-    void add_declaration(NonnullRefPtr<Declaration>&& declaration) { m_declarations.append(move(declaration)); }
+    virtual NonnullRefPtrVector<Declaration const> declarations() const override { return m_declarations; }
+    void add_declaration(NonnullRefPtr<Declaration const>&& declaration) { m_declarations.append(move(declaration)); }
 
 private:
-    NonnullRefPtrVector<Declaration> m_declarations;
+    NonnullRefPtrVector<Declaration const> m_declarations;
 };
 
 class CppCastExpression : public Expression {
 public:
-    CppCastExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    CppCastExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -877,18 +877,18 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
     void set_cast_type(StringView cast_type) { m_cast_type = move(cast_type); }
-    void set_type(NonnullRefPtr<Type>&& type) { m_type = move(type); }
-    void set_expression(NonnullRefPtr<Expression>&& e) { m_expression = move(e); }
+    void set_type(NonnullRefPtr<Type const>&& type) { m_type = move(type); }
+    void set_expression(NonnullRefPtr<Expression const>&& e) { m_expression = move(e); }
 
 private:
     StringView m_cast_type;
-    RefPtr<Type> m_type;
-    RefPtr<Expression> m_expression;
+    RefPtr<Type const> m_type;
+    RefPtr<Expression const> m_expression;
 };
 
 class CStyleCastExpression : public Expression {
 public:
-    CStyleCastExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    CStyleCastExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -897,17 +897,17 @@ public:
     virtual StringView class_name() const override { return "CStyleCastExpression"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    void set_type(NonnullRefPtr<Type>&& type) { m_type = move(type); }
-    void set_expression(NonnullRefPtr<Expression>&& e) { m_expression = move(e); }
+    void set_type(NonnullRefPtr<Type const>&& type) { m_type = move(type); }
+    void set_expression(NonnullRefPtr<Expression const>&& e) { m_expression = move(e); }
 
 private:
-    RefPtr<Type> m_type;
-    RefPtr<Expression> m_expression;
+    RefPtr<Type const> m_type;
+    RefPtr<Expression const> m_expression;
 };
 
 class SizeofExpression : public Expression {
 public:
-    SizeofExpression(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    SizeofExpression(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -916,15 +916,15 @@ public:
     virtual StringView class_name() const override { return "SizeofExpression"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    void set_type(RefPtr<Type>&& type) { m_type = move(type); }
+    void set_type(RefPtr<Type const>&& type) { m_type = move(type); }
 
 private:
-    RefPtr<Type> m_type;
+    RefPtr<Type const> m_type;
 };
 
 class BracedInitList : public Expression {
 public:
-    BracedInitList(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    BracedInitList(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
     {
     }
@@ -933,15 +933,15 @@ public:
     virtual StringView class_name() const override { return "BracedInitList"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    void add_expression(NonnullRefPtr<Expression>&& exp) { m_expressions.append(move(exp)); }
+    void add_expression(NonnullRefPtr<Expression const>&& exp) { m_expressions.append(move(exp)); }
 
 private:
-    NonnullRefPtrVector<Expression> m_expressions;
+    NonnullRefPtrVector<Expression const> m_expressions;
 };
 
 class DummyAstNode : public ASTNode {
 public:
-    DummyAstNode(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    DummyAstNode(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
@@ -957,7 +957,7 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_constructor() const override { return true; }
 
-    Constructor(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Constructor(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : FunctionDeclaration(parent, start, end, filename)
     {
     }
@@ -970,7 +970,7 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_destructor() const override { return true; }
 
-    Destructor(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    Destructor(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : FunctionDeclaration(parent, start, end, filename)
     {
     }
@@ -982,7 +982,7 @@ public:
     virtual StringView class_name() const override { return "UsingNamespaceDeclaration"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    UsingNamespaceDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+    UsingNamespaceDeclaration(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Declaration(parent, start, end, filename)
     {
     }

@@ -110,6 +110,12 @@ public:
         return !m_exception.template has<Empty>();
     }
 
+    ValueType release_value_but_fixme_should_propagate_errors()
+    {
+        VERIFY(!is_error());
+        return release_value();
+    }
+
     // These are for compatibility with the TRY() macro in AK.
     [[nodiscard]] bool is_error() const { return is_exception(); }
     Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> release_error() { return exception(); }

@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/HighResolutionTime/DOMHighResTimeStamp.h>
 
 namespace Web::Fetch::Infrastructure {

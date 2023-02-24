@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -49,7 +49,7 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<Deprecated
     // Note: The List is source text occurrence ordered!
     struct RequestedModuleAndSourceIndex {
         u32 source_offset { 0 };
-        ModuleRequest* module_request { nullptr };
+        ModuleRequest const* module_request { nullptr };
     };
 
     Vector<RequestedModuleAndSourceIndex> requested_modules_with_indices;
@@ -89,7 +89,7 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<Deprecated
             // 2. Let assertions be AssertClauseToAssertions of AssertClause.
             auto assertions = assert_clause_to_assertions(module.module_request->assertions, supported_import_assertions);
             // Note: We have to modify the assertions in place because else it might keep non supported ones
-            module.module_request->assertions = move(assertions);
+            const_cast<ModuleRequest*>(module.module_request)->assertions = move(assertions);
 
             // 3. Return a ModuleRequest Record { [[Specifer]]: specifier, [[Assertions]]: assertions }.
             requested_modules_in_source_order.empend(module.module_request->module_specifier, module.module_request->assertions);
@@ -102,7 +102,7 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<Deprecated
 SourceTextModule::SourceTextModule(Realm& realm, StringView filename, Script::HostDefined* host_defined, bool has_top_level_await, NonnullRefPtr<Program> body, Vector<ModuleRequest> requested_modules,
     Vector<ImportEntry> import_entries, Vector<ExportEntry> local_export_entries,
     Vector<ExportEntry> indirect_export_entries, Vector<ExportEntry> star_export_entries,
-    RefPtr<ExportStatement> default_export)
+    RefPtr<ExportStatement const> default_export)
     : CyclicModule(realm, filename, has_top_level_await, move(requested_modules), host_defined)
     , m_ecmascript_code(move(body))
     , m_execution_context(realm.heap())
@@ -157,7 +157,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
     Vector<ExportEntry> star_export_entries;
 
     // Note: Not in the spec but makes it easier to find the default.
-    RefPtr<ExportStatement> default_export;
+    RefPtr<ExportStatement const> default_export;
 
     // 9. Let exportEntries be ExportEntries of body.
     // 10. For each ExportEntry Record ee of exportEntries, do

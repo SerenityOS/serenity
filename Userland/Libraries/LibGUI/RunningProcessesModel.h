@@ -38,7 +38,7 @@ private:
     struct Process {
         pid_t pid;
         uid_t uid;
-        RefPtr<Gfx::Bitmap> icon;
+        RefPtr<Gfx::Bitmap const> icon;
         DeprecatedString name;
     };
     Vector<Process> m_processes;

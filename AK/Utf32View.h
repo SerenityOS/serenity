@@ -8,6 +8,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -41,6 +42,9 @@ public:
         VERIFY(m_length > 0);
         return *m_ptr;
     }
+
+    // NOTE: This returns {} if the peek is at or past EOF.
+    Optional<u32> peek(size_t offset = 0) const;
 
     constexpr int code_point_length_in_bytes() const { return sizeof(u32); }
     bool done() const { return !m_length; }
@@ -117,6 +121,11 @@ private:
 
     u32 const* m_code_points { nullptr };
     size_t m_length { 0 };
+};
+
+template<>
+struct Formatter<Utf32View> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder&, Utf32View const&);
 };
 
 }

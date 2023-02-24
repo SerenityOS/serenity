@@ -18,9 +18,9 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -251,7 +251,7 @@ void Editor::add_to_history(DeprecatedString const& line)
 
 bool Editor::load_history(DeprecatedString const& path)
 {
-    auto history_file = Core::File::construct(path);
+    auto history_file = Core::DeprecatedFile::construct(path);
     if (!history_file->open(Core::OpenMode::ReadOnly))
         return false;
     auto data = history_file->read_all();
@@ -311,7 +311,7 @@ bool Editor::save_history(DeprecatedString const& path)
 {
     Vector<HistoryEntry> final_history { { "", 0 } };
     {
-        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadWrite, 0600);
+        auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadWrite, 0600);
         if (file_or_error.is_error())
             return false;
         auto file = file_or_error.release_value();
@@ -326,7 +326,7 @@ bool Editor::save_history(DeprecatedString const& path)
             [](HistoryEntry const& left, HistoryEntry const& right) { return left.timestamp < right.timestamp; });
     }
 
-    auto file_or_error = Core::File::open(path, Core::OpenMode::WriteOnly, 0600);
+    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::WriteOnly, 0600);
     if (file_or_error.is_error())
         return false;
     auto file = file_or_error.release_value();
@@ -602,7 +602,7 @@ ErrorOr<void> Editor::interrupted()
 
     m_finish = false;
     {
-        auto stderr_stream = TRY(Core::Stream::File::standard_error());
+        auto stderr_stream = TRY(Core::File::standard_error());
         TRY(reposition_cursor(*stderr_stream, true));
         if (TRY(m_suggestion_display->cleanup()))
             TRY(reposition_cursor(*stderr_stream, true));
@@ -648,7 +648,7 @@ ErrorOr<void> Editor::handle_resize_event(bool reset_origin)
 
     set_origin(m_origin_row, 1);
 
-    auto stderr_stream = TRY(Core::Stream::File::standard_error());
+    auto stderr_stream = TRY(Core::File::standard_error());
 
     TRY(reposition_cursor(*stderr_stream, true));
     TRY(m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns));
@@ -665,7 +665,7 @@ ErrorOr<void> Editor::really_quit_event_loop()
 {
     m_finish = false;
     {
-        auto stderr_stream = TRY(Core::Stream::File::standard_error());
+        auto stderr_stream = TRY(Core::File::standard_error());
         TRY(reposition_cursor(*stderr_stream, true));
         TRY(stderr_stream->write_entire_buffer("\n"sv.bytes()));
     }
@@ -731,7 +731,7 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
     strip_styles(true);
 
     {
-        auto stderr_stream = Core::Stream::File::standard_error().release_value_but_fixme_should_propagate_errors();
+        auto stderr_stream = Core::File::standard_error().release_value_but_fixme_should_propagate_errors();
         auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
         for (size_t i = 0; i < prompt_lines; ++i)
             stderr_stream->write_entire_buffer("\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
@@ -1173,7 +1173,7 @@ ErrorOr<void> Editor::handle_read_event()
             for (auto& view : completion_result.insert)
                 insert(view);
 
-            auto stderr_stream = TRY(Core::Stream::File::standard_error());
+            auto stderr_stream = TRY(Core::File::standard_error());
             TRY(reposition_cursor(*stderr_stream));
 
             if (completion_result.style_to_apply.has_value()) {
@@ -1252,7 +1252,7 @@ ErrorOr<void> Editor::cleanup_suggestions()
         // We probably have some suggestions drawn,
         // let's clean them up.
         if (TRY(m_suggestion_display->cleanup())) {
-            auto stderr_stream = TRY(Core::Stream::File::standard_error());
+            auto stderr_stream = TRY(Core::File::standard_error());
             TRY(reposition_cursor(*stderr_stream));
             m_refresh_needed = true;
         }
@@ -1326,7 +1326,7 @@ ErrorOr<void> Editor::cleanup()
     if (new_lines < m_shown_lines)
         m_extra_forward_lines = max(m_shown_lines - new_lines, m_extra_forward_lines);
 
-    auto stderr_stream = TRY(Core::Stream::File::standard_error());
+    auto stderr_stream = TRY(Core::File::standard_error());
     TRY(reposition_cursor(*stderr_stream, true));
     auto current_line = num_lines() - 1;
     TRY(VT::clear_lines(current_line, m_extra_forward_lines, *stderr_stream));
@@ -1582,7 +1582,7 @@ void Editor::strip_styles(bool strip_anchored)
     m_refresh_needed = true;
 }
 
-ErrorOr<void> Editor::reposition_cursor(AK::Stream& stream, bool to_end)
+ErrorOr<void> Editor::reposition_cursor(Stream& stream, bool to_end)
 {
     auto cursor = m_cursor;
     auto saved_cursor = m_cursor;
@@ -1604,12 +1604,12 @@ ErrorOr<void> Editor::reposition_cursor(AK::Stream& stream, bool to_end)
     return {};
 }
 
-ErrorOr<void> VT::move_absolute(u32 row, u32 col, AK::Stream& stream)
+ErrorOr<void> VT::move_absolute(u32 row, u32 col, Stream& stream)
 {
     return stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{}H", row, col).bytes());
 }
 
-ErrorOr<void> VT::move_relative(int row, int col, AK::Stream& stream)
+ErrorOr<void> VT::move_relative(int row, int col, Stream& stream)
 {
     char x_op = 'A', y_op = 'D';
 
@@ -1761,7 +1761,7 @@ DeprecatedString Style::to_deprecated_string() const
     return builder.to_deprecated_string();
 }
 
-ErrorOr<void> VT::apply_style(Style const& style, AK::Stream& stream, bool is_starting)
+ErrorOr<void> VT::apply_style(Style const& style, Stream& stream, bool is_starting)
 {
     if (is_starting) {
         TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{};{}m{}{}{}",
@@ -1779,7 +1779,7 @@ ErrorOr<void> VT::apply_style(Style const& style, AK::Stream& stream, bool is_st
     return {};
 }
 
-ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, AK::Stream& stream)
+ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, Stream& stream)
 {
     if (count_below + count_above == 0) {
         TRY(stream.write_entire_buffer("\033[2K"sv.bytes()));
@@ -1798,17 +1798,17 @@ ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, AK::Stream
     return {};
 }
 
-ErrorOr<void> VT::save_cursor(AK::Stream& stream)
+ErrorOr<void> VT::save_cursor(Stream& stream)
 {
     return stream.write_entire_buffer("\033[s"sv.bytes());
 }
 
-ErrorOr<void> VT::restore_cursor(AK::Stream& stream)
+ErrorOr<void> VT::restore_cursor(Stream& stream)
 {
     return stream.write_entire_buffer("\033[u"sv.bytes());
 }
 
-ErrorOr<void> VT::clear_to_end_of_line(AK::Stream& stream)
+ErrorOr<void> VT::clear_to_end_of_line(Stream& stream)
 {
     return stream.write_entire_buffer("\033[K"sv.bytes());
 }

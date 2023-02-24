@@ -1,26 +1,26 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Forward.h>
 
 struct FontSelector {
-    DeprecatedFlyString family;
+    FlyString family;
     float point_size { 0 };
     int weight { 0 };
+    int width { 0 };
     int slope { 0 };
 
     bool operator==(FontSelector const& other) const
     {
-        return family == other.family && point_size == other.point_size && weight == other.weight && slope == other.slope;
+        return family == other.family && point_size == other.point_size && weight == other.weight && width == other.width && slope == other.slope;
     }
 };
 
@@ -34,10 +34,10 @@ struct Traits<FontSelector> : public GenericTraits<FontSelector> {
 class FontCache {
 public:
     static FontCache& the();
-    RefPtr<Gfx::Font> get(FontSelector const&) const;
-    void set(FontSelector const&, NonnullRefPtr<Gfx::Font>);
+    RefPtr<Gfx::Font const> get(FontSelector const&) const;
+    void set(FontSelector const&, NonnullRefPtr<Gfx::Font const>);
 
 private:
     FontCache() = default;
-    mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font>> m_fonts;
+    mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font const>> m_fonts;
 };

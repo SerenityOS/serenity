@@ -10,8 +10,8 @@
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/FileIconProvider.h>
@@ -61,7 +61,7 @@ bool FileSystemModel::Node::fetch_data(DeprecatedString const& full_path, bool i
     mtime = st.st_mtime;
 
     if (S_ISLNK(mode)) {
-        auto sym_link_target_or_error = Core::File::read_link(full_path);
+        auto sym_link_target_or_error = Core::DeprecatedFile::read_link(full_path);
         if (sym_link_target_or_error.is_error())
             perror("readlink");
         else {
@@ -120,10 +120,21 @@ void FileSystemModel::Node::traverse_if_needed()
 
         auto child = maybe_child.release_nonnull();
         total_size += child->size;
-        if (S_ISDIR(child->mode))
+        if (S_ISDIR(child->mode)) {
             directory_children.append(move(child));
-        else
-            file_children.append(move(child));
+        } else {
+            if (!m_model.m_allowed_file_extensions.has_value()) {
+                file_children.append(move(child));
+                continue;
+            }
+
+            for (auto& extension : *m_model.m_allowed_file_extensions) {
+                if (child_name.ends_with(DeprecatedString::formatted(".{}", extension))) {
+                    file_children.append(move(child));
+                    break;
+                }
+            }
+        }
     }
 
     m_children.extend(move(directory_children));
@@ -747,6 +758,15 @@ void FileSystemModel::set_should_show_dotfiles(bool show)
     m_should_show_dotfiles = show;
 
     // FIXME: add a way to granularly update in this case.
+    invalidate();
+}
+
+void FileSystemModel::set_allowed_file_extensions(Optional<Vector<DeprecatedString>> const& allowed_file_extensions)
+{
+    if (m_allowed_file_extensions == allowed_file_extensions)
+        return;
+    m_allowed_file_extensions = allowed_file_extensions;
+
     invalidate();
 }
 

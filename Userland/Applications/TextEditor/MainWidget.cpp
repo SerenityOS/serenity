@@ -12,7 +12,6 @@
 #include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>
-#include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -272,11 +271,12 @@ MainWidget::MainWidget()
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window());
+        auto response = FileSystemAccessClient::Client::the().open_file(window());
         if (response.is_error())
             return;
 
-        read_file(*response.value());
+        if (auto result = read_file(response.value().filename(), response.value().stream()); result.is_error())
+            GUI::MessageBox::show(window(), "Unable to open file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -284,18 +284,18 @@ MainWidget::MainWidget()
         if (extension.is_null() && m_editor->syntax_highlighter())
             extension = Syntax::common_language_extension(m_editor->syntax_highlighter()->language());
 
-        auto response = FileSystemAccessClient::Client::the().try_save_file_deprecated(window(), m_name, extension);
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, extension);
         if (response.is_error())
             return;
 
         auto file = response.release_value();
-        if (!m_editor->write_to_file(*file)) {
+        if (auto result = m_editor->write_to_file(file.stream()); result.is_error()) {
             GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
 
-        set_path(file->filename());
-        dbgln("Wrote document to {}", file->filename());
+        set_path(file.filename());
+        dbgln("Wrote document to {}", file.filename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -303,17 +303,17 @@ MainWidget::MainWidget()
             m_save_as_action->activate();
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), m_path, Core::OpenMode::Truncate | Core::OpenMode::WriteOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path, Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
         if (response.is_error())
             return;
 
-        if (!m_editor->write_to_file(*response.value())) {
+        if (auto result = m_editor->write_to_file(response.value().stream()); result.is_error()) {
             GUI::MessageBox::show(window(), "Unable to save file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
         }
     });
 
     auto file_manager_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_open_folder_action = GUI::Action::create("Open Containing Folder", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
+    m_open_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl | Mod_Shift, Key_O }, file_manager_icon, [&](auto&) {
         auto lexical_path = LexicalPath(m_path);
         Desktop::Launcher::open(URL::create_with_file_scheme(lexical_path.dirname(), lexical_path.basename()));
     });
@@ -746,12 +746,12 @@ void MainWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-bool MainWidget::read_file(Core::File& file)
+ErrorOr<void> MainWidget::read_file(String const& filename, Core::File& file)
 {
-    m_editor->set_text(file.read_all());
-    set_path(file.filename());
+    m_editor->set_text(TRY(file.read_until_eof()));
+    set_path(filename);
     m_editor->set_focus(true);
-    return true;
+    return {};
 }
 
 void MainWidget::open_nonexistent_file(DeprecatedString const& path)
@@ -803,11 +803,11 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (!request_close())
             return;
 
-        // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), urls.first().path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().path());
         if (response.is_error())
             return;
-        read_file(*response.value());
+        if (auto result = read_file(response.value().filename(), response.value().stream()); result.is_error())
+            GUI::MessageBox::show(window(), "Unable to open file.\n"sv, "Error"sv, GUI::MessageBox::Type::Error);
     }
 }
 

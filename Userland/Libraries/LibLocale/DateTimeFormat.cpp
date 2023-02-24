@@ -92,9 +92,9 @@ StringView calendar_pattern_style_to_string(CalendarPatternStyle style)
 }
 
 Optional<HourCycleRegion> __attribute__((weak)) hour_cycle_region_from_string(StringView) { return {}; }
-Vector<HourCycle> __attribute__((weak)) get_regional_hour_cycles(StringView) { return {}; }
+ErrorOr<Vector<HourCycle>> __attribute__((weak)) get_regional_hour_cycles(StringView) { return Vector<HourCycle> {}; }
 
-template<typename T, typename GetRegionalValues>
+template<typename T, FallibleFunction<StringView> GetRegionalValues>
 static ErrorOr<T> find_regional_values_for_locale(StringView locale, GetRegionalValues&& get_regional_values)
 {
     auto has_value = [](auto const& container) {
@@ -104,7 +104,7 @@ static ErrorOr<T> find_regional_values_for_locale(StringView locale, GetRegional
             return !container.is_empty();
     };
 
-    if (auto regional_values = get_regional_values(locale); has_value(regional_values))
+    if (auto regional_values = TRY(get_regional_values(locale)); has_value(regional_values))
         return regional_values;
 
     auto return_default_values = [&]() { return get_regional_values("001"sv); };
@@ -118,10 +118,16 @@ static ErrorOr<T> find_regional_values_for_locale(StringView locale, GetRegional
     if (!language.has_value() || !language->region.has_value())
         return return_default_values();
 
-    if (auto regional_values = get_regional_values(*language->region); has_value(regional_values))
+    if (auto regional_values = TRY(get_regional_values(*language->region)); has_value(regional_values))
         return regional_values;
 
     return return_default_values();
+}
+
+template<typename T, typename GetRegionalValues>
+static ErrorOr<T> find_regional_values_for_locale(StringView locale, GetRegionalValues&& get_regional_values)
+{
+    return find_regional_values_for_locale<T>(locale, [&](auto region) -> ErrorOr<T> { return get_regional_values(region); });
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Date_Field_Symbol_Table
@@ -187,22 +193,22 @@ ErrorOr<String> combine_skeletons(StringView first, StringView second)
 
     StringBuilder builder;
 
-    auto append_from_skeleton = [&](auto skeleton, auto ch) {
+    auto append_from_skeleton = [&](auto skeleton, auto ch) -> ErrorOr<bool> {
         auto first_index = skeleton.find(ch);
         if (!first_index.has_value())
             return false;
 
         auto last_index = skeleton.find_last(ch);
 
-        builder.append(skeleton.substring_view(*first_index, *last_index - *first_index + 1));
+        TRY(builder.try_append(skeleton.substring_view(*first_index, *last_index - *first_index + 1)));
         return true;
     };
 
     for (auto fields : field_order) {
         for (auto ch : fields) {
-            if (append_from_skeleton(first, ch))
+            if (TRY(append_from_skeleton(first, ch)))
                 break;
-            if (append_from_skeleton(second, ch))
+            if (TRY(append_from_skeleton(second, ch)))
                 break;
         }
     }

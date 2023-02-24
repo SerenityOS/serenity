@@ -23,8 +23,8 @@ class CSSRuleList : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(CSSRuleList, Bindings::LegacyPlatformObject);
 
 public:
-    static CSSRuleList* create(JS::Realm&, JS::MarkedVector<CSSRule*> const&);
-    static CSSRuleList* create_empty(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSRuleList>> create(JS::Realm&, JS::MarkedVector<CSSRule*> const&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSRuleList>> create_empty(JS::Realm&);
 
     ~CSSRuleList() = default;
 

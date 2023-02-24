@@ -77,15 +77,13 @@ InspectorWidget::InspectorWidget()
 {
     set_fill_with_background_color(true);
 
-    auto& layout = set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 4, 4, 4, 4 });
+    set_layout<GUI::VerticalBoxLayout>(4);
     auto& splitter = add<GUI::VerticalSplitter>();
 
     auto& top_tab_widget = splitter.add<GUI::TabWidget>();
 
     auto& dom_tree_container = top_tab_widget.add_tab<GUI::Widget>("DOM");
-    dom_tree_container.set_layout<GUI::VerticalBoxLayout>();
-    dom_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
+    dom_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_dom_tree_view = dom_tree_container.add<GUI::TreeView>();
     m_dom_tree_view->on_selection_change = [this] {
         const auto& index = m_dom_tree_view->selection().first();
@@ -93,30 +91,25 @@ InspectorWidget::InspectorWidget()
     };
 
     auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility");
-    accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>();
-    accessibility_tree_container.layout()->set_margins({ 4, 4, 4, 4 });
+    accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_accessibility_tree_view = accessibility_tree_container.add<GUI::TreeView>();
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
     auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed");
-    computed_style_table_container.set_layout<GUI::VerticalBoxLayout>();
-    computed_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    computed_style_table_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
 
     auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved");
-    resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>();
-    resolved_style_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_resolved_style_table_view = resolved_style_table_container.add<GUI::TableView>();
 
     auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables");
-    custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>();
-    custom_properties_table_container.layout()->set_margins({ 4, 4, 4, 4 });
+    custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
 
     auto& box_model_widget = bottom_tab_widget.add_tab<GUI::Widget>("Box Model");
-    box_model_widget.set_layout<GUI::VerticalBoxLayout>();
-    box_model_widget.layout()->set_margins({ 4, 4, 4, 4 });
+    box_model_widget.set_layout<GUI::VerticalBoxLayout>(4);
     m_element_size_view = box_model_widget.add<ElementSizePreviewWidget>();
     m_element_size_view->set_should_hide_unnecessary_scrollbars(true);
 

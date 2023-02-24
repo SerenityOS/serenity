@@ -13,7 +13,7 @@ namespace WebSocket {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, move(socket), 1)
 {
     s_connections.set(1, *this);
@@ -73,6 +73,15 @@ Messages::WebSocketServer::ReadyStateResponse ConnectionFromClient::ready_state(
         return (u32)connection->ready_state();
     }
     return (u32)ReadyState::Closed;
+}
+
+Messages::WebSocketServer::SubprotocolInUseResponse ConnectionFromClient::subprotocol_in_use(i32 connection_id)
+{
+    RefPtr<WebSocket> connection = m_connections.get(connection_id).value_or({});
+    if (connection) {
+        return connection->subprotocol_in_use();
+    }
+    return DeprecatedString::empty();
 }
 
 void ConnectionFromClient::send(i32 connection_id, bool is_text, ByteBuffer const& data)

@@ -83,7 +83,7 @@ public:
     void notify_about_theme_change();
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>, int client_id);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>, int client_id);
 
     // ^ConnectionFromClient
     virtual void die() override;

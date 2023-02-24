@@ -6,19 +6,20 @@
  */
 
 #include "FileArgument.h"
-#include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 
 namespace TextEditor {
 
-FileArgument::FileArgument(DeprecatedString file_argument)
+FileArgument::FileArgument(String file_argument)
 {
     m_line = {};
     m_column = {};
 
-    // A file doesn't exist with the full specified name, maybe the user entered line/column coordinates?
+    // A file doesn't exist with the full specified name, maybe the user entered
+    // line/column coordinates?
     Regex<PosixExtended> re("^(.+?)(?::([0-9]+))?(?::([0-9]+))?$");
-    RegexResult result = match(file_argument, re, PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Ungreedy);
+    RegexResult result = match(file_argument, re,
+        PosixFlags::Global | PosixFlags::Multiline | PosixFlags::Ungreedy);
     auto& groups = result.capture_group_matches.at(0);
 
     // Match 0 group 0: file name
@@ -26,9 +27,9 @@ FileArgument::FileArgument(DeprecatedString file_argument)
     // Match 0 group 2: column number
     if (groups.size() > 2) {
         // Both a line and column number were specified.
-        auto filename = groups.at(0).view.to_deprecated_string();
-        auto initial_line_number = groups.at(1).view.to_deprecated_string().to_int();
-        auto initial_column_number = groups.at(2).view.to_deprecated_string().to_int();
+        auto filename = groups.at(0).view.to_string().release_value_but_fixme_should_propagate_errors();
+        auto initial_line_number = groups.at(1).view.to_string().release_value_but_fixme_should_propagate_errors().to_number<int>();
+        auto initial_column_number = groups.at(2).view.to_string().release_value_but_fixme_should_propagate_errors().to_number<int>();
 
         m_filename = filename;
         if (initial_line_number.has_value() && initial_line_number.value() > 0)
@@ -37,15 +38,16 @@ FileArgument::FileArgument(DeprecatedString file_argument)
             m_column = initial_column_number.value();
     } else if (groups.size() == 2) {
         // Only a line number was specified.
-        auto filename = groups.at(0).view.to_deprecated_string();
-        auto initial_line_number = groups.at(1).view.to_deprecated_string().to_int();
+        auto filename = groups.at(0).view.to_string().release_value_but_fixme_should_propagate_errors();
+        auto initial_line_number = groups.at(1).view.to_string().release_value_but_fixme_should_propagate_errors().to_number<int>();
 
         m_filename = filename;
         if (initial_line_number.has_value() && initial_line_number.value() > 0)
             m_line = initial_line_number.value();
     } else {
-        // A colon was found at the end of the file name but no values were found after it.
-        m_filename = groups.at(0).view.to_deprecated_string();
+        // A colon was found at the end of the file name but no values were found
+        // after it.
+        m_filename = groups.at(0).view.to_string().release_value_but_fixme_should_propagate_errors();
     }
 }
 }

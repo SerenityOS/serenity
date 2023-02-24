@@ -5,8 +5,7 @@
 [Exposed=(Window,Worker)]
 interface WebSocket : EventTarget {
 
-    // FIXME: A second "protocols" argument should be added once supported
-    constructor(USVString url);
+    constructor(USVString url, optional (DOMString or sequence<DOMString>) protocols);
 
     readonly attribute USVString url;
 

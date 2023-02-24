@@ -692,6 +692,24 @@
       "unitless-length"
     ]
   },
+  "font-stretch": {
+    "inherited": true,
+    "initial": "normal",
+    "valid-types": [
+      "percentage [0,∞]"
+    ],
+    "valid-identifiers": [
+      "normal",
+      "ultra-condensed",
+      "extra-condensed",
+      "condensed",
+      "semi-condensed",
+      "semi-expanded",
+      "expanded",
+      "extra-expanded",
+      "ultra-expanded"
+    ]
+  },
   "font-style": {
     "inherited": true,
     "initial": "normal",

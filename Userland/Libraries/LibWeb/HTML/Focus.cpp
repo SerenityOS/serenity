@@ -65,9 +65,9 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
         //    with related blur target as the related target.
         if (blur_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto blur_event = UIEvents::FocusEvent::create(blur_event_target->realm(), HTML::EventNames::blur);
+            auto blur_event = UIEvents::FocusEvent::create(blur_event_target->realm(), HTML::EventNames::blur).release_value_but_fixme_should_propagate_errors();
             blur_event->set_related_target(related_blur_target);
-            blur_event_target->dispatch_event(*blur_event);
+            blur_event_target->dispatch_event(blur_event);
         }
     }
 
@@ -108,9 +108,9 @@ static void run_focus_update_steps(Vector<JS::Handle<DOM::Node>> old_chain, Vect
         //    with related focus target as the related target.
         if (focus_event_target) {
             // FIXME: Implement the "fire a focus event" spec operation.
-            auto focus_event = UIEvents::FocusEvent::create(focus_event_target->realm(), HTML::EventNames::focus);
+            auto focus_event = UIEvents::FocusEvent::create(focus_event_target->realm(), HTML::EventNames::focus).release_value_but_fixme_should_propagate_errors();
             focus_event->set_related_target(related_focus_target);
-            focus_event_target->dispatch_event(*focus_event);
+            focus_event_target->dispatch_event(focus_event);
         }
     }
 }
@@ -210,7 +210,7 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
     // with the focusing steps.
 
     auto is_shadow_host = [](DOM::Node* node) {
-        return is<DOM::Element>(node) && static_cast<DOM::Element*>(node)->shadow_root() != nullptr;
+        return is<DOM::Element>(node) && static_cast<DOM::Element*>(node)->is_shadow_host();
     };
 
     // 1. If old focus target is a shadow host whose shadow root's delegates focus is true, and old focus target's
@@ -218,7 +218,7 @@ void run_unfocusing_steps(DOM::Node* old_focus_target)
     //    context's DOM anchor, then set old focus target to that currently focused area of a top-level browsing
     //    context.
     if (is_shadow_host(old_focus_target)) {
-        auto* shadow_root = static_cast<DOM::Element*>(old_focus_target)->shadow_root();
+        auto* shadow_root = static_cast<DOM::Element*>(old_focus_target)->shadow_root_internal();
         if (shadow_root->delegates_focus()) {
             auto& top_level_browsing_context = old_focus_target->document().browsing_context()->top_level_browsing_context();
             if (auto currently_focused_area = top_level_browsing_context.currently_focused_area()) {

@@ -29,7 +29,7 @@ JavaScriptModuleScript::JavaScriptModuleScript(AK::URL base_url, DeprecatedStrin
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-javascript-module-script
-JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(DeprecatedString const& filename, StringView source, EnvironmentSettingsObject& settings_object, AK::URL base_url)
+WebIDL::ExceptionOr<JS::GCPtr<JavaScriptModuleScript>> JavaScriptModuleScript::create(DeprecatedString const& filename, StringView source, EnvironmentSettingsObject& settings_object, AK::URL base_url)
 {
     // 1. If scripting is disabled for settings, then set source to the empty string.
     if (settings_object.is_scripting_disabled())
@@ -38,7 +38,7 @@ JS::GCPtr<JavaScriptModuleScript> JavaScriptModuleScript::create(DeprecatedStrin
     auto& realm = settings_object.realm();
 
     // 2. Let script be a new module script that this algorithm will subsequently initialize.
-    auto script = realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object).release_allocated_value_but_fixme_should_propagate_errors();
+    auto script = MUST_OR_THROW_OOM(realm.heap().allocate<JavaScriptModuleScript>(realm, move(base_url), filename, settings_object));
 
     // 3. Set script's settings object to settings.
     // NOTE: This was already done when constructing.

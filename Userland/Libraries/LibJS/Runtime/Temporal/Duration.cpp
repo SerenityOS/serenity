@@ -305,7 +305,7 @@ ThrowCompletionOr<PartialDurationRecord> to_temporal_partial_duration_record(VM&
     // 1. If Type(temporalDurationLike) is not Object, then
     if (!temporal_duration_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_duration_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, temporal_duration_like.to_string_without_side_effects()));
     }
 
     // 2. Let result be a new partial Duration Record with each field set to undefined.
@@ -692,7 +692,7 @@ ThrowCompletionOr<DateDurationRecord> unbalance_duration_relative(VM& vm, double
             auto until_options = Object::create(realm, nullptr);
 
             // iii. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
-            MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"sv)));
+            MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "month"sv))));
 
             // iv. Let untilResult be ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
             auto* until_result = TRY(calendar_date_until(vm, *calendar, relative_to, new_relative_to, *until_options, date_until));
@@ -928,7 +928,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
         auto until_options = Object::create(realm, nullptr);
 
         // m. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
-        MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"sv)));
+        MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "month"sv))));
 
         // n. Let untilResult be ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
         auto* until_result = TRY(calendar_date_until(vm, calendar, relative_to, new_relative_to, *until_options, date_until));
@@ -954,7 +954,7 @@ ThrowCompletionOr<DateDurationRecord> balance_duration_relative(VM& vm, double y
             until_options = Object::create(realm, nullptr);
 
             // vi. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "month").
-            MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "month"sv)));
+            MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "month"sv))));
 
             // vii. Set untilResult to ? CalendarDateUntil(calendar, relativeTo, newRelativeTo, untilOptions, dateUntil).
             until_result = TRY(calendar_date_until(vm, calendar, relative_to, new_relative_to, *until_options, date_until));
@@ -1109,7 +1109,7 @@ ThrowCompletionOr<DurationRecord> add_duration(VM& vm, double years1, double mon
         auto difference_options = Object::create(realm, nullptr);
 
         // i. Perform ! CreateDataPropertyOrThrow(differenceOptions, "largestUnit", dateLargestUnit).
-        MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, date_largest_unit)));
+        MUST(difference_options->create_data_property_or_throw(vm.names.largestUnit, MUST_OR_THROW_OOM(PrimitiveString::create(vm, date_largest_unit))));
 
         // j. Let dateDifference be ? CalendarDateUntil(calendar, relativeTo, end, differenceOptions).
         auto* date_difference = TRY(calendar_date_until(vm, calendar, &relative_to, end, *difference_options));
@@ -1312,7 +1312,7 @@ ThrowCompletionOr<RoundedDuration> round_duration(VM& vm, double years, double m
         auto until_options = Object::create(realm, nullptr);
 
         // l. Perform ! CreateDataPropertyOrThrow(untilOptions, "largestUnit", "year").
-        MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, PrimitiveString::create(vm, "year"sv)));
+        MUST(until_options->create_data_property_or_throw(vm.names.largestUnit, MUST_OR_THROW_OOM(PrimitiveString::create(vm, "year"sv))));
 
         // m. Let timePassed be ? CalendarDateUntil(calendar, relativeTo, wholeDaysLater, untilOptions).
         auto* time_passed = TRY(calendar_date_until(vm, *calendar, relative_to, whole_days_later, *until_options));

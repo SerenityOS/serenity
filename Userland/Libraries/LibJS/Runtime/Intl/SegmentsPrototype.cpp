@@ -54,10 +54,10 @@ JS_DEFINE_NATIVE_FUNCTION(SegmentsPrototype::containing)
         return js_undefined();
 
     // 8. Let startIndex be ! FindBoundary(segmenter, string, n, before).
-    auto start_index = find_boundary(segmenter, string, n, Direction::Before, segments->boundaries_cache());
+    auto start_index = find_boundary(segmenter, string, n, Direction::Before);
 
     // 9. Let endIndex be ! FindBoundary(segmenter, string, n, after).
-    auto end_index = find_boundary(segmenter, string, n, Direction::After, segments->boundaries_cache());
+    auto end_index = find_boundary(segmenter, string, n, Direction::After);
 
     // 10. Return ! CreateSegmentDataObject(segmenter, string, startIndex, endIndex).
     return TRY(create_segment_data_object(vm, segmenter, string, start_index, end_index));

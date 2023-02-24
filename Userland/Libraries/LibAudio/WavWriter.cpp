@@ -5,6 +5,7 @@
  */
 
 #include <LibAudio/WavWriter.h>
+#include <LibCore/DeprecatedFile.h>
 
 namespace Audio {
 
@@ -31,7 +32,7 @@ WavWriter::~WavWriter()
 
 void WavWriter::set_file(StringView path)
 {
-    m_file = Core::File::construct(path);
+    m_file = Core::DeprecatedFile::construct(path);
     if (!m_file->open(Core::OpenMode::ReadWrite)) {
         m_error_string = DeprecatedString::formatted("Can't open file: {}", m_file->error_string());
         return;

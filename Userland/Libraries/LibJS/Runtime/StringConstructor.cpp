@@ -47,7 +47,7 @@ ThrowCompletionOr<Value> StringConstructor::call()
     if (!vm.argument_count())
         return PrimitiveString::create(vm, String {});
     if (vm.argument(0).is_symbol())
-        return PrimitiveString::create(vm, vm.argument(0).as_symbol().to_deprecated_string());
+        return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, vm.argument(0).as_symbol().descriptive_string()));
     return TRY(vm.argument(0).to_primitive_string(vm));
 }
 
@@ -59,7 +59,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> StringConstructor::construct(FunctionObj
 
     PrimitiveString* primitive_string;
     if (!vm.argument_count())
-        primitive_string = PrimitiveString::create(vm, "");
+        primitive_string = PrimitiveString::create(vm, String {});
     else
         primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     auto literal_segments = TRY(length_of_array_like(vm, *raw));
 
     if (literal_segments == 0)
-        return PrimitiveString::create(vm, "");
+        return PrimitiveString::create(vm, String {});
 
     auto const number_of_substituions = vm.argument_count() - 1;
 
@@ -120,10 +120,10 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
     for (size_t i = 0; i < vm.argument_count(); ++i) {
         auto next_code_point = TRY(vm.argument(i).to_number(vm));
         if (!next_code_point.is_integral_number())
-            return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
+            return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, TRY_OR_THROW_OOM(vm, next_code_point.to_string_without_side_effects()));
         auto code_point = TRY(next_code_point.to_i32(vm));
         if (code_point < 0 || code_point > 0x10FFFF)
-            return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
+            return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, TRY_OR_THROW_OOM(vm, next_code_point.to_string_without_side_effects()));
 
         TRY_OR_THROW_OOM(vm, code_point_to_utf16(string, static_cast<u32>(code_point)));
     }

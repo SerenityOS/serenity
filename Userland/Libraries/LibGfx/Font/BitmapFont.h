@@ -44,6 +44,8 @@ public:
 
     virtual float pixel_size() const override { return m_glyph_height; }
 
+    u16 width() const override { return FontWidth::Normal; }
+
     u16 weight() const override { return m_weight; }
     void set_weight(u16 weight) { m_weight = weight; }
 
@@ -59,12 +61,10 @@ public:
     bool contains_glyph(u32 code_point) const override;
     bool contains_raw_glyph(u32 code_point) const { return m_glyph_widths[code_point] > 0; }
 
-    virtual float glyph_or_emoji_width(u32 code_point) const override
-    {
-        if (m_fixed_width)
-            return m_glyph_width;
-        return glyph_or_emoji_width_for_variable_width_font(code_point);
-    }
+    virtual float glyph_or_emoji_width(u32) const override;
+    virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const override;
+    virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const override;
+
     float glyphs_horizontal_kerning(u32, u32) const override { return 0.f; }
     u8 glyph_height() const override { return m_glyph_height; }
     int x_height() const override { return m_x_height; }
@@ -123,6 +123,8 @@ public:
     DeprecatedString qualified_name() const override;
     DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
 
+    virtual RefPtr<Font> with_size(float point_size) const override;
+
 private:
     BitmapFont(DeprecatedString name, DeprecatedString family, u8* rows, u8* widths, bool is_fixed_width,
         u8 glyph_width, u8 glyph_height, u8 glyph_spacing, u16 range_mask_size, u8* range_mask,
@@ -134,7 +136,6 @@ private:
     int unicode_view_width(T const& view) const;
 
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
-    int glyph_or_emoji_width_for_variable_width_font(u32 code_point) const;
 
     DeprecatedString m_name;
     DeprecatedString m_family;

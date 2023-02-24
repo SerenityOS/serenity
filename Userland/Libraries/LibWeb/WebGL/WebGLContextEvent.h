@@ -19,8 +19,8 @@ class WebGLContextEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(WebGLContextEvent, DOM::Event);
 
 public:
-    static WebGLContextEvent* create(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
-    static WebGLContextEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> create(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
 
     virtual ~WebGLContextEvent() override;
 

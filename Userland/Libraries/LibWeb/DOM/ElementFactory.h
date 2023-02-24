@@ -10,6 +10,6 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<Element> create_element(Document&, DeprecatedFlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix = {});
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document&, DeprecatedFlyString local_name, DeprecatedFlyString namespace_, DeprecatedFlyString prefix = {});
 
 }

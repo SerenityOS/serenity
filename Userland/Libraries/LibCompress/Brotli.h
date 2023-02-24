@@ -9,12 +9,9 @@
 #include <AK/BitStream.h>
 #include <AK/CircularQueue.h>
 #include <AK/FixedArray.h>
-#include <LibCore/Stream.h>
+#include <AK/Vector.h>
 
 namespace Compress {
-
-using AK::LittleEndianInputBitStream;
-using AK::Stream;
 
 class BrotliDecompressionStream : public Stream {
 public:

@@ -499,8 +499,18 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
+            // U+2028 LINE SEPARATOR
+            constexpr static u32 const LineSeparator { 0x2028 };
+            // U+2029 PARAGRAPH SEPARATOR
+            constexpr static u32 const ParagraphSeparator { 0x2029 };
+
             auto input_view = input.view.substring_view(state.string_position, 1)[0];
-            if (input_view != '\n' || (input.regex_options.has_flag_set(AllFlags::SingleLine) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline))) {
+            auto is_equivalent_to_newline = input_view == '\n'
+                || (input.regex_options.has_flag_set(AllFlags::Internal_ECMA262DotSemantics)
+                        ? (input_view == '\r' || input_view == LineSeparator || input_view == ParagraphSeparator)
+                        : false);
+
+            if (!is_equivalent_to_newline || (input.regex_options.has_flag_set(AllFlags::SingleLine) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline))) {
                 if (current_inversion_state())
                     inverse_matched = true;
                 else

@@ -27,10 +27,12 @@ add_compile_options(-fsized-deallocation)
 add_compile_options(-fstack-clash-protection)
 add_compile_options(-fstack-protector-strong)
 add_link_options(-fstack-protector-strong)
-add_compile_options(-g1)
 
 # FIXME: Remove this once DWARF revision 5 is supported
 add_compile_options(-gdwarf-4)
+
+# Note: This needs to be set _after_ setting the DWARF version, otherwise we end up generating more debug information than we need.
+add_compile_options(-g1)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-literal-suffix)
@@ -49,4 +51,11 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
     link_directories(${TOOLCHAIN_ROOT}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
+endif()
+
+if ("${SERENITY_ARCH}" STREQUAL "aarch64")
+    # Unaligned memory access will cause a trap, so to make sure the compiler doesn't generate
+    # those unaligned accesses, the strict-align flag is added.
+    # FIXME: Remove -Wno-cast-align when we are able to build everything without this warning turned on.
+    add_compile_options(-mstrict-align -Wno-cast-align)
 endif()

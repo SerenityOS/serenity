@@ -23,9 +23,9 @@ void Intrinsics::create_web_prototype_and_constructor<HeadersIteratorPrototype>(
 
 namespace Web::Fetch {
 
-JS::NonnullGCPtr<HeadersIterator> HeadersIterator::create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HeadersIterator>> HeadersIterator::create(Headers const& headers, JS::Object::PropertyKind iteration_kind)
 {
-    return headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(headers.heap().allocate<HeadersIterator>(headers.realm(), headers, iteration_kind));
 }
 
 HeadersIterator::HeadersIterator(Headers const& headers, JS::Object::PropertyKind iteration_kind)
@@ -68,14 +68,16 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
         return create_iterator_result_object(vm(), JS::js_undefined(), true);
 
     auto const& pair = pairs[m_index++];
+    StringView pair_name { pair.name };
+    StringView pair_value { pair.value };
 
     switch (m_iteration_kind) {
     case JS::Object::PropertyKind::Key:
-        return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), StringView { pair.name }), false);
+        return create_iterator_result_object(vm(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_name)), false);
     case JS::Object::PropertyKind::Value:
-        return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), StringView { pair.value }), false);
+        return create_iterator_result_object(vm(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_value)), false);
     case JS::Object::PropertyKind::KeyAndValue: {
-        auto array = JS::Array::create_from(realm(), { JS::PrimitiveString::create(vm(), StringView { pair.name }), JS::PrimitiveString::create(vm(), StringView { pair.value }) });
+        auto array = JS::Array::create_from(realm(), { MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_name)), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_value)) });
         return create_iterator_result_object(vm(), array, false);
     }
     default:

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Fetch/Headers.h>
 
@@ -15,7 +16,7 @@ class HeadersIterator final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(HeadersIterator, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<HeadersIterator> create(Headers const&, JS::Object::PropertyKind iteration_kind);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<HeadersIterator>> create(Headers const&, JS::Object::PropertyKind iteration_kind);
 
     virtual ~HeadersIterator() override;
 

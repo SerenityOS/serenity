@@ -482,6 +482,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         // Apparently most loaders will just skip these?
         // Seems if the 'link editor' generates one something is funky with your code
         break;
+    case R_AARCH64_ABS64:
     case R_X86_64_64: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
@@ -500,6 +501,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr = call_ifunc_resolver(VirtualAddress { *patch_ptr }).get();
         break;
     }
+    case R_AARCH64_GLOB_DAT:
     case R_X86_64_GLOB_DAT: {
         auto symbol = relocation.symbol();
         auto res = lookup_symbol(symbol);
@@ -528,6 +530,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         *patch_ptr = symbol_location.get();
         break;
     }
+    case R_AARCH64_RELATIVE:
     case R_X86_64_RELATIVE: {
         if (!image().is_dynamic())
             break;
@@ -540,6 +543,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             *patch_ptr += m_dynamic_object->base_address().get();
         break;
     }
+    case R_AARCH64_TLS_TPREL64:
     case R_X86_64_TPOFF64: {
         auto symbol = relocation.symbol();
         FlatPtr symbol_value;
@@ -565,6 +569,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
 
         break;
     }
+    case R_AARCH64_JUMP_SLOT:
     case R_X86_64_JUMP_SLOT: {
         // FIXME: Or BIND_NOW flag passed in?
         if (m_dynamic_object->must_bind_now()) {

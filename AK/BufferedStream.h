@@ -8,12 +8,13 @@
 #pragma once
 
 #include <AK/CircularBuffer.h>
+#include <AK/OwnPtr.h>
 #include <AK/Stream.h>
 
 namespace AK {
 
 template<typename T>
-concept StreamLike = IsBaseOf<AK::Stream, T>;
+concept StreamLike = IsBaseOf<Stream, T>;
 template<typename T>
 concept SeekableStreamLike = IsBaseOf<SeekableStream, T>;
 
@@ -238,12 +239,12 @@ private:
             auto result = stream().read(fillable_slice);
             if (result.is_error()) {
                 if (!result.error().is_errno())
-                    return result.error();
+                    return result.release_error();
                 if (result.error().code() == EINTR)
                     continue;
                 if (result.error().code() == EAGAIN)
                     break;
-                return result.error();
+                return result.release_error();
             }
             auto const filled_slice = result.value();
             VERIFY(m_buffer.write(filled_slice) == filled_slice.size());
@@ -295,7 +296,7 @@ public:
 
         return result;
     }
-    virtual ErrorOr<void> truncate(off_t length) override
+    virtual ErrorOr<void> truncate(size_t length) override
     {
         return m_helper.stream().truncate(length);
     }

@@ -7,8 +7,8 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <pwd.h>
@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto file = TRY(Core::Stream::File::open("/var/run/utmp"sv, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open("/var/run/utmp"sv, Core::File::OpenMode::Read));
     auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
     if (!json.is_object()) {
@@ -40,10 +40,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
     json.as_object().for_each_member([&](auto& tty, auto& value) {
         const JsonObject& entry = value.as_object();
-        auto uid = entry.get_deprecated("uid"sv).to_u32();
-        [[maybe_unused]] auto pid = entry.get_deprecated("pid"sv).to_i32();
+        auto uid = entry.get_u32("uid"sv).value_or(0);
+        [[maybe_unused]] auto pid = entry.get_i32("pid"sv).value_or(0);
 
-        auto login_time = Core::DateTime::from_timestamp(entry.get_deprecated("login_at"sv).to_number<time_t>());
+        auto login_time = Core::DateTime::from_timestamp(entry.get_integer<time_t>("login_at"sv).value_or(0));
         auto login_at = login_time.to_deprecated_string("%b%d %H:%M:%S"sv);
 
         auto* pw = getpwuid(uid);

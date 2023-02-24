@@ -8,23 +8,22 @@
 #include <AK/Error.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
-#include <LibCore/Stream.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
 #include <unistd.h>
 
 namespace Gemini {
 
-Job::Job(GeminiRequest const& request, AK::Stream& output_stream)
+Job::Job(GeminiRequest const& request, Stream& output_stream)
     : Core::NetworkJob(output_stream)
     , m_request(request)
 {
 }
 
-void Job::start(Core::Stream::Socket& socket)
+void Job::start(Core::Socket& socket)
 {
     VERIFY(!m_socket);
-    m_socket = verify_cast<Core::Stream::BufferedSocketBase>(&socket);
+    m_socket = verify_cast<Core::BufferedSocketBase>(&socket);
     on_socket_connected();
 }
 

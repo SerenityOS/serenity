@@ -14,8 +14,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Variant.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibLocale/PluralRules.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
@@ -398,7 +397,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
 
     LexicalPath core_supplemental_path(move(core_path));
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
@@ -426,7 +425,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR&)
+static ErrorOr<void> generate_unicode_locale_header(Core::BufferedFile& file, CLDR&)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -447,7 +446,7 @@ namespace Locale {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -622,7 +621,7 @@ PluralCategory determine_plural_category(StringView locale, PluralForm form, Plu
     return decider(move(operands));
 }
 
-Span<PluralCategory const> available_plural_categories(StringView locale, PluralForm form)
+ReadonlySpan<PluralCategory> available_plural_categories(StringView locale, PluralForm form)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -673,8 +672,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(locale_names_path, "Path to cldr-localenames directory", "locale-names-path", 'l', "locale-names-path");
     args_parser.parse(arguments);
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
 
     CLDR cldr;
     TRY(parse_all_locales(core_path, locale_names_path, cldr));

@@ -37,7 +37,7 @@ class Window final
     WEB_PLATFORM_OBJECT(Window, DOM::EventTarget);
 
 public:
-    static JS::NonnullGCPtr<Window> create(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Window>> create(JS::Realm&);
 
     ~Window();
 

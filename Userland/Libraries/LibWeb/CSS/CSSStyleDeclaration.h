@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +21,7 @@ enum class Important {
 struct StyleProperty {
     Important important { Important::No };
     CSS::PropertyID property_id;
-    NonnullRefPtr<StyleValue> value;
+    NonnullRefPtr<StyleValue const> value;
     DeprecatedString custom_name {};
 };
 
@@ -63,7 +63,7 @@ class PropertyOwningCSSStyleDeclaration : public CSSStyleDeclaration {
     friend class ElementInlineCSSStyleDeclaration;
 
 public:
-    static PropertyOwningCSSStyleDeclaration* create(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PropertyOwningCSSStyleDeclaration>> create(JS::Realm&, Vector<StyleProperty>, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual ~PropertyOwningCSSStyleDeclaration() override = default;
 
@@ -92,7 +92,7 @@ protected:
     void set_the_declarations(Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
 private:
-    bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue>, Important);
+    bool set_a_css_declaration(PropertyID, NonnullRefPtr<StyleValue const>, Important);
 
     Vector<StyleProperty> m_properties;
     HashMap<DeprecatedString, StyleProperty> m_custom_properties;
@@ -102,7 +102,7 @@ class ElementInlineCSSStyleDeclaration final : public PropertyOwningCSSStyleDecl
     WEB_PLATFORM_OBJECT(ElementInlineCSSStyleDeclaration, PropertyOwningCSSStyleDeclaration);
 
 public:
-    static ElementInlineCSSStyleDeclaration* create(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ElementInlineCSSStyleDeclaration>> create(DOM::Element&, Vector<StyleProperty> properties, HashMap<DeprecatedString, StyleProperty> custom_properties);
 
     virtual ~ElementInlineCSSStyleDeclaration() override = default;
 

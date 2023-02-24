@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +20,7 @@ REGISTER_WIDGET(GUI, DialogButton)
 
 namespace GUI {
 
-Button::Button(DeprecatedString text)
+Button::Button(String text)
     : AbstractButton(move(text))
 {
     set_min_size({ 40, 22 });
@@ -89,18 +89,15 @@ void Button::paint_event(PaintEvent& event)
             // Reusing that threshold here as it seems to work reasonably well.
             should_invert_icon = contrast_ratio < 4.5f && contrast_ratio < palette().button().contrast_ratio(solid_color->inverted());
         }
-        if (should_invert_icon)
-            m_icon->invert();
+        auto icon = should_invert_icon ? m_icon->inverted().release_value_but_fixme_should_propagate_errors() : NonnullRefPtr { *m_icon };
         if (is_enabled()) {
             if (is_hovered())
-                painter.blit_brightened(icon_location, *m_icon, m_icon->rect());
+                painter.blit_brightened(icon_location, *icon, icon->rect());
             else
-                painter.blit(icon_location, *m_icon, m_icon->rect());
+                painter.blit(icon_location, *icon, icon->rect());
         } else {
-            painter.blit_disabled(icon_location, *m_icon, m_icon->rect(), palette());
+            painter.blit_disabled(icon_location, *icon, icon->rect(), palette());
         }
-        if (should_invert_icon)
-            m_icon->invert();
     }
     auto& font = is_checked() ? this->font().bold_variant() : this->font();
     if (m_icon && !text().is_empty()) {
@@ -145,6 +142,12 @@ void Button::click(unsigned modifiers)
         m_action->activate(this);
 }
 
+void Button::double_click(unsigned int modifiers)
+{
+    if (on_double_click)
+        on_double_click(modifiers);
+}
+
 void Button::middle_mouse_click(unsigned int modifiers)
 {
     if (!is_enabled())
@@ -175,7 +178,7 @@ void Button::set_action(Action& action)
         set_checked(action.is_checked());
 }
 
-void Button::set_icon(RefPtr<Gfx::Bitmap> icon)
+void Button::set_icon(RefPtr<Gfx::Bitmap const> icon)
 {
     if (m_icon == icon)
         return;

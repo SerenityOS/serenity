@@ -15,13 +15,6 @@ TEST_CASE(int_hash)
     static_assert(int_hash(0) == 1177991625u);
 }
 
-TEST_CASE(rehash_for_collision)
-{
-    static_assert(rehash_for_collision(666) == 171644115u);
-    static_assert(rehash_for_collision(0) == 1189591134u);
-    static_assert(rehash_for_collision(0xBA5EDB01) == 0u);
-}
-
 TEST_CASE(pair_int_hash)
 {
     static_assert(pair_int_hash(42, 17) == 339337046u);

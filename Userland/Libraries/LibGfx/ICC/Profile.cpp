@@ -5,6 +5,7 @@
  */
 
 #include <AK/Endian.h>
+#include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <math.h>
@@ -16,32 +17,6 @@
 namespace Gfx::ICC {
 
 namespace {
-
-// ICC V4, 4.2 dateTimeNumber
-// "All the dateTimeNumber values in a profile shall be in Coordinated Universal Time [...]."
-struct DateTimeNumber {
-    BigEndian<u16> year;
-    BigEndian<u16> month;
-    BigEndian<u16> day;
-    BigEndian<u16> hours;
-    BigEndian<u16> minutes;
-    BigEndian<u16> seconds;
-};
-
-// ICC V4, 4.6 s15Fixed16Number
-using s15Fixed16Number = i32;
-
-// ICC V4, 4.14 XYZNumber
-struct XYZNumber {
-    BigEndian<s15Fixed16Number> x;
-    BigEndian<s15Fixed16Number> y;
-    BigEndian<s15Fixed16Number> z;
-
-    operator XYZ() const
-    {
-        return XYZ { x / (double)0x1'0000, y / (double)0x1'0000, z / (double)0x1'0000 };
-    }
-};
 
 ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
 {
@@ -83,39 +58,6 @@ ErrorOr<time_t> parse_date_time_number(DateTimeNumber const& date_time)
 
     return timestamp;
 }
-
-// ICC V4, 7.2 Profile header
-struct ICCHeader {
-    BigEndian<u32> profile_size;
-    BigEndian<PreferredCMMType> preferred_cmm_type;
-
-    u8 profile_version_major;
-    u8 profile_version_minor_bugfix;
-    BigEndian<u16> profile_version_zero;
-
-    BigEndian<DeviceClass> profile_device_class;
-    BigEndian<ColorSpace> data_color_space;
-    BigEndian<ColorSpace> profile_connection_space; // "PCS" in the spec.
-
-    DateTimeNumber profile_creation_time;
-
-    BigEndian<u32> profile_file_signature;
-    BigEndian<PrimaryPlatform> primary_platform;
-
-    BigEndian<u32> profile_flags;
-    BigEndian<DeviceManufacturer> device_manufacturer;
-    BigEndian<DeviceModel> device_model;
-    BigEndian<u64> device_attributes;
-    BigEndian<u32> rendering_intent;
-
-    XYZNumber pcs_illuminant;
-
-    BigEndian<Creator> profile_creator;
-
-    u8 profile_id[16];
-    u8 reserved[28];
-};
-static_assert(AssertSize<ICCHeader, 128>());
 
 ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
 {
@@ -237,8 +179,7 @@ ErrorOr<time_t> parse_creation_date_time(ICCHeader const& header)
 ErrorOr<void> parse_file_signature(ICCHeader const& header)
 {
     // ICC v4, 7.2.9 Profile file signature field
-    // "The profile file signature field shall contain the value “acsp” (61637370h) as a profile file signature."
-    if (header.profile_file_signature != 0x61637370)
+    if (header.profile_file_signature != ProfileFileSignature)
         return Error::from_string_literal("ICC::Profile: profile file signature not 'acsp'");
     return {};
 }
@@ -307,14 +248,11 @@ ErrorOr<RenderingIntent> parse_rendering_intent(ICCHeader const& header)
 {
     // ICC v4, 7.2.15 Rendering intent field
     switch (header.rendering_intent) {
-    case 0:
-        return RenderingIntent::Perceptual;
-    case 1:
-        return RenderingIntent::MediaRelativeColorimetric;
-    case 2:
-        return RenderingIntent::Saturation;
-    case 3:
-        return RenderingIntent::ICCAbsoluteColorimetric;
+    case RenderingIntent::Perceptual:
+    case RenderingIntent::MediaRelativeColorimetric:
+    case RenderingIntent::Saturation:
+    case RenderingIntent::ICCAbsoluteColorimetric:
+        return header.rendering_intent;
     }
     return Error::from_string_literal("ICC::Profile: Invalid rendering intent");
 }
@@ -473,6 +411,53 @@ StringView data_color_space_name(ColorSpace color_space)
     VERIFY_NOT_REACHED();
 }
 
+static int number_of_components_in_color_space(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::Gray:
+        return 1;
+    case ColorSpace::TwoColor:
+        return 2;
+    case ColorSpace::nCIEXYZ:
+    case ColorSpace::CIELAB:
+    case ColorSpace::CIELUV:
+    case ColorSpace::YCbCr:
+    case ColorSpace::CIEYxy:
+    case ColorSpace::RGB:
+    case ColorSpace::HSV:
+    case ColorSpace::HLS:
+    case ColorSpace::CMY:
+    case ColorSpace::ThreeColor:
+        return 3;
+    case ColorSpace::CMYK:
+    case ColorSpace::FourColor:
+        return 4;
+    case ColorSpace::FiveColor:
+        return 5;
+    case ColorSpace::SixColor:
+        return 6;
+    case ColorSpace::SevenColor:
+        return 7;
+    case ColorSpace::EightColor:
+        return 8;
+    case ColorSpace::NineColor:
+        return 9;
+    case ColorSpace::TenColor:
+        return 10;
+    case ColorSpace::ElevenColor:
+        return 11;
+    case ColorSpace::TwelveColor:
+        return 12;
+    case ColorSpace::ThirteenColor:
+        return 13;
+    case ColorSpace::FourteenColor:
+        return 14;
+    case ColorSpace::FifteenColor:
+        return 15;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 StringView profile_connection_space_name(ColorSpace color_space)
 {
     switch (color_space) {
@@ -527,37 +512,42 @@ DeviceAttributes::DeviceAttributes(u64 bits)
 {
 }
 
-ErrorOr<void> Profile::read_header(ReadonlyBytes bytes)
+static ErrorOr<ProfileHeader> read_header(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(ICCHeader))
         return Error::from_string_literal("ICC::Profile: Not enough data for header");
 
-    auto header = *bit_cast<ICCHeader const*>(bytes.data());
+    ProfileHeader header;
+    auto raw_header = *bit_cast<ICCHeader const*>(bytes.data());
 
-    TRY(parse_file_signature(header));
-    m_on_disk_size = TRY(parse_size(header, bytes));
-    m_preferred_cmm_type = parse_preferred_cmm_type(header);
-    m_version = TRY(parse_version(header));
-    m_device_class = TRY(parse_device_class(header));
-    m_data_color_space = TRY(parse_data_color_space(header));
-    m_connection_space = TRY(parse_connection_space(header));
-    m_creation_timestamp = TRY(parse_creation_date_time(header));
-    m_primary_platform = TRY(parse_primary_platform(header));
-    m_flags = Flags { header.profile_flags };
-    m_device_manufacturer = parse_device_manufacturer(header);
-    m_device_model = parse_device_model(header);
-    m_device_attributes = TRY(parse_device_attributes(header));
-    m_rendering_intent = TRY(parse_rendering_intent(header));
-    m_pcs_illuminant = TRY(parse_pcs_illuminant(header));
-    m_creator = parse_profile_creator(header);
-    m_id = TRY(parse_profile_id(header, bytes));
-    TRY(parse_reserved(header));
+    TRY(parse_file_signature(raw_header));
+    header.on_disk_size = TRY(parse_size(raw_header, bytes));
+    header.preferred_cmm_type = parse_preferred_cmm_type(raw_header);
+    header.version = TRY(parse_version(raw_header));
+    header.device_class = TRY(parse_device_class(raw_header));
+    header.data_color_space = TRY(parse_data_color_space(raw_header));
+    header.connection_space = TRY(parse_connection_space(raw_header));
+    header.creation_timestamp = TRY(parse_creation_date_time(raw_header));
+    header.primary_platform = TRY(parse_primary_platform(raw_header));
+    header.flags = Flags { raw_header.profile_flags };
+    header.device_manufacturer = parse_device_manufacturer(raw_header);
+    header.device_model = parse_device_model(raw_header);
+    header.device_attributes = TRY(parse_device_attributes(raw_header));
+    header.rendering_intent = TRY(parse_rendering_intent(raw_header));
+    header.pcs_illuminant = TRY(parse_pcs_illuminant(raw_header));
+    header.creator = parse_profile_creator(raw_header);
+    header.id = TRY(parse_profile_id(raw_header, bytes));
+    TRY(parse_reserved(raw_header));
 
-    return {};
+    return header;
 }
 
-ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
+static ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element)
 {
+    // "All tag data elements shall start on a 4-byte boundary (relative to the start of the profile data stream)"
+    if (offset_to_beginning_of_tag_data_element % 4 != 0)
+        return Error::from_string_literal("ICC::Profile: Tag data not aligned");
+
     if (offset_to_beginning_of_tag_data_element + size_of_tag_data_element > bytes.size())
         return Error::from_string_literal("ICC::Profile: Tag data out of bounds");
 
@@ -572,32 +562,50 @@ ErrorOr<NonnullRefPtr<TagData>> Profile::read_tag(ReadonlyBytes bytes, u32 offse
 
     auto type = tag_type(tag_bytes);
     switch (type) {
+    case ChromaticityTagData::Type:
+        return ChromaticityTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case CicpTagData::Type:
+        return CicpTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case CurveTagData::Type:
         return CurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case Lut16TagData::Type:
         return Lut16TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case Lut8TagData::Type:
         return Lut8TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case LutAToBTagData::Type:
+        return LutAToBTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case LutBToATagData::Type:
+        return LutBToATagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case MeasurementTagData::Type:
+        return MeasurementTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case MultiLocalizedUnicodeTagData::Type:
         return MultiLocalizedUnicodeTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case NamedColor2TagData::Type:
+        return NamedColor2TagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case ParametricCurveTagData::Type:
         return ParametricCurveTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case S15Fixed16ArrayTagData::Type:
         return S15Fixed16ArrayTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case SignatureTagData::Type:
+        return SignatureTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextDescriptionTagData::Type:
         return TextDescriptionTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case TextTagData::Type:
         return TextTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
+    case ViewingConditionsTagData::Type:
+        return ViewingConditionsTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     case XYZTagData::Type:
         return XYZTagData::from_bytes(tag_bytes, offset_to_beginning_of_tag_data_element, size_of_tag_data_element);
     default:
         // FIXME: optionally ignore tags of unknown type
-        return adopt_ref(*new UnknownTagData(offset_to_beginning_of_tag_data_element, size_of_tag_data_element, type));
+        return try_make_ref_counted<UnknownTagData>(offset_to_beginning_of_tag_data_element, size_of_tag_data_element, type);
     }
 }
 
-ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
+static ErrorOr<OrderedHashMap<TagSignature, NonnullRefPtr<TagData>>> read_tag_table(ReadonlyBytes bytes)
 {
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table;
+
     // ICC v4, 7.3 Tag table
     // ICC v4, 7.3.1 Overview
     // "The tag table acts as a table of contents for the tags and an index into the tag data element in the profiles. It
@@ -621,14 +629,6 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
         return Error::from_string_literal("ICC::Profile: Not enough data for tag count");
     auto tag_count = *bit_cast<BigEndian<u32> const*>(tag_table_bytes.data());
 
-    // ICC V4, 7.3 Tag table, Table 24 - Tag table structure
-    struct TagTableEntry {
-        BigEndian<TagSignature> tag_signature;
-        BigEndian<u32> offset_to_beginning_of_tag_data_element;
-        BigEndian<u32> size_of_tag_data_element;
-    };
-    static_assert(AssertSize<TagTableEntry, 12>());
-
     tag_table_bytes = tag_table_bytes.slice(sizeof(u32));
     if (tag_table_bytes.size() < tag_count * sizeof(TagTableEntry))
         return Error::from_string_literal("ICC::Profile: Not enough data for tag table entries");
@@ -642,7 +642,7 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
         // FIXME: optionally ignore tags with unknown signature
 
         // Dedupe identical offset/sizes.
-        NonnullRefPtr<TagData> tag_data = TRY(offset_to_tag_data.try_ensure(tag_table_entries[i].offset_to_beginning_of_tag_data_element, [=, this]() {
+        NonnullRefPtr<TagData> tag_data = TRY(offset_to_tag_data.try_ensure(tag_table_entries[i].offset_to_beginning_of_tag_data_element, [&]() {
             return read_tag(bytes, tag_table_entries[i].offset_to_beginning_of_tag_data_element, tag_table_entries[i].size_of_tag_data_element);
         }));
 
@@ -651,11 +651,11 @@ ErrorOr<void> Profile::read_tag_table(ReadonlyBytes bytes)
             return Error::from_string_literal("ICC::Profile: two tags have same offset but different sizes");
 
         // "Duplicate tag signatures shall not be included in the tag table."
-        if (TRY(m_tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
+        if (TRY(tag_table.try_set(tag_table_entries[i].tag_signature, move(tag_data))) != AK::HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("ICC::Profile: duplicate tag signature");
     }
 
-    return {};
+    return tag_table;
 }
 
 static bool is_xCLR(ColorSpace color_space)
@@ -865,6 +865,10 @@ ErrorOr<void> Profile::check_tag_types()
     // Profile ID of /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
     static constexpr Crypto::Hash::MD5::DigestType apple_itu_2020_id = { 0x57, 0x0b, 0x1b, 0x76, 0xc6, 0xa0, 0x50, 0xaa, 0x9f, 0x6c, 0x53, 0x8d, 0xbe, 0x2d, 0x3e, 0xf0 };
 
+    // Profile ID of the "Display P3" profiles embedded in the images on https://webkit.org/blog-files/color-gamut/comparison.html
+    // (The macOS 13.1 /System/Library/ColorSync/Profiles/Display\ P3.icc file no longer has this quirk.)
+    static constexpr Crypto::Hash::MD5::DigestType apple_p3_2015_id = { 0xe5, 0xbb, 0x0e, 0x98, 0x67, 0xbd, 0x46, 0xcd, 0x4b, 0xbe, 0x44, 0x6e, 0xbd, 0x1b, 0x75, 0x98 };
+
     auto has_type = [&](auto tag, std::initializer_list<TagTypeSignature> types, std::initializer_list<TagTypeSignature> v4_types) {
         if (auto type = m_tag_table.get(tag); type.has_value()) {
             auto type_matches = [&](auto wanted_type) { return type.value()->type() == wanted_type; };
@@ -970,11 +974,29 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.16 chromaticityTag
     // "Permitted tag types: chromaticityType"
-    // FIXME
+    if (!has_type(chromaticityTag, { ChromaticityTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: ChromaticityTagData has unexpected type");
 
     // ICC v4, 9.2.17 cicpTag
     // "Permitted tag types: cicpType"
-    // FIXME
+    if (auto type = m_tag_table.get(cicpTag); type.has_value()) {
+        if (type.value()->type() != CicpTagData::Type)
+            return Error::from_string_literal("ICC::Profile: cicpTag has unexpected type");
+
+        // "The colour encoding specified by the CICP tag content shall be equivalent to the data colour space encoding
+        //  represented by this ICC profile.
+        //  NOTE The ICC colour transform cannot match every possible rendering of a CICP colour encoding."
+        // FIXME: Figure out what that means and check for it.
+
+        // "This tag may be present when the data colour space in the profile header is RGB, YCbCr, or XYZ, and the
+        //  profile class in the profile header is Input or Display. The tag shall not be present for other data colour spaces
+        //  or profile classes indicated in the profile header."
+        bool is_color_space_allowed = data_color_space() == ColorSpace::RGB || data_color_space() == ColorSpace::YCbCr || data_color_space() == ColorSpace::nCIEXYZ;
+        bool is_profile_class_allowed = device_class() == DeviceClass::InputDevice || device_class() == DeviceClass::DisplayDevice;
+        bool cicp_is_allowed = is_color_space_allowed && is_profile_class_allowed;
+        if (!cicp_is_allowed)
+            return Error::from_string_literal("ICC::Profile: cicpTag present but not allowed");
+    }
 
     // ICC v4, 9.2.18 colorantOrderTag
     // "Permitted tag types: colorantOrderType"
@@ -990,7 +1012,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.21 colorimetricIntentImageStateTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(colorimetricIntentImageStateTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: colorimetricIntentImageStateTag has unexpected type");
 
     // ICC v4, 9.2.22 copyrightTag
     // "Permitted tag types: multiLocalizedUnicodeType"
@@ -1000,7 +1023,7 @@ ErrorOr<void> Profile::check_tag_types()
         // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
         // that still uses the v2 'text' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
         // https://openradar.appspot.com/radar?id=5529765549178880
-        bool has_v2_cprt_type_in_v4_file_quirk = id() == apple_itu_2020_id;
+        bool has_v2_cprt_type_in_v4_file_quirk = id() == apple_itu_2020_id || id() == apple_p3_2015_id;
         if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type && (!has_v2_cprt_type_in_v4_file_quirk || type.value()->type() != TextTagData::Type))
             return Error::from_string_literal("ICC::Profile: copyrightTag has unexpected v4 type");
         if (is_v2() && type.value()->type() != TextTagData::Type)
@@ -1099,7 +1122,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.34 measurementTag
     // "Permitted tag types: measurementType"
-    // FIXME
+    if (!has_type(measurementTag, { MeasurementTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: measurementTag has unexpected type");
 
     // ICC v4, 9.2.35 metadataTag
     // "Permitted tag types: dictType"
@@ -1137,7 +1161,18 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.37 namedColor2Tag
     // "Permitted tag types: namedColor2Type"
-    // FIXME
+    if (auto type = m_tag_table.get(namedColor2Tag); type.has_value()) {
+        if (type.value()->type() != NamedColor2TagData::Type)
+            return Error::from_string_literal("ICC::Profile: namedColor2Tag has unexpected type");
+        // ICC v4, 10.17 namedColor2Type
+        // "The device representation corresponds to the header’s “data colour space” field.
+        //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type.
+        //  If this field is 0, device coordinates are not provided."
+        if (int number_of_device_coordinates = static_cast<NamedColor2TagData const&>(*type.value()).number_of_device_coordinates();
+            number_of_device_coordinates != 0 && number_of_device_coordinates != number_of_components_in_color_space(data_color_space())) {
+            return Error::from_string_literal("ICC::Profile: namedColor2Tag number of device coordinates inconsistent with data color space");
+        }
+    }
 
     // ICC v4, 9.2.38 outputResponseTag
     // "Permitted tag types: responseCurveSet16Type"
@@ -1145,7 +1180,8 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.39 perceptualRenderingIntentGamutTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(perceptualRenderingIntentGamutTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: perceptualRenderingIntentGamutTag has unexpected type");
 
     // ICC v4, 9.2.40 preview0Tag
     // "Permitted tag types: lut8Type or lut16Type or lutAToBType or lutBToAType"
@@ -1176,7 +1212,7 @@ ErrorOr<void> Profile::check_tag_types()
         // The v4 spec requires multiLocalizedUnicodeType for this, but I'm aware of a single file
         // that still uses the v2 'desc' type here: /System/Library/ColorSync/Profiles/ITU-2020.icc on macOS 13.1.
         // https://openradar.appspot.com/radar?id=5529765549178880
-        bool has_v2_desc_type_in_v4_file_quirk = id() == apple_itu_2020_id;
+        bool has_v2_desc_type_in_v4_file_quirk = id() == apple_itu_2020_id || id() == apple_p3_2015_id;
         if (is_v4() && type.value()->type() != MultiLocalizedUnicodeTagData::Type && (!has_v2_desc_type_in_v4_file_quirk || type.value()->type() != TextDescriptionTagData::Type))
             return Error::from_string_literal("ICC::Profile: profileDescriptionTag has unexpected v4 type");
         if (is_v2() && type.value()->type() != TextDescriptionTagData::Type)
@@ -1211,11 +1247,13 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.48 saturationRenderingIntentGamutTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(saturationRenderingIntentGamutTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: saturationRenderingIntentGamutTag has unexpected type");
 
     // ICC v4, 9.2.49 technologyTag
     // "Permitted tag types: signatureType"
-    // FIXME
+    if (!has_type(technologyTag, { SignatureTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: technologyTag has unexpected type");
 
     // ICC v4, 9.2.50 viewingCondDescTag
     // "Permitted tag types: multiLocalizedUnicodeType"
@@ -1230,17 +1268,50 @@ ErrorOr<void> Profile::check_tag_types()
 
     // ICC v4, 9.2.51 viewingConditionsTag
     // "Permitted tag types: viewingConditionsType"
-    // FIXME
+    if (!has_type(viewingConditionsTag, { ViewingConditionsTagData::Type }, {}))
+        return Error::from_string_literal("ICC::Profile: viewingConditionsTag has unexpected type");
+
+    // FIXME: Add validation for v2-only tags:
+    // - ICC v2, 6.4.14 crdInfoTag
+    //   "Tag Type: crdInfoType"
+    // - ICC v2, 6.4.17 deviceSettingsTag
+    //   "Tag Type: deviceSettingsType"
+    // - ICC v2, 6.4.24 mediaBlackPointTag
+    //   "Tag Type: XYZType"
+    // - ICC v2, 6.4.26 namedColorTag
+    //   "Tag Type: namedColorType"
+    // - ICC v2, 6.4.34 ps2CRD0Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.35 ps2CRD1Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.36 ps2CRD2Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.37 ps2CRD3Tag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.38 ps2CSATag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.39 ps2RenderingIntentTag
+    //   "Tag Type: dataType"
+    // - ICC v2, 6.4.42 screeningDescTag
+    //   "Tag Type: textDescriptionType"
+    // - ICC v2, 6.4.43 screeningTag
+    //   "Tag Type: screeningType"
+    // - ICC v2, 6.4.45 ucrbgTag
+    //   "Tag Type: ucrbgType"
+    // https://www.color.org/v2profiles.xalter says about these tags:
+    // "it is also recommended that optional tags in the v2 specification that have subsequently become
+    //  obsolete are not included in future profiles made to the v2 specification."
 
     return {};
 }
 
 ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(ReadonlyBytes bytes)
 {
-    auto profile = adopt_ref(*new Profile());
-    TRY(profile->read_header(bytes));
-    bytes = bytes.trim(profile->on_disk_size());
-    TRY(profile->read_tag_table(bytes));
+    auto header = TRY(read_header(bytes));
+    bytes = bytes.trim(header.on_disk_size);
+    auto tag_table = TRY(read_tag_table(bytes));
+
+    auto profile = TRY(try_make_ref_counted<Profile>(header, move(tag_table)));
 
     TRY(profile->check_required_tags());
     TRY(profile->check_tag_types());

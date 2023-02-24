@@ -7,6 +7,7 @@
 #include "Formatter.h"
 #include "AST.h"
 #include "Parser.h"
+#include "PosixParser.h"
 #include <AK/Hex.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
@@ -15,7 +16,7 @@ namespace Shell {
 
 DeprecatedString Formatter::format()
 {
-    auto node = m_root_node ? m_root_node : Parser(m_source).parse();
+    auto node = m_root_node ?: (m_parse_as_posix ? Posix::Parser(m_source).parse() : Parser(m_source).parse());
     if (m_cursor >= 0)
         m_output_cursor = m_cursor;
 

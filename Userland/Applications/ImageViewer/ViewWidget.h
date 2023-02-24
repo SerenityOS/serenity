@@ -66,7 +66,7 @@ private:
     Vector<DeprecatedString> load_files_from_directory(DeprecatedString const& path) const;
 
     DeprecatedString m_path;
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap const> m_bitmap;
     Optional<ImageDecoderClient::DecodedImage> m_decoded_image;
 
     size_t m_current_frame_index { 0 };

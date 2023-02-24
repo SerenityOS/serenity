@@ -16,7 +16,7 @@ namespace Kernel::PCI {
 
 class Device {
 public:
-    DeviceIdentifier& device_identifier() const { return *m_pci_identifier; };
+    DeviceIdentifier const& device_identifier() const { return *m_pci_identifier; };
 
     virtual ~Device() = default;
 
@@ -38,7 +38,7 @@ protected:
     explicit Device(DeviceIdentifier const& pci_identifier);
 
 private:
-    NonnullRefPtr<DeviceIdentifier> m_pci_identifier;
+    NonnullRefPtr<DeviceIdentifier const> m_pci_identifier;
 };
 
 template<typename... Parameters>

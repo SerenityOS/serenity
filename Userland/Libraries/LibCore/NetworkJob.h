@@ -8,9 +8,9 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/Stream.h>
 #include <LibCore/Forward.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 
 namespace Core {
 
@@ -41,7 +41,7 @@ public:
         DetachFromSocket,
         CloseSocket,
     };
-    virtual void start(Core::Stream::Socket&) = 0;
+    virtual void start(Core::Socket&) = 0;
     virtual void shutdown(ShutdownMode) = 0;
     virtual void fail(Error error) { did_fail(error); }
 
@@ -52,7 +52,7 @@ public:
     }
 
 protected:
-    NetworkJob(AK::Stream&);
+    NetworkJob(Stream&);
     void did_finish(NonnullRefPtr<NetworkResponse>&&);
     void did_fail(Error);
     void did_progress(Optional<u32> total_size, u32 downloaded);
@@ -61,7 +61,7 @@ protected:
 
 private:
     RefPtr<NetworkResponse> m_response;
-    AK::Stream& m_output_stream;
+    Stream& m_output_stream;
     Error m_error { Error::None };
 };
 

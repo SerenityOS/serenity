@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/File.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 #include <LibWebView/RequestServerAdapter.h>
@@ -64,7 +63,7 @@ bool RequestServerRequestAdapter::stop()
     return m_request->stop();
 }
 
-void RequestServerRequestAdapter::stream_into(AK::Stream& stream)
+void RequestServerRequestAdapter::stream_into(Stream& stream)
 {
     m_request->stream_into(stream);
 }

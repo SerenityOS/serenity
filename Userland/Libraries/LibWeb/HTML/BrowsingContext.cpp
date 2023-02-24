@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TextNode.h>
@@ -118,7 +119,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
             browsing_context->m_window_proxy = realm.heap().allocate<WindowProxy>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
             // - For the global object, create a new Window object.
-            window = HTML::Window::create(realm);
+            window = HTML::Window::create(realm).release_value_but_fixme_should_propagate_errors();
             return window.ptr();
         },
         [&](JS::Realm&) -> JS::Object* {
@@ -138,7 +139,8 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
         move(realm_execution_context),
         {},
         top_level_creation_url,
-        top_level_origin);
+        top_level_origin)
+        .release_value_but_fixme_should_propagate_errors();
 
     // 12. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
     //     coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
@@ -168,7 +170,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     //     load timing info is loadTimingInfo,
     //     FIXME: navigation id is null,
     //     and which is ready for post-load tasks.
-    auto document = DOM::Document::create(window->realm());
+    auto document = DOM::Document::create(window->realm()).release_value_but_fixme_should_propagate_errors();
 
     // Non-standard
     document->set_window({}, *window);
@@ -627,13 +629,13 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     auto sandboxing_flag_set = active_document()->active_sandboxing_flag_set();
 
     // 4. If name is the empty string or an ASCII case-insensitive match for "_self", then set chosen to current.
-    if (name.is_empty() || name.equals_ignoring_case("_self"sv)) {
+    if (name.is_empty() || Infra::is_ascii_case_insensitive_match(name, "_self"sv)) {
         chosen = this;
     }
 
     // 5. Otherwise, if name is an ASCII case-insensitive match for "_parent", set chosen to current's parent browsing
     //    context, if any, and current otherwise.
-    else if (name.equals_ignoring_case("_parent"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(name, "_parent"sv)) {
         if (auto parent = this->parent())
             chosen = parent;
         else
@@ -642,7 +644,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 
     // 6. Otherwise, if name is an ASCII case-insensitive match for "_top", set chosen to current's top-level browsing
     //    context, if any, and current otherwise.
-    else if (name.equals_ignoring_case("_top"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(name, "_top"sv)) {
         chosen = &top_level_browsing_context();
     }
 
@@ -652,7 +654,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     //           set chosen to that browsing context. If there are multiple matching browsing contexts, the user agent
     //           should set chosen to one in some arbitrary consistent manner, such as the most recently opened, most
     //           recently focused, or more closely related.
-    else if (!name.equals_ignoring_case("_blank"sv)) {
+    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
         dbgln("FIXME: Find matching browser context for name {}", name);
         chosen = this;
     } else {
@@ -715,7 +717,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
             // FIXME: Our BrowsingContexts do not have SandboxingFlagSets yet, only documents do
 
             // 6. If name is not an ASCII case-insensitive match for "_blank", then set chosen's name to name.
-            if (!name.equals_ignoring_case("_blank"sv))
+            if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv))
                 chosen->set_name(name);
         }
 
@@ -1177,7 +1179,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
             // and the newURL attribute initialized to newURL.
 
             // FIXME: Implement a proper HashChangeEvent class.
-            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange);
+            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange).release_value_but_fixme_should_propagate_errors();
             new_document->dispatch_event(event);
         });
     }

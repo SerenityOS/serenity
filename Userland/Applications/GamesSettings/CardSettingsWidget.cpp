@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,13 +18,13 @@ namespace GamesSettings {
 
 static constexpr StringView default_card_back_image_path = "/res/icons/cards/buggie-deck.png"sv;
 
-class Preview final : public Cards::CardGame {
-    C_OBJECT_ABSTRACT(Preview)
+class CardGamePreview final : public Cards::CardGame {
+    C_OBJECT_ABSTRACT(CardGamePreview)
 
 public:
-    static ErrorOr<NonnullRefPtr<Preview>> try_create()
+    static ErrorOr<NonnullRefPtr<CardGamePreview>> try_create()
     {
-        auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Preview()));
+        auto preview = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CardGamePreview()));
 
         Gfx::IntPoint point { 25, 30 };
         TRY(preview->add_stack(point, Cards::CardStack::Type::Stock));
@@ -51,7 +51,7 @@ public:
     }
 
 private:
-    Preview() = default;
+    CardGamePreview() = default;
 
     virtual void paint_event(GUI::PaintEvent& event) override
     {
@@ -67,13 +67,20 @@ private:
     }
 };
 
-CardSettingsWidget::CardSettingsWidget()
+ErrorOr<NonnullRefPtr<CardSettingsWidget>> CardSettingsWidget::try_create()
 {
-    load_from_gml(card_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto card_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CardSettingsWidget));
+    TRY(card_settings_widget->initialize());
+    return card_settings_widget;
+}
+
+ErrorOr<void> CardSettingsWidget::initialize()
+{
+    TRY(load_from_gml(card_settings_widget_gml));
 
     auto background_color = Gfx::Color::from_string(Config::read_string("Games"sv, "Cards"sv, "BackgroundColor"sv)).value_or(Gfx::Color::from_rgb(0x008000));
 
-    m_preview_frame = find_descendant_of_type_named<Preview>("cards_preview");
+    m_preview_frame = find_descendant_of_type_named<CardGamePreview>("cards_preview");
     m_preview_frame->set_background_color(background_color);
 
     m_background_color_input = find_descendant_of_type_named<GUI::ColorInput>("cards_background_color");
@@ -99,6 +106,8 @@ CardSettingsWidget::CardSettingsWidget()
     };
 
     m_last_selected_card_back = m_card_back_image_view->selection().first();
+
+    return {};
 }
 
 void CardSettingsWidget::apply_settings()
@@ -136,4 +145,4 @@ DeprecatedString CardSettingsWidget::card_back_image_path() const
 
 }
 
-REGISTER_WIDGET(GamesSettings, Preview);
+REGISTER_WIDGET(GamesSettings, CardGamePreview);

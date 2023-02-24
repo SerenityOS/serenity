@@ -39,6 +39,7 @@ void Frame::set_frame_thickness(int thickness)
         return;
     m_thickness = thickness;
     set_grabbable_margins(thickness);
+    layout_relevant_change_occurred();
 }
 
 void Frame::paint_event(PaintEvent& event)

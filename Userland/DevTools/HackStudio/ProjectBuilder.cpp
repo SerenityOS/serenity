@@ -7,8 +7,7 @@
 #include "ProjectBuilder.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/Command.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibRegex/Regex.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -112,7 +111,7 @@ ErrorOr<void> ProjectBuilder::build_serenity_component()
 
 ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_path)
 {
-    auto file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Read));
     auto content = TRY(file->read_until_eof());
 
     static Regex<ECMA262> const component_name(R"~~~(serenity_component\([\s]*(\w+)[\s\S]*\))~~~");
@@ -125,17 +124,17 @@ ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_p
 
 ErrorOr<void> ProjectBuilder::initialize_build_directory()
 {
-    if (!Core::File::exists(build_directory())) {
+    if (!Core::DeprecatedFile::exists(build_directory())) {
         if (mkdir(LexicalPath::join(build_directory()).string().characters(), 0700)) {
             return Error::from_errno(errno);
         }
     }
 
     auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
-    if (Core::File::exists(cmake_file_path))
-        MUST(Core::File::remove(cmake_file_path, Core::File::RecursionMode::Disallowed));
+    if (Core::DeprecatedFile::exists(cmake_file_path))
+        MUST(Core::DeprecatedFile::remove(cmake_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
 
-    auto cmake_file = TRY(Core::Stream::File::open(cmake_file_path, Core::Stream::OpenMode::Write));
+    auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Write));
     TRY(cmake_file->write_entire_buffer(generate_cmake_file_content().bytes()));
 
     TRY(m_terminal->run_command(DeprecatedString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
@@ -151,7 +150,7 @@ Optional<DeprecatedString> ProjectBuilder::find_cmake_file_for(StringView file_p
     auto directory = LexicalPath::dirname(file_path);
     while (!directory.is_empty()) {
         auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv);
-        if (Core::File::exists(cmake_path.string()))
+        if (Core::DeprecatedFile::exists(cmake_path.string()))
             return cmake_path.string();
         directory = LexicalPath::dirname(directory);
     }

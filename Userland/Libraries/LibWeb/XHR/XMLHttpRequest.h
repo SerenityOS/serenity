@@ -38,7 +38,7 @@ public:
         Done = 4,
     };
 
-    static JS::NonnullGCPtr<XMLHttpRequest> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLHttpRequest>> construct_impl(JS::Realm&);
 
     virtual ~XMLHttpRequest() override;
 

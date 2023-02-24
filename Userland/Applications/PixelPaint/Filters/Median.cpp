@@ -42,15 +42,16 @@ void Median::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap)
     painter.blit({}, target, target->rect());
 }
 
-RefPtr<GUI::Widget> Median::get_settings_widget()
+ErrorOr<RefPtr<GUI::Widget>> Median::get_settings_widget()
 {
     if (!m_settings_widget) {
-        m_settings_widget = GUI::Widget::construct();
-        m_settings_widget->load_from_gml(median_settings_gml).release_value_but_fixme_should_propagate_errors();
-        m_settings_widget->find_descendant_of_type_named<GUI::SpinBox>("filter_radius")->on_change = [this](auto value) {
+        auto settings_widget = TRY(GUI::Widget::try_create());
+        TRY(settings_widget->load_from_gml(median_settings_gml));
+        settings_widget->find_descendant_of_type_named<GUI::SpinBox>("filter_radius")->on_change = [this](auto value) {
             m_filter_radius = value;
             update_preview();
         };
+        m_settings_widget = settings_widget;
     }
 
     return m_settings_widget;

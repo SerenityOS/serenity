@@ -845,7 +845,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "Fl&atten Image", { Mod_Ctrl, Key_F }, g_icon_bag.flatten_image, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().flatten_all_layers();
+            if (auto maybe_error = editor->image().flatten_all_layers(); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to flatten all layers: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Flatten Image"sv);
         }));
 
@@ -853,7 +856,10 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "&Merge Visible", { Mod_Ctrl, Key_M }, g_icon_bag.merge_visible, [&](auto&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            editor->image().merge_visible_layers();
+            if (auto maybe_error = editor->image().merge_visible_layers(); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge visible layers: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Merge Visible"sv);
         }));
 
@@ -864,7 +870,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image().merge_active_layer_up(*active_layer);
+
+            if (auto maybe_error = editor->image().merge_active_layer_up(*active_layer); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge active layer up: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Merge Active Layer Up"sv);
         }));
 
@@ -875,7 +885,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image().merge_active_layer_down(*active_layer);
+
+            if (auto maybe_error = editor->image().merge_active_layer_down(*active_layer); maybe_error.is_error()) {
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge active layer down: {}", maybe_error.release_error()));
+                return;
+            }
             editor->did_complete_action("Merge Active Layer Down"sv);
         }));
 
@@ -1229,6 +1243,17 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
     },
         100);
 
+    image_editor.on_primary_color_change = [&](Color color) {
+        m_palette_widget->set_primary_color(color);
+        if (image_editor.active_tool())
+            image_editor.active_tool()->on_primary_color_change(color);
+    };
+    image_editor.on_secondary_color_change = [&](Color color) {
+        m_palette_widget->set_secondary_color(color);
+        if (image_editor.active_tool())
+            image_editor.active_tool()->on_secondary_color_change(color);
+    };
+
     if (image->layer_count())
         image_editor.set_active_layer(&image->layer(0));
 
@@ -1288,7 +1313,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), url.path(), Core::Stream::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), url.path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
         open_image(response.release_value());

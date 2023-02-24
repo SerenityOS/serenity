@@ -8,6 +8,6 @@
 
 namespace Unicode {
 
-Optional<Emoji> __attribute__((weak)) find_emoji_for_code_points(Span<u32 const>) { return {}; }
+Optional<Emoji> __attribute__((weak)) find_emoji_for_code_points(ReadonlySpan<u32>) { return {}; }
 
 }

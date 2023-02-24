@@ -12,8 +12,8 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
-#include <LibCore/File.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/System.h>
@@ -123,7 +123,7 @@ ErrorOr<void> Service::activate()
 
 ErrorOr<void> Service::spawn(int socket_fd)
 {
-    if (!Core::File::exists(m_executable_path)) {
+    if (!Core::DeprecatedFile::exists(m_executable_path)) {
         dbgln("{}: binary \"{}\" does not exist, skipping service.", name(), m_executable_path);
         return Error::from_errno(ENOENT);
     }
@@ -193,12 +193,9 @@ ErrorOr<void> Service::spawn(int socket_fd)
             }
         }
 
-        auto environment = TRY(StringBuilder::create());
-        TRY(environment.try_append(m_environment));
-
         if (!m_sockets.is_empty()) {
             // The new descriptor is !CLOEXEC here.
-            TRY(environment.try_appendff(" SOCKET_TAKEOVER={}", TRY(socket_takeover_builder.to_string())));
+            TRY(Core::System::setenv("SOCKET_TAKEOVER"sv, socket_takeover_builder.string_view(), true));
         }
 
         if (m_account.has_value() && m_account.value().uid() != getuid()) {
@@ -207,13 +204,20 @@ ErrorOr<void> Service::spawn(int socket_fd)
                 dbgln("Failed to drop privileges (GID={}, UID={})\n", account.gid(), account.uid());
                 exit(1);
             }
-            TRY(environment.try_appendff(" HOME={}", account.home_directory()));
+            TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
         }
 
-        auto arguments = TRY(StringBuilder::create());
-        TRY(arguments.try_appendff("{} {}", m_executable_path, m_extra_arguments));
+        TRY(m_environment.view().for_each_split_view(' ', SplitBehavior::Nothing, [&](auto env) {
+            return Core::System::putenv(env);
+        }));
 
-        TRY(Core::System::exec(m_executable_path, arguments.string_view().split_view(' '), Core::System::SearchInPath::No, environment.string_view().split_view(' ')));
+        Vector<StringView, 10> arguments;
+        TRY(arguments.try_append(m_executable_path));
+        TRY(m_extra_arguments.view().for_each_split_view(' ', SplitBehavior::Nothing, [&](auto arg) {
+            return arguments.try_append(arg);
+        }));
+
+        TRY(Core::System::exec(m_executable_path, arguments, Core::System::SearchInPath::No));
     } else if (!m_multi_instance) {
         // We are the parent.
         m_pid = pid;

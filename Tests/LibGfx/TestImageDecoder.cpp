@@ -11,7 +11,7 @@
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/JPGLoader.h>
+#include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PBMLoader.h>
 #include <LibGfx/PGMLoader.h>
 #include <LibGfx/PNGLoader.h>
@@ -88,8 +88,8 @@ TEST_CASE(test_bmp_embedded_in_ico)
 TEST_CASE(test_jpg)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgb24.jpg"sv)));
-    EXPECT(MUST(Gfx::JPGImageDecoderPlugin::sniff(file->bytes())));
-    auto plugin_decoder = MUST(Gfx::JPGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(MUST(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
     EXPECT(plugin_decoder->frame_count());

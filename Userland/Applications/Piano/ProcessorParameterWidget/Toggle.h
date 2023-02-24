@@ -16,8 +16,7 @@ class ProcessorParameterToggle : public GUI::CheckBox {
 
 public:
     ProcessorParameterToggle(DSP::ProcessorBooleanParameter& parameter)
-        : CheckBox("")
-        , m_parameter(parameter)
+        : m_parameter(parameter)
     {
         on_checked = [this](auto checked) {
             if (m_currently_setting_from_ui)

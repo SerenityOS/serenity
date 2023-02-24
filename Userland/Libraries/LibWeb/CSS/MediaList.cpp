@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,12 +9,13 @@
 #include <LibWeb/Bindings/MediaListPrototype.h>
 #include <LibWeb/CSS/MediaList.h>
 #include <LibWeb/CSS/Parser/Parser.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::CSS {
 
-MediaList* MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
 {
-    return realm.heap().allocate<MediaList>(realm, realm, move(media)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<MediaList>(realm, realm, move(media)));
 }
 
 MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
@@ -34,7 +35,7 @@ JS::ThrowCompletionOr<void> MediaList::initialize(JS::Realm& realm)
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
 DeprecatedString MediaList::media_text() const
 {
-    return serialize_a_media_query_list(m_media);
+    return serialize_a_media_query_list(m_media).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-mediatext
@@ -63,11 +64,21 @@ DeprecatedString MediaList::item(u32 index) const
 // https://www.w3.org/TR/cssom-1/#dom-medialist-appendmedium
 void MediaList::append_medium(DeprecatedString medium)
 {
+    // 1. Let m be the result of parsing the given value.
     auto m = parse_media_query({}, medium);
+
+    // 2. If m is null, then return.
     if (!m)
         return;
-    if (m_media.contains_slow(*m))
-        return;
+
+    // 3. If comparing m with any of the media queries in the collection of media queries returns true, then return.
+    auto serialized = m->to_string().release_value_but_fixme_should_propagate_errors();
+    for (auto& existing_medium : m_media) {
+        if (existing_medium.to_string().release_value_but_fixme_should_propagate_errors() == serialized)
+            return;
+    }
+
+    // 4. Append m to the collection of media queries.
     m_media.append(m.release_nonnull());
 }
 

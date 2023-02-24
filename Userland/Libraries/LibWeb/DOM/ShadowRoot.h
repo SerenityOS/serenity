@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/Bindings/ShadowRootPrototype.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 
 namespace Web::DOM {
@@ -14,7 +15,7 @@ class ShadowRoot final : public DocumentFragment {
     WEB_PLATFORM_OBJECT(ShadowRoot, DocumentFragment);
 
 public:
-    bool closed() const { return m_closed; }
+    Bindings::ShadowRootMode mode() const { return m_mode; }
 
     bool delegates_focus() const { return m_delegates_focus; }
     void set_delegates_focus(bool delegates_focus) { m_delegates_focus = delegates_focus; }
@@ -25,21 +26,19 @@ public:
     // ^EventTarget
     virtual EventTarget* get_parent(Event const&) override;
 
-    // NOTE: This is intended for the JS bindings.
-    DeprecatedString mode() const { return m_closed ? "closed" : "open"; }
-
     WebIDL::ExceptionOr<DeprecatedString> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(DeprecatedString const&);
 
 private:
-    ShadowRoot(Document&, Element&);
+    ShadowRoot(Document&, Element& host, Bindings::ShadowRootMode);
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     // ^Node
     virtual DeprecatedFlyString node_name() const override { return "#shadow-root"; }
     virtual bool is_shadow_root() const final { return true; }
 
-    // NOTE: The specification doesn't seem to specify a default value for closed. Assuming false for now.
-    bool m_closed { false };
+    // NOTE: The specification doesn't seem to specify a default value for closed. Assuming closed for now.
+    Bindings::ShadowRootMode m_mode { Bindings::ShadowRootMode::Closed };
     bool m_delegates_focus { false };
     bool m_available_to_element_internals { false };
 };
@@ -54,7 +53,7 @@ inline IterationDecision Node::for_each_shadow_including_descendant(Callback cal
         return IterationDecision::Break;
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (child->is_element()) {
-            if (JS::GCPtr<ShadowRoot> shadow_root = static_cast<Element*>(child)->shadow_root()) {
+            if (JS::GCPtr<ShadowRoot> shadow_root = static_cast<Element*>(child)->shadow_root_internal()) {
                 if (shadow_root->for_each_shadow_including_descendant(callback) == IterationDecision::Break)
                     return IterationDecision::Break;
             }

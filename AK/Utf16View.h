@@ -64,7 +64,7 @@ public:
     Utf16View() = default;
     ~Utf16View() = default;
 
-    explicit Utf16View(Span<u16 const> code_units)
+    explicit Utf16View(ReadonlySpan<u16> code_units)
         : m_code_units(code_units)
     {
     }
@@ -116,7 +116,7 @@ private:
 
     size_t calculate_length_in_code_points() const;
 
-    Span<u16 const> m_code_units;
+    ReadonlySpan<u16> m_code_units;
     mutable Optional<size_t> m_length_in_code_points;
 };
 

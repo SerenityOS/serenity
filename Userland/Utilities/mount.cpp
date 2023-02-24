@@ -9,7 +9,7 @@
 #include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -112,8 +112,8 @@ static ErrorOr<void> mount_all()
 
     bool all_ok = true;
     auto process_fstab_entries = [&](StringView path) -> ErrorOr<void> {
-        auto file_unbuffered = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-        auto file = TRY(Core::Stream::BufferedFile::create(move(file_unbuffered)));
+        auto file_unbuffered = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+        auto file = TRY(Core::BufferedFile::create(move(file_unbuffered)));
 
         while (TRY(file->can_read_line())) {
             auto line = TRY(file->read_line(buffer));
@@ -148,18 +148,18 @@ static ErrorOr<void> mount_all()
 static ErrorOr<void> print_mounts()
 {
     // Output info about currently mounted filesystems.
-    auto df = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
+    auto df = TRY(Core::File::open("/sys/kernel/df"sv, Core::File::OpenMode::Read));
 
     auto content = TRY(df->read_until_eof());
     auto json = TRY(JsonValue::from_string(content));
 
     json.as_array().for_each([](auto& value) {
         auto& fs_object = value.as_object();
-        auto class_name = fs_object.get_deprecated("class_name"sv).to_deprecated_string();
-        auto mount_point = fs_object.get_deprecated("mount_point"sv).to_deprecated_string();
-        auto source = fs_object.get_deprecated("source"sv).as_string_or("none");
-        auto readonly = fs_object.get_deprecated("readonly"sv).to_bool();
-        auto mount_flags = fs_object.get_deprecated("mount_flags"sv).to_int();
+        auto class_name = fs_object.get_deprecated_string("class_name"sv).value_or({});
+        auto mount_point = fs_object.get_deprecated_string("mount_point"sv).value_or({});
+        auto source = fs_object.get_deprecated_string("source"sv).value_or("none");
+        auto readonly = fs_object.get_bool("readonly"sv).value_or(false);
+        auto mount_flags = fs_object.get_u32("mount_flags"sv).value_or(0);
 
         out("{} on {} type {} (", source, mount_point, class_name);
 

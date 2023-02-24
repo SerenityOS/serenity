@@ -137,7 +137,7 @@ ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullOwnPtr<Hos
     m_host_controllers.get(domain_number).value()->enumerate_attached_devices([&](EnumerableDeviceIdentifier const& device_identifier) -> IterationDecision {
         auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
         if (device_identifier_or_error.is_error()) {
-            error_or_void = device_identifier_or_error.error();
+            error_or_void = device_identifier_or_error.release_error();
             return IterationDecision::Break;
         }
         m_device_identifiers.append(device_identifier_or_error.release_value());
@@ -167,7 +167,7 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
         (*it).value->enumerate_attached_devices([this, &error_or_void](EnumerableDeviceIdentifier device_identifier) -> IterationDecision {
             auto device_identifier_or_error = DeviceIdentifier::from_enumerable_identifier(device_identifier);
             if (device_identifier_or_error.is_error()) {
-                error_or_void = device_identifier_or_error.error();
+                error_or_void = device_identifier_or_error.release_error();
                 return IterationDecision::Break;
             }
             m_device_identifiers.append(device_identifier_or_error.release_value());

@@ -274,7 +274,7 @@ Optional<i16> Kern::read_glyph_kerning_format0(ReadonlyBytes slice, u16 left_gly
         return {};
 
     // FIXME: implement a possibly slightly more efficient binary search using the parameters above
-    Span<Format0Pair const> pairs { bit_cast<Format0Pair const*>(slice.slice(sizeof(Format0)).data()), number_of_pairs };
+    ReadonlySpan<Format0Pair> pairs { bit_cast<Format0Pair const*>(slice.slice(sizeof(Format0)).data()), number_of_pairs };
 
     // The left and right halves of the kerning pair make an unsigned 32-bit number, which is then used to order the kerning pairs numerically.
     auto needle = (static_cast<u32>(left_glyph_id) << 16u) | static_cast<u32>(right_glyph_id);
@@ -321,8 +321,8 @@ DeprecatedString Name::string_for_id(NameId id) const
     auto const offset = name_record.string_offset;
 
     if (platform_id == to_underlying(Platform::Windows)) {
-        static auto& decoder = *TextCodec::decoder_for("utf-16be");
-        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length });
+        static auto& decoder = *TextCodec::decoder_for("utf-16be"sv);
+        return decoder.to_utf8(StringView { (char const*)m_slice.offset_pointer(storage_offset + offset), length }).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     }
 
     return DeprecatedString((char const*)m_slice.offset_pointer(storage_offset + offset), length);
@@ -650,6 +650,15 @@ u16 Font::weight() const
     return 400;
 }
 
+u16 Font::width() const
+{
+    if (m_os2.has_value()) {
+        return m_os2->width_class();
+    }
+
+    return Gfx::FontWidth::Normal;
+}
+
 u8 Font::slope() const
 {
     // https://docs.microsoft.com/en-us/typography/opentype/spec/os2
@@ -678,6 +687,11 @@ bool Font::is_fixed_width() const
 u16 OS2::weight_class() const
 {
     return header().us_weight_class;
+}
+
+u16 OS2::width_class() const
+{
+    return header().us_width_class;
 }
 
 u16 OS2::selection() const

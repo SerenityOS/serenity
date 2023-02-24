@@ -54,16 +54,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (!path.has_value())
                 return;
 
-            ErrorOr<void> error_or = keyboard_mapper_widget->load_map_from_file(path.value());
-            if (error_or.is_error())
-                keyboard_mapper_widget->show_error_to_user(error_or.error());
+            if (auto error_or = keyboard_mapper_widget->load_map_from_file(path.value()); error_or.is_error())
+                keyboard_mapper_widget->show_error_to_user(error_or.release_error());
         });
 
     auto save_action = GUI::CommonActions::make_save_action(
         [&](auto&) {
-            ErrorOr<void> error_or = keyboard_mapper_widget->save();
-            if (error_or.is_error())
-                keyboard_mapper_widget->show_error_to_user(error_or.error());
+            if (auto error_or = keyboard_mapper_widget->save(); error_or.is_error())
+                keyboard_mapper_widget->show_error_to_user(error_or.release_error());
         });
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -72,9 +70,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!save_path.has_value())
             return;
 
-        ErrorOr<void> error_or = keyboard_mapper_widget->save_to_file(save_path.value());
-        if (error_or.is_error())
-            keyboard_mapper_widget->show_error_to_user(error_or.error());
+        if (auto error_or = keyboard_mapper_widget->save_to_file(save_path.value()); error_or.is_error())
+            keyboard_mapper_widget->show_error_to_user(error_or.release_error());
     });
 
     auto quit_action = GUI::CommonActions::make_quit_action(

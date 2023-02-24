@@ -72,17 +72,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     if (file_to_edit) {
-        FileArgument parsed_argument(file_to_edit);
-        auto response = FileSystemAccessClient::Client::the().try_request_file_read_only_approved_deprecated(window, parsed_argument.filename());
+        auto filename = TRY(String::from_utf8(StringView(file_to_edit, strlen(file_to_edit))));
+        FileArgument parsed_argument(filename);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, parsed_argument.filename().to_deprecated_string());
 
         if (response.is_error()) {
             if (response.error().code() == ENOENT)
-                text_widget->open_nonexistent_file(parsed_argument.filename());
+                text_widget->open_nonexistent_file(parsed_argument.filename().to_deprecated_string());
             else
                 return 1;
         } else {
-            if (!text_widget->read_file(*response.value()))
-                return 1;
+            TRY(text_widget->read_file(response.value().filename(), response.value().stream()));
             text_widget->editor().set_cursor_and_focus_line(parsed_argument.line().value_or(1) - 1, parsed_argument.column().value_or(0));
         }
 

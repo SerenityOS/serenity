@@ -13,7 +13,7 @@ namespace PixelPaint::Filters {
 class Sepia final : public Filter {
 public:
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const override;
-    virtual RefPtr<GUI::Widget> get_settings_widget() override;
+    virtual ErrorOr<RefPtr<GUI::Widget>> get_settings_widget() override;
 
     virtual StringView filter_name() const override { return "Sepia"sv; }
 

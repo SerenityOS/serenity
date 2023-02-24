@@ -9,7 +9,7 @@
 
 namespace Protocol {
 
-WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+WebSocketClient::WebSocketClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionToServer<WebSocketClientEndpoint, WebSocketServerEndpoint>(*this, move(socket))
 {
 }
@@ -32,6 +32,13 @@ u32 WebSocketClient::ready_state(Badge<WebSocket>, WebSocket& connection)
     if (!m_connections.contains(connection.id()))
         return (u32)WebSocket::ReadyState::Closed;
     return IPCProxy::ready_state(connection.id());
+}
+
+DeprecatedString WebSocketClient::subprotocol_in_use(Badge<WebSocket>, WebSocket& connection)
+{
+    if (!m_connections.contains(connection.id()))
+        return DeprecatedString::empty();
+    return IPCProxy::subprotocol_in_use(connection.id());
 }
 
 void WebSocketClient::send(Badge<WebSocket>, WebSocket& connection, ByteBuffer data, bool is_text)

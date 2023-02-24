@@ -41,11 +41,11 @@
 
 namespace Web::XHR {
 
-JS::NonnullGCPtr<XMLHttpRequest> XMLHttpRequest::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<XMLHttpRequest>> XMLHttpRequest::construct_impl(JS::Realm& realm)
 {
     auto& window = verify_cast<HTML::Window>(realm.global_object());
     auto author_request_headers = Fetch::Infrastructure::HeaderList::create(realm.vm());
-    return realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<XMLHttpRequest>(realm, window, *author_request_headers));
 }
 
 XMLHttpRequest::XMLHttpRequest(HTML::Window& window, Fetch::Infrastructure::HeaderList& author_request_headers)
@@ -83,7 +83,7 @@ void XMLHttpRequest::fire_progress_event(DeprecatedString const& event_name, u64
     event_init.length_computable = true;
     event_init.loaded = transmitted;
     event_init.total = length;
-    dispatch_event(*ProgressEvent::create(realm(), event_name, event_init));
+    dispatch_event(*ProgressEvent::create(realm(), event_name, event_init).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
@@ -129,7 +129,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty || m_response_type == Bindings::XMLHttpRequestResponseType::Text) {
         // 1. If this’s state is not loading or done, then return the empty string.
         if (m_state != State::Loading && m_state != State::Done)
-            return JS::PrimitiveString::create(vm, "");
+            return JS::PrimitiveString::create(vm, String {});
 
         // 2. Return the result of getting a text response for this.
         return JS::PrimitiveString::create(vm, get_text_response());
@@ -161,7 +161,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto blob_part = FileAPI::Blob::create(realm(), m_received_bytes, get_final_mime_type().type());
+        auto blob_part = TRY(FileAPI::Blob::create(realm(), m_received_bytes, get_final_mime_type().type()));
         auto blob = TRY(FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
         m_response_object = JS::Value(blob.ptr());
     }
@@ -219,12 +219,12 @@ DeprecatedString XMLHttpRequest::get_text_response() const
         charset = "UTF-8"sv;
 
     // 5. Return the result of running decode on xhr’s received bytes using fallback encoding charset.
-    auto* decoder = TextCodec::decoder_for(charset.value());
+    auto decoder = TextCodec::decoder_for(charset.value());
 
     // If we don't support the decoder yet, let's crash instead of attempting to return something, as the result would be incorrect and create obscure bugs.
-    VERIFY(decoder);
+    VERIFY(decoder.has_value());
 
-    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_received_bytes);
+    return TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, m_received_bytes).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://xhr.spec.whatwg.org/#final-mime-type
@@ -419,7 +419,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(DeprecatedString const& method_st
         m_state = State::Opened;
 
         // 2. Fire an event named readystatechange at this.
-        dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange));
+        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange)));
     }
 
     return {};
@@ -463,8 +463,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     if (should_enforce_same_origin_policy && !m_window->associated_document().origin().is_same_origin(request_url_origin)) {
         dbgln("XHR failed to load: Same-Origin Policy violation: {} may not load {}", m_window->associated_document().url(), request_url);
         m_state = State::Done;
-        dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange));
-        dispatch_event(*DOM::Event::create(realm, HTML::EventNames::error));
+        dispatch_event(TRY(DOM::Event::create(realm, EventNames::readystatechange)));
+        dispatch_event(TRY(DOM::Event::create(realm, HTML::EventNames::error)));
         return {};
     }
 
@@ -544,7 +544,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 xhr.m_status = status_code.value_or(0);
                 xhr.m_response_headers = move(response_headers);
                 xhr.m_send = false;
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::readystatechange));
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
                 xhr.fire_progress_event(EventNames::load, transmitted, length);
                 xhr.fire_progress_event(EventNames::loadend, transmitted, length);
             },
@@ -556,8 +556,8 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
                 xhr.m_state = State::Done;
                 xhr.set_status(status_code.value_or(0));
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::readystatechange));
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), HTML::EventNames::error));
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
             },
             m_timeout,
             [weak_this = make_weak_ptr<XMLHttpRequest>()] {
@@ -565,7 +565,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 if (!strong_this)
                     return;
                 auto& xhr = const_cast<XMLHttpRequest&>(*strong_this);
-                xhr.dispatch_event(*DOM::Event::create(xhr.realm(), EventNames::timeout));
+                xhr.dispatch_event(DOM::Event::create(xhr.realm(), EventNames::timeout).release_value_but_fixme_should_propagate_errors());
             });
     } else {
         TODO();

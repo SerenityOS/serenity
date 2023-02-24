@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/shell
 
 source $(dirname "$0")/test-commons.inc
 

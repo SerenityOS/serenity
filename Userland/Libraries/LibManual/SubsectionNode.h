@@ -13,7 +13,7 @@ namespace Manual {
 // A non-toplevel (i.e. not numbered) manual section.
 class SubsectionNode : public SectionNode {
 public:
-    SubsectionNode(NonnullRefPtr<SectionNode> parent, StringView name);
+    SubsectionNode(NonnullRefPtr<SectionNode const> parent, StringView name);
     virtual ~SubsectionNode() = default;
 
     virtual Node const* parent() const override;
@@ -22,7 +22,7 @@ public:
     virtual PageNode const* document() const override;
 
 protected:
-    NonnullRefPtr<SectionNode> m_parent;
+    NonnullRefPtr<SectionNode const> m_parent;
 };
 
 }

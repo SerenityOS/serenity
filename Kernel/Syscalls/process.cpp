@@ -25,18 +25,22 @@ ErrorOr<FlatPtr> Process::sys$getppid()
 
 ErrorOr<FlatPtr> Process::sys$get_process_name(Userspace<char*> buffer, size_t buffer_size)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    if (m_name->length() + 1 > buffer_size)
-        return ENAMETOOLONG;
 
-    TRY(copy_to_user(buffer, m_name->characters(), m_name->length() + 1));
+    TRY(m_name.with([&buffer, buffer_size](auto& name) -> ErrorOr<void> {
+        if (name->length() + 1 > buffer_size)
+            return ENAMETOOLONG;
+
+        return copy_to_user(buffer, name->characters(), name->length() + 1);
+    }));
+
     return 0;
 }
 
 ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<char const*> user_name, size_t user_name_length)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::proc));
     if (user_name_length > 256)
         return ENAMETOOLONG;
@@ -44,7 +48,7 @@ ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<char const*> user_name,
     // Empty and whitespace-only names only exist to confuse users.
     if (name->view().is_whitespace())
         return EINVAL;
-    m_name = move(name);
+    set_name(move(name));
     return 0;
 }
 

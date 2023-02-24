@@ -6,11 +6,10 @@
 
 .section .text.vector_table
 
-#define REGISTER_STATE_SIZE 272
+#define REGISTER_STATE_SIZE 264
 #define SPSR_EL1_SLOT       (31 * 8)
 #define ELR_EL1_SLOT        (32 * 8)
-#define TPIDR_EL0_SLOT      (33 * 8)
-#define SP_EL0_SLOT         (34 * 8)
+#define SP_EL0_SLOT         (33 * 8)
 
 // Vector Table Entry macro. Each entry is aligned at 128 bytes, meaning we have
 // at most that many instructions.
@@ -58,8 +57,6 @@
     str x0, [sp, #SPSR_EL1_SLOT]
     mrs x0, elr_el1
     str x0, [sp, #ELR_EL1_SLOT]
-    mrs x0, tpidr_el0
-    str x0, [sp, #TPIDR_EL0_SLOT]
     mrs x0, sp_el0
     str x0, [sp, #SP_EL0_SLOT]
 
@@ -83,8 +80,6 @@
     msr spsr_el1, x0
     ldr x0, [sp, #ELR_EL1_SLOT]
     msr elr_el1, x0
-    ldr x0, [sp, #TPIDR_EL0_SLOT]
-    msr tpidr_el0, x0
     ldr x0, [sp, #SP_EL0_SLOT]
     msr sp_el0, x0
 
@@ -128,10 +123,10 @@ vector_table_el1:
     table_entry system_error_current_elsp_elx
 
     // Exceptions from Lower EL, where causing application is in AArch64 mode
-    unimplemented_entry
-    unimplemented_entry
-    unimplemented_entry
-    unimplemented_entry
+    table_entry synchronous_lower_el
+    table_entry irq_lower_el
+    table_entry fiq_lower_el
+    table_entry system_error_lower_el
 
     // Exceptions from Lower EL, where causing application is in AArch32 mode
     unimplemented_entry
@@ -182,6 +177,30 @@ fiq_current_elsp_el0:
     eret
 
 system_error_current_elsp_el0:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+synchronous_lower_el:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+irq_lower_el:
+    save_current_context
+    bl handle_interrupt
+    restore_previous_context
+    eret
+
+fiq_lower_el:
+    save_current_context
+    bl exception_common
+    restore_previous_context
+    eret
+
+system_error_lower_el:
     save_current_context
     bl exception_common
     restore_previous_context

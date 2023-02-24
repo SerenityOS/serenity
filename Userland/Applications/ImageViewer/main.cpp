@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "MainWidget.h"
 #include "ViewWidget.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
@@ -56,10 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("Image Viewer");
 
-    auto root_widget = TRY(window->set_main_widget<GUI::Widget>());
-    root_widget->set_fill_with_background_color(true);
-    root_widget->set_layout<GUI::VerticalBoxLayout>();
-    root_widget->layout()->set_spacing(2);
+    auto root_widget = TRY(window->set_main_widget<MainWidget>());
 
     auto toolbar_container = TRY(root_widget->try_add<GUI::ToolbarContainer>());
     auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
@@ -182,12 +180,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             widget->navigate(ViewWidget::Directions::First);
         });
 
-    auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)),
+    auto go_back_action = GUI::Action::create("Go to &Previous", { Mod_None, Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Back);
         });
 
-    auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)),
+    auto go_forward_action = GUI::Action::create("Go to &Next", { Mod_None, Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)),
         [&](auto&) {
             widget->navigate(ViewWidget::Directions::Forward);
         });

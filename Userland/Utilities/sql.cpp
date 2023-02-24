@@ -7,11 +7,11 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
 #include <LibSQL/AST/Lexer.h>
@@ -75,28 +75,26 @@ public:
             m_editor->set_prompt(prompt_for_level(open_indents));
         };
 
-        m_sql_client->on_execution_success = [this](auto, auto, auto has_results, auto created, auto updated, auto deleted) {
-            if (updated != 0 || created != 0 || deleted != 0) {
-                outln("{} row(s) created, {} updated, {} deleted", created, updated, deleted);
-            }
-            if (!has_results) {
+        m_sql_client->on_execution_success = [this](auto result) {
+            if (result.rows_updated != 0 || result.rows_created != 0 || result.rows_deleted != 0)
+                outln("{} row(s) created, {} updated, {} deleted", result.rows_created, result.rows_updated, result.rows_deleted);
+            if (!result.has_results)
                 read_sql();
-            }
         };
 
-        m_sql_client->on_next_result = [](auto, auto, auto row) {
+        m_sql_client->on_next_result = [](auto result) {
             StringBuilder builder;
-            builder.join(", "sv, row);
+            builder.join(", "sv, result.values);
             outln("{}", builder.to_deprecated_string());
         };
 
-        m_sql_client->on_results_exhausted = [this](auto, auto, auto total_rows) {
-            outln("{} row(s)", total_rows);
+        m_sql_client->on_results_exhausted = [this](auto result) {
+            outln("{} row(s)", result.total_rows);
             read_sql();
         };
 
-        m_sql_client->on_execution_error = [this](auto, auto, auto, auto const& message) {
-            outln("\033[33;1mExecution error:\033[0m {}", message);
+        m_sql_client->on_execution_error = [this](auto result) {
+            outln("\033[33;1mExecution error:\033[0m {}", result.error_message);
             read_sql();
         };
 
@@ -153,7 +151,7 @@ private:
     NonnullRefPtr<SQL::SQLClient> m_sql_client;
     SQL::ConnectionID m_connection_id { 0 };
     Core::EventLoop& m_loop;
-    OwnPtr<Core::Stream::BufferedFile> m_input_file { nullptr };
+    OwnPtr<Core::BufferedFile> m_input_file { nullptr };
     bool m_quit_when_files_read { false };
     Vector<DeprecatedString> m_input_file_chain {};
     Array<u8, 4096> m_buffer {};
@@ -162,13 +160,13 @@ private:
     {
         if (!m_input_file && !m_input_file_chain.is_empty()) {
             auto file_name = m_input_file_chain.take_first();
-            auto file_or_error = Core::Stream::File::open(file_name, Core::Stream::OpenMode::Read);
+            auto file_or_error = Core::File::open(file_name, Core::File::OpenMode::Read);
             if (file_or_error.is_error()) {
                 warnln("Input file {} could not be opened: {}", file_name, file_or_error.error());
                 return {};
             }
 
-            auto buffered_file_or_error = Core::Stream::BufferedFile::create(file_or_error.release_value());
+            auto buffered_file_or_error = Core::BufferedFile::create(file_or_error.release_value());
             if (buffered_file_or_error.is_error()) {
                 warnln("Input file {} could not be buffered: {}", file_name, buffered_file_or_error.error());
                 return {};
@@ -361,13 +359,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if defined(AK_OS_SERENITY)
     auto sql_client = TRY(SQL::SQLClient::try_create());
 #else
-    VERIFY(sql_server_path != nullptr);
-    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(sql_server_path));
+    VERIFY(!sql_server_path.is_empty());
+    auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client({ TRY(String::from_utf8(sql_server_path)) }));
 #endif
 
     SQLRepl repl(loop, database_name, move(sql_client));
 
-    if (!suppress_sqlrc && Core::File::exists(sqlrc_path))
+    if (!suppress_sqlrc && Core::DeprecatedFile::exists(sqlrc_path))
         repl.source_file(sqlrc_path);
     if (!file_to_source.is_empty())
         repl.source_file(file_to_source);

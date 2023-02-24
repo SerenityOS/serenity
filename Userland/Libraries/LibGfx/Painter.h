@@ -53,9 +53,9 @@ public:
     void fill_rect_with_checkerboard(IntRect const&, IntSize, Color color_dark, Color color_light);
     void fill_rect_with_gradient(Orientation, IntRect const&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(IntRect const&, Color gradient_start, Color gradient_end);
-    void fill_rect_with_linear_gradient(IntRect const&, Span<ColorStop const>, float angle, Optional<float> repeat_length = {});
-    void fill_rect_with_conic_gradient(IntRect const&, Span<ColorStop const>, IntPoint center, float start_angle, Optional<float> repeat_length = {});
-    void fill_rect_with_radial_gradient(IntRect const&, Span<ColorStop const>, IntPoint center, IntSize size, Optional<float> repeat_length = {});
+    void fill_rect_with_linear_gradient(IntRect const&, ReadonlySpan<ColorStop>, float angle, Optional<float> repeat_length = {});
+    void fill_rect_with_conic_gradient(IntRect const&, ReadonlySpan<ColorStop>, IntPoint center, float start_angle, Optional<float> repeat_length = {});
+    void fill_rect_with_radial_gradient(IntRect const&, ReadonlySpan<ColorStop>, IntPoint center, IntSize size, Optional<float> repeat_length = {});
     void fill_rect_with_rounded_corners(IntRect const&, Color, int radius);
     void fill_rect_with_rounded_corners(IntRect const&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
     void fill_ellipse(IntRect const&, Color);
@@ -68,7 +68,7 @@ public:
     void draw_scaled_bitmap(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Gfx::Bitmap const&, FloatRect const& src_rect, Gfx::AffineTransform const&, float opacity = 1.0f, ScalingMode = ScalingMode::NearestNeighbor);
     void draw_triangle(IntPoint, IntPoint, IntPoint, Color);
-    void draw_triangle(IntPoint offset, Span<IntPoint const>, Color);
+    void draw_triangle(IntPoint offset, ReadonlySpan<IntPoint>, Color);
     void draw_ellipse_intersecting(IntRect const&, Color, int thickness = 1);
     void set_pixel(IntPoint, Color, bool blend = false);
     void set_pixel(int x, int y, Color color, bool blend = false) { set_pixel({ x, y }, color, blend); }
@@ -78,7 +78,7 @@ public:
     void draw_triangle_wave(IntPoint, IntPoint, Color color, int amplitude, int thickness = 1);
     void draw_quadratic_bezier_curve(IntPoint control_point, IntPoint, IntPoint, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void draw_cubic_bezier_curve(IntPoint control_point_0, IntPoint control_point_1, IntPoint, IntPoint, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
-    void draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
+    void draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color, int thickness = 1, LineStyle style = LineStyle::Solid);
     void blit(IntPoint, Gfx::Bitmap const&, IntRect const& src_rect, float opacity = 1.0f, bool apply_alpha = true);
     void blit_dimmed(IntPoint, Gfx::Bitmap const&, IntRect const& src_rect);
     void blit_brightened(IntPoint, Gfx::Bitmap const&, IntRect const& src_rect);
@@ -131,8 +131,8 @@ public:
     static void for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2, Function<void(FloatPoint, FloatPoint)>&);
     static void for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2, Function<void(FloatPoint, FloatPoint)>&&);
 
-    static void for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&);
-    static void for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&&);
+    static void for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&);
+    static void for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&&);
 
     void stroke_path(Path const&, Color, int thickness);
 
@@ -177,7 +177,7 @@ public:
     }
 
     IntRect clip_rect() const { return state().clip_rect; }
-    void set_clip_rect(IntRect const& rect) { state().clip_rect = rect; }
+    void set_clip_rect(IntRect const&);
 
     int scale() const { return state().scale; }
 

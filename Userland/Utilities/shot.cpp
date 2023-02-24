@@ -11,9 +11,8 @@
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -161,7 +160,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (edit_image)
         output_path = Core::DateTime::now().to_deprecated_string("/tmp/screenshot-%Y-%m-%d-%H-%M-%S.png"sv);
 
-    auto file_or_error = Core::Stream::File::open(output_path, Core::Stream::OpenMode::ReadWrite);
+    auto file_or_error = Core::File::open(output_path, Core::File::OpenMode::ReadWrite);
     if (file_or_error.is_error()) {
         warnln("Could not open '{}' for writing: {}", output_path, file_or_error.error());
         return 1;
@@ -175,7 +174,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool printed_hyperlink = false;
     if (isatty(STDOUT_FILENO)) {
-        auto full_path = Core::File::real_path_for(output_path);
+        auto full_path = Core::DeprecatedFile::real_path_for(output_path);
         if (!full_path.is_null()) {
             char hostname[HOST_NAME_MAX];
             VERIFY(gethostname(hostname, sizeof(hostname)) == 0);

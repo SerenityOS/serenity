@@ -11,8 +11,8 @@
 #include <AK/QuickSort.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <net/if.h>
@@ -89,7 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     if (modify_action.is_empty()) {
-        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/route"sv, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open("/sys/kernel/net/route"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 
@@ -101,17 +101,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get_deprecated("destination"sv).to_deprecated_string() < b.as_object().get_deprecated("destination"sv).to_deprecated_string();
+            return a.as_object().get_deprecated_string("destination"sv).value_or({}) < b.as_object().get_deprecated_string("destination"sv).value_or({});
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto destination = if_object.get_deprecated("destination"sv).to_deprecated_string();
-            auto gateway = if_object.get_deprecated("gateway"sv).to_deprecated_string();
-            auto genmask = if_object.get_deprecated("genmask"sv).to_deprecated_string();
-            auto interface = if_object.get_deprecated("interface"sv).to_deprecated_string();
-            auto flags = if_object.get_deprecated("flags"sv).to_u32();
+            auto destination = if_object.get_deprecated_string("destination"sv).value_or({});
+            auto gateway = if_object.get_deprecated_string("gateway"sv).value_or({});
+            auto genmask = if_object.get_deprecated_string("genmask"sv).value_or({});
+            auto interface = if_object.get_deprecated_string("interface"sv).value_or({});
+            auto flags = if_object.get_u32("flags"sv).value_or(0);
 
             StringBuilder flags_builder;
             if (flags & RTF_UP)

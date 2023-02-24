@@ -15,6 +15,7 @@ class TrackManager;
 class PlayerWidget final : public GUI::Toolbar {
     C_OBJECT(PlayerWidget)
 public:
+    static ErrorOr<NonnullRefPtr<PlayerWidget>> create(TrackManager&, AudioPlayerLoop&);
     virtual ~PlayerWidget() override = default;
 
     void add_track();
@@ -23,6 +24,8 @@ public:
 
 private:
     explicit PlayerWidget(TrackManager&, AudioPlayerLoop&);
+
+    ErrorOr<void> initialize();
 
     TrackManager& m_track_manager;
     AudioPlayerLoop& m_audio_loop;

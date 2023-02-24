@@ -169,11 +169,9 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
     case SO_ERROR: {
         if (size < sizeof(int))
             return EINVAL;
-        int errno;
-        if (so_error().is_error())
-            errno = so_error().error().code();
-        else
-            errno = 0;
+        int errno = 0;
+        if (auto const& error = so_error(); error.has_value())
+            errno = error.value();
         TRY(copy_to_user(static_ptr_cast<int*>(value), &errno));
         size = sizeof(int);
         TRY(copy_to_user(value_size, &size));

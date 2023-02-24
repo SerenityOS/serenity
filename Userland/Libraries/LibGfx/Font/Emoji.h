@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Span.h>
 #include <AK/Types.h>
 
 namespace Gfx {
@@ -17,8 +18,9 @@ class Bitmap;
 class Emoji {
 public:
     static Gfx::Bitmap const* emoji_for_code_point(u32 code_point);
-    static Gfx::Bitmap const* emoji_for_code_points(Span<u32 const> const&);
+    static Gfx::Bitmap const* emoji_for_code_points(ReadonlySpan<u32> const&);
     static Gfx::Bitmap const* emoji_for_code_point_iterator(Utf8CodePointIterator&);
+    static Gfx::Bitmap const* emoji_for_code_point_iterator(Utf32CodePointIterator&);
 };
 
 }

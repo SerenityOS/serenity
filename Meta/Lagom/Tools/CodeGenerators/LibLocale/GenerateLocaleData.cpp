@@ -19,9 +19,8 @@
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
 {
@@ -233,7 +232,7 @@ struct CLDR {
 // with locales such as "en-GB-oed" that are canonically invalid locale IDs.
 #define TRY_OR_DISCARD(expression)                                                                   \
     ({                                                                                               \
-        auto _temporary_result = (expression);                                                       \
+        auto&& _temporary_result = (expression);                                                     \
         if (_temporary_result.is_error())                                                            \
             return;                                                                                  \
         static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
@@ -921,7 +920,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
 
     LexicalPath core_supplemental_path(core_path);
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::File::is_directory(core_supplemental_path.string()));
+    VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
 
     TRY(parse_core_aliases(core_supplemental_path.string(), cldr));
     TRY(parse_likely_subtags(core_supplemental_path.string(), cldr));
@@ -1007,7 +1006,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_header(Core::Stream::BufferedFile& file, CLDR& cldr)
+static ErrorOr<void> generate_unicode_locale_header(Core::BufferedFile& file, CLDR& cldr)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -1052,7 +1051,7 @@ namespace Locale {
     return {};
 }
 
-static ErrorOr<void> generate_unicode_locale_implementation(Core::Stream::BufferedFile& file, CLDR& cldr)
+static ErrorOr<void> generate_unicode_locale_implementation(Core::BufferedFile& file, CLDR& cldr)
 {
     auto string_index_type = cldr.unique_strings.type_that_fits();
 
@@ -1127,7 +1126,7 @@ struct TextLayout {
     generate_available_values(generator, "get_available_currencies"sv, cldr.currencies);
 
     generator.append(R"~~~(
-Span<StringView const> get_available_keyword_values(StringView key)
+ReadonlySpan<StringView> get_available_keyword_values(StringView key)
 {
     auto key_value = key_from_string(key);
     if (!key_value.has_value())
@@ -1521,7 +1520,7 @@ Optional<StringView> get_locale_@enum_snake@_mapping(StringView locale, StringVi
     generate_value_to_string(generator, "{}_to_string"sv, "CharacterOrder"sv, "character_order"sv, format_identifier, cldr.character_orders);
 
     generator.append(R"~~~(
-static Span<@string_index_type@ const> find_keyword_indices(StringView locale, StringView key)
+static ReadonlySpan<@string_index_type@> find_keyword_indices(StringView locale, StringView key)
 {
     auto locale_value = locale_from_string(locale);
     if (!locale_value.has_value())
@@ -1774,8 +1773,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path");
     args_parser.parse(arguments);
 
-    auto generated_header_file = TRY(open_file(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
 
     CLDR cldr;
     TRY(parse_all_locales(bcp47_path, core_path, locale_names_path, misc_path, numbers_path, dates_path, cldr));

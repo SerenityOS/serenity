@@ -59,14 +59,14 @@ ErrorOr<void> CardGame::pick_up_cards_from_stack(Cards::CardStack& stack, Gfx::I
     return {};
 }
 
-RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule movement_rule) const
+RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule movement_rule)
 {
     auto bounds_to_check = moving_cards_bounds();
 
     RefPtr<CardStack> closest_stack;
     float closest_distance = FLT_MAX;
 
-    for (auto const& stack : stacks()) {
+    for (auto& stack : stacks()) {
         if (stack == moving_cards_source_stack())
             continue;
 

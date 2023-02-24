@@ -36,6 +36,9 @@ concept Enum = IsEnum<T>;
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
+template<class From, class To>
+concept ConvertibleTo = IsConvertible<From, To>;
+
 template<typename U, typename... Ts>
 concept OneOf = IsOneOf<U, Ts...>;
 
@@ -49,7 +52,7 @@ template<typename T, typename S>
 concept DerivedFrom = IsBaseOf<S, T>;
 
 template<typename T>
-concept AnyString = IsConstructible<StringView, T>;
+concept AnyString = IsConstructible<StringView, RemoveCVReference<T> const&>;
 
 template<typename T, typename U>
 concept HashCompatible = IsHashCompatible<Detail::Decay<T>, Detail::Decay<U>>;
@@ -139,6 +142,7 @@ namespace AK {
 #endif
 using AK::Concepts::Arithmetic;
 using AK::Concepts::ArrayLike;
+using AK::Concepts::ConvertibleTo;
 using AK::Concepts::DerivedFrom;
 using AK::Concepts::Enum;
 using AK::Concepts::FallibleFunction;

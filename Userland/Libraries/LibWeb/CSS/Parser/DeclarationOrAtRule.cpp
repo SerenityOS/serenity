@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,21 +23,5 @@ DeclarationOrAtRule::DeclarationOrAtRule(Declaration declaration)
 }
 
 DeclarationOrAtRule::~DeclarationOrAtRule() = default;
-
-DeprecatedString DeclarationOrAtRule::to_deprecated_string() const
-{
-    StringBuilder builder;
-    switch (m_type) {
-    default:
-    case DeclarationType::At:
-        builder.append(m_at->to_deprecated_string());
-        break;
-    case DeclarationType::Declaration:
-        builder.append(m_declaration->to_deprecated_string());
-        break;
-    }
-
-    return builder.to_deprecated_string();
-}
 
 }

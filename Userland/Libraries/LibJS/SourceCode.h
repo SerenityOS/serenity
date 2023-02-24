@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@ namespace JS {
 
 class SourceCode : public RefCounted<SourceCode> {
 public:
-    static NonnullRefPtr<SourceCode> create(String filename, String code);
+    static NonnullRefPtr<SourceCode const> create(String filename, String code);
 
     String const& filename() const;
     String const& code() const;

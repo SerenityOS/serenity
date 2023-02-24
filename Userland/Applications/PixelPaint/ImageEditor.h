@@ -153,7 +153,7 @@ private:
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
-    ErrorOr<void> save_project_to_file(NonnullOwnPtr<Core::Stream::File>) const;
+    ErrorOr<void> save_project_to_file(NonnullOwnPtr<Core::File>) const;
 
     int calculate_ruler_step_size() const;
     Gfx::IntRect mouse_indicator_rect_x() const;
@@ -187,7 +187,7 @@ private:
 
     float m_pixel_grid_threshold { 15.0f };
 
-    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_active_cursor { Gfx::StandardCursor::None };
+    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_active_cursor { Gfx::StandardCursor::None };
 
     bool m_loaded_from_image { true };
 

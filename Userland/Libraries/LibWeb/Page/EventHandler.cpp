@@ -185,7 +185,7 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
                 return false;
 
             auto offset = compute_mouse_event_offset(position, *layout_node);
-            if (node->dispatch_event(*UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, offset.x(), offset.y(), position.x(), position.y(), wheel_delta_x, wheel_delta_y, buttons, button))) {
+            if (node->dispatch_event(UIEvents::WheelEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::wheel, offset.x(), offset.y(), position.x(), position.y(), wheel_delta_x, wheel_delta_y, buttons, button).release_value_but_fixme_should_propagate_errors())) {
                 if (auto* page = m_browsing_context.page()) {
                     page->client().page_did_request_scroll(wheel_delta_x * 20, wheel_delta_y * 20);
                 }
@@ -249,12 +249,12 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, buttons, button));
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mouseup, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
             handled_event = true;
 
             bool run_activation_behavior = true;
             if (node.ptr() == m_mousedown_target && button == GUI::MouseButton::Primary) {
-                run_activation_behavior = node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, button));
+                run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, offset, client_offset, page_offset, button).release_value_but_fixme_should_propagate_errors());
             }
 
             if (run_activation_behavior) {
@@ -372,7 +372,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
         auto offset = compute_mouse_event_offset(position, *layout_node);
         auto client_offset = compute_mouse_event_client_offset(position);
         auto page_offset = compute_mouse_event_page_offset(client_offset);
-        node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, page_offset, buttons, button));
+        node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousedown, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
@@ -488,7 +488,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
             auto offset = compute_mouse_event_offset(position, *layout_node);
             auto client_offset = compute_mouse_event_client_offset(position);
             auto page_offset = compute_mouse_event_page_offset(client_offset);
-            node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, buttons));
+            node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, buttons).release_value_but_fixme_should_propagate_errors());
             // NOTE: Dispatching an event may have disturbed the world.
             if (!paint_root() || paint_root() != node->document().paint_box())
                 return true;
@@ -577,7 +577,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     auto offset = compute_mouse_event_offset(position, *layout_node);
     auto client_offset = compute_mouse_event_client_offset(position);
     auto page_offset = compute_mouse_event_page_offset(client_offset);
-    node->dispatch_event(*UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, buttons, button));
+    node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
 
     // NOTE: Dispatching an event may have disturbed the world.
     if (!paint_root() || paint_root() != node->document().paint_box())
@@ -684,17 +684,17 @@ bool EventHandler::fire_keyboard_event(DeprecatedFlyString const& event_name, HT
                 return fire_keyboard_event(event_name, *browsing_context_container.nested_browsing_context(), key, modifiers, code_point);
         }
 
-        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
-        return !focused_element->dispatch_event(*event);
+        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
+        return !focused_element->dispatch_event(event);
     }
 
     // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent allocation when recursing into an (i)frame.
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point);
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
 
     if (JS::GCPtr<HTML::HTMLElement> body = document->body())
-        return !body->dispatch_event(*event);
+        return !body->dispatch_event(event);
 
-    return !document->root().dispatch_event(*event);
+    return !document->root().dispatch_event(event);
 }
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)

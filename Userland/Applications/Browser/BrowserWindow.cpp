@@ -19,9 +19,6 @@
 #include <LibConfig/Client.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
-#include <LibCore/Version.h>
-#include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
@@ -130,11 +127,6 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     m_window_actions.on_tabs.append([this] {
         m_tab_widget->activate_last_tab();
     });
-
-    m_window_actions.on_about = [this] {
-        auto app_icon = GUI::Icon::default_icon("app-browser"sv);
-        GUI::AboutDialog::show("Browser"sv, Core::Version::read_long_version_string(), app_icon.bitmap_for_size(32), this);
-    };
 
     m_window_actions.on_show_bookmarks_bar = [](auto& action) {
         Browser::BookmarksBarWidget::the().set_visible(action.is_checked());
@@ -438,7 +430,7 @@ void BrowserWindow::build_menus()
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
         DeprecatedString user_agent;
-        if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv) != GUI::InputBox::ExecResult::OK || user_agent.is_empty() || user_agent.is_null()) {
+        if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv, GUI::InputType::NonemptyText) != GUI::InputBox::ExecResult::OK) {
             m_disable_user_agent_spoofing->activate();
             return;
         }
@@ -495,7 +487,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     m_search_engine_actions.add_action(*m_disable_search_engine_action);
     m_disable_search_engine_action->set_checked(true);
 
-    auto search_engines_file = TRY(Core::Stream::File::open(Browser::search_engines_file_path(), Core::Stream::OpenMode::Read));
+    auto search_engines_file = TRY(Core::File::open(Browser::search_engines_file_path(), Core::File::OpenMode::Read));
     auto file_size = TRY(search_engines_file->size());
     auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
     if (!search_engines_file->read_entire_buffer(buffer).is_error()) {
@@ -529,7 +521,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
         DeprecatedString search_engine;
-        if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK || search_engine.is_empty()) {
+        if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, GUI::InputType::NonemptyText, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK) {
             m_disable_search_engine_action->activate();
             return;
         }
@@ -782,7 +774,7 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
 
     auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
 
-    auto screenshot_file = TRY(Core::Stream::File::open(path.string(), Core::Stream::OpenMode::Write));
+    auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
     TRY(screenshot_file->write(encoded));
 
     return {};

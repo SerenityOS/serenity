@@ -19,14 +19,14 @@
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibLine/Editor.h>
+#include <Shell/PosixParser.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -220,7 +220,7 @@ Vector<DeprecatedString> Shell::expand_globs(StringView path, StringView base)
     }
 
     StringBuilder resolved_base_path_builder;
-    resolved_base_path_builder.append(Core::File::real_path_for(base));
+    resolved_base_path_builder.append(Core::DeprecatedFile::real_path_for(base));
     if (S_ISDIR(statbuf.st_mode))
         resolved_base_path_builder.append('/');
 
@@ -298,7 +298,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
             auto alias = resolve_alias(command.argv[0]);
             if (!alias.is_null()) {
                 auto argv0 = command.argv.take_first();
-                auto subcommand_ast = Parser { alias }.parse();
+                auto subcommand_ast = parse(alias, false);
                 if (subcommand_ast) {
                     while (subcommand_ast->is_execute()) {
                         auto* ast = static_cast<AST::Execute*>(subcommand_ast.ptr());
@@ -337,7 +337,7 @@ DeprecatedString Shell::resolve_path(DeprecatedString path) const
     if (!path.starts_with('/'))
         path = DeprecatedString::formatted("{}/{}", cwd, path);
 
-    return Core::File::real_path_for(path);
+    return Core::DeprecatedFile::real_path_for(path);
 }
 
 Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
@@ -350,7 +350,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::lookup_local_variable(StringView name) const
+RefPtr<AST::Value const> Shell::lookup_local_variable(StringView name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -361,7 +361,7 @@ RefPtr<AST::Value> Shell::lookup_local_variable(StringView name) const
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::get_argument(size_t index) const
+RefPtr<AST::Value const> Shell::get_argument(size_t index) const
 {
     if (index == 0)
         return adopt_ref(*new AST::StringValue(current_script));
@@ -369,7 +369,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index) const
     --index;
     if (auto argv = lookup_local_variable("ARGV"sv)) {
         if (argv->is_list_without_resolution()) {
-            AST::ListValue* list = static_cast<AST::ListValue*>(argv.ptr());
+            AST::ListValue const* list = static_cast<AST::ListValue const*>(argv.ptr());
             if (list->values().size() <= index)
                 return nullptr;
 
@@ -390,7 +390,7 @@ DeprecatedString Shell::local_variable_or(StringView name, DeprecatedString cons
     auto value = lookup_local_variable(name);
     if (value) {
         StringBuilder builder;
-        builder.join(' ', value->resolve_as_list(*this));
+        builder.join(' ', const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)));
         return builder.to_deprecated_string();
     }
     return replacement;
@@ -478,7 +478,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
 
 DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
 {
-    Formatter formatter(source, cursor);
+    Formatter formatter(source, cursor, m_in_posix_mode);
     auto result = formatter.format();
     cursor = formatter.cursor();
 
@@ -522,7 +522,7 @@ Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)
     auto parts = name.split_view('/');
     auto path = name.to_deprecated_string();
     if (parts.size() > 1) {
-        auto file = Core::File::open(path.characters(), Core::OpenMode::ReadOnly);
+        auto file = Core::DeprecatedFile::open(path.characters(), Core::OpenMode::ReadOnly);
         if (!file.is_error() && !file.value()->is_directory() && access(path.characters(), X_OK) == 0)
             return RunnablePath { RunnablePath::Kind::Executable, name };
     }
@@ -581,7 +581,7 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
     if (cmd.is_empty())
         return 0;
 
-    auto command = Parser(cmd, m_is_interactive).parse();
+    auto command = parse(cmd, m_is_interactive);
 
     if (!command)
         return 0;
@@ -906,7 +906,7 @@ void Shell::execute_process(Vector<char const*>&& argv)
         }
         if (saved_errno == ENOENT) {
             do {
-                auto file_result = Core::File::open(argv[0], Core::OpenMode::ReadOnly);
+                auto file_result = Core::DeprecatedFile::open(argv[0], Core::OpenMode::ReadOnly);
                 if (file_result.is_error())
                     break;
                 auto& file = file_result.value();
@@ -1045,7 +1045,7 @@ bool Shell::run_file(DeprecatedString const& filename, bool explicitly_invoked)
     TemporaryChange interactive_change { m_is_interactive, false };
     TemporaryChange<Optional<SourcePosition>> source_change { m_source_position, SourcePosition { .source_file = filename, .literal_source_text = {}, .position = {} } };
 
-    auto file_result = Core::File::open(filename, Core::OpenMode::ReadOnly);
+    auto file_result = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
     if (file_result.is_error()) {
         auto error = DeprecatedString::formatted("'{}': {}", escape_token_for_single_quotes(filename), file_result.error());
         if (explicitly_invoked)
@@ -1068,7 +1068,7 @@ bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const
     if (!value)
         return false;
 
-    return value->resolve_as_list(*this).contains_slow(command.argv[0]);
+    return const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this)).contains_slow(command.argv[0]);
 }
 
 void Shell::restore_ios()
@@ -1093,7 +1093,7 @@ void Shell::block_on_pipeline(RefPtr<AST::Pipeline> pipeline)
 
 void Shell::block_on_job(RefPtr<Job> job)
 {
-    TemporaryChange<Job const*> current_job { m_current_job, job.ptr() };
+    TemporaryChange<Job*> current_job { m_current_job, job.ptr() };
 
     if (!job)
         return;
@@ -1364,7 +1364,7 @@ void Shell::cache_path()
         cached_path.append({ RunnablePath::Kind::Alias, name });
     }
 
-    // TODO: Can we make this rely on Core::File::resolve_executable_from_environment()?
+    // TODO: Can we make this rely on Core::DeprecatedFile::resolve_executable_from_environment()?
     DeprecatedString path = getenv("PATH");
     if (!path.is_empty()) {
         auto directories = path.split(':');
@@ -1411,8 +1411,7 @@ void Shell::remove_entry_from_cache(StringView entry)
 void Shell::highlight(Line::Editor& editor) const
 {
     auto line = editor.line();
-    Parser parser(line, m_is_interactive);
-    auto ast = parser.parse();
+    auto ast = parse(line, m_is_interactive);
     if (!ast)
         return;
     ast->highlight_in_editor(editor, const_cast<Shell&>(*this));
@@ -1426,9 +1425,7 @@ Vector<Line::CompletionSuggestion> Shell::complete()
 
 Vector<Line::CompletionSuggestion> Shell::complete(StringView line)
 {
-    Parser parser(line, m_is_interactive);
-
-    auto ast = parser.parse();
+    auto ast = parse(line, m_is_interactive);
 
     if (!ast)
         return {};
@@ -1674,7 +1671,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         if (!node)
             return Error::from_string_literal("Cannot complete");
 
-        program_name_storage = node->run(*this)->resolve_as_string(*this);
+        program_name_storage = const_cast<AST::Node&>(*node).run(*this)->resolve_as_string(*this);
         known_program_name = program_name_storage;
     }
 
@@ -2178,8 +2175,9 @@ Shell::Shell()
     cache_path();
 }
 
-Shell::Shell(Line::Editor& editor, bool attempt_interactive)
-    : m_editor(editor)
+Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
+    : m_in_posix_mode(posix_mode)
+    , m_editor(editor)
 {
     uid = getuid();
     tcsetpgrp(0, getpgrp());
@@ -2225,8 +2223,8 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive)
         cache_path();
     }
 
-    m_editor->register_key_input_callback('\n', [](Line::Editor& editor) {
-        auto ast = Parser(editor.line()).parse();
+    m_editor->register_key_input_callback('\n', [this](Line::Editor& editor) {
+        auto ast = parse(editor.line(), false);
         if (ast && ast->is_syntax_error() && ast->syntax_error_node().is_continuable())
             return true;
 
@@ -2283,7 +2281,7 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-Job const* Shell::find_job(u64 id, bool is_pid)
+Job* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
         if (is_pid) {
@@ -2354,6 +2352,12 @@ void Shell::possibly_print_error() const
     case ShellError::LaunchError:
         warnln("Shell: {}", m_error_description);
         break;
+    case ShellError::PipeFailure:
+        warnln("Shell: pipe() failed for {}", m_error_description);
+        break;
+    case ShellError::WriteFailure:
+        warnln("Shell: write() failed for {}", m_error_description);
+        break;
     case ShellError::InternalControlFlowBreak:
     case ShellError::InternalControlFlowContinue:
     case ShellError::InternalControlFlowInterrupted:
@@ -2391,7 +2395,7 @@ void Shell::possibly_print_error() const
         i64 line_to_skip_to = max(source_position.position->start_line.line_number, 2ul) - 2;
 
         if (!source_position.source_file.is_null()) {
-            auto file = Core::File::open(source_position.source_file, Core::OpenMode::ReadOnly);
+            auto file = Core::DeprecatedFile::open(source_position.source_file, Core::OpenMode::ReadOnly);
             if (file.is_error()) {
                 warnln("Shell: Internal error while trying to display source information: {} (while reading '{}')", file.error(), source_position.source_file);
                 return;
@@ -2483,6 +2487,32 @@ void Shell::timer_event(Core::TimerEvent& event)
 
     if (m_editor && m_editor->is_history_dirty())
         m_editor->save_history(get_history_path());
+}
+
+RefPtr<AST::Node> Shell::parse(StringView input, bool interactive, bool as_command) const
+{
+    if (m_in_posix_mode) {
+        Posix::Parser parser(input);
+        if (as_command) {
+            auto node = parser.parse();
+            if constexpr (SHELL_POSIX_PARSER_DEBUG) {
+                dbgln("Parsed with the POSIX Parser:");
+                node->dump(0);
+            }
+            return node;
+        }
+
+        return parser.parse_word_list();
+    }
+
+    Parser parser { input, interactive };
+    if (as_command)
+        return parser.parse();
+
+    auto nodes = parser.parse_as_multiple_expressions();
+    return make_ref_counted<AST::ListConcatenate>(
+        nodes.is_empty() ? AST::Position { 0, 0, { 0, 0 }, { 0, 0 } } : nodes.first().position(),
+        move(nodes));
 }
 
 void FileDescriptionCollector::collect()

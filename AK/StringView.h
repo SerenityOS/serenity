@@ -164,40 +164,53 @@ public:
         return substring_view(0, needle_begin.release_value());
     }
 
-    template<VoidFunction<StringView> Callback>
-    void for_each_split_view(char separator, SplitBehavior split_behavior, Callback callback) const
+    template<typename Callback>
+    auto for_each_split_view(char separator, SplitBehavior split_behavior, Callback callback) const
     {
         StringView seperator_view { &separator, 1 };
-        for_each_split_view(seperator_view, split_behavior, callback);
+        return for_each_split_view(seperator_view, split_behavior, callback);
     }
 
-    template<VoidFunction<StringView> Callback>
-    void for_each_split_view(StringView separator, SplitBehavior split_behavior, Callback callback) const
+    template<typename Callback>
+    auto for_each_split_view(StringView separator, SplitBehavior split_behavior, Callback callback) const
     {
         VERIFY(!separator.is_empty());
+        // FIXME: This can't go in the template header since declval won't allow the incomplete StringView type.
+        using CallbackReturn = decltype(declval<Callback>()(StringView {}));
+        constexpr auto ReturnsErrorOr = IsSpecializationOf<CallbackReturn, ErrorOr>;
+        using ReturnType = Conditional<ReturnsErrorOr, ErrorOr<void>, void>;
+        return [&]() -> ReturnType {
+            if (is_empty())
+                return ReturnType();
 
-        if (is_empty())
-            return;
-
-        StringView view { *this };
-
-        auto maybe_separator_index = find(separator);
-        bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
-        bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
-        while (maybe_separator_index.has_value()) {
-            auto separator_index = maybe_separator_index.value();
-            auto part_with_separator = view.substring_view(0, separator_index + separator.length());
-            if (keep_empty || separator_index > 0) {
-                if (keep_separator)
-                    callback(part_with_separator);
-                else
-                    callback(part_with_separator.substring_view(0, separator_index));
+            StringView view { *this };
+            auto maybe_separator_index = find(separator);
+            bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+            bool keep_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
+            while (maybe_separator_index.has_value()) {
+                auto separator_index = maybe_separator_index.value();
+                auto part_with_separator = view.substring_view(0, separator_index + separator.length());
+                if (keep_empty || separator_index > 0) {
+                    auto part = part_with_separator;
+                    if (!keep_separator)
+                        part = part_with_separator.substring_view(0, separator_index);
+                    if constexpr (ReturnsErrorOr)
+                        TRY(callback(part));
+                    else
+                        callback(part);
+                }
+                view = view.substring_view_starting_after_substring(part_with_separator);
+                maybe_separator_index = view.find(separator);
             }
-            view = view.substring_view_starting_after_substring(part_with_separator);
-            maybe_separator_index = view.find(separator);
-        }
-        if (keep_empty || !view.is_empty())
-            callback(view);
+            if (keep_empty || !view.is_empty()) {
+                if constexpr (ReturnsErrorOr)
+                    TRY(callback(view));
+                else
+                    callback(view);
+            }
+
+            return ReturnType();
+        }();
     }
 
     // Create a Vector of StringViews split by line endings. As of CommonMark

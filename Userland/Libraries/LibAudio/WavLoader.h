@@ -14,8 +14,6 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <LibAudio/Loader.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 namespace Audio {
 
@@ -55,7 +53,7 @@ private:
 
     LoaderSamples samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const;
     template<typename SampleReader>
-    MaybeLoaderError read_samples_from_stream(AK::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const;
+    MaybeLoaderError read_samples_from_stream(Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const;
 
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };

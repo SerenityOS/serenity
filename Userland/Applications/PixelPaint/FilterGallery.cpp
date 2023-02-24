@@ -36,6 +36,9 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
     VERIFY(m_config_widget);
     VERIFY(m_preview_widget);
 
+    m_error_label = GUI::Label::try_create().release_value_but_fixme_should_propagate_errors();
+    m_error_label->set_enabled(false);
+
     auto filter_tree_model = MUST(create_filter_tree_model(editor));
     m_filter_tree->set_model(filter_tree_model);
     m_filter_tree->expand_tree();
@@ -59,7 +62,13 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
         };
         m_preview_widget->set_filter(m_selected_filter);
 
-        m_selected_filter_config_widget = m_selected_filter->get_settings_widget();
+        auto settings_widget_or_error = m_selected_filter->get_settings_widget();
+        if (settings_widget_or_error.is_error()) {
+            m_error_label->set_text(DeprecatedString::formatted("Error creating settings: {}", settings_widget_or_error.error()));
+            m_selected_filter_config_widget = m_error_label;
+        } else {
+            m_selected_filter_config_widget = settings_widget_or_error.release_value();
+        }
         m_config_widget->remove_all_children();
         m_config_widget->add_child(*m_selected_filter_config_widget);
     };

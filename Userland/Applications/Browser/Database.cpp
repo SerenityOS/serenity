@@ -30,11 +30,11 @@ Database::Database(NonnullRefPtr<SQL::SQLClient> sql_client, SQL::ConnectionID c
     : m_sql_client(move(sql_client))
     , m_connection_id(connection_id)
 {
-    m_sql_client->on_execution_success = [this](auto statement_id, auto execution_id, auto has_results, auto, auto, auto) {
-        if (has_results)
+    m_sql_client->on_execution_success = [this](auto result) {
+        if (result.has_results)
             return;
 
-        if (auto it = m_pending_executions.find({ statement_id, execution_id }); it != m_pending_executions.end()) {
+        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
             auto in_progress_statement = move(it->value);
             m_pending_executions.remove(it);
 
@@ -43,15 +43,15 @@ Database::Database(NonnullRefPtr<SQL::SQLClient> sql_client, SQL::ConnectionID c
         }
     };
 
-    m_sql_client->on_next_result = [this](auto statement_id, auto execution_id, auto row) {
-        if (auto it = m_pending_executions.find({ statement_id, execution_id }); it != m_pending_executions.end()) {
+    m_sql_client->on_next_result = [this](auto result) {
+        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
             if (it->value.on_result)
-                it->value.on_result(row);
+                it->value.on_result(result.values);
         }
     };
 
-    m_sql_client->on_results_exhausted = [this](auto statement_id, auto execution_id, auto) {
-        if (auto it = m_pending_executions.find({ statement_id, execution_id }); it != m_pending_executions.end()) {
+    m_sql_client->on_results_exhausted = [this](auto result) {
+        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
             auto in_progress_statement = move(it->value);
             m_pending_executions.remove(it);
 
@@ -60,13 +60,13 @@ Database::Database(NonnullRefPtr<SQL::SQLClient> sql_client, SQL::ConnectionID c
         }
     };
 
-    m_sql_client->on_execution_error = [this](auto statement_id, auto execution_id, auto, auto const& message) {
-        if (auto it = m_pending_executions.find({ statement_id, execution_id }); it != m_pending_executions.end()) {
+    m_sql_client->on_execution_error = [this](auto result) {
+        if (auto it = find_pending_execution(result); it != m_pending_executions.end()) {
             auto in_progress_statement = move(it->value);
             m_pending_executions.remove(it);
 
             if (in_progress_statement.on_error)
-                in_progress_statement.on_error(message);
+                in_progress_statement.on_error(result.error_message);
         }
     };
 }

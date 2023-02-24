@@ -11,10 +11,9 @@
 #include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
@@ -64,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        NonnullOwnPtr<AK::Stream> input_stream = TRY(Core::Stream::File::open_file_or_standard_stream(archive_file, Core::Stream::OpenMode::Read));
+        NonnullOwnPtr<Stream> input_stream = TRY(Core::File::open_file_or_standard_stream(archive_file, Core::File::OpenMode::Read));
 
         if (gzip)
             input_stream = make<Compress::GzipDecompressor>(move(input_stream));
@@ -150,7 +149,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("{}", filename);
 
             if (extract) {
-                DeprecatedString absolute_path = Core::File::absolute_path(filename);
+                DeprecatedString absolute_path = Core::DeprecatedFile::absolute_path(filename);
                 auto parent_path = LexicalPath(absolute_path).parent();
                 auto header_mode = TRY(header.mode());
 
@@ -181,7 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
                     auto result_or_error = Core::System::mkdir(absolute_path, header_mode);
                     if (result_or_error.is_error() && result_or_error.error().code() != EEXIST)
-                        return result_or_error.error();
+                        return result_or_error.release_error();
                     break;
                 }
                 default:
@@ -206,10 +205,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        NonnullOwnPtr<AK::Stream> output_stream = TRY(Core::Stream::File::standard_output());
+        NonnullOwnPtr<Stream> output_stream = TRY(Core::File::standard_output());
 
         if (!archive_file.is_empty())
-            output_stream = TRY(Core::Stream::File::open(archive_file, Core::Stream::OpenMode::Write));
+            output_stream = TRY(Core::File::open(archive_file, Core::File::OpenMode::Write));
 
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
@@ -220,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Archive::TarOutputStream tar_stream(move(output_stream));
 
         auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
-            auto file = Core::File::construct(path);
+            auto file = Core::DeprecatedFile::construct(path);
             if (!file->open(Core::OpenMode::ReadOnly)) {
                 warnln("Failed to open {}: {}", path, file->error_string());
                 return {};
@@ -257,9 +256,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
             while (it.has_next()) {
                 auto child_path = it.next_full_path();
-                if (!dereference && Core::File::is_link(child_path)) {
+                if (!dereference && Core::DeprecatedFile::is_link(child_path)) {
                     TRY(add_link(child_path));
-                } else if (!Core::File::is_directory(child_path)) {
+                } else if (!Core::DeprecatedFile::is_directory(child_path)) {
                     TRY(add_file(child_path));
                 } else {
                     TRY(handle_directory(child_path, handle_directory));
@@ -270,7 +269,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
 
         for (auto const& path : paths) {
-            if (Core::File::is_directory(path)) {
+            if (Core::DeprecatedFile::is_directory(path)) {
                 TRY(add_directory(path, add_directory));
             } else {
                 TRY(add_file(path));

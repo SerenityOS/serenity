@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DOSPackedTime.h>
 #include <AK/LexicalPath.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DateTime.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
 
@@ -38,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     DeprecatedString zip_file_path { zip_path };
-    if (Core::File::exists(zip_file_path)) {
+    if (Core::DeprecatedFile::exists(zip_file_path)) {
         if (force) {
             outln("{} already exists, overwriting...", zip_file_path);
         } else {
@@ -48,15 +50,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     outln("Archive: {}", zip_file_path);
-    auto file_stream = TRY(Core::Stream::File::open(zip_file_path, Core::Stream::OpenMode::Write));
+    auto file_stream = TRY(Core::File::open(zip_file_path, Core::File::OpenMode::Write));
     Archive::ZipOutputStream zip_stream(move(file_stream));
 
     auto add_file = [&](DeprecatedString path) -> ErrorOr<void> {
         auto canonicalized_path = LexicalPath::canonicalized_path(path);
-        auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto file_buffer = TRY(file->read_until_eof());
         Archive::ZipMember member {};
         member.name = TRY(String::from_deprecated_string(canonicalized_path));
+
+        auto stat = TRY(Core::System::fstat(file->fd()));
+        auto date = Core::DateTime::from_timestamp(stat.st_mtim.tv_sec);
+        member.modification_date = to_packed_dos_date(date.year(), date.month(), date.day());
+        member.modification_time = to_packed_dos_time(date.hour(), date.minute(), date.second());
 
         auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
         if (!deflate_buffer.is_error() && deflate_buffer.value().size() < file_buffer.size()) {
@@ -85,6 +92,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         member.uncompressed_size = 0;
         member.crc32 = 0;
         member.is_directory = true;
+
+        auto stat = TRY(Core::System::stat(canonicalized_path));
+        auto date = Core::DateTime::from_timestamp(stat.st_mtim.tv_sec);
+        member.modification_date = to_packed_dos_date(date.year(), date.month(), date.day());
+        member.modification_time = to_packed_dos_time(date.hour(), date.minute(), date.second());
+
         TRY(zip_stream.add_member(member));
         outln("  adding: {} (stored 0%)", canonicalized_path);
 
@@ -94,9 +107,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
             auto child_path = it.next_full_path();
-            if (Core::File::is_link(child_path))
+            if (Core::DeprecatedFile::is_link(child_path))
                 return {};
-            if (!Core::File::is_directory(child_path)) {
+            if (!Core::DeprecatedFile::is_directory(child_path)) {
                 auto result = add_file(child_path);
                 if (result.is_error())
                     warnln("Couldn't add file '{}': {}", child_path, result.error());
@@ -110,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     for (auto const& source_path : source_paths) {
-        if (Core::File::is_directory(source_path)) {
+        if (Core::DeprecatedFile::is_directory(source_path)) {
             auto result = add_directory(source_path, add_directory);
             if (result.is_error())
                 warnln("Couldn't add directory '{}': {}", source_path, result.error());

@@ -37,6 +37,18 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     m_video_display->on_click = [&]() { toggle_pause(); };
 
     m_seek_slider = find_descendant_of_type_named<GUI::HorizontalSlider>("seek_slider");
+    m_seek_slider->on_drag_start = [&]() {
+        if (!m_playback_manager)
+            return;
+        m_was_playing_before_seek = m_playback_manager->is_playing();
+        m_playback_manager->pause_playback();
+    };
+    m_seek_slider->on_drag_end = [&]() {
+        if (!m_playback_manager || !m_was_playing_before_seek)
+            return;
+        m_was_playing_before_seek = false;
+        m_playback_manager->resume_playback();
+    };
     m_seek_slider->on_change = [&](int value) {
         if (!m_playback_manager)
             return;
@@ -44,8 +56,9 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
         auto progress = value / static_cast<double>(m_seek_slider->max());
         auto duration = m_playback_manager->duration().to_milliseconds();
         Time timestamp = Time::from_milliseconds(static_cast<i64>(round(progress * static_cast<double>(duration))));
-        set_current_timestamp(timestamp);
-        m_playback_manager->seek_to_timestamp(timestamp);
+        auto seek_mode_to_use = m_seek_slider->knob_dragging() ? seek_mode() : Video::PlaybackManager::SeekMode::Accurate;
+        m_playback_manager->seek_to_timestamp(timestamp, seek_mode_to_use);
+        set_current_timestamp(m_playback_manager->current_playback_time());
     };
 
     m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
@@ -88,7 +101,6 @@ void VideoPlayerWidget::open_file(StringView filename)
     close_file();
     m_playback_manager = load_file_result.release_value();
     update_seek_slider_max();
-    update_seek_mode();
     resume_playback();
 }
 
@@ -103,7 +115,7 @@ void VideoPlayerWidget::update_play_pause_icon()
 
     m_play_pause_action->set_enabled(true);
 
-    if (m_playback_manager->is_playing()) {
+    if (m_playback_manager->is_playing() || m_was_playing_before_seek) {
         m_play_pause_action->set_icon(m_pause_icon);
         m_play_pause_action->set_text("Pause"sv);
     } else {
@@ -114,18 +126,16 @@ void VideoPlayerWidget::update_play_pause_icon()
 
 void VideoPlayerWidget::resume_playback()
 {
-    if (!m_playback_manager)
+    if (!m_playback_manager || m_seek_slider->knob_dragging())
         return;
     m_playback_manager->resume_playback();
-    update_play_pause_icon();
 }
 
 void VideoPlayerWidget::pause_playback()
 {
-    if (!m_playback_manager)
+    if (!m_playback_manager || m_seek_slider->knob_dragging())
         return;
     m_playback_manager->pause_playback();
-    update_play_pause_icon();
 }
 
 void VideoPlayerWidget::toggle_pause()
@@ -222,9 +232,11 @@ void VideoPlayerWidget::event(Core::Event& event)
         set_current_timestamp(m_playback_manager->current_playback_time());
 
         frame_event.accept();
-    } else if (event.type() == Video::EventType::PlaybackStatusChange) {
+    } else if (event.type() == Video::EventType::PlaybackStateChange) {
         update_play_pause_icon();
         event.accept();
+    } else if (event.type() == Video::EventType::FatalPlaybackError) {
+        close_file();
     }
 
     Widget::event(event);
@@ -263,13 +275,6 @@ void VideoPlayerWidget::set_seek_mode(Video::PlaybackManager::SeekMode seek_mode
     m_use_fast_seeking->set_checked(seek_mode == Video::PlaybackManager::SeekMode::Fast);
 }
 
-void VideoPlayerWidget::update_seek_mode()
-{
-    if (!m_playback_manager)
-        return;
-    m_playback_manager->set_seek_mode(seek_mode());
-}
-
 ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
     // File menu
@@ -289,9 +294,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
-    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {
-        update_seek_mode();
-    });
+    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {});
     TRY(playback_menu->try_add_action(*m_use_fast_seeking));
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 

@@ -123,8 +123,8 @@ public:
     [[nodiscard]] Bytes bytes() { return { data(), size() }; }
     [[nodiscard]] ReadonlyBytes bytes() const { return { data(), size() }; }
 
-    [[nodiscard]] AK::Span<u8> span() { return { data(), size() }; }
-    [[nodiscard]] AK::Span<u8 const> span() const { return { data(), size() }; }
+    [[nodiscard]] AK::Bytes span() { return { data(), size() }; }
+    [[nodiscard]] AK::ReadonlyBytes span() const { return { data(), size() }; }
 
     [[nodiscard]] u8* offset_pointer(size_t offset) { return data() + offset; }
     [[nodiscard]] u8 const* offset_pointer(size_t offset) const { return data() + offset; }
@@ -331,6 +331,14 @@ struct Traits<ByteBuffer> : public GenericTraits<ByteBuffer> {
     static unsigned hash(ByteBuffer const& byte_buffer)
     {
         return Traits<ReadonlyBytes>::hash(byte_buffer.span());
+    }
+    static bool equals(ByteBuffer const& byte_buffer, Bytes const& other)
+    {
+        return byte_buffer.bytes() == other;
+    }
+    static bool equals(ByteBuffer const& byte_buffer, ReadonlyBytes const& other)
+    {
+        return byte_buffer.bytes() == other;
     }
 };
 

@@ -86,9 +86,9 @@ private:
     u32 m_handle { 0 };
 };
 
-JS::NonnullGCPtr<Window> Window::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Window>> Window::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Window>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Window>(realm, realm));
 }
 
 Window::Window(JS::Realm& realm)
@@ -644,12 +644,12 @@ Page const* Window::page() const
 
 CSS::CSSStyleDeclaration* Window::get_computed_style_impl(DOM::Element& element) const
 {
-    return CSS::ResolvedCSSStyleDeclaration::create(element);
+    return CSS::ResolvedCSSStyleDeclaration::create(element).release_value_but_fixme_should_propagate_errors().ptr();
 }
 
 JS::NonnullGCPtr<CSS::MediaQueryList> Window::match_media_impl(DeprecatedString media)
 {
-    auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), media));
+    auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), media)).release_value_but_fixme_should_propagate_errors();
     associated_document().add_media_query_list(*media_query_list);
     return media_query_list;
 }
@@ -789,7 +789,7 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     // with the persisted attribute initialized to persisted,
     HTML::PageTransitionEventInit event_init {};
     event_init.persisted = persisted;
-    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), event_name, event_init);
+    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), event_name, event_init).release_value_but_fixme_should_propagate_errors();
 
     // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
@@ -798,7 +798,7 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     event->set_bubbles(true);
 
     // and legacy target override flag set.
-    dispatch_event(*event);
+    dispatch_event(event);
 }
 
 // https://html.spec.whatwg.org/#dom-queuemicrotask
@@ -864,7 +864,7 @@ JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> local_storage_per_origin;
     auto storage = local_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(realm());
+        return *HTML::Storage::create(realm()).release_value_but_fixme_should_propagate_errors();
     });
     return *storage;
 }
@@ -876,7 +876,7 @@ JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> session_storage_per_origin;
     auto storage = session_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(realm());
+        return *HTML::Storage::create(realm()).release_value_but_fixme_should_propagate_errors();
     });
     return *storage;
 }
@@ -913,7 +913,7 @@ WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, Deprecate
         HTML::MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>";
-        dispatch_event(*HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init));
+        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
     });
     return {};
 }
@@ -988,7 +988,7 @@ void Window::invoke_idle_callbacks()
         // 1. Pop the top callback from window's list of runnable idle callbacks.
         auto callback = m_runnable_idle_callbacks.take_first();
         // 2. Let deadlineArg be a new IdleDeadline whose [get deadline time algorithm] is getDeadline.
-        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(realm());
+        auto deadline_arg = RequestIdleCallback::IdleDeadline::create(realm()).release_value_but_fixme_should_propagate_errors();
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
         auto result = callback->invoke(deadline_arg);
         if (result.is_error())
@@ -1067,7 +1067,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    m_crypto = Crypto::Crypto::create(realm);
+    m_crypto = Crypto::Crypto::create(realm).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
@@ -1419,11 +1419,11 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
 
     // The bytes object might contain bytes greater than 128, encode them in UTF8
     // NOTE: Any 8-bit encoding -> utf-8 decoder will work for this
-    auto text_decoder = TextCodec::decoder_for("windows-1252");
-    VERIFY(text_decoder);
-    auto text = text_decoder->to_utf8(decoded.release_value());
+    auto text_decoder = TextCodec::decoder_for("windows-1252"sv);
+    VERIFY(text_decoder.has_value());
+    auto text = TRY_OR_THROW_OOM(vm, text_decoder->to_utf8(decoded.release_value()));
 
-    return JS::PrimitiveString::create(vm, DeprecatedString(text));
+    return JS::PrimitiveString::create(vm, text);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
@@ -1725,7 +1725,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
         if (!behavior_string_value.is_undefined())
             behavior_string = TRY(behavior_string_value.to_deprecated_string(vm));
         if (behavior_string != "smooth" && behavior_string != "auto")
-            return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
+            return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
 
     } else if (vm.argument_count() >= 2) {
         // We ignore arguments 2+ in line with behavior of Chrome and Firefox
@@ -1769,7 +1769,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
         options = JS::Object::create(realm, nullptr);
         MUST(options->set("left", vm.argument(0), ShouldThrowExceptions::No));
         MUST(options->set("top", vm.argument(1), ShouldThrowExceptions::No));
-        MUST(options->set("behavior", JS::PrimitiveString::create(vm, "auto"), ShouldThrowExceptions::No));
+        MUST(options->set("behavior", MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "auto"sv)), ShouldThrowExceptions::No));
     }
 
     auto left_value = TRY(options->get("left"));
@@ -1788,7 +1788,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     auto behavior_string_value = TRY(options->get("behavior"));
     auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_deprecated_string(vm));
     if (behavior_string != "smooth" && behavior_string != "auto")
-        return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'");
+        return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
     ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
 
     // FIXME: Spec wants us to call scroll(options) here.

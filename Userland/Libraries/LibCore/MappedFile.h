@@ -10,7 +10,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
-#include <AK/Result.h>
+#include <LibCore/Forward.h>
 
 namespace Core {
 
@@ -20,6 +20,7 @@ class MappedFile : public RefCounted<MappedFile> {
 
 public:
     static ErrorOr<NonnullRefPtr<MappedFile>> map(StringView path);
+    static ErrorOr<NonnullRefPtr<MappedFile>> map_from_file(NonnullOwnPtr<Core::File>, StringView path);
     static ErrorOr<NonnullRefPtr<MappedFile>> map_from_fd_and_close(int fd, StringView path);
     ~MappedFile();
 

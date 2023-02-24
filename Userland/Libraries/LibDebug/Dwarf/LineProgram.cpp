@@ -38,25 +38,20 @@ ErrorOr<void> LineProgram::parse_unit_header()
 
 ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> callback, PathListType list_type)
 {
-    Core::Stream::WrapInAKInputStream wrapped_stream { m_stream };
-
     if (m_unit_header.version() >= 5) {
         auto path_entry_format_count = TRY(m_stream.read_value<u8>());
 
         Vector<PathEntryFormat> format_descriptions;
 
         for (u8 i = 0; i < path_entry_format_count; i++) {
-            UnderlyingType<ContentType> content_type;
-            LEB128::read_unsigned(wrapped_stream, content_type);
+            UnderlyingType<ContentType> content_type = TRY(m_stream.read_value<LEB128<UnderlyingType<ContentType>>>());
 
-            UnderlyingType<AttributeDataForm> data_form;
-            LEB128::read_unsigned(wrapped_stream, data_form);
+            UnderlyingType<AttributeDataForm> data_form = TRY(m_stream.read_value<LEB128<UnderlyingType<AttributeDataForm>>>());
 
             format_descriptions.empend(static_cast<ContentType>(content_type), static_cast<AttributeDataForm>(data_form));
         }
 
-        size_t paths_count = 0;
-        LEB128::read_unsigned(wrapped_stream, paths_count);
+        size_t paths_count = TRY(m_stream.read_value<LEB128<size_t>>());
 
         for (size_t i = 0; i < paths_count; i++) {
             PathEntry entry;
@@ -87,11 +82,9 @@ ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> c
             PathEntry entry;
             entry.path = path;
             if (list_type == PathListType::Filenames) {
-                size_t directory_index = 0;
-                LEB128::read_unsigned(wrapped_stream, directory_index);
-                size_t _unused = 0;
-                LEB128::read_unsigned(wrapped_stream, _unused); // skip modification time
-                LEB128::read_unsigned(wrapped_stream, _unused); // skip file size
+                size_t directory_index = TRY(m_stream.read_value<LEB128<size_t>>());
+                TRY(m_stream.read_value<LEB128<size_t>>()); // skip modification time
+                TRY(m_stream.read_value<LEB128<size_t>>()); // skip file size
                 entry.directory_index = directory_index;
                 dbgln_if(DWARF_DEBUG, "file: {}, directory index: {}", path, directory_index);
             }
@@ -99,7 +92,6 @@ ErrorOr<void> LineProgram::parse_path_entries(Function<void(PathEntry& entry)> c
         }
     }
 
-    VERIFY(!wrapped_stream.has_any_error());
     return {};
 }
 
@@ -160,11 +152,7 @@ void LineProgram::reset_registers()
 
 ErrorOr<void> LineProgram::handle_extended_opcode()
 {
-    Core::Stream::WrapInAKInputStream wrapped_stream { m_stream };
-
-    size_t length = 0;
-    LEB128::read_unsigned(wrapped_stream, length);
-    TRY(wrapped_stream.try_handle_any_error());
+    size_t length = TRY(m_stream.read_value<LEB128<size_t>>());
 
     auto sub_opcode = TRY(m_stream.read_value<u8>());
 
@@ -182,9 +170,7 @@ ErrorOr<void> LineProgram::handle_extended_opcode()
     }
     case ExtendedOpcodes::SetDiscriminator: {
         dbgln_if(DWARF_DEBUG, "SetDiscriminator");
-        size_t discriminator;
-        LEB128::read_unsigned(wrapped_stream, discriminator);
-        TRY(wrapped_stream.try_handle_any_error());
+        [[maybe_unused]] size_t discriminator = TRY(m_stream.read_value<LEB128<size_t>>());
         break;
     }
     default:
@@ -196,26 +182,20 @@ ErrorOr<void> LineProgram::handle_extended_opcode()
 }
 ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
 {
-    Core::Stream::WrapInAKInputStream wrapped_stream { m_stream };
-
     switch (opcode) {
     case StandardOpcodes::Copy: {
         append_to_line_info();
         break;
     }
     case StandardOpcodes::AdvancePc: {
-        size_t operand = 0;
-        LEB128::read_unsigned(wrapped_stream, operand);
-        TRY(wrapped_stream.try_handle_any_error());
+        size_t operand = TRY(m_stream.read_value<LEB128<size_t>>());
         size_t delta = operand * m_unit_header.min_instruction_length();
         dbgln_if(DWARF_DEBUG, "AdvancePC by: {} to: {:p}", delta, m_address + delta);
         m_address += delta;
         break;
     }
     case StandardOpcodes::SetFile: {
-        size_t new_file_index = 0;
-        LEB128::read_unsigned(wrapped_stream, new_file_index);
-        TRY(wrapped_stream.try_handle_any_error());
+        size_t new_file_index = TRY(m_stream.read_value<LEB128<size_t>>());
         dbgln_if(DWARF_DEBUG, "SetFile: new file index: {}", new_file_index);
         m_file_index = new_file_index;
         break;
@@ -223,16 +203,12 @@ ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
     case StandardOpcodes::SetColumn: {
         // not implemented
         dbgln_if(DWARF_DEBUG, "SetColumn");
-        size_t new_column;
-        LEB128::read_unsigned(wrapped_stream, new_column);
-        TRY(wrapped_stream.try_handle_any_error());
+        [[maybe_unused]] size_t new_column = TRY(m_stream.read_value<LEB128<size_t>>());
 
         break;
     }
     case StandardOpcodes::AdvanceLine: {
-        ssize_t line_delta;
-        LEB128::read_signed(wrapped_stream, line_delta);
-        TRY(wrapped_stream.try_handle_any_error());
+        ssize_t line_delta = TRY(m_stream.read_value<LEB128<ssize_t>>());
         VERIFY(line_delta >= 0 || m_line >= (size_t)(-line_delta));
         m_line += line_delta;
         dbgln_if(DWARF_DEBUG, "AdvanceLine: {}", m_line);
@@ -252,9 +228,7 @@ ErrorOr<void> LineProgram::handle_standard_opcode(u8 opcode)
         break;
     }
     case StandardOpcodes::SetIsa: {
-        size_t isa;
-        LEB128::read_unsigned(wrapped_stream, isa);
-        TRY(wrapped_stream.try_handle_any_error());
+        size_t isa = TRY(m_stream.read_value<LEB128<size_t>>());
         dbgln_if(DWARF_DEBUG, "SetIsa: {}", isa);
         break;
     }

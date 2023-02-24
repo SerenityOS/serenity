@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -183,7 +183,7 @@ public:
     void set_resize_aspect_ratio(Optional<Gfx::IntSize> const& ratio);
 
     void set_cursor(Gfx::StandardCursor);
-    void set_cursor(NonnullRefPtr<Gfx::Bitmap>);
+    void set_cursor(NonnullRefPtr<Gfx::Bitmap const>);
 
     void set_icon(Gfx::Bitmap const*);
     void apply_icon();
@@ -270,7 +270,7 @@ private:
     void flip(Vector<Gfx::IntRect, 32> const& dirty_rects);
     void force_update();
 
-    bool are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const&, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> const&) const;
+    bool are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const&, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const&) const;
 
     WeakPtr<Widget> m_previously_focused_widget;
 
@@ -279,7 +279,7 @@ private:
 
     NonnullRefPtr<Menubar> m_menubar;
 
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     float m_alpha_hit_threshold { 0.0f };
@@ -296,8 +296,8 @@ private:
     Gfx::IntSize m_base_size;
     WindowType m_window_type { WindowType::Normal };
     WindowMode m_window_mode { WindowMode::Modeless };
-    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::None };
-    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_effective_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_effective_cursor { Gfx::StandardCursor::None };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
     bool m_resizable { true };

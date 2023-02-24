@@ -6,6 +6,9 @@
 
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
+#include <LibJS/Runtime/Realm.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
+#include <LibJS/Runtime/VM.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 
 namespace Web::HTML {
@@ -31,16 +34,18 @@ void WorkerDebugConsoleClient::end_group()
 // 2.3. Printer(logLevel, args[, options]), https://console.spec.whatwg.org/#printer
 JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::LogLevel log_level, PrinterArguments arguments)
 {
-    DeprecatedString indent = DeprecatedString::repeated("  "sv, m_group_stack_depth);
+    auto& vm = m_console.realm().vm();
+
+    auto indent = TRY_OR_THROW_OOM(vm, String::repeated(' ', m_group_stack_depth * 2));
 
     if (log_level == JS::Console::LogLevel::Trace) {
         auto trace = arguments.get<JS::Console::Trace>();
-        StringBuilder builder;
+        JS::ThrowableStringBuilder builder(vm);
         if (!trace.label.is_empty())
-            builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label);
+            MUST_OR_THROW_OOM(builder.appendff("{}\033[36;1m{}\033[0m\n", indent, trace.label));
 
         for (auto& function_name : trace.stack)
-            builder.appendff("{}-> {}\n", indent, function_name);
+            MUST_OR_THROW_OOM(builder.appendff("{}-> {}\n", indent, function_name));
 
         dbgln("{}", builder.string_view());
         return JS::js_undefined();
@@ -53,7 +58,7 @@ JS::ThrowCompletionOr<JS::Value> WorkerDebugConsoleClient::printer(JS::Console::
         return JS::js_undefined();
     }
 
-    auto output = DeprecatedString::join(' ', arguments.get<JS::MarkedVector<JS::Value>>());
+    auto output = TRY(generically_format_values(arguments.get<JS::MarkedVector<JS::Value>>()));
     m_console.output_debug_message(log_level, output);
 
     switch (log_level) {

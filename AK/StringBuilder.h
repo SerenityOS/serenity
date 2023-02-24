@@ -66,6 +66,7 @@ public:
 #endif
 
     ErrorOr<String> to_string() const;
+    ErrorOr<FlyString> to_fly_string() const;
 
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
 

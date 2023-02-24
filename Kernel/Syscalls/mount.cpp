@@ -11,8 +11,8 @@
 #include <Kernel/FileSystem/ISO9660FS/FileSystem.h>
 #include <Kernel/FileSystem/Plan9FS/FileSystem.h>
 #include <Kernel/FileSystem/ProcFS/FileSystem.h>
+#include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/FileSystem/SysFS/FileSystem.h>
-#include <Kernel/FileSystem/TmpFS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 
@@ -32,7 +32,7 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "proc"sv, "ProcFS"sv, false, false, false, {}, ProcFS::try_create },
     { "devpts"sv, "DevPtsFS"sv, false, false, false, {}, DevPtsFS::try_create },
     { "sys"sv, "SysFS"sv, false, false, false, {}, SysFS::try_create },
-    { "tmp"sv, "TmpFS"sv, false, false, false, {}, TmpFS::try_create },
+    { "ram"sv, "RAMFS"sv, false, false, false, {}, RAMFS::try_create },
     { "ext2"sv, "Ext2FS"sv, true, true, true, Ext2FS::try_create, {} },
     { "9p"sv, "Plan9FS"sv, true, true, true, Plan9FS::try_create, {} },
     { "iso9660"sv, "ISO9660FS"sv, true, true, true, ISO9660FS::try_create, {} },

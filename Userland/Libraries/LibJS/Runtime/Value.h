@@ -394,7 +394,7 @@ public:
     ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
     ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
 
-    DeprecatedString to_string_without_side_effects() const;
+    ErrorOr<String> to_string_without_side_effects() const;
 
     Value value_or(Value fallback) const
     {
@@ -561,7 +561,7 @@ enum class NumberToStringMode {
     WithExponent,
     WithoutExponent,
 };
-ThrowCompletionOr<String> number_to_string(VM& vm, double, NumberToStringMode = NumberToStringMode::WithExponent);
+ErrorOr<String> number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 Optional<Value> string_to_number(StringView);
 
@@ -682,7 +682,9 @@ template<>
 struct Formatter<JS::Value> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, JS::Value value)
     {
-        return Formatter<StringView>::format(builder, value.is_empty() ? "<empty>" : value.to_string_without_side_effects());
+        if (value.is_empty())
+            return Formatter<StringView>::format(builder, "<empty>"sv);
+        return Formatter<StringView>::format(builder, TRY(value.to_string_without_side_effects()));
     }
 };
 

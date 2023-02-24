@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 RefPtr<Line::Editor> g_line_editor;
-static OwnPtr<AK::Stream> g_stdout {};
+static OwnPtr<Stream> g_stdout {};
 static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);
@@ -252,8 +252,8 @@ static Optional<Wasm::Module> parse(StringView filename)
         return {};
     }
 
-    auto stream = FixedMemoryStream::construct(ReadonlyBytes { result.value()->data(), result.value()->size() }).release_value_but_fixme_should_propagate_errors();
-    auto parse_result = Wasm::Module::parse(*stream);
+    FixedMemoryStream stream { ReadonlyBytes { result.value()->data(), result.value()->size() } };
+    auto parse_result = Wasm::Module::parse(stream);
     if (parse_result.is_error()) {
         warnln("Something went wrong, either the file is invalid, or there's a bug with LibWasm!");
         warnln("The parse error was {}", Wasm::parse_error_to_deprecated_string(parse_result.error()));
@@ -339,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!parse_result.has_value())
         return 1;
 
-    g_stdout = TRY(Core::Stream::File::standard_output());
+    g_stdout = TRY(Core::File::standard_output());
     g_printer = TRY(try_make<Wasm::Printer>(*g_stdout));
 
     if (print && !attempt_instantiate) {

@@ -10,9 +10,9 @@
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<Storage> Storage::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Storage::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Storage>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Storage>(realm, realm));
 }
 
 Storage::Storage(JS::Realm& realm)

@@ -52,8 +52,7 @@ private:
         main_widget->set_frame_shape(Gfx::FrameShape::Container);
         main_widget->set_frame_shadow(Gfx::FrameShadow::Raised);
         main_widget->set_fill_with_background_color(true);
-        auto& layout = main_widget->template set_layout<GUI::VerticalBoxLayout>();
-        layout.set_margins(4);
+        main_widget->template set_layout<GUI::VerticalBoxLayout>(4);
 
         size_t index = 0;
         size_t columns = N;
@@ -81,13 +80,13 @@ private:
             }
         }
 
-        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize");
+        auto& norm_checkbox = main_widget->template add<GUI::CheckBox>(String::from_utf8("Normalize"sv).release_value_but_fixme_should_propagate_errors());
         norm_checkbox.set_checked(false);
 
-        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap");
+        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>(String::from_utf8_short_string("Wrap"sv));
         wrap_checkbox.set_checked(m_should_wrap);
 
-        auto& button = main_widget->template add<GUI::Button>("Done");
+        auto& button = main_widget->template add<GUI::Button>(String::from_utf8_short_string("Done"sv));
         button.on_click = [&](auto) {
             m_should_wrap = wrap_checkbox.is_checked();
             if (norm_checkbox.is_checked())

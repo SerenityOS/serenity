@@ -61,7 +61,7 @@ public:
 #ifdef PDF_DEBUG
         SourceLocation loc = SourceLocation::current()
 #endif
-    ) const
+            )
     requires(!IsSame<T, Object>)
     {
 #ifdef PDF_DEBUG
@@ -71,7 +71,7 @@ public:
         }
 #endif
 
-        return NonnullRefPtr<T>(static_cast<T const&>(*this));
+        return NonnullRefPtr<T>(static_cast<T&>(*this));
     }
 
     virtual char const* type_name() const = 0;

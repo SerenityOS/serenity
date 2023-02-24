@@ -16,16 +16,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath tty exec id"));
 
-    if (!TRY(Core::System::isatty(STDIN_FILENO)))
-        return Error::from_string_literal("Standard input is not a terminal");
-
     StringView first_positional;
     StringView second_positional;
+    DeprecatedString command;
     bool simulate_login = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(first_positional, "See --login", "-", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(second_positional, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
+    args_parser.add_option(command, "Command to execute", "command", 'c', "command");
     args_parser.add_option(simulate_login, "Simulate login", "login", 'l');
     args_parser.parse(arguments);
 
@@ -44,6 +43,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath tty exec id"));
 
     if (getuid() != 0 && account.has_password()) {
+        if (!TRY(Core::System::isatty(STDIN_FILENO)))
+            return Error::from_string_literal("Standard input is not a terminal");
+
         auto password = TRY(Core::get_password());
         if (!account.authenticate(password))
             return Error::from_string_literal("Incorrect or disabled password.");
@@ -60,6 +62,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::setenv("HOME"sv, account.home_directory(), true));
 
-    TRY(Core::System::exec(account.shell(), Array<StringView, 1> { account.shell().view() }, Core::System::SearchInPath::No));
+    if (command.is_null()) {
+        TRY(Core::System::exec(account.shell(), Array<StringView, 1> { account.shell().view() }, Core::System::SearchInPath::No));
+    } else {
+        TRY(Core::System::exec(account.shell(), Array<StringView, 3> { account.shell().view(), "-c"sv, command.view() }, Core::System::SearchInPath::No));
+    }
+
     return 1;
 }

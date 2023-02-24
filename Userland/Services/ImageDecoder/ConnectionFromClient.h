@@ -24,7 +24,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::ImageDecoderServer::DecodeImageResponse decode_image(Core::AnonymousBuffer const&, Optional<DeprecatedString> const& mime_type) override;
 };

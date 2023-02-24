@@ -11,8 +11,8 @@
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
@@ -48,7 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/services", "r"));
-    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    if (!flag_numeric)
+        TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool has_protocol_flag = (flag_tcp || flag_udp);
@@ -152,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!has_protocol_flag || flag_tcp) {
-        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/tcp"sv, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open("/sys/kernel/net/tcp"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json_or_error = JsonValue::from_string(file_contents);
         if (json_or_error.is_error()) {
@@ -163,16 +165,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get_deprecated("local_port"sv).to_u32() < b.as_object().get_deprecated("local_port"sv).to_u32();
+            return a.as_object().get_u32("local_port"sv).value_or(0) < b.as_object().get_u32("local_port"sv).value_or(0);
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto bytes_in = if_object.get_deprecated("bytes_in"sv).to_deprecated_string();
-            auto bytes_out = if_object.get_deprecated("bytes_out"sv).to_deprecated_string();
+            auto bytes_in = if_object.get_deprecated_string("bytes_in"sv).value_or({});
+            auto bytes_out = if_object.get_deprecated_string("bytes_out"sv).value_or({});
 
-            auto peer_address = if_object.get_deprecated("peer_address"sv).to_deprecated_string();
+            auto peer_address = if_object.get_deprecated_string("peer_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -184,9 +186,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get_deprecated("peer_port"sv).to_deprecated_string();
+            auto peer_port = if_object.get_deprecated_string("peer_port"sv).value_or({});
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get_deprecated("peer_port"sv).to_u32()), "tcp");
+                auto service = getservbyport(htons(if_object.get_u32("peer_port"sv).value_or(0)), "tcp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -194,7 +196,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_address = if_object.get_deprecated("local_address"sv).to_deprecated_string();
+            auto local_address = if_object.get_deprecated_string("local_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -206,9 +208,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get_deprecated("local_port"sv).to_deprecated_string();
+            auto local_port = if_object.get_deprecated_string("local_port"sv).value_or({});
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get_deprecated("local_port"sv).to_u32()), "tcp");
+                auto service = getservbyport(htons(if_object.get_u32("local_port"sv).value_or(0)), "tcp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -216,8 +218,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto state = if_object.get_deprecated("state"sv).to_deprecated_string();
-            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_deprecated("origin_pid"sv).to_u32() : -1;
+            auto state = if_object.get_deprecated_string("state"sv).value_or({});
+            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_u32("origin_pid"sv).value_or(0) : -1;
 
             if (!flag_all && ((state == "Listen" && !flag_list) || (state != "Listen" && flag_list)))
                 continue;
@@ -244,19 +246,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!has_protocol_flag || flag_udp) {
-        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/udp"sv, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open("/sys/kernel/net/udp"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 
         Vector<JsonValue> sorted_regions = json.as_array().values();
         quick_sort(sorted_regions, [](auto& a, auto& b) {
-            return a.as_object().get_deprecated("local_port"sv).to_u32() < b.as_object().get_deprecated("local_port"sv).to_u32();
+            return a.as_object().get_u32("local_port"sv).value_or(0) < b.as_object().get_u32("local_port"sv).value_or(0);
         });
 
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto local_address = if_object.get_deprecated("local_address"sv).to_deprecated_string();
+            auto local_address = if_object.get_deprecated_string("local_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(local_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -268,9 +270,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get_deprecated("local_port"sv).to_deprecated_string();
+            auto local_port = if_object.get_deprecated_string("local_port"sv).value_or({});
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get_deprecated("local_port"sv).to_u32()), "udp");
+                auto service = getservbyport(htons(if_object.get_u32("local_port"sv).value_or(0)), "udp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -278,7 +280,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_address = if_object.get_deprecated("peer_address"sv).to_deprecated_string();
+            auto peer_address = if_object.get_deprecated_string("peer_address"sv).value_or({});
             if (!flag_numeric) {
                 auto from_string = IPv4Address::from_string(peer_address);
                 auto addr = from_string.value().to_in_addr_t();
@@ -290,9 +292,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get_deprecated("peer_port"sv).to_deprecated_string();
+            auto peer_port = if_object.get_deprecated_string("peer_port"sv).value_or({});
             if (!flag_numeric) {
-                auto service = getservbyport(htons(if_object.get_deprecated("peer_port"sv).to_u32()), "udp");
+                auto service = getservbyport(htons(if_object.get_u32("peer_port"sv).value_or(0)), "udp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
@@ -300,7 +302,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_deprecated("origin_pid"sv).to_u32() : -1;
+            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_u32("origin_pid"sv).value_or(0) : -1;
 
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "udp";

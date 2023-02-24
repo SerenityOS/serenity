@@ -56,7 +56,9 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         }
         TRY(peer_process.start_tracing_from(caller.pid()));
         SpinlockLocker lock(peer->get_lock());
-        if (peer->state() != Thread::State::Stopped) {
+        if (peer->state() == Thread::State::Stopped) {
+            peer_process.tracer()->set_regs(peer->get_register_dump_from_stack());
+        } else {
             peer->send_signal(SIGSTOP, &caller);
         }
         return 0;
@@ -107,7 +109,7 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
         auto& peer_saved_registers = peer->get_register_dump_from_stack();
         // Verify that the saved registers are in usermode context
-        if (peer_saved_registers.previous_mode() == ExecutionMode::User)
+        if (peer_saved_registers.previous_mode() != ExecutionMode::User)
             return EFAULT;
 
         tracer->set_regs(regs);

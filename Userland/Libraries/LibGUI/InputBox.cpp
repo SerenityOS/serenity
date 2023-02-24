@@ -15,19 +15,20 @@
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
     : Dialog(parent_window)
     , m_text_value(move(text_value))
     , m_prompt(prompt)
+    , m_input_type(input_type)
     , m_placeholder(placeholder)
 {
     set_title(title);
-    build(input_type);
+    build();
 }
 
-Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, StringView placeholder, InputType input_type)
+Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
 {
-    auto box = InputBox::construct(parent_window, text_value, prompt, title, placeholder, input_type);
+    auto box = InputBox::construct(parent_window, text_value, prompt, title, input_type, placeholder);
     box->set_resizable(false);
     if (parent_window)
         box->set_icon(parent_window->icon());
@@ -43,11 +44,22 @@ void InputBox::set_text_value(DeprecatedString text_value)
 
 void InputBox::on_done(ExecResult result)
 {
-    if (result == ExecResult::OK)
+    if (result == ExecResult::OK) {
         m_text_value = m_text_editor->text();
+
+        switch (m_input_type) {
+        case InputType::Text:
+        case InputType::Password:
+            break;
+
+        case InputType::NonemptyText:
+            VERIFY(!m_text_value.is_empty());
+            break;
+        }
+    }
 }
 
-void InputBox::build(InputType input_type)
+void InputBox::build()
 {
     auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
 
@@ -55,12 +67,9 @@ void InputBox::build(InputType input_type)
     int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
     int max_width = max(text_width, title_width);
 
-    widget->set_layout<VerticalBoxLayout>();
+    widget->set_layout<VerticalBoxLayout>(6, 6);
     widget->set_fill_with_background_color(true);
     widget->set_preferred_height(SpecialDimension::Fit);
-
-    widget->layout()->set_margins(6);
-    widget->layout()->set_spacing(6);
 
     auto& label_editor_container = widget->add<Widget>();
     label_editor_container.set_layout<HorizontalBoxLayout>();
@@ -69,8 +78,9 @@ void InputBox::build(InputType input_type)
     auto& label = label_editor_container.add<Label>(m_prompt);
     label.set_preferred_width(text_width);
 
-    switch (input_type) {
+    switch (m_input_type) {
     case InputType::Text:
+    case InputType::NonemptyText:
         m_text_editor = label_editor_container.add<TextBox>();
         break;
     case InputType::Password:
@@ -88,13 +98,12 @@ void InputBox::build(InputType input_type)
     button_container_outer.set_layout<VerticalBoxLayout>();
 
     auto& button_container_inner = button_container_outer.add<Widget>();
-    button_container_inner.set_layout<HorizontalBoxLayout>();
+    button_container_inner.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 6);
     button_container_inner.set_preferred_height(SpecialDimension::Fit);
-    button_container_inner.layout()->set_spacing(6);
-    button_container_inner.layout()->add_spacer();
+    button_container_inner.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_ok_button = button_container_inner.add<DialogButton>();
-    m_ok_button->set_text("OK");
+    m_ok_button->set_text(String::from_utf8_short_string("OK"sv));
     m_ok_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: OK button clicked");
         done(ExecResult::OK);
@@ -102,7 +111,7 @@ void InputBox::build(InputType input_type)
     m_ok_button->set_default(true);
 
     m_cancel_button = button_container_inner.add<DialogButton>();
-    m_cancel_button->set_text("Cancel");
+    m_cancel_button->set_text(String::from_utf8_short_string("Cancel"sv));
     m_cancel_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: Cancel button clicked");
         done(ExecResult::Cancel);
@@ -112,6 +121,13 @@ void InputBox::build(InputType input_type)
         m_cancel_button->click();
     };
     m_text_editor->set_focus(true);
+
+    if (m_input_type == InputType::NonemptyText) {
+        m_text_editor->on_change = [this] {
+            m_ok_button->set_enabled(!m_text_editor->text().is_empty());
+        };
+        m_text_editor->on_change();
+    }
 
     set_rect(x(), y(), max_width + 140, widget->effective_preferred_size().height().as_int());
 }

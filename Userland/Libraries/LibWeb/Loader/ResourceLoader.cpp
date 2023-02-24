@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -172,7 +171,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         dbgln("ResourceLoader: Finished load of: \"{}\", Duration: {}ms", url_for_logging, load_time_ms);
     };
 
-    auto const log_failure = [url_for_logging, id](auto const& request, auto const error_message) {
+    auto const log_failure = [url_for_logging, id](auto const& request, auto const& error_message) {
         auto load_time_ms = request.load_time().to_milliseconds();
         emit_signpost(DeprecatedString::formatted("Failed load: {}", url_for_logging), id);
         dbgln("ResourceLoader: Failed load of: \"{}\", \033[31;1mError: {}\033[0m, Duration: {}ms", url_for_logging, error_message, load_time_ms);
@@ -251,7 +250,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
             auto const fd = file_or_error.value();
 
-            auto maybe_file = Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read);
+            auto maybe_file = Core::File::adopt_fd(fd, Core::File::OpenMode::Read);
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)

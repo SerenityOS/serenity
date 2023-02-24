@@ -32,6 +32,8 @@ public:
 
     ReadyState ready_state();
 
+    DeprecatedString subprotocol_in_use();
+
     // Call this to start the WebSocket connection.
     void start();
 
@@ -94,6 +96,8 @@ private:
     };
 
     InternalState m_state { InternalState::NotStarted };
+
+    DeprecatedString m_subprotocol_in_use { DeprecatedString::empty() };
 
     DeprecatedString m_websocket_key;
     bool m_has_read_server_handshake_first_line { false };

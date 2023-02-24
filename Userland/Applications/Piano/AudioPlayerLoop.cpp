@@ -47,7 +47,7 @@ struct AudioLoopDeferredInvoker final : public IPC::DeferredInvoker {
     Vector<Function<void()>, INLINE_FUNCTIONS> deferred_functions;
 };
 
-AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, Atomic<bool>& need_to_write_wav, Threading::MutexProtected<Audio::WavWriter>& wav_writer)
+AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, Atomic<bool>& need_to_write_wav, Atomic<int>& wav_percent_written, Threading::MutexProtected<Audio::WavWriter>& wav_writer)
     : m_track_manager(track_manager)
     , m_buffer(FixedArray<DSP::Sample>::must_create_but_fixme_should_propagate_errors(sample_count))
     , m_pipeline_thread(Threading::Thread::construct([this]() {
@@ -55,6 +55,7 @@ AudioPlayerLoop::AudioPlayerLoop(TrackManager& track_manager, Atomic<bool>& need
     },
           "Audio pipeline"sv))
     , m_need_to_write_wav(need_to_write_wav)
+    , m_wav_percent_written(wav_percent_written)
     , m_wav_writer(wav_writer)
 {
     m_audio_client = Audio::ConnectionToServer::try_create().release_value_but_fixme_should_propagate_errors();
@@ -139,10 +140,13 @@ void AudioPlayerLoop::write_wav_if_needed()
             m_track_manager.reset();
             m_track_manager.set_should_loop(false);
             do {
+                // FIXME: This progress detection is crude, but it works for now.
+                m_wav_percent_written.store(static_cast<int>(static_cast<float>(m_track_manager.transport()->time()) / roll_length * 100.0f));
                 m_track_manager.fill_buffer(m_buffer);
                 wav_writer.write_samples(m_buffer.span());
             } while (m_track_manager.transport()->time());
             // FIXME: Make sure that the new TrackManager APIs aren't as bad.
+            m_wav_percent_written.store(100);
             m_track_manager.reset();
             m_track_manager.set_should_loop(true);
             wav_writer.finalize();

@@ -21,6 +21,7 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/FileSystemModel.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/MessageBox.h>
@@ -86,7 +87,7 @@ void BackgroundSettingsWidget::create_frame()
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.on_click = [this](auto) {
-        auto path = GUI::FilePicker::get_open_filepath(window(), "Select wallpaper from file system", "/res/wallpapers"sv);
+        auto path = GUI::FilePicker::get_open_filepath(window(), "Select wallpaper from file system", "/res/wallpapers"sv, false, GUI::Dialog::ScreenPosition::CenterWithinParent, { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } });
         if (!path.has_value())
             return;
         m_wallpaper_view->selection().clear();
@@ -129,10 +130,10 @@ void BackgroundSettingsWidget::load_current_settings()
         m_monitor_widget->set_wallpaper(selected_wallpaper);
     }
 
-    auto mode = ws_config->read_entry("Background", "Mode", "center");
+    auto mode = ws_config->read_entry("Background", "Mode", "Center");
     if (!m_modes.contains_slow(mode)) {
-        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'center'", mode);
-        mode = "center";
+        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'Center'", mode);
+        mode = "Center";
     }
     m_monitor_widget->set_wallpaper_mode(mode);
     m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0), GUI::AllowCallback::No);

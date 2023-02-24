@@ -142,6 +142,12 @@ void CalculatorWidget::set_entry(Crypto::BigFraction value)
     update_display();
 }
 
+void CalculatorWidget::set_typed_entry(Crypto::BigFraction value)
+{
+    m_keypad.set_typed_value(move(value));
+    update_display();
+}
+
 void CalculatorWidget::update_display()
 {
     m_entry->set_text(m_keypad.to_deprecated_string());

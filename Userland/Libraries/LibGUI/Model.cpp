@@ -100,7 +100,7 @@ WeakPtr<PersistentHandle> Model::register_persistent_index(Badge<PersistentModel
 RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
 {
     auto mime_data = Core::MimeData::construct();
-    RefPtr<Gfx::Bitmap> bitmap;
+    RefPtr<Gfx::Bitmap const> bitmap;
 
     StringBuilder text_builder;
     StringBuilder data_builder;
@@ -128,7 +128,7 @@ RefPtr<Core::MimeData> Model::mime_data(ModelSelection const& selection) const
     mime_data->set_data(drag_data_type(), data_builder.to_byte_buffer());
     mime_data->set_text(text_builder.to_deprecated_string());
     if (bitmap)
-        mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer());
+        mime_data->set_data("image/x-raw-bitmap", bitmap->serialize_to_byte_buffer().release_value_but_fixme_should_propagate_errors());
 
     return mime_data;
 }

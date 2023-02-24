@@ -11,9 +11,11 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Variant.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/Streams/ReadableStream.h>
+#include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -31,7 +33,7 @@ public:
 
     [[nodiscard]] WebIDL::ExceptionOr<Body> clone() const;
 
-    [[nodiscard]] JS::NonnullGCPtr<JS::PromiseCapability> fully_read_as_promise() const;
+    [[nodiscard]] JS::NonnullGCPtr<WebIDL::Promise> fully_read_as_promise() const;
 
 private:
     // https://fetch.spec.whatwg.org/#concept-body-stream

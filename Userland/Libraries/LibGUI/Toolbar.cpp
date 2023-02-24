@@ -34,9 +34,7 @@ Toolbar::Toolbar(Orientation orientation, int button_size)
     else
         set_fixed_width(button_size);
 
-    set_layout<BoxLayout>(orientation);
-    layout()->set_spacing(0);
-    layout()->set_margins({ 2, 2, 2, 2 });
+    set_layout<BoxLayout>(orientation, GUI::Margins { 2, 2, 2, 2 }, 0);
 }
 
 class ToolbarButton final : public Button {
@@ -56,11 +54,11 @@ private:
         if (action.icon())
             set_icon(action.icon());
         else
-            set_text(action.text());
+            set_text(String::from_deprecated_string(action.text()).release_value_but_fixme_should_propagate_errors());
         set_button_style(Gfx::ButtonStyle::Coolbar);
     }
 
-    virtual void set_text(DeprecatedString text) override
+    virtual void set_text(String text) override
     {
         auto const* action = this->action();
         VERIFY(action);
@@ -176,7 +174,7 @@ ErrorOr<void> Toolbar::create_overflow_objects()
     m_overflow_action->set_status_tip("Show hidden toolbar actions");
     m_overflow_action->set_enabled(false);
 
-    TRY(layout()->try_add_spacer());
+    TRY(add_spacer());
 
     m_overflow_button = TRY(try_add_action(*m_overflow_action));
     m_overflow_button->set_visible(false);

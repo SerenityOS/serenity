@@ -68,7 +68,14 @@ UNMAP_AFTER_INIT KernelRng::KernelRng()
             add_random_event(Aarch64::Asm::read_rndrrs(), i % 32);
         }
     } else {
-        dmesgln("KernelRng: No entropy source available!");
+        // Fallback to TimeManagement as entropy
+        dmesgln("KernelRng: Using bad entropy source TimeManagement");
+        auto current_time = static_cast<u64>(TimeManagement::the().now().to_milliseconds());
+        for (size_t i = 0; i < pool_count * reseed_threshold; ++i) {
+            add_random_event(current_time, i % 32);
+            current_time *= 0x574au;
+            current_time += 0x40b2u;
+        }
     }
 #else
     dmesgln("KernelRng: No entropy source available!");

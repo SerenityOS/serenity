@@ -78,7 +78,7 @@ private:
     float m_max_scale { 10.0f };
     float m_scale { 1.0f };
 
-    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_saved_cursor { Gfx::StandardCursor::None };
+    AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_saved_cursor { Gfx::StandardCursor::None };
 };
 
 }

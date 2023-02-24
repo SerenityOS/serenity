@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +13,7 @@
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
+#include "WindowSwitcher.h"
 #include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
@@ -319,7 +320,7 @@ void Compositor::compose()
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
             } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
                 VERIFY(screen.compositor_screen_data().m_wallpaper_bitmap);
-                painter.blit(rect.location(), *screen.compositor_screen_data().m_wallpaper_bitmap, rect);
+                painter.blit(rect.location(), *screen.compositor_screen_data().m_wallpaper_bitmap, rect.translated(-screen.location()));
             } else {
                 VERIFY_NOT_REACHED();
             }
@@ -541,7 +542,8 @@ void Compositor::compose()
     // Paint the window stack.
     if (m_invalidated_window) {
         auto* fullscreen_window = wm.active_fullscreen_window();
-        if (fullscreen_window && fullscreen_window->is_opaque()) {
+        // FIXME: Remove the !WindowSwitcher::the().is_visible() check when WindowSwitcher is an overlay
+        if (fullscreen_window && fullscreen_window->is_opaque() && !WindowSwitcher::the().is_visible()) {
             compose_window(*fullscreen_window);
             fullscreen_window->clear_dirty_rects();
         } else {
@@ -818,7 +820,7 @@ bool Compositor::set_wallpaper_mode(DeprecatedString const& mode)
     return succeeded;
 }
 
-bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap> bitmap)
+bool Compositor::set_wallpaper(RefPtr<Gfx::Bitmap const> bitmap)
 {
     if (!bitmap)
         m_wallpaper = nullptr;
@@ -838,28 +840,48 @@ void Compositor::update_wallpaper_bitmap()
             screen_data.clear_wallpaper_bitmap();
             return IterationDecision::Continue;
         }
-        if (!screen_data.m_wallpaper_bitmap)
-            screen_data.init_wallpaper_bitmap(screen);
 
-        auto rect = screen_data.m_wallpaper_bitmap->rect();
-        auto& painter = *screen_data.m_wallpaper_painter;
+        // See if there is another screen with the same resolution and scale.
+        // If so, we can use the same bitmap.
+        bool share_bitmap_with_other_screen = false;
+        Screen::for_each([&](Screen& screen2) {
+            if (&screen == &screen2) {
+                // Stop iterating here, we haven't updated wallpaper bitmaps for
+                // this screen and the following screens.
+                return IterationDecision::Break;
+            }
 
-        painter.draw_scaled_bitmap(rect, *m_wallpaper, m_wallpaper->rect());
+            if (screen.size() == screen2.size() && screen.scale_factor() == screen2.scale_factor()) {
+                auto& screen2_data = screen2.compositor_screen_data();
 
+                // Use the same bitmap as the other screen
+                screen_data.m_wallpaper_bitmap = screen2_data.m_wallpaper_bitmap;
+                share_bitmap_with_other_screen = true;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        if (share_bitmap_with_other_screen)
+            return IterationDecision::Continue;
+
+        if (screen.size() == m_wallpaper->size() && screen.scale_factor() == m_wallpaper->scale()) {
+            // If the screen size is equal to the wallpaper size, we don't actually need to scale it
+            screen_data.m_wallpaper_bitmap = m_wallpaper;
+        } else {
+            auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
+
+            Gfx::Painter painter(*bitmap);
+            painter.draw_scaled_bitmap(bitmap->rect(), *m_wallpaper, m_wallpaper->rect());
+
+            screen_data.m_wallpaper_bitmap = move(bitmap);
+        }
         return IterationDecision::Continue;
     });
 }
 
-void CompositorScreenData::init_wallpaper_bitmap(Screen& screen)
-{
-    m_wallpaper_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
-    m_wallpaper_painter = make<Gfx::Painter>(*m_wallpaper_bitmap);
-    m_wallpaper_painter->translate(-screen.rect().location());
-}
-
 void CompositorScreenData::clear_wallpaper_bitmap()
 {
-    m_wallpaper_painter = nullptr;
     m_wallpaper_bitmap = nullptr;
 }
 
@@ -933,6 +955,7 @@ void Compositor::change_cursor(Cursor const* cursor)
                     m_current_cursor_frame = 0;
                 invalidate_cursor(true);
             });
+        m_cursor_timer->start();
     }
 }
 
@@ -1183,7 +1206,8 @@ void Compositor::recompute_occlusions()
     bool window_stack_transition_in_progress = m_transitioning_to_window_stack != nullptr;
     auto& main_screen = Screen::main();
     auto* fullscreen_window = wm.active_fullscreen_window();
-    if (fullscreen_window) {
+    // FIXME: Remove the !WindowSwitcher::the().is_visible() check when WindowSwitcher is an overlay
+    if (fullscreen_window && !WindowSwitcher::the().is_visible()) {
         // TODO: support fullscreen windows on all screens
         auto screen_rect = main_screen.rect();
         wm.for_each_visible_window_from_front_to_back([&](Window& w) {
@@ -1213,7 +1237,8 @@ void Compositor::recompute_occlusions()
 
         m_opaque_wallpaper_rects.clear();
     }
-    if (!fullscreen_window || (fullscreen_window && !fullscreen_window->is_opaque())) {
+    // FIXME: Remove the WindowSwitcher::the().is_visible() check when WindowSwitcher is an overlay
+    if (!fullscreen_window || WindowSwitcher::the().is_visible() || (fullscreen_window && !fullscreen_window->is_opaque())) {
         Gfx::DisjointIntRectSet remaining_visible_screen_rects;
         remaining_visible_screen_rects.add_many(Screen::rects());
         bool have_transparent = false;

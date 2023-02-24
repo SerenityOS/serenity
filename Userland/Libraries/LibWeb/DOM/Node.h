@@ -35,6 +35,11 @@ enum class NodeType : u16 {
     NOTATION_NODE = 12
 };
 
+enum class NameOrDescription {
+    Name,
+    Description
+};
+
 struct GetRootNodeOptions {
     bool composed { false };
 };
@@ -617,6 +622,9 @@ public:
         return false;
     }
 
+    ErrorOr<String> accessible_name(Document const&) const;
+    ErrorOr<String> accessible_description(Document const&) const;
+
 protected:
     Node(JS::Realm&, Document&, NodeType);
     Node(Document&, NodeType);
@@ -638,12 +646,20 @@ protected:
 
     void build_accessibility_tree(AccessibilityTreeNode& parent) const;
 
+    ErrorOr<String> name_or_description(NameOrDescription, Document const&, HashTable<i32>&) const;
+
 private:
     void queue_tree_mutation_record(JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling);
 
     void insert_before_impl(JS::NonnullGCPtr<Node>, JS::GCPtr<Node> child);
     void append_child_impl(JS::NonnullGCPtr<Node>);
     void remove_child_impl(JS::NonnullGCPtr<Node>);
+
+    static Optional<StringView> first_valid_id(DeprecatedString const&, Document const&);
+    static ErrorOr<void> append_without_space(StringBuilder, StringView const&);
+    static ErrorOr<void> append_with_space(StringBuilder, StringView const&);
+    static ErrorOr<void> prepend_without_space(StringBuilder, StringView const&);
+    static ErrorOr<void> prepend_with_space(StringBuilder, StringView const&);
 
     JS::GCPtr<Node> m_parent;
     JS::GCPtr<Node> m_first_child;

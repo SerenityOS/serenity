@@ -171,8 +171,7 @@ DeprecatedString TextLayout::elide_text_from_right(Utf8View text) const
         if (ellipsis_width < text_width) {
             size_t offset = 0;
             for (auto it = text.begin(); !it.done(); ++it) {
-                auto code_point = *it;
-                auto glyph_width = m_font.glyph_or_emoji_width(code_point);
+                auto glyph_width = m_font.glyph_or_emoji_width(it);
                 // NOTE: Glyph spacing should not be added after the last glyph on the line,
                 //       but since we are here because the last glyph does not actually fit on the line,
                 //       we don't have to worry about spacing.

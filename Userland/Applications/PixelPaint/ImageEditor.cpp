@@ -733,7 +733,7 @@ void ImageEditor::save_project()
         save_project_as();
         return;
     }
-    auto response = FileSystemAccessClient::Client::the().request_file(window(), path(), Core::Stream::OpenMode::Truncate | Core::Stream::OpenMode::Write);
+    auto response = FileSystemAccessClient::Client::the().request_file(window(), path(), Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
     if (response.is_error())
         return;
     auto result = save_project_to_file(response.value().release_stream());
@@ -760,7 +760,7 @@ void ImageEditor::save_project_as()
     set_unmodified();
 }
 
-ErrorOr<void> ImageEditor::save_project_to_file(NonnullOwnPtr<Core::Stream::File> file) const
+ErrorOr<void> ImageEditor::save_project_to_file(NonnullOwnPtr<Core::File> file) const
 {
     StringBuilder builder;
     auto json = TRY(JsonObjectSerializer<>::try_create(builder));

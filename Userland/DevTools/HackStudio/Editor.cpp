@@ -15,9 +15,8 @@
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <LibConfig/Client.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/Timer.h>
 #include <LibCpp/SemanticSyntaxHighlighter.h>
 #include <LibCpp/SyntaxHighlighter.h>
@@ -122,7 +121,7 @@ void Editor::focusout_event(GUI::FocusEvent& event)
 
 Gfx::IntRect Editor::gutter_icon_rect(size_t line_number) const
 {
-    return gutter_content_rect(line_number).translated(ruler_width() + gutter_width() + frame_thickness(), -vertical_scrollbar().value());
+    return gutter_content_rect(line_number).translated(frame_thickness(), 0);
 }
 
 void Editor::paint_event(GUI::PaintEvent& event)
@@ -232,7 +231,7 @@ void Editor::show_documentation_tooltip_if_available(DeprecatedString const& hov
     }
 
     dbgln_if(EDITOR_DEBUG, "opening {}", it->value);
-    auto file_or_error = Core::Stream::File::open(it->value, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(it->value, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
         dbgln("Failed to open {}, {}", it->value, file_or_error.error());
         return;
@@ -420,7 +419,7 @@ static HashMap<DeprecatedString, DeprecatedString>& include_paths()
         Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = it.next_full_path();
-            if (!Core::File::is_directory(path)) {
+            if (!Core::DeprecatedFile::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
                 dbgln_if(EDITOR_DEBUG, "Adding header \"{}\" in path \"{}\"", key, path);
                 paths.set(key, path);

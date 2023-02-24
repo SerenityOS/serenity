@@ -67,6 +67,23 @@ conflicts.
 
 > **Note**: `clangd.inlayHints.sep` breaks on `clangd 15.0.6`.
 
+# Formatting
+For code formatting the formatter plugin can be used.
+```vim
+Plug 'mhartington/formatter.nvim'
+```
+### Configuration
+To use the formatter plugin one needs to opt-in to specific formatters. An example lua configuration which uses clang-format for cpp files:
+```lua
+require("formatter").setup{
+    filetype = {
+        cpp = {
+            require("formatter.filetypes.cpp").clangformat
+        }
+    }
+}
+```
+
 # Install git blame (Optional)
 
 ```vim

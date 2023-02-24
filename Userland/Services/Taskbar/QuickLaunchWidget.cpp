@@ -105,8 +105,7 @@ ErrorOr<NonnullRefPtr<QuickLaunchWidget>> QuickLaunchWidget::create()
 QuickLaunchWidget::QuickLaunchWidget()
 {
     set_shrink_to_fit(true);
-    set_layout<GUI::HorizontalBoxLayout>();
-    layout()->set_spacing(0);
+    set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 0);
     set_frame_thickness(0);
     set_fixed_height(24);
 }

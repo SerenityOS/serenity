@@ -14,12 +14,12 @@
 
 namespace Gfx {
 
-void Path::elliptical_arc_to(FloatPoint point, FloatPoint radii, double x_axis_rotation, bool large_arc, bool sweep)
+void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, double x_axis_rotation, bool large_arc, bool sweep)
 {
     auto next_point = point;
 
-    double rx = radii.x();
-    double ry = radii.y();
+    double rx = radii.width();
+    double ry = radii.height();
 
     double x_axis_rotation_c = AK::cos(x_axis_rotation);
     double x_axis_rotation_s = AK::sin(x_axis_rotation);
@@ -291,7 +291,7 @@ void Path::segmentize_path()
             break;
         }
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto control = static_cast<QuadraticBezierCurveSegment&>(segment).through();
+            auto control = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
             Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });
@@ -309,7 +309,7 @@ void Path::segmentize_path()
             break;
         }
         case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<EllipticalArcSegment&>(segment);
+            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
             Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });

@@ -9,7 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibMain/Main.h>
@@ -42,7 +42,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
         // We're not copying anything.
     } else if (text.is_empty()) {
         // Copy our stdin.
-        auto c_stdin = TRY(Core::Stream::File::standard_input());
+        auto c_stdin = TRY(Core::File::standard_input());
         auto buffer = TRY(c_stdin->read_until_eof());
         dbgln("Read size {}", buffer.size());
         dbgln("Read data: `{}`", StringView(buffer.bytes()));

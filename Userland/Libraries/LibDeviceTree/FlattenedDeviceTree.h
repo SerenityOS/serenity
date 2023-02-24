@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2021-2023, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +7,10 @@
 #pragma once
 
 #include <AK/Endian.h>
+#include <AK/Error.h>
+#include <AK/Function.h>
+#include <AK/IterationDecision.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 namespace DeviceTree {
@@ -36,5 +40,32 @@ struct FlattenedDeviceTreeReserveEntry {
     bool operator==(FlattenedDeviceTreeReserveEntry const& other) const { return other.address == address && other.size == size; }
 };
 static_assert(sizeof(FlattenedDeviceTreeReserveEntry) == 16, "FDT Memory Reservation entry size must match specification");
+
+// https://devicetree-specification.readthedocs.io/en/v0.3/flattened-format.html#lexical-structure
+enum FlattenedDeviceTreeTokenType : u32 {
+    BeginNode = 1,
+    EndNode = 2,
+    Property = 3,
+    NoOp = 4,
+    End = 9
+};
+
+struct DeviceTreeCallbacks {
+    Function<ErrorOr<IterationDecision>(StringView)> on_node_begin;
+    Function<ErrorOr<IterationDecision>(StringView)> on_node_end;
+    Function<ErrorOr<IterationDecision>(StringView, ReadonlyBytes)> on_property;
+    Function<ErrorOr<IterationDecision>()> on_noop;
+    Function<ErrorOr<void>()> on_end;
+};
+
+ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree, DeviceTreeCallbacks);
+
+template<typename T>
+ErrorOr<T> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
+
+extern template ErrorOr<void> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+extern template ErrorOr<u32> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+extern template ErrorOr<u64> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+extern template ErrorOr<StringView> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
 
 } // namespace DeviceTree

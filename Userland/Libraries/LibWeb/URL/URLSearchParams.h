@@ -23,7 +23,7 @@ class URLSearchParams : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URLSearchParams, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<URLSearchParams> create(JS::Realm&, Vector<QueryParam> list);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create(JS::Realm&, Vector<QueryParam> list);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> construct_impl(JS::Realm&, Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>, DeprecatedString> const& init);
 
     virtual ~URLSearchParams() override;

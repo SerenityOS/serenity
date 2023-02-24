@@ -8,7 +8,9 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/Error.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <LibJS/SourceRange.h>
 
 namespace JS {
@@ -17,6 +19,7 @@ struct ParserError {
     DeprecatedString message;
     Optional<Position> position;
 
+    ErrorOr<String> to_string() const;
     DeprecatedString to_deprecated_string() const;
     DeprecatedString source_location_hint(StringView source, char const spacer = ' ', char const indicator = '^') const;
 };

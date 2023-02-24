@@ -73,16 +73,16 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
         auto& transfer_buffer_region = TRY(get_context_for_description(description))->transfer_buffer_region();
         auto user_transfer_descriptor = static_ptr_cast<VirGLTransferDescriptor const*>(arg);
         auto transfer_descriptor = TRY(copy_typed_from_user(user_transfer_descriptor));
+        if (Checked<size_t>::addition_would_overflow(transfer_descriptor.offset_in_region, transfer_descriptor.num_bytes)) {
+            return EOVERFLOW;
+        }
+        if (transfer_descriptor.offset_in_region + transfer_descriptor.num_bytes > NUM_TRANSFER_REGION_PAGES * PAGE_SIZE) {
+            return EOVERFLOW;
+        }
         if (transfer_descriptor.direction == VIRGL_DATA_DIR_GUEST_TO_HOST) {
-            if (transfer_descriptor.offset_in_region + transfer_descriptor.num_bytes > NUM_TRANSFER_REGION_PAGES * PAGE_SIZE) {
-                return EOVERFLOW;
-            }
             auto target = transfer_buffer_region.vaddr().offset(transfer_descriptor.offset_in_region).as_ptr();
             return copy_from_user(target, transfer_descriptor.data, transfer_descriptor.num_bytes);
         } else if (transfer_descriptor.direction == VIRGL_DATA_DIR_HOST_TO_GUEST) {
-            if (transfer_descriptor.offset_in_region + transfer_descriptor.num_bytes > NUM_TRANSFER_REGION_PAGES * PAGE_SIZE) {
-                return EOVERFLOW;
-            }
             auto source = transfer_buffer_region.vaddr().offset(transfer_descriptor.offset_in_region).as_ptr();
             return copy_to_user(transfer_descriptor.data, source, transfer_descriptor.num_bytes);
         } else {

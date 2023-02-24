@@ -21,7 +21,7 @@ struct CoreEventLoopDeferredInvoker final : public DeferredInvoker {
     }
 };
 
-ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::Stream::LocalSocket> socket, u32 local_endpoint_magic)
+ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::LocalSocket> socket, u32 local_endpoint_magic)
     : m_local_stub(local_stub)
     , m_socket(move(socket))
     , m_local_endpoint_magic(local_endpoint_magic)
@@ -35,12 +35,12 @@ void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferre
     m_deferred_invoker = move(deferred_invoker);
 }
 
-void ConnectionBase::set_fd_passing_socket(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+void ConnectionBase::set_fd_passing_socket(NonnullOwnPtr<Core::LocalSocket> socket)
 {
     m_fd_passing_socket = move(socket);
 }
 
-Core::Stream::LocalSocket& ConnectionBase::fd_passing_socket()
+Core::LocalSocket& ConnectionBase::fd_passing_socket()
 {
     if (m_fd_passing_socket)
         return *m_fd_passing_socket;

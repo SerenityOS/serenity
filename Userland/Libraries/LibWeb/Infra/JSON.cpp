@@ -19,7 +19,7 @@ WebIDL::ExceptionOr<JS::Value> parse_json_string_to_javascript_value(JS::VM& vm,
     auto& realm = *vm.current_realm();
 
     // 1. Return ? Call(%JSON.parse%, undefined, « string »).
-    return TRY(JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), JS::PrimitiveString::create(vm, string)));
+    return TRY(JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, string))));
 }
 
 // https://infra.spec.whatwg.org/#parse-json-bytes-to-a-javascript-value
@@ -27,7 +27,7 @@ WebIDL::ExceptionOr<JS::Value> parse_json_bytes_to_javascript_value(JS::VM& vm, 
 {
     // 1. Let string be the result of running UTF-8 decode on bytes.
     TextCodec::UTF8Decoder decoder;
-    auto string = decoder.to_utf8(bytes);
+    auto string = TRY_OR_THROW_OOM(vm, decoder.to_utf8(bytes));
 
     // 2. Return the result of parsing a JSON string to an Infra value given string.
     return parse_json_string_to_javascript_value(vm, string);

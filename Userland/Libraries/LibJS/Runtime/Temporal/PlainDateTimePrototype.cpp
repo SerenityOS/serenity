@@ -33,7 +33,7 @@ ThrowCompletionOr<void> PlainDateTimePrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 5.3.2 Temporal.PlainDateTime.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.plaindatetime.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Temporal.PlainDateTime"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.PlainDateTime"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.calendar, calendar_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.year, year_getter, {}, Attribute::Configurable);
@@ -382,7 +382,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainDateTimePrototype::with)
     // 3. If Type(temporalDateTimeLike) is not Object, then
     if (!temporal_date_time_like.is_object()) {
         // a. Throw a TypeError exception.
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, temporal_date_time_like.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, temporal_date_time_like.to_string_without_side_effects()));
     }
 
     // 4. Perform ? RejectObjectWithCalendarOrTimeZone(temporalDateTimeLike).

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -136,6 +137,11 @@ ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> to_vec2_f32x4(Vector2<AK::SIMD::i3
         AK::SIMD::to_f32x4(v.x()),
         AK::SIMD::to_f32x4(v.y()),
     };
+}
+
+ALWAYS_INLINE static constexpr Vector4<AK::SIMD::f32x4> to_vec4(AK::SIMD::f32x4 v)
+{
+    return { v, v, v, v };
 }
 
 }

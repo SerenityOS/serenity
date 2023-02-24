@@ -453,6 +453,161 @@ RefPtr<AST::Node> Shell::immediate_join(AST::ImmediateExpression& invoking_node,
     return AST::make_ref_counted<AST::StringLiteral>(invoking_node.position(), builder.to_deprecated_string(), AST::StringLiteral::EnclosureType::None);
 }
 
+RefPtr<AST::Node> Shell::immediate_value_or_default(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to value_or_default", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (!local_variable_or(name, ""sv).is_empty())
+        return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+
+    return arguments.last();
+}
+
+RefPtr<AST::Node> Shell::immediate_assign_default(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to assign_default", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (!local_variable_or(name, ""sv).is_empty())
+        return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+
+    auto value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_without_cast(*this);
+    set_local_variable(name, value);
+
+    return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
+}
+
+RefPtr<AST::Node> Shell::immediate_error_if_empty(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to error_if_empty", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (!local_variable_or(name, ""sv).is_empty())
+        return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+
+    auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this);
+    if (error_value.is_empty())
+        error_value = DeprecatedString::formatted("Expected {} to be non-empty", name);
+
+    raise_error(ShellError::EvaluatedSyntaxError, error_value, invoking_node.position());
+    return nullptr;
+}
+
+RefPtr<AST::Node> Shell::immediate_null_or_alternative(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to null_or_alternative", invoking_node.position());
+        return nullptr;
+    }
+
+    auto value = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_without_cast(*this);
+    if ((value->is_string() && value->resolve_as_string(*this).is_empty()) || (value->is_list() && value->resolve_as_list(*this).is_empty()))
+        return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
+
+    return arguments.last();
+}
+
+RefPtr<AST::Node> Shell::immediate_defined_value_or_default(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to defined_value_or_default", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (!find_frame_containing_local_variable(name))
+        return arguments.last();
+
+    return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+}
+
+RefPtr<AST::Node> Shell::immediate_assign_defined_default(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to assign_defined_default", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (find_frame_containing_local_variable(name))
+        return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+
+    auto value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_without_cast(*this);
+    set_local_variable(name, value);
+
+    return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
+}
+
+RefPtr<AST::Node> Shell::immediate_error_if_unset(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to error_if_unset", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (find_frame_containing_local_variable(name))
+        return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+
+    auto error_value = const_cast<AST::Node&>(arguments.last()).run(*this)->resolve_as_string(*this);
+    if (error_value.is_empty())
+        error_value = DeprecatedString::formatted("Expected {} to be set", name);
+
+    raise_error(ShellError::EvaluatedSyntaxError, error_value, invoking_node.position());
+    return nullptr;
+}
+
+RefPtr<AST::Node> Shell::immediate_null_if_unset_or_alternative(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 2) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 2 arguments to null_if_unset_or_alternative", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    if (!find_frame_containing_local_variable(name))
+        return arguments.last();
+
+    return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+}
+
+RefPtr<AST::Node> Shell::immediate_reexpand(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 1) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 1 argument to reexpand", invoking_node.position());
+        return nullptr;
+    }
+
+    auto value = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    return parse(value, m_is_interactive, false);
+}
+
+RefPtr<AST::Node> Shell::immediate_length_of_variable(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
+{
+    if (arguments.size() != 1) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 1 argument to length_of_variable", invoking_node.position());
+        return nullptr;
+    }
+
+    auto name = const_cast<AST::Node&>(arguments.first()).run(*this)->resolve_as_string(*this);
+    auto variable = make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+
+    return immediate_length_impl(
+        invoking_node,
+        { move(variable) },
+        false);
+}
+
 RefPtr<AST::Node> Shell::run_immediate_function(StringView str, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const& arguments)
 {
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \

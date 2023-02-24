@@ -6,6 +6,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
@@ -18,6 +19,11 @@ ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map(StringView path)
 {
     auto fd = TRY(Core::System::open(path, O_RDONLY | O_CLOEXEC, 0));
     return map_from_fd_and_close(fd, path);
+}
+
+ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_file(NonnullOwnPtr<Core::File> stream, StringView path)
+{
+    return map_from_fd_and_close(stream->leak_fd(Badge<MappedFile> {}), path);
 }
 
 ErrorOr<NonnullRefPtr<MappedFile>> MappedFile::map_from_fd_and_close(int fd, [[maybe_unused]] StringView path)

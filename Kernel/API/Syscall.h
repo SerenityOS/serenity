@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 #include <Kernel/API/POSIX/sched.h>
+#include <Kernel/Arch/RegisterState.h>
 
 constexpr int syscall_vector = 0x82;
 
@@ -57,7 +59,7 @@ enum class NeedsBigProcessLock {
     S(clock_settime, NeedsBigProcessLock::No)               \
     S(close, NeedsBigProcessLock::No)                       \
     S(connect, NeedsBigProcessLock::No)                     \
-    S(create_inode_watcher, NeedsBigProcessLock::Yes)       \
+    S(create_inode_watcher, NeedsBigProcessLock::No)        \
     S(create_thread, NeedsBigProcessLock::Yes)              \
     S(dbgputstr, NeedsBigProcessLock::No)                   \
     S(detach_thread, NeedsBigProcessLock::Yes)              \
@@ -80,10 +82,10 @@ enum class NeedsBigProcessLock {
     S(ftruncate, NeedsBigProcessLock::No)                   \
     S(futex, NeedsBigProcessLock::Yes)                      \
     S(get_dir_entries, NeedsBigProcessLock::Yes)            \
-    S(get_process_name, NeedsBigProcessLock::Yes)           \
+    S(get_process_name, NeedsBigProcessLock::No)            \
     S(get_root_session_id, NeedsBigProcessLock::No)         \
     S(get_stack_bounds, NeedsBigProcessLock::No)            \
-    S(get_thread_name, NeedsBigProcessLock::Yes)            \
+    S(get_thread_name, NeedsBigProcessLock::No)             \
     S(getcwd, NeedsBigProcessLock::No)                      \
     S(getegid, NeedsBigProcessLock::No)                     \
     S(geteuid, NeedsBigProcessLock::No)                     \
@@ -131,7 +133,7 @@ enum class NeedsBigProcessLock {
     S(perf_event, NeedsBigProcessLock::Yes)                 \
     S(perf_register_string, NeedsBigProcessLock::Yes)       \
     S(pipe, NeedsBigProcessLock::No)                        \
-    S(pledge, NeedsBigProcessLock::Yes)                     \
+    S(pledge, NeedsBigProcessLock::No)                      \
     S(poll, NeedsBigProcessLock::Yes)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)             \
     S(prctl, NeedsBigProcessLock::Yes)                      \
@@ -155,8 +157,8 @@ enum class NeedsBigProcessLock {
     S(sendmsg, NeedsBigProcessLock::Yes)                    \
     S(set_coredump_metadata, NeedsBigProcessLock::No)       \
     S(set_mmap_name, NeedsBigProcessLock::Yes)              \
-    S(set_process_name, NeedsBigProcessLock::Yes)           \
-    S(set_thread_name, NeedsBigProcessLock::Yes)            \
+    S(set_process_name, NeedsBigProcessLock::No)            \
+    S(set_thread_name, NeedsBigProcessLock::No)             \
     S(setegid, NeedsBigProcessLock::No)                     \
     S(seteuid, NeedsBigProcessLock::No)                     \
     S(setgid, NeedsBigProcessLock::No)                      \
@@ -200,6 +202,8 @@ enum class NeedsBigProcessLock {
     S(yield, NeedsBigProcessLock::No)
 
 namespace Syscall {
+
+ErrorOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4);
 
 enum Function {
 #undef __ENUMERATE_SYSCALL

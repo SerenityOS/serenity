@@ -27,6 +27,7 @@ public:
 
     Crypto::BigFraction value() const;
     void set_value(Crypto::BigFraction);
+    void set_typed_value(Crypto::BigFraction);
     void set_to_0();
 
     void shrink(unsigned);
@@ -56,6 +57,7 @@ private:
 
     enum class State {
         External,
+        TypedExternal,
         TypingInteger,
         TypingDecimal
     };

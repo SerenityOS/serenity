@@ -195,7 +195,7 @@ enum PixelFormatFlags : u32 {
     DDPF_NORMAL = 0x80000000,
 };
 
-struct DDSPixelFormat {
+struct [[gnu::packed]] DDSPixelFormat {
     u32 size {};
     u32 flags {};
     u32 four_cc {};
@@ -206,7 +206,7 @@ struct DDSPixelFormat {
     u32 a_bit_mask {};
 };
 
-struct DDSHeader {
+struct [[gnu::packed]] DDSHeader {
     u32 size {};
     u32 flags {};
     u32 height {};
@@ -223,7 +223,7 @@ struct DDSHeader {
     u32 reserved2 {};
 };
 
-struct DDSHeaderDXT10 {
+struct [[gnu::packed]] DDSHeaderDXT10 {
     DXGIFormat format {};
     u32 resource_dimension {};
     u32 misc_flag {};
@@ -257,3 +257,13 @@ private:
 };
 
 }
+
+template<>
+struct AK::Traits<Gfx::DDSHeader> : public AK::GenericTraits<Gfx::DDSHeader> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+struct AK::Traits<Gfx::DDSHeaderDXT10> : public AK::GenericTraits<Gfx::DDSHeaderDXT10> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};

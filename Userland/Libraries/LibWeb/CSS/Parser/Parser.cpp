@@ -32,6 +32,7 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Infra/Strings.h>
 
 static void log_parse_error(SourceLocation const& location = SourceLocation::current())
 {
@@ -77,12 +78,12 @@ bool ParsingContext::in_quirks_mode() const
 }
 
 // https://www.w3.org/TR/css-values-4/#relative-urls
-AK::URL ParsingContext::complete_url(DeprecatedString const& addr) const
+AK::URL ParsingContext::complete_url(StringView relative_url) const
 {
-    return m_url.complete_url(addr);
+    return m_url.complete_url(relative_url);
 }
 
-Parser::Parser(ParsingContext const& context, StringView input, DeprecatedString const& encoding)
+Parser::Parser(ParsingContext const& context, StringView input, StringView encoding)
     : m_context(context)
     , m_tokenizer(input, encoding)
     , m_tokens(m_tokenizer.parse())
@@ -127,8 +128,9 @@ CSSStyleSheet* Parser::parse_as_css_stylesheet(Optional<AK::URL> location)
             rules.append(rule);
     }
 
-    auto* rule_list = CSSRuleList::create(m_context.realm(), rules);
-    return CSSStyleSheet::create(m_context.realm(), *rule_list, *MediaList::create(m_context.realm(), {}), move(location));
+    auto rule_list = CSSRuleList::create(m_context.realm(), rules).release_value_but_fixme_should_propagate_errors();
+    auto media_list = MediaList::create(m_context.realm(), {}).release_value_but_fixme_should_propagate_errors();
+    return CSSStyleSheet::create(m_context.realm(), rule_list, media_list, move(location)).release_value_but_fixme_should_propagate_errors();
 }
 
 Optional<SelectorList> Parser::parse_as_selector(SelectorParsingMode parsing_mode)
@@ -278,7 +280,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
             // they are converted to lowercase, so we do that here too. If we want to be
             // correct with XML later, we'll need to keep the original case and then do
             // a case-insensitive compare later.
-            .name = attribute_part.token().ident().to_lowercase_string(),
+            .name = FlyString::from_utf8(attribute_part.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors(),
             .case_type = Selector::SimpleSelector::Attribute::CaseType::DefaultMatch,
         }
     };
@@ -338,7 +340,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         dbgln_if(CSS_PARSER_DEBUG, "Expected a string or ident for the value to match attribute against, got: '{}'", value_part.to_debug_string());
         return ParseError::SyntaxError;
     }
-    simple_selector.attribute().value = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
+    auto value_string_view = value_part.token().is(Token::Type::Ident) ? value_part.token().ident() : value_part.token().string();
+    simple_selector.attribute().value = String::from_utf8(value_string_view).release_value_but_fixme_should_propagate_errors();
 
     attribute_tokens.skip_whitespace();
     // Handle case-sensitivity suffixes. https://www.w3.org/TR/selectors-4/#attribute-case
@@ -561,8 +564,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                 return ParseError::SyntaxError;
             }
             // FIXME: Support multiple, comma-separated, language ranges.
-            Vector<DeprecatedFlyString> languages;
-            languages.append(pseudo_function.values().first().token().to_deprecated_string());
+            Vector<FlyString> languages;
+            languages.append(pseudo_function.values().first().token().to_string().release_value_but_fixme_should_propagate_errors());
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
                 .value = Selector::SimpleSelector::PseudoClass {
@@ -616,7 +619,7 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
             }
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::Class,
-                .value = Selector::SimpleSelector::Name { class_name_value.token().ident() }
+                .value = Selector::SimpleSelector::Name { FlyString::from_utf8(class_name_value.token().ident()).release_value_but_fixme_should_propagate_errors() }
             };
         }
         case '>':
@@ -640,13 +643,13 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
         }
         return Selector::SimpleSelector {
             .type = Selector::SimpleSelector::Type::Id,
-            .value = Selector::SimpleSelector::Name { first_value.token().hash_value() }
+            .value = Selector::SimpleSelector::Name { FlyString::from_utf8(first_value.token().hash_value()).release_value_but_fixme_should_propagate_errors() }
         };
     }
     if (first_value.is(Token::Type::Ident)) {
         return Selector::SimpleSelector {
             .type = Selector::SimpleSelector::Type::TagName,
-            .value = Selector::SimpleSelector::Name { first_value.token().ident() }
+            .value = Selector::SimpleSelector::Name { FlyString::from_utf8(first_value.token().ident()).release_value_but_fixme_should_propagate_errors() }
         };
     }
     if (first_value.is_block() && first_value.block().is_square())
@@ -1395,7 +1398,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_deprecated_string() }
+                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors() }
             };
         }
     }
@@ -1405,10 +1408,10 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
-            builder.append(item.to_deprecated_string());
+            builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
         transaction.commit();
         return Supports::Feature {
-            Supports::Selector { builder.to_deprecated_string() }
+            Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors() }
         };
     }
 
@@ -1425,13 +1428,13 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
     // `[ <function-token> <any-value>? ) ]`
     if (first_token.is_function()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_deprecated_string() };
+        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors() };
     }
 
     // `( <any-value>? )`
     if (first_token.is_block() && first_token.block().is_paren()) {
         transaction.commit();
-        return GeneralEnclosed { first_token.to_deprecated_string() };
+        return GeneralEnclosed { first_token.to_string().release_value_but_fixme_should_propagate_errors() };
     }
 
     return {};
@@ -1518,7 +1521,7 @@ NonnullRefPtr<Rule> Parser::consume_an_at_rule(TokenStream<T>& tokens)
 
     // Create a new at-rule with its name set to the value of the current input token, its prelude initially set to an empty list, and its value initially set to nothing.
     // NOTE: We create the Rule fully initialized when we return it instead.
-    DeprecatedFlyString at_rule_name = ((Token)name_ident).at_keyword();
+    auto at_rule_name = FlyString::from_utf8(((Token)name_ident).at_keyword()).release_value_but_fixme_should_propagate_errors();
     Vector<ComponentValue> prelude;
     RefPtr<Block> block;
 
@@ -1801,7 +1804,7 @@ NonnullRefPtr<Function> Parser::consume_a_function(TokenStream<T>& tokens)
     // Create a function with its name equal to the value of the current input token
     // and with its value initially set to an empty list.
     // NOTE: We create the Function fully initialized when we return it instead.
-    DeprecatedFlyString function_name = ((Token)name_ident).function();
+    auto function_name = FlyString::from_utf8(((Token)name_ident).function()).release_value_but_fixme_should_propagate_errors();
     Vector<ComponentValue> function_values;
 
     // Repeatedly consume the next input token and process it as follows:
@@ -1856,7 +1859,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
     // Create a new declaration with its name set to the value of the current input token
     // and its value initially set to the empty list.
     // NOTE: We create a fully-initialized Declaration just before returning it instead.
-    DeprecatedFlyString declaration_name = ((Token)token).ident();
+    auto declaration_name = FlyString::from_utf8(((Token)token).ident()).release_value_but_fixme_should_propagate_errors();
     Vector<ComponentValue> declaration_values;
     Important declaration_important = Important::No;
 
@@ -1894,7 +1897,7 @@ Optional<Declaration> Parser::consume_a_declaration(TokenStream<T>& tokens)
         Optional<size_t> important_index;
         for (size_t i = declaration_values.size() - 1; i > 0; i--) {
             auto value = declaration_values[i];
-            if (value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("important"sv)) {
+            if (value.is(Token::Type::Ident) && Infra::is_ascii_case_insensitive_match(value.token().ident(), "important"sv)) {
                 important_index = i;
                 break;
             }
@@ -2242,7 +2245,7 @@ ElementInlineCSSStyleDeclaration* Parser::parse_as_style_attribute(DOM::Element&
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(m_token_stream);
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
-    return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties));
+    return ElementInlineCSSStyleDeclaration::create(element, move(properties), move(custom_properties)).release_value_but_fixme_should_propagate_errors();
 }
 
 Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_value, AllowedDataUrlType allowed_data_url_type)
@@ -3040,7 +3043,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             }
 
             if (url.has_value())
-                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document()));
+                return CSSImportRule::create(url.value(), const_cast<DOM::Document&>(*m_context.document())).release_value_but_fixme_should_propagate_errors();
             dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
             return {};
         }
@@ -3057,8 +3060,9 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                 if (auto* child_rule = convert_to_rule(raw_rule))
                     child_rules.append(child_rule);
             }
-            auto* rule_list = CSSRuleList::create(m_context.realm(), child_rules);
-            return CSSMediaRule::create(m_context.realm(), *MediaList::create(m_context.realm(), move(media_query_list)), *rule_list);
+            auto media_list = MediaList::create(m_context.realm(), move(media_query_list)).release_value_but_fixme_should_propagate_errors();
+            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
+            return CSSMediaRule::create(m_context.realm(), media_list, rule_list).release_value_but_fixme_should_propagate_errors();
         }
         if (rule->at_rule_name().equals_ignoring_case("supports"sv)) {
             auto supports_tokens = TokenStream { rule->prelude() };
@@ -3081,8 +3085,8 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
                     child_rules.append(child_rule);
             }
 
-            auto* rule_list = CSSRuleList::create(m_context.realm(), child_rules);
-            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), *rule_list);
+            auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
+            return CSSSupportsRule::create(m_context.realm(), supports.release_nonnull(), rule_list).release_value_but_fixme_should_propagate_errors();
         }
 
         // FIXME: More at rules!
@@ -3120,7 +3124,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
         return {};
     }
 
-    return CSSStyleRule::create(m_context.realm(), move(selectors.value()), *declaration);
+    return CSSStyleRule::create(m_context.realm(), move(selectors.value()), *declaration).release_value_but_fixme_should_propagate_errors();
 }
 
 auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_and_at_rules) -> PropertiesAndCustomProperties
@@ -3149,7 +3153,7 @@ auto Parser::extract_properties(Vector<DeclarationOrAtRule> const& declarations_
 PropertyOwningCSSStyleDeclaration* Parser::convert_to_style_declaration(Vector<DeclarationOrAtRule> const& declarations_and_at_rules)
 {
     auto [properties, custom_properties] = extract_properties(declarations_and_at_rules);
-    return PropertyOwningCSSStyleDeclaration::create(m_context.realm(), move(properties), move(custom_properties));
+    return PropertyOwningCSSStyleDeclaration::create(m_context.realm(), move(properties), move(custom_properties)).release_value_but_fixme_should_propagate_errors();
 }
 
 Optional<StyleProperty> Parser::convert_to_style_property(Declaration const& declaration)
@@ -3385,7 +3389,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
             return DeprecatedString::formatted("{:+}", int_value);
         }
 
-        return component_value.to_deprecated_string();
+        return component_value.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     };
 
     auto create_unicode_range = [&](StringView text, auto& local_transaction) -> Optional<UnicodeRange> {
@@ -3993,7 +3997,7 @@ RefPtr<StyleValue> Parser::parse_comma_separated_value_list(Vector<ComponentValu
     if (!first || !tokens.has_next_token())
         return first;
 
-    NonnullRefPtrVector<StyleValue> values;
+    StyleValueVector values;
     values.append(first.release_nonnull());
 
     while (tokens.has_next_token()) {
@@ -4023,13 +4027,13 @@ RefPtr<StyleValue> Parser::parse_simple_comma_separated_value_list(Vector<Compon
 
 RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& component_values)
 {
-    NonnullRefPtrVector<StyleValue> background_images;
-    NonnullRefPtrVector<StyleValue> background_positions;
-    NonnullRefPtrVector<StyleValue> background_sizes;
-    NonnullRefPtrVector<StyleValue> background_repeats;
-    NonnullRefPtrVector<StyleValue> background_attachments;
-    NonnullRefPtrVector<StyleValue> background_clips;
-    NonnullRefPtrVector<StyleValue> background_origins;
+    StyleValueVector background_images;
+    StyleValueVector background_positions;
+    StyleValueVector background_sizes;
+    StyleValueVector background_repeats;
+    StyleValueVector background_attachments;
+    StyleValueVector background_clips;
+    StyleValueVector background_origins;
     RefPtr<StyleValue> background_color;
 
     // Per-layer values
@@ -4774,8 +4778,8 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
         }
     }
 
-    NonnullRefPtrVector<StyleValue> content_values;
-    NonnullRefPtrVector<StyleValue> alt_text_values;
+    StyleValueVector content_values;
+    StyleValueVector alt_text_values;
     bool in_alt_text = false;
 
     for (auto const& value : component_values) {
@@ -5123,13 +5127,13 @@ static bool is_generic_font_family(ValueID identifier)
 
 RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& component_values)
 {
+    RefPtr<StyleValue> font_stretch;
     RefPtr<StyleValue> font_style;
     RefPtr<StyleValue> font_weight;
     RefPtr<StyleValue> font_size;
     RefPtr<StyleValue> line_height;
     RefPtr<StyleValue> font_families;
     RefPtr<StyleValue> font_variant;
-    // FIXME: Implement font-stretch.
 
     // FIXME: Handle system fonts. (caption, icon, menu, message-box, small-caption, status-bar)
 
@@ -5189,6 +5193,12 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
             font_families = maybe_font_families.release_nonnull();
             break;
         }
+        if (property_accepts_value(PropertyID::FontStretch, *value)) {
+            if (font_stretch)
+                return nullptr;
+            font_stretch = value.release_nonnull();
+            continue;
+        }
         return nullptr;
     }
 
@@ -5202,6 +5212,8 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!font_size || !font_families)
         return nullptr;
 
+    if (!font_stretch)
+        font_stretch = property_initial_value(PropertyID::FontStretch);
     if (!font_style)
         font_style = property_initial_value(PropertyID::FontStyle);
     if (!font_weight)
@@ -5209,7 +5221,7 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
     if (!line_height)
         line_height = property_initial_value(PropertyID::LineHeight);
 
-    return FontStyleValue::create(font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
+    return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
 
 RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const& component_values, size_t start_index)
@@ -5227,7 +5239,7 @@ RefPtr<StyleValue> Parser::parse_font_family_value(Vector<ComponentValue> const&
     // eg, these are equivalent:
     //     font-family: my cool     font\!, serif;
     //     font-family: "my cool font!", serif;
-    NonnullRefPtrVector<StyleValue> font_families;
+    StyleValueVector font_families;
     Vector<DeprecatedString> current_name_parts;
     for (size_t i = start_index; i < component_values.size(); ++i) {
         auto const& part = component_values[i];
@@ -5289,7 +5301,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
 {
     auto declarations_and_at_rules = parse_a_list_of_declarations(tokens);
 
-    Optional<DeprecatedFlyString> font_family;
+    Optional<FlyString> font_family;
     Vector<FontFace::Source> src;
     Vector<UnicodeRange> unicode_range;
 
@@ -5341,7 +5353,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             if (had_syntax_error || font_family_parts.is_empty())
                 continue;
 
-            font_family = DeprecatedString::join(' ', font_family_parts);
+            font_family = String::join(' ', font_family_parts).release_value_but_fixme_should_propagate_errors();
             continue;
         }
         if (declaration.name().equals_ignoring_case("src"sv)) {
@@ -5386,7 +5398,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         unicode_range.empend(0x0u, 0x10FFFFu);
     }
 
-    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), move(src), move(unicode_range) });
+    return CSSFontFaceRule::create(m_context.realm(), FontFace { font_family.release_value(), move(src), move(unicode_range) }).release_value_but_fixme_should_propagate_errors();
 }
 
 Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>& component_values)
@@ -5412,7 +5424,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
         if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
-            Optional<DeprecatedFlyString> format;
+            Optional<FlyString> format;
 
             source_tokens.skip_whitespace();
             if (!source_tokens.has_next_token()) {
@@ -5446,7 +5458,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
                     continue;
                 }
 
-                format = format_name;
+                format = FlyString::from_utf8(format_name).release_value_but_fixme_should_propagate_errors();
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "CSSParser: @font-face src invalid (unrecognized function token `{}`); discarding.", function.name());
                 return {};
@@ -5630,7 +5642,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
 
 RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<ComponentValue>& tokens)
 {
-    NonnullRefPtrVector<StyleValue> style_values;
+    StyleValueVector style_values;
 
     while (tokens.has_next_token()) {
         auto const& token = tokens.next_token();
@@ -5669,7 +5681,7 @@ RefPtr<StyleValue> Parser::parse_text_decoration_line_value(TokenStream<Componen
 
 RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& component_values)
 {
-    NonnullRefPtrVector<StyleValue> transformations;
+    StyleValueVector transformations;
     auto tokens = TokenStream { component_values };
     tokens.skip_whitespace();
 
@@ -5694,7 +5706,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         auto function = maybe_function.release_value();
         auto function_metadata = transform_function_metadata(function);
 
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         auto argument_tokens = TokenStream { part.function().values() };
         argument_tokens.skip_whitespace();
         size_t argument_index = 0;
@@ -5839,7 +5851,7 @@ RefPtr<StyleValue> Parser::parse_transform_origin_value(Vector<ComponentValue> c
     };
 
     auto make_list = [](NonnullRefPtr<StyleValue> const& x_value, NonnullRefPtr<StyleValue> const& y_value) -> NonnullRefPtr<StyleValueList> {
-        NonnullRefPtrVector<StyleValue> values;
+        StyleValueVector values;
         values.append(x_value);
         values.append(y_value);
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
@@ -6603,7 +6615,7 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
 
     // We have multiple values, so treat them as a StyleValueList.
     if (property_maximum_value_count(property_id) > 1) {
-        NonnullRefPtrVector<StyleValue> parsed_values;
+        StyleValueVector parsed_values;
         for (auto& component_value : component_values) {
             auto parsed_value = parse_css_value(component_value);
             if (!parsed_value || !property_accepts_value(property_id, *parsed_value))
@@ -7388,8 +7400,11 @@ namespace Web {
 
 CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& context, StringView css, Optional<AK::URL> location)
 {
-    if (css.is_empty())
-        return CSS::CSSStyleSheet::create(context.realm(), *CSS::CSSRuleList::create_empty(context.realm()), *CSS::MediaList::create(context.realm(), {}), location);
+    if (css.is_empty()) {
+        auto rule_list = CSS::CSSRuleList::create_empty(context.realm()).release_value_but_fixme_should_propagate_errors();
+        auto media_list = CSS::MediaList::create(context.realm(), {}).release_value_but_fixme_should_propagate_errors();
+        return CSS::CSSStyleSheet::create(context.realm(), rule_list, media_list, location).release_value_but_fixme_should_propagate_errors();
+    }
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_css_stylesheet(location);
 }
@@ -7397,7 +7412,7 @@ CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& cont
 CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::ParsingContext const& context, StringView css, DOM::Element& element)
 {
     if (css.is_empty())
-        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {});
+        return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {}).release_value_but_fixme_should_propagate_errors();
     CSS::Parser::Parser parser(context, css);
     return parser.parse_as_style_attribute(element);
 }

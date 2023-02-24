@@ -864,12 +864,14 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
                 amount_shared = space->amount_shared();
                 amount_virtual = space->amount_virtual();
             });
-            dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
-                process.name(),
-                process.pid(),
-                amount_resident / PAGE_SIZE,
-                amount_shared / PAGE_SIZE,
-                amount_virtual / PAGE_SIZE);
+            process.name().with([&](auto& process_name) {
+                dbgln("{}({}) resident:{}, shared:{}, virtual:{}",
+                    process_name->view(),
+                    process.pid(),
+                    amount_resident / PAGE_SIZE,
+                    amount_shared / PAGE_SIZE,
+                    amount_virtual / PAGE_SIZE);
+            });
             return IterationDecision::Continue;
         });
     }

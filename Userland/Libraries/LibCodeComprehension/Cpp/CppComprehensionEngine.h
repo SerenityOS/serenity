@@ -47,7 +47,7 @@ private:
 
     struct Symbol {
         SymbolName name;
-        NonnullRefPtr<Cpp::Declaration> declaration;
+        NonnullRefPtr<Cpp::Declaration const> declaration;
 
         // Local symbols are symbols that should not appear in a global symbol search.
         // For example, a variable that is declared inside a function will have is_local = true.
@@ -57,7 +57,7 @@ private:
             No,
             Yes
         };
-        static Symbol create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Cpp::Declaration>, IsLocal is_local);
+        static Symbol create(StringView name, Vector<StringView> const& scope, NonnullRefPtr<Cpp::Declaration const>, IsLocal is_local);
     };
 
     friend Traits<SymbolName>;
@@ -101,9 +101,9 @@ private:
     DeprecatedString type_of_property(DocumentData const&, Identifier const&) const;
     DeprecatedString type_of_variable(Identifier const&) const;
     bool is_property(ASTNode const&) const;
-    RefPtr<Cpp::Declaration> find_declaration_of(DocumentData const&, ASTNode const&) const;
-    RefPtr<Cpp::Declaration> find_declaration_of(DocumentData const&, SymbolName const&) const;
-    RefPtr<Cpp::Declaration> find_declaration_of(DocumentData const&, const GUI::TextPosition& identifier_position);
+    RefPtr<Cpp::Declaration const> find_declaration_of(DocumentData const&, ASTNode const&) const;
+    RefPtr<Cpp::Declaration const> find_declaration_of(DocumentData const&, SymbolName const&) const;
+    RefPtr<Cpp::Declaration const> find_declaration_of(DocumentData const&, const GUI::TextPosition& identifier_position);
 
     enum class RecurseIntoScopes {
         No,
@@ -134,7 +134,7 @@ private:
     Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_name(DocumentData const&, ASTNode const&, Optional<Token> containing_token) const;
     Optional<Vector<CodeComprehension::AutocompleteResultEntry>> try_autocomplete_include(DocumentData const&, Token include_path_token, Cpp::Position const& cursor_position) const;
     static bool is_symbol_available(Symbol const&, Vector<StringView> const& current_scope, Vector<StringView> const& reference_scope);
-    Optional<FunctionParamsHint> get_function_params_hint(DocumentData const&, FunctionCall&, size_t argument_index);
+    Optional<FunctionParamsHint> get_function_params_hint(DocumentData const&, FunctionCall const&, size_t argument_index);
 
     template<typename Func>
     void for_each_available_symbol(DocumentData const&, Func) const;

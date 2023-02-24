@@ -9,6 +9,7 @@
 
 #include "WebContentView.h"
 #include "ConsoleWidget.h"
+#include "HelperProcess.h"
 #include "InspectorWidget.h"
 #include "Utilities.h"
 #include <AK/Assertions.h>
@@ -23,9 +24,7 @@
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/IODevice.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
@@ -447,14 +446,19 @@ void WebContentView::handle_resize()
     request_repaint();
 }
 
+void WebContentView::set_viewport_rect(Gfx::IntRect rect)
+{
+    m_viewport_rect = rect;
+    client().async_set_viewport_rect(rect);
+}
+
 void WebContentView::update_viewport_rect()
 {
     auto scaled_width = int(viewport()->width() / m_inverse_pixel_scaling_ratio);
     auto scaled_height = int(viewport()->height() / m_inverse_pixel_scaling_ratio);
     Gfx::IntRect rect(horizontalScrollBar()->value(), verticalScrollBar()->value(), scaled_width, scaled_height);
 
-    m_viewport_rect = rect;
-    client().async_set_viewport_rect(rect);
+    set_viewport_rect(rect);
 
     request_repaint();
 }
@@ -528,6 +532,7 @@ void WebContentView::show_inspector()
     ensure_inspector_widget();
     m_inspector_widget->show();
     inspect_dom_tree();
+    inspect_accessibility_tree();
 }
 
 void WebContentView::update_zoom()
@@ -575,7 +580,7 @@ void WebContentView::create_client()
 
         auto webcontent_fd_passing_socket_string = DeprecatedString::number(wc_fd_passing_fd);
 
-        Vector<StringView> arguments {
+        Vector<StringView, 5> arguments {
             "WebContent"sv,
             "--webcontent-fd-passing-socket"sv,
             webcontent_fd_passing_socket_string
@@ -586,12 +591,7 @@ void WebContentView::create_client()
             arguments.append(m_webdriver_content_ipc_path);
         }
 
-        auto result = Core::System::exec("./WebContent/WebContent"sv, arguments, Core::System::SearchInPath::Yes);
-        if (result.is_error()) {
-            auto web_content_path = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath() + "/WebContent");
-            result = Core::System::exec(web_content_path, arguments, Core::System::SearchInPath::Yes);
-        }
-
+        auto result = spawn_helper_process("WebContent"sv, arguments, Core::System::SearchInPath::Yes);
         if (result.is_error())
             warnln("Could not launch WebContent: {}", result.error());
         VERIFY_NOT_REACHED();
@@ -600,11 +600,11 @@ void WebContentView::create_client()
     MUST(Core::System::close(wc_fd_passing_fd));
     MUST(Core::System::close(wc_fd));
 
-    auto socket = MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd));
+    auto socket = MUST(Core::LocalSocket::adopt_fd(ui_fd));
     MUST(socket->set_blocking(true));
 
     auto new_client = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(std::move(socket), *this)));
-    new_client->set_fd_passing_socket(MUST(Core::Stream::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+    new_client->set_fd_passing_socket(MUST(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
 
     m_web_content_notifier.setSocket(new_client->socket().fd().value());
     m_web_content_notifier.setEnabled(true);
@@ -798,8 +798,10 @@ void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK
 void WebContentView::notify_server_did_finish_loading(Badge<WebContentClient>, AK::URL const& url)
 {
     m_url = url;
-    if (is_inspector_open())
+    if (is_inspector_open()) {
         inspect_dom_tree();
+        inspect_accessibility_tree();
+    }
     if (on_load_finish)
         on_load_finish(url);
 }
@@ -1006,7 +1008,7 @@ Gfx::IntRect WebContentView::notify_server_did_request_fullscreen_window()
 
 void WebContentView::notify_server_did_request_file(Badge<WebContentClient>, DeprecatedString const& path, i32 request_id)
 {
-    auto file = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+    auto file = Core::File::open(path, Core::File::OpenMode::Read);
     if (file.is_error())
         client().async_handle_file_return(file.error().code(), {}, request_id);
     else
@@ -1051,9 +1053,10 @@ void WebContentView::notify_server_did_finish_handling_input_event(bool event_wa
     (void)event_was_accepted;
 }
 
-void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const&)
+void WebContentView::notify_server_did_get_accessibility_tree(DeprecatedString const& accessibility_json)
 {
-    dbgln("TODO: support accessibility tree in Ladybird");
+    if (m_inspector_widget)
+        m_inspector_widget->set_accessibility_json(accessibility_json);
 }
 
 ErrorOr<String> WebContentView::dump_layout_tree()

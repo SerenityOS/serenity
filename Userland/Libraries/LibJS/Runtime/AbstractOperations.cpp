@@ -39,7 +39,7 @@ namespace JS {
 ThrowCompletionOr<Value> require_object_coercible(VM& vm, Value value)
 {
     if (value.is_nullish())
-        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotObjectCoercible, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
     return value;
 }
 
@@ -52,7 +52,7 @@ ThrowCompletionOr<Value> call_impl(VM& vm, Value function, Value this_value, Opt
 
     // 2. If IsCallable(F) is false, throw a TypeError exception.
     if (!function.is_function())
-        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, function.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, function.to_string_without_side_effects()));
 
     // 3. Return ? F.[[Call]](V, argumentsList).
     return function.as_function().internal_call(this_value, move(*arguments_list));
@@ -100,7 +100,7 @@ ThrowCompletionOr<MarkedVector<Value>> create_list_from_array_like(VM& vm, Value
 
     // 2. If Type(obj) is not Object, throw a TypeError exception.
     if (!value.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
 
     auto& array_like = value.as_object();
 
@@ -144,7 +144,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(VM& vm, Object const& obj
 
     // 3. If Type(C) is not Object, throw a TypeError exception.
     if (!constructor.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, TRY_OR_THROW_OOM(vm, constructor.to_string_without_side_effects()));
 
     // 4. Let S be ? Get(C, @@species).
     auto species = TRY(constructor.as_object().get(*vm.well_known_symbol_species()));
@@ -158,7 +158,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(VM& vm, Object const& obj
         return &species.as_function();
 
     // 7. Throw a TypeError exception.
-    return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, species.to_string_without_side_effects());
+    return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, TRY_OR_THROW_OOM(vm, species.to_string_without_side_effects()));
 }
 
 // 7.3.25 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
@@ -602,7 +602,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     //     b. If script is a List of errors, throw a SyntaxError exception.
     if (parser.has_errors()) {
         auto& error = parser.errors()[0];
-        return vm.throw_completion<SyntaxError>(error.to_deprecated_string());
+        return vm.throw_completion<SyntaxError>(TRY_OR_THROW_OOM(vm, error.to_string()));
     }
 
     bool strict_eval = false;
@@ -704,7 +704,7 @@ ThrowCompletionOr<Value> perform_eval(VM& vm, Value x, CallerMode strict_caller,
     if (auto* bytecode_interpreter = Bytecode::Interpreter::current()) {
         auto executable_result = Bytecode::Generator::generate(program);
         if (executable_result.is_error())
-            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, executable_result.error().to_deprecated_string());
+            return vm.throw_completion<InternalError>(ErrorType::NotImplemented, TRY_OR_THROW_OOM(vm, executable_result.error().to_string()));
 
         auto executable = executable_result.release_value();
         executable->name = "eval"sv;
@@ -1169,7 +1169,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
 }
 
 // 7.1.21 CanonicalNumericIndexString ( argument ), https://tc39.es/ecma262/#sec-canonicalnumericindexstring
-CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, CanonicalIndexMode mode)
+ThrowCompletionOr<CanonicalIndex> canonical_numeric_index_string(VM& vm, PropertyKey const& property_key, CanonicalIndexMode mode)
 {
     // NOTE: If the property name is a number type (An implementation-defined optimized
     // property key type), it can be treated as a string property that has already been
@@ -1219,11 +1219,10 @@ CanonicalIndex canonical_numeric_index_string(PropertyKey const& property_key, C
     auto maybe_double = argument.to_double(AK::TrimWhitespace::No);
     if (!maybe_double.has_value())
         return CanonicalIndex(CanonicalIndex::Type::Undefined, 0);
-    auto double_value = Value(maybe_double.value());
 
     // FIXME: We return 0 instead of n but it might not observable?
     // 3. If SameValue(! ToString(n), argument) is true, return n.
-    if (double_value.to_string_without_side_effects() == argument)
+    if (TRY_OR_THROW_OOM(vm, number_to_string(*maybe_double)) == argument.view())
         return CanonicalIndex(CanonicalIndex::Type::Numeric, 0);
 
     // 4. Return undefined.
@@ -1333,7 +1332,7 @@ ThrowCompletionOr<void> add_disposable_resource(VM& vm, Vector<DisposableResourc
 
         // b. If Type(V) is not Object, throw a TypeError exception.
         if (!value.is_object())
-            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
 
         // c. Let resource be ? CreateDisposableResource(V, hint).
         resource = TRY(create_disposable_resource(vm, value, hint));
@@ -1349,7 +1348,7 @@ ThrowCompletionOr<void> add_disposable_resource(VM& vm, Vector<DisposableResourc
         else {
             // i. If Type(V) is not Object, throw a TypeError exception.
             if (!value.is_object())
-                return vm.throw_completion<TypeError>(ErrorType::NotAnObject, value.to_string_without_side_effects());
+                return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
 
             // ii. Let resource be ? CreateDisposableResource(V, hint, method).
             resource = TRY(create_disposable_resource(vm, value, hint, method));
@@ -1378,7 +1377,7 @@ ThrowCompletionOr<DisposableResource> create_disposable_resource(VM& vm, Value v
 
         // c. If method is undefined, throw a TypeError exception.
         if (!method)
-            return vm.throw_completion<TypeError>(ErrorType::NoDisposeMethod, value.to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::NoDisposeMethod, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
     }
     // 2. Else,
     // a. If IsCallable(method) is false, throw a TypeError exception.

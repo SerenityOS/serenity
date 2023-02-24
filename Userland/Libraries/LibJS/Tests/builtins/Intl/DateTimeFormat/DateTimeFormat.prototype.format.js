@@ -161,6 +161,17 @@ describe("era", () => {
             expect(ar.format(d1)).toBe(d.ar1);
         });
     });
+
+    test("Year 1 BC (ISO year 0)", () => {
+        let year1BC = new Date(Date.UTC(0));
+        year1BC.setUTCFullYear(0);
+
+        const en = new Intl.DateTimeFormat("en", { era: "short", timeZone: "UTC" });
+        expect(en.format(year1BC)).toBe("1/1/1 BC");
+
+        const ar = new Intl.DateTimeFormat("ar", { era: "short", timeZone: "UTC" });
+        expect(ar.format(year1BC)).toBe("١ ١ ١ ق.م");
+    });
 });
 
 describe("year", () => {

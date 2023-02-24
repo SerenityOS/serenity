@@ -35,12 +35,15 @@ public:
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
-    virtual GUI::Widget* get_properties_widget() override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override;
     virtual bool is_overriding_alt() override { return true; }
     LayerSelectionMode layer_selection_mode() const { return m_layer_selection_mode; }
 
 private:
+    static int resize_anchor_size(Gfx::IntRect layer_rect_in_frame_coordinates);
+    static Gfx::IntRect resize_anchor_rect_from_position(Gfx::IntPoint, int resize_anchor_size);
+    static Array<Gfx::IntRect, 4> resize_anchor_rects(Gfx::IntRect layer_rect_in_frame_coordinates, int resize_anchor_size);
     virtual StringView tool_name() const override { return "Move Tool"sv; }
     ErrorOr<void> update_cached_preview_bitmap(Layer const* layer);
     Optional<ResizeAnchorLocation const> resize_anchor_location_from_cursor_position(Layer const*, MouseEvent&);

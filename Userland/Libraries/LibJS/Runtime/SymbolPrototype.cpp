@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -34,7 +34,7 @@ ThrowCompletionOr<void> SymbolPrototype::initialize(Realm& realm)
     define_native_function(realm, *vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
     // 20.4.3.6 Symbol.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-symbol.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, "Symbol"), Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Symbol"sv)), Attribute::Configurable);
 
     return {};
 }
@@ -53,7 +53,7 @@ static ThrowCompletionOr<Symbol*> this_symbol_value(VM& vm, Value value)
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 {
     auto* symbol = TRY(this_symbol_value(vm, vm.this_value()));
-    auto& description = symbol->raw_description();
+    auto& description = symbol->description();
     if (!description.has_value())
         return js_undefined();
     return PrimitiveString::create(vm, *description);
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::description_getter)
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto* symbol = TRY(this_symbol_value(vm, vm.this_value()));
-    return PrimitiveString::create(vm, symbol->to_deprecated_string());
+    return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, symbol->descriptive_string()));
 }
 
 // 20.4.3.4 Symbol.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-symbol.prototype.valueof

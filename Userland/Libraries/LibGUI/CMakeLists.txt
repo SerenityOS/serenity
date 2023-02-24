@@ -1,3 +1,4 @@
+compile_gml(AboutDialog.gml AboutDialogGML.h about_dialog_gml)
 compile_gml(EmojiInputDialog.gml EmojiInputDialogGML.h emoji_input_dialog_gml)
 compile_gml(FontPickerDialog.gml FontPickerDialogGML.h font_picker_dialog_gml)
 compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
@@ -81,6 +82,7 @@ set(SOURCES
     OpacitySlider.cpp
     Painter.cpp
     PasswordInputDialog.cpp
+    PathBreadcrumbbar.cpp
     PersistentModelIndex.cpp
     Process.cpp
     ProcessChooser.cpp
@@ -132,6 +134,7 @@ set(GENERATED_SOURCES
     ../../Services/WindowServer/WindowManagerClientEndpoint.h
     ../../Services/WindowServer/WindowManagerServerEndpoint.h
     ../../Services/WindowServer/WindowServerEndpoint.h
+    AboutDialogGML.h
     EmojiInputDialogGML.h
     FilePickerDialogGML.h
     FontPickerDialogGML.h

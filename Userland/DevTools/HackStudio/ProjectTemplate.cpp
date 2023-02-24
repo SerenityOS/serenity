@@ -9,8 +9,8 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <sys/stat.h>
@@ -52,7 +52,7 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(DeprecatedString con
 
     auto bitmap_path_32 = DeprecatedString::formatted("/res/icons/hackstudio/templates-32x32/{}.png", config->read_entry("HackStudioTemplate", "IconName32x"));
 
-    if (Core::File::exists(bitmap_path_32)) {
+    if (Core::DeprecatedFile::exists(bitmap_path_32)) {
         auto bitmap_or_error = Gfx::Bitmap::load_from_file(bitmap_path_32);
         if (!bitmap_or_error.is_error())
             icon = GUI::Icon(bitmap_or_error.release_value());
@@ -64,15 +64,15 @@ RefPtr<ProjectTemplate> ProjectTemplate::load_from_manifest(DeprecatedString con
 Result<void, DeprecatedString> ProjectTemplate::create_project(DeprecatedString const& name, DeprecatedString const& path)
 {
     // Check if a file or directory already exists at the project path
-    if (Core::File::exists(path))
+    if (Core::DeprecatedFile::exists(path))
         return DeprecatedString("File or directory already exists at specified location.");
 
     dbgln("Creating project at path '{}' with name '{}'", path, name);
 
     // Verify that the template content directory exists. If it does, copy it's contents.
     // Otherwise, create an empty directory at the project path.
-    if (Core::File::is_directory(content_path())) {
-        auto result = Core::File::copy_file_or_directory(path, content_path());
+    if (Core::DeprecatedFile::is_directory(content_path())) {
+        auto result = Core::DeprecatedFile::copy_file_or_directory(path, content_path());
         dbgln("Copying {} -> {}", content_path(), path);
         if (result.is_error())
             return DeprecatedString::formatted("Failed to copy template contents. Error code: {}", static_cast<Error const&>(result.error()));

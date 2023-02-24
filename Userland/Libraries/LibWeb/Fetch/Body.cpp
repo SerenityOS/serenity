@@ -109,7 +109,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         // Return a Blob whose contents are bytes and type attribute is mimeType.
         // NOTE: If extracting the mime type returns failure, other browsers set it to an empty string - not sure if that's spec'd.
         auto mime_type_string = mime_type.has_value() ? mime_type->serialized() : DeprecatedString::empty();
-        return FileAPI::Blob::create(realm, move(bytes), move(mime_type_string));
+        return TRY(FileAPI::Blob::create(realm, move(bytes), move(mime_type_string)));
     }
     case PackageDataType::FormData:
         // If mimeType’s essence is "multipart/form-data", then:
@@ -148,7 +148,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
 
     // 1. If object is unusable, then return a promise rejected with a TypeError.
     if (object.is_unusable()) {
-        auto promise_capability = WebIDL::create_rejected_promise(realm, JS::TypeError::create(realm, "Body is unusable"sv));
+        auto promise_capability = WebIDL::create_rejected_promise(realm, JS::TypeError::create(realm, "Body is unusable"sv).release_allocated_value_but_fixme_should_propagate_errors());
         return verify_cast<JS::Promise>(*promise_capability->promise().ptr());
     }
 

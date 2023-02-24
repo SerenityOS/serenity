@@ -60,7 +60,7 @@ Gfx::Path& SVGEllipseElement::get_path()
         return m_path.value();
     }
 
-    Gfx::FloatPoint radii = { rx, ry };
+    Gfx::FloatSize radii = { rx, ry };
     double x_axis_rotation = 0;
     bool large_arc = false;
     bool sweep = true; // Note: Spec says it should be false, but it's wrong. https://github.com/w3c/svgwg/issues/765
@@ -89,9 +89,9 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGEllipseElement::cx() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_center_x.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_center_x.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(realm(), 0, m_center_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_center_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#EllipseElementCYAttribute
@@ -99,9 +99,9 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGEllipseElement::cy() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_center_y.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_center_y.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(realm(), 0, m_center_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_center_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#EllipseElementRXAttribute
@@ -109,9 +109,9 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGEllipseElement::rx() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_radius_x.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_radius_x.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(realm(), 0, m_radius_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_radius_x.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://www.w3.org/TR/SVG11/shapes.html#EllipseElementRYAttribute
@@ -119,9 +119,9 @@ JS::NonnullGCPtr<SVGAnimatedLength> SVGEllipseElement::ry() const
 {
     // FIXME: Populate the unit type when it is parsed (0 here is "unknown").
     // FIXME: Create a proper animated value when animations are supported.
-    auto base_length = SVGLength::create(realm(), 0, m_radius_y.value_or(0));
-    auto anim_length = SVGLength::create(realm(), 0, m_radius_y.value_or(0));
-    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length));
+    auto base_length = SVGLength::create(realm(), 0, m_radius_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    auto anim_length = SVGLength::create(realm(), 0, m_radius_y.value_or(0)).release_value_but_fixme_should_propagate_errors();
+    return SVGAnimatedLength::create(realm(), move(base_length), move(anim_length)).release_value_but_fixme_should_propagate_errors();
 }
 
 }

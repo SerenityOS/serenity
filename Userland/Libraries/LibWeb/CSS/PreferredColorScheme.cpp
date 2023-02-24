@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +8,7 @@
 
 namespace Web::CSS {
 
-PreferredColorScheme preferred_color_scheme_from_string(DeprecatedString const& value)
+PreferredColorScheme preferred_color_scheme_from_string(StringView value)
 {
     if (value.equals_ignoring_case("light"sv))
         return PreferredColorScheme::Light;

@@ -20,10 +20,12 @@ public:
     virtual void on_mouseup(Layer*, MouseEvent&) override;
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_keyup(GUI::KeyEvent&) override;
+    virtual void on_primary_color_change(Color) override;
+    virtual void on_secondary_color_change(Color) override;
     virtual void on_tool_activation() override;
-    virtual GUI::Widget* get_properties_widget() override;
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
 
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
 
 protected:
@@ -44,6 +46,7 @@ private:
     bool m_hover_over_start_handle = false;
     bool m_hover_over_end_handle = false;
     int m_opacity = 100;
+    bool m_use_secondary_color { false };
     Gfx::FloatLine m_gradient_begin_line;
     Gfx::FloatLine m_gradient_center_line;
     Gfx::FloatLine m_gradient_end_line;

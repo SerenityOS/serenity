@@ -28,8 +28,8 @@ namespace Detail {
 class StringData;
 }
 
-// FIXME: Remove this when Apple Clang fully supports consteval.
-#if defined(AK_OS_MACOS)
+// FIXME: Remove this when Apple Clang and OpenBSD Clang fully supports consteval.
+#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD)
 #    define AK_SHORT_STRING_CONSTEVAL constexpr
 #else
 #    define AK_SHORT_STRING_CONSTEVAL consteval
@@ -63,6 +63,9 @@ public:
 
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
+
+    // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
+    static ErrorOr<String> from_stream(Stream&, size_t byte_count);
 
     // Creates a new String from a short sequence of UTF-8 encoded code points. If the provided string
     // does not fit in the short string storage, a compilation error will be emitted.
@@ -230,7 +233,7 @@ private:
         u8 storage[MAX_SHORT_STRING_BYTE_COUNT] = { 0 };
     };
 
-    explicit String(NonnullRefPtr<Detail::StringData>);
+    explicit String(NonnullRefPtr<Detail::StringData const>);
 
     explicit constexpr String(ShortString short_string)
         : m_short_string(short_string)
@@ -241,7 +244,7 @@ private:
 
     union {
         ShortString m_short_string;
-        Detail::StringData* m_data { nullptr };
+        Detail::StringData const* m_data { nullptr };
     };
 };
 

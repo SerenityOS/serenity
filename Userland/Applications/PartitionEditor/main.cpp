@@ -6,6 +6,7 @@
 
 #include <Applications/PartitionEditor/PartitionEditorWindowGML.h>
 #include <Applications/PartitionEditor/PartitionModel.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
@@ -22,7 +23,7 @@ static Vector<DeprecatedString> get_device_paths()
     Core::DirIterator iterator("/dev", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_full_path();
-        if (Core::File::is_block_device(path))
+        if (Core::DeprecatedFile::is_block_device(path))
             device_paths.append(path);
     }
     return device_paths;

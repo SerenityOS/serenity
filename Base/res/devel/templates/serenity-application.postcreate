@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/Shell
 
 echo > $2/CMakeLists.txt <<-EOF
 # NOTE! Make sure to edit this file and remove the comments before submitting a

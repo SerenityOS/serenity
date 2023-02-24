@@ -19,7 +19,7 @@ class DocumentFragment
     WEB_PLATFORM_OBJECT(DocumentFragment, ParentNode);
 
 public:
-    static JS::NonnullGCPtr<DocumentFragment> construct_impl(JS::Realm& realm);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> construct_impl(JS::Realm& realm);
 
     virtual ~DocumentFragment() override = default;
 

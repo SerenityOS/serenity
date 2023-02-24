@@ -18,7 +18,7 @@ class CSSMediaRule final : public CSSConditionRule {
     WEB_PLATFORM_OBJECT(CSSMediaRule, CSSConditionRule);
 
 public:
-    static CSSMediaRule* create(JS::Realm&, MediaList& media_queries, CSSRuleList&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSMediaRule>> create(JS::Realm&, MediaList& media_queries, CSSRuleList&);
 
     virtual ~CSSMediaRule() = default;
 

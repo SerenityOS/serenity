@@ -20,7 +20,7 @@ class CSSSupportsRule final : public CSSConditionRule {
     WEB_PLATFORM_OBJECT(CSSSupportsRule, CSSConditionRule);
 
 public:
-    static CSSSupportsRule* create(JS::Realm&, NonnullRefPtr<Supports>&&, CSSRuleList&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSSupportsRule>> create(JS::Realm&, NonnullRefPtr<Supports>&&, CSSRuleList&);
 
     virtual ~CSSSupportsRule() = default;
 

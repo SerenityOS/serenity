@@ -34,7 +34,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
 
     auto previous_size = memory->size() / Wasm::Constants::page_size;
     if (!memory->grow(page_count * Wasm::Constants::page_size))
-        return vm.throw_completion<JS::TypeError>("Memory.grow() grows past the stated limit of the memory instance");
+        return vm.throw_completion<JS::TypeError>("Memory.grow() grows past the stated limit of the memory instance"sv);
 
     return JS::Value(static_cast<u32>(previous_size));
 }
@@ -53,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::buffer_getter)
         return JS::js_undefined();
 
     auto array_buffer = JS::ArrayBuffer::create(realm, &memory->data());
-    array_buffer->set_detach_key(JS::PrimitiveString::create(vm, "WebAssembly.Memory"));
+    array_buffer->set_detach_key(MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "WebAssembly.Memory"sv)));
     return array_buffer;
 }
 

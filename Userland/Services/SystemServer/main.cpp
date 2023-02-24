@@ -9,13 +9,14 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
+#include <AK/String.h>
 #include <Kernel/API/DeviceEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <errno.h>
@@ -71,7 +72,7 @@ static ErrorOr<void> determine_system_mode()
             g_system_mode = "text";
     });
 
-    auto f = Core::File::construct("/sys/kernel/system_mode");
+    auto f = Core::DeprecatedFile::construct("/sys/kernel/constants/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue and assume "text" mode.
@@ -143,24 +144,22 @@ inline char offset_character_with_number(char base_char, u8 offset)
     return offsetted_char;
 }
 
-static void create_devtmpfs_block_device(DeprecatedString name, mode_t mode, unsigned major, unsigned minor)
+static ErrorOr<void> create_devtmpfs_block_device(StringView name, mode_t mode, unsigned major, unsigned minor)
 {
-    if (auto rc = mknod(name.characters(), mode | S_IFBLK, makedev(major, minor)); rc < 0)
-        VERIFY_NOT_REACHED();
+    return Core::System::mknod(name, mode | S_IFBLK, makedev(major, minor));
 }
 
-static void create_devtmpfs_char_device(DeprecatedString name, mode_t mode, unsigned major, unsigned minor)
+static ErrorOr<void> create_devtmpfs_char_device(StringView name, mode_t mode, unsigned major, unsigned minor)
 {
-    if (auto rc = mknod(name.characters(), mode | S_IFCHR, makedev(major, minor)); rc < 0)
-        VERIFY_NOT_REACHED();
+    return Core::System::mknod(name, mode | S_IFCHR, makedev(major, minor));
 }
 
-static void populate_devtmpfs_char_devices_based_on_sysfs()
+static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
 {
     Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
         warnln("Failed to open /sys/dev/char - {}", di.error());
-        VERIFY_NOT_REACHED();
+        return Error::from_errno(di.error());
     }
     while (di.has_next()) {
         auto entry_name = di.next_path().split(':');
@@ -171,7 +170,7 @@ static void populate_devtmpfs_char_devices_based_on_sysfs()
         case 2: {
             switch (minor_number) {
             case 10: {
-                create_devtmpfs_char_device("/dev/devctl", 0660, 2, 10);
+                TRY(create_devtmpfs_char_device("/dev/devctl"sv, 0660, 2, 10));
                 break;
             }
             default:
@@ -184,11 +183,12 @@ static void populate_devtmpfs_char_devices_based_on_sysfs()
             break;
         }
     }
+    return {};
 }
 
-static void populate_devtmpfs_devices_based_on_devctl()
+static ErrorOr<void> populate_devtmpfs_devices_based_on_devctl()
 {
-    auto f = Core::File::construct("/dev/devctl");
+    auto f = Core::DeprecatedFile::construct("/dev/devctl");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         warnln("Failed to open /dev/devctl - {}", f->error_string());
         VERIFY_NOT_REACHED();
@@ -204,22 +204,26 @@ static void populate_devtmpfs_devices_based_on_devctl()
         switch (major_number) {
         case 116: {
             if (!is_block_device) {
-                create_devtmpfs_char_device(DeprecatedString::formatted("/dev/audio/{}", minor_number), 0220, 116, minor_number);
+                auto name = TRY(String::formatted("/dev/audio/{}", minor_number));
+                TRY(create_devtmpfs_char_device(name.bytes_as_string_view(), 0220, 116, minor_number));
                 break;
             }
             break;
         }
         case 28: {
-            create_devtmpfs_block_device(DeprecatedString::formatted("/dev/gpu/render{}", minor_number), 0666, 28, minor_number);
+            auto name = TRY(String::formatted("/dev/gpu/render{}", minor_number));
+            TRY(create_devtmpfs_block_device(name.bytes_as_string_view(), 0666, 28, minor_number));
             break;
         }
         case 226: {
-            create_devtmpfs_char_device(DeprecatedString::formatted("/dev/gpu/connector{}", minor_number), 0666, 226, minor_number);
+            auto name = TRY(String::formatted("/dev/gpu/connector{}", minor_number));
+            TRY(create_devtmpfs_char_device(name.bytes_as_string_view(), 0666, 226, minor_number));
             break;
         }
         case 229: {
             if (!is_block_device) {
-                create_devtmpfs_char_device(DeprecatedString::formatted("/dev/hvc0p{}", minor_number), 0666, major_number, minor_number);
+                auto name = TRY(String::formatted("/dev/hvc0p{}", minor_number));
+                TRY(create_devtmpfs_char_device(name.bytes_as_string_view(), 0666, 229, minor_number));
             }
             break;
         }
@@ -227,11 +231,11 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 0: {
-                    create_devtmpfs_char_device("/dev/input/mouse/0", 0660, 10, 0);
+                    TRY(create_devtmpfs_char_device("/dev/input/mouse/0"sv, 0666, 10, 0));
                     break;
                 }
                 case 183: {
-                    create_devtmpfs_char_device("/dev/hwrng", 0660, 10, 183);
+                    TRY(create_devtmpfs_char_device("/dev/hwrng"sv, 0666, 10, 183));
                     break;
                 }
                 default:
@@ -244,7 +248,7 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 0: {
-                    create_devtmpfs_char_device("/dev/input/keyboard/0", 0660, 85, 0);
+                    TRY(create_devtmpfs_char_device("/dev/input/keyboard/0"sv, 0666, 85, 0));
                     break;
                 }
                 default:
@@ -257,23 +261,23 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 5: {
-                    create_devtmpfs_char_device("/dev/zero", 0666, 1, 5);
+                    TRY(create_devtmpfs_char_device("/dev/zero"sv, 0666, 1, 5));
                     break;
                 }
                 case 1: {
-                    create_devtmpfs_char_device("/dev/mem", 0660, 1, 1);
+                    TRY(create_devtmpfs_char_device("/dev/mem"sv, 0666, 1, 1));
                     break;
                 }
                 case 3: {
-                    create_devtmpfs_char_device("/dev/null", 0666, 1, 3);
+                    TRY(create_devtmpfs_char_device("/dev/null"sv, 0666, 1, 3));
                     break;
                 }
                 case 7: {
-                    create_devtmpfs_char_device("/dev/full", 0666, 1, 7);
+                    TRY(create_devtmpfs_char_device("/dev/full"sv, 0666, 1, 7));
                     break;
                 }
                 case 8: {
-                    create_devtmpfs_char_device("/dev/random", 0666, 1, 8);
+                    TRY(create_devtmpfs_char_device("/dev/random"sv, 0666, 1, 8));
                     break;
                 }
                 default:
@@ -285,13 +289,15 @@ static void populate_devtmpfs_devices_based_on_devctl()
         }
         case 30: {
             if (!is_block_device) {
-                create_devtmpfs_char_device(DeprecatedString::formatted("/dev/kcov{}", minor_number), 0666, 30, minor_number);
+                auto name = TRY(String::formatted("/dev/kcov{}", minor_number));
+                TRY(create_devtmpfs_char_device(name.bytes_as_string_view(), 0666, 30, minor_number));
             }
             break;
         }
         case 3: {
             if (is_block_device) {
-                create_devtmpfs_block_device(DeprecatedString::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)), 0600, 3, minor_number);
+                auto name = TRY(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)));
+                TRY(create_devtmpfs_block_device(name.bytes_as_string_view(), 0600, 3, minor_number));
             }
             break;
         }
@@ -299,15 +305,15 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 1: {
-                    create_devtmpfs_char_device("/dev/console", 0666, 5, 1);
+                    TRY(create_devtmpfs_char_device("/dev/console"sv, 0666, 5, 1));
                     break;
                 }
                 case 2: {
-                    create_devtmpfs_char_device("/dev/ptmx", 0666, 5, 2);
+                    TRY(create_devtmpfs_char_device("/dev/ptmx"sv, 0666, 5, 2));
                     break;
                 }
                 case 0: {
-                    create_devtmpfs_char_device("/dev/tty", 0666, 5, 0);
+                    TRY(create_devtmpfs_char_device("/dev/tty"sv, 0666, 5, 0));
                     break;
                 }
                 default:
@@ -320,35 +326,35 @@ static void populate_devtmpfs_devices_based_on_devctl()
             if (!is_block_device) {
                 switch (minor_number) {
                 case 0: {
-                    create_devtmpfs_char_device("/dev/tty0", 0620, 4, 0);
+                    TRY(create_devtmpfs_char_device("/dev/tty0"sv, 0620, 4, 0));
                     break;
                 }
                 case 1: {
-                    create_devtmpfs_char_device("/dev/tty1", 0620, 4, 1);
+                    TRY(create_devtmpfs_char_device("/dev/tty1"sv, 0620, 4, 1));
                     break;
                 }
                 case 2: {
-                    create_devtmpfs_char_device("/dev/tty2", 0620, 4, 2);
+                    TRY(create_devtmpfs_char_device("/dev/tty2"sv, 0620, 4, 2));
                     break;
                 }
                 case 3: {
-                    create_devtmpfs_char_device("/dev/tty3", 0620, 4, 3);
+                    TRY(create_devtmpfs_char_device("/dev/tty3"sv, 0620, 4, 3));
                     break;
                 }
                 case 64: {
-                    create_devtmpfs_char_device("/dev/ttyS0", 0620, 4, 64);
+                    TRY(create_devtmpfs_char_device("/dev/ttyS0"sv, 0620, 4, 64));
                     break;
                 }
                 case 65: {
-                    create_devtmpfs_char_device("/dev/ttyS1", 0620, 4, 65);
+                    TRY(create_devtmpfs_char_device("/dev/ttyS1"sv, 0620, 4, 65));
                     break;
                 }
                 case 66: {
-                    create_devtmpfs_char_device("/dev/ttyS2", 0620, 4, 66);
+                    TRY(create_devtmpfs_char_device("/dev/ttyS2"sv, 0620, 4, 66));
                     break;
                 }
                 case 67: {
-                    create_devtmpfs_char_device("/dev/ttyS3", 0666, 4, 67);
+                    TRY(create_devtmpfs_char_device("/dev/ttyS3"sv, 0666, 4, 67));
                     break;
                 }
                 default:
@@ -365,23 +371,33 @@ static void populate_devtmpfs_devices_based_on_devctl()
             break;
         }
     }
+    return {};
 }
 
-static void populate_devtmpfs()
+static ErrorOr<void> populate_devtmpfs()
 {
     mode_t old_mask = umask(0);
     printf("Changing umask %#o\n", old_mask);
-    populate_devtmpfs_char_devices_based_on_sysfs();
-    populate_devtmpfs_devices_based_on_devctl();
+    TRY(populate_devtmpfs_char_devices_based_on_sysfs());
+    TRY(populate_devtmpfs_devices_based_on_devctl());
     umask(old_mask);
+    return {};
 }
 
 static ErrorOr<void> prepare_synthetic_filesystems()
 {
+    // FIXME: Don't hardcode the fs type as the ext2 filesystem and once there's
+    // more than this filesystem implementation (which is suitable for usage on
+    // physical storage), find a way to detect it.
+    TRY(Core::System::mount(-1, "/"sv, "ext2"sv, MS_REMOUNT | MS_NODEV | MS_NOSUID | MS_RDONLY));
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
     TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
-    TRY(Core::System::mount(-1, "/dev"sv, "tmp"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
+    TRY(Core::System::mount(-1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
+
+    TRY(Core::System::mount(-1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
+    // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
+    TRY(Core::System::chmod("/tmp"sv, 01777));
 
     TRY(Core::System::mkdir("/dev/audio"sv, 0755));
     TRY(Core::System::mkdir("/dev/input"sv, 0755));
@@ -394,7 +410,7 @@ static ErrorOr<void> prepare_synthetic_filesystems()
 
     TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
 
-    populate_devtmpfs();
+    TRY(populate_devtmpfs());
 
     TRY(Core::System::mkdir("/dev/pts"sv, 0755));
 

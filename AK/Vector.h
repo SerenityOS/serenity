@@ -55,7 +55,6 @@ private:
 public:
     using ValueType = T;
     Vector()
-        : m_capacity(inline_capacity)
     {
     }
 
@@ -90,7 +89,7 @@ public:
         m_size = other.size();
     }
 
-    explicit Vector(Span<T const> other)
+    explicit Vector(ReadonlySpan<T> other)
     requires(!IsLvalueReference<T>)
     {
         ensure_capacity(other.size());
@@ -112,10 +111,10 @@ public:
     }
 
     Span<StorageType> span() { return { data(), size() }; }
-    Span<StorageType const> span() const { return { data(), size() }; }
+    ReadonlySpan<StorageType> span() const { return { data(), size() }; }
 
     operator Span<StorageType>() { return span(); }
-    operator Span<StorageType const>() const { return span(); }
+    operator ReadonlySpan<StorageType>() const { return span(); }
 
     bool is_empty() const { return size() == 0; }
     ALWAYS_INLINE size_t size() const { return m_size; }
@@ -833,7 +832,7 @@ private:
     StorageType& raw_at(size_t index) { return *slot(index); }
 
     size_t m_size { 0 };
-    size_t m_capacity { 0 };
+    size_t m_capacity { inline_capacity };
 
     static constexpr size_t storage_size()
     {

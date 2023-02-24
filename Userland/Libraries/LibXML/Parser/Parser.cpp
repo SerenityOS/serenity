@@ -242,7 +242,7 @@ ErrorOr<void, ParseError> Parser::expect(StringView expected)
 }
 
 template<typename Pred>
-requires(IsCallableWithArguments<Pred, char>) ErrorOr<StringView, ParseError> Parser::expect(Pred predicate, StringView description)
+requires(IsCallableWithArguments<Pred, bool, char>) ErrorOr<StringView, ParseError> Parser::expect(Pred predicate, StringView description)
 {
     auto rollback = rollback_point();
     auto start = m_lexer.tell();
@@ -257,7 +257,7 @@ requires(IsCallableWithArguments<Pred, char>) ErrorOr<StringView, ParseError> Pa
 }
 
 template<typename Pred>
-requires(IsCallableWithArguments<Pred, char>) ErrorOr<StringView, ParseError> Parser::expect_many(Pred predicate, StringView description)
+requires(IsCallableWithArguments<Pred, bool, char>) ErrorOr<StringView, ParseError> Parser::expect_many(Pred predicate, StringView description)
 {
     auto rollback = rollback_point();
     auto start = m_lexer.tell();

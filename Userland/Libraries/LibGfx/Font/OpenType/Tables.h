@@ -231,6 +231,7 @@ private:
 class OS2 {
 public:
     u16 weight_class() const;
+    u16 width_class() const;
     u16 selection() const;
     i16 typographic_ascender() const;
     i16 typographic_descender() const;

@@ -9,7 +9,7 @@
 
 namespace ImageDecoderClient {
 
-Client::Client(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+Client::Client(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionToServer<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, move(socket))
 {
 }
@@ -49,9 +49,10 @@ Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data, Optional
     image.is_animated = response.is_animated();
     image.loop_count = response.loop_count();
     image.frames.resize(response.bitmaps().size());
+    auto bitmaps = response.take_bitmaps();
     for (size_t i = 0; i < image.frames.size(); ++i) {
         auto& frame = image.frames[i];
-        frame.bitmap = response.bitmaps()[i].bitmap();
+        frame.bitmap = bitmaps[i].bitmap();
         frame.duration = response.durations()[i];
     }
     return image;

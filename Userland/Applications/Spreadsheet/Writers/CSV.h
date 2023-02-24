@@ -15,13 +15,13 @@ namespace Writer {
 class CSV {
 public:
     template<typename ContainerType>
-    static ErrorOr<void> generate(AK::Stream& output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
+    static ErrorOr<void> generate(Stream& output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
     {
         return XSV<ContainerType>::generate(output, data, { ",", "\"", WriterTraits::Repeat }, move(headers), behaviors);
     }
 
     template<typename ContainerType>
-    static ErrorOr<void> generate_preview(AK::Stream& output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
+    static ErrorOr<void> generate_preview(Stream& output, ContainerType const& data, Vector<StringView> headers = {}, WriterBehavior behaviors = default_behaviors())
     {
         return XSV<ContainerType>::generate_preview(output, data, { ",", "\"", WriterTraits::Repeat }, move(headers), behaviors);
     }

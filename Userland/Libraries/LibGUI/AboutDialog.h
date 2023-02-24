@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -13,23 +13,25 @@
 namespace GUI {
 
 class AboutDialog final : public Dialog {
-    C_OBJECT(AboutDialog)
+    C_OBJECT_ABSTRACT(AboutDialog)
 public:
+    static ErrorOr<NonnullRefPtr<AboutDialog>> try_create(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
     virtual ~AboutDialog() override = default;
 
-    static void show(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr)
+    static ErrorOr<void> show(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr)
     {
-        auto dialog = AboutDialog::construct(name, version, icon, parent_window);
+        auto dialog = TRY(AboutDialog::try_create(name, version, icon, parent_window));
         if (window_icon)
             dialog->set_icon(window_icon);
         dialog->exec();
+        return {};
     }
 
 private:
     AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
 
     DeprecatedString m_name;
-    RefPtr<Gfx::Bitmap> m_icon;
+    RefPtr<Gfx::Bitmap const> m_icon;
     DeprecatedString m_version_string;
 };
 }

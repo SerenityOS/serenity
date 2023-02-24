@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -127,6 +128,19 @@ struct FontPixelMetrics {
     float line_spacing() const { return ascent + descent + line_gap; }
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswidthclass
+enum FontWidth {
+    UltraCondensed = 1,
+    ExtraCondensed = 2,
+    Condensed = 3,
+    SemiCondensed = 4,
+    Normal = 5,
+    SemiExpanded = 6,
+    Expanded = 7,
+    ExtraExpanded = 8,
+    UltraExpanded = 9
+};
+
 class Font : public RefCounted<Font> {
 public:
     enum class AllowInexactSizeMatch {
@@ -144,6 +158,8 @@ public:
     virtual float pixel_size() const = 0;
     virtual u8 slope() const = 0;
 
+    virtual u16 width() const = 0;
+
     virtual u16 weight() const = 0;
     virtual Glyph glyph(u32 code_point) const = 0;
     virtual Glyph glyph(u32 code_point, GlyphSubpixelOffset) const = 0;
@@ -152,6 +168,8 @@ public:
     virtual float glyph_left_bearing(u32 code_point) const = 0;
     virtual float glyph_width(u32 code_point) const = 0;
     virtual float glyph_or_emoji_width(u32 code_point) const = 0;
+    virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const = 0;
+    virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const = 0;
     virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const = 0;
     virtual u8 glyph_height() const = 0;
     virtual int x_height() const = 0;
@@ -182,10 +200,12 @@ public:
     virtual DeprecatedString qualified_name() const = 0;
     virtual DeprecatedString human_readable_name() const = 0;
 
+    virtual RefPtr<Font> with_size(float point_size) const = 0;
+
     Font const& bold_variant() const;
 
 private:
-    mutable RefPtr<Gfx::Font> m_bold_variant;
+    mutable RefPtr<Gfx::Font const> m_bold_variant;
 };
 
 }

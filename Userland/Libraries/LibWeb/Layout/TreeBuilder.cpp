@@ -171,7 +171,7 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     pseudo_element_node->set_generated(true);
     // FIXME: Handle images, and multiple values
     if (pseudo_element_content.type == CSS::ContentData::Type::String) {
-        auto text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data).release_allocated_value_but_fixme_should_propagate_errors();
+        auto text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data.to_deprecated_string()).release_allocated_value_but_fixme_should_propagate_errors();
         auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
         text_node->set_generated(true);
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));
@@ -239,7 +239,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
         insert_node_into_inline_or_block_ancestor(*layout_node, display, AppendOrPrepend::Append);
     }
 
-    auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root() : nullptr;
+    auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root_internal() : nullptr;
 
     if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {
         push_parent(verify_cast<NodeWithStyle>(*layout_node));
@@ -606,7 +606,11 @@ void TreeBuilder::generate_missing_parents(NodeWithStyle& root)
 
         parent.remove_child(*table_box);
         wrapper->append_child(*table_box);
-        parent.insert_before(*wrapper, *nearest_sibling);
+
+        if (nearest_sibling)
+            parent.insert_before(*wrapper, *nearest_sibling);
+        else
+            parent.append_child(*wrapper);
     }
 }
 

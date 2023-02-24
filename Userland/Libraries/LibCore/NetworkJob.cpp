@@ -11,12 +11,12 @@
 
 namespace Core {
 
-NetworkJob::NetworkJob(AK::Stream& output_stream)
+NetworkJob::NetworkJob(Stream& output_stream)
     : m_output_stream(output_stream)
 {
 }
 
-void NetworkJob::start(Core::Stream::Socket&)
+void NetworkJob::start(Core::Socket&)
 {
 }
 

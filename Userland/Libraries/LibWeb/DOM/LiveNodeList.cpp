@@ -10,9 +10,9 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<NodeList> LiveNodeList::create(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> LiveNodeList::create(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)
 {
-    return realm.heap().allocate<LiveNodeList>(realm, realm, root, move(filter)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<LiveNodeList>(realm, realm, root, move(filter)));
 }
 
 LiveNodeList::LiveNodeList(JS::Realm& realm, Node& root, Function<bool(Node const&)> filter)

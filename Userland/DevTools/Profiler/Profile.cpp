@@ -16,7 +16,6 @@
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <LibCore/MappedFile.h>
-#include <LibCore/Stream.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
 #include <sys/stat.h>
@@ -236,7 +235,7 @@ OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path)
 {
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
 
     auto json = JsonValue::from_string(TRY(file->read_until_eof()));
     if (json.is_error() || !json.value().is_object())
@@ -334,13 +333,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 .executable = executable,
             };
 
-            auto sampled_process = adopt_own(*new Process {
+            auto sampled_process = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Process {
                 .pid = event.pid,
                 .executable = executable,
                 .basename = LexicalPath::basename(executable),
                 .start_valid = event.serial,
                 .end_valid = {},
-            });
+            }));
 
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
@@ -356,13 +355,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
 
             current_processes.remove(event.pid);
 
-            auto sampled_process = adopt_own(*new Process {
+            auto sampled_process = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Process {
                 .pid = event.pid,
                 .executable = executable,
                 .basename = LexicalPath::basename(executable),
                 .start_valid = event.serial,
                 .end_valid = {},
-            });
+            }));
 
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));

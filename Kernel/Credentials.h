@@ -14,7 +14,7 @@ namespace Kernel {
 
 class Credentials final : public AtomicRefCounted<Credentials> {
 public:
-    static ErrorOr<NonnullRefPtr<Credentials>> create(UserID uid, GroupID gid, UserID euid, GroupID egid, UserID suid, GroupID sgid, Span<GroupID const> extra_gids, SessionID sid, ProcessGroupID pgid);
+    static ErrorOr<NonnullRefPtr<Credentials>> create(UserID uid, GroupID gid, UserID euid, GroupID egid, UserID suid, GroupID sgid, ReadonlySpan<GroupID> extra_gids, SessionID sid, ProcessGroupID pgid);
     ~Credentials();
 
     bool is_superuser() const { return euid() == 0; }
@@ -25,7 +25,7 @@ public:
     GroupID gid() const { return m_gid; }
     UserID suid() const { return m_suid; }
     GroupID sgid() const { return m_sgid; }
-    Span<GroupID const> extra_gids() const { return m_extra_gids.span(); }
+    ReadonlySpan<GroupID> extra_gids() const { return m_extra_gids.span(); }
     SessionID sid() const { return m_sid; };
     ProcessGroupID pgid() const { return m_pgid; }
 

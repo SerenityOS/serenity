@@ -74,7 +74,7 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
 ErrorOr<FlatPtr> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 {
     auto const start_timestamp = TimeManagement::the().uptime_ms();
-    auto const result = read_impl(fd, buffer, size);
+    auto result = read_impl(fd, buffer, size);
 
     if (Thread::current()->is_profiling_suppressed())
         return result;

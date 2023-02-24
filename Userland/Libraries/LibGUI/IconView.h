@@ -46,6 +46,9 @@ public:
 
     virtual void select_all() override;
 
+protected:
+    virtual void did_change_font() override;
+
 private:
     IconView();
 

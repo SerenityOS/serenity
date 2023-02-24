@@ -35,11 +35,12 @@ public:
 
     size_t buffer_size() const { return m_document->size(); }
     ErrorOr<void> open_new_file(size_t size);
-    void open_file(NonnullRefPtr<Core::File> file);
+    void open_file(NonnullOwnPtr<Core::File> file);
     ErrorOr<void> fill_selection(u8 fill_byte);
     Optional<u8> get_byte(size_t position);
-    bool save_as(NonnullRefPtr<Core::File>);
-    bool save();
+    ByteBuffer get_selected_bytes();
+    ErrorOr<void> save_as(NonnullOwnPtr<Core::File>);
+    ErrorOr<void> save();
 
     bool undo();
     bool redo();

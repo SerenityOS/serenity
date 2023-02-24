@@ -46,7 +46,6 @@ private:
     void set_current_timestamp(Time);
     void set_time_label(Time);
     void on_decoding_error(Video::DecoderError const&);
-    void update_seek_mode();
 
     void cycle_sizing_modes();
 
@@ -68,6 +67,8 @@ private:
     RefPtr<GUI::Action> m_use_fast_seeking;
 
     OwnPtr<Video::PlaybackManager> m_playback_manager;
+
+    bool m_was_playing_before_seek { false };
 };
 
 }

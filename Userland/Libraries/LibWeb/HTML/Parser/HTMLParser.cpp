@@ -253,9 +253,9 @@ void HTMLParser::the_end()
         document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // 2. Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
-        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded);
+        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded).release_value_but_fixme_should_propagate_errors();
         content_loaded_event->set_bubbles(true);
-        document->dispatch_event(*content_loaded_event);
+        document->dispatch_event(content_loaded_event);
 
         // 3. Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
         document->load_timing_info().dom_content_loaded_event_end_time = HighResolutionTime::unsafe_shared_current_time();
@@ -294,7 +294,7 @@ void HTMLParser::the_end()
         // 5. Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        window->dispatch_event(*DOM::Event::create(document->realm(), HTML::EventNames::load));
+        window->dispatch_event(DOM::Event::create(document->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
 
         // FIXME: 6. Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 
@@ -536,8 +536,8 @@ void HTMLParser::handle_before_html(HTMLToken& token)
     // -> Anything else
 AnythingElse:
     // Create an html element whose node document is the Document object. Append it to the Document object. Put this element in the stack of open elements.
-    auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML);
-    MUST(document().append_child(*element));
+    auto element = create_element(document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(document().append_child(element));
     m_stack_of_open_elements.push(element);
 
     // Switch the insertion mode to "before head", then reprocess the token.
@@ -638,7 +638,7 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     // 9. Let element be the result of creating an element given document, localName, given namespace, null, and is.
     // FIXME: If will execute script is true, set the synchronous custom elements flag; otherwise, leave it unset.
     // FIXME: Pass in `null` and `is`.
-    auto element = create_element(*document, local_name, namespace_);
+    auto element = create_element(*document, local_name, namespace_).release_value_but_fixme_should_propagate_errors();
 
     // 10. Append each attribute in the given token to element.
     // FIXME: This isn't the exact `append` the spec is talking about.
@@ -3448,7 +3448,7 @@ DOM::Document& HTMLParser::document()
 Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
 {
     // 1. Create a new Document node, and mark it as being an HTML document.
-    auto temp_document = DOM::Document::create(context_element.realm());
+    auto temp_document = DOM::Document::create(context_element.realm()).release_value_but_fixme_should_propagate_errors();
     temp_document->set_document_type(DOM::Document::Type::HTML);
 
     // 2. If the node document of the context element is in quirks mode, then let the Document be in quirks mode.
@@ -3499,7 +3499,7 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     }
 
     // 5. Let root be a new html element with no attributes.
-    auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML);
+    auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
 
     // 6. Append the element root to the Document node created above.
     MUST(temp_document->append_child(root));

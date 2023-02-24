@@ -333,6 +333,10 @@ install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 add_serenity_subdirectory(AK)
 add_serenity_subdirectory(Userland/Libraries/LibCore)
 target_link_libraries(LibCore PRIVATE Threads::Threads)
+if (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
+    # NetBSD has its shm_open and shm_unlink functions in librt so we need to link that
+    target_link_libraries(LibCore PRIVATE librt.so)
+endif()
 target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
@@ -400,6 +404,7 @@ if (BUILD_LAGOM)
         list(APPEND lagom_standard_libraries Web)
 
         # WebView
+        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/AccessibilityTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/StylePropertiesModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ViewImplementation.cpp")
@@ -465,10 +470,6 @@ if (BUILD_LAGOM)
 
     add_serenity_subdirectory(Userland/Shell)
 
-    if (ENABLE_LAGOM_LADYBIRD)
-        add_serenity_subdirectory(Ladybird)
-    endif()
-
     if (NOT ENABLE_FUZZERS AND NOT ENABLE_COMPILER_EXPLORER_BUILD AND NOT ANDROID)
         # Lagom Services
         add_serenity_subdirectory(Userland/Services)
@@ -492,6 +493,10 @@ if (BUILD_LAGOM)
         if (ENABLE_LAGOM_LIBWEB)
             add_executable(headless-browser ../../Userland/Utilities/headless-browser.cpp ../../Userland/Services/WebContent/WebDriverConnection.cpp)
             target_link_libraries(headless-browser LibWeb LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
+        endif()
+
+        if (ENABLE_LAGOM_LADYBIRD)
+            add_serenity_subdirectory(Ladybird)
         endif()
 
         add_executable(icc ../../Userland/Utilities/icc.cpp)
@@ -635,12 +640,14 @@ if (BUILD_LAGOM)
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
         target_link_libraries(test-wasm LibCore LibTest LibWasm LibJS)
-        # FIXME: Don't require passing test-common.js path if you only want to pass a custom Test root path
         add_test(
             NAME WasmParser
-            COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests ${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibJS/Tests/test-common.js
+            COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests
         )
-        set_tests_properties(WasmParser PROPERTIES SKIP_RETURN_CODE 1)
+        set_tests_properties(WasmParser PROPERTIES
+            SKIP_RETURN_CODE 1
+            ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}
+        )
 
         # Tests that are not LibTest based
         # Shell

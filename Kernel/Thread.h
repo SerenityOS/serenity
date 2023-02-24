@@ -94,19 +94,11 @@ public:
     Process& process() { return m_process; }
     Process const& process() const { return m_process; }
 
-    // NOTE: This returns a null-terminated string.
-    StringView name() const
+    SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> const& name() const
     {
-        // NOTE: Whoever is calling this needs to be holding our lock while reading the name.
-        VERIFY(m_lock.is_locked_by_current_processor());
-        return m_name->view();
+        return m_name;
     }
-
-    void set_name(NonnullOwnPtr<KString> name)
-    {
-        SpinlockLocker lock(m_lock);
-        m_name = move(name);
-    }
+    void set_name(NonnullOwnPtr<KString> name);
 
     void finalize();
 
@@ -1229,7 +1221,7 @@ private:
 
     FPUState m_fpu_state {};
     State m_state { Thread::State::Invalid };
-    NonnullOwnPtr<KString> m_name;
+    SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
     State m_stop_state { Thread::State::Invalid };

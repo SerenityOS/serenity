@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +29,6 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Vector4.h>
-#include <LibSoftGPU/AlphaBlendFactors.h>
 #include <LibSoftGPU/Buffer/FrameBuffer.h>
 #include <LibSoftGPU/Buffer/Typed2DBuffer.h>
 #include <LibSoftGPU/Clipper.h>
@@ -102,7 +101,6 @@ private:
     void rasterize_point(GPU::Vertex&);
 
     void rasterize_triangle(Triangle&);
-    void setup_blend_factors();
     void shade_fragments(PixelQuad&);
 
     RefPtr<FrameBuffer<GPU::ColorType, GPU::DepthType, GPU::StencilType>> m_frame_buffer {};
@@ -112,8 +110,9 @@ private:
     Vector<Triangle> m_triangle_list;
     Vector<Triangle> m_processed_triangles;
     Vector<GPU::Vertex> m_clipped_vertices;
+    float m_one_over_fog_depth;
     Array<Sampler, GPU::NUM_TEXTURE_UNITS> m_samplers;
-    AlphaBlendFactors m_alpha_blend_factors;
+    bool m_samplers_need_texture_staging { false };
     Array<GPU::Light, NUM_LIGHTS> m_lights;
     Array<GPU::Material, 2u> m_materials;
     GPU::RasterPosition m_raster_position;

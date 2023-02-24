@@ -15,7 +15,6 @@
 #include <AK/LexicalPath.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
@@ -95,7 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto webcontent_socket = TRY(Core::take_over_socket_from_system_server("WebContent"sv));
     auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
-    webcontent_client->set_fd_passing_socket(TRY(Core::Stream::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
+    webcontent_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
 
     QSocketNotifier webcontent_notifier(QSocketNotifier::Type::Read);
     proxy_socket_through_notifier(*webcontent_client, webcontent_notifier);
@@ -112,13 +111,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(DeprecatedString::formatted("{}/home/anon/.config/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        file_or_error = Core::Stream::File::open(DeprecatedString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::Stream::OpenMode::Read);
+        file_or_error = Core::File::open(DeprecatedString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         return file_or_error.release_error();
     auto file = file_or_error.release_value();
-    auto ad_filter_list = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));

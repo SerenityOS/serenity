@@ -18,7 +18,7 @@ class LiveNodeList final : public NodeList {
     WEB_PLATFORM_OBJECT(LiveNodeList, NodeList);
 
 public:
-    static JS::NonnullGCPtr<NodeList> create(JS::Realm&, Node& root, Function<bool(Node const&)> filter);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> create(JS::Realm&, Node& root, Function<bool(Node const&)> filter);
     virtual ~LiveNodeList() override;
 
     virtual u32 length() const override;

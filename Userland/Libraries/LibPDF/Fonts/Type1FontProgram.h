@@ -20,15 +20,48 @@ class Encoding;
 class Type1FontProgram : public RefCounted<Type1FontProgram> {
 
 public:
-    RefPtr<Gfx::Bitmap> rasterize_glyph(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
-    Gfx::FloatPoint glyph_translation(u32 char_code, float width) const;
+    RefPtr<Gfx::Bitmap> rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    Gfx::FloatPoint glyph_translation(DeprecatedFlyString const& char_name, float width) const;
     RefPtr<Encoding> encoding() const { return m_encoding; }
 
 protected:
-    struct Glyph {
-        Gfx::Path path;
-        float width { 0 };
-        bool width_specified { false };
+    struct AccentedCharacter {
+        AccentedCharacter(u8 base_char_code, u8 accent_char_code, float adx, float ady)
+            : base_character(Encoding::standard_encoding()->get_name(base_char_code))
+            , accent_character(Encoding::standard_encoding()->get_name(accent_char_code))
+            , accent_origin(adx, ady)
+        {
+        }
+
+        DeprecatedFlyString base_character;
+        DeprecatedFlyString accent_character;
+        Gfx::FloatPoint accent_origin;
+    };
+
+    class Glyph {
+
+    public:
+        bool has_width() const { return m_width.has_value(); }
+        float width() const { return m_width.value(); }
+        void set_width(float width)
+        {
+            m_width = width;
+        }
+
+        Gfx::Path& path() { return m_path; }
+        Gfx::Path const& path() const { return m_path; }
+
+        bool is_accented_character() const { return m_accented_character.has_value(); }
+        AccentedCharacter const& accented_character() const { return m_accented_character.value(); }
+        void set_accented_character(AccentedCharacter&& accented_character)
+        {
+            m_accented_character = move(accented_character);
+        }
+
+    private:
+        Gfx::Path m_path;
+        Optional<float> m_width;
+        Optional<AccentedCharacter> m_accented_character;
     };
 
     struct GlyphParserState {
@@ -68,18 +101,20 @@ protected:
         m_font_matrix = move(font_matrix);
     }
 
-    PDFErrorOr<void> add_glyph(u16 char_code, Glyph&& glyph)
+    PDFErrorOr<void> add_glyph(DeprecatedFlyString name, Glyph&& glyph)
     {
-        TRY(m_glyph_map.try_set(char_code, glyph));
+        TRY(m_glyph_map.try_set(move(name), move(glyph)));
         return {};
     }
 
+    void consolidate_glyphs();
+
 private:
-    HashMap<u16, Glyph> m_glyph_map;
+    HashMap<DeprecatedFlyString, Glyph> m_glyph_map;
     Gfx::AffineTransform m_font_matrix;
     RefPtr<Encoding> m_encoding;
 
-    Gfx::Path build_char(u32 char_code, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    Gfx::Path build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
     Gfx::AffineTransform glyph_transform_to_device_space(Glyph const& glyph, float width) const;
 };
 

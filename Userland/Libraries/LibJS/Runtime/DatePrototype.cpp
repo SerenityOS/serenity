@@ -952,7 +952,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 
     // 3. If tv is NaN, return "Invalid Date".
     if (isnan(time))
-        return PrimitiveString::create(vm, "Invalid Date"sv);
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
     // 4. Let t be LocalTime(tv).
     // 5. Return DateString(t).
@@ -1003,7 +1003,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 
     // 2. If x is NaN, return "Invalid Date".
     if (isnan(time))
-        return PrimitiveString::create(vm, "Invalid Date"sv);
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
     // 3. Let options be ? ToDateTimeOptions(options, "date", "date").
     options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Date, Intl::OptionDefaults::Date)));
@@ -1028,7 +1028,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 
     // 2. If x is NaN, return "Invalid Date".
     if (isnan(time))
-        return PrimitiveString::create(vm, "Invalid Date"sv);
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
     // 3. Let options be ? ToDateTimeOptions(options, "any", "all").
     options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Any, Intl::OptionDefaults::All)));
@@ -1053,7 +1053,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 
     // 2. If x is NaN, return "Invalid Date".
     if (isnan(time))
-        return PrimitiveString::create(vm, "Invalid Date"sv);
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
     // 3. Let options be ? ToDateTimeOptions(options, "time", "time").
     options = Value(TRY(Intl::to_date_time_options(vm, options, Intl::OptionRequired::Time, Intl::OptionDefaults::Time)));
@@ -1210,7 +1210,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
 
     // 3. If tv is NaN, return "Invalid Date".
     if (isnan(time))
-        return PrimitiveString::create(vm, "Invalid Date"sv);
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
     // 4. Let t be LocalTime(tv).
     // 5. Return the string-concatenation of TimeString(t) and TimeZoneString(tv).
@@ -1227,7 +1227,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
 
     // 3. If tv is NaN, return "Invalid Date".
     if (isnan(time))
-        return PrimitiveString::create(vm, "Invalid Date"sv);
+        return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Invalid Date"sv));
 
     // 4. Let weekday be the Name of the entry in Table 62 with the Number WeekDay(tv).
     auto weekday = short_day_names[week_day(time)];
@@ -1255,10 +1255,10 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
 {
     auto this_value = vm.this_value();
     if (!this_value.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, this_value.to_string_without_side_effects()));
     auto hint_value = vm.argument(0);
     if (!hint_value.is_string())
-        return vm.throw_completion<TypeError>(ErrorType::InvalidHint, hint_value.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::InvalidHint, TRY_OR_THROW_OOM(vm, hint_value.to_string_without_side_effects()));
     auto hint = TRY(hint_value.as_string().deprecated_string());
     Value::PreferredType try_first;
     if (hint == "string" || hint == "default")

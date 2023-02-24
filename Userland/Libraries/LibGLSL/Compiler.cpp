@@ -12,7 +12,7 @@ ErrorOr<NonnullOwnPtr<ObjectFile>> Compiler::compile(Vector<String> const&)
 {
     // FIXME: implement this function
     m_messages = {};
-    return adopt_own(*new ObjectFile());
+    return try_make<ObjectFile>();
 }
 
 }

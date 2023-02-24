@@ -6,7 +6,6 @@
 
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
-#include <LibCore/Stream.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(allocating_memory_stream_empty)

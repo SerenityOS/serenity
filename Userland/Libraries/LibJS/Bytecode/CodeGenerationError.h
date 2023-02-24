@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibJS/Forward.h>
 
@@ -16,7 +17,7 @@ struct CodeGenerationError {
     ASTNode const* failing_node { nullptr };
     StringView reason_literal;
 
-    DeprecatedString to_deprecated_string();
+    ErrorOr<String> to_string() const;
 };
 
 template<typename T>

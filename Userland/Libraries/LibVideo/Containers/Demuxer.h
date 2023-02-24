@@ -29,7 +29,9 @@ public:
     }
 
     // Returns the timestamp of the keyframe that was seeked to.
-    virtual DecoderErrorOr<Time> seek_to_most_recent_keyframe(Track track, Time timestamp) = 0;
+    // The value is `Optional` to allow the demuxer to decide not to seek so that it can keep its position
+    // in the case that the timestamp is closer to the current time than the nearest keyframe.
+    virtual DecoderErrorOr<Optional<Time>> seek_to_most_recent_keyframe(Track track, Time timestamp, Optional<Time> earliest_available_sample = OptionalNone()) = 0;
 
     virtual DecoderErrorOr<Time> duration() = 0;
 

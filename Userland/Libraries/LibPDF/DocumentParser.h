@@ -20,10 +20,12 @@ public:
         Linearized,
     };
 
-    [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
+    [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_xref_table->trailer(); }
 
     // Parses the header and initializes the xref table and trailer
     PDFErrorOr<void> initialize();
+
+    bool can_resolve_references() { return m_xref_table; };
 
     PDFErrorOr<Value> parse_object_with_index(u32 index);
 
@@ -92,7 +94,6 @@ private:
     bool navigate_to_after_startxref();
 
     RefPtr<XRefTable> m_xref_table;
-    RefPtr<DictObject> m_trailer;
     Optional<LinearizationDictionary> m_linearization_dictionary;
 };
 

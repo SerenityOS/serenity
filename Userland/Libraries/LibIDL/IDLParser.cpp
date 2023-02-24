@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
@@ -11,8 +11,8 @@
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 
 [[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
 {
@@ -138,10 +138,10 @@ static HashTable<DeprecatedString> import_stack;
 Optional<Interface&> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
-    if (!Core::File::exists(include_path))
+    if (!Core::DeprecatedFile::exists(include_path))
         report_parsing_error(DeprecatedString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
-    auto real_path = Core::File::real_path_for(include_path);
+    auto real_path = Core::DeprecatedFile::real_path_for(include_path);
     if (top_level_resolved_imports().contains(real_path))
         return *top_level_resolved_imports().find(real_path)->value;
 
@@ -149,7 +149,7 @@ Optional<Interface&> Parser::resolve_import(auto path)
         report_parsing_error(DeprecatedString::formatted("Circular import detected: {}", include_path), filename, input, lexer.tell());
     import_stack.set(real_path);
 
-    auto file_or_error = Core::Stream::File::open(real_path, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(real_path, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         report_parsing_error(DeprecatedString::formatted("Failed to open {}: {}", real_path, file_or_error.error()), filename, input, lexer.tell());
 
@@ -163,10 +163,10 @@ Optional<Interface&> Parser::resolve_import(auto path)
     return result;
 }
 
-NonnullRefPtr<Type> Parser::parse_type()
+NonnullRefPtr<Type const> Parser::parse_type()
 {
     if (lexer.consume_specific('(')) {
-        NonnullRefPtrVector<Type> union_member_types;
+        NonnullRefPtrVector<Type const> union_member_types;
         union_member_types.append(parse_type());
         consume_whitespace();
         assert_string("or"sv);
@@ -203,7 +203,7 @@ NonnullRefPtr<Type> Parser::parse_type()
             name = "long long"sv;
     }
 
-    NonnullRefPtrVector<Type> parameters;
+    NonnullRefPtrVector<Type const> parameters;
     bool is_parameterized_type = false;
     if (lexer.consume_specific('<')) {
         is_parameterized_type = true;
@@ -820,11 +820,11 @@ void Parser::parse_non_interface_entities(bool allow_interface, Interface& inter
 
 static void resolve_union_typedefs(Interface& interface, UnionType& union_);
 
-static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, HashMap<DeprecatedString, DeprecatedString>* extended_attributes = {})
+static void resolve_typedef(Interface& interface, NonnullRefPtr<Type const>& type, HashMap<DeprecatedString, DeprecatedString>* extended_attributes = {})
 {
     if (is<ParameterizedType>(*type)) {
-        auto& parameterized_type = type->as_parameterized();
-        auto& parameters = static_cast<Vector<NonnullRefPtr<Type>>&>(parameterized_type.parameters());
+        auto& parameterized_type = const_cast<Type&>(*type).as_parameterized();
+        auto& parameters = static_cast<Vector<NonnullRefPtr<Type const>>&>(parameterized_type.parameters());
         for (auto& parameter : parameters)
             resolve_typedef(interface, parameter);
         return;
@@ -832,7 +832,7 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
 
     // Resolve anonymous union types until we get named types that can be resolved in the next step.
     if (is<UnionType>(*type) && type->name().is_empty()) {
-        resolve_union_typedefs(interface, type->as_union());
+        resolve_union_typedefs(interface, const_cast<Type&>(*type).as_union());
         return;
     }
 
@@ -841,7 +841,7 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
         return;
     bool nullable = type->is_nullable();
     type = it->value.type;
-    type->set_nullable(nullable);
+    const_cast<Type&>(*type).set_nullable(nullable);
     if (extended_attributes) {
         for (auto& attribute : it->value.extended_attributes)
             extended_attributes->set(attribute.key, attribute.value);
@@ -859,12 +859,12 @@ static void resolve_typedef(Interface& interface, NonnullRefPtr<Type>& type, Has
     // UnionType(UnionType(A, B), UnionType(C, D))
     // Note that flattening unions is handled separately as per the spec.
     if (is<UnionType>(*type))
-        resolve_union_typedefs(interface, type->as_union());
+        resolve_union_typedefs(interface, const_cast<Type&>(*type).as_union());
 }
 
 static void resolve_union_typedefs(Interface& interface, UnionType& union_)
 {
-    auto& member_types = static_cast<Vector<NonnullRefPtr<Type>>&>(union_.member_types());
+    auto& member_types = static_cast<Vector<NonnullRefPtr<Type const>>&>(union_.member_types());
     for (auto& member_type : member_types)
         resolve_typedef(interface, member_type);
 }
@@ -884,7 +884,7 @@ void resolve_function_typedefs(Interface& interface, FunctionType& function)
 
 Interface& Parser::parse()
 {
-    auto this_module = Core::File::real_path_for(filename);
+    auto this_module = Core::DeprecatedFile::real_path_for(filename);
 
     auto interface_ptr = make<Interface>();
     auto& interface = *interface_ptr;

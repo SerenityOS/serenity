@@ -10,7 +10,6 @@
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibManual/Node.h>
@@ -85,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     .to_deprecated_string();
     pid_t pager_pid = TRY(pipe_to_pager(pager));
 
-    auto file = TRY(Core::Stream::File::open(TRY(page->path()), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(TRY(page->path()), Core::File::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio proc"));
 

@@ -10,7 +10,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -123,6 +123,26 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(DeprecatedString const& comma
         return {};
     }
 
+    // At this point, libraries should have been loaded
+    debug_session->update_loaded_libs();
+
+    return debug_session;
+}
+
+OwnPtr<DebugSession> DebugSession::attach(pid_t pid, DeprecatedString source_root)
+{
+    if (ptrace(PT_ATTACH, pid, 0, 0) < 0) {
+        perror("PT_ATTACH");
+        return {};
+    }
+
+    int status = 0;
+    if (waitpid(pid, &status, WSTOPPED | WEXITED) != pid || !WIFSTOPPED(status)) {
+        perror("waitpid");
+        return {};
+    }
+
+    auto debug_session = adopt_own(*new DebugSession(pid, source_root));
     // At this point, libraries should have been loaded
     debug_session->update_loaded_libs();
 
@@ -424,7 +444,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
 
 void DebugSession::update_loaded_libs()
 {
-    auto file = Core::File::construct(DeprecatedString::formatted("/proc/{}/vm", m_debuggee_pid));
+    auto file = Core::DeprecatedFile::construct(DeprecatedString::formatted("/proc/{}/vm", m_debuggee_pid));
     bool rc = file->open(Core::OpenMode::ReadOnly);
     VERIFY(rc);
 
@@ -456,7 +476,7 @@ void DebugSession::update_loaded_libs()
             return IterationDecision::Continue;
 
         DeprecatedString lib_name = object_path.value();
-        if (Core::File::looks_like_shared_library(lib_name))
+        if (Core::DeprecatedFile::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 
         FlatPtr base_address = entry.as_object().get_addr("address"sv).value_or(0);

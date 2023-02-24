@@ -8,16 +8,16 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibMarkdown/Document.h>
 #include <LibTest/TestCase.h>
 #include <LibTest/TestSuite.h>
 
 TEST_SETUP
 {
-    auto file_or_error = Core::Stream::File::open("/home/anon/Tests/commonmark.spec.json"sv, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open("/home/anon/Tests/commonmark.spec.json"sv, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        file_or_error = Core::Stream::File::open("./commonmark.spec.json"sv, Core::Stream::OpenMode::Read);
+        file_or_error = Core::File::open("./commonmark.spec.json"sv, Core::File::OpenMode::Read);
     VERIFY(!file_or_error.is_error());
     auto file = file_or_error.release_value();
     auto file_size = MUST(file->size());

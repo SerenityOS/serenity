@@ -36,6 +36,8 @@ public:
     u8 minor_version() const { return m_minor_and_bugfix_version >> 4; }
     u8 bugfix_version() const { return m_minor_and_bugfix_version & 0xf; }
 
+    u8 minor_and_bugfix_version() const { return m_minor_and_bugfix_version; }
+
 private:
     u8 m_major_version = 0;
     u8 m_minor_and_bugfix_version = 0;
@@ -96,11 +98,11 @@ enum class PrimaryPlatform : u32 {
 StringView primary_platform_name(PrimaryPlatform);
 
 // ICC v4, 7.2.15 Rendering intent field
-enum class RenderingIntent {
-    Perceptual,
-    MediaRelativeColorimetric,
-    Saturation,
-    ICCAbsoluteColorimetric,
+enum class RenderingIntent : u32 {
+    Perceptual = 0,
+    MediaRelativeColorimetric = 1,
+    Saturation = 2,
+    ICCAbsoluteColorimetric = 3,
 };
 StringView rendering_intent_name(RenderingIntent);
 
@@ -187,29 +189,54 @@ private:
     u64 m_bits = 0;
 };
 
+struct ProfileHeader {
+    u32 on_disk_size { 0 };
+    Optional<PreferredCMMType> preferred_cmm_type;
+    Version version;
+    DeviceClass device_class {};
+    ColorSpace data_color_space {};
+    ColorSpace connection_space {};
+    time_t creation_timestamp { 0 };
+    Optional<PrimaryPlatform> primary_platform {};
+    Flags flags;
+    Optional<DeviceManufacturer> device_manufacturer;
+    Optional<DeviceModel> device_model;
+    DeviceAttributes device_attributes;
+    RenderingIntent rendering_intent {};
+    XYZ pcs_illuminant;
+    Optional<Creator> creator;
+    Optional<Crypto::Hash::MD5::DigestType> id;
+};
+
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
 
-    Optional<PreferredCMMType> preferred_cmm_type() const { return m_preferred_cmm_type; }
-    Version version() const { return m_version; }
-    DeviceClass device_class() const { return m_device_class; }
-    ColorSpace data_color_space() const { return m_data_color_space; }
+    Profile(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
+        : m_header(header)
+        , m_tag_table(move(tag_table))
+    {
+    }
+
+    Optional<PreferredCMMType> preferred_cmm_type() const { return m_header.preferred_cmm_type; }
+    Version version() const { return m_header.version; }
+    DeviceClass device_class() const { return m_header.device_class; }
+    ColorSpace data_color_space() const { return m_header.data_color_space; }
 
     // For non-DeviceLink profiles, always PCSXYZ or PCSLAB.
-    ColorSpace connection_space() const { return m_connection_space; }
+    ColorSpace connection_space() const { return m_header.connection_space; }
 
-    u32 on_disk_size() const { return m_on_disk_size; }
-    time_t creation_timestamp() const { return m_creation_timestamp; }
-    Optional<PrimaryPlatform> primary_platform() const { return m_primary_platform; }
-    Flags flags() const { return m_flags; }
-    Optional<DeviceManufacturer> device_manufacturer() const { return m_device_manufacturer; }
-    Optional<DeviceModel> device_model() const { return m_device_model; }
-    DeviceAttributes device_attributes() const { return m_device_attributes; }
-    RenderingIntent rendering_intent() const { return m_rendering_intent; }
-    XYZ const& pcs_illuminant() const { return m_pcs_illuminant; }
-    Optional<Creator> creator() const { return m_creator; }
-    Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_id; }
+    u32 on_disk_size() const { return m_header.on_disk_size; }
+    time_t creation_timestamp() const { return m_header.creation_timestamp; }
+    Optional<PrimaryPlatform> primary_platform() const { return m_header.primary_platform; }
+    Flags flags() const { return m_header.flags; }
+    Optional<DeviceManufacturer> device_manufacturer() const { return m_header.device_manufacturer; }
+    Optional<DeviceModel> device_model() const { return m_header.device_model; }
+    DeviceAttributes device_attributes() const { return m_header.device_attributes; }
+    RenderingIntent rendering_intent() const { return m_header.rendering_intent; }
+    XYZ const& pcs_illuminant() const { return m_header.pcs_illuminant; }
+    Optional<Creator> creator() const { return m_header.creator; }
+    Optional<Crypto::Hash::MD5::DigestType> const& id() const { return m_header.id; }
 
     static Crypto::Hash::MD5::DigestType compute_id(ReadonlyBytes);
 
@@ -220,34 +247,25 @@ public:
             callback(tag.key, tag.value);
     }
 
+    template<FallibleFunction<TagSignature, NonnullRefPtr<TagData>> Callback>
+    ErrorOr<void> try_for_each_tag(Callback&& callback) const
+    {
+        for (auto const& tag : m_tag_table)
+            TRY(callback(tag.key, tag.value));
+        return {};
+    }
+
+    size_t tag_count() const { return m_tag_table.size(); }
+
     // Only versions 2 and 4 are in use.
     bool is_v2() const { return version().major_version() == 2; }
     bool is_v4() const { return version().major_version() == 4; }
 
 private:
-    ErrorOr<void> read_header(ReadonlyBytes);
-    ErrorOr<NonnullRefPtr<TagData>> read_tag(ReadonlyBytes bytes, u32 offset_to_beginning_of_tag_data_element, u32 size_of_tag_data_element);
-    ErrorOr<void> read_tag_table(ReadonlyBytes);
     ErrorOr<void> check_required_tags();
     ErrorOr<void> check_tag_types();
 
-    u32 m_on_disk_size { 0 };
-    Optional<PreferredCMMType> m_preferred_cmm_type;
-    Version m_version;
-    DeviceClass m_device_class {};
-    ColorSpace m_data_color_space {};
-    ColorSpace m_connection_space {};
-    time_t m_creation_timestamp { 0 };
-    Optional<PrimaryPlatform> m_primary_platform {};
-    Flags m_flags;
-    Optional<DeviceManufacturer> m_device_manufacturer;
-    Optional<DeviceModel> m_device_model;
-    DeviceAttributes m_device_attributes;
-    RenderingIntent m_rendering_intent {};
-    XYZ m_pcs_illuminant;
-    Optional<Creator> m_creator;
-    Optional<Crypto::Hash::MD5::DigestType> m_id;
-
+    ProfileHeader m_header;
     OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> m_tag_table;
 };
 

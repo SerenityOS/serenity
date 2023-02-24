@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,10 +39,11 @@ private:
 };
 
 ThrowCompletionOr<NonnullGCPtr<Object>> create_segment_data_object(VM&, Segmenter const&, Utf16View const&, double start_index, double end_index);
+
 enum class Direction {
     Before,
     After,
 };
-double find_boundary(Segmenter const&, Utf16View const&, double start_index, Direction, Optional<Vector<size_t>>& boundaries_cache);
+double find_boundary(Segmenter const&, Utf16View const&, double start_index, Direction);
 
 }

@@ -50,7 +50,8 @@ void EditorWrapper::set_mode_displayable()
 {
     editor().set_mode(GUI::TextEditor::Editable);
     editor().set_background_role(Gfx::ColorRole::Base);
-    editor().set_palette(GUI::Application::the()->palette());
+    auto palette = GUI::Application::the()->palette();
+    editor().set_palette(palette);
 }
 
 void EditorWrapper::set_mode_non_displayable()
@@ -79,7 +80,7 @@ void EditorWrapper::save()
         });
         file_picker_action->activate();
     }
-    editor().write_to_file(filename());
+    editor().write_to_file(filename()).release_value_but_fixme_should_propagate_errors();
     update_diff();
     editor().update();
 }

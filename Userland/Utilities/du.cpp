@@ -11,7 +11,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <limits.h>
@@ -116,7 +116,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
     if (!pattern.is_empty())
         du_option.excluded_patterns.append(pattern);
     if (!exclude_from.is_empty()) {
-        auto file = TRY(Core::Stream::File::open(exclude_from, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open(exclude_from, Core::File::OpenMode::Read));
         auto const buff = TRY(file->read_until_eof());
         if (!buff.is_empty()) {
             DeprecatedString patterns = DeprecatedString::copy(buff, Chomp);

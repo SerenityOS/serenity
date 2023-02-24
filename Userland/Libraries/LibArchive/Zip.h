@@ -8,11 +8,13 @@
 #pragma once
 
 #include <AK/Array.h>
+#include <AK/DOSPackedTime.h>
 #include <AK/Function.h>
 #include <AK/IterationDecision.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
 #include <string.h>
 
 namespace Archive {
@@ -55,7 +57,7 @@ struct [[gnu::packed]] EndOfCentralDirectory {
         return true;
     }
 
-    ErrorOr<void> write(AK::Stream& stream) const
+    ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -112,8 +114,8 @@ struct [[gnu::packed]] CentralDirectoryRecord {
     u16 minimum_version;
     ZipGeneralPurposeFlags general_purpose_flags;
     ZipCompressionMethod compression_method;
-    u16 modification_time;
-    u16 modification_date;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
     u32 crc32;
     u32 compressed_size;
     u32 uncompressed_size;
@@ -141,7 +143,7 @@ struct [[gnu::packed]] CentralDirectoryRecord {
         return true;
     }
 
-    ErrorOr<void> write(AK::Stream& stream) const
+    ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -186,8 +188,8 @@ struct [[gnu::packed]] LocalFileHeader {
     u16 minimum_version;
     ZipGeneralPurposeFlags general_purpose_flags;
     u16 compression_method;
-    u16 modification_time;
-    u16 modification_date;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
     u32 crc32;
     u32 compressed_size;
     u32 uncompressed_size;
@@ -210,7 +212,7 @@ struct [[gnu::packed]] LocalFileHeader {
         return true;
     }
 
-    ErrorOr<void> write(AK::Stream& stream) const
+    ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
             return stream.write_entire_buffer({ &value, sizeof(value) });
@@ -244,6 +246,8 @@ struct ZipMember {
     u32 uncompressed_size;
     u32 crc32;
     bool is_directory;
+    DOSPackedTime modification_time;
+    DOSPackedDate modification_date;
 };
 
 class Zip {
@@ -267,13 +271,13 @@ private:
 
 class ZipOutputStream {
 public:
-    ZipOutputStream(NonnullOwnPtr<AK::Stream>);
+    ZipOutputStream(NonnullOwnPtr<Stream>);
 
     ErrorOr<void> add_member(ZipMember const&);
     ErrorOr<void> finish();
 
 private:
-    NonnullOwnPtr<AK::Stream> m_stream;
+    NonnullOwnPtr<Stream> m_stream;
     Vector<ZipMember> m_members;
 
     bool m_finished { false };

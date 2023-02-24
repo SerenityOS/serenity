@@ -37,7 +37,7 @@ JS::ThrowCompletionOr<void> DOMParser::initialize(JS::Realm& realm)
 JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString const& string, Bindings::DOMParserSupportedType type)
 {
     // 1. Let document be a new Document, whose content type is type and url is this's relevant global object's associated Document's URL.
-    auto document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url());
+    auto document = DOM::Document::create(realm(), verify_cast<HTML::Window>(relevant_global_object(*this)).associated_document().url()).release_value_but_fixme_should_propagate_errors();
     document->set_content_type(Bindings::idl_enum_to_deprecated_string(type));
 
     // 2. Switch on type:
@@ -68,7 +68,7 @@ JS::NonnullGCPtr<DOM::Document> DOMParser::parse_from_string(DeprecatedString co
             // 1. Assert: document has no child nodes.
             document->remove_all_children(true);
             // 2. Let root be the result of creating an element given document, "parsererror", and "http://www.mozilla.org/newlayout/xml/parsererror.xml".
-            auto root = DOM::create_element(*document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml");
+            auto root = DOM::create_element(*document, "parsererror", "http://www.mozilla.org/newlayout/xml/parsererror.xml").release_value_but_fixme_should_propagate_errors();
             // FIXME: 3. Optionally, add attributes or children to root to describe the nature of the parsing error.
             // 4. Append root to document.
             MUST(document->append_child(*root));

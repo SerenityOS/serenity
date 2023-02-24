@@ -163,7 +163,7 @@ public:
     ConstIterator end() const { return ConstIterator::end(*this); }
 
     Span<T> span() { return { data(), size() }; }
-    Span<T const> span() const { return { data(), size() }; }
+    ReadonlySpan<T> span() const { return { data(), size() }; }
 
 private:
     struct Storage {

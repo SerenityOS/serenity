@@ -10,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -69,7 +69,7 @@ static bool is_primitive_type(DeprecatedString const& type)
 static bool is_simple_type(DeprecatedString const& type)
 {
     // Small types that it makes sense just to pass by value.
-    return type.is_one_of("Gfx::Color", "Gfx::IntPoint", "Gfx::FloatPoint", "Gfx::IntSize", "Gfx::FloatSize", "Core::Stream::OpenMode");
+    return type.is_one_of("Gfx::Color", "Gfx::IntPoint", "Gfx::FloatPoint", "Gfx::IntSize", "Gfx::FloatSize", "Core::File::OpenMode");
 }
 
 static bool is_primitive_or_simple_type(DeprecatedString const& type)
@@ -338,7 +338,7 @@ public:)~~~");
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(AK::Stream& stream, Core::Stream::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<@message.pascal_name@>> decode(Stream& stream, Core::LocalSocket& socket)
     {
         IPC::Decoder decoder { stream, socket };)~~~");
 
@@ -584,10 +584,10 @@ public:
 
     static u32 static_magic() { return @endpoint.magic@; }
 
-    static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::Stream::LocalSocket& socket)
+    static ErrorOr<NonnullOwnPtr<IPC::Message>> decode_message(ReadonlyBytes buffer, [[maybe_unused]] Core::LocalSocket& socket)
     {
-        auto stream = TRY(FixedMemoryStream::construct(buffer));
-        auto message_endpoint_magic = TRY(stream->read_value<u32>());)~~~");
+        FixedMemoryStream stream { buffer };
+        auto message_endpoint_magic = TRY(stream.read_value<u32>());)~~~");
     generator.append(R"~~~(
 
         if (message_endpoint_magic != @endpoint.magic@) {)~~~");
@@ -599,7 +599,7 @@ public:
             return Error::from_string_literal("Endpoint magic number mismatch, not my message!");
         }
 
-        auto message_id = TRY(stream->read_value<i32>());)~~~");
+        auto message_id = TRY(stream.read_value<i32>());)~~~");
     generator.appendln(R"~~~(
 
         switch (message_id) {)~~~");
@@ -613,7 +613,7 @@ public:
 
             message_generator.append(R"~~~(
         case (int)Messages::@endpoint.name@::MessageID::@message.pascal_name@:
-            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(*stream, socket));)~~~");
+            return TRY(Messages::@endpoint.name@::@message.pascal_name@::decode(stream, socket));)~~~");
         };
 
         do_decode_message(message.name);
@@ -796,7 +796,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto file = TRY(Core::Stream::File::open(arguments.strings[1], Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(arguments.strings[1], Core::File::OpenMode::Read));
 
     auto file_contents = TRY(file->read_until_eof());
 

@@ -17,6 +17,7 @@
 namespace Gfx::ICC {
 
 using S15Fixed16 = FixedPoint<16, i32>;
+using U16Fixed16 = FixedPoint<16, u32>;
 
 struct XYZ {
     double x { 0 };
@@ -58,11 +59,85 @@ public:
     }
 };
 
+// ICC v4, 10.2 chromaticityType
+class ChromaticityTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6368726D }; // 'chrm'
+
+    static ErrorOr<NonnullRefPtr<ChromaticityTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // ICC v4, Table 31 — Colorant and phosphor encoding
+    enum class PhosphorOrColorantType : u16 {
+        Unknown = 0,
+        ITU_R_BT_709_2 = 1,
+        SMPTE_RP145 = 2,
+        EBU_Tech_3213_E = 3,
+        P22 = 4,
+        P3 = 5,
+        ITU_R_BT_2020 = 6,
+    };
+
+    static StringView phosphor_or_colorant_type_name(PhosphorOrColorantType);
+
+    struct xyCoordinate {
+        U16Fixed16 x;
+        U16Fixed16 y;
+    };
+
+    ChromaticityTagData(u32 offset, u32 size, PhosphorOrColorantType phosphor_or_colorant_type, Vector<xyCoordinate> xy_coordinates)
+        : TagData(offset, size, Type)
+        , m_phosphor_or_colorant_type(phosphor_or_colorant_type)
+        , m_xy_coordinates(move(xy_coordinates))
+    {
+    }
+
+    PhosphorOrColorantType phosphor_or_colorant_type() const { return m_phosphor_or_colorant_type; }
+    Vector<xyCoordinate> xy_coordinates() const { return m_xy_coordinates; }
+
+private:
+    PhosphorOrColorantType m_phosphor_or_colorant_type;
+    Vector<xyCoordinate> m_xy_coordinates;
+};
+
+// ICC v4, 10.3 cicpType
+// "The cicpType specifies Coding-independent code points for video signal type identification."
+// See presentations at https://www.color.org/events/HDR_experts.xalter for background.
+class CicpTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x63696370 }; // 'cicp'
+
+    static ErrorOr<NonnullRefPtr<CicpTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    CicpTagData(u32 offset, u32 size, u8 color_primaries, u8 transfer_characteristics, u8 matrix_coefficients, u8 video_full_range_flag)
+        : TagData(offset, size, Type)
+        , m_color_primaries(color_primaries)
+        , m_transfer_characteristics(transfer_characteristics)
+        , m_matrix_coefficients(matrix_coefficients)
+        , m_video_full_range_flag(video_full_range_flag)
+    {
+    }
+
+    // "The fields ColourPrimaries, TransferCharacteristics, MatrixCoefficients, and VideoFullRangeFlag shall be
+    //  encoded as specified in Recommendation ITU-T H.273. Recommendation ITU-T H.273 (ISO/IEC 23091-2)
+    //  provides detailed descriptions of the code values and their interpretation."
+    u8 color_primaries() const { return m_color_primaries; }
+    u8 transfer_characteristics() const { return m_transfer_characteristics; }
+    u8 matrix_coefficients() const { return m_matrix_coefficients; }
+    u8 video_full_range_flag() const { return m_video_full_range_flag; }
+
+private:
+    u8 m_color_primaries;
+    u8 m_transfer_characteristics;
+    u8 m_matrix_coefficients;
+    u8 m_video_full_range_flag;
+};
+
 // ICC v4, 10.6 curveType
 class CurveTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x63757276 }; // 'curv'
 
+    static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset);
     static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
     CurveTagData(u32 offset, u32 size, Vector<u16> values)
@@ -89,6 +164,10 @@ private:
 };
 
 struct EMatrix3x3 {
+    // A row-major 3x3 matrix:
+    // [ e[0] e[1] e[2] ]
+    // [ e[3] e[4] e[5] ] * v
+    // ] e[6] e[7] e[8] ]
     S15Fixed16 e[9];
 
     S15Fixed16 const& operator[](unsigned i) const
@@ -122,6 +201,11 @@ public:
     {
         VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+
+        VERIFY(number_of_input_table_entries >= 2);
+        VERIFY(number_of_input_table_entries <= 4096);
+        VERIFY(number_of_output_table_entries >= 2);
+        VERIFY(number_of_output_table_entries <= 4096);
     }
 
     EMatrix3x3 const& e_matrix() const { return m_e; }
@@ -176,6 +260,9 @@ public:
     {
         VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+
+        VERIFY(number_of_input_table_entries == 256);
+        VERIFY(number_of_output_table_entries == 256);
     }
 
     EMatrix3x3 const& e_matrix() const { return m_e; }
@@ -206,12 +293,79 @@ private:
     Vector<u8> m_output_tables;
 };
 
+struct EMatrix3x4 {
+    // A row-major 3x3 matrix followed by a translation vector:
+    // [ e[0] e[1] e[2] ]       [ e[9]  ]
+    // [ e[3] e[4] e[5] ] * v + [ e[10] ]
+    // [ e[6] e[7] e[8] ]       [ e[11] ]
+    S15Fixed16 e[12];
+
+    S15Fixed16 const& operator[](unsigned i) const
+    {
+        VERIFY(i < array_size(e));
+        return e[i];
+    }
+};
+
+struct CLUTData {
+    Vector<u8, 4> number_of_grid_points_in_dimension;
+    Variant<Vector<u8>, Vector<u16>> values;
+};
+
+using LutCurveType = NonnullRefPtr<TagData>; // FIXME: Variant<CurveTagData, ParametricCurveTagData> instead?
+
 // ICC v4, 10.12 lutAToBType
 class LutAToBTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x6D414220 }; // 'mAB '
 
-    // FIXME: Implement!
+    static ErrorOr<NonnullRefPtr<LutAToBTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels,
+        Optional<Vector<LutCurveType>> a_curves, Optional<CLUTData> clut, Optional<Vector<LutCurveType>> m_curves, Optional<EMatrix3x4> e, Vector<LutCurveType> b_curves)
+        : TagData(offset, size, Type)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_a_curves(move(a_curves))
+        , m_clut(move(clut))
+        , m_m_curves(move(m_curves))
+        , m_e(e)
+        , m_b_curves(move(b_curves))
+    {
+        VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_input_channels);
+        VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_output_channels);
+        VERIFY(m_b_curves.size() == m_number_of_output_channels);
+
+        VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
+        VERIFY(m_a_curves.has_value() == m_clut.has_value());
+        VERIFY(m_m_curves.has_value() == m_e.has_value());
+    }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+
+    Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
+    Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
+    Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
+
+private:
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+
+    // "It is possible to use any or all of these processing elements. At least one processing element shall be included.
+    //  Only the following combinations are permitted:
+    //  - B;
+    //  - M, Matrix, B;
+    //  - A, CLUT, B;
+    //  - A, CLUT, M, Matrix, B."
+    // This seems to imply that the B curve is not in fact optional.
+    Optional<Vector<LutCurveType>> m_a_curves;
+    Optional<CLUTData> m_clut;
+    Optional<Vector<LutCurveType>> m_m_curves;
+    Optional<EMatrix3x4> m_e;
+    Vector<LutCurveType> m_b_curves;
 };
 
 // ICC v4, 10.13 lutBToAType
@@ -219,7 +373,118 @@ class LutBToATagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x6D424120 }; // 'mBA '
 
-    // FIXME: Implement!
+    static ErrorOr<NonnullRefPtr<LutBToATagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels,
+        Vector<LutCurveType> b_curves, Optional<EMatrix3x4> e, Optional<Vector<LutCurveType>> m_curves, Optional<CLUTData> clut, Optional<Vector<LutCurveType>> a_curves)
+        : TagData(offset, size, Type)
+        , m_number_of_input_channels(number_of_input_channels)
+        , m_number_of_output_channels(number_of_output_channels)
+        , m_b_curves(move(b_curves))
+        , m_e(e)
+        , m_m_curves(move(m_curves))
+        , m_clut(move(clut))
+        , m_a_curves(move(a_curves))
+    {
+        VERIFY(m_b_curves.size() == m_number_of_input_channels);
+        VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_input_channels);
+        VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_output_channels);
+
+        VERIFY(m_e.has_value() == m_m_curves.has_value());
+        VERIFY(m_clut.has_value() == m_a_curves.has_value());
+        VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
+    }
+
+    u8 number_of_input_channels() const { return m_number_of_input_channels; }
+    u8 number_of_output_channels() const { return m_number_of_output_channels; }
+
+    Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
+    Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
+    Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
+
+private:
+    u8 m_number_of_input_channels;
+    u8 m_number_of_output_channels;
+
+    // "It is possible to use any or all of these processing elements. At least one processing element shall be included.
+    //  Only the following combinations are permitted:
+    //  - B;
+    //  - B, Matrix, M;
+    //  - B, CLUT, A;
+    //  - B, Matrix, M, CLUT, A."
+    // This seems to imply that the B curve is not in fact optional.
+    Vector<LutCurveType> m_b_curves;
+    Optional<EMatrix3x4> m_e;
+    Optional<Vector<LutCurveType>> m_m_curves;
+    Optional<CLUTData> m_clut;
+    Optional<Vector<LutCurveType>> m_a_curves;
+};
+
+// ICC v4, 10.14 measurementType
+class MeasurementTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6D656173 }; // 'meas'
+
+    static ErrorOr<NonnullRefPtr<MeasurementTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // Table 50 — Standard observer encodings
+    enum class StandardObserver {
+        Unknown = 0,
+        CIE_1931_standard_colorimetric_observer = 1,
+        CIE_1964_standard_colorimetric_observer = 2,
+    };
+    static ErrorOr<void> validate_standard_observer(StandardObserver);
+    static StringView standard_observer_name(StandardObserver);
+
+    // Table 51 — Measurement geometry encodings
+    enum class MeasurementGeometry {
+        Unknown = 0,
+        Degrees_0_45_or_45_0 = 1,
+        Degrees_0_d_or_d_0 = 2,
+    };
+    static ErrorOr<void> validate_measurement_geometry(MeasurementGeometry);
+    static StringView measurement_geometry_name(MeasurementGeometry);
+
+    // Table 53 — Standard illuminant encodings
+    enum class StandardIlluminant {
+        Unknown = 0,
+        D50 = 1,
+        D65 = 2,
+        D93 = 3,
+        F2 = 4,
+        D55 = 5,
+        A = 6,
+        Equi_Power_E = 7,
+        F8 = 8,
+    };
+    static ErrorOr<void> validate_standard_illuminant(StandardIlluminant);
+    static StringView standard_illuminant_name(StandardIlluminant);
+
+    MeasurementTagData(u32 offset, u32 size, StandardObserver standard_observer, XYZ tristimulus_value_for_measurement_backing,
+        MeasurementGeometry measurement_geometry, U16Fixed16 measurement_flare, StandardIlluminant standard_illuminant)
+        : TagData(offset, size, Type)
+        , m_standard_observer(standard_observer)
+        , m_tristimulus_value_for_measurement_backing(tristimulus_value_for_measurement_backing)
+        , m_measurement_geometry(measurement_geometry)
+        , m_measurement_flare(measurement_flare)
+        , m_standard_illuminant(standard_illuminant)
+    {
+    }
+
+    StandardObserver standard_observer() const { return m_standard_observer; }
+    XYZ const& tristimulus_value_for_measurement_backing() const { return m_tristimulus_value_for_measurement_backing; }
+    MeasurementGeometry measurement_geometry() const { return m_measurement_geometry; }
+    U16Fixed16 measurement_flare() const { return m_measurement_flare; }
+    StandardIlluminant standard_illuminant() const { return m_standard_illuminant; }
+
+private:
+    StandardObserver m_standard_observer;
+    XYZ m_tristimulus_value_for_measurement_backing;
+    MeasurementGeometry m_measurement_geometry;
+    U16Fixed16 m_measurement_flare;
+    StandardIlluminant m_standard_illuminant;
 };
 
 // ICC v4, 10.15 multiLocalizedUnicodeType
@@ -245,6 +510,96 @@ public:
 
 private:
     Vector<Record> m_records;
+};
+
+// ICC v4, 10.17 namedColor2Type
+class NamedColor2TagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x6E636C32 }; // 'ncl2'
+
+    static ErrorOr<NonnullRefPtr<NamedColor2TagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    // "The encoding is the same as the encodings for the PCS colour spaces
+    //  as described in 6.3.4.2 and 10.8. Only PCSXYZ and
+    //  legacy 16-bit PCSLAB encodings are permitted. PCS
+    //  values shall be relative colorimetric."
+    // (Which I suppose implies this type must not be used in DeviceLink profiles unless
+    // the device's PCS happens to be PCSXYZ or PCSLAB.)
+    struct XYZOrLAB {
+        union {
+            struct {
+                u16 x, y, z;
+            } xyz;
+            struct {
+                u16 L, a, b;
+            } lab;
+        };
+    };
+
+    NamedColor2TagData(u32 offset, u32 size, u32 vendor_specific_flag, u32 number_of_device_coordinates, String prefix, String suffix,
+        Vector<String> root_names, Vector<XYZOrLAB> pcs_coordinates, Vector<u16> device_coordinates)
+        : TagData(offset, size, Type)
+        , m_vendor_specific_flag(vendor_specific_flag)
+        , m_number_of_device_coordinates(number_of_device_coordinates)
+        , m_prefix(move(prefix))
+        , m_suffix(move(suffix))
+        , m_root_names(move(root_names))
+        , m_pcs_coordinates(move(pcs_coordinates))
+        , m_device_coordinates(move(device_coordinates))
+    {
+        VERIFY(root_names.size() == pcs_coordinates.size());
+        VERIFY(root_names.size() * number_of_device_coordinates == device_coordinates.size());
+
+        for (u8 byte : m_prefix.bytes())
+            VERIFY(byte < 128);
+        VERIFY(m_prefix.bytes().size() < 32);
+
+        for (u8 byte : m_suffix.bytes())
+            VERIFY(byte < 128);
+        VERIFY(m_suffix.bytes().size() < 32);
+
+        for (auto const& root_name : m_root_names) {
+            for (u8 byte : root_name.bytes())
+                VERIFY(byte < 128);
+            VERIFY(root_name.bytes().size() < 32);
+        }
+    }
+
+    // "(least-significant 16 bits reserved for ICC use)"
+    u32 vendor_specific_flag() const { return m_vendor_specific_flag; }
+
+    // "If this field is 0, device coordinates are not provided."
+    u32 number_of_device_coordinates() const { return m_number_of_device_coordinates; }
+
+    u32 size() const { return m_root_names.size(); }
+
+    // "In order to maintain maximum portability, it is strongly recommended that
+    //  special characters of the 7-bit ASCII set not be used."
+    String const& prefix() const { return m_prefix; }                        // "7-bit ASCII"
+    String const& suffix() const { return m_suffix; }                        // "7-bit ASCII"
+    String const& root_name(u32 index) const { return m_root_names[index]; } // "7-bit ASCII"
+
+    // Returns 7-bit ASCII.
+    ErrorOr<String> color_name(u32 index) const;
+
+    // "The PCS representation corresponds to the header’s PCS field."
+    XYZOrLAB const& pcs_coordinates(u32 index) const { return m_pcs_coordinates[index]; }
+
+    // "The device representation corresponds to the header’s “data colour space” field."
+    u16 const* device_coordinates(u32 index) const
+    {
+        VERIFY((index + 1) * m_number_of_device_coordinates <= m_device_coordinates.size());
+        return m_device_coordinates.data() + index * m_number_of_device_coordinates;
+    }
+
+private:
+    u32 m_vendor_specific_flag;
+    u32 m_number_of_device_coordinates;
+    String m_prefix;
+    String m_suffix;
+    Vector<String> m_root_names;
+    Vector<XYZOrLAB> m_pcs_coordinates;
+    Vector<u16> m_device_coordinates;
 };
 
 // ICC v4, 10.18 parametricCurveType
@@ -283,6 +638,7 @@ public:
 
     static constexpr TagTypeSignature Type { 0x70617261 }; // 'para'
 
+    static ErrorOr<NonnullRefPtr<ParametricCurveTagData>> from_bytes(ReadonlyBytes, u32 offset);
     static ErrorOr<NonnullRefPtr<ParametricCurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
     ParametricCurveTagData(u32 offset, u32 size, FunctionType function_type, Array<S15Fixed16, 7> parameters)
@@ -295,6 +651,13 @@ public:
     FunctionType function_type() const { return m_function_type; }
 
     static unsigned parameter_count(FunctionType);
+
+    unsigned parameter_count() const { return parameter_count(function_type()); }
+    S15Fixed16 parameter(size_t i) const
+    {
+        VERIFY(i < parameter_count());
+        return m_parameters[i];
+    }
 
     S15Fixed16 g() const { return m_parameters[0]; }
     S15Fixed16 a() const
@@ -355,6 +718,32 @@ private:
     Vector<S15Fixed16, 9> m_values;
 };
 
+// ICC v4, 10.23 signatureType
+class SignatureTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x73696720 }; // 'sig '
+
+    static ErrorOr<NonnullRefPtr<SignatureTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    SignatureTagData(u32 offset, u32 size, u32 signature)
+        : TagData(offset, size, Type)
+        , m_signature(signature)
+    {
+    }
+
+    u32 signature() const { return m_signature; }
+
+    static Optional<StringView> colorimetric_intent_image_state_signature_name(u32);
+    static Optional<StringView> perceptual_rendering_intent_gamut_signature_name(u32);
+    static Optional<StringView> saturation_rendering_intent_gamut_signature_name(u32);
+    static Optional<StringView> technology_signature_name(u32);
+
+    Optional<StringView> name_for_tag(TagSignature);
+
+private:
+    u32 m_signature;
+};
+
 // ICC v2, 6.5.17 textDescriptionType
 class TextDescriptionTagData : public TagData {
 public:
@@ -369,6 +758,8 @@ public:
         , m_unicode_description(move(unicode_description))
         , m_macintosh_description(move(macintosh_description))
     {
+        for (u8 byte : m_ascii_description.bytes())
+            VERIFY(byte < 128);
     }
 
     // Guaranteed to be 7-bit ASCII.
@@ -399,6 +790,8 @@ public:
         : TagData(offset, size, Type)
         , m_text(move(text))
     {
+        for (u8 byte : m_text.bytes())
+            VERIFY(byte < 128);
     }
 
     // Guaranteed to be 7-bit ASCII.
@@ -406,6 +799,32 @@ public:
 
 private:
     String m_text;
+};
+
+// ICC v4, 10.30 viewingConditionsType
+class ViewingConditionsTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x76696577 }; // 'view'
+
+    static ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    ViewingConditionsTagData(u32 offset, u32 size, XYZ const& unnormalized_ciexyz_values_for_illuminant,
+        XYZ const& unnormalized_ciexyz_values_for_surround, MeasurementTagData::StandardIlluminant illuminant_type)
+        : TagData(offset, size, Type)
+        , m_unnormalized_ciexyz_values_for_illuminant(unnormalized_ciexyz_values_for_illuminant)
+        , m_unnormalized_ciexyz_values_for_surround(unnormalized_ciexyz_values_for_surround)
+        , m_illuminant_type(illuminant_type)
+    {
+    }
+
+    XYZ const& unnormalized_ciexyz_values_for_illuminant() const { return m_unnormalized_ciexyz_values_for_illuminant; }
+    XYZ const& unnormalized_ciexyz_values_for_surround() const { return m_unnormalized_ciexyz_values_for_surround; }
+    MeasurementTagData::StandardIlluminant illuminant_type() const { return m_illuminant_type; }
+
+private:
+    XYZ m_unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
+    XYZ m_unnormalized_ciexyz_values_for_surround;   // "(in which Y is in cd/m2)"
+    MeasurementTagData::StandardIlluminant m_illuminant_type;
 };
 
 // ICC v4, 10.31 XYZType

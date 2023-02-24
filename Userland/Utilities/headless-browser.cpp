@@ -14,9 +14,8 @@
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibCore/SystemServerTakeover.h>
 #include <LibCore/Timer.h>
@@ -238,8 +237,8 @@ public:
 
     void request_file(Web::FileRequest request) override
     {
-        auto const file = Core::System::open(request.path(), O_RDONLY);
-        request.on_file_request_finish(file);
+        auto file = Core::System::open(request.path(), O_RDONLY);
+        request.on_file_request_finish(move(file));
     }
 
 private:
@@ -302,9 +301,9 @@ public:
         static ErrorOr<NonnullRefPtr<HTTPHeadlessRequest>> create(DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const&)
         {
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
-            auto underlying_socket = TRY(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(80)));
+            auto underlying_socket = TRY(Core::TCPSocket::connect(url.host(), url.port().value_or(80)));
             TRY(underlying_socket->set_blocking(false));
-            auto socket = TRY(Core::Stream::BufferedSocket<Core::Stream::TCPSocket>::create(move(underlying_socket)));
+            auto socket = TRY(Core::BufferedSocket<Core::TCPSocket>::create(move(underlying_socket)));
 
             HTTP::HttpRequest request;
             if (method.equals_ignoring_case("head"sv))
@@ -335,14 +334,14 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Stream&) override
         {
         }
 
     private:
-        HTTPHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
+        HTTPHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(try_make<FixedMemoryStream>(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(HTTP::Job::construct(move(request), *m_output_stream))
         {
@@ -369,7 +368,7 @@ public:
         Optional<u32> m_response_code;
         ByteBuffer m_stream_backing_buffer;
         NonnullOwnPtr<FixedMemoryStream> m_output_stream;
-        NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+        NonnullOwnPtr<Core::BufferedSocketBase> m_socket;
         NonnullRefPtr<HTTP::Job> m_job;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
     };
@@ -383,7 +382,7 @@ public:
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
             auto underlying_socket = TRY(TLS::TLSv12::connect(url.host(), url.port().value_or(443)));
             TRY(underlying_socket->set_blocking(false));
-            auto socket = TRY(Core::Stream::BufferedSocket<TLS::TLSv12>::create(move(underlying_socket)));
+            auto socket = TRY(Core::BufferedSocket<TLS::TLSv12>::create(move(underlying_socket)));
 
             HTTP::HttpRequest request;
             if (method.equals_ignoring_case("head"sv))
@@ -414,14 +413,14 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Stream&) override
         {
         }
 
     private:
-        HTTPSHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
+        HTTPSHeadlessRequest(HTTP::HttpRequest&& request, NonnullOwnPtr<Core::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(try_make<FixedMemoryStream>(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(HTTP::HttpsJob::construct(move(request), *m_output_stream))
         {
@@ -448,7 +447,7 @@ public:
         Optional<u32> m_response_code;
         ByteBuffer m_stream_backing_buffer;
         NonnullOwnPtr<FixedMemoryStream> m_output_stream;
-        NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+        NonnullOwnPtr<Core::BufferedSocketBase> m_socket;
         NonnullRefPtr<HTTP::HttpsJob> m_job;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
     };
@@ -460,9 +459,9 @@ public:
         static ErrorOr<NonnullRefPtr<GeminiHeadlessRequest>> create(DeprecatedString const&, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const&, ReadonlyBytes, Core::ProxyData const&)
         {
             auto stream_backing_buffer = TRY(ByteBuffer::create_uninitialized(1 * MiB));
-            auto underlying_socket = TRY(Core::Stream::TCPSocket::connect(url.host(), url.port().value_or(80)));
+            auto underlying_socket = TRY(Core::TCPSocket::connect(url.host(), url.port().value_or(80)));
             TRY(underlying_socket->set_blocking(false));
-            auto socket = TRY(Core::Stream::BufferedSocket<Core::Stream::TCPSocket>::create(move(underlying_socket)));
+            auto socket = TRY(Core::BufferedSocket<Core::TCPSocket>::create(move(underlying_socket)));
 
             Gemini::GeminiRequest request;
             request.set_url(url);
@@ -483,14 +482,14 @@ public:
             return false;
         }
 
-        virtual void stream_into(AK::Stream&) override
+        virtual void stream_into(Stream&) override
         {
         }
 
     private:
-        GeminiHeadlessRequest(Gemini::GeminiRequest&& request, NonnullOwnPtr<Core::Stream::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
+        GeminiHeadlessRequest(Gemini::GeminiRequest&& request, NonnullOwnPtr<Core::BufferedSocketBase> socket, ByteBuffer&& stream_backing_buffer)
             : m_stream_backing_buffer(move(stream_backing_buffer))
-            , m_output_stream(FixedMemoryStream::construct(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
+            , m_output_stream(try_make<FixedMemoryStream>(m_stream_backing_buffer.bytes()).release_value_but_fixme_should_propagate_errors())
             , m_socket(move(socket))
             , m_job(Gemini::Job::construct(move(request), *m_output_stream))
         {
@@ -517,7 +516,7 @@ public:
         Optional<u32> m_response_code;
         ByteBuffer m_stream_backing_buffer;
         NonnullOwnPtr<FixedMemoryStream> m_output_stream;
-        NonnullOwnPtr<Core::Stream::BufferedSocketBase> m_socket;
+        NonnullOwnPtr<Core::BufferedSocketBase> m_socket;
         NonnullRefPtr<Gemini::Job> m_job;
         HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> m_response_headers;
     };
@@ -592,6 +591,11 @@ public:
             VERIFY_NOT_REACHED();
         }
 
+        virtual DeprecatedString subprotocol_in_use() override
+        {
+            return m_websocket->subprotocol_in_use();
+        }
+
         virtual void send(ByteBuffer binary_or_text_message, bool is_text) override
         {
             m_websocket->send(WebSocket::Message(binary_or_text_message, is_text));
@@ -661,10 +665,11 @@ public:
 
     virtual ~HeadlessWebSocketClientManager() override { }
 
-    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, DeprecatedString const& origin) override
+    virtual RefPtr<Web::WebSockets::WebSocketClientSocket> connect(AK::URL const& url, DeprecatedString const& origin, Vector<DeprecatedString> const& protocols) override
     {
         WebSocket::ConnectionInfo connection_info(url);
         connection_info.set_origin(origin);
+        connection_info.set_protocols(protocols);
 
         auto connection = HeadlessWebSocket::create(WebSocket::WebSocket::create(move(connection_info)));
         return connection;
@@ -685,10 +690,10 @@ static void load_page_for_screenshot_and_exit(HeadlessBrowserPageClient& page_cl
             DeprecatedString output_file_path = "output.png";
             dbgln("Saving to {}", output_file_path);
 
-            if (Core::File::exists(output_file_path))
-                MUST(Core::File::remove(output_file_path, Core::File::RecursionMode::Disallowed));
+            if (Core::DeprecatedFile::exists(output_file_path))
+                MUST(Core::DeprecatedFile::remove(output_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
 
-            auto output_file = MUST(Core::Stream::File::open(output_file_path, Core::Stream::OpenMode::Write));
+            auto output_file = MUST(Core::File::open(output_file_path, Core::File::OpenMode::Write));
 
             auto output_rect = page_client.screen_rect();
             auto output_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, output_rect.size().to_type<int>()));

@@ -4,6 +4,8 @@ set(AK_SOURCES
     CircularBuffer.cpp
     DeprecatedFlyString.cpp
     DeprecatedString.cpp
+    DOSPackedTime.cpp
+    Error.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp
     Format.cpp
@@ -31,6 +33,7 @@ set(AK_SOURCES
     URL.cpp
     URLParser.cpp
     Utf16View.cpp
+    Utf32View.cpp
     Utf8View.cpp
     UUID.cpp
 )

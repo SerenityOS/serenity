@@ -781,6 +781,7 @@ DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator,
         index = clamp(((timestamp.to_nanoseconds() * cue_points.size()) / TRY(segment_information()).duration()->to_nanoseconds()), 0, cue_points.size() - 1);
 
     CuePoint const* prev_cue_point = &cue_points[index];
+    dbgln_if(MATROSKA_DEBUG, "Finding Matroska cue points for timestamp {}ms starting from cue at {}ms", timestamp.to_milliseconds(), prev_cue_point->timestamp().to_milliseconds());
 
     if (prev_cue_point->timestamp() == timestamp) {
         TRY(iterator.seek_to_cue_point(*prev_cue_point));
@@ -788,25 +789,27 @@ DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator,
     }
 
     if (prev_cue_point->timestamp() > timestamp) {
-        while (index > 0 && prev_cue_point->timestamp() > timestamp)
+        while (index > 0 && prev_cue_point->timestamp() > timestamp) {
             prev_cue_point = &cue_points[--index];
+            dbgln_if(MATROSKA_DEBUG, "Checking previous cue point {}ms", prev_cue_point->timestamp().to_milliseconds());
+        }
         TRY(iterator.seek_to_cue_point(*prev_cue_point));
         return {};
     }
 
-    while (index < cue_points.size()) {
-        auto const& cue_point = cue_points[index++];
+    while (++index < cue_points.size()) {
+        auto const& cue_point = cue_points[index];
+        dbgln_if(MATROSKA_DEBUG, "Checking future cue point {}ms", cue_point.timestamp().to_milliseconds());
         if (cue_point.timestamp() > timestamp)
             break;
         prev_cue_point = &cue_point;
-        index++;
     }
 
     TRY(iterator.seek_to_cue_point(*prev_cue_point));
     return {};
 }
 
-static DecoderErrorOr<bool> find_keyframe_before_timestamp(SampleIterator& iterator, Time const& timestamp)
+static DecoderErrorOr<void> search_clusters_for_keyframe_before_timestamp(SampleIterator& iterator, Time const& timestamp)
 {
 #if MATROSKA_DEBUG
     size_t inter_frames_count;
@@ -837,10 +840,9 @@ static DecoderErrorOr<bool> find_keyframe_before_timestamp(SampleIterator& itera
         dbgln("Seeked to a keyframe with {} inter frames to skip", inter_frames_count);
 #endif
         iterator = last_keyframe.release_value();
-        return true;
     }
 
-    return false;
+    return {};
 }
 
 DecoderErrorOr<bool> Reader::has_cues_for_track(u64 track_number)
@@ -849,37 +851,23 @@ DecoderErrorOr<bool> Reader::has_cues_for_track(u64 track_number)
     return m_cues.contains(track_number);
 }
 
-DecoderErrorOr<void> Reader::seek_to_random_access_point(SampleIterator& iterator, Time timestamp)
+DecoderErrorOr<SampleIterator> Reader::seek_to_random_access_point(SampleIterator iterator, Time timestamp)
 {
-    if (iterator.m_last_timestamp == timestamp)
-        return {};
-
     if (TRY(has_cues_for_track(iterator.m_track.track_number()))) {
-        auto seeked_iterator = iterator;
-        TRY(seek_to_cue_for_timestamp(seeked_iterator, timestamp));
-        VERIFY(seeked_iterator.m_last_timestamp <= timestamp);
-
-        // We only need to seek to a keyframe if it's not faster to continue from the current position.
-        if (timestamp < iterator.m_last_timestamp || seeked_iterator.m_last_timestamp > iterator.m_last_timestamp)
-            iterator = seeked_iterator;
-        return {};
+        TRY(seek_to_cue_for_timestamp(iterator, timestamp));
+        VERIFY(iterator.last_timestamp().has_value() && iterator.last_timestamp().value() <= timestamp);
+        return iterator;
     }
 
-    // FIXME: This could cache the keyframes it finds. Is it worth doing? Probably not, most files will have Cues :^)
-    if (timestamp < iterator.last_timestamp() || iterator.last_timestamp().is_negative()) {
+    if (!iterator.last_timestamp().has_value() || timestamp < iterator.last_timestamp().value()) {
         // If the timestamp is before the iterator's current position, then we need to start from the beginning of the Segment.
         iterator = TRY(create_sample_iterator(iterator.m_track.track_number()));
-        if (!TRY(find_keyframe_before_timestamp(iterator, timestamp)))
-            return DecoderError::corrupted("No random access points found"sv);
-
-        return {};
+        TRY(search_clusters_for_keyframe_before_timestamp(iterator, timestamp));
+        return iterator;
     }
 
-    auto seeked_iterator = iterator;
-    if (TRY(find_keyframe_before_timestamp(seeked_iterator, timestamp)))
-        iterator = seeked_iterator;
-    VERIFY(iterator.last_timestamp() <= timestamp);
-    return {};
+    TRY(search_clusters_for_keyframe_before_timestamp(iterator, timestamp));
+    return iterator;
 }
 
 DecoderErrorOr<Optional<Vector<CuePoint> const&>> Reader::cue_points_for_track(u64 track_number)

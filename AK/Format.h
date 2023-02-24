@@ -136,7 +136,7 @@ struct TypeErasedParameter {
             if constexpr (sizeof(T) > sizeof(size_t))
                 VERIFY(value < NumericLimits<size_t>::max());
             if constexpr (IsSigned<T>)
-                VERIFY(value > 0);
+                VERIFY(value >= 0);
             return static_cast<size_t>(value);
         });
     }
@@ -209,6 +209,7 @@ public:
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
     ErrorOr<void> put_fixed_point(
+        bool is_negative,
         i64 integer_value,
         u64 fraction_value,
         u64 fraction_one,
@@ -264,13 +265,13 @@ private:
 
 class TypeErasedFormatParams {
 public:
-    Span<TypeErasedParameter const> parameters() const { return m_parameters; }
+    ReadonlySpan<TypeErasedParameter> parameters() const { return m_parameters; }
 
-    void set_parameters(Span<TypeErasedParameter const> parameters) { m_parameters = parameters; }
+    void set_parameters(ReadonlySpan<TypeErasedParameter> parameters) { m_parameters = parameters; }
     size_t take_next_index() { return m_next_index++; }
 
 private:
-    Span<TypeErasedParameter const> m_parameters;
+    ReadonlySpan<TypeErasedParameter> m_parameters;
     size_t m_next_index { 0 };
 };
 
@@ -359,14 +360,14 @@ struct Formatter<StringView> : StandardFormatter {
 
 template<typename T>
 requires(HasFormatter<T>)
-struct Formatter<Span<T const>> : StandardFormatter {
+struct Formatter<ReadonlySpan<T>> : StandardFormatter {
     Formatter() = default;
     explicit Formatter(StandardFormatter formatter)
         : StandardFormatter(move(formatter))
     {
     }
 
-    ErrorOr<void> format(FormatBuilder& builder, Span<T const> value)
+    ErrorOr<void> format(FormatBuilder& builder, ReadonlySpan<T> value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };
@@ -406,19 +407,19 @@ struct Formatter<Span<T const>> : StandardFormatter {
 
 template<typename T>
 requires(HasFormatter<T>)
-struct Formatter<Span<T>> : Formatter<Span<T const>> {
+struct Formatter<Span<T>> : Formatter<ReadonlySpan<T>> {
     ErrorOr<void> format(FormatBuilder& builder, Span<T> value)
     {
-        return Formatter<Span<T const>>::format(builder, value);
+        return Formatter<ReadonlySpan<T>>::format(builder, value);
     }
 };
 
 template<typename T, size_t inline_capacity>
 requires(HasFormatter<T>)
-struct Formatter<Vector<T, inline_capacity>> : Formatter<Span<T const>> {
+struct Formatter<Vector<T, inline_capacity>> : Formatter<ReadonlySpan<T>> {
     ErrorOr<void> format(FormatBuilder& builder, Vector<T, inline_capacity> const& value)
     {
-        return Formatter<Span<T const>>::format(builder, value.span());
+        return Formatter<ReadonlySpan<T>>::format(builder, value.span());
     }
 };
 
@@ -684,9 +685,7 @@ struct Formatter<Error> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
     {
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
-        if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "Error(errno={})"sv, error.code());
-        return Formatter<FormatString>::format(builder, "Error({})"sv, error.string_literal());
+        return Formatter<FormatString>::format(builder, "Error(errno={})"sv, error.code());
 #else
         if (error.is_syscall())
             return Formatter<FormatString>::format(builder, "{}: {} (errno={})"sv, error.string_literal(), strerror(error.code()), error.code());

@@ -132,7 +132,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     }
 
     if (m_perform_autocomplete) {
-        autocomplete(stdout, { argv[0], strlen(argv[0]) }, Span<char const* const> { argv + optind, static_cast<size_t>(argc - optind) });
+        autocomplete(stdout, { argv[0], strlen(argv[0]) }, ReadonlySpan<char const*> { argv + optind, static_cast<size_t>(argc - optind) });
         if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
             exit(0);
         return false;
@@ -731,7 +731,7 @@ void ArgsParser::add_positional_argument(Vector<StringView>& values, char const*
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::autocomplete(FILE* file, StringView program_name, Span<char const* const> remaining_arguments)
+void ArgsParser::autocomplete(FILE* file, StringView program_name, ReadonlySpan<char const*> remaining_arguments)
 {
     // We expect the full invocation of the program to be available as positional args,
     // e.g. `foo --bar arg -b` (program invoked as `foo --complete -- foo --bar arg -b`)

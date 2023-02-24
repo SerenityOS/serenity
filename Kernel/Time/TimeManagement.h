@@ -52,6 +52,7 @@ public:
     void set_epoch_time(Time);
     time_t ticks_per_second() const;
     static Time boot_time();
+    Time clock_resolution() const;
 
     bool is_system_timer(HardwareTimerBase const&) const;
 

@@ -11,8 +11,8 @@
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
@@ -65,7 +65,7 @@ static bool parse_name(StringView name, OpenFile& file)
 
 static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 {
-    auto file = Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/fds", pid), Core::Stream::OpenMode::Read);
+    auto file = Core::File::open(DeprecatedString::formatted("/proc/{}/fds", pid), Core::File::OpenMode::Read);
     if (file.is_error()) {
         outln("lsof: PID {}: {}", pid, file.error());
         return Vector<OpenFile>();
@@ -87,9 +87,9 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
     json.as_array().for_each([pid, &files](JsonValue const& object) {
         OpenFile open_file;
         open_file.pid = pid;
-        open_file.fd = object.as_object().get_deprecated("fd"sv).to_int();
+        open_file.fd = object.as_object().get_integer<int>("fd"sv).value();
 
-        DeprecatedString name = object.as_object().get_deprecated("absolute_path"sv).to_deprecated_string();
+        DeprecatedString name = object.as_object().get_deprecated_string("absolute_path"sv).value_or({});
         VERIFY(parse_name(name, open_file));
         open_file.full_name = name;
 

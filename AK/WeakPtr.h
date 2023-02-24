@@ -149,8 +149,11 @@ public:
         return nullptr;
     }
 
-    [[nodiscard]] T const* value() const { return unsafe_ptr(); }
-    [[nodiscard]] T* value() { return unsafe_ptr(); }
+    [[nodiscard]] NonnullRefPtr<T> value() const
+    {
+        VERIFY(has_value());
+        return *unsafe_ptr();
+    }
 
     operator bool() const { return m_link ? !m_link->is_null() : false; }
 

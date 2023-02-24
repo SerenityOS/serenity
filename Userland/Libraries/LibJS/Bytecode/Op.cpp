@@ -74,7 +74,7 @@ static ThrowCompletionOr<void> put_by_property_key(Object* object, Value value, 
     case PropertyKind::KeyValue: {
         bool succeeded = TRY(object->internal_set(name, interpreter.accumulator(), object));
         if (!succeeded && vm.in_strict_mode())
-            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, interpreter.accumulator().to_string_without_side_effects());
+            return vm.throw_completion<TypeError>(ErrorType::ReferenceNullishSetProperty, name, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
         break;
     }
     case PropertyKind::Spread:
@@ -150,7 +150,7 @@ static ThrowCompletionOr<Value> not_(VM&, Value value)
 
 static ThrowCompletionOr<Value> typeof_(VM& vm, Value value)
 {
-    return Value(PrimitiveString::create(vm, value.typeof()));
+    return MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
 }
 
 #define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                   \
@@ -320,17 +320,17 @@ ThrowCompletionOr<void> NewRegExp::execute_impl(Bytecode::Interpreter& interpret
     return {};
 }
 
-#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                          \
-    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                         \
-    {                                                                                                                                      \
-        auto& vm = interpreter.vm();                                                                                                       \
-        auto& realm = *vm.current_realm();                                                                                                 \
-        interpreter.accumulator() = ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string));                 \
-        return {};                                                                                                                         \
-    }                                                                                                                                      \
-    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                               \
-    {                                                                                                                                      \
-        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string)); \
+#define JS_DEFINE_NEW_BUILTIN_ERROR_OP(ErrorName)                                                                                             \
+    ThrowCompletionOr<void> New##ErrorName::execute_impl(Bytecode::Interpreter& interpreter) const                                            \
+    {                                                                                                                                         \
+        auto& vm = interpreter.vm();                                                                                                          \
+        auto& realm = *vm.current_realm();                                                                                                    \
+        interpreter.accumulator() = MUST_OR_THROW_OOM(ErrorName::create(realm, interpreter.current_executable().get_string(m_error_string))); \
+        return {};                                                                                                                            \
+    }                                                                                                                                         \
+    DeprecatedString New##ErrorName::to_deprecated_string_impl(Bytecode::Executable const& executable) const                                  \
+    {                                                                                                                                         \
+        return DeprecatedString::formatted("New" #ErrorName " {} (\"{}\")", m_error_string, executable.string_table->get(m_error_string));    \
     }
 
 JS_ENUMERATE_NEW_BUILTIN_ERROR_OPS(JS_DEFINE_NEW_BUILTIN_ERROR_OP)
@@ -446,7 +446,7 @@ ThrowCompletionOr<void> CreateVariable::execute_impl(Bytecode::Interpreter& inte
         // Note: This is papering over an issue where "FunctionDeclarationInstantiation" creates these bindings for us.
         //       Instead of crashing in there, we'll just raise an exception here.
         if (TRY(vm.lexical_environment()->has_binding(name)))
-            return vm.throw_completion<InternalError>(DeprecatedString::formatted("Lexical environment already has binding '{}'", name));
+            return vm.throw_completion<InternalError>(TRY_OR_THROW_OOM(vm, String::formatted("Lexical environment already has binding '{}'", name)));
 
         if (m_is_immutable)
             vm.lexical_environment()->create_immutable_binding(vm, name, vm.in_strict_mode());
@@ -593,7 +593,7 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
     auto arguments = interpreter.accumulator();
 
     if (!(arguments.is_object() && is<Array>(arguments.as_object()))) {
-        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), arguments.to_string_without_side_effects());
+        dbgln("[{}] Call arguments are not an array, but: {}", interpreter.debug_position(), MUST(arguments.to_string_without_side_effects()));
         interpreter.current_executable().dump();
         VERIFY_NOT_REACHED();
     }
@@ -614,11 +614,13 @@ static MarkedVector<Value> argument_list_evaluation(Bytecode::Interpreter& inter
 
 Completion Call::throw_type_error_for_callee(Bytecode::Interpreter& interpreter, StringView callee_type) const
 {
+    auto& vm = interpreter.vm();
     auto callee = interpreter.reg(m_callee);
-    if (m_expression_string.has_value())
-        return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
 
-    return interpreter.vm().throw_completion<TypeError>(ErrorType::IsNotA, callee.to_string_without_side_effects(), callee_type);
+    if (m_expression_string.has_value())
+        return vm.throw_completion<TypeError>(ErrorType::IsNotAEvaluatedFrom, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type, interpreter.current_executable().get_string(m_expression_string->value()));
+
+    return vm.throw_completion<TypeError>(ErrorType::IsNotA, TRY_OR_THROW_OOM(vm, callee.to_string_without_side_effects()), callee_type);
 }
 
 ThrowCompletionOr<void> Call::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -747,7 +749,7 @@ ThrowCompletionOr<void> ThrowIfNotObject::execute_impl(Bytecode::Interpreter& in
 {
     auto& vm = interpreter.vm();
     if (!interpreter.accumulator().is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, interpreter.accumulator().to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, interpreter.accumulator().to_string_without_side_effects()));
     return {};
 }
 
@@ -927,7 +929,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                 auto& realm = *vm.current_realm();
                 auto iterated_object_value = vm.this_value();
                 if (!iterated_object_value.is_object())
-                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next");
+                    return vm.throw_completion<InternalError>("Invalid state for GetObjectPropertyIterator.next"sv);
 
                 auto& iterated_object = iterated_object_value.as_object();
                 auto result_object = Object::create(realm, nullptr);
@@ -937,9 +939,7 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
                         return result_object;
                     }
 
-                    auto it = items.begin();
-                    auto key = *it;
-                    items.remove(it);
+                    auto key = items.take_first();
 
                     // If the key was already seen, skip over it (invariant no. 4)
                     auto result = seen_items.set(key);
@@ -1035,7 +1035,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
     // 2. If val is a Reference Record, then
     //    a. If IsUnresolvableReference(val) is true, return "undefined".
     if (reference.is_unresolvable()) {
-        interpreter.accumulator() = PrimitiveString::create(vm, "undefined"sv);
+        interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, "undefined"sv));
         return {};
     }
 
@@ -1044,7 +1044,7 @@ ThrowCompletionOr<void> TypeofVariable::execute_impl(Bytecode::Interpreter& inte
 
     // 4. NOTE: This step is replaced in section B.3.6.3.
     // 5. Return a String according to Table 41.
-    interpreter.accumulator() = PrimitiveString::create(vm, value.typeof());
+    interpreter.accumulator() = MUST_OR_THROW_OOM(PrimitiveString::create(vm, value.typeof()));
     return {};
 }
 
@@ -1111,7 +1111,7 @@ DeprecatedString CopyObjectExcludingProperties::to_deprecated_string_impl(Byteco
     builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
     if (m_excluded_names_count != 0) {
         builder.append(" excluding:["sv);
-        builder.join(", "sv, Span<Register const>(m_excluded_names, m_excluded_names_count));
+        builder.join(", "sv, ReadonlySpan<Register>(m_excluded_names, m_excluded_names_count));
         builder.append(']');
     }
     return builder.to_deprecated_string();
@@ -1343,7 +1343,11 @@ DeprecatedString GetObjectPropertyIterator::to_deprecated_string_impl(Bytecode::
 
 DeprecatedString IteratorClose::to_deprecated_string_impl(Bytecode::Executable const&) const
 {
-    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), m_completion_value.has_value() ? m_completion_value.value().to_string_without_side_effects() : "<empty>");
+    if (!m_completion_value.has_value())
+        return DeprecatedString::formatted("IteratorClose completion_type={} completion_value=<empty>", to_underlying(m_completion_type));
+
+    auto completion_value_string = m_completion_value->to_string_without_side_effects().release_value_but_fixme_should_propagate_errors();
+    return DeprecatedString::formatted("IteratorClose completion_type={} completion_value={}", to_underlying(m_completion_type), completion_value_string);
 }
 
 DeprecatedString IteratorNext::to_deprecated_string_impl(Executable const&) const

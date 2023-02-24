@@ -20,9 +20,7 @@ namespace GUI {
 Statusbar::Statusbar(int count)
 {
     set_fixed_height(18);
-    set_layout<HorizontalBoxLayout>();
-    layout()->set_margins(0);
-    layout()->set_spacing(2);
+    set_layout<HorizontalBoxLayout>(0, 2);
 
     m_corner = add<ResizeCorner>();
     set_segment_count(count);
@@ -86,7 +84,7 @@ void Statusbar::update_segment(size_t index)
             if (!text(i).is_empty())
                 m_segments[i].set_visible(true);
         }
-        segment.set_text(segment.restored_text());
+        segment.set_text(String::from_utf8(segment.restored_text()).release_value_but_fixme_should_propagate_errors());
         segment.set_frame_shape(Gfx::FrameShape::Panel);
         if (segment.mode() != Segment::Mode::Proportional)
             segment.set_fixed_width(segment.restored_width());
@@ -95,7 +93,7 @@ void Statusbar::update_segment(size_t index)
             if (!m_segments[i].is_clickable())
                 m_segments[i].set_visible(false);
         }
-        segment.set_text(segment.override_text());
+        segment.set_text(String::from_utf8(segment.override_text()).release_value_but_fixme_should_propagate_errors());
         segment.set_frame_shape(Gfx::FrameShape::NoFrame);
         if (segment.mode() != Segment::Mode::Proportional)
             segment.set_fixed_width(SpecialDimension::Grow);
@@ -104,7 +102,7 @@ void Statusbar::update_segment(size_t index)
 
 DeprecatedString Statusbar::text(size_t index) const
 {
-    return m_segments.at(index).text();
+    return m_segments.at(index).text().to_deprecated_string();
 }
 
 void Statusbar::set_text(DeprecatedString text)

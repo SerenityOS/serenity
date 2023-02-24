@@ -14,7 +14,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(spaces_in_indent >= 0);
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 
@@ -139,7 +139,7 @@ JsonValue query(JsonValue const& value, Vector<StringView>& key_parts, size_t ke
 
     JsonValue result {};
     if (value.is_object()) {
-        result = value.as_object().get_deprecated(key);
+        result = value.as_object().get(key).value_or({});
     } else if (value.is_array()) {
         auto key_as_index = key.to_int();
         if (key_as_index.has_value())

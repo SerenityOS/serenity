@@ -9,16 +9,17 @@
 
 namespace Kernel {
 
-bool safe_memset(void*, int, size_t, void*&)
+bool safe_memset(void* dest_ptr, int c, size_t n, void*&)
 {
-    TODO_AARCH64();
-    return false;
+    // FIXME: Actually implement a safe memset.
+    memset(dest_ptr, c, n);
+    return true;
 }
 
-ssize_t safe_strnlen(char const*, unsigned long, void*&)
+ssize_t safe_strnlen(char const* str, unsigned long max_n, void*&)
 {
-    TODO_AARCH64();
-    return 0;
+    // FIXME: Actually implement a safe strnlen.
+    return strnlen(str, max_n);
 }
 
 bool safe_memcpy(void* dest_ptr, void const* src_ptr, unsigned long n, void*&)

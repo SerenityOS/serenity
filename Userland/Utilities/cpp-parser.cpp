@@ -5,7 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCpp/Parser.h>
 #include <LibMain/Main.h>
 
@@ -20,7 +20,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (path.is_empty())
         path = "Source/little/main.cpp"sv;
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto content = TRY(file->read_until_eof());
     StringView content_view(content);
 

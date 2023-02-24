@@ -21,7 +21,8 @@ public:
     ~FlyString();
 
     static ErrorOr<FlyString> from_utf8(StringView);
-    explicit FlyString(String const&);
+    FlyString(String const&);
+    FlyString& operator=(String const&);
 
     FlyString(FlyString const&);
     FlyString& operator=(FlyString const&);

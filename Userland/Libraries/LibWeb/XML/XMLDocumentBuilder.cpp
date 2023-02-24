@@ -64,7 +64,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
         }
     }
 
-    auto node = DOM::create_element(m_document, name, {});
+    auto node = DOM::create_element(m_document, name, {}).release_value_but_fixme_should_propagate_errors();
     // When an XML parser with XML scripting support enabled creates a script element,
     // it must have its parser document set and its "force async" flag must be unset.
     // FIXME: If the parser was created as part of the XML fragment parsing algorithm, then the element must be marked as "already started" also.
@@ -189,9 +189,9 @@ void XMLDocumentBuilder::document_end()
         document->load_timing_info().dom_content_loaded_event_start_time = HighResolutionTime::unsafe_shared_current_time();
 
         // Fire an event named DOMContentLoaded at the Document object, with its bubbles attribute initialized to true.
-        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded);
+        auto content_loaded_event = DOM::Event::create(document->realm(), HTML::EventNames::DOMContentLoaded).release_value_but_fixme_should_propagate_errors();
         content_loaded_event->set_bubbles(true);
-        document->dispatch_event(*content_loaded_event);
+        document->dispatch_event(content_loaded_event);
 
         // Set the Document's load timing info's DOM content loaded event end time to the current high resolution time given the Document's relevant global object.
         document->load_timing_info().dom_content_loaded_event_end_time = HighResolutionTime::unsafe_shared_current_time();
@@ -229,7 +229,7 @@ void XMLDocumentBuilder::document_end()
         // Fire an event named load at window, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         // We should reorganize this so that the flag appears explicitly here instead.
-        window->dispatch_event(*DOM::Event::create(document->realm(), HTML::EventNames::load));
+        window->dispatch_event(DOM::Event::create(document->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
 
         // FIXME: Invoke WebDriver BiDi load complete with the Document's browsing context, and a new WebDriver BiDi navigation status whose id is the Document object's navigation id, status is "complete", and url is the Document object's URL.
 

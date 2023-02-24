@@ -341,7 +341,6 @@ void init_stage2(void*)
     }
 
     NetworkingManagement::the().initialize();
-    Syscall::initialize();
 
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
     (void)KCOVDevice::must_create().leak_ref();

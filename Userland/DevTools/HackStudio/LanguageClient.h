@@ -31,7 +31,7 @@ class ConnectionToServer
     friend class ConnectionToServerWrapper;
 
 public:
-    ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket, DeprecatedString const& project_path)
+    ConnectionToServer(NonnullOwnPtr<Core::LocalSocket> socket, DeprecatedString const& project_path)
         : IPC::ConnectionToServer<LanguageClientEndpoint, LanguageServerEndpoint>(*this, move(socket))
     {
         m_project_path = project_path;

@@ -11,4 +11,3 @@
 /usr/Tests	/usr/Tests	bind	bind,nodev,ro
 /usr/local	/usr/local	bind	bind,nodev,nosuid
 
-none	/tmp	tmp	nodev,nosuid
