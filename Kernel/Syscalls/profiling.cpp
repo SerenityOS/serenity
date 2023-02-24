@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Coredump.h>
 #include <Kernel/PerformanceManager.h>
+#include <Kernel/Tasks/Coredump.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Time/TimeManagement.h>

@@ -10,7 +10,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/Singleton.h>
-#include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -18,6 +17,7 @@
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
+#include <Kernel/Tasks/Coredump.h>
 #include <Kernel/Tasks/Process.h>
 #include <LibC/elf.h>
 #include <LibELF/Core.h>
