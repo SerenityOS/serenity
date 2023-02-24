@@ -35,7 +35,7 @@ JS::ThrowCompletionOr<void> SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
-JS::Promise* SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
+JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
 {
     auto& realm = this->realm();
 
