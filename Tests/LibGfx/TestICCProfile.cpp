@@ -9,6 +9,7 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PNGLoader.h>
+#include <LibGfx/WebPLoader.h>
 #include <LibTest/TestCase.h>
 
 #ifdef AK_OS_SERENITY
@@ -39,6 +40,30 @@ TEST_CASE(jpg)
 
     auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
     EXPECT(icc_profile->is_v4());
+}
+
+TEST_CASE(webp_extended_lossless)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
+    auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(webp->initialize());
+    auto icc_bytes = MUST(webp->icc_data());
+    EXPECT(icc_bytes.has_value());
+
+    auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
+    EXPECT(icc_profile->is_v2());
+}
+
+TEST_CASE(webp_extended_lossy)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
+    auto webp = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(webp->initialize());
+    auto icc_bytes = MUST(webp->icc_data());
+    EXPECT(icc_bytes.has_value());
+
+    auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes.value()));
+    EXPECT(icc_profile->is_v2());
 }
 
 TEST_CASE(serialize_icc)
