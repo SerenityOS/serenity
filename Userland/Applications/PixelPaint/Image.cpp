@@ -665,13 +665,18 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
     for (auto const& layer : m_layers) {
         auto layer_content_rect_in_layer_coordinates = layer->nonempty_content_bounding_rect();
         if (!layer_content_rect_in_layer_coordinates.has_value())
-            continue;
+            layer_content_rect_in_layer_coordinates = layer->rect();
+
         auto layer_content_rect_in_image_coordinates = layer_content_rect_in_layer_coordinates->translated(layer->location());
         if (!bounding_rect.has_value())
             bounding_rect = layer_content_rect_in_image_coordinates;
         else
             bounding_rect = bounding_rect->united(layer_content_rect_in_image_coordinates);
     }
+
+    bounding_rect->intersect(rect());
+    if (bounding_rect == rect())
+        return OptionalNone {};
 
     return bounding_rect;
 }
