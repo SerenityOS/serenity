@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Tasks/Coredump.h>
 
 namespace Kernel {
 

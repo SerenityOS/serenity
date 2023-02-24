@@ -41,8 +41,6 @@ set(KERNEL_SOURCES
     Bus/VirtIO/Queue.cpp
     Bus/VirtIO/RNG.cpp
     CommandLine.cpp
-    Coredump.cpp
-    CrashHandler.cpp
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
     Devices/Audio/Channel.cpp
@@ -344,6 +342,8 @@ set(KERNEL_SOURCES
     TTY/SlavePTY.cpp
     TTY/TTY.cpp
     TTY/VirtualConsole.cpp
+    Tasks/Coredump.cpp
+    Tasks/CrashHandler.cpp
     Tasks/FinalizerTask.cpp
     Tasks/FutexQueue.cpp
     Tasks/Process.cpp
