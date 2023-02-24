@@ -11,10 +11,10 @@
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Coredump.h>
-#include <Kernel/Credentials.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/InterruptDisabler.h>
+#include <Kernel/Security/Credentials.h>
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
