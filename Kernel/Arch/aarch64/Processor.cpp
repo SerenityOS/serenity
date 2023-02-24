@@ -13,7 +13,7 @@
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/CPU.h>
 #include <Kernel/Arch/aarch64/CPUID.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>

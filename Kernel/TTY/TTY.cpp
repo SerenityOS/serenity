@@ -13,7 +13,7 @@
 #include <Kernel/API/ttydefaults.h>
 #include <Kernel/API/ttydefaultschars.h>
 #include <Kernel/Debug.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/UnixTypes.h>
 

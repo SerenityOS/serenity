@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 

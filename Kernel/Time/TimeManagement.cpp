@@ -25,7 +25,7 @@
 #include <Kernel/Arch/CurrentTime.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Scheduler.h>

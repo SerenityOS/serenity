@@ -8,7 +8,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Devices/Audio/AC97.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 
 namespace Kernel {

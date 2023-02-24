@@ -12,7 +12,7 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Security/Credentials.h>
 #include <Kernel/Tasks/Coredump.h>
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION

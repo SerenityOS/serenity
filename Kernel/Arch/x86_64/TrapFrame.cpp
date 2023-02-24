@@ -6,7 +6,7 @@
 
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/x86_64/TrapFrame.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 
 namespace Kernel {
 

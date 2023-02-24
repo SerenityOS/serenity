@@ -10,7 +10,7 @@
 #include <AK/Time.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceManager.h>
