@@ -9,8 +9,8 @@
 #include <AK/Platform.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/RegisterState.h>
-#include <Kernel/ExecutionMode.h>
 #include <Kernel/Memory/VirtualAddress.h>
+#include <Kernel/Security/ExecutionMode.h>
 
 namespace Kernel {
 
