@@ -84,7 +84,6 @@ RequestManagerQt::Request::~Request() = default;
 
 void RequestManagerQt::Request::did_finish()
 {
-    bool success = m_reply.error() == QNetworkReply::NetworkError::NoError;
     auto buffer = m_reply.readAll();
     auto http_status_code = m_reply.attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt();
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
@@ -106,5 +105,6 @@ void RequestManagerQt::Request::did_finish()
     if (!set_cookie_headers.is_empty()) {
         response_headers.set("set-cookie"sv, JsonArray { set_cookie_headers }.to_deprecated_string());
     }
+    bool success = http_status_code != 0;
     on_buffered_request_finish(success, buffer.length(), response_headers, http_status_code, ReadonlyBytes { buffer.data(), (size_t)buffer.size() });
 }
