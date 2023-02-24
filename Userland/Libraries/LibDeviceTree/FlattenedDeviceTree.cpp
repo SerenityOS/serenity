@@ -113,9 +113,12 @@ static ErrorOr<ReadonlyBytes> slow_get_property_raw(StringView name, FlattenedDe
     // Name is a path like /path/to/node/property
     Vector<StringView, 16> path;
     TRY(name.for_each_split_view('/', SplitBehavior::Nothing, [&path](StringView view) -> ErrorOr<void> {
-        if (path.size() == path.capacity())
+        if (path.size() == path.capacity()) {
             return Error::from_errno(ENAMETOOLONG);
-        return path.try_append(view);
+        }
+        // This can never fail as all entries go into the inline buffer, enforced by the check above.
+        MUST(path.try_append(view));
+        return {};
     }));
 
     bool check_property_name = path.size() == 1; // Properties on root node should be checked immediately
