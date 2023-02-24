@@ -13,7 +13,7 @@
 #endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {

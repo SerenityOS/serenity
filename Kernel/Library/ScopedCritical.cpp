@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/ScopedCritical.h>
+#include <Kernel/Library/ScopedCritical.h>
 
 #include <Kernel/Arch/Processor.h>
 

@@ -16,7 +16,7 @@
 #include <LibELF/Validation.h>
 
 #ifdef KERNEL
-#    include <Kernel/StdLib.h>
+#    include <Kernel/Library/StdLib.h>
 #else
 #    include <string.h>
 #endif

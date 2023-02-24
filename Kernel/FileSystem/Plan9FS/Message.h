@@ -8,8 +8,8 @@
 
 #include <AK/Types.h>
 #include <Kernel/FileSystem/Plan9FS/Definitions.h>
-#include <Kernel/KBuffer.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBuffer.h>
+#include <Kernel/Library/KBufferBuilder.h>
 
 namespace Kernel {
 

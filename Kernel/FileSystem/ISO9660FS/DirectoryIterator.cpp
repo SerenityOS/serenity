@@ -7,7 +7,7 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/ISO9660FS/Definitions.h>
 #include <Kernel/FileSystem/ISO9660FS/DirectoryIterator.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 
 namespace Kernel {
 

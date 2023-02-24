@@ -13,7 +13,7 @@
 #include <Kernel/FileSystem/FATFS/Definitions.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 
 namespace Kernel {
 

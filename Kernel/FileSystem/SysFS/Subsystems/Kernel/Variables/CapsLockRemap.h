@@ -9,8 +9,8 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

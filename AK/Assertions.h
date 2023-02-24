@@ -7,7 +7,7 @@
 #pragma once
 
 #if defined(KERNEL)
-#    include <Kernel/Assertions.h>
+#    include <Kernel/Library/Assertions.h>
 #else
 #    include <assert.h>
 extern "C" __attribute__((noreturn)) void ak_verification_failed(char const*);

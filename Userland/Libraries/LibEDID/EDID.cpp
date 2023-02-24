@@ -11,7 +11,7 @@
 #include <LibEDID/EDID.h>
 
 #ifdef KERNEL
-#    include <Kernel/StdLib.h>
+#    include <Kernel/Library/StdLib.h>
 #else
 #    include <AK/ScopeGuard.h>
 #    include <Kernel/API/Graphics.h>

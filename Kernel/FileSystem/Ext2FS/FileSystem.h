@@ -11,7 +11,7 @@
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Definitions.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

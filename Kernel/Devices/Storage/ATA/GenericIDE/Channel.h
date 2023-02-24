@@ -22,8 +22,8 @@
 #include <Kernel/Devices/Storage/ATA/ATADevice.h>
 #include <Kernel/Devices/Storage/ATA/ATAPort.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
-#include <Kernel/IOWindow.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Library/IOWindow.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalAddress.h>

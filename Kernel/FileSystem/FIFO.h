@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Kernel/DoubleBuffer.h>
 #include <Kernel/FileSystem/File.h>
+#include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Tasks/WaitQueue.h>
 #include <Kernel/UnixTypes.h>

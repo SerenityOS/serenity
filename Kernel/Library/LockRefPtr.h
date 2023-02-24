@@ -16,7 +16,7 @@
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #ifdef KERNEL
 #    include <Kernel/Arch/Processor.h>
-#    include <Kernel/ScopedCritical.h>
+#    include <Kernel/Library/ScopedCritical.h>
 #endif
 
 #define LOCKREFPTR_SCRUB_BYTE 0xa0

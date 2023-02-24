@@ -6,7 +6,7 @@
 
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
-#include <Kernel/KBufferBuilder.h>
+#include <Kernel/Library/KBufferBuilder.h>
 
 namespace Kernel {
 

@@ -9,7 +9,7 @@
 #include <Kernel/Devices/Storage/NVMe/NVMeInterruptQueue.h>
 #include <Kernel/Devices/Storage/NVMe/NVMePollQueue.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeQueue.h>
-#include <Kernel/StdLib.h>
+#include <Kernel/Library/StdLib.h>
 
 namespace Kernel {
 ErrorOr<NonnullLockRefPtr<NVMeQueue>> NVMeQueue::try_create(NVMeController& device, u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type)

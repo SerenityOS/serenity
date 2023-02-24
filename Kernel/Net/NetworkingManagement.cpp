@@ -7,7 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>

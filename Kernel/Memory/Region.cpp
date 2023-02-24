@@ -10,11 +10,11 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/InterruptDisabler.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

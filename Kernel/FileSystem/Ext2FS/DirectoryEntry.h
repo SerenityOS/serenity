@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel {
 

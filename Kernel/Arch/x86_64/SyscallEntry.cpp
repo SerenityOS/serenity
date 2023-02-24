@@ -8,8 +8,8 @@
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86_64/DescriptorTable.h>
 #include <Kernel/Arch/x86_64/Processor.h>
-#include <Kernel/Assertions.h>
-#include <Kernel/Panic.h>
+#include <Kernel/Library/Assertions.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

@@ -5,8 +5,8 @@
  */
 
 #include <Kernel/KSyms.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Tasks/Process.h>
-#include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/kstdio.h>
 
 namespace Kernel {

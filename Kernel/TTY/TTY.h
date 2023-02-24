@@ -8,7 +8,7 @@
 
 #include <AK/CircularDeque.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/DoubleBuffer.h>
+#include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>

@@ -16,10 +16,10 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/Thread.h>

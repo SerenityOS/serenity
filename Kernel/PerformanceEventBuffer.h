@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 
 namespace Kernel {
 

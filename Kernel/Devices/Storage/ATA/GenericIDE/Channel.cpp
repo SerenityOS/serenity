@@ -13,7 +13,7 @@
 #include <Kernel/Devices/Storage/ATA/Definitions.h>
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Devices/Storage/ATA/GenericIDE/Controller.h>
-#include <Kernel/IOWindow.h>
+#include <Kernel/Library/IOWindow.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>

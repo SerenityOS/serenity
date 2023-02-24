@@ -7,7 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/KLexicalPath.h>
+#include <Kernel/Library/KLexicalPath.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {

@@ -11,10 +11,10 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Library/StdLib.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/UnixTypes.h>
 

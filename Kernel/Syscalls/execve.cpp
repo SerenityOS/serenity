@@ -12,10 +12,10 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>

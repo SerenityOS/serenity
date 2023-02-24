@@ -8,11 +8,11 @@
 
 #include <AK/IntrusiveList.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/WaitQueue.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

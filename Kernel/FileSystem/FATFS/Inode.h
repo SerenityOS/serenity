@@ -11,8 +11,8 @@
 #include <Kernel/FileSystem/FATFS/Definitions.h>
 #include <Kernel/FileSystem/FATFS/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/KBuffer.h>
-#include <Kernel/KString.h>
+#include <Kernel/Library/KBuffer.h>
+#include <Kernel/Library/KString.h>
 
 namespace Kernel {
 

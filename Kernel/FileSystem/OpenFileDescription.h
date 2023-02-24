@@ -14,7 +14,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
-#include <Kernel/KBuffer.h>
+#include <Kernel/Library/KBuffer.h>
 #include <Kernel/Memory/VirtualAddress.h>
 
 namespace Kernel {
