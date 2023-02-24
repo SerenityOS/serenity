@@ -30,10 +30,14 @@ class BookmarkEditor final : public GUI::Dialog {
 
 public:
     static Vector<JsonValue>
-    edit_bookmark(Window* parent_window, StringView title, StringView url)
+    edit_bookmark(Window* parent_window, StringView title, StringView url, BookmarksBarWidget::PerformEditOn perform_edit_on)
     {
         auto editor = BookmarkEditor::construct(parent_window, title, url);
-        editor->set_title("Edit Bookmark");
+        if (perform_edit_on == BookmarksBarWidget::PerformEditOn::NewBookmark) {
+            editor->set_title("Add Bookmark");
+        } else {
+            editor->set_title("Edit Bookmark");
+        }
         editor->set_icon(g_icon_bag.bookmark_filled);
 
         if (editor->exec() == ExecResult::OK) {
@@ -306,37 +310,53 @@ bool BookmarksBarWidget::add_bookmark(DeprecatedString const& url, DeprecatedStr
     values.append(title);
     values.append(url);
 
-    auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
-    if (json_model.add(move(values))) {
-        json_model.store();
+    auto was_bookmark_added = update_model(values, [](auto& model, auto&& values) {
+        return model.add(move(values));
+    });
+
+    if (!was_bookmark_added)
+        return false;
+
+    if (on_bookmark_add)
+        on_bookmark_add(url);
+
+    if (edit_bookmark(url, PerformEditOn::NewBookmark))
         return true;
-    }
+
+    remove_bookmark(url);
     return false;
 }
 
-bool BookmarksBarWidget::edit_bookmark(DeprecatedString const& url)
+bool BookmarksBarWidget::edit_bookmark(DeprecatedString const& url, PerformEditOn perform_edit_on)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
         auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
         auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
 
         if (item_url == url) {
-            auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url);
-            bool item_replaced = false;
-
-            if (!values.is_empty()) {
-                auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
-                item_replaced = json_model.set(item_index, move(values));
-
-                if (item_replaced)
-                    json_model.store();
-            }
-
-            return item_replaced;
+            auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url, perform_edit_on);
+            return update_model(values, [item_index](auto& model, auto&& values) {
+                return model.set(item_index, move(values));
+            });
         }
     }
 
     return false;
+}
+
+bool BookmarksBarWidget::update_model(Vector<JsonValue>& values, Function<bool(GUI::JsonArrayModel& model, Vector<JsonValue>&& values)> perform_model_change)
+{
+    bool has_model_changed = false;
+
+    if (!values.is_empty()) {
+        auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
+        has_model_changed = perform_model_change(json_model, move(values));
+
+        if (has_model_changed)
+            json_model.store();
+    }
+
+    return has_model_changed;
 }
 
 }
