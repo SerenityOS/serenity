@@ -258,7 +258,6 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    Syscall.cpp
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
     Security/Random.cpp
@@ -324,6 +323,7 @@ set(KERNEL_SOURCES
     Syscalls/stat.cpp
     Syscalls/statvfs.cpp
     Syscalls/sync.cpp
+    Syscalls/SyscallHandler.cpp
     Syscalls/sysconf.cpp
     Syscalls/thread.cpp
     Syscalls/times.cpp
@@ -653,7 +653,7 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
         # interrupt handlers because their calling convention is not compatible
         # with the System V ABI.
         ../Kernel/Arch/x86_64/Interrupts.cpp
-        ../Kernel/Syscall.cpp
+        ../Kernel/Syscall/SyscallHandler.cpp
     )
     set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
 elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
