@@ -110,6 +110,7 @@ static ErrorOr<void> decode_webp_header(WebPLoadingContext& context)
     return {};
 }
 
+// https://developers.google.com/speed/webp/docs/riff_container#riff_file_format
 static ErrorOr<Chunk> decode_webp_chunk_header(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
     if (chunks.size() < sizeof(ChunkHeader)) {
@@ -128,10 +129,29 @@ static ErrorOr<Chunk> decode_webp_chunk_header(WebPLoadingContext& context, Read
     return Chunk { header.chunk_type, { chunks.data() + sizeof(ChunkHeader), header.chunk_size } };
 }
 
+// https://developers.google.com/speed/webp/docs/riff_container#riff_file_format
 static ErrorOr<Chunk> decode_webp_advance_chunk(WebPLoadingContext& context, ReadonlyBytes& chunks)
 {
     auto chunk = TRY(decode_webp_chunk_header(context, chunks));
+
+    // "Chunk Size: 32 bits (uint32)
+    //      The size of the chunk in bytes, not including this field, the chunk identifier or padding.
+    //  Chunk Payload: Chunk Size bytes
+    //      The data payload. If Chunk Size is odd, a single padding byte -- that MUST be 0 to conform with RIFF -- is added."
     chunks = chunks.slice(sizeof(ChunkHeader) + chunk.data.size());
+
+    if (chunk.data.size() % 2 != 0) {
+        if (chunks.is_empty()) {
+            context.state = WebPLoadingContext::State::Error;
+            return Error::from_string_literal("Missing data for padding byte");
+        }
+        if (*chunks.data() != 0) {
+            context.state = WebPLoadingContext::State::Error;
+            return Error::from_string_literal("Padding byte is not 0");
+        }
+        chunks = chunks.slice(1);
+    }
+
     return chunk;
 }
 
