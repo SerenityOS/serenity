@@ -10,7 +10,7 @@
 #include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Debug.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

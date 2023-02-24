@@ -9,7 +9,7 @@
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>

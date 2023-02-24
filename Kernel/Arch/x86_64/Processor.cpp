@@ -13,7 +13,7 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>

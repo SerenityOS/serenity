@@ -14,7 +14,7 @@
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>

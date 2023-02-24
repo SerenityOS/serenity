@@ -6,7 +6,7 @@
 
 #include <Kernel/Arch/x86_64/Time/HPETComparator.h>
 #include <Kernel/Debug.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/Assertions.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>

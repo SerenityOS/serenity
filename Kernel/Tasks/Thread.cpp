@@ -16,7 +16,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>

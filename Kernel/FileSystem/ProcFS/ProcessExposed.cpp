@@ -9,7 +9,7 @@
 #include <AK/JsonValue.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/ProcFS/Inode.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>

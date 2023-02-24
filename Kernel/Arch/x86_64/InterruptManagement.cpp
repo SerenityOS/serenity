@@ -13,7 +13,7 @@
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>

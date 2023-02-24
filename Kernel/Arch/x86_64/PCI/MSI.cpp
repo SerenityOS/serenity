@@ -8,7 +8,7 @@
 #include <Kernel/Arch/PCIMSI.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/PCI/MSI.h>
-#include <Kernel/InterruptDisabler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 
 namespace Kernel {
 u64 msi_address_register(u8 destination_id, bool redirection_hint, bool destination_mode)

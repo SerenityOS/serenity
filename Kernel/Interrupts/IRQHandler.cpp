@@ -6,8 +6,8 @@
 
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Debug.h>
-#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Interrupts/IRQHandler.h>
+#include <Kernel/Interrupts/InterruptDisabler.h>
 
 namespace Kernel {
 
