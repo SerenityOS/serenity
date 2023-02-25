@@ -120,4 +120,18 @@ ErrorOr<String> to_ascii_lower_case(StringView string)
     return string_builder.to_string();
 }
 
+// https://infra.spec.whatwg.org/#ascii-uppercase
+ErrorOr<String> to_ascii_upper_case(StringView string)
+{
+    // To ASCII uppercase a string, replace all ASCII lower alphas in the string with their
+    // corresponding code point in ASCII upper alpha.
+    StringBuilder string_builder;
+    auto utf8_view = Utf8View { string };
+    for (u32 code_point : utf8_view) {
+        code_point = to_ascii_uppercase(code_point);
+        TRY(string_builder.try_append(code_point));
+    }
+    return string_builder.to_string();
+}
+
 }
