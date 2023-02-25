@@ -82,6 +82,7 @@ MainWidget::MainWidget()
                     m_palette_widget->set_image_editor(nullptr);
                     m_tool_properties_widget->set_enabled(false);
                     set_actions_enabled(false);
+                    set_mask_actions_for_layer(nullptr);
                 }
                 update_window_modified();
             });
@@ -106,6 +107,7 @@ MainWidget::MainWidget()
         };
         // Ensure that our undo/redo actions are in sync with the current editor.
         image_editor_did_update_undo_stack();
+        set_mask_actions_for_layer(image_editor.active_layer());
     };
 }
 
@@ -739,23 +741,38 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     m_layer_menu->add_action(*m_layer_via_cut);
 
     m_layer_menu->add_separator();
-    m_layer_menu->add_action(GUI::Action::create(
-        "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, [&](auto&) {
+
+    auto create_layer_mask_callback = [&](auto const& action_name, Function<void(Layer*)> mask_function) {
+        return [&, mask_function = move(mask_function)](GUI::Action&) {
             auto* editor = current_image_editor();
             VERIFY(editor);
-            auto active_layer = editor->active_layer();
+            auto* active_layer = editor->active_layer();
             if (!active_layer)
                 return;
 
-            if (auto maybe_error = active_layer->create_mask(); maybe_error.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer mask: {}", maybe_error.release_error()));
-                return;
-            }
+            mask_function(active_layer);
 
-            editor->did_complete_action("Add Mask");
+            editor->did_complete_action(action_name);
             editor->update();
             m_layer_list_widget->repaint();
+            set_mask_actions_for_layer(active_layer);
+        };
+    };
+
+    m_add_mask_action = GUI::Action::create(
+        "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, create_layer_mask_callback("Add Mask", [&](Layer* active_layer) {
+            VERIFY(!active_layer->is_masked());
+            if (auto maybe_error = active_layer->create_mask(); maybe_error.is_error())
+                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer mask: {}", maybe_error.release_error()));
         }));
+    m_layer_menu->add_action(*m_add_mask_action);
+
+    m_delete_mask_action = GUI::Action::create(
+        "Delete Mask", create_layer_mask_callback("Delete Mask", [&](Layer* active_layer) {
+            VERIFY(active_layer->is_masked());
+            active_layer->delete_mask();
+        }));
+    m_layer_menu->add_action(*m_delete_mask_action);
 
     m_layer_menu->add_separator();
 
@@ -1115,6 +1132,22 @@ void MainWidget::set_actions_enabled(bool enabled)
     m_zoom_combobox->set_enabled(enabled);
 }
 
+void MainWidget::set_mask_actions_for_layer(Layer* layer)
+{
+    if (!layer) {
+        m_add_mask_action->set_visible(true);
+        m_delete_mask_action->set_visible(false);
+        m_add_mask_action->set_enabled(false);
+        return;
+    }
+
+    m_add_mask_action->set_enabled(true);
+
+    auto masked = layer->is_masked();
+    m_add_mask_action->set_visible(!masked);
+    m_delete_mask_action->set_visible(masked);
+}
+
 void MainWidget::open_image(FileSystemAccessClient::File file)
 {
     auto try_load = m_loader.load_from_file(file.release_stream());
@@ -1165,6 +1198,7 @@ ErrorOr<void> MainWidget::create_image_from_clipboard()
 
     m_layer_list_widget->set_image(image);
     m_layer_list_widget->set_selected_layer(layer);
+    set_mask_actions_for_layer(layer);
     return {};
 }
 
@@ -1196,6 +1230,7 @@ ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
             return;
         m_layer_list_widget->set_selected_layer(layer);
         m_layer_properties_widget->set_layer(layer);
+        set_mask_actions_for_layer(layer);
     };
 
     image_editor.on_title_change = [&](auto const& title) {
