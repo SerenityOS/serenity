@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
+#include <AK/Vector.h>
 #include <LibGfx/WebPLoader.h>
 
 // Overview: https://developers.google.com/speed/webp/docs/compression
@@ -52,6 +53,32 @@ struct Chunk {
     ReadonlyBytes data;
 };
 
+struct VP8Header {
+    u8 version;
+    bool show_frame;
+    u32 size_of_first_partition;
+    u32 width;
+    u8 horizontal_scale;
+    u32 height;
+    u8 vertical_scale;
+};
+
+struct VP8LHeader {
+    u16 width;
+    u16 height;
+    bool is_alpha_used;
+};
+
+struct VP8XHeader {
+    bool has_icc;
+    bool has_alpha;
+    bool has_exif;
+    bool has_xmp;
+    bool has_animation;
+    u32 width;
+    u32 height;
+};
+
 }
 
 struct WebPLoadingContext {
@@ -59,6 +86,7 @@ struct WebPLoadingContext {
         NotDecoded = 0,
         Error,
         HeaderDecoded,
+        FirstChunkDecoded,
         SizeDecoded,
         ChunksDecoded,
         BitmapDecoded,
@@ -66,9 +94,29 @@ struct WebPLoadingContext {
     State state { State::NotDecoded };
     ReadonlyBytes data;
 
+    ReadonlyBytes chunks_cursor;
+
+    Optional<IntSize> size;
+
     RefPtr<Gfx::Bitmap> bitmap;
 
-    Optional<ReadonlyBytes> icc_data;
+    // Either 'VP8 ' (simple lossy file), 'VP8L' (simple lossless file), or 'VP8X' (extended file).
+    Optional<Chunk> first_chunk;
+
+    // If first_chunk is not a VP8X chunk, then only image_data_chunk is set and all the other Chunks are not set.
+
+    // "For a still image, the image data consists of a single frame, which is made up of:
+    //     An optional alpha subchunk.
+    //     A bitstream subchunk."
+    Optional<Chunk> alpha_chunk;      // 'ALPH'
+    Optional<Chunk> image_data_chunk; // Either 'VP8 ' or 'VP8L'.
+
+    Optional<Chunk> animation_header_chunk; // 'ANIM'
+    Vector<Chunk> animation_frame_chunks;   // 'ANMF'
+
+    Optional<Chunk> iccp_chunk; // 'ICCP'
+    Optional<Chunk> exif_chunk; // 'EXIF'
+    Optional<Chunk> xmp_chunk;  // 'XMP '
 
     template<size_t N>
     [[nodiscard]] class Error error(char const (&string_literal)[N])
@@ -149,7 +197,7 @@ static ErrorOr<Chunk> decode_webp_advance_chunk(WebPLoadingContext& context, Rea
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossy
 // https://datatracker.ietf.org/doc/html/rfc6386#section-19 "Annex A: Bitstream Syntax"
-static ErrorOr<void> decode_webp_simple_lossy(WebPLoadingContext& context, Chunk const& vp8_chunk)
+static ErrorOr<VP8Header> decode_webp_chunk_VP8_header(WebPLoadingContext& context, Chunk const& vp8_chunk)
 {
     VERIFY(vp8_chunk.type == FourCC("VP8 "));
 
@@ -200,12 +248,12 @@ static ErrorOr<void> decode_webp_simple_lossy(WebPLoadingContext& context, Chunk
     dbgln_if(WEBP_DEBUG, "version {}, show_frame {}, size_of_first_partition {}, width {}, horizontal_scale {}, height {}, vertical_scale {}",
         version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale);
 
-    return {};
+    return VP8Header { version, show_frame, size_of_first_partition, width, horizontal_scale, height, vertical_scale };
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
-static ErrorOr<void> decode_webp_simple_lossless(WebPLoadingContext& context, Chunk const& vp8l_chunk)
+static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(WebPLoadingContext& context, Chunk const& vp8l_chunk)
 {
     VERIFY(vp8l_chunk.type == FourCC("VP8L"));
 
@@ -231,10 +279,10 @@ static ErrorOr<void> decode_webp_simple_lossless(WebPLoadingContext& context, Ch
     if (version_number != 0)
         return context.error("WebPImageDecoderPlugin: VP8L chunk invalid version_number");
 
-    return {};
+    return VP8LHeader { width, height, is_alpha_used };
 }
 
-static ErrorOr<void> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
+static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
 {
     VERIFY(vp8x_chunk.type == FourCC("VP8X"));
 
@@ -260,11 +308,11 @@ static ErrorOr<void> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk c
     bool has_xmp = flags & 0x4;
     bool has_animation = flags & 0x2;
 
-    // 3 byte reserved
-    // 3 byte width minus one
+    // 3 bytes reserved
+    // 3 bytes width minus one
     u32 width = (data[4] | (data[5] << 8) | (data[6] << 16)) + 1;
 
-    // 3 byte height minus one
+    // 3 bytes height minus one
     u32 height = (data[7] | (data[8] << 8) | (data[9] << 16)) + 1;
 
     dbgln_if(WEBP_DEBUG, "flags 0x{:x} --{}{}{}{}{}{}, width {}, height {}",
@@ -277,32 +325,89 @@ static ErrorOr<void> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk c
         (flags & 0x3e) == 0 ? " none" : "",
         width, height);
 
-    return {};
+    return VP8XHeader { has_icc, has_alpha, has_exif, has_xmp, has_animation, width, height };
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
-static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, Chunk const& vp8x_chunk, ReadonlyBytes chunks)
+static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
-    TRY(decode_webp_chunk_VP8X(context, vp8x_chunk));
-
     // FIXME: This isn't quite to spec, which says
     // "All chunks SHOULD be placed in the same order as listed above.
     //  If a chunk appears in the wrong place, the file is invalid, but readers MAY parse the file, ignoring the chunks that are out of order."
+    auto store = [](auto& field, Chunk const& chunk) {
+        if (!field.has_value())
+            field = chunk;
+    };
     while (!chunks.is_empty()) {
         auto chunk = TRY(decode_webp_advance_chunk(context, chunks));
 
         if (chunk.type == FourCC("ICCP"))
-            context.icc_data = chunk.data;
-
-        // FIXME: Probably want to make this and decode_webp_simple_lossy/lossless call the same function
-        //        instead of calling the _simple functions from the _extended function.
-        if (chunk.type == FourCC("VP8 "))
-            TRY(decode_webp_simple_lossy(context, chunk));
-        if (chunk.type == FourCC("VP8L"))
-            TRY(decode_webp_simple_lossless(context, chunk));
+            store(context.iccp_chunk, chunk);
+        else if (chunk.type == FourCC("ALPH"))
+            store(context.alpha_chunk, chunk);
+        else if (chunk.type == FourCC("ANIM"))
+            store(context.animation_header_chunk, chunk);
+        else if (chunk.type == FourCC("ANMF"))
+            TRY(context.animation_frame_chunks.try_append(chunk));
+        else if (chunk.type == FourCC("EXIF"))
+            store(context.exif_chunk, chunk);
+        else if (chunk.type == FourCC("XMP "))
+            store(context.xmp_chunk, chunk);
+        else if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
+            store(context.image_data_chunk, chunk);
     }
 
     context.state = WebPLoadingContext::State::ChunksDecoded;
+    return {};
+}
+
+static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
+{
+    if (context.state >= WebPLoadingContext::State::FirstChunkDecoded)
+        return {};
+
+    if (context.state < WebPLoadingContext::HeaderDecoded)
+        TRY(decode_webp_header(context));
+
+    context.chunks_cursor = context.data.slice(sizeof(WebPFileHeader));
+    auto first_chunk = TRY(decode_webp_advance_chunk(context, context.chunks_cursor));
+
+    if (first_chunk.type != FourCC("VP8 ") && first_chunk.type != FourCC("VP8L") && first_chunk.type != FourCC("VP8X"))
+        return context.error("WebPImageDecoderPlugin: Invalid first chunk type");
+
+    context.first_chunk = first_chunk;
+    context.state = WebPLoadingContext::State::FirstChunkDecoded;
+
+    if (first_chunk.type == FourCC("VP8 ") || first_chunk.type == FourCC("VP8L"))
+        context.image_data_chunk = first_chunk;
+
+    return {};
+}
+
+static ErrorOr<void> decode_webp_size(WebPLoadingContext& context)
+{
+    if (context.state >= WebPLoadingContext::State::SizeDecoded)
+        return {};
+
+    if (context.state < WebPLoadingContext::FirstChunkDecoded)
+        TRY(decode_webp_first_chunk(context));
+
+    if (context.first_chunk->type == FourCC("VP8 ")) {
+        auto header = TRY(decode_webp_chunk_VP8_header(context, context.first_chunk.value()));
+        context.size = IntSize { header.width, header.height };
+        context.state = WebPLoadingContext::State::SizeDecoded;
+        return {};
+    }
+    if (context.first_chunk->type == FourCC("VP8L")) {
+        auto header = TRY(decode_webp_chunk_VP8L_header(context, context.first_chunk.value()));
+        context.size = IntSize { header.width, header.height };
+        context.state = WebPLoadingContext::State::SizeDecoded;
+        return {};
+    }
+    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+    auto header = TRY(decode_webp_chunk_VP8X(context, context.first_chunk.value()));
+    context.size = IntSize { header.width, header.height };
+    context.state = WebPLoadingContext::State::SizeDecoded;
     return {};
 }
 
@@ -311,26 +416,14 @@ static ErrorOr<void> decode_webp_chunks(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::State::ChunksDecoded)
         return {};
 
-    if (context.state < WebPLoadingContext::HeaderDecoded)
-        TRY(decode_webp_header(context));
+    if (context.state < WebPLoadingContext::SizeDecoded)
+        TRY(decode_webp_size(context));
 
-    ReadonlyBytes chunks = context.data.slice(sizeof(WebPFileHeader));
-    auto first_chunk = TRY(decode_webp_advance_chunk(context, chunks));
+    if (context.first_chunk->type == FourCC("VP8X"))
+        return decode_webp_extended(context, context.chunks_cursor);
 
-    if (first_chunk.type == FourCC("VP8 ")) {
-        context.state = WebPLoadingContext::State::ChunksDecoded;
-        return decode_webp_simple_lossy(context, first_chunk);
-    }
-
-    if (first_chunk.type == FourCC("VP8L")) {
-        context.state = WebPLoadingContext::State::ChunksDecoded;
-        return decode_webp_simple_lossless(context, first_chunk);
-    }
-
-    if (first_chunk.type == FourCC("VP8X"))
-        return decode_webp_extended(context, first_chunk, chunks);
-
-    return context.error("WebPImageDecoderPlugin: Invalid first chunk type");
+    context.state = WebPLoadingContext::State::ChunksDecoded;
+    return {};
 }
 
 WebPImageDecoderPlugin::WebPImageDecoderPlugin(ReadonlyBytes data, OwnPtr<WebPLoadingContext> context)
@@ -347,11 +440,11 @@ IntSize WebPImageDecoderPlugin::size()
         return {};
 
     if (m_context->state < WebPLoadingContext::State::SizeDecoded) {
-        // FIXME
+        if (decode_webp_size(*m_context).is_error())
+            return {};
     }
 
-    // FIXME
-    return { 0, 0 };
+    return m_context->size.value();
 }
 
 void WebPImageDecoderPlugin::set_volatile()
@@ -418,7 +511,7 @@ ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
 
     // FIXME: "If this chunk is not present, sRGB SHOULD be assumed."
 
-    return m_context->icc_data;
+    return m_context->iccp_chunk.map([](auto iccp_chunk) { return iccp_chunk.data; });
 }
 
 }
