@@ -11,7 +11,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] FlatPtr arg2)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         switch (option) {
         case PR_GET_DUMPABLE:
