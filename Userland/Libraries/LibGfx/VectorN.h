@@ -296,7 +296,7 @@ public:
     constexpr auto const& data() const { return m_data; }
 
 private:
-    AK::Array<T, N> m_data;
+    Array<T, N> m_data;
 };
 
 }
