@@ -318,6 +318,8 @@ protected:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual bool id_reference_exists(DeprecatedString const&) const override;
+
 private:
     void make_html_uppercased_qualified_name();
 

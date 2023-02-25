@@ -23,6 +23,12 @@ class ResourceLoader;
 class XMLDocumentBuilder;
 }
 
+namespace Web::ARIA {
+class AriaData;
+class ARIAMixin;
+enum class StateAndProperties;
+}
+
 namespace Web::Bindings {
 class Intrinsics;
 class OptionConstructor;
