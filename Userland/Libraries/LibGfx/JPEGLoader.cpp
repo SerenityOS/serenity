@@ -202,6 +202,12 @@ struct Scan {
     u8 successive_approximation {};
 
     HuffmanStreamState huffman_stream;
+
+    // See the note on Figure B.4 - Scan header syntax
+    bool are_components_interleaved() const
+    {
+        return components.size() != 1;
+    }
 };
 
 struct JPEGLoadingContext {
@@ -399,7 +405,11 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
 
         for (u8 vfactor_i = 0; vfactor_i < scan_component.component.vsample_factor; vfactor_i++) {
             for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
+                // A.2.3 - Interleaved order
                 u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
+                if (!context.current_scan.are_components_interleaved())
+                    mb_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
+
                 Macroblock& block = macroblocks[mb_index];
 
                 if (context.current_scan.spectral_selection_start == 0)
@@ -844,12 +854,6 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
         component.vsample_factor = subsample_factors & 0x0F;
 
         if (i == 0) {
-            // If there is only a single component, i.e. grayscale, the macroblocks will not be interleaved, even if
-            // the horizontal or vertical sample factor is larger than 1.
-            if (component_count == 1) {
-                component.hsample_factor = 1;
-                component.vsample_factor = 1;
-            }
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
