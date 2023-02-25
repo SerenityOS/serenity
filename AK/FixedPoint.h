@@ -16,6 +16,11 @@
 #    include <AK/Math.h>
 #endif
 
+// Solaris' definition of signbit in math_c99.h conflicts with our implementation.
+#ifdef AK_OS_SOLARIS
+#    undef signbit
+#endif
+
 namespace AK {
 
 // FIXME: this always uses round to nearest break-tie to even
