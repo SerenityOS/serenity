@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
@@ -207,8 +208,23 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                             if (type.results().size() == 1)
                                 return Wasm::Result { Vector<Wasm::Value> { TRY(to_webassembly_value(vm, result, type.results().first())) } };
 
-                            // FIXME: Multiple returns
-                            TODO();
+                            auto method = TRY(result.get_method(vm, vm.names.iterator));
+                            if (method == JS::js_undefined())
+                                return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, result.to_string_without_side_effects()));
+
+                            auto values = TRY(JS::iterable_to_list(vm, result, method));
+
+                            if (values.size() != type.results().size())
+                                return vm.throw_completion<JS::TypeError>(DeprecatedString::formatted("Invalid number of return values for multi-value wasm return of {} objects", type.results().size()));
+
+                            Vector<Wasm::Value> wasm_values;
+                            TRY_OR_THROW_OOM(vm, wasm_values.try_ensure_capacity(values.size()));
+
+                            size_t i = 0;
+                            for (auto& value : values)
+                                wasm_values.append(TRY(to_webassembly_value(vm, value, type.results()[i++])));
+
+                            return Wasm::Result { move(wasm_values) };
                         },
                         type
                     };
@@ -448,11 +464,9 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
             if (result.values().size() == 1)
                 return to_js_value(vm, result.values().first());
 
-            Vector<JS::Value> result_values;
-            for (auto& entry : result.values())
-                result_values.append(to_js_value(vm, entry));
-
-            return JS::Value(JS::Array::create_from(realm, result_values));
+            return JS::Value(JS::Array::create_from<Wasm::Value>(realm, result.values(), [&](Wasm::Value value) {
+                return to_js_value(vm, value);
+            }));
         });
 
     WebAssemblyObject::s_global_cache.function_instances.set(address, function);
