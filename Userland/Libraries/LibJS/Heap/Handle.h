@@ -46,7 +46,7 @@ public:
 
     static Handle create(T* cell)
     {
-        return Handle(adopt_ref(*new HandleImpl(cell)));
+        return Handle(adopt_ref(*new HandleImpl(const_cast<RemoveConst<T>*>(cell))));
     }
 
     Handle(T* cell)
