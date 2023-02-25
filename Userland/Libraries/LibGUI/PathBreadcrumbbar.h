@@ -19,6 +19,7 @@ public:
     virtual ~PathBreadcrumbbar() override;
 
     void set_current_path(DeprecatedString const&);
+    void rebuild_path(DeprecatedString const& new_path, bool collapse_home);
 
     void show_location_text_box();
     void hide_location_text_box();

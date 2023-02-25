@@ -1003,6 +1003,32 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     show_dotfiles_action->set_checked(show_dotfiles);
     show_dotfiles_in_view(show_dotfiles);
 
+    auto const abbreviate_home_path = [](DeprecatedString const path) {
+        auto const home_path = Core::StandardPaths::home_directory();
+        if (path.starts_with(home_path)) {
+            return path.replace(home_path, "~"sv, ReplaceMode::FirstOnly);
+        } else {
+            return path;
+        }
+    };
+
+    auto const update_title = [&](DeprecatedString const title, bool collapse_home) {
+        auto const new_title = collapse_home ? abbreviate_home_path(title) : title;
+        window->set_title(DeprecatedString::formatted("{} - File Manager", new_title));
+    };
+
+    auto collapse_home = Config::read_bool("FileManager"sv, "BreadcrumbBar"sv, "CollapseHome"sv, false);
+
+    auto collapse_home_action = GUI::Action::create_checkable("Collapse &Home", [&](auto& action) {
+        breadcrumbbar.rebuild_path(directory_view->path(), action.is_checked());
+        update_title(directory_view->path(), action.is_checked());
+        collapse_home = action.is_checked();
+        Config::write_bool("FileManager"sv, "BreadcrumbBar"sv, "CollapseHome"sv, action.is_checked());
+    });
+
+    collapse_home_action->set_checked(collapse_home);
+    update_title(directory_view->path(), collapse_home);
+
     auto view_menu = TRY(window->try_add_menu("&View"));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
     TRY(layout_menu->try_add_action(*layout_toolbar_action));
@@ -1017,6 +1043,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     TRY(view_menu->try_add_action(directory_view->view_as_columns_action()));
     TRY(view_menu->try_add_separator());
     TRY(view_menu->try_add_action(show_dotfiles_action));
+    TRY(view_menu->try_add_action(collapse_home_action));
 
     auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         toolbar_container.set_visible(true);
@@ -1078,8 +1105,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         auto* bitmap = icon.bitmap_for_size(16);
         window->set_icon(bitmap);
 
-        window->set_title(DeprecatedString::formatted("{} - File Manager", new_path));
-
+        update_title(new_path, collapse_home);
         breadcrumbbar.set_current_path(new_path);
 
         if (!is_reacting_to_tree_view_selection_change) {
@@ -1095,7 +1121,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().fetch_mime_type() == "text/uri-list");
         go_forward_action->set_enabled(directory_view->path_history_position() < directory_view->path_history_size() - 1);
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
-        open_parent_directory_action->set_enabled(breadcrumbbar.has_parent_segment());
+        open_parent_directory_action->set_enabled(directory_view->path() != "/");
         open_child_directory_action->set_enabled(breadcrumbbar.has_child_segment());
         directory_view->view_as_table_action().set_enabled(can_read_in_path);
         directory_view->view_as_icons_action().set_enabled(can_read_in_path);

@@ -9,8 +9,10 @@
 
 #include "PathBreadcrumbbar.h"
 #include <AK/LexicalPath.h>
+#include <LibConfig/Client.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/FileIconProvider.h>
@@ -92,7 +94,6 @@ void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
     if (new_path == m_current_path)
         return;
 
-    LexicalPath lexical_path(new_path);
     m_current_path = new_path;
 
     auto segment_index_of_new_path_in_breadcrumbbar = m_breadcrumbbar->find_segment_with_data(new_path);
@@ -108,21 +109,31 @@ void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
             m_breadcrumbbar->remove_end_segments(new_segment_index + 1);
         }
     } else {
-        m_breadcrumbbar->clear_segments();
+        rebuild_path(new_path, Config::read_bool("FileManager"sv, "BreadcrumbBar"sv, "CollapseHome"sv, false));
+    }
+}
 
-        m_breadcrumbbar->append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
-        StringBuilder builder;
+void PathBreadcrumbbar::rebuild_path(DeprecatedString const& new_path, bool collapse_home)
+{
+    m_breadcrumbbar->clear_segments();
 
-        for (auto& part : lexical_path.parts()) {
-            // NOTE: We rebuild the path as we go, so we have something to pass to GUI::FileIconProvider.
-            builder.append('/');
-            builder.append(part);
+    m_breadcrumbbar->append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
 
-            m_breadcrumbbar->append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
+    StringBuilder builder;
+    LexicalPath lexical_path(new_path);
+    for (auto& part : lexical_path.parts()) {
+        // NOTE: We rebuild the path as we go, so we have something to pass to GUI::FileIconProvider.
+        builder.append('/');
+        builder.append(part);
+
+        if (collapse_home && builder.string_view() == Core::StandardPaths::home_directory()) {
+            m_breadcrumbbar->clear_segments();
         }
 
-        m_breadcrumbbar->set_selected_segment(m_breadcrumbbar->segment_count() - 1);
+        m_breadcrumbbar->append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
     }
+
+    m_breadcrumbbar->set_selected_segment(m_breadcrumbbar->segment_count() - 1);
 }
 
 bool PathBreadcrumbbar::has_parent_segment() const
