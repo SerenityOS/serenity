@@ -23,12 +23,6 @@ public:
     {
     }
 
-    NonnullGCPtr(T const& ptr)
-    requires(!IsConst<T>)
-        : m_ptr(&const_cast<T&>(ptr))
-    {
-    }
-
     template<typename U>
     NonnullGCPtr(U& ptr)
     requires(IsConvertible<U*, T*>)
@@ -36,31 +30,21 @@ public:
     {
     }
 
-    template<typename U>
-    NonnullGCPtr(U const& ptr)
-    requires(IsConvertible<U*, T*> && !IsConst<T>)
-        : m_ptr(&const_cast<T&>(static_cast<T const&>(ptr)))
+    NonnullGCPtr(NonnullGCPtr const& other)
+        : m_ptr(other.ptr())
     {
     }
 
     template<typename U>
-    NonnullGCPtr(NonnullGCPtr<U> ptr)
+    NonnullGCPtr(NonnullGCPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_ptr(ptr)
+        : m_ptr(other.ptr())
     {
     }
 
-    NonnullGCPtr& operator=(T const& other)
+    NonnullGCPtr& operator=(NonnullGCPtr const& other)
     {
-        m_ptr = &const_cast<T&>(other);
-        return *this;
-    }
-
-    template<typename U>
-    NonnullGCPtr& operator=(U const& other)
-    requires(IsConvertible<U*, T*>)
-    {
-        m_ptr = &const_cast<T&>(static_cast<T const&>(other));
+        m_ptr = other.ptr();
         return *this;
     }
 
@@ -68,7 +52,21 @@ public:
     NonnullGCPtr& operator=(NonnullGCPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
     {
-        m_ptr = const_cast<T*>(static_cast<T const*>(other.ptr()));
+        m_ptr = static_cast<T*>(other.ptr());
+        return *this;
+    }
+
+    NonnullGCPtr& operator=(T& other)
+    {
+        m_ptr = &other;
+        return *this;
+    }
+
+    template<typename U>
+    NonnullGCPtr& operator=(U& other)
+    requires(IsConvertible<U*, T*>)
+    {
+        m_ptr = &static_cast<T&>(other);
         return *this;
     }
 
@@ -96,32 +94,20 @@ public:
     {
     }
 
-    GCPtr(T const& ptr)
-    requires(!IsConst<T>)
-        : m_ptr(&const_cast<T&>(ptr))
-    {
-    }
-
     GCPtr(T* ptr)
         : m_ptr(ptr)
     {
     }
 
-    GCPtr(T const* ptr)
-    requires(!IsConst<T>)
-        : m_ptr(const_cast<T*>(ptr))
-    {
-    }
-
-    GCPtr(NonnullGCPtr<T> ptr)
-        : m_ptr(ptr)
+    GCPtr(NonnullGCPtr<T> const& other)
+        : m_ptr(other.ptr())
     {
     }
 
     template<typename U>
-    GCPtr(NonnullGCPtr<U> ptr)
+    GCPtr(NonnullGCPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
-        : m_ptr(ptr)
+        : m_ptr(other.ptr())
     {
     }
 
@@ -137,13 +123,13 @@ public:
     GCPtr& operator=(GCPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
     {
-        m_ptr = const_cast<T*>(static_cast<T const*>(other.ptr()));
+        m_ptr = static_cast<T*>(other.ptr());
         return *this;
     }
 
     GCPtr& operator=(NonnullGCPtr<T> const& other)
     {
-        m_ptr = const_cast<T*>(other.ptr());
+        m_ptr = other.ptr();
         return *this;
     }
 
@@ -151,35 +137,35 @@ public:
     GCPtr& operator=(NonnullGCPtr<U> const& other)
     requires(IsConvertible<U*, T*>)
     {
-        m_ptr = const_cast<T*>(static_cast<T const*>(other.ptr()));
+        m_ptr = static_cast<T*>(other.ptr());
         return *this;
     }
 
-    GCPtr& operator=(T const& other)
+    GCPtr& operator=(T& other)
     {
-        m_ptr = &const_cast<T&>(other);
-        return *this;
-    }
-
-    template<typename U>
-    GCPtr& operator=(U const& other)
-    requires(IsConvertible<U*, T*>)
-    {
-        m_ptr = &const_cast<T&>(static_cast<T const&>(other));
-        return *this;
-    }
-
-    GCPtr& operator=(T const* other)
-    {
-        m_ptr = const_cast<T*>(other);
+        m_ptr = &other;
         return *this;
     }
 
     template<typename U>
-    GCPtr& operator=(U const* other)
+    GCPtr& operator=(U& other)
     requires(IsConvertible<U*, T*>)
     {
-        m_ptr = const_cast<T*>(static_cast<T const*>(other));
+        m_ptr = &static_cast<T&>(other);
+        return *this;
+    }
+
+    GCPtr& operator=(T* other)
+    {
+        m_ptr = other;
+        return *this;
+    }
+
+    template<typename U>
+    GCPtr& operator=(U* other)
+    requires(IsConvertible<U*, T*>)
+    {
+        m_ptr = static_cast<T*>(other);
         return *this;
     }
 
