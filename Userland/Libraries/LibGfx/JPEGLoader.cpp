@@ -135,7 +135,7 @@ struct Component {
     u8 vsample_factor { 1 }; // Vi, Vertical sampling factor
     u8 qtable_id { 0 };      // Tqi, Quantization table destination selector
 
-    // The JPEG specification does not specify which component correspond to
+    // The JPEG specification does not specify which component corresponds to
     // Y, Cb or Cr. This field (actually the index in the parent Vector) will
     // act as an authority to determine the *real* component.
     // Please note that this is implementation specific.
@@ -547,6 +547,8 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
 
 static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
+    // B.2.3 - Scan header syntax
+
     if (context.state < JPEGLoadingContext::State::FrameDecoded) {
         dbgln_if(JPEG_DEBUG, "{}: SOS found before reading a SOF!", TRY(stream.tell()));
         return Error::from_string_literal("SOS found before reading a SOF");
@@ -554,23 +556,30 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
 
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
-    [[maybe_unused]] u8 const component_count = TRY(stream.read_value<u8>());
+    u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
 
+    Optional<u8> last_read;
+    u8 component_read = 0;
     for (auto& component : context.components) {
-        u8 component_id = TRY(stream.read_value<u8>());
+        // See the Csj paragraph:
+        // [...] the ordering in the scan header shall follow the ordering in the frame header.
+        if (component_read == component_count)
+            break;
 
-        if (component.id != component_id) {
-            dbgln("JPEG decode failed (component.id != component_id)");
-            return Error::from_string_literal("JPEG decode failed (component.id != component_id)");
-        }
+        if (!last_read.has_value())
+            last_read = TRY(stream.read_value<u8>());
+
+        if (component.id != *last_read)
+            continue;
 
         u8 table_ids = TRY(stream.read_value<u8>());
 
-        ScanComponent scan_component { component, static_cast<u8>(table_ids >> 4), static_cast<u8>(table_ids & 0x0F) };
+        current_scan.components.empend(component, static_cast<u8>(table_ids >> 4), static_cast<u8>(table_ids & 0x0F));
 
-        current_scan.components.append(scan_component);
+        component_read++;
+        last_read.clear();
     }
 
     current_scan.spectral_selection_start = TRY(stream.read_value<u8>());
