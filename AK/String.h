@@ -259,3 +259,13 @@ struct Formatter<String> : Formatter<StringView> {
 };
 
 }
+
+[[nodiscard]] ALWAYS_INLINE AK::ErrorOr<AK::String> operator""_string(char const* cstring, size_t length)
+{
+    return AK::String::from_utf8(AK::StringView(cstring, length));
+}
+
+[[nodiscard]] ALWAYS_INLINE consteval AK::String operator""_short_string(char const* cstring, size_t length)
+{
+    return AK::String::from_utf8_short_string(AK::StringView(cstring, length));
+}

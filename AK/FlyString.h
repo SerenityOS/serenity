@@ -69,6 +69,11 @@ struct Formatter<FlyString> : Formatter<StringView> {
 
 }
 
+[[nodiscard]] ALWAYS_INLINE AK::ErrorOr<AK::FlyString> operator""_fly_string(char const* cstring, size_t length)
+{
+    return AK::FlyString::from_utf8(AK::StringView(cstring, length));
+}
+
 #if USING_AK_GLOBALLY
 using AK::FlyString;
 #endif
