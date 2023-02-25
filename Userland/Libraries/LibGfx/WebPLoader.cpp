@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <LibGfx/WebPLoader.h>
 
+// Overview: https://developers.google.com/speed/webp/docs/compression
 // Container: https://developers.google.com/speed/webp/docs/riff_container
 // Lossless format: https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification
 // Lossy format: https://datatracker.ietf.org/doc/html/rfc6386
