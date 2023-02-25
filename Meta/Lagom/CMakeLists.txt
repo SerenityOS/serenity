@@ -552,7 +552,7 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(wasm ../../Userland/Utilities/wasm.cpp)
-        target_link_libraries(wasm LibCore LibWasm LibLine LibMain)
+        target_link_libraries(wasm LibCore LibWasm LibLine LibMain LibJS)
 
         add_executable(xml ../../Userland/Utilities/xml.cpp)
         target_link_libraries(xml LibCore LibXML LibMain)

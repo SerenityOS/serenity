@@ -15,9 +15,15 @@ namespace Wasm {
 struct BytecodeInterpreter : public Interpreter {
     virtual void interpret(Configuration&) override;
     virtual ~BytecodeInterpreter() override = default;
-    virtual bool did_trap() const override { return m_trap.has_value(); }
-    virtual DeprecatedString trap_reason() const override { return m_trap.value().reason; }
-    virtual void clear_trap() override { m_trap.clear(); }
+    virtual bool did_trap() const override { return !m_trap.has<Empty>(); }
+    virtual DeprecatedString trap_reason() const override
+    {
+        return m_trap.visit(
+            [](Empty) -> DeprecatedString { VERIFY_NOT_REACHED(); },
+            [](Trap const& trap) { return trap.reason; },
+            [](JS::Completion const& completion) { return completion.value()->to_string_without_side_effects().release_value().to_deprecated_string(); });
+    }
+    virtual void clear_trap() override { m_trap = Empty {}; }
 
     struct CallFrameHandle {
         explicit CallFrameHandle(BytecodeInterpreter& interpreter, Configuration& configuration)
@@ -62,10 +68,10 @@ protected:
     {
         if (!value)
             m_trap = Trap { reason };
-        return m_trap.has_value();
+        return !m_trap.has<Empty>();
     }
 
-    Optional<Trap> m_trap;
+    Variant<Trap, JS::Completion, Empty> m_trap;
     StackInfo m_stack_info;
 };
 

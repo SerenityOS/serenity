@@ -34,7 +34,7 @@ namespace Wasm {
 
 void BytecodeInterpreter::interpret(Configuration& configuration)
 {
-    m_trap.clear();
+    m_trap = Empty {};
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
@@ -51,7 +51,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration)
         auto& instruction = instructions[current_ip_value.value()];
         auto old_ip = current_ip_value;
         interpret(configuration, current_ip_value, instruction);
-        if (m_trap.has_value())
+        if (did_trap())
             return;
         if (current_ip_value == old_ip) // If no jump occurred
             ++current_ip_value;
@@ -137,6 +137,11 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
     if (result.is_trap()) {
         m_trap = move(result.trap());
+        return;
+    }
+
+    if (result.is_completion()) {
+        m_trap = move(result.completion());
         return;
     }
 

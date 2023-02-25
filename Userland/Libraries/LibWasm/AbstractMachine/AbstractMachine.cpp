@@ -175,7 +175,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 entry.expression(),
                 1,
             });
-            auto result = config.execute(interpreter);
+            auto result = config.execute(interpreter).assert_wasm_result();
             if (result.is_trap())
                 instantiation_result = InstantiationError { DeprecatedString::formatted("Global value construction trapped: {}", result.trap().reason) };
             else
@@ -202,7 +202,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     entry,
                     entry.instructions().size(),
                 });
-                auto result = config.execute(interpreter);
+                auto result = config.execute(interpreter).assert_wasm_result();
                 if (result.is_trap()) {
                     instantiation_result = InstantiationError { DeprecatedString::formatted("Element construction trapped: {}", result.trap().reason) };
                     return IterationDecision::Continue;
@@ -255,7 +255,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 active_ptr->expression,
                 1,
             });
-            auto result = config.execute(interpreter);
+            auto result = config.execute(interpreter).assert_wasm_result();
             if (result.is_trap()) {
                 instantiation_result = InstantiationError { DeprecatedString::formatted("Element section initialisation trapped: {}", result.trap().reason) };
                 return IterationDecision::Break;
@@ -315,7 +315,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                         data.offset,
                         1,
                     });
-                    auto result = config.execute(interpreter);
+                    auto result = config.execute(interpreter).assert_wasm_result();
                     if (result.is_trap()) {
                         instantiation_result = InstantiationError { DeprecatedString::formatted("Data section initialisation trapped: {}", result.trap().reason) };
                         return;
