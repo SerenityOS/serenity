@@ -576,7 +576,11 @@ ErrorOr<DeprecatedString> gethostname()
 
 ErrorOr<void> sethostname(StringView hostname)
 {
+#if defined(AK_OS_SOLARIS)
+    int rc = ::sethostname(const_cast<char*>(hostname.characters_without_null_termination()), hostname.length());
+#else
     int rc = ::sethostname(hostname.characters_without_null_termination(), hostname.length());
+#endif
     if (rc < 0)
         return Error::from_syscall("sethostname"sv, -errno);
     return {};
