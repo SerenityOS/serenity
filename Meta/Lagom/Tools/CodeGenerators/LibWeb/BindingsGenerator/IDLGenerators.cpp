@@ -1226,9 +1226,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (includes_string) {
             // 14. If types includes a string type, then return the result of converting V to that type.
             // NOTE: Currently all string types are converted to String.
-            union_generator.append(R"~~~(
+            if (interface.extended_attributes.contains("UseNewAKString")) {
+                union_generator.append(R"~~~(
+        return TRY(@js_name@@js_suffix@.to_string(vm));
+)~~~");
+            } else {
+                union_generator.append(R"~~~(
         return TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
 )~~~");
+            }
         } else if (numeric_type && includes_bigint) {
             // 15. If types includes a numeric type and bigint, then return the result of converting V to either that numeric type or bigint.
             // https://webidl.spec.whatwg.org/#converted-to-a-numeric-type-or-bigint
