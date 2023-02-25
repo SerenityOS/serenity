@@ -24,6 +24,7 @@ public:
     }
 
     NonnullGCPtr(T const& ptr)
+    requires(!IsConst<T>)
         : m_ptr(&const_cast<T&>(ptr))
     {
     }
@@ -37,7 +38,7 @@ public:
 
     template<typename U>
     NonnullGCPtr(U const& ptr)
-    requires(IsConvertible<U*, T*>)
+    requires(IsConvertible<U*, T*> && !IsConst<T>)
         : m_ptr(&const_cast<T&>(static_cast<T const&>(ptr)))
     {
     }
@@ -96,6 +97,7 @@ public:
     }
 
     GCPtr(T const& ptr)
+    requires(!IsConst<T>)
         : m_ptr(&const_cast<T&>(ptr))
     {
     }
@@ -106,6 +108,7 @@ public:
     }
 
     GCPtr(T const* ptr)
+    requires(!IsConst<T>)
         : m_ptr(const_cast<T*>(ptr))
     {
     }
