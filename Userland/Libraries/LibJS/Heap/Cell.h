@@ -65,13 +65,13 @@ public:
         void visit(GCPtr<T> cell)
         {
             if (cell)
-                visit_impl(*cell.ptr());
+                visit_impl(const_cast<RemoveConst<T>&>(*cell.ptr()));
         }
 
         template<typename T>
         void visit(NonnullGCPtr<T> cell)
         {
-            visit_impl(*cell.ptr());
+            visit_impl(const_cast<RemoveConst<T>&>(*cell.ptr()));
         }
 
         void visit(Value value)
