@@ -1,5 +1,6 @@
 set(TEST_SOURCES
     TestEmoji.cpp
+    TestSegmentation.cpp
     TestUnicodeCharacterTypes.cpp
     TestUnicodeNormalization.cpp
 )
