@@ -246,6 +246,9 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     if (result.is_trap())
         return vm.throw_completion<JS::TypeError>(TRY_OR_THROW_OOM(vm, String::formatted("Execution trapped: {}", result.trap().reason)));
 
+    if (result.is_completion())
+        return result.completion();
+
     if (result.values().is_empty())
         return JS::js_null();
 

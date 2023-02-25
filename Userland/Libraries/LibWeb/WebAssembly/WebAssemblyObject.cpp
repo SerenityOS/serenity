@@ -200,20 +200,12 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                             for (auto& entry : arguments)
                                 argument_values.append(to_js_value(vm, entry));
 
-                            auto result_or_error = JS::call(vm, function, JS::js_undefined(), move(argument_values));
-                            if (result_or_error.is_error()) {
-                                return Wasm::Trap();
-                            }
+                            auto result = TRY(JS::call(vm, function, JS::js_undefined(), move(argument_values)));
                             if (type.results().is_empty())
                                 return Wasm::Result { Vector<Wasm::Value> {} };
 
-                            if (type.results().size() == 1) {
-                                auto value_or_error = to_webassembly_value(vm, result_or_error.release_value(), type.results().first());
-                                if (value_or_error.is_error())
-                                    return Wasm::Trap {};
-
-                                return Wasm::Result { Vector<Wasm::Value> { value_or_error.release_value() } };
-                            }
+                            if (type.results().size() == 1)
+                                return Wasm::Result { Vector<Wasm::Value> { TRY(to_webassembly_value(vm, result, type.results().first())) } };
 
                             // FIXME: Multiple returns
                             TODO();
