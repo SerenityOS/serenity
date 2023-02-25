@@ -265,7 +265,7 @@ struct Formatter<String> : Formatter<StringView> {
     return AK::String::from_utf8(AK::StringView(cstring, length));
 }
 
-[[nodiscard]] ALWAYS_INLINE consteval AK::String operator""_short_string(char const* cstring, size_t length)
+[[nodiscard]] ALWAYS_INLINE AK_SHORT_STRING_CONSTEVAL AK::String operator""_short_string(char const* cstring, size_t length)
 {
     return AK::String::from_utf8_short_string(AK::StringView(cstring, length));
 }
