@@ -324,6 +324,14 @@ void Layer::delete_mask()
     update_cached_bitmap();
 }
 
+void Layer::apply_mask()
+{
+    m_content_bitmap->fill(Color::Transparent);
+    Gfx::Painter painter(m_content_bitmap);
+    painter.blit({}, m_cached_display_bitmap, m_cached_display_bitmap->rect());
+    delete_mask();
+}
+
 Gfx::Bitmap& Layer::currently_edited_bitmap()
 {
     switch (edit_mode()) {

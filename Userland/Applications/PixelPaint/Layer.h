@@ -47,6 +47,8 @@ public:
 
     ErrorOr<void> create_mask();
     void delete_mask();
+    void apply_mask();
+
     Gfx::Bitmap& get_scratch_edited_bitmap();
 
     Gfx::IntSize size() const { return content_bitmap().size(); }
