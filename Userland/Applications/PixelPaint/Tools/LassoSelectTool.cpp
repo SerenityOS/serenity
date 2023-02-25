@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,42 +20,31 @@
 
 namespace PixelPaint {
 
-void LassoSelectTool::on_mousedown(Layer* layer, MouseEvent& event)
+void LassoSelectTool::on_mousedown(Layer*, MouseEvent& event)
 {
-    if (!layer)
+    if (!m_editor)
         return;
 
-    auto& layer_event = event.layer_event();
-    if (!layer->rect().contains(layer_event.position()))
-        return;
-
-    auto selection_bitmap_result = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, layer->content_bitmap().size());
-    if (selection_bitmap_result.is_error())
-        return;
-
-    m_selection_bitmap = selection_bitmap_result.release_value();
-    m_start_position = layer_event.position();
-    m_most_recent_position = layer_event.position();
+    auto const& image_event = event.image_event();
+    m_start_position = image_event.position();
+    m_most_recent_position = image_event.position();
     m_top_left = m_start_position;
     m_bottom_right = m_start_position;
-    m_preview_coords.clear();
-    m_preview_coords.append(m_most_recent_position);
-    m_selection_bitmap->set_pixel(m_most_recent_position, Gfx::Color::Black);
+    m_path_points.clear();
+    m_path_points.append(m_most_recent_position);
 
     m_selecting = true;
 
     m_editor->image().selection().begin_interactive_selection();
 }
 
-void LassoSelectTool::on_mousemove(Layer* layer, MouseEvent& event)
+void LassoSelectTool::on_mousemove(Layer*, MouseEvent& event)
 {
     if (!m_selecting)
         return;
 
-    auto& layer_event = event.layer_event();
-    auto new_position = layer_event.position();
-    if (!layer->rect().contains(new_position))
-        return;
+    auto const& image_event = event.image_event();
+    auto new_position = image_event.position();
 
     if (new_position == m_most_recent_position)
         return;
@@ -69,10 +59,7 @@ void LassoSelectTool::on_mousemove(Layer* layer, MouseEvent& event)
     if (new_position.y() > m_bottom_right.y())
         m_bottom_right.set_y(new_position.y());
 
-    m_preview_coords.append(new_position);
-
-    auto selection_painter = Gfx::Painter(*m_selection_bitmap);
-    selection_painter.draw_line(m_most_recent_position, new_position, Gfx::Color::Black);
+    m_path_points.append(new_position);
 
     m_most_recent_position = new_position;
 }
@@ -82,72 +69,56 @@ void LassoSelectTool::on_mouseup(Layer*, MouseEvent&)
     if (!m_selecting)
         return;
 
-    if (m_selection_bitmap.is_null())
-        return;
-
     m_selecting = false;
-    m_bottom_right.translate_by(1);
+    m_top_left.translate_by(-1);
 
-    if (m_most_recent_position != m_start_position) {
-        auto selection_painter = Gfx::Painter(*m_selection_bitmap);
-        selection_painter.draw_line(m_most_recent_position, m_start_position, Gfx::Color::Black, 1);
-    }
-
-    auto cropped_selection_result = m_selection_bitmap->cropped(Gfx::Rect<int>::from_two_points(m_top_left, m_bottom_right));
-    if (cropped_selection_result.is_error())
-        return;
-    auto cropped_selection = cropped_selection_result.release_value();
+    if (m_path_points.last() != m_start_position)
+        m_path_points.append(m_start_position);
 
     // We create a bitmap that is bigger by 1 pixel on each side
-    auto lasso_bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { (m_bottom_right.x() - m_top_left.x()) + 2, (m_bottom_right.y() - m_top_left.y()) + 2 });
+    auto lasso_bitmap_rect = Gfx::IntRect::from_two_points(m_top_left, m_bottom_right).inflated(2, 2);
+    auto lasso_bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, lasso_bitmap_rect.size());
     if (lasso_bitmap_or_error.is_error())
         return;
 
     auto lasso_bitmap = lasso_bitmap_or_error.release_value();
-
     auto lasso_painter = Gfx::Painter(lasso_bitmap);
+    for (size_t i = 0; i < m_path_points.size() - 1; i++) {
+        auto start = m_path_points.at(i) - m_top_left;
+        auto end = m_path_points.at(i + 1) - m_top_left;
+        lasso_painter.draw_line(start, end, Color::Black, 1);
+    }
 
-    // We want to paint the lasso into the bitmap such that there is an empty 1px border on each side
-    // this ensures that we have a known pixel (0,0) that is outside the lasso.
-    // Because we want a 1 px offset to the right and down, we blit the cropped selection bitmap starting at (1,1).
-    lasso_painter.blit({ 1, 1 }, cropped_selection, cropped_selection->rect());
-
-    // Delta to use for mapping the bitmap back to layer coordinates. -1 to account for the right and down offset.
-    auto bitmap_to_layer_delta = Gfx::IntPoint(m_top_left.x() + m_editor->active_layer()->location().x() - 1, m_top_left.y() + m_editor->active_layer()->location().y() - 1);
-    flood_lasso_selection(lasso_bitmap, bitmap_to_layer_delta);
+    flood_lasso_selection(lasso_bitmap);
 }
 
-void LassoSelectTool::flood_lasso_selection(Gfx::Bitmap& lasso_bitmap, Gfx::IntPoint lasso_delta)
+void LassoSelectTool::flood_lasso_selection(Gfx::Bitmap& lasso_bitmap)
 {
     VERIFY(lasso_bitmap.bpp() == 32);
 
     // Create Mask which will track already-processed pixels
-    Mask selection_mask = Mask::full(lasso_bitmap.rect().translated(lasso_delta));
-
+    auto selection_mask = Mask::full({ m_top_left, lasso_bitmap.size() });
     auto pixel_reached = [&](Gfx::IntPoint location) {
-        selection_mask.set(Gfx::IntPoint(location.x(), location.y()).translated(lasso_delta), 0);
+        selection_mask.set(Gfx::IntPoint(m_top_left.x() + location.x(), m_top_left.y() + location.y()), 0);
     };
 
     lasso_bitmap.flood_visit_from_point({ 0, 0 }, 0, move(pixel_reached));
 
     selection_mask.shrink_to_fit();
-    selection_mask.bounding_rect().translate_by(m_editor->active_layer()->location());
     m_editor->image().selection().merge(selection_mask, m_merge_mode);
 }
 
-void LassoSelectTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
+void LassoSelectTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
 {
-    if (!m_selecting || m_preview_coords.size() < 2)
+    if (!m_selecting || m_path_points.size() < 2)
         return;
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    if (layer)
-        painter.translate(editor_layer_location(*layer));
 
     auto draw_preview_lines = [&](auto color, auto thickness) {
-        for (size_t i = 0; i < m_preview_coords.size() - 1; i++) {
-            auto preview_start = editor_stroke_position(m_preview_coords.at(i), 1);
-            auto preview_end = editor_stroke_position(m_preview_coords.at(i + 1), 1);
+        for (size_t i = 0; i < m_path_points.size() - 1; i++) {
+            auto preview_start = editor_stroke_position(m_path_points.at(i), 1);
+            auto preview_end = editor_stroke_position(m_path_points.at(i + 1), 1);
             painter.draw_line(preview_start, preview_end, color, thickness);
         }
     };
@@ -162,8 +133,7 @@ bool LassoSelectTool::on_keydown(GUI::KeyEvent& key_event)
     if (key_event.key() == KeyCode::Key_Escape) {
         if (m_selecting) {
             m_selecting = false;
-            m_selection_bitmap.clear();
-            m_preview_coords.clear();
+            m_path_points.clear();
             return true;
         }
     }
