@@ -64,12 +64,29 @@ static void for_each_grapheme_segmentation_boundary_impl([[maybe_unused]] ViewTy
     if (code_unit_length(view) > 1) {
         auto it = view.begin();
         auto code_point = *it;
-        u32 next_code_point;
+        u32 next_code_point = 0;
         auto current_ri_chain = 0;
-        auto in_emoji_sequence = false;
 
         for (++it; it != view.end(); ++it, code_point = next_code_point) {
             next_code_point = *it;
+
+            // GB11
+            if (code_point_has_property(code_point, Property::Extended_Pictographic) && has_any_gbp(next_code_point, GBP::Extend, GBP::ZWJ)) {
+                auto it_copy = it;
+
+                while (it_copy != view.end() && has_any_gbp(*it_copy, GBP::Extend))
+                    ++it_copy;
+
+                if (it_copy != view.end() && has_any_gbp(*it_copy, GBP::ZWJ)) {
+                    ++it_copy;
+
+                    if (it_copy != view.end() && code_point_has_property(*it_copy, Property::Extended_Pictographic)) {
+                        next_code_point = *it_copy;
+                        it = it_copy;
+                        continue;
+                    }
+                }
+            }
 
             auto code_point_is_cr = has_any_gbp(code_point, GBP::CR);
             auto next_code_point_is_lf = has_any_gbp(next_code_point, GBP::LF);
@@ -97,12 +114,6 @@ static void for_each_grapheme_segmentation_boundary_impl([[maybe_unused]] ViewTy
             if (next_code_point_is_t && has_any_gbp(code_point, GBP::LVT, GBP::T))
                 continue;
 
-            auto code_point_is_zwj = has_any_gbp(code_point, GBP::ZWJ);
-            if (!in_emoji_sequence && code_point_has_property(code_point, Property::Extended_Pictographic))
-                in_emoji_sequence = true;
-            else if (in_emoji_sequence && !has_any_gbp(code_point, GBP::Extend) && !code_point_is_zwj)
-                in_emoji_sequence = false;
-
             // GB9
             if (has_any_gbp(next_code_point, GBP::Extend, GBP::ZWJ))
                 continue;
@@ -111,10 +122,6 @@ static void for_each_grapheme_segmentation_boundary_impl([[maybe_unused]] ViewTy
                 continue;
             // GB9b
             if (has_any_gbp(code_point, GBP::Prepend))
-                continue;
-
-            // GB11
-            if (in_emoji_sequence && code_point_is_zwj && code_point_has_property(next_code_point, Property::Extended_Pictographic))
                 continue;
 
             auto code_point_is_ri = has_any_gbp(code_point, GBP::Regional_Indicator);
