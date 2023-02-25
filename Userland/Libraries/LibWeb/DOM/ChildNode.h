@@ -117,9 +117,9 @@ protected:
     ChildNode() = default;
 
 private:
-    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes) const
+    JS::GCPtr<Node> viable_previous_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
     {
-        auto* node = static_cast<NodeType const*>(this);
+        auto* node = static_cast<NodeType*>(this);
 
         while (auto* previous_sibling = node->previous_sibling()) {
             bool contained_in_nodes = false;
@@ -142,9 +142,9 @@ private:
         return nullptr;
     }
 
-    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes) const
+    JS::GCPtr<Node> viable_nest_sibling_for_insertion(Vector<Variant<JS::Handle<Node>, DeprecatedString>> const& nodes)
     {
-        auto* node = static_cast<NodeType const*>(this);
+        auto* node = static_cast<NodeType*>(this);
 
         while (auto* next_sibling = node->next_sibling()) {
             bool contained_in_nodes = false;

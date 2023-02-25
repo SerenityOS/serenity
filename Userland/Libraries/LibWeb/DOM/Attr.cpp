@@ -45,11 +45,6 @@ void Attr::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_owner_element.ptr());
 }
 
-Element* Attr::owner_element()
-{
-    return m_owner_element.ptr();
-}
-
 Element const* Attr::owner_element() const
 {
     return m_owner_element.ptr();
@@ -79,7 +74,7 @@ void Attr::set_value(DeprecatedString value)
 }
 
 // https://dom.spec.whatwg.org/#handle-attribute-changes
-void Attr::handle_attribute_changes(Element& element, DeprecatedString const& old_value, [[maybe_unused]] DeprecatedString const& new_value)
+void Attr::handle_attribute_changes(Element const& element, DeprecatedString const& old_value, [[maybe_unused]] DeprecatedString const& new_value)
 {
     // 1. Queue a mutation record of "attributes" for element with attribute’s local name, attribute’s namespace, oldValue, « », « », null, and null.
     auto added_node_list = StaticNodeList::create(realm(), {}).release_value_but_fixme_should_propagate_errors();

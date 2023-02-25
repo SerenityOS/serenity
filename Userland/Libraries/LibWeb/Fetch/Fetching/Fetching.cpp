@@ -97,7 +97,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
     //    response consume body is processResponseConsumeBody, process response end-of-body is processResponseEndOfBody,
     //    task destination is taskDestination, and cross-origin isolated capability is crossOriginIsolatedCapability.
     auto fetch_params = Infrastructure::FetchParams::create(vm, request, timing_info);
-    fetch_params->set_algorithms(move(algorithms));
+    fetch_params->set_algorithms(algorithms);
     if (task_destination)
         fetch_params->set_task_destination({ *task_destination });
     fetch_params->set_cross_origin_isolated_capability(cross_origin_isolated_capability);
@@ -506,7 +506,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
 }
 
 // https://fetch.spec.whatwg.org/#fetch-finale
-WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response const& response)
+WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response& response)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'fetch response handover' with: fetch_params @ {}, response @ {}", &fetch_params, &response);
 
@@ -958,7 +958,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
 }
 
 // https://fetch.spec.whatwg.org/#concept-http-redirect-fetch
-WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response const& response)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response& response)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'HTTP-redirect fetch' with: fetch_params @ {}, response = {}", &fetch_params, &response);
 
@@ -1103,7 +1103,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
     auto request = fetch_params.request();
 
     // 2. Let httpFetchParams be null.
-    JS::GCPtr<Infrastructure::FetchParams> http_fetch_params;
+    JS::GCPtr<Infrastructure::FetchParams const> http_fetch_params;
 
     // 3. Let httpRequest be null.
     JS::GCPtr<Infrastructure::Request> http_request;
@@ -1151,11 +1151,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
             // 2. Set httpFetchParams to a copy of fetchParams.
             // 3. Set httpFetchParams’s request to httpRequest.
-            http_fetch_params = Infrastructure::FetchParams::create(vm, *http_request, fetch_params.timing_info());
-            http_fetch_params->set_algorithms(fetch_params.algorithms());
-            http_fetch_params->set_task_destination(fetch_params.task_destination());
-            http_fetch_params->set_cross_origin_isolated_capability(fetch_params.cross_origin_isolated_capability());
-            http_fetch_params->set_preloaded_response_candidate(fetch_params.preloaded_response_candidate());
+            auto new_http_fetch_params = Infrastructure::FetchParams::create(vm, *http_request, fetch_params.timing_info());
+            new_http_fetch_params->set_algorithms(fetch_params.algorithms());
+            new_http_fetch_params->set_task_destination(fetch_params.task_destination());
+            new_http_fetch_params->set_cross_origin_isolated_capability(fetch_params.cross_origin_isolated_capability());
+            new_http_fetch_params->set_preloaded_response_candidate(fetch_params.preloaded_response_candidate());
+            http_fetch_params = new_http_fetch_params;
         }
 
         // 3. Let includeCredentials be true if one of
@@ -1678,7 +1679,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
 }
 
 // https://fetch.spec.whatwg.org/#cors-preflight-fetch-0
-WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::Realm& realm, Infrastructure::Request const& request)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::Realm& realm, Infrastructure::Request& request)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'CORS-preflight fetch' with request @ {}", &request);
 

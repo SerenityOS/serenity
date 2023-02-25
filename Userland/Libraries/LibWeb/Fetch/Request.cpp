@@ -116,7 +116,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     auto base_url = HTML::relevant_settings_object(*request_object).api_base_url();
 
     // 4. Let signal be null.
-    DOM::AbortSignal const* input_signal = nullptr;
+    DOM::AbortSignal* input_signal = nullptr;
 
     // 5. If input is a string, then:
     if (input.has<String>()) {

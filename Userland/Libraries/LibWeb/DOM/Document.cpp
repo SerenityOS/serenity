@@ -754,7 +754,7 @@ Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
 
 void Document::update_base_element(Badge<HTML::HTMLBaseElement>)
 {
-    JS::GCPtr<HTML::HTMLBaseElement> base_element;
+    JS::GCPtr<HTML::HTMLBaseElement const> base_element;
 
     for_each_in_subtree_of_type<HTML::HTMLBaseElement>([&base_element](HTML::HTMLBaseElement const& base_element_in_tree) {
         if (base_element_in_tree.has_attribute(HTML::AttributeNames::href)) {
@@ -768,7 +768,7 @@ void Document::update_base_element(Badge<HTML::HTMLBaseElement>)
     m_first_base_element_with_href_in_tree_order = base_element;
 }
 
-JS::GCPtr<HTML::HTMLBaseElement> Document::first_base_element_with_href_in_tree_order() const
+JS::GCPtr<HTML::HTMLBaseElement const> Document::first_base_element_with_href_in_tree_order() const
 {
     return m_first_base_element_with_href_in_tree_order;
 }

@@ -24,7 +24,7 @@ class DOMTokenList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMTokenList>> create(Element const& associated_element, DeprecatedFlyString associated_attribute);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMTokenList>> create(Element& associated_element, DeprecatedFlyString associated_attribute);
     ~DOMTokenList() = default;
 
     void associated_attribute_changed(StringView value);
@@ -44,7 +44,7 @@ public:
     void set_value(DeprecatedString value);
 
 private:
-    DOMTokenList(Element const& associated_element, DeprecatedFlyString associated_attribute);
+    DOMTokenList(Element& associated_element, DeprecatedFlyString associated_attribute);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;

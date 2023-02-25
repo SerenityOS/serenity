@@ -1390,7 +1390,7 @@ Painting::PaintableBox const* Node::paint_box() const
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record
-void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling)
+void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling) const
 {
     // NOTE: We defer garbage collection until the end of the scope, since we can't safely use MutationObserver* as a hashmap key otherwise.
     // FIXME: This is a total hack.
@@ -1401,7 +1401,7 @@ void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedStri
     OrderedHashMap<MutationObserver*, DeprecatedString> interested_observers;
 
     // 2. Let nodes be the inclusive ancestors of target.
-    Vector<JS::Handle<Node>> nodes;
+    Vector<JS::Handle<Node const>> nodes;
     nodes.append(JS::make_handle(*this));
 
     for (auto* parent_node = parent(); parent_node; parent_node = parent_node->parent())
@@ -1558,18 +1558,18 @@ bool Node::is_following(Node const& other) const
     return false;
 }
 
-void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
+void Node::build_accessibility_tree(AccessibilityTreeNode& parent)
 {
     if (is_uninteresting_whitespace_node())
         return;
 
     if (is_document()) {
-        auto const* document = static_cast<DOM::Document const*>(this);
-        auto const* document_element = document->document_element();
+        auto* document = static_cast<DOM::Document*>(this);
+        auto* document_element = document->document_element();
         if (document_element) {
             parent.set_value(document_element);
             if (document_element->has_child_nodes())
-                document_element->for_each_child([&parent](DOM::Node const& child) {
+                document_element->for_each_child([&parent](DOM::Node& child) {
                     child.build_accessibility_tree(parent);
                 });
         }
@@ -1580,7 +1580,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
             return;
 
         if (element->include_in_accessibility_tree()) {
-            auto current_node = AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this).release_value_but_fixme_should_propagate_errors();
+            auto current_node = AccessibilityTreeNode::create(&document(), this).release_value_but_fixme_should_propagate_errors();
             parent.append_child(current_node);
             if (has_child_nodes()) {
                 for_each_child([&current_node](DOM::Node& child) {
@@ -1593,7 +1593,7 @@ void Node::build_accessibility_tree(AccessibilityTreeNode& parent) const
             });
         }
     } else if (is_text()) {
-        parent.append_child(AccessibilityTreeNode::create(const_cast<Document*>(&this->document()), this).release_value_but_fixme_should_propagate_errors());
+        parent.append_child(AccessibilityTreeNode::create(&document(), this).release_value_but_fixme_should_propagate_errors());
         if (has_child_nodes()) {
             for_each_child([&parent](DOM::Node& child) {
                 child.build_accessibility_tree(parent);

@@ -350,7 +350,7 @@ void HTMLScriptElement::prepare_script()
         else if (m_script_type == ScriptType::Module) {
             // Fetch an external module script graph given url, settings object, options, and onComplete.
             // FIXME: Pass options.
-            fetch_external_module_script_graph(url, settings_object, [this](auto const* result) {
+            fetch_external_module_script_graph(url, settings_object, [this](auto* result) {
                 // 1. Mark as ready el given result.
                 if (!result)
                     mark_as_ready(ResultState::Null {});
@@ -382,7 +382,7 @@ void HTMLScriptElement::prepare_script()
 
             // 2. Fetch an inline module script graph, given source text, base URL, settings object, options, and with the following steps given result:
             // FIXME: Pass options
-            fetch_inline_module_script_graph(m_document->url().to_deprecated_string(), source_text, base_url, document().relevant_settings_object(), [this](auto const* result) {
+            fetch_inline_module_script_graph(m_document->url().to_deprecated_string(), source_text, base_url, document().relevant_settings_object(), [this](auto* result) {
                 // 1. Mark as ready el given result.
                 if (!result)
                     mark_as_ready(ResultState::Null {});

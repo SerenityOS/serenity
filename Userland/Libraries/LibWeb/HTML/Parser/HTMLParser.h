@@ -119,7 +119,7 @@ private:
 
     void generate_implied_end_tags(DeprecatedFlyString const& exception = {});
     void generate_all_implied_end_tags_thoroughly();
-    JS::NonnullGCPtr<DOM::Element> create_element_for(HTMLToken const&, DeprecatedFlyString const& namespace_, DOM::Node const& intended_parent);
+    JS::NonnullGCPtr<DOM::Element> create_element_for(HTMLToken const&, DeprecatedFlyString const& namespace_, DOM::Node& intended_parent);
 
     struct AdjustedInsertionLocation {
         JS::GCPtr<DOM::Node> parent;

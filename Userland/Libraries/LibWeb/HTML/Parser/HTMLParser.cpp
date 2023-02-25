@@ -616,7 +616,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     return adjusted_insertion_location;
 }
 
-JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, DeprecatedFlyString const& namespace_, DOM::Node const& intended_parent)
+JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& token, DeprecatedFlyString const& namespace_, DOM::Node& intended_parent)
 {
     // FIXME: 1. If the active speculative HTML parser is not null, then return the result of creating a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
     // FIXME: 2. Otherwise, optionally create a speculative mock element given given namespace, the tag name of the given token, and the attributes of the given token.
@@ -3562,7 +3562,7 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
 {
     // The algorithm takes as input a DOM Element, Document, or DocumentFragment referred to as the node.
     VERIFY(node.is_element() || node.is_document() || node.is_document_fragment());
-    JS::NonnullGCPtr<DOM::Node> actual_node = node;
+    JS::NonnullGCPtr<DOM::Node const> actual_node = node;
 
     if (is<DOM::Element>(node)) {
         auto& element = verify_cast<DOM::Element>(node);

@@ -18,7 +18,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<AccessibilityTreeNode>> AccessibilityTreeNo
     return MUST_OR_THROW_OOM(document->heap().allocate<AccessibilityTreeNode>(document->realm(), value));
 }
 
-AccessibilityTreeNode::AccessibilityTreeNode(JS::GCPtr<DOM::Node> value)
+AccessibilityTreeNode::AccessibilityTreeNode(JS::GCPtr<DOM::Node const> value)
     : m_value(value)
 {
     m_children = {};
@@ -29,7 +29,7 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
     if (value()->is_document()) {
         VERIFY_NOT_REACHED();
     } else if (value()->is_element()) {
-        auto const* element = static_cast<DOM::Element*>(value().ptr());
+        auto const* element = static_cast<DOM::Element const*>(value().ptr());
 
         if (element->include_in_accessibility_tree()) {
             MUST(object.add("type"sv, "element"sv));
@@ -53,7 +53,7 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
     } else if (value()->is_text()) {
         MUST(object.add("type"sv, "text"sv));
 
-        auto const* text_node = static_cast<DOM::Text*>(value().ptr());
+        auto const* text_node = static_cast<DOM::Text const*>(value().ptr());
         MUST(object.add("text"sv, text_node->data()));
     }
 
@@ -73,7 +73,7 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
 void AccessibilityTreeNode::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(*value());
+    visitor.visit(value());
     for (auto child : children())
         child->visit_edges(visitor);
 }

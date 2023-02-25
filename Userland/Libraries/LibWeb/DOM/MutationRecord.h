@@ -15,7 +15,7 @@ class MutationRecord : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(MutationRecord, Bindings::PlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MutationRecord>> create(JS::Realm&, DeprecatedFlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MutationRecord>> create(JS::Realm&, DeprecatedFlyString const& type, Node const& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
 
     virtual ~MutationRecord() override;
 
@@ -30,13 +30,13 @@ public:
     DeprecatedString const& old_value() const { return m_old_value; }
 
 private:
-    MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type, Node& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
+    MutationRecord(JS::Realm& realm, DeprecatedFlyString const& type, Node const& target, NodeList& added_nodes, NodeList& removed_nodes, Node* previous_sibling, Node* next_sibling, DeprecatedString const& attribute_name, DeprecatedString const& attribute_namespace, DeprecatedString const& old_value);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     DeprecatedFlyString m_type;
-    JS::GCPtr<Node> m_target;
+    JS::GCPtr<Node const> m_target;
     JS::GCPtr<NodeList> m_added_nodes;
     JS::GCPtr<NodeList> m_removed_nodes;
     JS::GCPtr<Node> m_previous_sibling;
