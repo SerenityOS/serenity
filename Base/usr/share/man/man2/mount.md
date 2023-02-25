@@ -34,9 +34,7 @@ The following `flags` are supported:
 * `MS_NODEV`: Disallow opening any devices from this file system.
 * `MS_NOEXEC`: Disallow executing any executables from this file system.
 * `MS_NOSUID`: Ignore set-user-id bits on executables from this file system.
-* `MS_BIND`: Perform a bind-mount (see below).
 * `MS_RDONLY`: Mount the filesystem read-only.
-* `MS_REMOUNT`: Remount an already mounted filesystem (see below).
 * `MS_WXALLOWED`: Allow W^X protection circumvention for executables on this file system.
 * `MS_AXALLOWED`: Allow anonymous executable mappings for executables on this file system.
 * `MS_NOREGULAR`: Disallow opening any regular files from this file system.
@@ -57,11 +55,6 @@ itself, which may be useful for changing mount flags for a part of a filesystem.
 
 ### Remounting
 
-If `MS_REMOUNT` is specified in `flags`, `source_fd` and `fs_type` are ignored,
-and a remount is performed instead. `target` must point to an existing mount
-point. The mount flags for that mount point are reset to `flags` (except the
-`MS_REMOUNT` flag itself, which is stripped from the value).
-
 Note that remounting a file system will only affect future operations with the
 file system, not any already opened files. For example, if you open a directory
 on a filesystem that's mounted with `MS_NODEV`, then remount the filesystem to
@@ -74,14 +67,9 @@ in mount flags of the underlying file system. To "refresh" the working directory
 to use the new mount flags after remounting a filesystem, a process can call
 `chdir()` with the path to the same directory.
 
-Similarly, to change the mount flags used by the root directory, a process can
-remount the root filesystem using `MS_REMOUNT`.
-However, it only have a noticeable effect if
-the kernel was to launch more userspace processes directly, the way it does
-launch the initial userspace process.
-
 ## Errors
 
+* `EINVAL`: The `flags` value contains deprecated flags such as `MS_REMOUNT` or `MS_BIND`.
 * `EFAULT`: The `fs_type` or `target` are invalid strings.
 * `EPERM`: The current process does not have superuser privileges.
 * `ENODEV`: The `fs_type` is unrecognized, or the file descriptor to source is
@@ -99,3 +87,5 @@ All of the usual path resolution errors may also occur.
 ## See also
 
 * [`mount`(8)](help://man/8/mount)
+* [`remount`(2)](help://man/2/remount)
+* [`bindmount`(2)](help://man/2/bindmount)

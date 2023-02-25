@@ -401,10 +401,7 @@ static ErrorOr<void> populate_devtmpfs()
 
 static ErrorOr<void> prepare_synthetic_filesystems()
 {
-    // FIXME: Don't hardcode the fs type as the ext2 filesystem and once there's
-    // more than this filesystem implementation (which is suitable for usage on
-    // physical storage), find a way to detect it.
-    TRY(Core::System::mount(-1, "/"sv, "ext2"sv, MS_REMOUNT | MS_NODEV | MS_NOSUID | MS_RDONLY));
+    TRY(Core::System::remount("/"sv, MS_NODEV | MS_NOSUID | MS_RDONLY));
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
     TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));

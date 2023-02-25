@@ -232,6 +232,33 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
     HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 
+ErrorOr<void> bindmount(int source_fd, StringView target, int flags)
+{
+    if (target.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_bindmount_params params {
+        { target.characters_without_null_termination(), target.length() },
+        source_fd,
+        flags,
+    };
+    int rc = syscall(SC_bindmount, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("bindmount", rc, {});
+}
+
+ErrorOr<void> remount(StringView target, int flags)
+{
+    if (target.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_remount_params params {
+        { target.characters_without_null_termination(), target.length() },
+        flags
+    };
+    int rc = syscall(SC_remount, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("remount", rc, {});
+}
+
 ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags)
 {
     if (target.is_null() || fs_type.is_null())

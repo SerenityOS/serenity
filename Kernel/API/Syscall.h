@@ -53,6 +53,7 @@ enum class NeedsBigProcessLock {
     S(annotate_mapping, NeedsBigProcessLock::No)           \
     S(beep, NeedsBigProcessLock::No)                       \
     S(bind, NeedsBigProcessLock::No)                       \
+    S(bindmount, NeedsBigProcessLock::No)                  \
     S(chdir, NeedsBigProcessLock::No)                      \
     S(chmod, NeedsBigProcessLock::No)                      \
     S(chown, NeedsBigProcessLock::No)                      \
@@ -153,6 +154,7 @@ enum class NeedsBigProcessLock {
     S(recvfd, NeedsBigProcessLock::No)                     \
     S(recvmsg, NeedsBigProcessLock::Yes)                   \
     S(rename, NeedsBigProcessLock::No)                     \
+    S(remount, NeedsBigProcessLock::No)                    \
     S(rmdir, NeedsBigProcessLock::No)                      \
     S(scheduler_get_parameters, NeedsBigProcessLock::No)   \
     S(scheduler_set_parameters, NeedsBigProcessLock::No)   \
@@ -433,6 +435,17 @@ struct SC_rename_params {
 struct SC_mount_params {
     StringArgument target;
     StringArgument fs_type;
+    int source_fd;
+    int flags;
+};
+
+struct SC_remount_params {
+    StringArgument target;
+    int flags;
+};
+
+struct SC_bindmount_params {
+    StringArgument target;
     int source_fd;
     int flags;
 };
