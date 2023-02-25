@@ -77,6 +77,11 @@
 #    define AK_OS_DRAGONFLY
 #endif
 
+#if defined(__sun)
+#    define AK_OS_BSD_GENERIC
+#    define AK_OS_SOLARIS
+#endif
+
 #if defined(_WIN32) || defined(_WIN64)
 #    define AK_OS_WINDOWS
 #endif
