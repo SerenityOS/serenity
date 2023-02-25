@@ -370,6 +370,9 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #elif defined(AK_OS_NETBSD)
     struct sockcred creds = {};
     socklen_t creds_size = sizeof(creds);
+#elif defined(AK_OS_SOLARIS)
+    ucred_t* creds = NULL;
+    socklen_t creds_size = sizeof(creds);
 #else
     struct ucred creds = {};
     socklen_t creds_size = sizeof(creds);
@@ -384,6 +387,9 @@ ErrorOr<pid_t> LocalSocket::peer_pid() const
 #elif defined(AK_OS_NETBSD)
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SCM_CREDS, &creds, &creds_size));
     return creds.sc_pid;
+#elif defined(AK_OS_SOLARIS)
+    TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_RECVUCRED, &creds, &creds_size));
+    return ucred_getpid(creds);
 #else
     TRY(System::getsockopt(m_helper.fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size));
     return creds.pid;
