@@ -17,5 +17,6 @@ bool is_ascii_case_insensitive_match(StringView a, StringView b);
 DeprecatedString strip_and_collapse_whitespace(StringView string);
 bool is_code_unit_prefix(StringView potential_prefix, StringView input);
 ErrorOr<String> convert_to_scalar_value_string(StringView string);
+ErrorOr<String> to_ascii_lower_case(StringView string);
 
 }

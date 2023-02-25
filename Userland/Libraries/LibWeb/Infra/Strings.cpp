@@ -106,4 +106,18 @@ ErrorOr<String> convert_to_scalar_value_string(StringView string)
     return scalar_value_builder.to_string();
 }
 
+// https://infra.spec.whatwg.org/#ascii-lowercase
+ErrorOr<String> to_ascii_lower_case(StringView string)
+{
+    // To ASCII lowercase a string, replace all ASCII upper alphas in the string with their
+    // corresponding code point in ASCII lower alpha.
+    StringBuilder string_builder;
+    auto utf8_view = Utf8View { string };
+    for (u32 code_point : utf8_view) {
+        code_point = to_ascii_lowercase(code_point);
+        TRY(string_builder.try_append(code_point));
+    }
+    return string_builder.to_string();
+}
+
 }
