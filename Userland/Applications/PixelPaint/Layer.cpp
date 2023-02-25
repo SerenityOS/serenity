@@ -317,6 +317,13 @@ ErrorOr<void> Layer::create_mask()
     return {};
 }
 
+void Layer::delete_mask()
+{
+    m_mask_bitmap = nullptr;
+    set_edit_mode(EditMode::Content);
+    update_cached_bitmap();
+}
+
 Gfx::Bitmap& Layer::currently_edited_bitmap()
 {
     switch (edit_mode()) {

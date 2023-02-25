@@ -56,6 +56,7 @@ private:
     void image_editor_did_update_undo_stack();
 
     void set_actions_enabled(bool enabled);
+    void set_mask_actions_for_layer(Layer* active_layer);
 
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
@@ -109,6 +110,9 @@ private:
 
     RefPtr<GUI::Action> m_layer_via_copy;
     RefPtr<GUI::Action> m_layer_via_cut;
+
+    RefPtr<GUI::Action> m_add_mask_action;
+    RefPtr<GUI::Action> m_delete_mask_action;
 
     Gfx::IntPoint m_last_image_editor_mouse_position;
 };
