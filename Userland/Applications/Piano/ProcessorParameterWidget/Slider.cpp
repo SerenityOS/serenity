@@ -26,7 +26,7 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP:
         set_value(value_log);
         set_step((min_log - max_log) / slider_steps);
     }
-    set_tooltip(m_parameter.name());
+    set_tooltip(m_parameter.name().to_deprecated_string());
     m_value_label->set_text(DeprecatedString::formatted("{:.2f}", static_cast<double>(m_parameter)));
 
     on_change = [this](auto value) {

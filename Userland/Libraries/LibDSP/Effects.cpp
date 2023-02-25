@@ -12,9 +12,9 @@ namespace DSP::Effects {
 
 Delay::Delay(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
-    , m_delay_decay("Decay"sv, 0.01, 0.99, 0.33, Logarithmic::No)
-    , m_delay_time("Delay Time"sv, 3, 2000, 900, Logarithmic::Yes)
-    , m_dry_gain("Dry"sv, 0, 1, 0.9, Logarithmic::No)
+    , m_delay_decay(String::from_utf8_short_string("Decay"sv), 0.01, 0.99, 0.33, Logarithmic::No)
+    , m_delay_time(String::from_utf8("Delay Time"sv), 3, 2000, 900, Logarithmic::Yes)
+    , m_dry_gain(String::from_utf8_short_string("Dry"sv), 0, 1, 0.9, Logarithmic::No)
 {
 
     m_parameters.append(m_delay_decay);
@@ -59,9 +59,9 @@ void Delay::process_impl(Signal const& input_signal, Signal& output_signal)
 
 Mastering::Mastering(NonnullRefPtr<Transport> transport)
     : EffectProcessor(move(transport))
-    , m_pan("Pan", -1, 1, 0, Logarithmic::No)
-    , m_volume("Volume", 0, 1, 1, Logarithmic::No)
-    , m_muted("Mute", false)
+    , m_pan(String::from_utf8_short_string("Pan"sv), -1, 1, 0, Logarithmic::No)
+    , m_volume(String::from_utf8_short_string("Volume"sv), 0, 1, 1, Logarithmic::No)
+    , m_muted(String::from_utf8_short_string("Mute"sv), false)
 {
     m_parameters.append(m_muted);
     m_parameters.append(m_volume);

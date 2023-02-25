@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Arne Elster (arne@elster.li)
+ * Copyright (c) 2021, Arne Elster <arne@elster.li>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
