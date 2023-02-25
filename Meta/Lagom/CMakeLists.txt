@@ -485,6 +485,12 @@ if (BUILD_LAGOM)
             target_link_libraries(disasm LibCore LibELF LibX86 LibMain)
         endif()
 
+        if (NOT EMSCRIPTEN)
+            # LibELF is part of LibC in SerenityOS builds, but not in Lagom.
+            add_executable(file ../../Userland/Utilities/file.cpp)
+            target_link_libraries(file LibCompress LibCore LibELF LibGfx LibIPC LibMain)
+        endif()
+
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
         target_link_libraries(gml-format LibCore LibGUI LibMain)
 
