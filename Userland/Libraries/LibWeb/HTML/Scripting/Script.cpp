@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/Script.h>
 
 namespace Web::HTML {

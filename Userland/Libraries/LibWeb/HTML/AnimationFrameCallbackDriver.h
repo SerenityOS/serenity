@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/IDAllocator.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/Platform/Timer.h>

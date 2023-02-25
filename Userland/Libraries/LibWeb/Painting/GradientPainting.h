@@ -9,6 +9,7 @@
 #include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/Gradients.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintContext.h>
 

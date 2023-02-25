@@ -8,7 +8,9 @@
 
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/CSS/Display.h>
+#include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Layout {

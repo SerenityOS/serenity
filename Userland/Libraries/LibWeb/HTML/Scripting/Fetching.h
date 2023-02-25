@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibWeb/HTML/Scripting/ImportMap.h>
+#include <LibWeb/HTML/Scripting/ModuleMap.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
 
 namespace Web::HTML {

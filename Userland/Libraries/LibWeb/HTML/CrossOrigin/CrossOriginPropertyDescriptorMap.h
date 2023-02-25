@@ -6,9 +6,12 @@
 
 #pragma once
 
+#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
+#include <AK/Optional.h>
 #include <AK/Traits.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/PropertyKey.h>
 
 namespace Web::HTML {
 

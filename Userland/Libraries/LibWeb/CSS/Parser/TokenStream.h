@@ -9,6 +9,7 @@
 
 #include <AK/Format.h>
 #include <AK/Vector.h>
+#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
 
 namespace Web::CSS::Parser {
