@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 
 // 8 Set Records, https://tc39.es/proposal-set-methods/#sec-set-records
 struct SetRecord {
-    NonnullGCPtr<Object> set;          // [[Set]]
+    NonnullGCPtr<Object const> set;    // [[Set]]
     double size { 0 };                 // [[Size]
     NonnullGCPtr<FunctionObject> has;  // [[Has]]
     NonnullGCPtr<FunctionObject> keys; // [[Keys]]
