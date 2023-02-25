@@ -164,12 +164,56 @@ static ErrorOr<void> decode_webp_simple_lossless(WebPLoadingContext& context, Ch
     return {};
 }
 
+static ErrorOr<void> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
+{
+    VERIFY(vp8x_chunk.type == FourCC("VP8X"));
+
+    // The VP8X chunk is documented at "Extended WebP file header:" at the end of
+    // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
+    if (vp8x_chunk.data.size() < 10)
+        return context.error("WebPImageDecoderPlugin: VP8X chunk too small");
+
+    u8 const* data = vp8x_chunk.data.data();
+
+    // 1 byte flags
+    // "Reserved (Rsv): 2 bits   MUST be 0. Readers MUST ignore this field.
+    //  ICC profile (I): 1 bit   Set if the file contains an ICC profile.
+    //  Alpha (L): 1 bit         Set if any of the frames of the image contain transparency information ("alpha").
+    //  Exif metadata (E): 1 bit Set if the file contains Exif metadata.
+    //  XMP metadata (X): 1 bit  Set if the file contains XMP metadata.
+    //  Animation (A): 1 bit     Set if this is an animated image. Data in 'ANIM' and 'ANMF' chunks should be used to control the animation.
+    //  Reserved (R): 1 bit      MUST be 0. Readers MUST ignore this field."
+    u8 flags = data[0];
+    bool has_icc = flags & 0x20;
+    bool has_alpha = flags & 0x10;
+    bool has_exif = flags & 0x8;
+    bool has_xmp = flags & 0x4;
+    bool has_animation = flags & 0x2;
+
+    // 3 byte reserved
+    // 3 byte width minus one
+    u32 width = (data[4] | (data[5] << 8) | (data[6] << 16)) + 1;
+
+    // 3 byte height minus one
+    u32 height = (data[7] | (data[8] << 8) | (data[9] << 16)) + 1;
+
+    dbgln_if(WEBP_DEBUG, "flags 0x{:x} --{}{}{}{}{}{}, width {}, height {}",
+        flags,
+        has_icc ? " icc" : "",
+        has_alpha ? " alpha" : "",
+        has_exif ? " exif" : "",
+        has_xmp ? " xmp" : "",
+        has_animation ? " anim" : "",
+        (flags & 0x3e) == 0 ? " none" : "",
+        width, height);
+
+    return {};
+}
+
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
 static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, Chunk const& vp8x_chunk, ReadonlyBytes chunks)
 {
-
-    // FIXME: Do something with this.
-    (void)vp8x_chunk;
+    TRY(decode_webp_chunk_VP8X(context, vp8x_chunk));
 
     // FIXME: This isn't quite to spec, which says
     // "All chunks SHOULD be placed in the same order as listed above.
