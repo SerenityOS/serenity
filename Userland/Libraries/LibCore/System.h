@@ -35,6 +35,10 @@
 #    include <shadow.h>
 #endif
 
+#ifdef AK_OS_SOLARIS
+#    include <sys/filio.h>
+#endif
+
 namespace Core::System {
 
 #ifdef AK_OS_SERENITY
