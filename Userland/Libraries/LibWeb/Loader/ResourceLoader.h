@@ -40,6 +40,8 @@ namespace Web {
 #    define OS_STRING "NetBSD"
 #elif defined(AK_OS_DRAGONFLY)
 #    define OS_STRING "DragonFly"
+#elif defined(AK_OS_SOLARIS)
+#    define OS_STRING "SunOS"
 #else
 #    error Unknown OS
 #endif
