@@ -15,7 +15,7 @@ ProcessorParameterWidget::ProcessorParameterWidget(DSP::ProcessorParameter& raw_
     : m_parameter(raw_parameter)
 {
     set_layout<GUI::VerticalBoxLayout>();
-    m_label = add<GUI::Label>(raw_parameter.name());
+    m_label = add<GUI::Label>(raw_parameter.name().to_deprecated_string());
     switch (raw_parameter.type()) {
     case DSP::ParameterType::Range: {
         auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
