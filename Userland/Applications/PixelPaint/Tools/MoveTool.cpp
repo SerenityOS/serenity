@@ -304,9 +304,9 @@ ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
 
         auto mode_radio_container = TRY(selection_mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        m_selection_mode_foreground = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Foreground"sv))));
+        m_selection_mode_foreground = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY("Foreground"_string)));
 
-        m_selection_mode_active = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Active Layer"sv))));
+        m_selection_mode_active = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY("Active Layer"_string)));
 
         m_selection_mode_foreground->on_checked = [this](bool) {
             m_layer_selection_mode = LayerSelectionMode::ForegroundLayer;

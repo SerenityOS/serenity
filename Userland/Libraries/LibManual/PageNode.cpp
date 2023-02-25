@@ -29,7 +29,7 @@ ErrorOr<String> PageNode::path() const
 
 ErrorOr<NonnullRefPtr<PageNode>> PageNode::help_index_page()
 {
-    static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], TRY(String::from_utf8("Help-index"sv))));
+    static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], TRY("Help-index"_string)));
     return help_index_page;
 }
 

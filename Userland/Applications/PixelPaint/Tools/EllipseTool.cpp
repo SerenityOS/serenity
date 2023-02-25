@@ -140,7 +140,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
-        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
+        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
         thickness_slider->set_range(1, 10);
         thickness_slider->set_value(m_thickness);
 
@@ -157,9 +157,9 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Outline"sv)));
-        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Fill"sv)));
-        auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>(TRY(String::from_utf8("Anti-alias"sv))));
+        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_short_string));
+        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_short_string));
+        auto aa_enable_checkbox = TRY(mode_radio_container->try_add<GUI::CheckBox>(TRY("Anti-alias"_string)));
 
         aa_enable_checkbox->on_checked = [this](bool checked) {
             m_antialias_enabled = checked;

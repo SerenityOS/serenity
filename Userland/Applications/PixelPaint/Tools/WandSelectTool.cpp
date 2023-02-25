@@ -81,7 +81,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     threshold_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     threshold_label->set_fixed_size(80, 20);
 
-    auto threshold_slider = TRY(threshold_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv)));
+    auto threshold_slider = TRY(threshold_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
     threshold_slider->set_range(0, 100);
     threshold_slider->set_value(m_threshold);
 

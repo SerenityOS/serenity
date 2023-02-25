@@ -92,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto buffer = TRY(file->read_until_eof());
     auto source = DeprecatedString::copy(buffer);
 
-    auto const title = TRY(String::from_utf8("SerenityOS manual"sv));
+    auto const title = TRY("SerenityOS manual"_string);
 
     int spaces = max(view_width / 2 - page_name.code_points().length() - section->section_name().code_points().length() - title.code_points().length() / 2 - 4, 0);
     outln("{}({}){}{}", page_name, section->section_name(), DeprecatedString::repeated(' ', spaces), title);

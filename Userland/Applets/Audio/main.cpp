@@ -85,7 +85,7 @@ private:
         m_root_container->set_layout<GUI::VerticalBoxLayout>(4, 0);
         m_root_container->set_frame_shape(Gfx::FrameShape::Window);
 
-        m_percent_box = m_root_container->add<GUI::CheckBox>(String::from_utf8_short_string("\xE2\x84\xB9"sv));
+        m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9"_short_string);
         m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
         m_percent_box->set_checked(m_show_percent);
         m_percent_box->on_checked = [&](bool show_percent) {
@@ -110,7 +110,7 @@ private:
             update();
         };
 
-        m_mute_box = m_root_container->add<GUI::CheckBox>(String::from_utf8_short_string("\xE2\x9D\x8C"sv));
+        m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C"_short_string);
         m_mute_box->set_checked(m_audio_muted);
         m_mute_box->set_tooltip(m_audio_muted ? "Unmute" : "Mute");
         m_mute_box->on_checked = [&](bool is_muted) {

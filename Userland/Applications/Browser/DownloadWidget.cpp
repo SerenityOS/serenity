@@ -84,7 +84,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     destination_label.set_fixed_height(16);
 
-    m_close_on_finish_checkbox = add<GUI::CheckBox>(String::from_utf8("Close when finished"sv).release_value_but_fixme_should_propagate_errors());
+    m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished"_string.release_value_but_fixme_should_propagate_errors());
     m_close_on_finish_checkbox->set_checked(close_on_finish);
 
     m_close_on_finish_checkbox->on_checked = [&](bool checked) {
@@ -94,7 +94,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     auto& button_container = add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
-    m_cancel_button = button_container.add<GUI::Button>(String::from_utf8_short_string("Cancel"sv));
+    m_cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
     m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {
         bool success = m_download->stop();
@@ -102,7 +102,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         window()->close();
     };
 
-    m_close_button = button_container.add<GUI::Button>(String::from_utf8_short_string("OK"sv));
+    m_close_button = button_container.add<GUI::Button>("OK"_short_string);
     m_close_button->set_enabled(false);
     m_close_button->set_fixed_size(100, 22);
     m_close_button->on_click = [this](auto) {
@@ -151,7 +151,7 @@ void DownloadWidget::did_finish(bool success)
     m_browser_image->load_from_file("/res/graphics/download-finished.gif"sv);
     window()->set_title("Download finished!");
     m_close_button->set_enabled(true);
-    m_cancel_button->set_text(String::from_utf8("Open in Folder"sv).release_value_but_fixme_should_propagate_errors());
+    m_cancel_button->set_text("Open in Folder"_string.release_value_but_fixme_should_propagate_errors());
     m_cancel_button->on_click = [this](auto) {
         Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_url.basename()));
         window()->close();

@@ -339,11 +339,11 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_separator();
 
     m_show_clipping_paths = toolbar.add<GUI::CheckBox>();
-    m_show_clipping_paths->set_text(String::from_utf8("Show clipping paths"sv).release_value_but_fixme_should_propagate_errors());
+    m_show_clipping_paths->set_text("Show clipping paths"_string.release_value_but_fixme_should_propagate_errors());
     m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
     m_show_clipping_paths->on_checked = [&](auto checked) { m_viewer->set_show_clipping_paths(checked); };
     m_show_images = toolbar.add<GUI::CheckBox>();
-    m_show_images->set_text(String::from_utf8("Show images"sv).release_value_but_fixme_should_propagate_errors());
+    m_show_images->set_text("Show images"_string.release_value_but_fixme_should_propagate_errors());
     m_show_images->set_checked(m_viewer->show_images(), GUI::AllowCallback::No);
     m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }

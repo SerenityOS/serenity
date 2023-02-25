@@ -50,11 +50,11 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
         box->set_icon(parent_window->icon());
 
     if (path.is_empty())
-        box->m_yes_button->set_text(String::from_utf8("Save As..."sv).release_value_but_fixme_should_propagate_errors());
+        box->m_yes_button->set_text("Save As..."_string.release_value_but_fixme_should_propagate_errors());
     else
-        box->m_yes_button->set_text(String::from_utf8_short_string("Save"sv));
-    box->m_no_button->set_text(String::from_utf8_short_string("Discard"sv));
-    box->m_cancel_button->set_text(String::from_utf8_short_string("Cancel"sv));
+        box->m_yes_button->set_text("Save"_short_string);
+    box->m_no_button->set_text("Discard"_short_string);
+    box->m_cancel_button->set_text("Cancel"_short_string);
 
     return box->exec();
 }
@@ -162,13 +162,13 @@ void MessageBox::build()
 
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
     if (should_include_ok_button())
-        m_ok_button = add_button(String::from_utf8_short_string("OK"sv), ExecResult::OK);
+        m_ok_button = add_button("OK"_short_string, ExecResult::OK);
     if (should_include_yes_button())
-        m_yes_button = add_button(String::from_utf8_short_string("Yes"sv), ExecResult::Yes);
+        m_yes_button = add_button("Yes"_short_string, ExecResult::Yes);
     if (should_include_no_button())
-        m_no_button = add_button(String::from_utf8_short_string("No"sv), ExecResult::No);
+        m_no_button = add_button("No"_short_string, ExecResult::No);
     if (should_include_cancel_button())
-        m_cancel_button = add_button(String::from_utf8_short_string("Cancel"sv), ExecResult::Cancel);
+        m_cancel_button = add_button("Cancel"_short_string, ExecResult::Cancel);
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;

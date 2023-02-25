@@ -43,12 +43,12 @@ WizardDialog::WizardDialog(Window* parent_window)
     nav_container_widget.set_fixed_height(42);
     nav_container_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 
-    m_back_button = nav_container_widget.add<DialogButton>(String::from_utf8_short_string("< Back"sv));
+    m_back_button = nav_container_widget.add<DialogButton>("< Back"_short_string);
     m_back_button->on_click = [&](auto) {
         pop_page();
     };
 
-    m_next_button = nav_container_widget.add<DialogButton>(String::from_utf8_short_string("Next >"sv));
+    m_next_button = nav_container_widget.add<DialogButton>("Next >"_short_string);
     m_next_button->on_click = [&](auto) {
         VERIFY(has_pages());
 
@@ -65,7 +65,7 @@ WizardDialog::WizardDialog(Window* parent_window)
     auto& button_spacer = nav_container_widget.add<Widget>();
     button_spacer.set_fixed_width(10);
 
-    m_cancel_button = nav_container_widget.add<DialogButton>(String::from_utf8_short_string("Cancel"sv));
+    m_cancel_button = nav_container_widget.add<DialogButton>("Cancel"_short_string);
     m_cancel_button->on_click = [&](auto) {
         handle_cancel();
     };
@@ -120,11 +120,11 @@ void WizardDialog::update_navigation()
     if (has_pages()) {
         m_next_button->set_enabled(current_page().is_final_page() || current_page().can_go_next());
         if (current_page().is_final_page())
-            m_next_button->set_text(String::from_utf8_short_string("Finish"sv));
+            m_next_button->set_text("Finish"_short_string);
         else
-            m_next_button->set_text(String::from_utf8_short_string("Next >"sv));
+            m_next_button->set_text("Next >"_short_string);
     } else {
-        m_next_button->set_text(String::from_utf8_short_string("Next >"sv));
+        m_next_button->set_text("Next >"_short_string);
         m_next_button->set_enabled(false);
     }
 }

@@ -35,7 +35,7 @@ WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String co
             if (filename.has_value())
                 name_attribute = filename.value();
             else
-                name_attribute = TRY_OR_THROW_OOM(vm, String::from_utf8("blob"sv));
+                name_attribute = TRY_OR_THROW_OOM(vm, "blob"_string);
             return JS::make_handle(TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, name_attribute.to_deprecated_string(), {})));
         }));
 

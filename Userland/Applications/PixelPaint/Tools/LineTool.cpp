@@ -133,7 +133,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
-        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
+        auto thickness_slider = TRY(thickness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
         thickness_slider->set_range(1, 10);
         thickness_slider->set_value(m_thickness);
 
@@ -150,7 +150,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 
-        auto aa_enable_checkbox = TRY(mode_container->try_add<GUI::CheckBox>(TRY(String::from_utf8("Anti-alias"sv))));
+        auto aa_enable_checkbox = TRY(mode_container->try_add<GUI::CheckBox>(TRY("Anti-alias"_string)));
         aa_enable_checkbox->on_checked = [this](bool checked) {
             m_antialias_enabled = checked;
         };

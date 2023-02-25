@@ -26,8 +26,8 @@
 namespace Web::HTML {
 
 struct WorkerOptions {
-    String type { String::from_utf8("classic"sv).release_value_but_fixme_should_propagate_errors() };
-    String credentials { String::from_utf8("same-origin"sv).release_value_but_fixme_should_propagate_errors() };
+    String type { "classic"_string.release_value_but_fixme_should_propagate_errors() };
+    String credentials { "same-origin"_string.release_value_but_fixme_should_propagate_errors() };
     String name { String {} };
 };
 

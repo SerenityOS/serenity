@@ -56,7 +56,7 @@ LayerPropertiesWidget::LayerPropertiesWidget()
             m_layer->set_opacity_percent(value);
     };
 
-    m_visibility_checkbox = group_box.add<GUI::CheckBox>(String::from_utf8_short_string("Visible"sv));
+    m_visibility_checkbox = group_box.add<GUI::CheckBox>("Visible"_short_string);
     m_visibility_checkbox->set_fixed_height(20);
     m_visibility_checkbox->on_checked = [this](bool checked) {
         if (m_layer)

@@ -67,7 +67,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
-        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
+        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
         size_slider->set_range(1, 100);
         size_slider->set_value(size());
 
@@ -85,7 +85,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 
-        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv)));
+        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
         hardness_slider->set_range(1, 100);
         hardness_slider->set_value(hardness());
 
@@ -100,7 +100,7 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto use_secondary_color_checkbox = TRY(secondary_color_container->try_add<GUI::CheckBox>());
         use_secondary_color_checkbox->set_checked(m_use_secondary_color);
-        use_secondary_color_checkbox->set_text(TRY(String::from_utf8("Use secondary color"sv)));
+        use_secondary_color_checkbox->set_text(TRY("Use secondary color"_string));
         use_secondary_color_checkbox->on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
         };
@@ -114,8 +114,8 @@ ErrorOr<GUI::Widget*> EraseTool::get_properties_widget()
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        auto pencil_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Pencil"sv)));
-        auto brush_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Brush"sv)));
+        auto pencil_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Pencil"_short_string));
+        auto brush_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Brush"_short_string));
 
         pencil_mode_radio->on_checked = [this, hardness_slider, size_slider](bool) {
             m_draw_mode = DrawMode::Pencil;

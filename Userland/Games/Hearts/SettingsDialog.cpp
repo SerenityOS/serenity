@@ -39,11 +39,11 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     auto& button_box = main_widget->add<GUI::Widget>();
     button_box.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 12);
 
-    button_box.add<GUI::Button>(String::from_utf8_short_string("Cancel"sv)).on_click = [this](auto) {
+    button_box.add<GUI::Button>("Cancel"_short_string).on_click = [this](auto) {
         done(ExecResult::Cancel);
     };
 
-    button_box.add<GUI::Button>(String::from_utf8_short_string("OK"sv)).on_click = [this](auto) {
+    button_box.add<GUI::Button>("OK"_short_string).on_click = [this](auto) {
         done(ExecResult::OK);
     };
 }
