@@ -24,7 +24,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -204,15 +204,15 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
 
     if (request == "dump-layout-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
-            if (auto* icb = doc->layout_node())
-                Web::dump_tree(*icb);
+            if (auto* viewport = doc->layout_node())
+                Web::dump_tree(*viewport);
         }
     }
 
     if (request == "dump-stacking-context-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
-            if (auto* icb = doc->layout_node()) {
-                if (auto* stacking_context = icb->paint_box()->stacking_context())
+            if (auto* viewport = doc->layout_node()) {
+                if (auto* stacking_context = viewport->paint_box()->stacking_context())
                     stacking_context->dump();
             }
         }

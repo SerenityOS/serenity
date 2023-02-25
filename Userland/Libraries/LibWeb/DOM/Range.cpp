@@ -17,7 +17,7 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 
 namespace Web::DOM {
 

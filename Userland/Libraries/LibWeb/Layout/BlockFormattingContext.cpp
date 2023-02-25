@@ -12,7 +12,6 @@
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/LineBuilder.h>
 #include <LibWeb/Layout/ListItemBox.h>
@@ -20,6 +19,7 @@
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
+#include <LibWeb/Layout/Viewport.h>
 
 namespace Web::Layout {
 
@@ -38,11 +38,6 @@ BlockFormattingContext::~BlockFormattingContext()
     }
 }
 
-bool BlockFormattingContext::is_initial() const
-{
-    return is<InitialContainingBlock>(root());
-}
-
 CSSPixels BlockFormattingContext::automatic_content_height() const
 {
     return compute_auto_height_for_block_formatting_context_root(root());
@@ -50,8 +45,8 @@ CSSPixels BlockFormattingContext::automatic_content_height() const
 
 void BlockFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
-    if (is_initial()) {
-        layout_initial_containing_block(layout_mode, available_space);
+    if (is<Viewport>(root())) {
+        layout_viewport(layout_mode, available_space);
         return;
     }
 
@@ -696,12 +691,12 @@ static void measure_scrollable_overflow(LayoutState const& state, Box const& box
     });
 }
 
-void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode, AvailableSpace const& available_space)
+void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSpace const& available_space)
 {
     auto viewport_rect = root().browsing_context().viewport_rect();
 
-    auto& icb = verify_cast<Layout::InitialContainingBlock>(root());
-    auto& icb_state = m_state.get_mutable(icb);
+    auto& viewport = verify_cast<Layout::Viewport>(root());
+    auto& viewport_state = m_state.get_mutable(viewport);
 
     if (root().children_are_inline())
         layout_inline_children(root(), layout_mode, available_space);
@@ -710,11 +705,11 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 
     CSSPixels bottom_edge = 0;
     CSSPixels right_edge = 0;
-    measure_scrollable_overflow(m_state, icb, bottom_edge, right_edge);
+    measure_scrollable_overflow(m_state, viewport, bottom_edge, right_edge);
 
     if (bottom_edge >= viewport_rect.height() || right_edge >= viewport_rect.width()) {
         // FIXME: Move overflow data to LayoutState!
-        auto& overflow_data = icb_state.ensure_overflow_data();
+        auto& overflow_data = viewport_state.ensure_overflow_data();
         overflow_data.scrollable_overflow_rect = viewport_rect;
         // NOTE: The edges are *within* the rectangle, so we add 1 to get the width and height.
         overflow_data.scrollable_overflow_rect.set_size(right_edge + 1, bottom_edge + 1);

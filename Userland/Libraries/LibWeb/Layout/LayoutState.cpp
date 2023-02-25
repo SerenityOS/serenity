@@ -26,7 +26,7 @@ LayoutState::UsedValues& LayoutState::get_mutable(NodeWithStyleAndBoxModelMetric
         }
     }
 
-    auto const* containing_block_used_values = box.is_initial_containing_block_box() ? nullptr : &get(*box.containing_block());
+    auto const* containing_block_used_values = box.is_viewport() ? nullptr : &get(*box.containing_block());
 
     used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
     used_values_per_layout_node[serial_id]->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);
@@ -44,7 +44,7 @@ LayoutState::UsedValues const& LayoutState::get(NodeWithStyleAndBoxModelMetrics 
             return *ancestor->used_values_per_layout_node[serial_id];
     }
 
-    auto const* containing_block_used_values = box.is_initial_containing_block_box() ? nullptr : &get(*box.containing_block());
+    auto const* containing_block_used_values = box.is_viewport() ? nullptr : &get(*box.containing_block());
 
     const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id] = adopt_own(*new UsedValues);
     const_cast<LayoutState*>(this)->used_values_per_layout_node[serial_id]->set_node(const_cast<NodeWithStyleAndBoxModelMetrics&>(box), containing_block_used_values);

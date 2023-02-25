@@ -8,8 +8,8 @@
 
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Painter.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/GradientPainting.h>

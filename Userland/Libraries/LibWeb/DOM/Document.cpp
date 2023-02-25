@@ -65,8 +65,8 @@
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/TreeBuilder.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/Timer.h>
@@ -849,7 +849,7 @@ void Document::update_layout()
     if (!m_layout_root) {
         m_next_layout_node_serial_id = 0;
         Layout::TreeBuilder tree_builder;
-        m_layout_root = verify_cast<Layout::InitialContainingBlock>(*tree_builder.build(*this));
+        m_layout_root = verify_cast<Layout::Viewport>(*tree_builder.build(*this));
     }
 
     Layout::LayoutState layout_state;
@@ -858,10 +858,10 @@ void Document::update_layout()
     {
         Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
 
-        auto& icb = static_cast<Layout::InitialContainingBlock&>(*m_layout_root);
-        auto& icb_state = layout_state.get_mutable(icb);
-        icb_state.set_content_width(viewport_rect.width());
-        icb_state.set_content_height(viewport_rect.height());
+        auto& viewport = static_cast<Layout::Viewport&>(*m_layout_root);
+        auto& viewport_state = layout_state.get_mutable(viewport);
+        viewport_state.set_content_width(viewport_rect.width());
+        viewport_state.set_content_height(viewport_rect.height());
 
         root_formatting_context.run(
             *m_layout_root,
@@ -947,14 +947,14 @@ void Document::set_visited_link_color(Color color)
     m_visited_link_color = color;
 }
 
-Layout::InitialContainingBlock const* Document::layout_node() const
+Layout::Viewport const* Document::layout_node() const
 {
-    return static_cast<Layout::InitialContainingBlock const*>(Node::layout_node());
+    return static_cast<Layout::Viewport const*>(Node::layout_node());
 }
 
-Layout::InitialContainingBlock* Document::layout_node()
+Layout::Viewport* Document::layout_node()
 {
-    return static_cast<Layout::InitialContainingBlock*>(Node::layout_node());
+    return static_cast<Layout::Viewport*>(Node::layout_node());
 }
 
 void Document::set_inspected_node(Node* node)

@@ -1,37 +1,37 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/Dump.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 
 namespace Web::Layout {
 
-InitialContainingBlock::InitialContainingBlock(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
+Viewport::Viewport(DOM::Document& document, NonnullRefPtr<CSS::StyleProperties> style)
     : BlockContainer(document, &document, move(style))
 {
 }
 
-InitialContainingBlock::~InitialContainingBlock() = default;
+Viewport::~Viewport() = default;
 
-JS::GCPtr<Selection::Selection> InitialContainingBlock::selection() const
+JS::GCPtr<Selection::Selection> Viewport::selection() const
 {
     return const_cast<DOM::Document&>(document()).get_selection();
 }
 
-void InitialContainingBlock::build_stacking_context_tree_if_needed()
+void Viewport::build_stacking_context_tree_if_needed()
 {
     if (paint_box()->stacking_context())
         return;
     build_stacking_context_tree();
 }
 
-void InitialContainingBlock::build_stacking_context_tree()
+void Viewport::build_stacking_context_tree()
 {
     const_cast<Painting::PaintableWithLines*>(paint_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
 
@@ -52,7 +52,7 @@ void InitialContainingBlock::build_stacking_context_tree()
     const_cast<Painting::PaintableWithLines*>(paint_box())->stacking_context()->sort();
 }
 
-void InitialContainingBlock::paint_all_phases(PaintContext& context)
+void Viewport::paint_all_phases(PaintContext& context)
 {
     build_stacking_context_tree_if_needed();
     context.painter().fill_rect(context.enclosing_device_rect(paint_box()->absolute_rect()).to_type<int>(), document().background_color(context.palette()));
@@ -60,7 +60,7 @@ void InitialContainingBlock::paint_all_phases(PaintContext& context)
     paint_box()->stacking_context()->paint(context);
 }
 
-void InitialContainingBlock::recompute_selection_states()
+void Viewport::recompute_selection_states()
 {
     // 1. Start by resetting the selection state of all layout nodes to None.
     for_each_in_inclusive_subtree([&](auto& layout_node) {

@@ -11,10 +11,10 @@
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/FormattingContext.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TextNode.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Layout {
@@ -62,7 +62,7 @@ bool Node::can_contain_boxes_with_position_absolute() const
     if (computed_values().position() != CSS::Position::Static)
         return true;
 
-    if (is<InitialContainingBlock>(*this))
+    if (is<Viewport>(*this))
         return true;
 
     // https://w3c.github.io/csswg-drafts/css-transforms-1/#propdef-transform
@@ -163,13 +163,13 @@ HTML::BrowsingContext& Node::browsing_context()
     return *m_browsing_context;
 }
 
-InitialContainingBlock const& Node::root() const
+Viewport const& Node::root() const
 {
     VERIFY(document().layout_node());
     return *document().layout_node();
 }
 
-InitialContainingBlock& Node::root()
+Viewport& Node::root()
 {
     VERIFY(document().layout_node());
     return *document().layout_node();

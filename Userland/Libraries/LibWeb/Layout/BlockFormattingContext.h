@@ -24,8 +24,6 @@ public:
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
     virtual CSSPixels automatic_content_height() const override;
 
-    bool is_initial() const;
-
     auto const& left_side_floats() const { return m_left_floats; }
     auto const& right_side_floats() const { return m_right_floats; }
 
@@ -61,7 +59,7 @@ private:
 
     CSSPixels compute_width_for_table_wrapper(Box const&, AvailableSpace const&);
 
-    void layout_initial_containing_block(LayoutMode, AvailableSpace const&);
+    void layout_viewport(LayoutMode, AvailableSpace const&);
 
     void layout_block_level_children(BlockContainer const&, LayoutMode, AvailableSpace const&);
     void layout_inline_children(BlockContainer const&, LayoutMode, AvailableSpace const&);

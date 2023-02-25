@@ -101,7 +101,7 @@ private:
 
     explicit PageHost(ConnectionFromClient&);
 
-    Web::Layout::InitialContainingBlock* layout_root();
+    Web::Layout::Viewport* layout_root();
     void setup_palette();
 
     ConnectionFromClient& m_client;

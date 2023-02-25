@@ -13,7 +13,7 @@
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
@@ -119,14 +119,14 @@ EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& 
 
 EventHandler::~EventHandler() = default;
 
-Layout::InitialContainingBlock const* EventHandler::layout_root() const
+Layout::Viewport const* EventHandler::layout_root() const
 {
     if (!m_browsing_context.active_document())
         return nullptr;
     return m_browsing_context.active_document()->layout_node();
 }
 
-Layout::InitialContainingBlock* EventHandler::layout_root()
+Layout::Viewport* EventHandler::layout_root()
 {
     if (!m_browsing_context.active_document())
         return nullptr;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,12 +12,12 @@
 
 namespace Web::Layout {
 
-class InitialContainingBlock final : public BlockContainer {
-    JS_CELL(InitialContainingBlock, BlockContainer);
+class Viewport final : public BlockContainer {
+    JS_CELL(Viewport, BlockContainer);
 
 public:
-    explicit InitialContainingBlock(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
-    virtual ~InitialContainingBlock() override;
+    explicit Viewport(DOM::Document&, NonnullRefPtr<CSS::StyleProperties>);
+    virtual ~Viewport() override;
 
     const DOM::Document& dom_node() const { return static_cast<const DOM::Document&>(*Node::dom_node()); }
 
@@ -30,10 +30,10 @@ public:
 
 private:
     void build_stacking_context_tree();
-    virtual bool is_initial_containing_block_box() const override { return true; }
+    virtual bool is_viewport() const override { return true; }
 };
 
 template<>
-inline bool Node::fast_is<InitialContainingBlock>() const { return is_initial_containing_block_box(); }
+inline bool Node::fast_is<Viewport>() const { return is_viewport(); }
 
 }

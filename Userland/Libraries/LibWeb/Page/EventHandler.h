@@ -44,8 +44,8 @@ private:
     CSSPixelPoint compute_mouse_event_client_offset(CSSPixelPoint event_page_position) const;
     CSSPixelPoint compute_mouse_event_page_offset(CSSPixelPoint event_client_offset) const;
 
-    Layout::InitialContainingBlock* layout_root();
-    Layout::InitialContainingBlock const* layout_root() const;
+    Layout::Viewport* layout_root();
+    Layout::Viewport const* layout_root() const;
 
     Painting::PaintableBox* paint_root();
     Painting::PaintableBox const* paint_root() const;

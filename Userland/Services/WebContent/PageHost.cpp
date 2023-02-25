@@ -12,7 +12,7 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Platform/Timer.h>
 #include <WebContent/WebContentClientEndpoint.h>
@@ -96,7 +96,7 @@ ErrorOr<void> PageHost::connect_to_webdriver(DeprecatedString const& webdriver_i
     return {};
 }
 
-Web::Layout::InitialContainingBlock* PageHost::layout_root()
+Web::Layout::Viewport* PageHost::layout_root()
 {
     auto* document = page().top_level_browsing_context().active_document();
     if (!document)

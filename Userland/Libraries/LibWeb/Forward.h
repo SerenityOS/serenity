@@ -447,7 +447,7 @@ class CheckBox;
 class FlexFormattingContext;
 class FormattingContext;
 struct LayoutState;
-class InitialContainingBlock;
+class Viewport;
 class InlineFormattingContext;
 class Label;
 class LabelableNode;

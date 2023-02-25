@@ -7,7 +7,7 @@
 #include <AK/Debug.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/Layout/FrameBox.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/NestedBrowsingContextPaintable.h>
 
@@ -54,7 +54,7 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         context.painter().translate(absolute_rect.x().value(), absolute_rect.y().value());
 
         context.set_device_viewport_rect({ {}, context.enclosing_device_size(layout_box().dom_node().nested_browsing_context()->size()) });
-        const_cast<Layout::InitialContainingBlock*>(hosted_layout_tree)->paint_all_phases(context);
+        const_cast<Layout::Viewport*>(hosted_layout_tree)->paint_all_phases(context);
 
         context.set_device_viewport_rect(old_viewport_rect);
         context.painter().restore();

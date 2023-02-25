@@ -196,8 +196,8 @@ public:
 
     virtual bool is_child_allowed(Node const&) const override;
 
-    Layout::InitialContainingBlock const* layout_node() const;
-    Layout::InitialContainingBlock* layout_node();
+    Layout::Viewport const* layout_node() const;
+    Layout::Viewport* layout_node();
 
     void schedule_style_update();
     void schedule_layout_update();
@@ -477,7 +477,7 @@ private:
 
     JS::GCPtr<HTML::Window> m_window;
 
-    JS::GCPtr<Layout::InitialContainingBlock> m_layout_root;
+    JS::GCPtr<Layout::Viewport> m_layout_root;
 
     Optional<Color> m_link_color;
     Optional<Color> m_active_link_color;

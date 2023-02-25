@@ -11,7 +11,7 @@
 #include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/BackgroundPainting.h>
 #include <LibWeb/Painting/FilterPainting.h>
 #include <LibWeb/Painting/PaintableBox.h>
@@ -141,7 +141,7 @@ Painting::StackingContext* PaintableBox::enclosing_stacking_context()
         if (auto* ancestor_paint_box = ancestor_box.paint_box(); ancestor_paint_box && ancestor_paint_box->stacking_context())
             return const_cast<StackingContext*>(ancestor_paint_box->stacking_context());
     }
-    // We should always reach the Layout::InitialContainingBlock stacking context.
+    // We should always reach the Layout::Viewport stacking context.
     VERIFY_NOT_REACHED();
 }
 
@@ -686,8 +686,8 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
     if (!is_visible())
         return {};
 
-    if (layout_box().is_initial_containing_block_box()) {
-        const_cast<Layout::InitialContainingBlock&>(static_cast<Layout::InitialContainingBlock const&>(layout_box())).build_stacking_context_tree_if_needed();
+    if (layout_box().is_viewport()) {
+        const_cast<Layout::Viewport&>(static_cast<Layout::Viewport const&>(layout_box())).build_stacking_context_tree_if_needed();
         return stacking_context()->hit_test(position, type);
     }
 

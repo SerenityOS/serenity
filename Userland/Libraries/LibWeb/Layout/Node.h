@@ -62,8 +62,8 @@ public:
     HTML::BrowsingContext const& browsing_context() const;
     HTML::BrowsingContext& browsing_context();
 
-    InitialContainingBlock const& root() const;
-    InitialContainingBlock& root();
+    Viewport const& root() const;
+    Viewport& root();
 
     bool is_root_element() const;
 
@@ -86,7 +86,7 @@ public:
     virtual bool is_block_container() const { return false; }
     virtual bool is_break_node() const { return false; }
     virtual bool is_text_node() const { return false; }
-    virtual bool is_initial_containing_block_box() const { return false; }
+    virtual bool is_viewport() const { return false; }
     virtual bool is_svg_box() const { return false; }
     virtual bool is_svg_geometry_box() const { return false; }
     virtual bool is_label() const { return false; }

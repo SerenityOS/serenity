@@ -14,7 +14,7 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
 
@@ -493,9 +493,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
             return IdentifierStyleValue::create(ValueID::None);
 
         // The transform matrix is held by the StackingContext, so we need to make sure we have one first.
-        auto* initial_containing_block = layout_node.document().layout_node();
-        VERIFY(initial_containing_block);
-        const_cast<Layout::InitialContainingBlock&>(*initial_containing_block).build_stacking_context_tree_if_needed();
+        auto const* viewport = layout_node.document().layout_node();
+        VERIFY(viewport);
+        const_cast<Layout::Viewport&>(*viewport).build_stacking_context_tree_if_needed();
 
         VERIFY(layout_node.paintable());
         auto const& paintable_box = verify_cast<Painting::PaintableBox const>(layout_node.paintable());

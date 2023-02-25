@@ -35,7 +35,7 @@
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/Layout/InitialContainingBlock.h>
+#include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
@@ -58,7 +58,7 @@ public:
     virtual Web::Page& page() override { return *m_page; }
     virtual Web::Page const& page() const override { return *m_page; }
 
-    Web::Layout::InitialContainingBlock* layout_root()
+    Web::Layout::Viewport* layout_root()
     {
         auto* document = page().top_level_browsing_context().active_document();
         if (!document)

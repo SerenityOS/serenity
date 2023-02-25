@@ -1,4 +1,4 @@
-InitialContainingBlock <#document> at (0,0) content-size 800x600 children: not-inline
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html> at (0,0) content-size 800x268 children: not-inline
     BlockContainer <body> at (8,8) content-size 784x252 children: not-inline
       Box <div.container> at (9,9) content-size 782x250 flex-container(column) children: not-inline

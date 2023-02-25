@@ -1,4 +1,4 @@
-InitialContainingBlock <#document> at (0,0) content-size 800x600 children: not-inline
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
   BlockContainer <html.js> at (0,0) content-size 800x200 children: not-inline
     BlockContainer <body> at (0,0) content-size 800x50 children: not-inline
       BlockContainer <div#page> at (50,50) content-size 750x0 children: not-inline
