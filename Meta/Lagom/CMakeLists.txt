@@ -337,6 +337,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
     # NetBSD has its shm_open and shm_unlink functions in librt so we need to link that
     target_link_libraries(LibCore PRIVATE librt.so)
 endif()
+if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")
+    # Solaris has socket and networking related functions in two extra libraries
+    target_link_libraries(LibCore PRIVATE nsl socket)
+endif()
 target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
