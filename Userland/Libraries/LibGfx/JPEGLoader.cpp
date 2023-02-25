@@ -515,6 +515,7 @@ static inline bool is_supported_marker(Marker const marker)
     case JPEG_DHT:
     case JPEG_DQT:
     case JPEG_DRI:
+    case JPEG_EOI:
     case JPEG_SOF0:
     case JPEG_SOI:
     case JPEG_SOS:
