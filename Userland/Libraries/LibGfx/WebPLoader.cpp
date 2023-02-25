@@ -276,7 +276,7 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, Chunk con
         //        instead of calling the _simple functions from the _extended function.
         if (chunk.type == FourCC("VP8 "))
             TRY(decode_webp_simple_lossy(context, chunk));
-        if (chunk.type == FourCC("VP8X"))
+        if (chunk.type == FourCC("VP8L"))
             TRY(decode_webp_simple_lossless(context, chunk));
     }
 
