@@ -93,7 +93,9 @@ ErrorOr<int> accept4(int sockfd, struct sockaddr*, socklen_t*, int flags);
 #endif
 
 ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigaction* old_action);
-#if defined(AK_OS_BSD_GENERIC)
+#if defined(AK_OS_SOLARIS)
+ErrorOr<SIG_TYP> signal(int signal, SIG_TYP handler);
+#elif defined(AK_OS_BSD_GENERIC)
 ErrorOr<sig_t> signal(int signal, sig_t handler);
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);
