@@ -774,6 +774,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }));
     m_layer_menu->add_action(*m_delete_mask_action);
 
+    m_apply_mask_action = GUI::Action::create(
+        "Apply Mask", create_layer_mask_callback("Apply Mask", [&](Layer* active_layer) {
+            VERIFY(active_layer->is_masked());
+            active_layer->apply_mask();
+        }));
+    m_layer_menu->add_action(*m_apply_mask_action);
+
     m_layer_menu->add_separator();
 
     m_layer_menu->add_action(GUI::Action::create(
@@ -1137,6 +1144,7 @@ void MainWidget::set_mask_actions_for_layer(Layer* layer)
     if (!layer) {
         m_add_mask_action->set_visible(true);
         m_delete_mask_action->set_visible(false);
+        m_apply_mask_action->set_visible(false);
         m_add_mask_action->set_enabled(false);
         return;
     }
@@ -1146,6 +1154,7 @@ void MainWidget::set_mask_actions_for_layer(Layer* layer)
     auto masked = layer->is_masked();
     m_add_mask_action->set_visible(!masked);
     m_delete_mask_action->set_visible(masked);
+    m_apply_mask_action->set_visible(masked);
 }
 
 void MainWidget::open_image(FileSystemAccessClient::File file)
