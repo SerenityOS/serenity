@@ -2121,7 +2121,7 @@ Vector<JS::Handle<HTML::BrowsingContext>> Document::list_of_descendant_browsing_
     //       of this document's browsing context.
     if (browsing_context()) {
         browsing_context()->for_each_in_subtree([&](auto& context) {
-            list.append(JS::make_handle(const_cast<HTML::BrowsingContext&>(context)));
+            list.append(JS::make_handle(context));
             return IterationDecision::Continue;
         });
     }

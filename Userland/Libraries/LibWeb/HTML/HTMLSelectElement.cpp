@@ -84,13 +84,13 @@ Vector<JS::Handle<HTMLOptionElement>> HTMLSelectElement::list_of_options() const
     // and all the option element children of all the optgroup element children of the select element, in tree order.
     Vector<JS::Handle<HTMLOptionElement>> list;
 
-    for_each_child_of_type<HTMLOptionElement>([&](HTMLOptionElement const& option_element) {
-        list.append(JS::make_handle(const_cast<HTMLOptionElement&>(option_element)));
+    for_each_child_of_type<HTMLOptionElement>([&](HTMLOptionElement& option_element) {
+        list.append(JS::make_handle(option_element));
     });
 
     for_each_child_of_type<HTMLOptGroupElement>([&](HTMLOptGroupElement const& optgroup_element) {
-        optgroup_element.for_each_child_of_type<HTMLOptionElement>([&](HTMLOptionElement const& option_element) {
-            list.append(JS::make_handle(const_cast<HTMLOptionElement&>(option_element)));
+        optgroup_element.for_each_child_of_type<HTMLOptionElement>([&](HTMLOptionElement& option_element) {
+            list.append(JS::make_handle(option_element));
         });
     });
 

@@ -35,7 +35,7 @@ private:
 
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
-    void run_callback() const;
+    void run_callback();
 
     Callback m_callback;
     JS::NonnullGCPtr<Infrastructure::Request> m_request;
