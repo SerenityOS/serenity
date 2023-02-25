@@ -25,6 +25,12 @@ public:
     unsigned long length() const { return m_files.size(); }
 
     // https://w3c.github.io/FileAPI/#dfn-item
+    File* item(size_t index)
+    {
+        return index < m_files.size() ? m_files[index].ptr() : nullptr;
+    }
+
+    // https://w3c.github.io/FileAPI/#dfn-item
     File const* item(size_t index) const
     {
         return index < m_files.size() ? m_files[index].ptr() : nullptr;

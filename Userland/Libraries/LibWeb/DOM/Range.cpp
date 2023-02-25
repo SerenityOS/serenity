@@ -139,7 +139,7 @@ RelativeBoundaryPointPosition position_of_boundary_point_relative_to_other_bound
     // 4. If nodeA is an ancestor of nodeB:
     if (node_a.is_ancestor_of(node_b)) {
         // 1. Let child be nodeB.
-        JS::NonnullGCPtr<Node> child = node_b;
+        JS::NonnullGCPtr<Node const> child = node_b;
 
         // 2. While child is not a child of nodeA, set child to its parent.
         while (!node_a.is_parent_of(child)) {
@@ -405,7 +405,7 @@ void Range::collapse(bool to_start)
 }
 
 // https://dom.spec.whatwg.org/#dom-range-selectnodecontents
-WebIDL::ExceptionOr<void> Range::select_node_contents(Node const& node)
+WebIDL::ExceptionOr<void> Range::select_node_contents(Node& node)
 {
     // 1. If node is a doctype, throw an "InvalidNodeTypeError" DOMException.
     if (is<DocumentType>(node))
@@ -657,7 +657,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::extract()
 
     // 11. Let contained children be a list of all children of common ancestor that are contained in range, in tree order.
     Vector<JS::NonnullGCPtr<Node>> contained_children;
-    for (Node const* node = common_ancestor->first_child(); node; node = node->next_sibling()) {
+    for (Node* node = common_ancestor->first_child(); node; node = node->next_sibling()) {
         if (contains_node(*node))
             contained_children.append(*node);
     }
@@ -983,7 +983,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::clone_the_content
 
     // 11. Let contained children be a list of all children of common ancestor that are contained in range, in tree order.
     Vector<JS::NonnullGCPtr<Node>> contained_children;
-    for (Node const* node = common_ancestor->first_child(); node; node = node->next_sibling()) {
+    for (Node* node = common_ancestor->first_child(); node; node = node->next_sibling()) {
         if (contains_node(*node))
             contained_children.append(*node);
     }

@@ -35,7 +35,7 @@ Paintable::DispatchEventOfSameName Paintable::handle_mousemove(Badge<EventHandle
 
 bool Paintable::handle_mousewheel(Badge<EventHandler>, CSSPixelPoint, unsigned, unsigned, int wheel_delta_x, int wheel_delta_y)
 {
-    if (auto* containing_block = this->containing_block()) {
+    if (auto const* containing_block = this->containing_block()) {
         if (!containing_block->is_scrollable())
             return false;
         auto new_offset = containing_block->scroll_offset();
@@ -56,7 +56,7 @@ Optional<HitTestResult> Paintable::hit_test(CSSPixelPoint, HitTestType) const
 
 Paintable const* Paintable::first_child() const
 {
-    auto* layout_child = m_layout_node->first_child();
+    auto const* layout_child = m_layout_node->first_child();
     for (; layout_child && !layout_child->paintable(); layout_child = layout_child->next_sibling())
         ;
     return layout_child ? layout_child->paintable() : nullptr;
@@ -64,7 +64,7 @@ Paintable const* Paintable::first_child() const
 
 Paintable const* Paintable::next_sibling() const
 {
-    auto* layout_node = m_layout_node->next_sibling();
+    auto const* layout_node = m_layout_node->next_sibling();
     for (; layout_node && !layout_node->paintable(); layout_node = layout_node->next_sibling())
         ;
     return layout_node ? layout_node->paintable() : nullptr;
@@ -72,7 +72,7 @@ Paintable const* Paintable::next_sibling() const
 
 Paintable const* Paintable::last_child() const
 {
-    auto* layout_child = m_layout_node->last_child();
+    auto const* layout_child = m_layout_node->last_child();
     for (; layout_child && !layout_child->paintable(); layout_child = layout_child->previous_sibling())
         ;
     return layout_child ? layout_child->paintable() : nullptr;
@@ -80,7 +80,7 @@ Paintable const* Paintable::last_child() const
 
 Paintable const* Paintable::previous_sibling() const
 {
-    auto* layout_node = m_layout_node->previous_sibling();
+    auto const* layout_node = m_layout_node->previous_sibling();
     for (; layout_node && !layout_node->paintable(); layout_node = layout_node->previous_sibling())
         ;
     return layout_node ? layout_node->paintable() : nullptr;

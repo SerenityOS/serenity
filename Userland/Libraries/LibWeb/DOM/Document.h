@@ -106,7 +106,7 @@ public:
     AK::URL base_url() const;
 
     void update_base_element(Badge<HTML::HTMLBaseElement>);
-    JS::GCPtr<HTML::HTMLBaseElement> first_base_element_with_href_in_tree_order() const;
+    JS::GCPtr<HTML::HTMLBaseElement const> first_base_element_with_href_in_tree_order() const;
 
     DeprecatedString url_string() const { return m_url.to_deprecated_string(); }
     DeprecatedString document_uri() const { return m_url.to_deprecated_string(); }
@@ -611,7 +611,7 @@ private:
     JS::GCPtr<Selection::Selection> m_selection;
 
     // NOTE: This is a cache to make finding the first <base href> element O(1).
-    JS::GCPtr<HTML::HTMLBaseElement> m_first_base_element_with_href_in_tree_order;
+    JS::GCPtr<HTML::HTMLBaseElement const> m_first_base_element_with_href_in_tree_order;
 };
 
 }

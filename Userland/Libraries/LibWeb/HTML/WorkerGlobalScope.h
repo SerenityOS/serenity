@@ -45,7 +45,7 @@ public:
     // https://html.spec.whatwg.org/multipage/workers.html#the-workerglobalscope-common-interface
 
     // https://html.spec.whatwg.org/multipage/workers.html#dom-workerglobalscope-self
-    JS::NonnullGCPtr<WorkerGlobalScope> self() const { return *this; }
+    JS::NonnullGCPtr<WorkerGlobalScope const> self() const { return *this; }
 
     JS::NonnullGCPtr<WorkerLocation> location() const;
     JS::NonnullGCPtr<WorkerNavigator> navigator() const;

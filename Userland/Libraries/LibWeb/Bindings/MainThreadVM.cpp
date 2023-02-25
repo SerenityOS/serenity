@@ -395,7 +395,7 @@ JS::VM& main_thread_vm()
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-observer-compound-microtask
-void queue_mutation_observer_microtask(DOM::Document& document)
+void queue_mutation_observer_microtask(DOM::Document const& document)
 {
     auto& vm = main_thread_vm();
     auto& custom_data = verify_cast<WebEngineCustomData>(*vm.custom_data());

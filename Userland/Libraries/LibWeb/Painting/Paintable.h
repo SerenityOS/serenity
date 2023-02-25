@@ -143,8 +143,8 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    JS::NonnullGCPtr<Layout::Node> m_layout_node;
-    Optional<JS::GCPtr<Layout::Box>> mutable m_containing_block;
+    JS::NonnullGCPtr<Layout::Node const> m_layout_node;
+    Optional<JS::GCPtr<Layout::Box const>> mutable m_containing_block;
 };
 
 inline DOM::Node* HitTestResult::dom_node()

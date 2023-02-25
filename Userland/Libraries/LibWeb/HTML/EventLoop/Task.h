@@ -31,7 +31,7 @@ public:
         JavaScriptEngine,
     };
 
-    static NonnullOwnPtr<Task> create(Source source, DOM::Document* document, JS::SafeFunction<void()> steps)
+    static NonnullOwnPtr<Task> create(Source source, DOM::Document const* document, JS::SafeFunction<void()> steps)
     {
         return adopt_own(*new Task(source, document, move(steps)));
     }
@@ -40,17 +40,16 @@ public:
     Source source() const { return m_source; }
     void execute();
 
-    DOM::Document* document();
     DOM::Document const* document() const;
 
     bool is_runnable() const;
 
 private:
-    Task(Source, DOM::Document*, JS::SafeFunction<void()> steps);
+    Task(Source, DOM::Document const*, JS::SafeFunction<void()> steps);
 
     Source m_source { Source::Unspecified };
     JS::SafeFunction<void()> m_steps;
-    JS::Handle<DOM::Document> m_document;
+    JS::Handle<DOM::Document const> m_document;
 };
 
 }
