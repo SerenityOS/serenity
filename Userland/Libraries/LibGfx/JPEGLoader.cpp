@@ -1342,6 +1342,7 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
             TRY(read_start_of_scan(*context.stream, context));
             TRY(scan_huffman_stream(*context.stream, context.current_scan.huffman_stream));
             TRY(decode_huffman_stream(context, macroblocks));
+        } else if (marker == JPEG_EOI) {
             return macroblocks;
         } else {
             dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(context.stream->tell()), marker);
