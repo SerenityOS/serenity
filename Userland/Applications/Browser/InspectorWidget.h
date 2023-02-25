@@ -15,6 +15,8 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWebView/Forward.h>
+#include <LibWebView/OutOfProcessWebView.h>
+
 namespace Browser {
 
 class InspectorWidget final : public GUI::Widget {
