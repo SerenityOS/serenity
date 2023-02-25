@@ -1,4 +1,4 @@
-[Exposed=(Window,Worker), Serializable]
+[Exposed=(Window,Worker), Serializable, UseNewAKString]
 interface Blob {
     constructor(optional sequence<BlobPart> blobParts, optional BlobPropertyBag options = {});
 

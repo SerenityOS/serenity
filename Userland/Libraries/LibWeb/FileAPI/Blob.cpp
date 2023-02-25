@@ -1,27 +1,28 @@
 /*
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/GenericLexer.h>
-#include <AK/StdLibExtras.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/BlobPrototype.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/Blob.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::FileAPI {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, ByteBuffer byte_buffer, String type)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm, move(byte_buffer), move(type)));
 }
 
 // https://w3c.github.io/FileAPI/#convert-line-endings-to-native
-ErrorOr<DeprecatedString> convert_line_endings_to_native(DeprecatedString const& string)
+ErrorOr<String> convert_line_endings_to_native(StringView string)
 {
     // 1. Let native line ending be be the code point U+000A LF.
     auto native_line_ending = "\n"sv;
@@ -33,7 +34,7 @@ ErrorOr<DeprecatedString> convert_line_endings_to_native(DeprecatedString const&
     StringBuilder result;
 
     // 4. Let position be a position variable for s, initially pointing at the start of s.
-    auto lexer = GenericLexer { string.view() };
+    auto lexer = GenericLexer { string };
 
     // 5. Let token be the result of collecting a sequence of code points that are not equal to U+000A LF or U+000D CR from s given position.
     // 6. Append token to result.
@@ -64,7 +65,7 @@ ErrorOr<DeprecatedString> convert_line_endings_to_native(DeprecatedString const&
         TRY(result.try_append(lexer.consume_until(is_any_of("\n\r"sv))));
     }
     // 5. Return result.
-    return result.to_deprecated_string();
+    return result.to_string();
 }
 
 // https://w3c.github.io/FileAPI/#process-blob-parts
@@ -77,7 +78,7 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
     for (auto const& blob_part : blob_parts) {
         TRY(blob_part.visit(
             // 1. If element is a USVString, run the following sub-steps:
-            [&](DeprecatedString const& string) -> ErrorOr<void> {
+            [&](String const& string) -> ErrorOr<void> {
                 // 1. Let s be element.
                 auto s = string;
 
@@ -85,9 +86,9 @@ ErrorOr<ByteBuffer> process_blob_parts(Vector<BlobPart> const& blob_parts, Optio
                 if (options.has_value() && options->endings == Bindings::EndingType::Native)
                     s = TRY(convert_line_endings_to_native(s));
 
-                // NOTE: The AK::DeprecatedString is always UTF-8.
+                // NOTE: The AK::String is always UTF-8.
                 // 3. Append the result of UTF-8 encoding s to bytes.
-                return bytes.try_append(s.to_byte_buffer());
+                return bytes.try_append(s.bytes());
             },
             // 2. If element is a BufferSource, get a copy of the bytes held by the buffer source, and append those bytes to bytes.
             [&](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
@@ -117,7 +118,7 @@ Blob::Blob(JS::Realm& realm)
 {
 }
 
-Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString type)
+Blob::Blob(JS::Realm& realm, ByteBuffer byte_buffer, String type)
     : PlatformObject(realm)
     , m_byte_buffer(move(byte_buffer))
     , m_type(move(type))
@@ -143,6 +144,8 @@ JS::ThrowCompletionOr<void> Blob::initialize(JS::Realm& realm)
 // https://w3c.github.io/FileAPI/#ref-for-dom-blob-blob
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optional<Vector<BlobPart>> const& blob_parts, Optional<BlobPropertyBag> const& options)
 {
+    auto& vm = realm.vm();
+
     // 1. If invoked with zero parameters, return a new Blob object consisting of 0 bytes, with size set to 0, and with type set to the empty string.
     if (!blob_parts.has_value() && !options.has_value())
         return MUST_OR_THROW_OOM(realm.heap().allocate<Blob>(realm, realm));
@@ -153,7 +156,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optio
         byte_buffer = TRY_OR_THROW_OOM(realm.vm(), process_blob_parts(blob_parts.value(), options));
     }
 
-    auto type = DeprecatedString::empty();
+    auto type = String {};
     // 3. If the type member of the options argument is not the empty string, run the following sub-steps:
     if (options.has_value() && !options->type.is_empty()) {
         // 1. If the type member is provided and is not the empty string, let t be set to the type dictionary member.
@@ -166,7 +169,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optio
 
         // 2. Convert every character in t to ASCII lowercase.
         if (!type.is_empty())
-            type = options->type.to_lowercase();
+            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lower_case(type));
     }
 
     // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
@@ -179,8 +182,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::construct_impl(JS::Realm& real
 }
 
 // https://w3c.github.io/FileAPI/#dfn-slice
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<DeprecatedString> const& content_type)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Optional<i64> end, Optional<String> const& content_type)
 {
+    auto& vm = realm().vm();
+
     // 1. The optional start parameter is a value for the start point of a slice() call, and must be treated as a byte-order position, with the zeroth position representing the first byte.
     //    User agents must process slice() with start normalized according to the following:
     i64 relative_start;
@@ -218,17 +223,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
 
     // 3. The optional contentType parameter is used to set the ASCII-encoded string in lower case representing the media type of the Blob.
     //    User agents must process the slice() with contentType normalized according to the following:
-    DeprecatedString relative_content_type;
+    String relative_content_type;
     if (!content_type.has_value()) {
         // a. If the contentType parameter is not provided, let relativeContentType be set to the empty string.
-        relative_content_type = "";
+        relative_content_type = String {};
     } else {
         // b. Else let relativeContentType be set to contentType and run the substeps below:
 
         // FIXME: 1. If relativeContentType contains any characters outside the range of U+0020 to U+007E, then set relativeContentType to the empty string and return from these substeps.
 
         // 2. Convert every character in relativeContentType to ASCII lowercase.
-        relative_content_type = content_type->to_lowercase();
+        relative_content_type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lower_case(content_type.value()));
     }
 
     // 4. Let span be max((relativeEnd - relativeStart), 0).
@@ -238,20 +243,23 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
     // a. S refers to span consecutive bytes from this, beginning with the byte at byte-order position relativeStart.
     // b. S.size = span.
     // c. S.type = relativeContentType.
-    auto byte_buffer = TRY_OR_THROW_OOM(realm().vm(), m_byte_buffer.slice(relative_start, span));
+    auto byte_buffer = TRY_OR_THROW_OOM(vm, m_byte_buffer.slice(relative_start, span));
     return MUST_OR_THROW_OOM(heap().allocate<Blob>(realm(), realm(), move(byte_buffer), move(relative_content_type)));
 }
 
 // https://w3c.github.io/FileAPI/#dom-blob-text
-JS::Promise* Blob::text()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> Blob::text()
 {
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
     // FIXME: 1. Let stream be the result of calling get stream on this.
     // FIXME: 2. Let reader be the result of getting a reader from stream. If that threw an exception, return a new promise rejected with that exception.
 
     // FIXME: We still need to implement ReadableStream for this step to be fully valid.
     // 3. Let promise be the result of reading all bytes from stream with reader
-    auto promise = JS::Promise::create(realm());
-    auto result = JS::PrimitiveString::create(vm(), DeprecatedString { m_byte_buffer.bytes() });
+    auto promise = JS::Promise::create(realm);
+    auto result = TRY(Bindings::throw_dom_exception_if_needed(vm, [&]() { return JS::PrimitiveString::create(vm, StringView { m_byte_buffer.bytes() }); }));
 
     // 4. Return the result of transforming promise by a fulfillment handler that returns the result of running UTF-8 decode on its first argument.
     promise->fulfill(result);
