@@ -77,6 +77,10 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
         return EPERM;
 
     auto params = TRY(copy_typed_from_user(user_params));
+    if (params.flags & MS_REMOUNT)
+        return EINVAL;
+    if (params.flags & MS_BIND)
+        return EINVAL;
 
     auto source_fd = params.source_fd;
     auto target = TRY(try_copy_kstring_from_user(params.target));
@@ -91,25 +95,6 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 
     auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
 
-    if (params.flags & MS_REMOUNT) {
-        // We're not creating a new mount, we're updating an existing one!
-        TRY(VirtualFileSystem::the().remount(target_custody, params.flags & ~MS_REMOUNT));
-        return 0;
-    }
-
-    if (params.flags & MS_BIND) {
-        // We're doing a bind mount.
-        if (description_or_error.is_error())
-            return description_or_error.release_error();
-        auto description = description_or_error.release_value();
-        if (!description->custody()) {
-            // We only support bind-mounting inodes, not arbitrary files.
-            return ENODEV;
-        }
-        TRY(VirtualFileSystem::the().bind_mount(*description->custody(), target_custody, params.flags));
-        return 0;
-    }
-
     RefPtr<FileSystem> fs;
 
     if (!description_or_error.is_error()) {
@@ -123,6 +108,54 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
 
     TRY(fs->initialize());
     TRY(VirtualFileSystem::the().mount(*fs, target_custody, params.flags));
+    return 0;
+}
+
+ErrorOr<FlatPtr> Process::sys$remount(Userspace<Syscall::SC_remount_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    TRY(require_no_promises());
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
+        return EPERM;
+
+    auto params = TRY(copy_typed_from_user(user_params));
+    if (params.flags & MS_REMOUNT)
+        return EINVAL;
+    if (params.flags & MS_BIND)
+        return EINVAL;
+
+    auto target = TRY(try_copy_kstring_from_user(params.target));
+    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
+    TRY(VirtualFileSystem::the().remount(target_custody, params.flags));
+    return 0;
+}
+
+ErrorOr<FlatPtr> Process::sys$bindmount(Userspace<Syscall::SC_bindmount_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    TRY(require_no_promises());
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
+        return EPERM;
+
+    auto params = TRY(copy_typed_from_user(user_params));
+    if (params.flags & MS_REMOUNT)
+        return EINVAL;
+    if (params.flags & MS_BIND)
+        return EINVAL;
+
+    auto source_fd = params.source_fd;
+    auto target = TRY(try_copy_kstring_from_user(params.target));
+    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
+
+    auto description = TRY(open_file_description(source_fd));
+    if (!description->custody()) {
+        // NOTE: We only support bind-mounting inodes, not arbitrary files.
+        return ENODEV;
+    }
+
+    TRY(VirtualFileSystem::the().bind_mount(*description->custody(), target_custody, params.flags));
     return 0;
 }
 
