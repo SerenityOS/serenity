@@ -1057,7 +1057,7 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
 
 ErrorOr<struct utsname> uname()
 {
-    utsname uts;
+    struct utsname uts;
 #ifdef AK_OS_SERENITY
     int rc = syscall(SC_uname, &uts);
     HANDLE_SYSCALL_RETURN_VALUE("uname", rc, uts);
