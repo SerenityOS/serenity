@@ -553,11 +553,7 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
 
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
-    u8 component_count = TRY(stream.read_value<u8>());
-    if (component_count != context.components.size()) {
-        dbgln_if(JPEG_DEBUG, "{}: Unsupported number of components: {}!", TRY(stream.tell()), component_count);
-        return Error::from_string_literal("Unsupported number of components");
-    }
+    [[maybe_unused]] u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
 
@@ -572,21 +568,6 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         u8 table_ids = TRY(stream.read_value<u8>());
 
         ScanComponent scan_component { component, static_cast<u8>(table_ids >> 4), static_cast<u8>(table_ids & 0x0F) };
-
-        if (context.dc_tables.size() != context.ac_tables.size()) {
-            dbgln_if(JPEG_DEBUG, "{}: DC & AC table count mismatch!", TRY(stream.tell()));
-            return Error::from_string_literal("DC & AC table count mismatch");
-        }
-
-        if (!context.dc_tables.contains(scan_component.dc_destination_id)) {
-            dbgln_if(JPEG_DEBUG, "DC table (id: {}) does not exist!", scan_component.dc_destination_id);
-            return Error::from_string_literal("DC table does not exist");
-        }
-
-        if (!context.ac_tables.contains(scan_component.ac_destination_id)) {
-            dbgln_if(JPEG_DEBUG, "AC table (id: {}) does not exist!", scan_component.ac_destination_id);
-            return Error::from_string_literal("AC table does not exist");
-        }
 
         current_scan.components.append(scan_component);
     }
