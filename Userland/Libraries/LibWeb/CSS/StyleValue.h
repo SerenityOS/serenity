@@ -1591,7 +1591,7 @@ public:
     }
     virtual ~InheritStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return String::from_utf8("inherit"sv); }
+    ErrorOr<String> to_string() const override { return "inherit"_string; }
 
     bool properties_equal(InheritStyleValue const&) const { return true; }
 
@@ -1611,7 +1611,7 @@ public:
     }
     virtual ~InitialStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return String::from_utf8("initial"sv); }
+    ErrorOr<String> to_string() const override { return "initial"_string; }
 
     bool properties_equal(InitialStyleValue const&) const { return true; }
 
@@ -2029,7 +2029,7 @@ public:
     }
     virtual ~UnsetStyleValue() override = default;
 
-    ErrorOr<String> to_string() const override { return String::from_utf8("unset"sv); }
+    ErrorOr<String> to_string() const override { return "unset"_string; }
 
     bool properties_equal(UnsetStyleValue const&) const { return true; }
 

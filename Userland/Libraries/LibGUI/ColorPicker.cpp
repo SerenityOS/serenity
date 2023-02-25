@@ -228,14 +228,14 @@ void ColorPicker::build_ui()
     button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& ok_button = button_container.add<DialogButton>();
-    ok_button.set_text(String::from_utf8_short_string("OK"sv));
+    ok_button.set_text("OK"_short_string);
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<DialogButton>();
-    cancel_button.set_text(String::from_utf8_short_string("Cancel"sv));
+    cancel_button.set_text("Cancel"_short_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };
@@ -407,7 +407,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     make_spinbox(Blue, m_color.blue());
     make_spinbox(Alpha, m_color.alpha());
 
-    m_selector_button = vertical_container.add<GUI::Button>(String::from_utf8("Select on screen"sv).release_value_but_fixme_should_propagate_errors());
+    m_selector_button = vertical_container.add<GUI::Button>("Select on screen"_string.release_value_but_fixme_should_propagate_errors());
     m_selector_button->on_click = [this](auto) {
         auto selector = ColorSelectOverlay::construct();
         auto original_color = m_color;

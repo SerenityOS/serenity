@@ -206,7 +206,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 
         set_primary_slider(opacity_slider);
 
-        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>(TRY(String::from_utf8("Use secondary color"sv))));
+        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>(TRY("Use secondary color"_string)));
         use_secondary_color_checkbox->on_checked = [this](bool checked) {
             m_use_secondary_color = checked;
             m_editor->update();
@@ -217,7 +217,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
         button_container->add_spacer().release_value_but_fixme_should_propagate_errors();
 
-        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>(String::from_utf8_short_string("Apply"sv)));
+        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_short_string));
         apply_button->on_click = [this](auto) {
             rasterize_gradient();
         };

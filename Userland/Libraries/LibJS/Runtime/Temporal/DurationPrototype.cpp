@@ -369,7 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(DurationPrototype::round)
         smallest_unit_present = false;
 
         // b. Set smallestUnit to "nanosecond".
-        smallest_unit = TRY_OR_THROW_OOM(vm, String::from_utf8("nanosecond"sv));
+        smallest_unit = TRY_OR_THROW_OOM(vm, "nanosecond"_string);
     }
 
     // 10. Let defaultLargestUnit be ! DefaultTemporalLargestUnit(duration.[[Years]], duration.[[Months]], duration.[[Weeks]], duration.[[Days]], duration.[[Hours]], duration.[[Minutes]], duration.[[Seconds]], duration.[[Milliseconds]], duration.[[Microseconds]]).

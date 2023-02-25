@@ -224,7 +224,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
 
     auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
-    cancel_button.set_text(String::from_utf8_short_string("Cancel"sv));
+    cancel_button.set_text("Cancel"_short_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

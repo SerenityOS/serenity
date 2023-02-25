@@ -154,17 +154,17 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 
     TRY(button_widget->add_spacer());
 
-    auto ok_button = TRY(make_button(String::from_utf8_short_string("OK"sv), button_widget));
+    auto ok_button = TRY(make_button("OK"_short_string, button_widget));
     ok_button->on_click = [this](auto) {
         if (apply_changes())
             close();
     };
-    auto cancel_button = TRY(make_button(String::from_utf8_short_string("Cancel"sv), button_widget));
+    auto cancel_button = TRY(make_button("Cancel"_short_string, button_widget));
     cancel_button->on_click = [this](auto) {
         close();
     };
 
-    m_apply_button = TRY(make_button(String::from_utf8_short_string("Apply"sv), button_widget));
+    m_apply_button = TRY(make_button("Apply"_short_string, button_widget));
     m_apply_button->on_click = [this](auto) { apply_changes(); };
     m_apply_button->set_enabled(false);
 

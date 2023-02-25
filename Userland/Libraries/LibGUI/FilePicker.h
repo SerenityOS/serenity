@@ -54,11 +54,11 @@ private:
         case Mode::Open:
         case Mode::OpenMultiple:
         case Mode::OpenFolder:
-            return String::from_utf8_short_string("Open"sv);
+            return "Open"_short_string;
         case Mode::Save:
-            return String::from_utf8_short_string("Save"sv);
+            return "Save"_short_string;
         default:
-            return String::from_utf8_short_string("OK"sv);
+            return "OK"_short_string;
         }
     }
 

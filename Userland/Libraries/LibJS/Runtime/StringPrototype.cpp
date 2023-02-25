@@ -494,7 +494,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
-    auto rx = TRY(regexp_create(vm, regexp, PrimitiveString::create(vm, String::from_utf8_short_string("g"sv))));
+    auto rx = TRY(regexp_create(vm, regexp, PrimitiveString::create(vm, "g"_short_string)));
     return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_match_all(), PrimitiveString::create(vm, move(string))));
 }
 
@@ -509,7 +509,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::normalize)
 
     // 3. If form is undefined, let f be "NFC".
     if (auto form_value = vm.argument(0); form_value.is_undefined()) {
-        form = String::from_utf8_short_string("NFC"sv);
+        form = "NFC"_short_string;
     }
     // 4. Else, let f be ? ToString(form).
     else {

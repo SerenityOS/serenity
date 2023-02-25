@@ -15,8 +15,8 @@ ErrorOr<NonnullOwnPtr<LinkedShader>> Linker::link(Vector<ObjectFile const*> cons
 
     GPU::IR::Shader shader;
 
-    auto input_name = TRY(String::from_utf8("input0"sv));
-    auto output_name = TRY(String::from_utf8("output0"sv));
+    auto input_name = TRY("input0"_string);
+    auto output_name = TRY("output0"_string);
     TRY(shader.inputs.try_append({ move(input_name), GPU::IR::StorageType::Vector4 }));
     TRY(shader.outputs.try_append({ move(output_name), GPU::IR::StorageType::Vector4 }));
     GPU::IR::Instruction instruction {

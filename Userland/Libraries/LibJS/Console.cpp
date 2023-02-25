@@ -104,7 +104,7 @@ ThrowCompletionOr<Value> Console::trace()
     for (ssize_t i = execution_context_stack.size() - 2; i >= 0; --i) {
         auto const& function_name = execution_context_stack[i]->function_name;
         trace.stack.append(function_name.is_empty()
-                ? TRY_OR_THROW_OOM(vm, String::from_utf8("<anonymous>"sv))
+                ? TRY_OR_THROW_OOM(vm, "<anonymous>"_string)
                 : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(function_name)));
     }
 
@@ -253,7 +253,7 @@ ThrowCompletionOr<Value> Console::group()
     }
     // ... Otherwise, let groupLabel be an implementation-chosen label representing a group.
     else {
-        group_label = TRY_OR_THROW_OOM(vm, String::from_utf8("Group"sv));
+        group_label = TRY_OR_THROW_OOM(vm, "Group"_string);
     }
 
     // 3. Incorporate groupLabel as a label for group.
@@ -289,7 +289,7 @@ ThrowCompletionOr<Value> Console::group_collapsed()
     }
     // ... Otherwise, let groupLabel be an implementation-chosen label representing a group.
     else {
-        group_label = TRY_OR_THROW_OOM(vm, String::from_utf8("Group"sv));
+        group_label = TRY_OR_THROW_OOM(vm, "Group"_string);
     }
 
     // 3. Incorporate groupLabel as a label for group.

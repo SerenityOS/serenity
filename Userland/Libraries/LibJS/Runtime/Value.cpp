@@ -362,11 +362,11 @@ ErrorOr<String> Value::to_string_without_side_effects() const
 
     switch (m_value.tag) {
     case UNDEFINED_TAG:
-        return String::from_utf8("undefined"sv);
+        return "undefined"_string;
     case NULL_TAG:
-        return String::from_utf8("null"sv);
+        return "null"_string;
     case BOOLEAN_TAG:
-        return String::from_utf8(as_bool() ? "true"sv : "false"sv);
+        return as_bool() ? "true"_string : "false"_string;
     case INT32_TAG:
         return String::number(as_i32());
     case STRING_TAG:
@@ -389,7 +389,7 @@ ErrorOr<String> Value::to_string_without_side_effects() const
     case OBJECT_TAG:
         return String::formatted("[object {}]", as_object().class_name());
     case ACCESSOR_TAG:
-        return String::from_utf8("<accessor>"sv);
+        return "<accessor>"_string;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -418,14 +418,14 @@ ThrowCompletionOr<String> Value::to_string(VM& vm) const
         return vm.throw_completion<TypeError>(ErrorType::Convert, "symbol", "string");
     // 3. If argument is undefined, return "undefined".
     case UNDEFINED_TAG:
-        return TRY_OR_THROW_OOM(vm, String::from_utf8("undefined"sv));
+        return TRY_OR_THROW_OOM(vm, "undefined"_string);
     // 4. If argument is null, return "null".
     case NULL_TAG:
-        return TRY_OR_THROW_OOM(vm, String::from_utf8("null"sv));
+        return TRY_OR_THROW_OOM(vm, "null"_string);
     // 5. If argument is true, return "true".
     // 6. If argument is false, return "false".
     case BOOLEAN_TAG:
-        return TRY_OR_THROW_OOM(vm, String::from_utf8(as_bool() ? "true"sv : "false"sv));
+        return TRY_OR_THROW_OOM(vm, as_bool() ? "true"_string : "false"_string);
     // 7. If argument is a Number, return Number::toString(argument, 10).
     case INT32_TAG:
         return TRY_OR_THROW_OOM(vm, String::number(as_i32()));

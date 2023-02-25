@@ -325,7 +325,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     }).release_value_but_fixme_should_propagate_errors();
     update_timer->start();
 
-    auto& stop_button = widget->add<GUI::Button>(String::from_utf8_short_string("Stop"sv));
+    auto& stop_button = widget->add<GUI::Button>("Stop"_short_string);
     stop_button.set_fixed_size(140, 22);
     stop_button.on_click = [&](auto) {
         GUI::Application::the()->quit();
@@ -338,7 +338,7 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
 bool generate_profile(pid_t& pid)
 {
     if (!pid) {
-        auto process_chooser = GUI::ProcessChooser::construct("Profiler"sv, String::from_utf8_short_string("Profile"sv), Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
+        auto process_chooser = GUI::ProcessChooser::construct("Profiler"sv, "Profile"_short_string, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"sv).release_value_but_fixme_should_propagate_errors());
         if (process_chooser->exec() == GUI::Dialog::ExecResult::Cancel)
             return false;
         pid = process_chooser->pid();

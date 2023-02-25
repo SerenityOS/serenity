@@ -39,7 +39,7 @@ ErrorOr<String> Token::to_string() const
     case Type::Url:
         return serialize_a_url(url());
     case Type::BadUrl:
-        return String::from_utf8("url()"sv);
+        return "url()"_string;
     case Type::Delim:
         return String { m_value };
     case Type::Number:
@@ -49,29 +49,29 @@ ErrorOr<String> Token::to_string() const
     case Type::Dimension:
         return String::formatted("{}{}", m_number_value.value(), dimension_unit());
     case Type::Whitespace:
-        return String::from_utf8_short_string(" "sv);
+        return " "_short_string;
     case Type::CDO:
-        return String::from_utf8("<!--"sv);
+        return "<!--"_string;
     case Type::CDC:
-        return String::from_utf8_short_string("-->"sv);
+        return "-->"_short_string;
     case Type::Colon:
-        return String::from_utf8_short_string(":"sv);
+        return ":"_short_string;
     case Type::Semicolon:
-        return String::from_utf8_short_string(";"sv);
+        return ";"_short_string;
     case Type::Comma:
-        return String::from_utf8_short_string(","sv);
+        return ","_short_string;
     case Type::OpenSquare:
-        return String::from_utf8_short_string("["sv);
+        return "["_short_string;
     case Type::CloseSquare:
-        return String::from_utf8_short_string("]"sv);
+        return "]"_short_string;
     case Type::OpenParen:
-        return String::from_utf8_short_string("("sv);
+        return "("_short_string;
     case Type::CloseParen:
-        return String::from_utf8_short_string(")"sv);
+        return ")"_short_string;
     case Type::OpenCurly:
-        return String::from_utf8_short_string("{"sv);
+        return "{"_short_string;
     case Type::CloseCurly:
-        return String::from_utf8_short_string("}"sv);
+        return "}"_short_string;
     case Type::Invalid:
     default:
         VERIFY_NOT_REACHED();
@@ -85,7 +85,7 @@ ErrorOr<String> Token::to_debug_string() const
         VERIFY_NOT_REACHED();
 
     case Type::EndOfFile:
-        return String::from_utf8("__EOF__"sv);
+        return "__EOF__"_string;
     case Type::Ident:
         return String::formatted("Ident: {}", ident());
     case Type::Function:
@@ -97,11 +97,11 @@ ErrorOr<String> Token::to_debug_string() const
     case Type::String:
         return String::formatted("String: {}", string());
     case Type::BadString:
-        return String::from_utf8("BadString"sv);
+        return "BadString"_string;
     case Type::Url:
         return String::formatted("Url: {}", url());
     case Type::BadUrl:
-        return String::from_utf8("BadUrl"sv);
+        return "BadUrl"_string;
     case Type::Delim:
         return String::formatted("Delim: {}", m_value);
     case Type::Number:
@@ -111,29 +111,29 @@ ErrorOr<String> Token::to_debug_string() const
     case Type::Dimension:
         return String::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Whitespace:
-        return String::from_utf8("Whitespace"sv);
+        return "Whitespace"_string;
     case Type::CDO:
-        return String::from_utf8("CDO"sv);
+        return "CDO"_string;
     case Type::CDC:
-        return String::from_utf8("CDC"sv);
+        return "CDC"_string;
     case Type::Colon:
-        return String::from_utf8("Colon"sv);
+        return "Colon"_string;
     case Type::Semicolon:
-        return String::from_utf8("Semicolon"sv);
+        return "Semicolon"_string;
     case Type::Comma:
-        return String::from_utf8("Comma"sv);
+        return "Comma"_string;
     case Type::OpenSquare:
-        return String::from_utf8("OpenSquare"sv);
+        return "OpenSquare"_string;
     case Type::CloseSquare:
-        return String::from_utf8("CloseSquare"sv);
+        return "CloseSquare"_string;
     case Type::OpenParen:
-        return String::from_utf8("OpenParen"sv);
+        return "OpenParen"_string;
     case Type::CloseParen:
-        return String::from_utf8("CloseParen"sv);
+        return "CloseParen"_string;
     case Type::OpenCurly:
-        return String::from_utf8("OpenCurly"sv);
+        return "OpenCurly"_string;
     case Type::CloseCurly:
-        return String::from_utf8("CloseCurly"sv);
+        return "CloseCurly"_string;
     }
     VERIFY_NOT_REACHED();
 }

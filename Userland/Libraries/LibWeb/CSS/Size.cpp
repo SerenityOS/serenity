@@ -78,18 +78,18 @@ ErrorOr<String> Size::to_string() const
 {
     switch (m_type) {
     case Type::Auto:
-        return String::from_utf8("auto"sv);
+        return "auto"_string;
     case Type::Length:
     case Type::Percentage:
         return m_length_percentage.to_string();
     case Type::MinContent:
-        return String::from_utf8("min-content"sv);
+        return "min-content"_string;
     case Type::MaxContent:
-        return String::from_utf8("max-content"sv);
+        return "max-content"_string;
     case Type::FitContent:
         return String::formatted("fit-content({})", TRY(m_length_percentage.to_string()));
     case Type::None:
-        return String::from_utf8("none"sv);
+        return "none"_string;
     }
     VERIFY_NOT_REACHED();
 }

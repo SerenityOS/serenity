@@ -154,7 +154,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         thickness_or_radius_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_or_radius_label->set_fixed_size(80, 20);
 
-        auto thickness_or_radius_slider = TRY(thickness_or_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("px"sv)));
+        auto thickness_or_radius_slider = TRY(thickness_or_radius_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
 
         thickness_or_radius_slider->on_change = [&](int value) {
             if (m_fill_mode == FillMode::RoundedCorners) {
@@ -187,12 +187,12 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_radio_container->try_set_layout<GUI::VerticalBoxLayout>());
-        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Outline"sv)));
-        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Fill"sv)));
-        auto gradient_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY(String::from_utf8("Gradient"sv))));
+        auto outline_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Outline"_short_string));
+        auto fill_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Fill"_short_string));
+        auto gradient_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(TRY("Gradient"_string)));
         mode_radio_container->set_fixed_width(70);
 
-        auto rounded_corners_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>(String::from_utf8_short_string("Rounded"sv)));
+        auto rounded_corners_mode_radio = TRY(mode_radio_container->try_add<GUI::RadioButton>("Rounded"_short_string));
 
         outline_mode_radio->on_checked = [this, update_slider](bool) {
             m_fill_mode = FillMode::Outline;
@@ -215,7 +215,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         auto mode_extras_container = TRY(mode_container->try_add<GUI::Widget>());
         (void)TRY(mode_extras_container->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto aa_enable_checkbox = TRY(mode_extras_container->try_add<GUI::CheckBox>(TRY(String::from_utf8("Anti-alias"sv))));
+        auto aa_enable_checkbox = TRY(mode_extras_container->try_add<GUI::CheckBox>(TRY("Anti-alias"_string)));
         aa_enable_checkbox->on_checked = [this](bool checked) {
             m_antialias_enabled = checked;
         };

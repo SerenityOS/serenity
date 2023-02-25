@@ -116,7 +116,7 @@ ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
 
     m_font_label = TRY(properties_widget->try_add<GUI::Label>(m_selected_font->human_readable_name()));
 
-    auto change_font_button = TRY(properties_widget->try_add<GUI::Button>(TRY(String::from_utf8("Change Font..."sv))));
+    auto change_font_button = TRY(properties_widget->try_add<GUI::Button>(TRY("Change Font..."_string)));
     change_font_button->on_click = [this](auto) {
         auto picker = GUI::FontPicker::construct(nullptr, m_selected_font, false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {

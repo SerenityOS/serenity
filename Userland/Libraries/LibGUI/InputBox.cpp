@@ -103,7 +103,7 @@ void InputBox::build()
     button_container_inner.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_ok_button = button_container_inner.add<DialogButton>();
-    m_ok_button->set_text(String::from_utf8_short_string("OK"sv));
+    m_ok_button->set_text("OK"_short_string);
     m_ok_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: OK button clicked");
         done(ExecResult::OK);
@@ -111,7 +111,7 @@ void InputBox::build()
     m_ok_button->set_default(true);
 
     m_cancel_button = button_container_inner.add<DialogButton>();
-    m_cancel_button->set_text(String::from_utf8_short_string("Cancel"sv));
+    m_cancel_button->set_text("Cancel"_short_string);
     m_cancel_button->on_click = [this](auto) {
         dbgln("GUI::InputBox: Cancel button clicked");
         done(ExecResult::Cancel);

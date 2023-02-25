@@ -117,7 +117,7 @@ ErrorOr<String> Length::to_string() const
     if (is_calculated())
         return m_calculated_style->to_string();
     if (is_auto())
-        return String::from_utf8("auto"sv);
+        return "auto"_string;
     return String::formatted("{}{}", m_value, unit_name());
 }
 

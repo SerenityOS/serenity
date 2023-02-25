@@ -19,11 +19,11 @@ namespace DSP::Synthesizers {
 
 Classic::Classic(NonnullRefPtr<Transport> transport)
     : DSP::SynthesizerProcessor(move(transport))
-    , m_waveform(String::from_utf8("Waveform"sv), Waveform::Saw)
-    , m_attack(String::from_utf8_short_string("Attack"sv), 0.01, 2000, 5, Logarithmic::Yes)
-    , m_decay(String::from_utf8_short_string("Decay"sv), 0.01, 20'000, 80, Logarithmic::Yes)
-    , m_sustain(String::from_utf8_short_string("Sustain"sv), 0.001, 1, 0.725, Logarithmic::No)
-    , m_release(String::from_utf8_short_string("Release"sv), 0.01, 6'000, 120, Logarithmic::Yes)
+    , m_waveform("Waveform"_string, Waveform::Saw)
+    , m_attack("Attack"_short_string, 0.01, 2000, 5, Logarithmic::Yes)
+    , m_decay("Decay"_short_string, 0.01, 20'000, 80, Logarithmic::Yes)
+    , m_sustain("Sustain"_short_string, 0.001, 1, 0.725, Logarithmic::No)
+    , m_release("Release"_short_string, 0.01, 6'000, 120, Logarithmic::Yes)
 {
     m_parameters.append(m_waveform);
     m_parameters.append(m_attack);

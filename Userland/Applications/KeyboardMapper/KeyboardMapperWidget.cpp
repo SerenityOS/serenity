@@ -88,11 +88,11 @@ void KeyboardMapperWidget::create_frame()
     m_map_group->set_layout<GUI::HorizontalBoxLayout>();
     m_map_group->set_fixed_width(450);
 
-    add_map_radio_button("map"sv, String::from_utf8_short_string("Default"sv));
-    add_map_radio_button("shift_map"sv, String::from_utf8_short_string("Shift"sv));
-    add_map_radio_button("altgr_map"sv, String::from_utf8_short_string("AltGr"sv));
-    add_map_radio_button("alt_map"sv, String::from_utf8_short_string("Alt"sv));
-    add_map_radio_button("shift_altgr_map"sv, String::from_utf8("Shift+AltGr"sv).release_value_but_fixme_should_propagate_errors());
+    add_map_radio_button("map"sv, "Default"_short_string);
+    add_map_radio_button("shift_map"sv, "Shift"_short_string);
+    add_map_radio_button("altgr_map"sv, "AltGr"_short_string);
+    add_map_radio_button("alt_map"sv, "Alt"_short_string);
+    add_map_radio_button("shift_altgr_map"sv, "Shift+AltGr"_string.release_value_but_fixme_should_propagate_errors());
 
     bottom_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 }

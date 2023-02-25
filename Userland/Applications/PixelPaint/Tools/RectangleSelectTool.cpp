@@ -166,7 +166,7 @@ ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
     feather_label->set_fixed_size(80, 20);
 
     int const feather_slider_max = 100;
-    auto feather_slider = TRY(feather_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, String::from_utf8_short_string("%"sv)));
+    auto feather_slider = TRY(feather_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
     feather_slider->set_range(0, feather_slider_max);
     feather_slider->set_value((int)floorf(m_edge_feathering * (float)feather_slider_max));
 
