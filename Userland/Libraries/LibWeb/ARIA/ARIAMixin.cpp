@@ -61,4 +61,22 @@ bool ARIAMixin::has_global_aria_attribute() const
         || !aria_role_description().is_null();
 }
 
+Optional<DeprecatedString> ARIAMixin::parse_id_reference(DeprecatedString const& id_reference) const
+{
+    if (id_reference_exists(id_reference))
+        return id_reference;
+    return {};
+}
+
+Vector<DeprecatedString> ARIAMixin::parse_id_reference_list(DeprecatedString const& id_list) const
+{
+    Vector<DeprecatedString> result;
+    auto id_references = id_list.split_view(Infra::is_ascii_whitespace);
+    for (auto const id_reference : id_references) {
+        if (id_reference_exists(id_reference))
+            result.append(id_reference);
+    }
+    return result;
+}
+
 }

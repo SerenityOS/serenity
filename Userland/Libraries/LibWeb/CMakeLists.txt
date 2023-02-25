@@ -1,6 +1,7 @@
 include(libweb_generators)
 
 set(SOURCES
+    ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
     ARIA/ARIAMixin.idl
     ARIA/Roles.cpp

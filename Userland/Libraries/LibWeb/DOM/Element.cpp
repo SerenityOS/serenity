@@ -1779,4 +1779,9 @@ void Element::scroll(HTML::ScrollToOptions const&)
     dbgln("FIXME: Implement Element::scroll(ScrollToOptions)");
 }
 
+bool Element::id_reference_exists(DeprecatedString const& id_reference) const
+{
+    return document().get_element_by_id(id_reference);
+}
+
 }
