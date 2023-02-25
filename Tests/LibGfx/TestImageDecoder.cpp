@@ -38,7 +38,7 @@ TEST_CASE(test_bmp)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    auto frame = plugin_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -53,7 +53,7 @@ TEST_CASE(test_gif)
     EXPECT(plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    auto frame = plugin_decoder->frame(1).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(1));
     EXPECT(frame.duration == 400);
 }
 
@@ -96,9 +96,7 @@ TEST_CASE(test_jpg)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame = plugin_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -113,9 +111,7 @@ TEST_CASE(test_pbm)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame = plugin_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -130,9 +126,7 @@ TEST_CASE(test_pgm)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame = plugin_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -147,9 +141,7 @@ TEST_CASE(test_png)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame = plugin_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -164,9 +156,7 @@ TEST_CASE(test_ppm)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame = plugin_decoder->frame(0).release_value_but_fixme_should_propagate_errors();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -181,11 +171,7 @@ TEST_CASE(test_targa_bottom_left)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame_or_error = plugin_decoder->frame(0);
-    EXPECT(!frame_or_error.is_error());
-    auto frame = frame_or_error.release_value();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -200,11 +186,7 @@ TEST_CASE(test_targa_top_left)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame_or_error = plugin_decoder->frame(0);
-    EXPECT(!frame_or_error.is_error());
-    auto frame = frame_or_error.release_value();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -219,11 +201,7 @@ TEST_CASE(test_targa_bottom_left_compressed)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame_or_error = plugin_decoder->frame(0);
-    EXPECT(!frame_or_error.is_error());
-    auto frame = frame_or_error.release_value();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
 
@@ -238,10 +216,6 @@ TEST_CASE(test_targa_top_left_compressed)
     EXPECT(!plugin_decoder->is_animated());
     EXPECT(!plugin_decoder->loop_count());
 
-    EXPECT(!plugin_decoder->frame(0).is_error());
-
-    auto frame_or_error = plugin_decoder->frame(0);
-    EXPECT(!frame_or_error.is_error());
-    auto frame = frame_or_error.release_value();
+    auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
 }
