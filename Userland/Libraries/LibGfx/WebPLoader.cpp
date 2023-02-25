@@ -204,11 +204,33 @@ static ErrorOr<void> decode_webp_simple_lossy(WebPLoadingContext& context, Chunk
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
+// https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
 static ErrorOr<void> decode_webp_simple_lossless(WebPLoadingContext& context, Chunk const& vp8l_chunk)
 {
-    // FIXME
-    (void)context;
-    (void)vp8l_chunk;
+    VERIFY(vp8l_chunk.type == FourCC("VP8L"));
+
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#3_riff_header
+    if (vp8l_chunk.data.size() < 5)
+        return context.error("WebPImageDecoderPlugin: VP8L chunk too small");
+
+    u8 const* data = vp8l_chunk.data.data();
+    u8 signature = data[0];
+    if (signature != 0x2f)
+        return context.error("WebPImageDecoderPlugin: VP8L chunk invalid signature");
+
+    // 14 bits width-1, 14 bits height-1, 1 bit alpha hint, 3 bit version_number.
+    u16 width = (data[1] | ((data[2] & 0x3f) << 8)) + 1;
+    u16 height = ((data[2] >> 6) | (data[3] << 2) | ((data[4] & 0xf) << 12)) + 1;
+    bool is_alpha_used = (data[4] & 0x10) != 0;
+    u8 version_number = (data[4] & 0xe0) >> 5;
+
+    dbgln_if(WEBP_DEBUG, "width {}, height {}, is_alpha_used {}, version_number {}",
+        width, height, is_alpha_used, version_number);
+
+    // "The version_number is a 3 bit code that must be set to 0. Any other value should be treated as an error. [AMENDED]"
+    if (version_number != 0)
+        return context.error("WebPImageDecoderPlugin: VP8L chunk invalid version_number");
+
     return {};
 }
 
