@@ -74,7 +74,7 @@ ErrorOr<void> Group::add_group(Group& group)
         return Error::from_string_literal("Group name can not be empty.");
 
     // A quick sanity check on group name
-    if (strpbrk(group.name().characters(), "\\/!@#$%^&*()~+=`:\n"))
+    if (group.name().find_any_of("\\/!@#$%^&*()~+=`:\n"sv, DeprecatedString::SearchDirection::Forward).has_value())
         return Error::from_string_literal("Group name has invalid characters.");
 
     // Disallow names starting with '_', '-' or other non-alpha characters.
