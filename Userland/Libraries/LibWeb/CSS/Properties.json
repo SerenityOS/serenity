@@ -765,6 +765,34 @@
       "cursor"
     ]
   },
+  "cx": {
+    "__comment": "This is an SVG 2 geometry property, see: https://www.w3.org/TR/SVG/geometry.html#CX.",
+    "animation-type": "by-computed-value",
+    "inherited": false,
+    "initial": "0",
+    "valid-types": [
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
+    ],
+    "percentages-resolve-to": "length",
+    "quirks": [
+      "unitless-length"
+    ]
+  },
+  "cy": {
+    "__comment": "This is an SVG 2 geometry property, see: https://www.w3.org/TR/SVG/geometry.html#CY.",
+    "animation-type": "by-computed-value",
+    "inherited": false,
+    "initial": "0",
+    "valid-types": [
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
+    ],
+    "percentages-resolve-to": "length",
+    "quirks": [
+      "unitless-length"
+    ]
+  },
   "direction": {
     "animation-type": "none",
     "inherited": true,
@@ -2005,6 +2033,20 @@
       "none"
     ]
   },
+  "r": {
+    "__comment": "This is an SVG 2 geometry property, see: https://www.w3.org/TR/SVG/geometry.html#R.",
+    "animation-type": "by-computed-value",
+    "inherited": false,
+    "initial": "0",
+    "valid-types": [
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
+    ],
+    "percentages-resolve-to": "length",
+    "quirks": [
+      "unitless-length"
+    ]
+  },
   "right": {
     "animation-type": "by-computed-value",
     "inherited": false,
@@ -2033,6 +2075,40 @@
       "auto"
     ],
     "percentages-resolve-to": "length"
+  },
+  "rx": {
+    "__comment": "This is an SVG 2 geometry property, see: https://www.w3.org/TR/SVG/geometry.html#RX.",
+    "animation-type": "by-computed-value",
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ],
+    "percentages-resolve-to": "length",
+    "quirks": [
+      "unitless-length"
+    ]
+  },
+  "ry": {
+    "__comment": "This is an SVG 2 geometry property, see: https://www.w3.org/TR/SVG/geometry.html#RY.",
+    "animation-type": "by-computed-value",
+    "inherited": false,
+    "initial": "auto",
+    "valid-types": [
+      "length [-∞,∞]",
+      "percentage [-∞,∞]"
+    ],
+    "valid-identifiers": [
+      "auto"
+    ],
+    "percentages-resolve-to": "length",
+    "quirks": [
+      "unitless-length"
+    ]
   },
   "scrollbar-width": {
     "affects-layout": false,

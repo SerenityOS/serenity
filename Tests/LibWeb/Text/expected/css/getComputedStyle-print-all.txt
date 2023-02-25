@@ -52,6 +52,8 @@ column-count: auto
 column-gap: auto
 content: normal
 cursor: auto
+cx: 0px
+cy: 0px
 direction: ltr
 display: block
 fill: rgb(0, 0, 0)
@@ -81,7 +83,7 @@ grid-row-start: auto
 grid-template-areas: 
 grid-template-columns: 
 grid-template-rows: 
-height: 1411px
+height: 1445px
 image-rendering: auto
 inset-block-end: auto
 inset-block-start: auto
@@ -136,8 +138,11 @@ padding-top: 0px
 pointer-events: auto
 position: static
 quotes: auto
+r: 0px
 right: auto
 row-gap: auto
+rx: auto
+ry: auto
 scrollbar-width: auto
 stop-color: rgb(0, 0, 0)
 stop-opacity: 1
