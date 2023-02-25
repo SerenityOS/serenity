@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/URL.h>
 #include <LibWeb/HTML/Scripting/ModuleScript.h>
 
 namespace Web::HTML {

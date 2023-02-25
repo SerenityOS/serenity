@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibWeb/Layout/FormattingContext.h>
+#include <LibWeb/Layout/TableBox.h>
 #include <LibWeb/Layout/TableWrapper.h>
 
 namespace Web::Layout {

@@ -8,6 +8,7 @@
 
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 

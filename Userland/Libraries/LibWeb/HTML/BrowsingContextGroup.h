@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/WeakPtr.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
 

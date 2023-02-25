@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibJS/SourceCode.h>
