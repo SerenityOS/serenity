@@ -36,7 +36,7 @@ WebIDL::ExceptionOr<XHR::FormDataEntry> create_entry(JS::Realm& realm, String co
                 name_attribute = filename.value();
             else
                 name_attribute = TRY_OR_THROW_OOM(vm, "blob"_string);
-            return JS::make_handle(TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, name_attribute.to_deprecated_string(), {})));
+            return JS::make_handle(TRY(FileAPI::File::create(realm, { JS::make_handle(*blob) }, move(name_attribute), {})));
         }));
 
     // 4. Return an entry whose name is name and whose value is value.
@@ -130,8 +130,8 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
             // 1. If there are no selected files, then create an entry with name and a new File object with an empty name, application/octet-stream as type, and an empty body, and append it to entry list.
             if (file_element->files()->length() == 0) {
                 FileAPI::FilePropertyBag options {};
-                options.type = "application/octet-stream";
-                auto file = TRY(FileAPI::File::create(realm, {}, "", options));
+                options.type = TRY_OR_THROW_OOM(vm, "application/octet-stream"_string);
+                auto file = TRY(FileAPI::File::create(realm, {}, String {}, options));
                 TRY_OR_THROW_OOM(vm, entry_list.try_append(XHR::FormDataEntry { .name = move(name), .value = JS::make_handle(file) }));
             }
             // 2. Otherwise, for each file in selected files, create an entry with name and a File object representing the file, and append it to entry list.
