@@ -12,7 +12,7 @@
 
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>
-#elif defined(AK_OS_LINUX) or defined(AK_OS_MACOS) or defined(AK_OS_NETBSD)
+#elif defined(AK_OS_LINUX) or defined(AK_OS_MACOS) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS)
 #    include <pthread.h>
 #elif defined(AK_OS_FREEBSD) or defined(AK_OS_OPENBSD)
 #    include <pthread.h>
@@ -32,7 +32,7 @@ StackInfo::StackInfo()
         perror("get_stack_bounds");
         VERIFY_NOT_REACHED();
     }
-#elif defined(AK_OS_LINUX) or defined(AK_OS_FREEBSD) or defined(AK_OS_NETBSD)
+#elif defined(AK_OS_LINUX) or defined(AK_OS_FREEBSD) or defined(AK_OS_NETBSD) or defined(AK_OS_SOLARIS)
     int rc;
     pthread_attr_t attr;
     pthread_attr_init(&attr);
