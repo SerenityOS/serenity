@@ -7,7 +7,6 @@
 #pragma once
 
 #include <LibJS/SourceTextModule.h>
-#include <LibWeb/HTML/Scripting/ModuleMap.h>
 #include <LibWeb/HTML/Scripting/Script.h>
 
 namespace Web::HTML {
