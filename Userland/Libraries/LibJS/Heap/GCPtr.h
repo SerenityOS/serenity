@@ -100,6 +100,18 @@ public:
     {
     }
 
+    GCPtr(GCPtr<T> const& other)
+        : m_ptr(other.ptr())
+    {
+    }
+
+    template<typename U>
+    GCPtr(GCPtr<U> const& other)
+    requires(IsConvertible<U*, T*>)
+        : m_ptr(other.ptr())
+    {
+    }
+
     GCPtr(NonnullGCPtr<T> const& other)
         : m_ptr(other.ptr())
     {
@@ -117,7 +129,6 @@ public:
     {
     }
 
-    GCPtr(GCPtr const&) = default;
     GCPtr& operator=(GCPtr const&) = default;
 
     template<typename U>
