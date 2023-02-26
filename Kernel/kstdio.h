@@ -15,7 +15,6 @@ void kernelputstr(char const*, size_t);
 void kernelcriticalputstr(char const*, size_t);
 void dbgputchar(char);
 void kernelearlyputstr(char const*, size_t);
-int snprintf(char* buf, size_t, char const* fmt, ...) __attribute__((format(printf, 3, 4)));
 void set_serial_debug_enabled(bool desired_state);
 bool is_serial_debug_enabled();
 }
