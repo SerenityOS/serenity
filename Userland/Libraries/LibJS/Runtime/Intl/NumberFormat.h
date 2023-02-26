@@ -251,7 +251,7 @@ private:
     Notation m_notation { Notation::Invalid };           // [[Notation]]
     Optional<CompactDisplay> m_compact_display {};       // [[CompactDisplay]]
     SignDisplay m_sign_display { SignDisplay::Invalid }; // [[SignDisplay]]
-    NativeFunction* m_bound_format { nullptr };          // [[BoundFormat]]
+    GCPtr<NativeFunction> m_bound_format;                // [[BoundFormat]]
 
     // Non-standard. Stores the resolved currency display string based on [[Locale]], [[Currency]], and [[CurrencyDisplay]].
     Optional<StringView> m_resolved_currency_display;

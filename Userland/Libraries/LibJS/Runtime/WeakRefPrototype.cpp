@@ -34,7 +34,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
     weak_ref->update_execution_generation();
     return weak_ref->value().visit(
         [](Empty) -> Value { return js_undefined(); },
-        [](auto* value) -> Value { return value; });
+        [](auto value) -> Value { return value; });
 }
 
 }

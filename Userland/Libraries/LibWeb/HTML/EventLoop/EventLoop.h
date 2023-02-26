@@ -101,10 +101,10 @@ private:
     Vector<WeakPtr<DOM::Document>> m_documents;
 
     // Used to implement step 4 of "perform a microtask checkpoint".
-    Vector<EnvironmentSettingsObject&> m_related_environment_settings_objects;
+    Vector<JS::NonnullGCPtr<EnvironmentSettingsObject>> m_related_environment_settings_objects;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#backup-incumbent-settings-object-stack
-    Vector<EnvironmentSettingsObject&> m_backup_incumbent_settings_object_stack;
+    Vector<JS::NonnullGCPtr<EnvironmentSettingsObject>> m_backup_incumbent_settings_object_stack;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#termination-nesting-level
     size_t m_termination_nesting_level { 0 };

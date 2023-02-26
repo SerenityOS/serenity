@@ -308,7 +308,7 @@ void EventLoop::perform_a_microtask_checkpoint()
 
     // 4. For each environment settings object whose responsible event loop is this event loop, notify about rejected promises on that environment settings object.
     for (auto& environment_settings_object : m_related_environment_settings_objects)
-        environment_settings_object.notify_about_rejected_promises({});
+        environment_settings_object->notify_about_rejected_promises({});
 
     // FIXME: 5. Cleanup Indexed Database transactions.
 
@@ -362,7 +362,7 @@ void EventLoop::register_environment_settings_object(Badge<EnvironmentSettingsOb
 
 void EventLoop::unregister_environment_settings_object(Badge<EnvironmentSettingsObject>, EnvironmentSettingsObject& environment_settings_object)
 {
-    bool did_remove = m_related_environment_settings_objects.remove_first_matching([&](auto& entry) { return &entry == &environment_settings_object; });
+    bool did_remove = m_related_environment_settings_objects.remove_first_matching([&](auto& entry) { return entry.ptr() == &environment_settings_object; });
     VERIFY(did_remove);
 }
 

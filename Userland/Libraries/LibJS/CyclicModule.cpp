@@ -25,7 +25,7 @@ void CyclicModule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_cycle_root);
-    for (auto* module : m_async_parent_modules)
+    for (auto module : m_async_parent_modules)
         visitor.visit(module);
 }
 
@@ -204,7 +204,7 @@ ThrowCompletionOr<Promise*> CyclicModule::evaluate(VM& vm)
         VERIFY(m_cycle_root);
         VERIFY(this != m_cycle_root);
         VERIFY(m_cycle_root->m_status == ModuleStatus::Linked);
-        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root);
+        dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] evaluate[{}](vm) deferring to cycle root at {}", this, m_cycle_root.ptr());
         return m_cycle_root->evaluate(vm);
     }
 
@@ -502,7 +502,7 @@ void CyclicModule::execute_async_module(VM& vm)
 void CyclicModule::gather_available_ancestors(Vector<CyclicModule*>& exec_list)
 {
     // 1. For each Cyclic Module Record m of module.[[AsyncParentModules]], do
-    for (auto* module : m_async_parent_modules) {
+    for (auto module : m_async_parent_modules) {
         // a. If execList does not contain m and m.[[CycleRoot]].[[EvaluationError]] is empty, then
         if (!exec_list.contains_slow(module) && !module->m_cycle_root->m_evaluation_error.is_error()) {
             // i. Assert: m.[[Status]] is evaluating-async.
@@ -653,8 +653,7 @@ void CyclicModule::async_module_execution_rejected(VM& vm, Value error)
     m_status = ModuleStatus::Evaluated;
 
     // 7. For each Cyclic Module Record m of module.[[AsyncParentModules]], do
-    for (auto* module : m_async_parent_modules) {
-
+    for (auto module : m_async_parent_modules) {
         // a. Perform AsyncModuleExecutionRejected(m, error).
         module->async_module_execution_rejected(vm, error);
     }

@@ -36,12 +36,12 @@ public:
 
     MediaList* media() const
     {
-        return &m_media;
+        return m_media;
     }
 
     void set_media(DeprecatedString media)
     {
-        m_media.set_media_text(media);
+        m_media->set_media_text(media);
     }
 
     bool is_alternate() const { return m_alternate; }
@@ -59,7 +59,7 @@ protected:
     explicit StyleSheet(JS::Realm&, MediaList& media);
     virtual void visit_edges(Cell::Visitor&) override;
 
-    MediaList& m_media;
+    JS::NonnullGCPtr<MediaList> m_media;
 
 private:
     JS::GCPtr<DOM::Element> m_owner_node;

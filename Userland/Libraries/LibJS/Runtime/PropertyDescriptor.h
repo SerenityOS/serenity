@@ -35,8 +35,8 @@ public:
     }
 
     Optional<Value> value {};
-    Optional<FunctionObject*> get {};
-    Optional<FunctionObject*> set {};
+    Optional<GCPtr<FunctionObject>> get {};
+    Optional<GCPtr<FunctionObject>> set {};
     Optional<bool> writable {};
     Optional<bool> enumerable {};
     Optional<bool> configurable {};
@@ -54,9 +54,9 @@ struct Formatter<JS::PropertyDescriptor> : Formatter<StringView> {
         if (property_descriptor.value.has_value())
             TRY(parts.try_append(TRY(String::formatted("[[Value]]: {}", TRY(property_descriptor.value->to_string_without_side_effects())))));
         if (property_descriptor.get.has_value())
-            TRY(parts.try_append(TRY(String::formatted("[[Get]]: JS::Function* @ {:p}", *property_descriptor.get))));
+            TRY(parts.try_append(TRY(String::formatted("[[Get]]: JS::Function* @ {:p}", property_descriptor.get->ptr()))));
         if (property_descriptor.set.has_value())
-            TRY(parts.try_append(TRY(String::formatted("[[Set]]: JS::Function* @ {:p}", *property_descriptor.set))));
+            TRY(parts.try_append(TRY(String::formatted("[[Set]]: JS::Function* @ {:p}", property_descriptor.set->ptr()))));
         if (property_descriptor.writable.has_value())
             TRY(parts.try_append(TRY(String::formatted("[[Writable]]: {}", *property_descriptor.writable))));
         if (property_descriptor.enumerable.has_value())

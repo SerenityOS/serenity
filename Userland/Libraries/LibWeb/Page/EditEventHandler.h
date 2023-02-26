@@ -25,7 +25,7 @@ public:
     virtual void handle_insert(DOM::Position, u32 code_point);
 
 private:
-    HTML::BrowsingContext& m_browsing_context;
+    JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
 };
 
 }

@@ -37,7 +37,7 @@ JS::ThrowCompletionOr<void> WebAssemblyInstanceObject::initialize(JS::Realm& rea
     for (auto& export_ : instance.exports()) {
         TRY(export_.value().visit(
             [&](Wasm::FunctionAddress const& address) -> JS::ThrowCompletionOr<void> {
-                Optional<JS::FunctionObject*> object = cache.function_instances.get(address);
+                Optional<JS::GCPtr<JS::FunctionObject>> object = cache.function_instances.get(address);
                 if (!object.has_value()) {
                     object = create_native_function(vm, address, export_.name());
                     cache.function_instances.set(address, *object);
@@ -46,7 +46,7 @@ JS::ThrowCompletionOr<void> WebAssemblyInstanceObject::initialize(JS::Realm& rea
                 return {};
             },
             [&](Wasm::MemoryAddress const& address) -> JS::ThrowCompletionOr<void> {
-                Optional<WebAssemblyMemoryObject*> object = cache.memory_instances.get(address);
+                Optional<JS::GCPtr<WebAssemblyMemoryObject>> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
                     object = MUST_OR_THROW_OOM(heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm, realm, address));
                     cache.memory_instances.set(address, *object);
@@ -55,7 +55,7 @@ JS::ThrowCompletionOr<void> WebAssemblyInstanceObject::initialize(JS::Realm& rea
                 return {};
             },
             [&](Wasm::TableAddress const& address) -> JS::ThrowCompletionOr<void> {
-                Optional<WebAssemblyTableObject*> object = cache.table_instances.get(address);
+                Optional<JS::GCPtr<WebAssemblyTableObject>> object = cache.table_instances.get(address);
                 if (!object.has_value()) {
                     object = MUST_OR_THROW_OOM(heap().allocate<Web::Bindings::WebAssemblyTableObject>(realm, realm, address));
                     cache.table_instances.set(address, *object);

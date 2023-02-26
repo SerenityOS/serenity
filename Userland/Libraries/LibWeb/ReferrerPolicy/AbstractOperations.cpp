@@ -23,7 +23,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
     auto const& policy = request.referrer_policy();
 
     // 2. Let environment be request’s client.
-    auto* environment = request.client();
+    auto environment = request.client();
 
     // 3. Switch on request’s referrer:
     auto referrer_source = request.referrer().visit(
@@ -33,7 +33,7 @@ Optional<AK::URL> determine_requests_referrer(Fetch::Infrastructure::Request con
             VERIFY(referrer == Fetch::Infrastructure::Request::Referrer::Client);
 
             // FIXME: Add a const global_object() getter to ESO
-            auto& global_object = const_cast<HTML::EnvironmentSettingsObject*>(environment)->global_object();
+            auto& global_object = const_cast<HTML::EnvironmentSettingsObject&>(*environment).global_object();
 
             // 1. If environment’s global object is a Window object, then
             if (is<HTML::Window>(global_object)) {

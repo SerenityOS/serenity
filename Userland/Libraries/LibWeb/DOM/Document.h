@@ -567,7 +567,7 @@ private:
 
     bool m_needs_full_style_update { false };
 
-    HashTable<NodeIterator*> m_node_iterators;
+    HashTable<JS::GCPtr<NodeIterator>> m_node_iterators;
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool m_is_initial_about_blank { false };

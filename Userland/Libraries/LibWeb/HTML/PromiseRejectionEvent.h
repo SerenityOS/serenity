@@ -39,7 +39,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    JS::Promise* m_promise { nullptr };
+    JS::GCPtr<JS::Promise> m_promise;
     JS::Value m_reason;
 };
 

@@ -32,7 +32,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    WorkerGlobalScope& m_global_scope;
+    JS::NonnullGCPtr<WorkerGlobalScope> m_global_scope;
 };
 
 }

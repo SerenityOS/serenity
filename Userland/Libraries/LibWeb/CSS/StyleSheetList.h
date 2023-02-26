@@ -60,7 +60,7 @@ private:
 
     void sort_sheets();
 
-    DOM::Document& m_document;
+    JS::NonnullGCPtr<DOM::Document> m_document;
     Vector<JS::NonnullGCPtr<CSSStyleSheet>> m_sheets;
 };
 

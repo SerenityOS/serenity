@@ -129,15 +129,15 @@ static ThrowCompletionOr<Value> run_resolve_thenable_job(VM& vm, Promise& promis
     // b. Let thenCallResult be Completion(HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »)).
     dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: Calling then job callback for thenable {}", &thenable);
     MarkedVector<Value> arguments(vm.heap());
-    arguments.append(Value(&resolve_function));
-    arguments.append(Value(&reject_function));
+    arguments.append(Value(resolve_function));
+    arguments.append(Value(reject_function));
     auto then_call_result = vm.host_call_job_callback(then, thenable, move(arguments));
 
     // c. If thenCallResult is an abrupt completion, then
     if (then_call_result.is_error()) {
         // i. Return ? Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
         dbgln_if(PROMISE_DEBUG, "run_resolve_thenable_job: then_call_result is an abrupt completion, calling reject function with value {}", *then_call_result.throw_completion().value());
-        return call(vm, &reject_function, js_undefined(), *then_call_result.throw_completion().value());
+        return call(vm, *reject_function, js_undefined(), *then_call_result.throw_completion().value());
     }
 
     // d. Return ? thenCallResult.

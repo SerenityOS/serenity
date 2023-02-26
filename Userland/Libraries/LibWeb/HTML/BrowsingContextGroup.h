@@ -35,7 +35,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context-group-set
-    OrderedHashTable<BrowsingContext*> m_browsing_context_set;
+    OrderedHashTable<JS::GCPtr<BrowsingContext>> m_browsing_context_set;
 
     WeakPtr<Page> m_page;
 };

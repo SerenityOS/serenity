@@ -28,7 +28,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    $262Object* m_$262 { nullptr };
+    GCPtr<$262Object> m_$262;
 
     JS_DECLARE_NATIVE_FUNCTION(print);
 };

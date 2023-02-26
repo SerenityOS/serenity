@@ -1680,8 +1680,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // 1. Position anything that's not auto-positioned.
     for (size_t i = 0; i < m_boxes_to_place.size(); i++) {
         auto const& child_box = m_boxes_to_place[i];
-        if (is_auto_positioned_row(child_box.computed_values().grid_row_start(), child_box.computed_values().grid_row_end())
-            || is_auto_positioned_column(child_box.computed_values().grid_column_start(), child_box.computed_values().grid_column_end()))
+        if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end())
+            || is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
             continue;
         place_item_with_row_and_column_position(box, child_box);
         m_boxes_to_place.remove(i);
@@ -1692,7 +1692,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // FIXME: Do "dense" packing
     for (size_t i = 0; i < m_boxes_to_place.size(); i++) {
         auto const& child_box = m_boxes_to_place[i];
-        if (is_auto_positioned_row(child_box.computed_values().grid_row_start(), child_box.computed_values().grid_row_end()))
+        if (is_auto_positioned_row(child_box->computed_values().grid_row_start(), child_box->computed_values().grid_row_end()))
             continue;
         place_item_with_row_position(box, child_box);
         m_boxes_to_place.remove(i);
@@ -1723,7 +1723,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         // FIXME: no distinction made. See #4.2
 
         // 4.1.1. If the item has a definite column position:
-        if (!is_auto_positioned_column(child_box.computed_values().grid_column_start(), child_box.computed_values().grid_column_end()))
+        if (!is_auto_positioned_column(child_box->computed_values().grid_column_start(), child_box->computed_values().grid_column_end()))
             place_item_with_column_position(box, child_box, auto_placement_cursor_x, auto_placement_cursor_y);
 
         // 4.1.2. If the item has an automatic grid position in both axes:

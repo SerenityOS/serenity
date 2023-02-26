@@ -27,8 +27,8 @@ private:
     explicit JSONObject(Realm&);
 
     struct StringifyState {
-        FunctionObject* replacer_function { nullptr };
-        HashTable<Object*> seen_objects;
+        GCPtr<FunctionObject> replacer_function;
+        HashTable<GCPtr<Object>> seen_objects;
         DeprecatedString indent { DeprecatedString::empty() };
         DeprecatedString gap;
         Optional<Vector<DeprecatedString>> property_list;

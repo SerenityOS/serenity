@@ -122,7 +122,7 @@ struct DifferenceSettings {
     String largest_unit;
     String rounding_mode;
     u64 rounding_increment;
-    Object& options;
+    NonnullGCPtr<Object> options;
 };
 
 struct TemporalUnitRequired { };

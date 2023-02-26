@@ -115,69 +115,69 @@ private:
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
-    Realm& m_realm;
+    NonnullGCPtr<Realm> m_realm;
 
-    Shape* m_empty_object_shape { nullptr };
-    Shape* m_new_object_shape { nullptr };
-    Shape* m_new_ordinary_function_prototype_object_shape { nullptr };
+    GCPtr<Shape> m_empty_object_shape;
+    GCPtr<Shape> m_new_object_shape;
+    GCPtr<Shape> m_new_ordinary_function_prototype_object_shape;
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
-    ProxyConstructor* m_proxy_constructor { nullptr };
+    GCPtr<ProxyConstructor> m_proxy_constructor;
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
-    Object* m_async_from_sync_iterator_prototype { nullptr };
-    Object* m_async_generator_prototype { nullptr };
-    Object* m_generator_prototype { nullptr };
+    GCPtr<Object> m_async_from_sync_iterator_prototype;
+    GCPtr<Object> m_async_generator_prototype;
+    GCPtr<Object> m_generator_prototype;
 
     // Not included in JS_ENUMERATE_INTL_OBJECTS due to missing distinct constructor
-    Object* m_intl_segments_prototype { nullptr };
+    GCPtr<Object> m_intl_segments_prototype;
 
     // Global object functions
-    FunctionObject* m_eval_function { nullptr };
-    FunctionObject* m_is_finite_function { nullptr };
-    FunctionObject* m_is_nan_function { nullptr };
-    FunctionObject* m_parse_float_function { nullptr };
-    FunctionObject* m_parse_int_function { nullptr };
-    FunctionObject* m_decode_uri_function { nullptr };
-    FunctionObject* m_decode_uri_component_function { nullptr };
-    FunctionObject* m_encode_uri_function { nullptr };
-    FunctionObject* m_encode_uri_component_function { nullptr };
-    FunctionObject* m_escape_function { nullptr };
-    FunctionObject* m_unescape_function { nullptr };
+    GCPtr<FunctionObject> m_eval_function;
+    GCPtr<FunctionObject> m_is_finite_function;
+    GCPtr<FunctionObject> m_is_nan_function;
+    GCPtr<FunctionObject> m_parse_float_function;
+    GCPtr<FunctionObject> m_parse_int_function;
+    GCPtr<FunctionObject> m_decode_uri_function;
+    GCPtr<FunctionObject> m_decode_uri_component_function;
+    GCPtr<FunctionObject> m_encode_uri_function;
+    GCPtr<FunctionObject> m_encode_uri_component_function;
+    GCPtr<FunctionObject> m_escape_function;
+    GCPtr<FunctionObject> m_unescape_function;
 
     // Namespace/constructor object functions
-    FunctionObject* m_array_prototype_values_function { nullptr };
-    FunctionObject* m_date_constructor_now_function { nullptr };
-    FunctionObject* m_json_parse_function { nullptr };
-    FunctionObject* m_json_stringify_function { nullptr };
-    FunctionObject* m_object_prototype_to_string_function { nullptr };
-    FunctionObject* m_throw_type_error_function { nullptr };
+    GCPtr<FunctionObject> m_array_prototype_values_function;
+    GCPtr<FunctionObject> m_date_constructor_now_function;
+    GCPtr<FunctionObject> m_json_parse_function;
+    GCPtr<FunctionObject> m_json_stringify_function;
+    GCPtr<FunctionObject> m_object_prototype_to_string_function;
+    GCPtr<FunctionObject> m_throw_type_error_function;
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    ConstructorName* m_##snake_name##_constructor { nullptr };                           \
-    Object* m_##snake_name##_prototype { nullptr };
+    GCPtr<ConstructorName> m_##snake_name##_constructor;                                 \
+    GCPtr<Object> m_##snake_name##_prototype;
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    Intl::ConstructorName* m_intl_##snake_name##_constructor { nullptr };     \
-    Object* m_intl_##snake_name##_prototype { nullptr };
+    GCPtr<Intl::ConstructorName> m_intl_##snake_name##_constructor;           \
+    GCPtr<Object> m_intl_##snake_name##_prototype;
     JS_ENUMERATE_INTL_OBJECTS
 #undef __JS_ENUMERATE
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName)     \
-    Temporal::ConstructorName* m_temporal_##snake_name##_constructor { nullptr }; \
-    Object* m_temporal_##snake_name##_prototype { nullptr };
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    GCPtr<Temporal::ConstructorName> m_temporal_##snake_name##_constructor;   \
+    GCPtr<Object> m_temporal_##snake_name##_prototype;
     JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
-    ClassName* m_##snake_name##_object { nullptr };
+    GCPtr<ClassName> m_##snake_name##_object;
     JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
 #undef __JS_ENUMERATE
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
-    Object* m_##snake_name##_prototype { nullptr };
+    GCPtr<Object> m_##snake_name##_prototype;
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
 };

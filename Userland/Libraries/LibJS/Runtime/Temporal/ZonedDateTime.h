@@ -30,9 +30,9 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 6.4 Properties of Temporal.ZonedDateTime Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-zoneddatetime-instances
-    BigInt const& m_nanoseconds; // [[Nanoseconds]]
-    Object& m_time_zone;         // [[TimeZone]]
-    Object& m_calendar;          // [[Calendar]]
+    NonnullGCPtr<BigInt const> m_nanoseconds; // [[Nanoseconds]]
+    NonnullGCPtr<Object> m_time_zone;         // [[TimeZone]]
+    NonnullGCPtr<Object> m_calendar;          // [[Calendar]]
 };
 
 struct NanosecondsToDaysResult {

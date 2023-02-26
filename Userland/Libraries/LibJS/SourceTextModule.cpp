@@ -693,11 +693,11 @@ ThrowCompletionOr<void> SourceTextModule::execute_module(VM& vm, GCPtr<PromiseCa
         auto result = m_ecmascript_code->execute(vm.interpreter());
 
         // d. Let env be moduleContext's LexicalEnvironment.
-        auto* env = module_context.lexical_environment;
+        auto env = module_context.lexical_environment;
         VERIFY(is<DeclarativeEnvironment>(*env));
 
         // e. Set result to DisposeResources(env, result).
-        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
+        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env.ptr()), result);
 
         // f. Suspend moduleContext and remove it from the execution context stack.
         vm.pop_execution_context();

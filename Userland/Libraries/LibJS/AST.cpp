@@ -273,10 +273,10 @@ Completion FunctionDeclaration::execute(Interpreter& interpreter) const
         // Perform special annexB steps see step 3 of: https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
 
         // i. Let genv be the running execution context's VariableEnvironment.
-        auto* variable_environment = interpreter.vm().running_execution_context().variable_environment;
+        auto variable_environment = interpreter.vm().running_execution_context().variable_environment;
 
         // ii. Let benv be the running execution context's LexicalEnvironment.
-        auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
+        auto lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
 
         // iii. Let fobj be ! benv.GetBindingValue(F, false).
         auto function_object = MUST(lexical_environment->get_binding_value(vm, name(), false));
@@ -319,7 +319,7 @@ Value FunctionExpression::instantiate_ordinary_function_expression(Interpreter& 
         MUST(environment->create_immutable_binding(vm, name(), false));
     }
 
-    auto* private_environment = vm.running_execution_context().private_environment;
+    auto private_environment = vm.running_execution_context().private_environment;
 
     auto closure = ECMAScriptFunctionObject::create(realm, used_name, source_text(), body(), parameters(), function_length(), environment, private_environment, kind(), is_strict_mode(), might_need_arguments_object(), contains_direct_call_to_eval(), is_arrow_function());
 
@@ -622,7 +622,7 @@ Completion WithStatement::execute(Interpreter& interpreter) const
     auto* object = TRY(value.to_object(vm));
 
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
-    auto* old_environment = vm.running_execution_context().lexical_environment;
+    auto old_environment = vm.running_execution_context().lexical_environment;
 
     // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
     auto new_environment = new_object_environment(*object, true, old_environment);
@@ -1096,7 +1096,7 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
 
         if (new_environment) {
             // 2.d Set the running execution context's LexicalEnvironment to newEnv.
-            TemporaryChange<Environment*> scope_change(interpreter.vm().running_execution_context().lexical_environment, new_environment);
+            TemporaryChange<GCPtr<Environment>> scope_change(interpreter.vm().running_execution_context().lexical_environment, new_environment);
 
             // 3. Let exprRef be the result of evaluating expr.
             // 5. Let exprValue be ? GetValue(exprRef).
@@ -1177,9 +1177,9 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<Depr
         // NOTE: Because of optimizations we only create a new lexical environment if there are bindings
         //       so we should only dispose if that is the case.
         if (vm.running_execution_context().lexical_environment != old_environment) {
-            VERIFY(is<DeclarativeEnvironment>(vm.running_execution_context().lexical_environment));
+            VERIFY(is<DeclarativeEnvironment>(*vm.running_execution_context().lexical_environment));
             // m. Set result to DisposeResources(iterationEnv, result).
-            result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(vm.running_execution_context().lexical_environment), result);
+            result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(vm.running_execution_context().lexical_environment.ptr()), result);
         }
 
         // n. Set the running execution context's LexicalEnvironment to oldEnv.
@@ -1241,8 +1241,8 @@ Completion ForOfStatement::loop_evaluation(Interpreter& interpreter, Vector<Depr
         auto result = m_body->execute(interpreter);
 
         if (vm.running_execution_context().lexical_environment != old_environment) {
-            VERIFY(is<DeclarativeEnvironment>(vm.running_execution_context().lexical_environment));
-            result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(vm.running_execution_context().lexical_environment), result);
+            VERIFY(is<DeclarativeEnvironment>(*vm.running_execution_context().lexical_environment));
+            result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(vm.running_execution_context().lexical_environment.ptr()), result);
         }
 
         // m. Set the running execution context's LexicalEnvironment to oldEnv.
@@ -1378,7 +1378,7 @@ Completion BinaryExpression::execute(Interpreter& interpreter) const
         auto rhs_result = TRY(m_rhs->execute(interpreter)).release_value();
         if (!rhs_result.is_object())
             return interpreter.vm().throw_completion<TypeError>(ErrorType::InOperatorWithObject);
-        auto* private_environment = interpreter.vm().running_execution_context().private_environment;
+        auto private_environment = interpreter.vm().running_execution_context().private_environment;
         VERIFY(private_environment);
         auto private_name = private_environment->resolve_private_identifier(private_identifier);
         return Value(rhs_result.as_object().private_element_find(private_name) != nullptr);
@@ -1661,7 +1661,7 @@ static ThrowCompletionOr<ClassElementName> class_key_to_property_name(Interprete
 
     if (is<PrivateIdentifier>(key)) {
         auto& private_identifier = static_cast<PrivateIdentifier const&>(key);
-        auto* private_environment = interpreter.vm().running_execution_context().private_environment;
+        auto private_environment = interpreter.vm().running_execution_context().private_environment;
         VERIFY(private_environment);
         return ClassElementName { private_environment->resolve_private_identifier(private_identifier.string()) };
     }
@@ -1841,10 +1841,10 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     auto& realm = *vm.current_realm();
 
     // 1. Let lex be the running execution context's LexicalEnvironment.
-    auto* lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
+    auto lexical_environment = interpreter.vm().running_execution_context().lexical_environment;
 
     // 2. Let privateEnv be the running execution context's PrivateEnvironment.
-    auto* private_environment = interpreter.vm().running_execution_context().private_environment;
+    auto private_environment = interpreter.vm().running_execution_context().private_environment;
 
     // 3. Let sourceText be the empty sequence of Unicode code points.
     // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
@@ -1946,7 +1946,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
     if (!binding_name.is_null())
         MUST(class_environment->create_immutable_binding(vm, binding_name, true));
 
-    auto* outer_private_environment = vm.running_execution_context().private_environment;
+    auto outer_private_environment = vm.running_execution_context().private_environment;
     auto class_private_environment = new_private_environment(vm, outer_private_environment);
 
     for (auto const& element : m_elements) {
@@ -3976,7 +3976,7 @@ Completion TryStatement::execute(Interpreter& interpreter) const
     // 14.15.2 Runtime Semantics: CatchClauseEvaluation, https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation
     auto catch_clause_evaluation = [&](Value thrown_value) {
         // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-        auto* old_environment = vm.running_execution_context().lexical_environment;
+        auto old_environment = vm.running_execution_context().lexical_environment;
 
         // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
         auto catch_environment = new_declarative_environment(*old_environment);
@@ -4730,7 +4730,7 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
     auto& realm = *vm.current_realm();
 
     VERIFY(environment);
-    auto* private_environment = vm.running_execution_context().private_environment;
+    auto private_environment = vm.running_execution_context().private_environment;
     // Note: All the calls here are ! and thus we do not need to TRY this callback.
     //       We use MUST to ensure it does not throw and to avoid discarding the returned ThrowCompletionOr<void>.
     MUST(for_each_lexically_scoped_declaration([&](Declaration const& declaration) {

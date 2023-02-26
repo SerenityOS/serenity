@@ -123,7 +123,7 @@ protected:
     Type m_type {};
 
     FormattingContext* m_parent { nullptr };
-    Box const& m_context_box;
+    JS::NonnullGCPtr<Box const> m_context_box;
 
     LayoutState& m_state;
 };

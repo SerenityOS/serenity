@@ -35,7 +35,7 @@ private:
     ModuleNamespaceObject(Realm&, Module* module, Vector<DeprecatedFlyString> exports);
 
     // FIXME: UHHH how do we want to store this to avoid cycles but be safe??
-    Module* m_module;                      // [[Module]]
+    GCPtr<Module> m_module;                // [[Module]]
     Vector<DeprecatedFlyString> m_exports; // [[Exports]]
 };
 

@@ -113,7 +113,7 @@ private:
     MarkedVectorBase::List m_marked_vectors;
     WeakContainer::List m_weak_containers;
 
-    Vector<Cell*> m_uprooted_cells;
+    Vector<GCPtr<Cell>> m_uprooted_cells;
 
     BlockAllocator m_block_allocator;
 

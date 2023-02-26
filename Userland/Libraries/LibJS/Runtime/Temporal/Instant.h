@@ -30,7 +30,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 8.4 Properties of Temporal.Instant Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-instant-instances
-    BigInt const& m_nanoseconds; // [[Nanoseconds]]
+    NonnullGCPtr<BigInt const> m_nanoseconds; // [[Nanoseconds]]
 };
 
 // https://tc39.es/proposal-temporal/#eqn-nsMaxInstant

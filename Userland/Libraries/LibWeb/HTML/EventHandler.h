@@ -23,10 +23,10 @@ public:
     // NOTE: This does not contain Empty as part of the optimization of not allocating all event handler attributes up front.
     // FIXME: The string should actually be an "internal raw uncompiled handler" struct. This struct is just the uncompiled source code plus a source location for reporting parse errors.
     //        https://html.spec.whatwg.org/multipage/webappapis.html#internal-raw-uncompiled-handler
-    Variant<DeprecatedString, WebIDL::CallbackType*> value;
+    Variant<DeprecatedString, JS::GCPtr<WebIDL::CallbackType>> value;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-listener
-    DOM::DOMEventListener* listener { nullptr };
+    JS::GCPtr<DOM::DOMEventListener> listener;
 
 private:
     virtual StringView class_name() const override { return "EventHandler"sv; }

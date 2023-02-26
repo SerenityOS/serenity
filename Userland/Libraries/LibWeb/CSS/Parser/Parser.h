@@ -48,8 +48,8 @@ public:
     JS::Realm& realm() const { return m_realm; }
 
 private:
-    JS::Realm& m_realm;
-    DOM::Document const* m_document { nullptr };
+    JS::NonnullGCPtr<JS::Realm> m_realm;
+    JS::GCPtr<DOM::Document const> m_document;
     PropertyID m_current_property_id { PropertyID::Invalid };
     AK::URL m_url;
 };

@@ -51,12 +51,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     ExecutionContext execution_context(vm().heap());
     if (vm().execution_context_stack().is_empty() || !vm().running_execution_context().lexical_environment) {
         // The "normal" interpreter pushes an execution context without environment so in that case we also want to push one.
-        execution_context.this_value = &m_realm.global_object();
+        execution_context.this_value = &m_realm->global_object();
         static DeprecatedFlyString global_execution_context_name = "(*BC* global execution context)";
         execution_context.function_name = global_execution_context_name;
-        execution_context.lexical_environment = &m_realm.global_environment();
-        execution_context.variable_environment = &m_realm.global_environment();
-        execution_context.realm = &m_realm;
+        execution_context.lexical_environment = &m_realm->global_environment();
+        execution_context.variable_environment = &m_realm->global_environment();
+        execution_context.realm = m_realm;
         execution_context.is_strict_mode = executable.is_strict_mode;
         vm().push_execution_context(execution_context);
         pushed_execution_context = true;
@@ -67,7 +67,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (in_frame)
         m_register_windows.append(in_frame);
     else
-        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<Environment*>(vm().heap()), MarkedVector<Environment*>(vm().heap()), Vector<UnwindInfo> {}));
+        m_register_windows.append(make<RegisterWindow>(MarkedVector<Value>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), MarkedVector<GCPtr<Environment>>(vm().heap()), Vector<UnwindInfo> {}));
 
     registers().resize(executable.number_of_registers);
 

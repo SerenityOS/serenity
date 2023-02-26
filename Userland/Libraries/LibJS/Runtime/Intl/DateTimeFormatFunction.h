@@ -28,7 +28,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    DateTimeFormat& m_date_time_format; // [[DateTimeFormat]]
+    NonnullGCPtr<DateTimeFormat> m_date_time_format; // [[DateTimeFormat]]
 };
 
 }

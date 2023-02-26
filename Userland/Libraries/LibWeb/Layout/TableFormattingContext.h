@@ -57,13 +57,13 @@ private:
     };
 
     struct Row {
-        Box& box;
+        JS::NonnullGCPtr<Box> box;
         CSSPixels used_height { 0 };
         CSSPixels baseline { 0 };
     };
 
     struct Cell {
-        Box& box;
+        JS::NonnullGCPtr<Box> box;
         size_t column_index;
         size_t row_index;
         size_t column_span;

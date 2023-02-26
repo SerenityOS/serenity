@@ -48,17 +48,17 @@ JS::ThrowCompletionOr<void> FormDataIterator::initialize(JS::Realm& realm)
 void FormDataIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_form_data);
+    visitor.visit(m_form_data);
 }
 
 JS::Object* FormDataIterator::next()
 {
     auto& vm = this->vm();
 
-    if (m_index >= m_form_data.m_entry_list.size())
+    if (m_index >= m_form_data->m_entry_list.size())
         return create_iterator_result_object(vm, JS::js_undefined(), true);
 
-    auto& entry = m_form_data.m_entry_list[m_index++];
+    auto entry = m_form_data->m_entry_list[m_index++];
     if (m_iterator_kind == JS::Object::PropertyKind::Key)
         return create_iterator_result_object(vm, JS::PrimitiveString::create(vm, entry.name), false);
 

@@ -32,10 +32,10 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 3.4 Properties of Temporal.PlainDate Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindate-instances
-    i32 m_iso_year { 0 }; // [[ISOYear]]
-    u8 m_iso_month { 1 }; // [[ISOMonth]]
-    u8 m_iso_day { 1 };   // [[ISODay]]
-    Object& m_calendar;   // [[Calendar]]
+    i32 m_iso_year { 0 };            // [[ISOYear]]
+    u8 m_iso_month { 1 };            // [[ISOMonth]]
+    u8 m_iso_day { 1 };              // [[ISODay]]
+    NonnullGCPtr<Object> m_calendar; // [[Calendar]]
 };
 
 // 3.5.1 ISO Date Records, https://tc39.es/proposal-temporal/#sec-temporal-iso-date-records

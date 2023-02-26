@@ -33,9 +33,9 @@ void ZonedDateTime::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
-    visitor.visit(&m_nanoseconds);
-    visitor.visit(&m_time_zone);
-    visitor.visit(&m_calendar);
+    visitor.visit(m_nanoseconds);
+    visitor.visit(m_time_zone);
+    visitor.visit(m_calendar);
 }
 
 // 6.5.1 InterpretISODateTimeOffset ( year, month, day, hour, minute, second, millisecond, microsecond, nanosecond, offsetBehaviour, offsetNanoseconds, timeZone, disambiguation, offsetOption, matchBehaviour ), https://tc39.es/proposal-temporal/#sec-temporal-interpretisodatetimeoffset

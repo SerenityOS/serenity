@@ -29,8 +29,8 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    Segmenter& m_segments_segmenter; // [[SegmentsSegmenter]]
-    Utf16String m_segments_string;   // [[SegmentsString]]
+    NonnullGCPtr<Segmenter> m_segments_segmenter; // [[SegmentsSegmenter]]
+    Utf16String m_segments_string;                // [[SegmentsString]]
 };
 
 }

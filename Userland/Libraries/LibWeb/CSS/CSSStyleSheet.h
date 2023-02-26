@@ -54,10 +54,10 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    CSSRuleList* m_rules { nullptr };
+    JS::GCPtr<CSSRuleList> m_rules;
 
     JS::GCPtr<StyleSheetList> m_style_sheet_list;
-    CSSRule* m_owner_css_rule { nullptr };
+    JS::GCPtr<CSSRule> m_owner_css_rule;
 };
 
 }

@@ -645,7 +645,7 @@ protected:
 
     // https://dom.spec.whatwg.org/#registered-observer-list
     // "Nodes have a strong reference to registered observers in their registered observer list." https://dom.spec.whatwg.org/#garbage-collection
-    Vector<RegisteredObserver&> m_registered_observer_list;
+    Vector<JS::NonnullGCPtr<RegisteredObserver>> m_registered_observer_list;
 
     void build_accessibility_tree(AccessibilityTreeNode& parent);
 

@@ -48,17 +48,17 @@ protected:
     void async_module_execution_fulfilled(VM& vm);
     void async_module_execution_rejected(VM& vm, Value error);
 
-    ModuleStatus m_status { ModuleStatus::Unlinked }; // [[Status]]
-    ThrowCompletionOr<void> m_evaluation_error;       // [[EvaluationError]]
-    Optional<u32> m_dfs_index;                        // [[DFSIndex]]
-    Optional<u32> m_dfs_ancestor_index;               // [[DFSAncestorIndex]]
-    Vector<ModuleRequest> m_requested_modules;        // [[RequestedModules]]
-    CyclicModule* m_cycle_root { nullptr };           // [[CycleRoot]]
-    bool m_has_top_level_await { false };             // [[HasTLA]]
-    bool m_async_evaluation { false };                // [[AsyncEvaluation]]
-    GCPtr<PromiseCapability> m_top_level_capability;  // [[TopLevelCapability]]
-    Vector<CyclicModule*> m_async_parent_modules;     // [[AsyncParentModules]]
-    Optional<u32> m_pending_async_dependencies;       // [[PendingAsyncDependencies]]
+    ModuleStatus m_status { ModuleStatus::Unlinked };   // [[Status]]
+    ThrowCompletionOr<void> m_evaluation_error;         // [[EvaluationError]]
+    Optional<u32> m_dfs_index;                          // [[DFSIndex]]
+    Optional<u32> m_dfs_ancestor_index;                 // [[DFSAncestorIndex]]
+    Vector<ModuleRequest> m_requested_modules;          // [[RequestedModules]]
+    GCPtr<CyclicModule> m_cycle_root;                   // [[CycleRoot]]
+    bool m_has_top_level_await { false };               // [[HasTLA]]
+    bool m_async_evaluation { false };                  // [[AsyncEvaluation]]
+    GCPtr<PromiseCapability> m_top_level_capability;    // [[TopLevelCapability]]
+    Vector<GCPtr<CyclicModule>> m_async_parent_modules; // [[AsyncParentModules]]
+    Optional<u32> m_pending_async_dependencies;         // [[PendingAsyncDependencies]]
 };
 
 }

@@ -151,7 +151,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
         auto job = create_promise_resolve_thenable_job(vm, promise, resolution, move(then_job_callback));
 
         // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Enqueuing job @ {} in realm {}", &promise, &job.job, job.realm);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / PromiseResolvingFunction]: Enqueuing job @ {} in realm {}", &promise, &job.job, job.realm.ptr());
         vm.host_enqueue_promise_job(move(job.job), job.realm);
 
         // 16. Return undefined.
@@ -275,7 +275,7 @@ void Promise::trigger_reactions() const
         auto [job, realm] = create_promise_reaction_job(vm, *reaction, m_result);
 
         // b. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Enqueuing job @ {} in realm {}", this, &job, realm);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / trigger_reactions()]: Enqueuing job @ {} in realm {}", this, &job, realm.ptr());
         vm.host_enqueue_promise_job(move(job), realm);
     }
 
@@ -345,7 +345,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, GCPtr<Promise
         auto [fulfill_job, realm] = create_promise_reaction_job(vm, fulfill_reaction, value);
 
         // c. Perform HostEnqueuePromiseJob(fulfillJob.[[Job]], fulfillJob.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &fulfill_job, realm);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &fulfill_job, realm.ptr());
         vm.host_enqueue_promise_job(move(fulfill_job), realm);
         break;
     }
@@ -365,7 +365,7 @@ Value Promise::perform_then(Value on_fulfilled, Value on_rejected, GCPtr<Promise
         auto [reject_job, realm] = create_promise_reaction_job(vm, *reject_reaction, reason);
 
         // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
-        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &reject_job, realm);
+        dbgln_if(PROMISE_DEBUG, "[Promise @ {} / perform_then()]: Enqueuing job @ {} in realm {}", this, &reject_job, realm.ptr());
         vm.host_enqueue_promise_job(move(reject_job), realm);
         break;
     }

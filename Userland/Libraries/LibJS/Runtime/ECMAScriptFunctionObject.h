@@ -112,13 +112,13 @@ private:
     i32 m_function_length { 0 };
 
     // Internal Slots of ECMAScript Function Objects, https://tc39.es/ecma262/#table-internal-slots-of-ecmascript-function-objects
-    Environment* m_environment { nullptr };                                  // [[Environment]]
-    PrivateEnvironment* m_private_environment { nullptr };                   // [[PrivateEnvironment]]
+    GCPtr<Environment> m_environment;                                        // [[Environment]]
+    GCPtr<PrivateEnvironment> m_private_environment;                         // [[PrivateEnvironment]]
     Vector<FunctionParameter> const m_formal_parameters;                     // [[FormalParameters]]
     NonnullRefPtr<Statement const> m_ecmascript_code;                        // [[ECMAScriptCode]]
-    Realm* m_realm { nullptr };                                              // [[Realm]]
+    GCPtr<Realm> m_realm;                                                    // [[Realm]]
     ScriptOrModule m_script_or_module;                                       // [[ScriptOrModule]]
-    Object* m_home_object { nullptr };                                       // [[HomeObject]]
+    GCPtr<Object> m_home_object;                                             // [[HomeObject]]
     DeprecatedString m_source_text;                                          // [[SourceText]]
     Vector<ClassFieldDefinition> m_fields;                                   // [[Fields]]
     Vector<PrivateElement> m_private_methods;                                // [[PrivateMethods]]

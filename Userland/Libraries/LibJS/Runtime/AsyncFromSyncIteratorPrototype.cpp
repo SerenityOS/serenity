@@ -108,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
-    auto* sync_iterator = this_object->sync_iterator_record().iterator;
+    auto sync_iterator = this_object->sync_iterator_record().iterator;
 
     // 5. Let return be Completion(GetMethod(syncIterator, "return")).
     // 6. IfAbruptRejectPromise(return, promiseCapability).
@@ -161,7 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
 
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
-    auto* sync_iterator = this_object->sync_iterator_record().iterator;
+    auto sync_iterator = this_object->sync_iterator_record().iterator;
 
     // 5. Let throw be Completion(GetMethod(syncIterator, "throw")).
     // 6. IfAbruptRejectPromise(throw, promiseCapability).

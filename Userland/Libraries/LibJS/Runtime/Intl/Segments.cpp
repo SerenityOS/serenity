@@ -32,7 +32,7 @@ Segments::Segments(Realm& realm, Segmenter& segmenter, Utf16String string)
 void Segments::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_segments_segmenter);
+    visitor.visit(m_segments_segmenter);
 }
 
 }

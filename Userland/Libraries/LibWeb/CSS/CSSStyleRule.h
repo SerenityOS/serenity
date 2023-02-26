@@ -40,7 +40,7 @@ private:
     virtual DeprecatedString serialized() const override;
 
     Vector<NonnullRefPtr<Selector>> m_selectors;
-    CSSStyleDeclaration& m_declaration;
+    JS::NonnullGCPtr<CSSStyleDeclaration> m_declaration;
 };
 
 template<>

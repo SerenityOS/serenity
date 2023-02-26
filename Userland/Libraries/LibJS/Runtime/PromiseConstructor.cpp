@@ -298,12 +298,12 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PromiseConstructor::construct(FunctionOb
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
     // 9. Let completion be Completion(Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »)).
-    auto completion = JS::call(vm, executor.as_function(), js_undefined(), &resolve_function, &reject_function);
+    auto completion = JS::call(vm, executor.as_function(), js_undefined(), resolve_function, reject_function);
 
     // 10. If completion is an abrupt completion, then
     if (completion.is_error()) {
         // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
-        TRY(JS::call(vm, reject_function, js_undefined(), *completion.release_error().value()));
+        TRY(JS::call(vm, *reject_function, js_undefined(), *completion.release_error().value()));
     }
 
     // 11. Return promise.

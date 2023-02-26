@@ -16,7 +16,7 @@ namespace JS {
 
 struct PromiseJob {
     Function<ThrowCompletionOr<Value>()> job;
-    Realm* realm { nullptr };
+    GCPtr<Realm> realm;
 };
 
 // NOTE: These return a PromiseJob to prevent awkward casting at call sites.

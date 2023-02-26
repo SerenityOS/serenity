@@ -17,10 +17,10 @@ class CallbackType final : public JS::Cell {
 public:
     CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context);
 
-    JS::Object& callback;
+    JS::NonnullGCPtr<JS::Object> callback;
 
     // https://webidl.spec.whatwg.org/#dfn-callback-context
-    HTML::EnvironmentSettingsObject& callback_context;
+    JS::NonnullGCPtr<HTML::EnvironmentSettingsObject> callback_context;
 
 private:
     virtual StringView class_name() const override;

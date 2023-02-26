@@ -41,8 +41,8 @@ private:
     {
     }
 
-    FunctionObject* m_getter { nullptr };
-    FunctionObject* m_setter { nullptr };
+    GCPtr<FunctionObject> m_getter;
+    GCPtr<FunctionObject> m_setter;
 };
 
 }

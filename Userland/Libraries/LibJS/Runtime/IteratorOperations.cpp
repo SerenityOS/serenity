@@ -128,7 +128,7 @@ static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, C
     // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
 
     // 2. Let iterator be iteratorRecord.[[Iterator]].
-    auto* iterator = iterator_record.iterator;
+    auto iterator = iterator_record.iterator;
 
     // 3. Let innerResult be Completion(GetMethod(iterator, "return")).
     auto inner_result = ThrowCompletionOr<Value> { js_undefined() };

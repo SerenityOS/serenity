@@ -111,7 +111,7 @@ ThrowCompletionOr<Value> NativeFunction::internal_call(Value this_argument, Mark
     callee_context.function_name = m_name;
 
     // 5. Let calleeRealm be F.[[Realm]].
-    auto* callee_realm = m_realm;
+    auto callee_realm = m_realm;
     // NOTE: This non-standard fallback is needed until we can guarantee that literally
     // every function has a realm - especially in LibWeb that's sometimes not the case
     // when a function is created while no JS is running, as we currently need to rely on
@@ -178,7 +178,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> NativeFunction::internal_construct(Marke
     callee_context.function_name = m_name;
 
     // 5. Let calleeRealm be F.[[Realm]].
-    auto* callee_realm = m_realm;
+    auto callee_realm = m_realm;
     // NOTE: This non-standard fallback is needed until we can guarantee that literally
     // every function has a realm - especially in LibWeb that's sometimes not the case
     // when a function is created while no JS is running, as we currently need to rely on

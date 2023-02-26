@@ -31,7 +31,7 @@ private:
     friend class Handle;
 
     explicit HandleImpl(Cell*);
-    Cell* m_cell { nullptr };
+    GCPtr<Cell> m_cell;
 
     IntrusiveListNode<HandleImpl> m_list_node;
 

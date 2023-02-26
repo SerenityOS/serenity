@@ -39,16 +39,16 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 5.4 Properties of Temporal.PlainDateTime Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaindatetime-instances
-    i32 m_iso_year { 0 };        // [[ISOYear]]
-    u8 m_iso_month { 0 };        // [[ISOMonth]]
-    u8 m_iso_day { 0 };          // [[ISODay]]
-    u8 m_iso_hour { 0 };         // [[ISOHour]]
-    u8 m_iso_minute { 0 };       // [[ISOMinute]]
-    u8 m_iso_second { 0 };       // [[ISOSecond]]
-    u16 m_iso_millisecond { 0 }; // [[ISOMillisecond]]
-    u16 m_iso_microsecond { 0 }; // [[ISOMicrosecond]]
-    u16 m_iso_nanosecond { 0 };  // [[ISONanosecond]]
-    Object& m_calendar;          // [[Calendar]]
+    i32 m_iso_year { 0 };            // [[ISOYear]]
+    u8 m_iso_month { 0 };            // [[ISOMonth]]
+    u8 m_iso_day { 0 };              // [[ISODay]]
+    u8 m_iso_hour { 0 };             // [[ISOHour]]
+    u8 m_iso_minute { 0 };           // [[ISOMinute]]
+    u8 m_iso_second { 0 };           // [[ISOSecond]]
+    u16 m_iso_millisecond { 0 };     // [[ISOMillisecond]]
+    u16 m_iso_microsecond { 0 };     // [[ISOMicrosecond]]
+    u16 m_iso_nanosecond { 0 };      // [[ISONanosecond]]
+    NonnullGCPtr<Object> m_calendar; // [[Calendar]]
 };
 
 // Used by AddDateTime to temporarily hold values

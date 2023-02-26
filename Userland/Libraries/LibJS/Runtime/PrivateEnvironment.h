@@ -49,8 +49,8 @@ private:
 
     static u64 s_next_id;
 
-    PrivateEnvironment* m_outer_environment { nullptr }; // [[OuterEnv]]
-    Vector<PrivateName> m_private_names;                 // [[Names]]
+    GCPtr<PrivateEnvironment> m_outer_environment; // [[OuterEnv]]
+    Vector<PrivateName> m_private_names;           // [[Names]]
     u64 m_unique_id;
 };
 

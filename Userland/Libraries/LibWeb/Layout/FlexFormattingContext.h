@@ -48,7 +48,7 @@ private:
     };
 
     struct FlexItem {
-        Box& box;
+        JS::NonnullGCPtr<Box> box;
         CSS::FlexBasisData used_flex_basis {};
         bool used_flex_basis_is_definite { false };
         CSSPixels flex_base_size { 0 };

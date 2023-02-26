@@ -37,8 +37,8 @@ public:
     struct IteratorImpl {
         bool is_end() const
         {
-            return m_map.m_keys.begin_from(m_index).is_end()
-                && m_map.m_keys.find_smallest_not_below_iterator(m_index).is_end();
+            return m_map->m_keys.begin_from(m_index).is_end()
+                && m_map->m_keys.find_smallest_not_below_iterator(m_index).is_end();
         }
 
         IteratorImpl& operator++()
@@ -50,13 +50,13 @@ public:
         decltype(auto) operator*()
         {
             ensure_next_element();
-            return *m_map.m_entries.find(*m_map.m_keys.begin_from(m_index));
+            return *m_map->m_entries.find(*m_map->m_keys.begin_from(m_index));
         }
 
         decltype(auto) operator*() const
         {
             ensure_next_element();
-            return *m_map.m_entries.find(*m_map.m_keys.begin_from(m_index));
+            return *m_map->m_entries.find(*m_map->m_keys.begin_from(m_index));
         }
 
         bool operator==(IteratorImpl const& other) const { return m_index == other.m_index && &m_map == &other.m_map; }
@@ -80,21 +80,21 @@ public:
 
         void ensure_index() const
         {
-            if (m_map.m_keys.is_empty())
-                m_index = m_map.m_next_insertion_id;
+            if (m_map->m_keys.is_empty())
+                m_index = m_map->m_next_insertion_id;
             else
-                m_index = m_map.m_keys.begin().key();
+                m_index = m_map->m_keys.begin().key();
         }
 
         void ensure_next_element() const
         {
-            if (auto it = m_map.m_keys.find_smallest_not_below_iterator(m_index); it.is_end())
-                m_index = m_map.m_next_insertion_id;
+            if (auto it = m_map->m_keys.find_smallest_not_below_iterator(m_index); it.is_end())
+                m_index = m_map->m_next_insertion_id;
             else
                 m_index = it.key();
         }
 
-        Conditional<IsConst, Map const&, Map&> m_map;
+        Conditional<IsConst, NonnullGCPtr<Map const>, NonnullGCPtr<Map>> m_map;
         mutable size_t m_index { 0 };
     };
 

@@ -23,7 +23,7 @@ BigIntObject::BigIntObject(BigInt& bigint, Object& prototype)
 void BigIntObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_bigint);
+    visitor.visit(m_bigint);
 }
 
 }

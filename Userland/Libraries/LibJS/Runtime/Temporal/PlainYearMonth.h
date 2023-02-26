@@ -29,10 +29,10 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 9.4 Properties of Temporal.PlainYearMonth Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plainyearmonth-instances
-    i32 m_iso_year { 0 }; // [[ISOYear]]
-    u8 m_iso_month { 0 }; // [[ISOMonth]]
-    u8 m_iso_day { 0 };   // [[ISODay]]
-    Object& m_calendar;   // [[Calendar]]
+    i32 m_iso_year { 0 };            // [[ISOYear]]
+    u8 m_iso_month { 0 };            // [[ISOMonth]]
+    u8 m_iso_day { 0 };              // [[ISODay]]
+    NonnullGCPtr<Object> m_calendar; // [[Calendar]]
 };
 
 struct ISOYearMonth {

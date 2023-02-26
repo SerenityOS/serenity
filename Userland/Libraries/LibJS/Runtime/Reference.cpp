@@ -207,7 +207,7 @@ ThrowCompletionOr<void> Reference::initialize_referenced_binding(VM& vm, Value v
 Reference make_private_reference(VM& vm, Value base_value, DeprecatedFlyString const& private_identifier)
 {
     // 1. Let privEnv be the running execution context's PrivateEnvironment.
-    auto* private_environment = vm.running_execution_context().private_environment;
+    auto private_environment = vm.running_execution_context().private_environment;
 
     // 2. Assert: privEnv is not null.
     VERIFY(private_environment);

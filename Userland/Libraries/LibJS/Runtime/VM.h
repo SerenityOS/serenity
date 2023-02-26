@@ -73,12 +73,12 @@ public:
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 
-    HashMap<String, PrimitiveString*>& string_cache()
+    HashMap<String, GCPtr<PrimitiveString>>& string_cache()
     {
         return m_string_cache;
     }
 
-    HashMap<DeprecatedString, PrimitiveString*>& deprecated_string_cache()
+    HashMap<DeprecatedString, GCPtr<PrimitiveString>>& deprecated_string_cache()
     {
         return m_deprecated_string_cache;
     }
@@ -280,8 +280,8 @@ private:
     ThrowCompletionOr<void> import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
 
-    HashMap<String, PrimitiveString*> m_string_cache;
-    HashMap<DeprecatedString, PrimitiveString*> m_deprecated_string_cache;
+    HashMap<String, GCPtr<PrimitiveString>> m_string_cache;
+    HashMap<DeprecatedString, GCPtr<PrimitiveString>> m_deprecated_string_cache;
 
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;
@@ -297,10 +297,10 @@ private:
 
     Vector<Function<ThrowCompletionOr<Value>()>> m_promise_jobs;
 
-    Vector<FinalizationRegistry*> m_finalization_registry_cleanup_jobs;
+    Vector<GCPtr<FinalizationRegistry>> m_finalization_registry_cleanup_jobs;
 
-    PrimitiveString* m_empty_string { nullptr };
-    PrimitiveString* m_single_ascii_character_strings[128] {};
+    GCPtr<PrimitiveString> m_empty_string;
+    GCPtr<PrimitiveString> m_single_ascii_character_strings[128] {};
     AK::Array<String, to_underlying(ErrorMessage::__Count)> m_error_messages;
 
     struct StoredModule {
@@ -316,7 +316,7 @@ private:
     Vector<StoredModule> m_loaded_modules;
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    Symbol* m_well_known_symbol_##snake_name { nullptr };
+    GCPtr<Symbol> m_well_known_symbol_##snake_name;
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 

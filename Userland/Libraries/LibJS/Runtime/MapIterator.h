@@ -31,7 +31,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    Map& m_map;
+    NonnullGCPtr<Map> m_map;
     bool m_done { false };
     Object::PropertyKind m_iteration_kind;
     Map::ConstIterator m_iterator;

@@ -35,7 +35,7 @@ private:
 
     AK::URL m_base_url;
     DeprecatedString m_filename;
-    EnvironmentSettingsObject& m_settings_object;
+    JS::NonnullGCPtr<EnvironmentSettingsObject> m_settings_object;
 };
 
 }

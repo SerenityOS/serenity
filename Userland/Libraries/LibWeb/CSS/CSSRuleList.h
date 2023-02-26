@@ -32,26 +32,23 @@ public:
     {
         if (index >= length())
             return nullptr;
-        return &m_rules[index];
+        return m_rules[index];
     }
 
     CSSRule* item(size_t index)
     {
         if (index >= length())
             return nullptr;
-        return &m_rules[index];
+        return m_rules[index];
     }
 
     size_t length() const { return m_rules.size(); }
 
-    using ConstIterator = AK::SimpleIterator<Vector<CSSRule&> const, CSSRule const>;
-    using Iterator = AK::SimpleIterator<Vector<CSSRule&>, CSSRule>;
+    auto begin() const { return m_rules.begin(); }
+    auto begin() { return m_rules.begin(); }
 
-    ConstIterator const begin() const { return m_rules.begin(); }
-    Iterator begin() { return m_rules.begin(); }
-
-    ConstIterator const end() const { return m_rules.end(); }
-    Iterator end() { return m_rules.end(); }
+    auto end() const { return m_rules.end(); }
+    auto end() { return m_rules.end(); }
 
     virtual bool is_supported_property_index(u32 index) const override;
     virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
@@ -82,7 +79,7 @@ private:
     virtual bool named_property_setter_has_identifier() const override { return false; }
     virtual bool named_property_deleter_has_identifier() const override { return false; }
 
-    Vector<CSSRule&> m_rules;
+    Vector<JS::NonnullGCPtr<CSSRule>> m_rules;
 };
 
 }

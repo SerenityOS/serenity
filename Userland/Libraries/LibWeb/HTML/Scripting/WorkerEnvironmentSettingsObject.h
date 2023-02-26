@@ -25,7 +25,7 @@ public:
 
     static JS::NonnullGCPtr<WorkerEnvironmentSettingsObject> setup(NonnullOwnPtr<JS::ExecutionContext> execution_context /* FIXME: null or an environment reservedEnvironment, a URL topLevelCreationURL, and an origin topLevelOrigin */)
     {
-        auto* realm = execution_context->realm;
+        auto realm = execution_context->realm;
         VERIFY(realm);
         auto settings_object = realm->heap().allocate<WorkerEnvironmentSettingsObject>(*realm, move(execution_context)).release_allocated_value_but_fixme_should_propagate_errors();
         settings_object->target_browsing_context = nullptr;

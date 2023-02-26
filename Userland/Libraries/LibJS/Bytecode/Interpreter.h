@@ -20,8 +20,8 @@ namespace JS::Bytecode {
 
 struct RegisterWindow {
     MarkedVector<Value> registers;
-    MarkedVector<Environment*> saved_lexical_environments;
-    MarkedVector<Environment*> saved_variable_environments;
+    MarkedVector<GCPtr<Environment>> saved_lexical_environments;
+    MarkedVector<GCPtr<Environment>> saved_variable_environments;
     Vector<UnwindInfo> unwind_contexts;
 };
 
@@ -109,7 +109,7 @@ private:
     static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
-    Realm& m_realm;
+    NonnullGCPtr<Realm> m_realm;
     Vector<Variant<NonnullOwnPtr<RegisterWindow>, RegisterWindow*>> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     BasicBlock const* m_scheduled_jump { nullptr };

@@ -68,8 +68,8 @@ private:
     String m_numbering_system;                         // [[NumberingSystem]]
     ::Locale::Style m_style { ::Locale::Style::Long }; // [[Style]]
     Numeric m_numeric { Numeric::Always };             // [[Numeric]]
-    NumberFormat* m_number_format { nullptr };         // [[NumberFormat]]
-    PluralRules* m_plural_rules { nullptr };           // [[PluralRules]]
+    GCPtr<NumberFormat> m_number_format;               // [[NumberFormat]]
+    GCPtr<PluralRules> m_plural_rules;                 // [[PluralRules]]
 };
 
 struct PatternPartitionWithUnit : public PatternPartition {

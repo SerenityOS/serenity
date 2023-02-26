@@ -49,7 +49,7 @@ private:
     ErrorOr<void> create_pseudo_element_if_needed(DOM::Element&, CSS::Selector::PseudoElement, AppendOrPrepend);
 
     JS::GCPtr<Layout::Node> m_layout_root;
-    Vector<Layout::NodeWithStyle&> m_ancestor_stack;
+    Vector<JS::NonnullGCPtr<Layout::NodeWithStyle>> m_ancestor_stack;
 };
 
 }

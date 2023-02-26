@@ -22,7 +22,7 @@ public:
 
     CSSRuleList const& css_rules() const { return m_rules; }
     CSSRuleList& css_rules() { return m_rules; }
-    CSSRuleList* css_rules_for_bindings() { return &m_rules; }
+    CSSRuleList* css_rules_for_bindings() { return m_rules; }
     WebIDL::ExceptionOr<u32> insert_rule(StringView rule, u32 index = 0);
     WebIDL::ExceptionOr<void> delete_rule(u32 index);
 
@@ -37,7 +37,7 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
 private:
-    CSSRuleList& m_rules;
+    JS::NonnullGCPtr<CSSRuleList> m_rules;
 };
 
 }

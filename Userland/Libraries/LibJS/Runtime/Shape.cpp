@@ -82,7 +82,7 @@ Shape* Shape::create_prototype_transition(Object* new_prototype)
         return existing_shape;
     auto new_shape = heap().allocate_without_realm<Shape>(*this, new_prototype);
     if (!m_prototype_transitions)
-        m_prototype_transitions = make<HashMap<Object*, WeakPtr<Shape>>>();
+        m_prototype_transitions = make<HashMap<GCPtr<Object>, WeakPtr<Shape>>>();
     m_prototype_transitions->set(new_prototype, new_shape.ptr());
     return new_shape;
 }
@@ -115,7 +115,7 @@ Shape::Shape(Shape& previous_shape, Object* new_prototype)
 void Shape::visit_edges(Cell::Visitor& visitor)
 {
     Cell::visit_edges(visitor);
-    visitor.visit(&m_realm);
+    visitor.visit(m_realm);
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
     m_property_key.visit_edges(visitor);
@@ -162,7 +162,7 @@ void Shape::ensure_property_table() const
     u32 next_offset = 0;
 
     Vector<Shape const&, 64> transition_chain;
-    for (auto* shape = m_previous; shape; shape = shape->m_previous) {
+    for (auto shape = m_previous; shape; shape = shape->m_previous) {
         if (shape->m_property_table) {
             *m_property_table = *shape->m_property_table;
             next_offset = shape->m_property_count;

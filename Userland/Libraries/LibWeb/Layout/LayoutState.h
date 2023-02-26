@@ -131,7 +131,7 @@ struct LayoutState {
         AvailableSize available_width_inside() const;
         AvailableSize available_height_inside() const;
 
-        Layout::NodeWithStyleAndBoxModelMetrics* m_node { nullptr };
+        JS::GCPtr<Layout::NodeWithStyleAndBoxModelMetrics> m_node { nullptr };
 
         CSSPixels m_content_width { 0 };
         CSSPixels m_content_height { 0 };
@@ -139,7 +139,7 @@ struct LayoutState {
         bool m_has_definite_width { false };
         bool m_has_definite_height { false };
 
-        HashTable<Box const*> m_floating_descendants;
+        HashTable<JS::GCPtr<Box const>> m_floating_descendants;
     };
 
     CSSPixels resolved_definite_width(Box const&) const;
@@ -171,7 +171,7 @@ struct LayoutState {
         Optional<CSSPixels> max_content_height_with_max_content_available_width;
     };
 
-    HashMap<NodeWithStyleAndBoxModelMetrics const*, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
+    HashMap<JS::GCPtr<NodeWithStyleAndBoxModelMetrics const>, NonnullOwnPtr<IntrinsicSizes>> mutable intrinsic_sizes;
 
     LayoutState const* m_parent { nullptr };
     LayoutState const& m_root;

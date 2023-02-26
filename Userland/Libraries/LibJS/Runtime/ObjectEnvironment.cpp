@@ -20,7 +20,7 @@ ObjectEnvironment::ObjectEnvironment(Object& binding_object, IsWithEnvironment i
 void ObjectEnvironment::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_binding_object);
+    visitor.visit(m_binding_object);
 }
 
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
@@ -31,7 +31,7 @@ ThrowCompletionOr<bool> ObjectEnvironment::has_binding(DeprecatedFlyString const
     // 1. Let bindingObject be envRec.[[BindingObject]].
 
     // 2. Let foundBinding be ? HasProperty(bindingObject, N).
-    bool found_binding = TRY(m_binding_object.has_property(name));
+    bool found_binding = TRY(m_binding_object->has_property(name));
 
     // 3. If foundBinding is false, return false.
     if (!found_binding)
@@ -42,7 +42,7 @@ ThrowCompletionOr<bool> ObjectEnvironment::has_binding(DeprecatedFlyString const
         return true;
 
     // 5. Let unscopables be ? Get(bindingObject, @@unscopables).
-    auto unscopables = TRY(m_binding_object.get(*vm.well_known_symbol_unscopables()));
+    auto unscopables = TRY(m_binding_object->get(*vm.well_known_symbol_unscopables()));
 
     // 6. If Type(unscopables) is Object, then
     if (unscopables.is_object()) {
@@ -63,7 +63,7 @@ ThrowCompletionOr<void> ObjectEnvironment::create_mutable_binding(VM&, Deprecate
 {
     // 1. Let bindingObject be envRec.[[BindingObject]].
     // 2. Perform ? DefinePropertyOrThrow(bindingObject, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
-    TRY(m_binding_object.define_property_or_throw(name, { .value = js_undefined(), .writable = true, .enumerable = true, .configurable = can_be_deleted }));
+    TRY(m_binding_object->define_property_or_throw(name, { .value = js_undefined(), .writable = true, .enumerable = true, .configurable = can_be_deleted }));
 
     // 3. Return unused.
     return {};
@@ -99,22 +99,22 @@ ThrowCompletionOr<void> ObjectEnvironment::set_mutable_binding(VM&, DeprecatedFl
     //               We can't do this for with environments, since it would be observable (e.g via a Proxy)
     // FIXME: I think we could combine HasProperty and Set in strict mode if Set would return a bit more failure information.
     if (!m_with_environment && !strict)
-        return m_binding_object.set(name, value, Object::ShouldThrowExceptions::No);
+        return m_binding_object->set(name, value, Object::ShouldThrowExceptions::No);
 
     // 1. Let bindingObject be envRec.[[BindingObject]].
     // 2. Let stillExists be ? HasProperty(bindingObject, N).
-    auto still_exists = TRY(m_binding_object.has_property(name));
+    auto still_exists = TRY(m_binding_object->has_property(name));
 
     // 3. If stillExists is false and S is true, throw a ReferenceError exception.
     if (!still_exists && strict)
         return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, name);
 
     // 4. Perform ? Set(bindingObject, N, V, S).
-    auto result_or_error = m_binding_object.set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
+    auto result_or_error = m_binding_object->set(name, value, strict ? Object::ShouldThrowExceptions::Yes : Object::ShouldThrowExceptions::No);
 
     // Note: Nothing like this in the spec, this is here to produce nicer errors instead of the generic one thrown by Object::set().
     if (result_or_error.is_error() && strict) {
-        auto property_or_error = m_binding_object.internal_get_own_property(name);
+        auto property_or_error = m_binding_object->internal_get_own_property(name);
         // Return the initial error instead of masking it with the new error
         if (property_or_error.is_error())
             return result_or_error.release_error();
@@ -142,11 +142,11 @@ ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(VM&, DeprecatedFly
     //               We can't do this for with environments, since it would be observable (e.g via a Proxy)
     // FIXME: We could combine HasProperty and Get in non-strict mode if Get would return a bit more failure information.
     if (!m_with_environment && !strict)
-        return m_binding_object.get(name);
+        return m_binding_object->get(name);
 
     // 1. Let bindingObject be envRec.[[BindingObject]].
     // 2. Let value be ? HasProperty(bindingObject, N).
-    auto value = TRY(m_binding_object.has_property(name));
+    auto value = TRY(m_binding_object->has_property(name));
 
     // 3. If value is false, then
     if (!value) {
@@ -157,7 +157,7 @@ ThrowCompletionOr<Value> ObjectEnvironment::get_binding_value(VM&, DeprecatedFly
     }
 
     // 4. Return ? Get(bindingObject, N).
-    return m_binding_object.get(name);
+    return m_binding_object->get(name);
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n
@@ -165,7 +165,7 @@ ThrowCompletionOr<bool> ObjectEnvironment::delete_binding(VM&, DeprecatedFlyStri
 {
     // 1. Let bindingObject be envRec.[[BindingObject]].
     // 2. Return ? bindingObject.[[Delete]](N).
-    return m_binding_object.internal_delete(name);
+    return m_binding_object->internal_delete(name);
 }
 
 }

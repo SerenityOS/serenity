@@ -207,7 +207,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         return false;
     }
 
-    if (!m_browsing_context.is_frame_nesting_allowed(request.url())) {
+    if (!m_browsing_context->is_frame_nesting_allowed(request.url())) {
         dbgln("No further recursion is allowed for the frame, abort load!");
         return false;
     }
@@ -216,7 +216,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
     if (type == Type::Navigation || type == Type::Reload || type == Type::Redirect) {
         if (auto* page = browsing_context().page()) {
-            if (&page->top_level_browsing_context() == &m_browsing_context)
+            if (&page->top_level_browsing_context() == m_browsing_context)
                 page->client().page_did_start_loading(url, type == Type::Redirect);
         }
     }

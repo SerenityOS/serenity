@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGfx/Rect.h>
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PixelUnits.h>
 
@@ -77,7 +78,7 @@ public:
     CSSPixelRect selection_rect(Gfx::Font const&) const;
 
 private:
-    Node const& m_layout_node;
+    JS::NonnullGCPtr<Node const> m_layout_node;
     int m_start { 0 };
     int m_length { 0 };
     CSSPixelPoint m_offset;

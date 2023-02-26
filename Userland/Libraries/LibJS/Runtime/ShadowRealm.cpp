@@ -30,7 +30,7 @@ void ShadowRealm::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
-    visitor.visit(&m_shadow_realm);
+    visitor.visit(m_shadow_realm);
 }
 
 // 3.1.2 CopyNameAndLength ( F: a function object, Target: a function object, optional prefix: a String, optional argCount: a Number, ), https://tc39.es/proposal-shadowrealm/#sec-copynameandlength
@@ -239,7 +239,7 @@ ThrowCompletionOr<Value> shadow_realm_import_value(VM& vm, DeprecatedString spec
         VERIFY(is<ModuleNamespaceObject>(exports));
 
         // 2. Let f be the active function object.
-        auto* function = vm.running_execution_context().function;
+        auto function = vm.running_execution_context().function;
 
         // 3. Let string be f.[[ExportNameString]].
         // 4. Assert: Type(string) is String.

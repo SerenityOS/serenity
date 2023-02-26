@@ -37,7 +37,7 @@ StringView LineBoxFragment::text() const
 CSSPixelRect const LineBoxFragment::absolute_rect() const
 {
     CSSPixelRect rect { {}, size() };
-    rect.set_location(m_layout_node.containing_block()->paint_box()->absolute_position());
+    rect.set_location(m_layout_node->containing_block()->paint_box()->absolute_position());
     rect.translate_by(offset());
     return rect;
 }

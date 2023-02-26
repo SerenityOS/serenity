@@ -45,7 +45,7 @@ struct WebEngineCustomJobCallbackData final : public JS::JobCallback::CustomData
 
     virtual ~WebEngineCustomJobCallbackData() override = default;
 
-    HTML::EnvironmentSettingsObject& incumbent_settings;
+    JS::NonnullGCPtr<HTML::EnvironmentSettingsObject> incumbent_settings;
     OwnPtr<JS::ExecutionContext> active_script_context;
 };
 

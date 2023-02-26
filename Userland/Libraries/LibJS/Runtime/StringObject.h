@@ -33,7 +33,7 @@ private:
     virtual bool is_string_object() const final { return true; }
     virtual void visit_edges(Visitor&) override;
 
-    PrimitiveString& m_string;
+    NonnullGCPtr<PrimitiveString> m_string;
 };
 
 template<>

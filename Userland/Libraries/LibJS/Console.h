@@ -89,7 +89,7 @@ private:
     ThrowCompletionOr<String> value_vector_to_string(MarkedVector<Value> const&);
     ThrowCompletionOr<String> format_time_since(Core::ElapsedTimer timer);
 
-    Realm& m_realm;
+    NonnullGCPtr<Realm> m_realm;
     ConsoleClient* m_client { nullptr };
 
     HashMap<String, unsigned> m_counters;

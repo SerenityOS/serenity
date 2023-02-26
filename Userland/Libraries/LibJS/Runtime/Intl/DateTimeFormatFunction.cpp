@@ -67,7 +67,7 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
 void DateTimeFormatFunction::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_date_time_format);
+    visitor.visit(m_date_time_format);
 }
 
 }

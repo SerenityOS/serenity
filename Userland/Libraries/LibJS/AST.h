@@ -1863,7 +1863,7 @@ public:
 private:
     NonnullRefPtr<Expression const> const m_tag;
     NonnullRefPtr<TemplateLiteral const> const m_template_literal;
-    mutable HashMap<Realm*, Handle<Array>> m_cached_values;
+    mutable HashMap<GCPtr<Realm>, Handle<Array>> m_cached_values;
 };
 
 class MemberExpression final : public Expression {

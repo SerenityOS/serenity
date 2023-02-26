@@ -35,8 +35,8 @@ public:
     Value result() const { return m_result; }
 
     struct ResolvingFunctions {
-        FunctionObject& resolve;
-        FunctionObject& reject;
+        NonnullGCPtr<FunctionObject> resolve;
+        NonnullGCPtr<FunctionObject> reject;
     };
     ResolvingFunctions create_resolving_functions();
 
@@ -58,11 +58,11 @@ private:
     void trigger_reactions() const;
 
     // 27.2.6 Properties of Promise Instances, https://tc39.es/ecma262/#sec-properties-of-promise-instances
-    State m_state { State::Pending };             // [[PromiseState]]
-    Value m_result;                               // [[PromiseResult]]
-    Vector<PromiseReaction*> m_fulfill_reactions; // [[PromiseFulfillReactions]]
-    Vector<PromiseReaction*> m_reject_reactions;  // [[PromiseRejectReactions]]
-    bool m_is_handled { false };                  // [[PromiseIsHandled]]
+    State m_state { State::Pending };                   // [[PromiseState]]
+    Value m_result;                                     // [[PromiseResult]]
+    Vector<GCPtr<PromiseReaction>> m_fulfill_reactions; // [[PromiseFulfillReactions]]
+    Vector<GCPtr<PromiseReaction>> m_reject_reactions;  // [[PromiseRejectReactions]]
+    bool m_is_handled { false };                        // [[PromiseIsHandled]]
 };
 
 }

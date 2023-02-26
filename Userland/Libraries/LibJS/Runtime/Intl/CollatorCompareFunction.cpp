@@ -71,7 +71,7 @@ ThrowCompletionOr<Value> CollatorCompareFunction::call()
 void CollatorCompareFunction::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_collator);
+    visitor.visit(m_collator);
 }
 
 }

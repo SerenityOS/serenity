@@ -26,7 +26,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    Collator& m_collator; // [[Collator]]
+    NonnullGCPtr<Collator> m_collator; // [[Collator]]
 };
 
 double compare_strings(Collator&, Utf8View const& x, Utf8View const& y);

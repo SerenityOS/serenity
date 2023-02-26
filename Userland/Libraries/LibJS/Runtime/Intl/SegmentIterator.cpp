@@ -34,8 +34,8 @@ SegmentIterator::SegmentIterator(Realm& realm, Segmenter& segmenter, Utf16View c
 void SegmentIterator::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_iterating_segmenter);
-    visitor.visit(&m_segments);
+    visitor.visit(m_iterating_segmenter);
+    visitor.visit(m_segments);
 }
 
 }
