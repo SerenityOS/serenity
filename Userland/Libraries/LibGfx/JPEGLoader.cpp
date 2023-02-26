@@ -313,7 +313,13 @@ static inline i32* get_component(Macroblock& block, unsigned component)
 
 static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
-    auto& dc_table = context.dc_tables.find(scan_component.dc_destination_id)->value;
+    auto maybe_table = context.dc_tables.get(scan_component.dc_destination_id);
+    if (!maybe_table.has_value()) {
+        dbgln_if(JPEG_DEBUG, "Unable to find a DC table with id: {}", scan_component.dc_destination_id);
+        return Error::from_string_literal("Unable to find corresponding DC table");
+    }
+
+    auto& dc_table = maybe_table.value();
     auto& scan = context.current_scan;
 
     // For DC coefficients, symbol encodes the length of the coefficient.
@@ -357,7 +363,13 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
 
 static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
-    auto& ac_table = context.ac_tables.find(scan_component.ac_destination_id)->value;
+    auto maybe_table = context.ac_tables.get(scan_component.ac_destination_id);
+    if (!maybe_table.has_value()) {
+        dbgln_if(JPEG_DEBUG, "Unable to find a AC table with id: {}", scan_component.ac_destination_id);
+        return Error::from_string_literal("Unable to find corresponding AC table");
+    }
+
+    auto& ac_table = maybe_table.value();
     auto* select_component = get_component(macroblock, scan_component.component.index);
 
     auto& scan = context.current_scan;
@@ -421,11 +433,6 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
 static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
     for (auto const& scan_component : context.current_scan.components) {
-        if (scan_component.dc_destination_id >= context.dc_tables.size())
-            return Error::from_string_literal("DC destination ID is greater than number of DC tables");
-        if (scan_component.ac_destination_id >= context.ac_tables.size())
-            return Error::from_string_literal("AC destination ID is greater than number of AC tables");
-
         for (u8 vfactor_i = 0; vfactor_i < scan_component.component.vsample_factor; vfactor_i++) {
             for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
                 // A.2.3 - Interleaved order
