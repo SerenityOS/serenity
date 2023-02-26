@@ -13,6 +13,7 @@
 #endif
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Object.h>
+#include <LibMain/Main.h>
 #include <LibTest/CrashTest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +30,7 @@ using Test::Crash;
 #    pragma GCC optimize("O0")
 #endif
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool do_all_crash_types = false;
     bool do_segmentation_violation = false;
@@ -81,14 +82,14 @@ int main(int argc, char** argv)
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
     args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
 
-    if (argc == 1) {
+    if (arguments.argc == 1) {
         do_all_crash_types = true;
-    } else if (argc != 2) {
-        args_parser.print_usage(stderr, argv[0]);
+    } else if (arguments.argc != 2) {
+        args_parser.print_usage(stderr, arguments.argv[0]);
         exit(1);
     }
 
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
     Crash::RunType run_type = do_all_crash_types ? Crash::RunType::UsingChildProcess
                                                  : Crash::RunType::UsingCurrentProcess;

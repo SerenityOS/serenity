@@ -35,7 +35,7 @@ endforeach()
 
 target_link_libraries(fuzz-syscalls PRIVATE LibSystem)
 
-serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
+serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED LIBS LibMain)
 
 set(LIBTEST_BASED_SOURCES
     TestEFault.cpp
