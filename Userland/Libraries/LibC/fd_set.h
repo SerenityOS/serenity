@@ -6,7 +6,8 @@
 
 #pragma once
 
-#define FD_SETSIZE 1024
+#include <Kernel/API/POSIX/select.h>
+
 #define FD_ZERO(set)                      \
     do {                                  \
         memset((set), 0, sizeof(fd_set)); \
