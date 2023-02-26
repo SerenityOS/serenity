@@ -6,14 +6,16 @@
 
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* target = nullptr;
+    StringView target;
     int max_file_size = 1024 * 1024;
     int count = 1024;
 
@@ -21,9 +23,9 @@ int main(int argc, char** argv)
     args_parser.add_option(max_file_size, "Maximum file size to generate", "max-size", 's', "size");
     args_parser.add_option(count, "Number of truncations to run", "number", 'n', "number");
     args_parser.add_positional_argument(target, "Target file path", "target");
-    args_parser.parse(argc, argv);
+    args_parser.parse(arguments);
 
-    int fd = creat(target, 0666);
+    int fd = creat(target.characters_without_null_termination(), 0666);
     if (fd < 0) {
         perror("Couldn't create target file");
         return EXIT_FAILURE;
@@ -33,16 +35,11 @@ int main(int argc, char** argv)
     for (int i = 0; i < count; i++) {
         auto new_file_size = AK::get_random<uint64_t>() % (max_file_size + 1);
         printf("(%d/%d)\tTruncating to %" PRIu64 " bytes...\n", i + 1, count, new_file_size);
-        if (truncate(target, new_file_size) < 0) {
-            perror("Couldn't truncate target file");
-            return EXIT_FAILURE;
-        }
+
+        TRY(Core::System::truncate(target, new_file_size));
     }
 
-    if (unlink(target) < 0) {
-        perror("Couldn't remove target file");
-        return EXIT_FAILURE;
-    }
+    TRY(Core::System::unlink(target));
 
     return EXIT_SUCCESS;
 }
