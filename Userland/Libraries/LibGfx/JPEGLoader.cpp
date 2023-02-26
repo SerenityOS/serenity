@@ -1178,8 +1178,8 @@ static bool is_app_marker(Marker const marker)
 
 static bool is_miscellaneous_or_table_marker(Marker const marker)
 {
-    // B.6 - Summary
-    // See: Figure B.17 – Flow of marker segment
+    // B.2.4 - Table-specification and miscellaneous marker segment syntax
+    // See also B.6 - Summary: Figure B.17 – Flow of marker segment
 
     bool const is_misc = marker == JPEG_COM || marker == JPEG_DRI || is_app_marker(marker);
     bool const is_table = marker == JPEG_DQT || marker == JPEG_DAC || marker == JPEG_DHT;
