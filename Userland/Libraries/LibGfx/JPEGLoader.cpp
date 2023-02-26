@@ -205,6 +205,8 @@ struct Scan {
 
     HuffmanStreamState huffman_stream;
 
+    u64 end_of_bands_run_count { 0 };
+
     // See the note on Figure B.4 - Scan header syntax
     bool are_components_interleaved() const
     {
@@ -335,6 +337,24 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     return {};
 }
 
+static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
+{
+    // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
+    // Note: We also use it for non-progressive encoding as it supports both EOB and ZRL
+
+    if (auto const eob = symbol & 0x0F; eob == 0 && symbol != JPEG_ZRL) {
+        // We encountered an EOB marker
+        auto const eob_base = symbol >> 4;
+        auto const additional_value = TRY(read_huffman_bits(scan.huffman_stream, eob_base));
+
+        scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
+
+        return true;
+    }
+
+    return false;
+}
+
 static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto& ac_table = context.ac_tables.find(scan_component.ac_destination_id)->value;
@@ -352,7 +372,8 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
         auto ac_symbol = TRY(get_next_symbol(scan.huffman_stream, ac_table));
-        if (ac_symbol == 0)
+
+        if (TRY(read_eob(scan, ac_symbol)))
             break;
 
         // ac_symbol = JPEG_ZRL means we need to skip 16 zeroes.
@@ -412,6 +433,12 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                 if (!context.current_scan.are_components_interleaved())
                     mb_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
 
+                // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
+                if (context.current_scan.end_of_bands_run_count > 0) {
+                    --context.current_scan.end_of_bands_run_count;
+                    continue;
+                }
+
                 Macroblock& block = macroblocks[mb_index];
 
                 if (context.current_scan.spectral_selection_start == 0)
@@ -438,6 +465,9 @@ static bool is_dct_based(StartOfFrame::FrameType frame_type)
 
 static void reset_decoder(JPEGLoadingContext& context)
 {
+    // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
+    context.current_scan.end_of_bands_run_count = 0;
+
     // E.2.4 Control procedure for decoding a restart interval
     if (is_dct_based(context.frame.type)) {
         context.previous_dc_values[0] = 0;
