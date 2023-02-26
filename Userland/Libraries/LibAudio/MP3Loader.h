@@ -27,7 +27,7 @@ public:
     static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(StringView path);
     static Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> create(Bytes buffer);
 
-    virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
+    virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) override;
 
     virtual MaybeLoaderError reset() override;
     virtual MaybeLoaderError seek(int const position) override;
@@ -70,7 +70,6 @@ private:
     size_t m_loaded_samples { 0 };
 
     AK::Optional<MP3::MP3Frame> m_current_frame;
-    u32 m_current_frame_read;
     OwnPtr<BigEndianInputBitStream> m_bitstream;
     AllocatingMemoryStream m_bit_reservoir;
 };

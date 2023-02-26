@@ -28,11 +28,12 @@ struct FlacTest : Test::TestCase {
         auto loader = result.release_value();
 
         while (true) {
-            auto maybe_samples = loader->get_more_samples(2 * MiB);
+            auto maybe_samples = loader->load_chunks(2 * MiB);
             if (maybe_samples.is_error()) {
                 FAIL(DeprecatedString::formatted("{} (at {})", maybe_samples.error().description, maybe_samples.error().index));
                 return;
             }
+            maybe_samples.value().remove_all_matching([](auto& chunk) { return chunk.is_empty(); });
             if (maybe_samples.value().is_empty())
                 return;
         }

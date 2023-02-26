@@ -25,6 +25,12 @@ namespace Audio {
 
 static constexpr StringView no_plugin_error = "No loader plugin available"sv;
 
+// Experimentally determined to be a decent buffer size on i686:
+// 4K (the default) is slightly worse, and 64K is much worse.
+// At sufficiently large buffer sizes, the advantage of infrequent read() calls is outweighed by the memmove() overhead.
+// There was no intensive fine-tuning done to determine this value, so improvements may definitely be possible.
+constexpr size_t const loader_buffer_size = 8 * KiB;
+
 using LoaderSamples = ErrorOr<FixedArray<Sample>, LoaderError>;
 using MaybeLoaderError = ErrorOr<void, LoaderError>;
 
@@ -33,7 +39,13 @@ public:
     explicit LoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
     virtual ~LoaderPlugin() = default;
 
-    virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) = 0;
+    // Load as many audio chunks as necessary to get up to the required samples.
+    // A chunk can be anything that is convenient for the plugin to load in one go without requiring to move samples around different buffers.
+    // For example: A FLAC, MP3 or QOA frame.
+    // The chunks are returned in a vector, so the loader can simply add chunks until the requested sample amount is reached.
+    // The sample count MAY be surpassed, but only as little as possible. It CAN be undershot when the end of the stream is reached.
+    // If the loader has no chunking limitations (e.g. WAV), it may return a single exact-sized chunk.
+    virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) = 0;
 
     virtual MaybeLoaderError reset() = 0;
 
@@ -68,10 +80,15 @@ public:
     static Result<NonnullRefPtr<Loader>, LoaderError> create(StringView path) { return adopt_ref(*new Loader(TRY(create_plugin(path)))); }
     static Result<NonnullRefPtr<Loader>, LoaderError> create(Bytes buffer) { return adopt_ref(*new Loader(TRY(create_plugin(buffer)))); }
 
-    LoaderSamples get_more_samples(size_t max_samples_to_read_from_input = 128 * KiB) const { return m_plugin->get_more_samples(max_samples_to_read_from_input); }
+    // Will only read less samples if we're at the end of the stream.
+    LoaderSamples get_more_samples(size_t samples_to_read_from_input = 128 * KiB);
 
     MaybeLoaderError reset() const { return m_plugin->reset(); }
-    MaybeLoaderError seek(int const position) const { return m_plugin->seek(position); }
+    MaybeLoaderError seek(int const position) const
+    {
+        m_buffer.clear_with_capacity();
+        return m_plugin->seek(position);
+    }
 
     int loaded_samples() const { return m_plugin->loaded_samples(); }
     int total_samples() const { return m_plugin->total_samples(); }
@@ -88,6 +105,7 @@ private:
     explicit Loader(NonnullOwnPtr<LoaderPlugin>);
 
     mutable NonnullOwnPtr<LoaderPlugin> m_plugin;
+    mutable Vector<Sample, loader_buffer_size> m_buffer;
 };
 
 }

@@ -19,7 +19,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
     auto qoa = qoa_or_error.release_value();
 
     for (;;) {
-        auto samples = qoa->get_more_samples();
+        auto samples = qoa->load_chunks(5 * KiB);
         if (samples.is_error())
             return 0;
         if (samples.value().size() > 0)

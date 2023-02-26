@@ -266,14 +266,14 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
         if (to_read == 0)
             return {};
         dbgln_if(AFLACLOADER_DEBUG, "Seeking {} samples manually", to_read);
-        (void)TRY(get_more_samples(to_read));
+        (void)TRY(load_chunks(to_read));
     } else {
         auto target_seekpoint = maybe_target_seekpoint.release_value();
 
         // When a small seek happens, we may already be closer to the target than the seekpoint.
         if (sample_index - target_seekpoint.sample_index > sample_index - m_loaded_samples) {
             dbgln_if(AFLACLOADER_DEBUG, "Close enough to target: seeking {} samples manually", sample_index - m_loaded_samples);
-            (void)TRY(get_more_samples(sample_index - m_loaded_samples));
+            (void)TRY(load_chunks(sample_index - m_loaded_samples));
             return {};
         }
 
@@ -284,47 +284,34 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
 
         auto remaining_samples_after_seekpoint = sample_index - m_data_start_location;
         if (remaining_samples_after_seekpoint > 0)
-            (void)TRY(get_more_samples(remaining_samples_after_seekpoint));
+            (void)TRY(load_chunks(remaining_samples_after_seekpoint));
         m_loaded_samples = target_seekpoint.sample_index;
     }
     return {};
 }
 
-LoaderSamples FlacLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
+ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(size_t samples_to_read_from_input)
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     if (remaining_samples <= 0)
-        return FixedArray<Sample> {};
+        return Vector<FixedArray<Sample>> {};
 
-    // FIXME: samples_to_read is calculated wrong, because when seeking not all samples are loaded.
-    size_t samples_to_read = min(max_bytes_to_read_from_input, remaining_samples);
-    auto samples = FixedArray<Sample>::must_create_but_fixme_should_propagate_errors(samples_to_read);
+    size_t samples_to_read = min(samples_to_read_from_input, remaining_samples);
+    Vector<FixedArray<Sample>> frames;
     size_t sample_index = 0;
 
-    if (m_unread_data.size() > 0) {
-        size_t to_transfer = min(m_unread_data.size(), samples_to_read);
-        dbgln_if(AFLACLOADER_DEBUG, "Reading {} samples from unread sample buffer (size {})", to_transfer, m_unread_data.size());
-        AK::TypedTransfer<Sample>::move(samples.data(), m_unread_data.data(), to_transfer);
-        if (to_transfer < m_unread_data.size())
-            m_unread_data.remove(0, to_transfer);
-        else
-            m_unread_data.clear_with_capacity();
-
-        sample_index += to_transfer;
-    }
-
     while (sample_index < samples_to_read) {
-        TRY(next_frame(samples.span().slice(sample_index)));
+        TRY(frames.try_append(TRY(next_frame())));
         sample_index += m_current_frame->sample_count;
     }
 
     m_loaded_samples += sample_index;
 
-    return samples;
+    return frames;
 }
 
 // 11.21. FRAME
-MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
+LoaderSamples FlacLoaderPlugin::next_frame()
 {
 #define FLAC_VERIFY(check, category, msg)                                                                                                         \
     do {                                                                                                                                          \
@@ -399,6 +386,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     for (u8 i = 0; i < subframe_count; ++i) {
         FlacSubframeHeader new_subframe = TRY(next_subframe_header(bit_stream, i));
         Vector<i32> subframe_samples = TRY(parse_subframe(new_subframe, bit_stream));
+        VERIFY(subframe_samples.size() == m_current_frame->sample_count);
         current_subframes.unchecked_append(move(subframe_samples));
     }
 
@@ -410,12 +398,15 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     [[maybe_unused]] u16 footer_checksum = LOADER_TRY(bit_stream.read_bits<u16>(16));
     dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
 
-    Vector<i32> left;
-    Vector<i32> right;
+    float sample_rescale = 1 / static_cast<float>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
+    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
+
+    FixedArray<Sample> samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
 
     switch (channel_type) {
     case FlacFrameChannelType::Mono:
-        left = right = current_subframes[0];
+        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
+            samples[i] = Sample { static_cast<float>(current_subframes[0][i]) * sample_rescale };
         break;
     case FlacFrameChannelType::Stereo:
     // TODO mix together surround channels on each side?
@@ -425,64 +416,39 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
     case FlacFrameChannelType::Surround5p1:
     case FlacFrameChannelType::Surround6p1:
     case FlacFrameChannelType::Surround7p1:
-        left = current_subframes[0];
-        right = current_subframes[1];
+        for (size_t i = 0; i < m_current_frame->sample_count; ++i)
+            samples[i] = { static_cast<float>(current_subframes[0][i]) * sample_rescale, static_cast<float>(current_subframes[1][i]) * sample_rescale };
         break;
     case FlacFrameChannelType::LeftSideStereo:
         // channels are left (0) and side (1)
-        left = current_subframes[0];
-        right.ensure_capacity(left.size());
-        for (size_t i = 0; i < left.size(); ++i) {
+        for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
             // right = left - side
-            right.unchecked_append(left[i] - current_subframes[1][i]);
+            samples[i] = { static_cast<float>(current_subframes[0][i]) * sample_rescale,
+                static_cast<float>(current_subframes[0][i] - current_subframes[1][i]) * sample_rescale };
         }
         break;
     case FlacFrameChannelType::RightSideStereo:
         // channels are side (0) and right (1)
-        right = current_subframes[1];
-        left.ensure_capacity(right.size());
-        for (size_t i = 0; i < right.size(); ++i) {
+        for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
             // left = right + side
-            left.unchecked_append(right[i] + current_subframes[0][i]);
+            samples[i] = { static_cast<float>(current_subframes[1][i] + current_subframes[0][i]) * sample_rescale,
+                static_cast<float>(current_subframes[1][i]) * sample_rescale };
         }
         break;
     case FlacFrameChannelType::MidSideStereo:
         // channels are mid (0) and side (1)
-        left.ensure_capacity(current_subframes[0].size());
-        right.ensure_capacity(current_subframes[0].size());
         for (size_t i = 0; i < current_subframes[0].size(); ++i) {
             i64 mid = current_subframes[0][i];
             i64 side = current_subframes[1][i];
             mid *= 2;
             // prevent integer division errors
-            left.unchecked_append(static_cast<i32>((mid + side) / 2));
-            right.unchecked_append(static_cast<i32>((mid - side) / 2));
+            samples[i] = { static_cast<float>((mid + side) * .5f) * sample_rescale,
+                static_cast<float>((mid - side) * .5f) * sample_rescale };
         }
         break;
     }
 
-    VERIFY(left.size() == right.size() && left.size() == m_current_frame->sample_count);
-
-    float sample_rescale = static_cast<float>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
-    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
-
-    // zip together channels
-    auto samples_to_directly_copy = min(target_vector.size(), m_current_frame->sample_count);
-    for (size_t i = 0; i < samples_to_directly_copy; ++i) {
-        Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
-        target_vector[i] = frame;
-    }
-    // move superfluous data into the class buffer instead
-    auto result = m_unread_data.try_grow_capacity(m_current_frame->sample_count - samples_to_directly_copy);
-    if (result.is_error())
-        return LoaderError { LoaderError::Category::Internal, static_cast<size_t>(samples_to_directly_copy + m_current_sample_or_frame), "Couldn't allocate sample buffer for superfluous data" };
-
-    for (size_t i = samples_to_directly_copy; i < m_current_frame->sample_count; ++i) {
-        Sample frame = { left[i] / sample_rescale, right[i] / sample_rescale };
-        m_unread_data.unchecked_append(frame);
-    }
-
-    return {};
+    return samples;
 #undef FLAC_VERIFY
 }
 
