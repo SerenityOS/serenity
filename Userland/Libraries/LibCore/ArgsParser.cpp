@@ -367,7 +367,7 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
 
 void ArgsParser::print_version(FILE* file)
 {
-    outln(file, Core::Version::read_long_version_string());
+    outln(file, Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void ArgsParser::add_option(Option&& option)

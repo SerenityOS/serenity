@@ -6,10 +6,11 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace Core::Version {
 
-DeprecatedString read_long_version_string();
+ErrorOr<String> read_long_version_string();
 
 }
