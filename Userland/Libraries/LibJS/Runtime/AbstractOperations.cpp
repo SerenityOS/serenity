@@ -345,8 +345,8 @@ bool validate_and_apply_property_descriptor(Object* object, PropertyKey const& p
             // i. For each field of Desc, set the corresponding attribute of the property named P of object O to the value of the field.
             Value value;
             if (descriptor.is_accessor_descriptor() || (current->is_accessor_descriptor() && !descriptor.is_data_descriptor())) {
-                auto* getter = descriptor.get.value_or(current->get.value_or(nullptr));
-                auto* setter = descriptor.set.value_or(current->set.value_or(nullptr));
+                auto getter = descriptor.get.value_or(current->get.value_or(nullptr));
+                auto setter = descriptor.set.value_or(current->set.value_or(nullptr));
                 value = Accessor::create(object->vm(), getter, setter);
             } else {
                 value = descriptor.value.value_or(current->value.value_or({}));

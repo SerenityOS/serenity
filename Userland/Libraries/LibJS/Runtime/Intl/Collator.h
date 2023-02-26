@@ -77,14 +77,14 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    String m_locale;                                      // [[Locale]]
-    Usage m_usage { Usage::Sort };                        // [[Usage]]
-    Sensitivity m_sensitivity { Sensitivity::Variant };   // [[Sensitivity]]
-    CaseFirst m_case_first { CaseFirst::False };          // [[CaseFirst]]
-    String m_collation;                                   // [[Collation]]
-    bool m_ignore_punctuation { false };                  // [[IgnorePunctuation]]
-    bool m_numeric { false };                             // [[Numeric]]
-    CollatorCompareFunction* m_bound_compare { nullptr }; // [[BoundCompare]]
+    String m_locale;                                    // [[Locale]]
+    Usage m_usage { Usage::Sort };                      // [[Usage]]
+    Sensitivity m_sensitivity { Sensitivity::Variant }; // [[Sensitivity]]
+    CaseFirst m_case_first { CaseFirst::False };        // [[CaseFirst]]
+    String m_collation;                                 // [[Collation]]
+    bool m_ignore_punctuation { false };                // [[IgnorePunctuation]]
+    bool m_numeric { false };                           // [[Numeric]]
+    GCPtr<CollatorCompareFunction> m_bound_compare;     // [[BoundCompare]]
 };
 
 }

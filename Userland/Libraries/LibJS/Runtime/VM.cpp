@@ -215,7 +215,7 @@ VM::InterpreterExecutionScope::~InterpreterExecutionScope()
 void VM::gather_roots(HashTable<Cell*>& roots)
 {
     roots.set(m_empty_string);
-    for (auto* string : m_single_ascii_character_strings)
+    for (auto string : m_single_ascii_character_strings)
         roots.set(string);
 
     auto gather_roots_from_execution_context_stack = [&roots](Vector<ExecutionContext*> const& stack) {
@@ -229,7 +229,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             roots.set(execution_context->lexical_environment);
             roots.set(execution_context->variable_environment);
             roots.set(execution_context->private_environment);
-            if (auto* context_owner = execution_context->context_owner)
+            if (auto context_owner = execution_context->context_owner)
                 roots.set(context_owner);
             execution_context->script_or_module.visit(
                 [](Empty) {},
@@ -251,7 +251,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     for (auto& symbol : m_global_symbol_registry)
         roots.set(symbol.value);
 
-    for (auto* finalization_registry : m_finalization_registry_cleanup_jobs)
+    for (auto finalization_registry : m_finalization_registry_cleanup_jobs)
         roots.set(finalization_registry);
 }
 
@@ -687,7 +687,7 @@ void VM::enqueue_promise_job(Function<ThrowCompletionOr<Value>()> job, Realm*)
 void VM::run_queued_finalization_registry_cleanup_jobs()
 {
     while (!m_finalization_registry_cleanup_jobs.is_empty()) {
-        auto* registry = m_finalization_registry_cleanup_jobs.take_first();
+        auto registry = m_finalization_registry_cleanup_jobs.take_first();
         // FIXME: Handle any uncatched exceptions here.
         (void)registry->cleanup();
     }

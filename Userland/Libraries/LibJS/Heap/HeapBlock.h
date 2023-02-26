@@ -99,7 +99,7 @@ private:
     struct FreelistEntry final : public Cell {
         JS_CELL(FreelistEntry, Cell);
 
-        FreelistEntry* next { nullptr };
+        GCPtr<FreelistEntry> next;
     };
 
     Cell* cell(size_t index)
@@ -110,7 +110,7 @@ private:
     Heap& m_heap;
     size_t m_cell_size { 0 };
     size_t m_next_lazy_freelist_index { 0 };
-    FreelistEntry* m_freelist { nullptr };
+    GCPtr<FreelistEntry> m_freelist;
     alignas(Cell) u8 m_storage[];
 
 public:

@@ -47,8 +47,8 @@ void WrappedFunction::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
-    visitor.visit(&m_wrapped_target_function);
-    visitor.visit(&m_realm);
+    visitor.visit(m_wrapped_target_function);
+    visitor.visit(m_realm);
 }
 
 // 2.1 [[Call]] ( thisArgument, argumentsList ), https://tc39.es/proposal-shadowrealm/#sec-wrapped-function-exotic-objects-call-thisargument-argumentslist

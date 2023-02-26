@@ -83,7 +83,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
 
         // 6. Let global be listener callback’s associated Realm’s global object.
         auto& callback = listener->callback->callback();
-        auto& realm = callback.callback.shape().realm();
+        auto& realm = callback.callback->shape().realm();
         auto& global = realm.global_object();
 
         // 7. Let currentEvent be undefined.

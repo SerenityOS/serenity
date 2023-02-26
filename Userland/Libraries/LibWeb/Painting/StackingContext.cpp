@@ -29,7 +29,7 @@ static void paint_node(Layout::Node const& layout_node, PaintContext& context, P
 
 StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
     : m_box(box)
-    , m_transform(combine_transformations(m_box.computed_values().transformations()))
+    , m_transform(combine_transformations(m_box->computed_values().transformations()))
     , m_transform_origin(compute_transform_origin())
     , m_parent(parent)
 {
@@ -41,10 +41,10 @@ StackingContext::StackingContext(Layout::Box& box, StackingContext* parent)
 void StackingContext::sort()
 {
     quick_sort(m_children, [](auto& a, auto& b) {
-        auto a_z_index = a->m_box.computed_values().z_index().value_or(0);
-        auto b_z_index = b->m_box.computed_values().z_index().value_or(0);
+        auto a_z_index = a->m_box->computed_values().z_index().value_or(0);
+        auto b_z_index = b->m_box->computed_values().z_index().value_or(0);
         if (a_z_index == b_z_index)
-            return a->m_box.is_before(b->m_box);
+            return a->m_box->is_before(b->m_box);
         return a_z_index < b_z_index;
     });
 
@@ -140,11 +140,11 @@ void StackingContext::paint_internal(PaintContext& context) const
     paint_node(m_box, context, PaintPhase::Border);
 
     auto paint_child = [&](auto* child) {
-        auto parent = child->m_box.parent();
+        auto parent = child->m_box->parent();
         auto* parent_paintable = parent ? parent->paintable() : nullptr;
         if (parent_paintable)
             parent_paintable->before_children_paint(context, PaintPhase::Foreground);
-        auto containing_block = child->m_box.containing_block();
+        auto containing_block = child->m_box->containing_block();
         auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
         if (containing_block_paintable)
             containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
@@ -159,7 +159,7 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     // Draw positioned descendants with negative z-indices (step 3)
     for (auto* child : m_children) {
-        if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() < 0)
+        if (child->m_box->computed_values().z_index().has_value() && child->m_box->computed_values().z_index().value() < 0)
             paint_child(child);
     }
 
@@ -175,7 +175,7 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // NOTE: Non-positioned descendants that establish stacking contexts with z-index `0` or `auto` are also painted here.
     // FIXME: There's more to this step that we have yet to understand and implement.
-    m_box.paint_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
+    m_box->paint_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
         auto const& z_index = paint_box.computed_values().z_index();
         if (auto* child = paint_box.stacking_context()) {
             if (!z_index.has_value() || z_index.value() == 0)
@@ -217,7 +217,7 @@ void StackingContext::paint_internal(PaintContext& context) const
 
     // Draw other positioned descendants (step 9)
     for (auto* child : m_children) {
-        if (child->m_box.computed_values().z_index().has_value() && child->m_box.computed_values().z_index().value() >= 1)
+        if (child->m_box->computed_values().z_index().has_value() && child->m_box->computed_values().z_index().value() >= 1)
             paint_child(child);
     }
 
@@ -363,11 +363,11 @@ Gfx::AffineTransform StackingContext::affine_transform_matrix() const
 void StackingContext::paint(PaintContext& context) const
 {
     Gfx::PainterStateSaver saver(context.painter());
-    if (m_box.is_fixed_position()) {
+    if (m_box->is_fixed_position()) {
         context.painter().translate(-context.painter().translation());
     }
 
-    auto opacity = m_box.computed_values().opacity();
+    auto opacity = m_box->computed_values().opacity();
     if (opacity == 0.0f)
         return;
 
@@ -424,7 +424,7 @@ void StackingContext::paint(PaintContext& context) const
 
 Gfx::FloatPoint StackingContext::compute_transform_origin() const
 {
-    auto style_value = m_box.computed_values().transform_origin();
+    auto style_value = m_box->computed_values().transform_origin();
     // FIXME: respect transform-box property
     auto reference_box = paintable().absolute_border_box_rect();
     auto x = reference_box.left() + style_value.x.resolved(m_box, CSS::Length::make_px(reference_box.width())).to_px(m_box);
@@ -461,7 +461,7 @@ static TraversalDecision for_each_in_subtree_of_type_within_same_stacking_contex
 
 Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTestType type) const
 {
-    if (!m_box.is_visible())
+    if (!m_box->is_visible())
         return {};
 
     auto transform_origin = this->transform_origin().to_type<CSSPixels>();
@@ -485,7 +485,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // NOTE: Hit testing follows reverse painting order, that's why the conditions here are reversed.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.m_box.computed_values().z_index().value_or(0) <= 0)
+        if (child.m_box->computed_values().z_index().value_or(0) <= 0)
             break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
@@ -528,7 +528,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // "child stacking contexts with stack level 0" is first in the step, so last here to match reverse order.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.m_box.computed_values().z_index().value_or(0) != 0)
+        if (child.m_box->computed_values().z_index().value_or(0) != 0)
             break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
@@ -536,7 +536,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     }
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
-    if (m_box.children_are_inline() && is<Layout::BlockContainer>(m_box)) {
+    if (m_box->children_are_inline() && is<Layout::BlockContainer>(*m_box)) {
         auto result = paintable().hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
@@ -563,7 +563,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
         return result;
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
-    if (!m_box.children_are_inline()) {
+    if (!m_box->children_are_inline()) {
         for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](auto const& paint_box) {
             // FIXME: Support more overflow variations.
             if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
@@ -588,7 +588,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     // NOTE: Hit testing follows reverse painting order, that's why the conditions here are reversed.
     for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
         auto const& child = *m_children[i];
-        if (child.m_box.computed_values().z_index().value_or(0) >= 0)
+        if (child.m_box->computed_values().z_index().value_or(0) >= 0)
             break;
         auto result = child.hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
@@ -610,9 +610,9 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box.debug_description(), paintable().absolute_rect(), m_children.size());
-    if (m_box.computed_values().z_index().has_value())
-        builder.appendff("{}", m_box.computed_values().z_index().value());
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box->debug_description(), paintable().absolute_rect(), m_children.size());
+    if (m_box->computed_values().z_index().has_value())
+        builder.appendff("{}", m_box->computed_values().z_index().value());
     else
         builder.append("auto"sv);
     builder.append(')');

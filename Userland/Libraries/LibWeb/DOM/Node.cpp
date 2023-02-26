@@ -602,8 +602,8 @@ void Node::remove(bool suppress_observers)
     //     whose observer is registered’s observer, options is registered’s options, and source is registered to node’s registered observer list.
     for (auto* inclusive_ancestor = parent; inclusive_ancestor; inclusive_ancestor = inclusive_ancestor->parent()) {
         for (auto& registered : inclusive_ancestor->m_registered_observer_list) {
-            if (registered.options().subtree) {
-                auto transient_observer = TransientRegisteredObserver::create(registered.observer(), registered.options(), registered);
+            if (registered->options().subtree) {
+                auto transient_observer = TransientRegisteredObserver::create(registered->observer(), registered->options(), registered);
                 m_registered_observer_list.append(move(transient_observer));
             }
         }
@@ -1411,7 +1411,7 @@ void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedStri
     for (auto& node : nodes) {
         for (auto& registered_observer : node->m_registered_observer_list) {
             // 1. Let options be registered’s options.
-            auto& options = registered_observer.options();
+            auto& options = registered_observer->options();
 
             // 2. If none of the following are true
             //      - node is not target and options["subtree"] is false
@@ -1426,7 +1426,7 @@ void Node::queue_mutation_record(DeprecatedFlyString const& type, DeprecatedStri
                 && !(type == MutationType::characterData && (!options.character_data.has_value() || !options.character_data.value()))
                 && !(type == MutationType::childList && !options.child_list)) {
                 // 1. Let mo be registered’s observer.
-                auto mutation_observer = registered_observer.observer();
+                auto mutation_observer = registered_observer->observer();
 
                 // 2. If interestedObservers[mo] does not exist, then set interestedObservers[mo] to null.
                 if (!interested_observers.contains(mutation_observer))

@@ -35,9 +35,9 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    FunctionObject* m_bound_target_function { nullptr }; // [[BoundTargetFunction]]
-    Value m_bound_this;                                  // [[BoundThis]]
-    Vector<Value> m_bound_arguments;                     // [[BoundArguments]]
+    GCPtr<FunctionObject> m_bound_target_function; // [[BoundTargetFunction]]
+    Value m_bound_this;                            // [[BoundThis]]
+    Vector<Value> m_bound_arguments;               // [[BoundArguments]]
 
     DeprecatedFlyString m_name;
 };

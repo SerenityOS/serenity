@@ -59,7 +59,7 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
 
     if (value()->has_child_nodes()) {
         auto node_children = MUST(object.add_array("children"sv));
-        for (auto* child : children()) {
+        for (auto& child : children()) {
             if (child->value()->is_uninteresting_whitespace_node())
                 continue;
             JsonObjectSerializer<StringBuilder> child_object = MUST(node_children.add_object());

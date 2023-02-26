@@ -184,8 +184,8 @@ ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
     // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_realm().
-    MUST_OR_THROW_OOM(static_cast<FunctionPrototype*>(m_function_prototype)->initialize(realm));
-    MUST_OR_THROW_OOM(static_cast<ObjectPrototype*>(m_object_prototype)->initialize(realm));
+    MUST_OR_THROW_OOM(m_function_prototype->initialize(realm));
+    MUST_OR_THROW_OOM(m_object_prototype->initialize(realm));
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
     VERIFY(!m_##snake_name##_prototype);      \

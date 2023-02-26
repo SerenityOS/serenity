@@ -54,7 +54,7 @@ ThrowCompletionOr<Value> NumberFormatFunction::call()
 void NumberFormatFunction::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_number_format);
+    visitor.visit(m_number_format);
 }
 
 }

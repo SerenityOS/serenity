@@ -30,7 +30,7 @@ void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 WebIDL::ExceptionOr<void> WindowEnvironmentSettingsObject::setup(AK::URL const& creation_url, NonnullOwnPtr<JS::ExecutionContext> execution_context, Optional<Environment> reserved_environment, AK::URL top_level_creation_url, Origin top_level_origin)
 {
     // 1. Let realm be the value of execution context's Realm component.
-    auto* realm = execution_context->realm;
+    auto realm = execution_context->realm;
     VERIFY(realm);
 
     // 2. Let window be realm's global object.

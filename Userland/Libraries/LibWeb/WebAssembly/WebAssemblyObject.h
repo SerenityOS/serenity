@@ -46,12 +46,12 @@ public:
     //        so ideally this would be a refcounted object, shared between
     //        WebAssemblyModuleObject's and WebAssemblyInstantiatedModuleObject's.
     struct ModuleCache {
-        HashMap<Wasm::FunctionAddress, JS::FunctionObject*> function_instances;
-        HashMap<Wasm::MemoryAddress, WebAssemblyMemoryObject*> memory_instances;
-        HashMap<Wasm::TableAddress, WebAssemblyTableObject*> table_instances;
+        HashMap<Wasm::FunctionAddress, JS::GCPtr<JS::FunctionObject>> function_instances;
+        HashMap<Wasm::MemoryAddress, JS::GCPtr<WebAssemblyMemoryObject>> memory_instances;
+        HashMap<Wasm::TableAddress, JS::GCPtr<WebAssemblyTableObject>> table_instances;
     };
     struct GlobalModuleCache {
-        HashMap<Wasm::FunctionAddress, JS::NativeFunction*> function_instances;
+        HashMap<Wasm::FunctionAddress, JS::GCPtr<JS::NativeFunction>> function_instances;
     };
 
     static Vector<NonnullOwnPtr<CompiledWebAssemblyModule>> s_compiled_modules;

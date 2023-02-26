@@ -49,7 +49,7 @@ public:
     int gap_adjusted_column(Box const& parent_box);
 
 private:
-    Box const& m_box;
+    JS::NonnullGCPtr<Box const> m_box;
     int m_row { 0 };
     int m_row_span { 1 };
     int m_column { 0 };
@@ -120,7 +120,7 @@ private:
 
     OccupationGrid m_occupation_grid;
     Vector<PositionedBox> m_positioned_boxes;
-    Vector<Box const&> m_boxes_to_place;
+    Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
     CSSPixels get_free_space_x(AvailableSpace const& available_space);
     CSSPixels get_free_space_y(Box const&);

@@ -36,7 +36,7 @@ protected:
     }
 
 private:
-    Bindings::PlatformObject& m_self;
+    JS::NonnullGCPtr<Bindings::PlatformObject> m_self;
     Gfx::Path m_path;
 };
 

@@ -36,13 +36,13 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 4.4 Properties of Temporal.PlainTime Instances, https://tc39.es/proposal-temporal/#sec-properties-of-temporal-plaintime-instances
-    u8 m_iso_hour { 0 };         // [[ISOHour]]
-    u8 m_iso_minute { 0 };       // [[ISOMinute]]
-    u8 m_iso_second { 0 };       // [[ISOSecond]]
-    u16 m_iso_millisecond { 0 }; // [[ISOMillisecond]]
-    u16 m_iso_microsecond { 0 }; // [[ISOMicrosecond]]
-    u16 m_iso_nanosecond { 0 };  // [[ISONanosecond]]
-    Calendar& m_calendar;        // [[Calendar]] (always the built-in ISO 8601 calendar)
+    u8 m_iso_hour { 0 };               // [[ISOHour]]
+    u8 m_iso_minute { 0 };             // [[ISOMinute]]
+    u8 m_iso_second { 0 };             // [[ISOSecond]]
+    u16 m_iso_millisecond { 0 };       // [[ISOMillisecond]]
+    u16 m_iso_microsecond { 0 };       // [[ISOMicrosecond]]
+    u16 m_iso_nanosecond { 0 };        // [[ISONanosecond]]
+    NonnullGCPtr<Calendar> m_calendar; // [[Calendar]] (always the built-in ISO 8601 calendar)
 };
 
 struct DaysAndTime {

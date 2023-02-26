@@ -54,7 +54,7 @@ private:
     DeprecatedFlyString m_name;
     Optional<DeprecatedFlyString> m_initial_name; // [[InitialName]]
     SafeFunction<ThrowCompletionOr<Value>(VM&)> m_native_function;
-    Realm* m_realm { nullptr };
+    GCPtr<Realm> m_realm;
 };
 
 template<>

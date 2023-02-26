@@ -80,7 +80,7 @@ WebIDL::ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserv
     // 7. For each registered of target’s registered observer list, if registered’s observer is this:
     bool updated_existing_observer = false;
     for (auto& registered_observer : target.registered_observers_list()) {
-        if (registered_observer.observer().ptr() != this)
+        if (registered_observer->observer().ptr() != this)
             continue;
 
         updated_existing_observer = true;
@@ -92,12 +92,12 @@ WebIDL::ExceptionOr<void> MutationObserver::observe(Node& target, MutationObserv
                 continue;
 
             node->registered_observers_list().remove_all_matching([&registered_observer](RegisteredObserver& observer) {
-                return is<TransientRegisteredObserver>(observer) && verify_cast<TransientRegisteredObserver>(observer).source().ptr() == &registered_observer;
+                return is<TransientRegisteredObserver>(observer) && verify_cast<TransientRegisteredObserver>(observer).source().ptr() == registered_observer;
             });
         }
 
         // 2. Set registered’s options to options.
-        registered_observer.set_options(options);
+        registered_observer->set_options(options);
         break;
     }
 

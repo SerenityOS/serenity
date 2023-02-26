@@ -27,7 +27,7 @@ CSSStyleSheet::CSSStyleSheet(JS::Realm& realm, CSSRuleList& rules, MediaList& me
         set_location(location->to_deprecated_string());
 
     for (auto& rule : *m_rules)
-        rule.set_parent_style_sheet(this);
+        rule->set_parent_style_sheet(this);
 }
 
 JS::ThrowCompletionOr<void> CSSStyleSheet::initialize(JS::Realm& realm)
@@ -106,7 +106,7 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(unsigned index)
 
 void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
-    if (m_media.matches()) {
+    if (m_media->matches()) {
         m_rules->for_each_effective_style_rule(callback);
     }
 }
@@ -115,8 +115,8 @@ bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)
 {
     bool any_media_queries_changed_match_state = false;
 
-    bool did_match = m_media.matches();
-    bool now_matches = m_media.evaluate(window);
+    bool did_match = m_media->matches();
+    bool now_matches = m_media->evaluate(window);
     if (did_match != now_matches)
         any_media_queries_changed_match_state = true;
     if (now_matches && m_rules->evaluate_media_queries(window))

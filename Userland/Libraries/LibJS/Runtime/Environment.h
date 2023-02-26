@@ -67,7 +67,7 @@ private:
 
     bool m_permanently_screwed_by_eval { false };
 
-    Environment* m_outer_environment { nullptr };
+    GCPtr<Environment> m_outer_environment;
 };
 
 }

@@ -65,7 +65,7 @@ void Error::populate_stack()
     auto& vm = this->vm();
     m_traceback.ensure_capacity(vm.execution_context_stack().size());
     for (ssize_t i = vm.execution_context_stack().size() - 1; i >= 0; i--) {
-        auto* context = vm.execution_context_stack()[i];
+        auto context = vm.execution_context_stack()[i];
         auto function_name = context->function_name;
         if (function_name.is_empty())
             function_name = "<unknown>"sv;

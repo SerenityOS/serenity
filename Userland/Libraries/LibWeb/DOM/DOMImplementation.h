@@ -36,7 +36,7 @@ private:
     Document& document() { return m_document; }
     Document const& document() const { return m_document; }
 
-    Document& m_document;
+    JS::NonnullGCPtr<Document> m_document;
 };
 
 }

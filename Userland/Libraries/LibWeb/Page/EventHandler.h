@@ -50,7 +50,7 @@ private:
     Painting::PaintableBox* paint_root();
     Painting::PaintableBox const* paint_root() const;
 
-    HTML::BrowsingContext& m_browsing_context;
+    JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
 
     bool m_in_mouse_selection { false };
 

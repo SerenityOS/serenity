@@ -71,7 +71,7 @@ protected:
     u32 m_byte_length { 0 };
     u32 m_byte_offset { 0 };
     ContentType m_content_type { ContentType::Number };
-    ArrayBuffer* m_viewed_array_buffer { nullptr };
+    GCPtr<ArrayBuffer> m_viewed_array_buffer;
     IntrinsicConstructor m_intrinsic_constructor { nullptr };
 
 private:

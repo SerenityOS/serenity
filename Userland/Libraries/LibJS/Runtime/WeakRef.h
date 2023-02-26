@@ -35,7 +35,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    Variant<Object*, Symbol*, Empty> m_value;
+    Variant<GCPtr<Object>, GCPtr<Symbol>, Empty> m_value;
     u32 m_last_execution_generation { 0 };
 };
 

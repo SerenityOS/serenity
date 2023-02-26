@@ -24,7 +24,7 @@ void EventHandler::visit_edges(Cell::Visitor& visitor)
     Cell::visit_edges(visitor);
     visitor.visit(listener);
 
-    if (auto* callback = value.get_pointer<WebIDL::CallbackType*>())
+    if (auto* callback = value.get_pointer<JS::GCPtr<WebIDL::CallbackType>>())
         visitor.visit(*callback);
 }
 

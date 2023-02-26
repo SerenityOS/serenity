@@ -464,12 +464,12 @@ WebIDL::CallbackType* EventTarget::get_current_value_of_event_handler(Deprecated
         function->set_script_or_module({});
 
         // 12. Set eventHandler's value to the result of creating a Web IDL EventHandler callback function object whose object reference is function and whose callback context is settings object.
-        event_handler->value = realm.heap().allocate_without_realm<WebIDL::CallbackType>(*function, settings_object).ptr();
+        event_handler->value = JS::GCPtr(realm.heap().allocate_without_realm<WebIDL::CallbackType>(*function, settings_object));
     }
 
     // 4. Return eventHandler's value.
-    VERIFY(event_handler->value.has<WebIDL::CallbackType*>());
-    return *event_handler->value.get_pointer<WebIDL::CallbackType*>();
+    VERIFY(event_handler->value.has<JS::GCPtr<WebIDL::CallbackType>>());
+    return *event_handler->value.get_pointer<JS::GCPtr<WebIDL::CallbackType>>();
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-attributes:event-handler-idl-attributes-3
@@ -512,7 +512,7 @@ void EventTarget::set_event_handler_attribute(DeprecatedFlyString const& name, W
 
     auto& event_handler = event_handler_iterator->value;
 
-    event_handler->value = value;
+    event_handler->value = JS::GCPtr(value);
 
     //  4. Activate an event handler given eventTarget and name.
     //  NOTE: See the optimization comment above.

@@ -130,7 +130,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#outstanding-rejected-promises-weak-set
     // The outstanding rejected promises weak set must not create strong references to any of its members, and implementations are free to limit its size, e.g. by removing old entries from it when new ones are added.
-    Vector<JS::Promise*> m_outstanding_rejected_promises_weak_set;
+    Vector<JS::GCPtr<JS::Promise>> m_outstanding_rejected_promises_weak_set;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#about-to-be-notified-rejected-promises-list
     Vector<JS::Handle<JS::Promise>> m_about_to_be_notified_rejected_promises_list;

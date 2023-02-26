@@ -29,7 +29,7 @@ private:
 
     virtual void visit_edges(Visitor& visitor) override;
 
-    ArrayBuffer* m_viewed_array_buffer { nullptr };
+    GCPtr<ArrayBuffer> m_viewed_array_buffer;
     size_t m_byte_length { 0 };
     size_t m_byte_offset { 0 };
 };

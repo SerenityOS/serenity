@@ -40,8 +40,8 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    Promise& m_promise;
-    AlreadyResolved& m_already_resolved;
+    NonnullGCPtr<Promise> m_promise;
+    NonnullGCPtr<AlreadyResolved> m_already_resolved;
     FunctionType m_native_function;
 };
 

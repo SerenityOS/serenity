@@ -247,7 +247,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ECMAScriptFunctionObject::internal_const
     }
 
     // 7. Let constructorEnv be the LexicalEnvironment of calleeContext.
-    auto* constructor_env = callee_context.lexical_environment;
+    auto constructor_env = callee_context.lexical_environment;
 
     // 8. Let result be Completion(OrdinaryCallEvaluateBody(F, argumentsList)).
     auto result = ordinary_call_evaluate_body();
@@ -587,7 +587,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         }));
     }
 
-    auto* private_environment = callee_context.private_environment;
+    auto private_environment = callee_context.private_environment;
     for (auto& declaration : functions_to_initialize) {
         auto function = ECMAScriptFunctionObject::create(realm, declaration.name(), declaration.source_text(), declaration.body(), declaration.parameters(), declaration.function_length(), lex_environment, private_environment, declaration.kind(), declaration.is_strict_mode(), declaration.might_need_arguments_object(), declaration.contains_direct_call_to_eval());
         MUST(var_environment->set_mutable_binding(vm, declaration.name(), function, false));
@@ -621,7 +621,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::prepare_for_ordinary_call(Exec
     callee_context.function_name = m_name;
 
     // 4. Let calleeRealm be F.[[Realm]].
-    auto* callee_realm = m_realm;
+    auto callee_realm = m_realm;
     // NOTE: This non-standard fallback is needed until we can guarantee that literally
     // every function has a realm - especially in LibWeb that's sometimes not the case
     // when a function is created while no JS is running, as we currently need to rely on
@@ -674,7 +674,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
         return;
 
     // 3. Let calleeRealm be F.[[Realm]].
-    auto* callee_realm = m_realm;
+    auto callee_realm = m_realm;
     // NOTE: This non-standard fallback is needed until we can guarantee that literally
     // every function has a realm - especially in LibWeb that's sometimes not the case
     // when a function is created while no JS is running, as we currently need to rely on
@@ -685,7 +685,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     VERIFY(callee_realm);
 
     // 4. Let localEnv be the LexicalEnvironment of calleeContext.
-    auto* local_env = callee_context.lexical_environment;
+    auto local_env = callee_context.lexical_environment;
 
     Value this_value;
 
@@ -717,7 +717,7 @@ void ECMAScriptFunctionObject::ordinary_call_bind_this(ExecutionContext& callee_
     // 7. Assert: localEnv is a function Environment Record.
     // 8. Assert: The next step never returns an abrupt completion because localEnv.[[ThisBindingStatus]] is not initialized.
     // 9. Perform ! localEnv.BindThisValue(thisValue).
-    MUST(verify_cast<FunctionEnvironment>(local_env)->bind_this_value(vm, this_value));
+    MUST(verify_cast<FunctionEnvironment>(*local_env).bind_this_value(vm, this_value));
 
     // 10. Return unused.
 }
@@ -762,11 +762,11 @@ void async_block_start(VM& vm, NonnullRefPtr<Statement const> const& async_body,
         vm.pop_execution_context();
 
         // d. Let env be asyncContext's LexicalEnvironment.
-        auto* env = async_context.lexical_environment;
-        VERIFY(is<DeclarativeEnvironment>(env));
+        auto env = async_context.lexical_environment;
+        VERIFY(is<DeclarativeEnvironment>(*env));
 
         // e. Set result to DisposeResources(env, result).
-        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
+        result = dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env.ptr()), result);
 
         // f. If result.[[Type]] is normal, then
         if (result.type() == Completion::Type::Normal) {
@@ -909,11 +909,11 @@ Completion ECMAScriptFunctionObject::ordinary_call_evaluate_body()
             auto result = m_ecmascript_code->execute(*ast_interpreter);
 
             // 3. Let env be the running execution context's LexicalEnvironment.
-            auto* env = vm.running_execution_context().lexical_environment;
-            VERIFY(is<DeclarativeEnvironment>(env));
+            auto env = vm.running_execution_context().lexical_environment;
+            VERIFY(is<DeclarativeEnvironment>(*env));
 
             // 4. Return ? DisposeResources(env, result).
-            return dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env), result);
+            return dispose_resources(vm, static_cast<DeclarativeEnvironment*>(env.ptr()), result);
         }
         // AsyncFunctionBody : FunctionBody
         else if (m_kind == FunctionKind::Async) {

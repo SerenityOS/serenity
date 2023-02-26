@@ -48,15 +48,15 @@ JS::ThrowCompletionOr<void> URLSearchParamsIterator::initialize(JS::Realm& realm
 void URLSearchParamsIterator::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_url_search_params);
+    visitor.visit(m_url_search_params);
 }
 
 JS::Object* URLSearchParamsIterator::next()
 {
-    if (m_index >= m_url_search_params.m_list.size())
+    if (m_index >= m_url_search_params->m_list.size())
         return create_iterator_result_object(vm(), JS::js_undefined(), true);
 
-    auto& entry = m_url_search_params.m_list[m_index++];
+    auto& entry = m_url_search_params->m_list[m_index++];
     if (m_iteration_kind == JS::Object::PropertyKind::Key)
         return create_iterator_result_object(vm(), JS::PrimitiveString::create(vm(), entry.name), false);
     else if (m_iteration_kind == JS::Object::PropertyKind::Value)

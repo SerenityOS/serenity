@@ -56,9 +56,9 @@ protected:
     virtual ThrowCompletionOr<Value> resolve_element() = 0;
 
     size_t m_index { 0 };
-    PromiseValueList& m_values;
+    NonnullGCPtr<PromiseValueList> m_values;
     NonnullGCPtr<PromiseCapability const> m_capability;
-    RemainingElements& m_remaining_elements;
+    NonnullGCPtr<RemainingElements> m_remaining_elements;
 
 private:
     virtual void visit_edges(Visitor&) override;

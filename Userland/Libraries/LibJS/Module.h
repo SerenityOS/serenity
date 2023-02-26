@@ -36,7 +36,7 @@ struct ResolvedBinding {
     }
 
     Type type { Null };
-    Module* module { nullptr };
+    GCPtr<Module> module;
     DeprecatedFlyString export_name;
 
     bool is_valid() const

@@ -25,8 +25,8 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    AgentObject* m_agent { nullptr };
-    IsHTMLDDA* m_is_htmldda { nullptr };
+    GCPtr<AgentObject> m_agent;
+    GCPtr<IsHTMLDDA> m_is_htmldda;
 
     JS_DECLARE_NATIVE_FUNCTION(clear_kept_objects);
     JS_DECLARE_NATIVE_FUNCTION(create_realm);

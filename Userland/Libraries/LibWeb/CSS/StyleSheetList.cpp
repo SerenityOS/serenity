@@ -24,9 +24,9 @@ void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
         return;
     }
 
-    m_document.style_computer().invalidate_rule_cache();
-    m_document.style_computer().load_fonts_from_sheet(sheet);
-    m_document.invalidate_style();
+    m_document->style_computer().invalidate_rule_cache();
+    m_document->style_computer().load_fonts_from_sheet(sheet);
+    m_document->invalidate_style();
 }
 
 void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
@@ -41,8 +41,8 @@ void StyleSheetList::remove_sheet(CSSStyleSheet& sheet)
 
     sort_sheets();
 
-    m_document.style_computer().invalidate_rule_cache();
-    m_document.invalidate_style();
+    m_document->style_computer().invalidate_rule_cache();
+    m_document->invalidate_style();
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<StyleSheetList>> StyleSheetList::create(DOM::Document& document)

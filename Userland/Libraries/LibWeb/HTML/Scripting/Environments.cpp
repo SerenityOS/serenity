@@ -259,7 +259,7 @@ void EnvironmentSettingsObject::notify_about_rejected_promises(Badge<EventLoop>)
 
             // 4. If p's [[PromiseIsHandled]] internal slot is false, add p to settings object's outstanding rejected promises weak set.
             if (!promise->is_handled())
-                m_outstanding_rejected_promises_weak_set.append(promise);
+                m_outstanding_rejected_promises_weak_set.append(*promise);
 
             // This algorithm results in promise rejections being marked as handled or not handled. These concepts parallel handled and not handled script errors.
             // If a rejection is still not handled after this, then the rejection may be reported to a developer console.

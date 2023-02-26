@@ -108,13 +108,13 @@ void TableFormattingContext::compute_table_measures()
     for (auto& cell : m_cells) {
         auto width_of_containing_block = m_state.get(*table_wrapper().containing_block()).content_width();
         auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
-        auto& computed_values = cell.box.computed_values();
+        auto& computed_values = cell.box->computed_values();
         CSSPixels padding_left = computed_values.padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
         CSSPixels padding_right = computed_values.padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
 
         auto is_left_most_cell = cell.column_index == 0;
         auto is_right_most_cell = cell.column_index == m_columns.size() - 1;
-        auto should_hide_borders = cell.box.computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
+        auto should_hide_borders = cell.box->computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
         CSSPixels border_left = should_hide_borders && !is_left_most_cell ? 0 : computed_values.border_left().width;
         CSSPixels border_right = should_hide_borders && !is_right_most_cell ? 0 : computed_values.border_right().width;
 
@@ -392,24 +392,24 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
         for (size_t i = 0; i < cell.column_span; ++i)
             span_width += m_columns[cell.column_index + i].used_width;
 
-        auto width_of_containing_block = m_state.get(*cell.box.containing_block()).content_width();
+        auto width_of_containing_block = m_state.get(*cell.box->containing_block()).content_width();
         auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
 
-        cell_state.padding_top = cell.box.computed_values().padding().top().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.padding_bottom = cell.box.computed_values().padding().bottom().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.padding_left = cell.box.computed_values().padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
-        cell_state.padding_right = cell.box.computed_values().padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        cell_state.padding_top = cell.box->computed_values().padding().top().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        cell_state.padding_bottom = cell.box->computed_values().padding().bottom().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        cell_state.padding_left = cell.box->computed_values().padding().left().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
+        cell_state.padding_right = cell.box->computed_values().padding().right().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
 
         auto is_top_most_cell = cell.row_index == 0;
         auto is_left_most_cell = cell.column_index == 0;
         auto is_right_most_cell = cell.column_index == m_columns.size() - 1;
         auto is_bottom_most_cell = cell.row_index == m_rows.size() - 1;
-        auto should_hide_borders = cell.box.computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
+        auto should_hide_borders = cell.box->computed_values().border_collapse() == CSS::BorderCollapse::Collapse;
 
-        cell_state.border_top = (should_hide_borders && is_top_most_cell) ? 0 : cell.box.computed_values().border_top().width;
-        cell_state.border_bottom = (should_hide_borders && is_bottom_most_cell) ? 0 : cell.box.computed_values().border_bottom().width;
-        cell_state.border_left = (should_hide_borders && is_left_most_cell) ? 0 : cell.box.computed_values().border_left().width;
-        cell_state.border_right = (should_hide_borders && is_right_most_cell) ? 0 : cell.box.computed_values().border_right().width;
+        cell_state.border_top = (should_hide_borders && is_top_most_cell) ? 0 : cell.box->computed_values().border_top().width;
+        cell_state.border_bottom = (should_hide_borders && is_bottom_most_cell) ? 0 : cell.box->computed_values().border_bottom().width;
+        cell_state.border_left = (should_hide_borders && is_left_most_cell) ? 0 : cell.box->computed_values().border_left().width;
+        cell_state.border_right = (should_hide_borders && is_right_most_cell) ? 0 : cell.box->computed_values().border_right().width;
 
         cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
         if (auto independent_formatting_context = layout_inside(cell.box, layout_mode, cell_state.available_inner_space_or_constraints_from(*m_available_space))) {
@@ -484,7 +484,7 @@ void TableFormattingContext::position_cell_boxes()
         auto& row_state = m_state.get(m_rows[cell.row_index].box);
         CSSPixels const cell_border_box_height = cell_state.content_height() + cell_state.border_box_top() + cell_state.border_box_bottom();
         CSSPixels const row_content_height = row_state.content_height();
-        auto const& vertical_align = cell.box.computed_values().vertical_align();
+        auto const& vertical_align = cell.box->computed_values().vertical_align();
         if (vertical_align.has<CSS::VerticalAlign>()) {
             switch (vertical_align.get<CSS::VerticalAlign>()) {
             case CSS::VerticalAlign::Middle: {

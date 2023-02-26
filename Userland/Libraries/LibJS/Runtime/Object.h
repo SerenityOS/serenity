@@ -213,7 +213,7 @@ private:
     Object* prototype() { return shape().prototype(); }
     Object const* prototype() const { return shape().prototype(); }
 
-    Shape* m_shape { nullptr };
+    GCPtr<Shape> m_shape;
     Vector<Value> m_storage;
     IndexedProperties m_indexed_properties;
     OwnPtr<Vector<PrivateElement>> m_private_elements; // [[PrivateElements]]

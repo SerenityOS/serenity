@@ -27,7 +27,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    Symbol& m_symbol;
+    NonnullGCPtr<Symbol> m_symbol;
 };
 
 }

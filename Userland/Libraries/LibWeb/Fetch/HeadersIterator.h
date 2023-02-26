@@ -28,7 +28,7 @@ private:
 
     HeadersIterator(Headers const&, JS::Object::PropertyKind iteration_kind);
 
-    Headers const& m_headers;
+    JS::NonnullGCPtr<Headers const> m_headers;
     JS::Object::PropertyKind m_iteration_kind;
     size_t m_index { 0 };
 };

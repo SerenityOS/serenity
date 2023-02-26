@@ -62,8 +62,8 @@ private:
 
     mutable bool m_is_rope { false };
 
-    mutable PrimitiveString* m_lhs { nullptr };
-    mutable PrimitiveString* m_rhs { nullptr };
+    mutable GCPtr<PrimitiveString> m_lhs;
+    mutable GCPtr<PrimitiveString> m_rhs;
 
     mutable Optional<String> m_utf8_string;
     mutable Optional<DeprecatedString> m_deprecated_string;

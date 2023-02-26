@@ -32,15 +32,15 @@ private:
     explicit ExecutionContext(MarkedVector<Value> existing_arguments);
 
 public:
-    FunctionObject* function { nullptr };                // [[Function]]
-    Realm* realm { nullptr };                            // [[Realm]]
-    ScriptOrModule script_or_module;                     // [[ScriptOrModule]]
-    Environment* lexical_environment { nullptr };        // [[LexicalEnvironment]]
-    Environment* variable_environment { nullptr };       // [[VariableEnvironment]]
-    PrivateEnvironment* private_environment { nullptr }; // [[PrivateEnvironment]]
+    GCPtr<FunctionObject> function;                // [[Function]]
+    GCPtr<Realm> realm;                            // [[Realm]]
+    ScriptOrModule script_or_module;               // [[ScriptOrModule]]
+    GCPtr<Environment> lexical_environment;        // [[LexicalEnvironment]]
+    GCPtr<Environment> variable_environment;       // [[VariableEnvironment]]
+    GCPtr<PrivateEnvironment> private_environment; // [[PrivateEnvironment]]
 
     // Non-standard: This points at something that owns this ExecutionContext, in case it needs to be protected from GC.
-    Cell* context_owner { nullptr };
+    GCPtr<Cell> context_owner;
 
     ASTNode const* current_node { nullptr };
     DeprecatedFlyString function_name;

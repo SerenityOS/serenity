@@ -34,17 +34,17 @@ JS::ThrowCompletionOr<void> CSSMediaRule::initialize(JS::Realm& realm)
 void CSSMediaRule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_media);
+    visitor.visit(m_media);
 }
 
 DeprecatedString CSSMediaRule::condition_text() const
 {
-    return m_media.media_text();
+    return m_media->media_text();
 }
 
 void CSSMediaRule::set_condition_text(DeprecatedString text)
 {
-    m_media.set_media_text(text);
+    m_media->set_media_text(text);
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-css-rule

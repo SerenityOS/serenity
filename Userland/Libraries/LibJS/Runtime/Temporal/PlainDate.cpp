@@ -35,7 +35,7 @@ PlainDate::PlainDate(i32 year, u8 month, u8 day, Object& calendar, Object& proto
 void PlainDate::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_calendar);
+    visitor.visit(m_calendar);
 }
 
 // 3.5.2 CreateISODateRecord ( year, month, day ), https://tc39.es/proposal-temporal/#sec-temporal-create-iso-date-record

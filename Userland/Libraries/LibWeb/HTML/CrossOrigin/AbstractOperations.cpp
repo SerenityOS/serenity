@@ -137,7 +137,7 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<HT
         // 5. Otherwise:
         else {
             // 1. Let crossOriginGet be undefined.
-            Optional<JS::FunctionObject*> cross_origin_get;
+            Optional<JS::GCPtr<JS::FunctionObject>> cross_origin_get;
 
             // 2. If e.[[NeedsGet]] is true, then set crossOriginGet to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the getter of the IDL attribute P on object O.
             if (*entry.needs_get) {
@@ -149,7 +149,7 @@ Optional<JS::PropertyDescriptor> cross_origin_get_own_property_helper(Variant<HT
             }
 
             // 3. Let crossOriginSet be undefined.
-            Optional<JS::FunctionObject*> cross_origin_set;
+            Optional<JS::GCPtr<JS::FunctionObject>> cross_origin_set;
 
             // If e.[[NeedsSet]] is true, then set crossOriginSet to an anonymous built-in function, created in the current Realm Record, that performs the same steps as the setter of the IDL attribute P on object O.
             if (*entry.needs_set) {

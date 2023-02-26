@@ -136,8 +136,8 @@ static void collect_style_sheets(CSSStyleSheet const& sheet, Vector<JS::NonnullG
 {
     sheets.append(sheet);
     for (auto const& rule : sheet.rules()) {
-        if (rule.type() == CSSRule::Type::Import) {
-            auto const& import_rule = static_cast<CSSImportRule const&>(rule);
+        if (rule->type() == CSSRule::Type::Import) {
+            auto const& import_rule = static_cast<CSSImportRule const&>(*rule);
             if (auto const* imported_sheet = import_rule.loaded_style_sheet()) {
                 collect_style_sheets(*imported_sheet, sheets);
             }
@@ -991,7 +991,7 @@ CSSPixels StyleComputer::root_element_font_size() const
 {
     constexpr float default_root_element_font_size = 16;
 
-    auto const* root_element = m_document.first_child_of_type<HTML::HTMLHtmlElement>();
+    auto const* root_element = m_document->first_child_of_type<HTML::HTMLHtmlElement>();
     if (!root_element)
         return default_root_element_font_size;
 
@@ -1588,9 +1588,9 @@ void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
 void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
 {
     for (auto const& rule : static_cast<CSSStyleSheet const&>(sheet).rules()) {
-        if (!is<CSSFontFaceRule>(rule))
+        if (!is<CSSFontFaceRule>(*rule))
             continue;
-        auto const& font_face = static_cast<CSSFontFaceRule const&>(rule).font_face();
+        auto const& font_face = static_cast<CSSFontFaceRule const&>(*rule).font_face();
         if (font_face.sources().is_empty())
             continue;
         if (m_loaded_fonts.contains(font_face.font_family()))
@@ -1620,7 +1620,7 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
             continue;
 
         LoadRequest request;
-        auto url = m_document.parse_url(candidate_url.value().to_deprecated_string());
+        auto url = m_document->parse_url(candidate_url.value().to_deprecated_string());
         auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
         const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family().to_string(), move(loader));
     }

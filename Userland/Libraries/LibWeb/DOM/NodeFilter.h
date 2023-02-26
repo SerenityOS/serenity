@@ -46,7 +46,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    WebIDL::CallbackType& m_callback;
+    JS::NonnullGCPtr<WebIDL::CallbackType> m_callback;
 };
 
 AK_ENUM_BITWISE_OPERATORS(NodeFilter::WhatToShow);

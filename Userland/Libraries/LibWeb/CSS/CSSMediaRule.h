@@ -26,11 +26,11 @@ public:
 
     virtual DeprecatedString condition_text() const override;
     virtual void set_condition_text(DeprecatedString) override;
-    virtual bool condition_matches() const override { return m_media.matches(); }
+    virtual bool condition_matches() const override { return m_media->matches(); }
 
-    MediaList* media() const { return &m_media; }
+    MediaList* media() const { return m_media; }
 
-    bool evaluate(HTML::Window const& window) { return m_media.evaluate(window); }
+    bool evaluate(HTML::Window const& window) { return m_media->evaluate(window); }
 
 private:
     CSSMediaRule(JS::Realm&, MediaList&, CSSRuleList&);
@@ -39,7 +39,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
     virtual DeprecatedString serialized() const override;
 
-    MediaList& m_media;
+    JS::NonnullGCPtr<MediaList> m_media;
 };
 
 template<>

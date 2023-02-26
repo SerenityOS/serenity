@@ -30,7 +30,7 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // 3.5 Properties of ShadowRealm Instances, https://tc39.es/proposal-shadowrealm/#sec-properties-of-shadowrealm-instances
-    Realm& m_shadow_realm;                // [[ShadowRealm]]
+    NonnullGCPtr<Realm> m_shadow_realm;   // [[ShadowRealm]]
     ExecutionContext m_execution_context; // [[ExecutionContext]]
 };
 

@@ -21,7 +21,7 @@
 namespace Web::CSS {
 
 struct MatchingRule {
-    CSSStyleRule const* rule { nullptr };
+    JS::GCPtr<CSSStyleRule const> rule;
     size_t style_sheet_index { 0 };
     size_t rule_index { 0 };
     size_t selector_index { 0 };
@@ -114,7 +114,7 @@ private:
     void build_rule_cache();
     void build_rule_cache_if_needed() const;
 
-    DOM::Document& m_document;
+    JS::NonnullGCPtr<DOM::Document> m_document;
 
     struct RuleCache {
         HashMap<FlyString, Vector<MatchingRule>> rules_by_id;

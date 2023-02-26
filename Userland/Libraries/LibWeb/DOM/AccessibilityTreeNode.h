@@ -22,7 +22,7 @@ public:
 
     JS::GCPtr<DOM::Node const> value() const { return m_value; }
     void set_value(JS::GCPtr<DOM::Node const> value) { m_value = value; }
-    Vector<AccessibilityTreeNode*> children() const { return m_children; }
+    Vector<JS::GCPtr<AccessibilityTreeNode>> children() const { return m_children; }
     void append_child(AccessibilityTreeNode* child) { m_children.append(child); }
 
     void serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object, Document const&) const;
@@ -34,7 +34,7 @@ private:
     explicit AccessibilityTreeNode(JS::GCPtr<DOM::Node const>);
 
     JS::GCPtr<DOM::Node const> m_value;
-    Vector<AccessibilityTreeNode*> m_children;
+    Vector<JS::GCPtr<AccessibilityTreeNode>> m_children;
 };
 
 }

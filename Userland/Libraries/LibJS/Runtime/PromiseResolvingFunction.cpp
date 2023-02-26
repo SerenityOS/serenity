@@ -40,8 +40,8 @@ ThrowCompletionOr<Value> PromiseResolvingFunction::call()
 void PromiseResolvingFunction::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_promise);
-    visitor.visit(&m_already_resolved);
+    visitor.visit(m_promise);
+    visitor.visit(m_already_resolved);
 }
 
 }

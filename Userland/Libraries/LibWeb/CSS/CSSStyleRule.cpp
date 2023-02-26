@@ -35,13 +35,13 @@ JS::ThrowCompletionOr<void> CSSStyleRule::initialize(JS::Realm& realm)
 void CSSStyleRule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_declaration);
+    visitor.visit(m_declaration);
 }
 
 // https://www.w3.org/TR/cssom/#dom-cssstylerule-style
 CSSStyleDeclaration* CSSStyleRule::style()
 {
-    return &m_declaration;
+    return m_declaration;
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-css-rule

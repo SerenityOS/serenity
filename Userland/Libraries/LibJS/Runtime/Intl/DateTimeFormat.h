@@ -142,7 +142,7 @@ private:
     Optional<Style> m_date_style;                            // [[DateStyle]]
     Optional<Style> m_time_style;                            // [[TimeStyle]]
     Vector<::Locale::CalendarRangePattern> m_range_patterns; // [[RangePatterns]]
-    NativeFunction* m_bound_format { nullptr };              // [[BoundFormat]]
+    GCPtr<NativeFunction> m_bound_format;                    // [[BoundFormat]]
 
     String m_data_locale;
 };

@@ -52,7 +52,7 @@ private:
 
     Value m_this_value;                                                           // [[ThisValue]]
     ThisBindingStatus m_this_binding_status { ThisBindingStatus::Uninitialized }; // [[ThisBindingStatus]]
-    ECMAScriptFunctionObject* m_function_object { nullptr };                      // [[FunctionObject]]
+    GCPtr<ECMAScriptFunctionObject> m_function_object;                            // [[FunctionObject]]
     Value m_new_target { js_undefined() };                                        // [[NewTarget]]
 };
 

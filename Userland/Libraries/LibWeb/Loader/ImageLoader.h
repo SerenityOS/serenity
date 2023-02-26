@@ -53,7 +53,7 @@ private:
         Failed,
     };
 
-    DOM::Element& m_owner_element;
+    JS::NonnullGCPtr<DOM::Element> m_owner_element;
 
     mutable bool m_visible_in_viewport { false };
 

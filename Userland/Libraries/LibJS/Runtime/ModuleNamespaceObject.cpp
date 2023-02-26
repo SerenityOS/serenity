@@ -160,7 +160,7 @@ ThrowCompletionOr<Value> ModuleNamespaceObject::internal_get(PropertyKey const& 
     VERIFY(binding.is_valid());
 
     // 7. Let targetModule be binding.[[Module]].
-    auto* target_module = binding.module;
+    auto target_module = binding.module;
 
     // 8. Assert: targetModule is not undefined.
     VERIFY(target_module);

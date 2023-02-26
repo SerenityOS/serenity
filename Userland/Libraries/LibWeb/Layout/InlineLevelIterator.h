@@ -31,7 +31,7 @@ public:
             FloatingElement,
         };
         Type type {};
-        Layout::Node const* node { nullptr };
+        JS::GCPtr<Layout::Node const> node {};
         size_t offset_in_node { 0 };
         size_t length_in_node { 0 };
         CSSPixels width { 0.0f };
@@ -68,10 +68,10 @@ private:
 
     Layout::InlineFormattingContext& m_inline_formatting_context;
     Layout::LayoutState& m_layout_state;
-    Layout::BlockContainer const& m_container;
+    JS::NonnullGCPtr<Layout::BlockContainer const> m_container;
     Layout::LayoutState::UsedValues const& m_container_state;
-    Layout::Node const* m_current_node { nullptr };
-    Layout::Node const* m_next_node { nullptr };
+    JS::GCPtr<Layout::Node const> m_current_node;
+    JS::GCPtr<Layout::Node const> m_next_node;
     LayoutMode const m_layout_mode;
 
     struct TextNodeContext {
@@ -95,7 +95,7 @@ private:
     Optional<ExtraBoxMetrics> m_extra_leading_metrics;
     Optional<ExtraBoxMetrics> m_extra_trailing_metrics;
 
-    Vector<NodeWithStyleAndBoxModelMetrics const&> m_box_model_node_stack;
+    Vector<JS::NonnullGCPtr<NodeWithStyleAndBoxModelMetrics const>> m_box_model_node_stack;
 };
 
 }

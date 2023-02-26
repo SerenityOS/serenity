@@ -24,7 +24,7 @@ SymbolObject::SymbolObject(Symbol& symbol, Object& prototype)
 void SymbolObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_symbol);
+    visitor.visit(m_symbol);
 }
 
 }

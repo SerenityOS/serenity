@@ -29,7 +29,7 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    Vector<Node&> m_static_nodes;
+    Vector<JS::NonnullGCPtr<Node>> m_static_nodes;
 };
 
 }

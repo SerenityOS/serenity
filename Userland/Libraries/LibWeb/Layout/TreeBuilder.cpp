@@ -128,11 +128,11 @@ void TreeBuilder::insert_node_into_inline_or_block_ancestor(Layout::Node& node, 
         // Non-inlines can't be inserted into an inline parent, so find the nearest non-inline ancestor.
         auto& nearest_non_inline_ancestor = [&]() -> Layout::NodeWithStyle& {
             for (auto& ancestor : m_ancestor_stack.in_reverse()) {
-                if (!ancestor.display().is_inline_outside())
+                if (!ancestor->display().is_inline_outside())
                     return ancestor;
-                if (!ancestor.display().is_flow_inside())
+                if (!ancestor->display().is_flow_inside())
                     return ancestor;
-                if (ancestor.dom_node() && is<SVG::SVGForeignObjectElement>(*ancestor.dom_node()))
+                if (ancestor->dom_node() && is<SVG::SVGForeignObjectElement>(*ancestor->dom_node()))
                     return ancestor;
             }
             VERIFY_NOT_REACHED();
@@ -237,7 +237,7 @@ ErrorOr<void> TreeBuilder::create_layout_tree(DOM::Node& dom_node, TreeBuilder::
     if (!dom_node.parent_or_shadow_host()) {
         m_layout_root = layout_node;
     } else if (layout_node->is_svg_box()) {
-        m_ancestor_stack.last().append_child(*layout_node);
+        m_ancestor_stack.last()->append_child(*layout_node);
     } else {
         insert_node_into_inline_or_block_ancestor(*layout_node, display, AppendOrPrepend::Append);
     }

@@ -356,7 +356,7 @@ ErrorOr<void> print_weak_ref(JS::PrintContext& print_context, JS::WeakRef const&
 {
     TRY(print_type(print_context, "WeakRef"sv));
     TRY(js_out(print_context, " "));
-    TRY(print_value(print_context, weak_ref.value().visit([](Empty) -> JS::Value { return JS::js_undefined(); }, [](auto* value) -> JS::Value { return value; }), seen_objects));
+    TRY(print_value(print_context, weak_ref.value().visit([](Empty) -> JS::Value { return JS::js_undefined(); }, [](auto value) -> JS::Value { return value; }), seen_objects));
     return {};
 }
 

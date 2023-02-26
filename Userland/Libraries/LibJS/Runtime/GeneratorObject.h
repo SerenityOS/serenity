@@ -38,7 +38,7 @@ private:
     ThrowCompletionOr<Value> execute(VM&, JS::Completion const& completion);
 
     ExecutionContext m_execution_context;
-    ECMAScriptFunctionObject* m_generating_function { nullptr };
+    GCPtr<ECMAScriptFunctionObject> m_generating_function;
     Value m_previous_value;
     Optional<Bytecode::RegisterWindow> m_frame;
     GeneratorState m_generator_state { GeneratorState::SuspendedStart };

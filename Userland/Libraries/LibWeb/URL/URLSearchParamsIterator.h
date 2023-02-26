@@ -27,7 +27,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    URLSearchParams const& m_url_search_params;
+    JS::NonnullGCPtr<URLSearchParams const> m_url_search_params;
     JS::Object::PropertyKind m_iteration_kind;
     size_t m_index { 0 };
 };

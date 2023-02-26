@@ -27,7 +27,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    FormData const& m_form_data;
+    JS::NonnullGCPtr<FormData const> m_form_data;
     JS::Object::PropertyKind m_iterator_kind;
     size_t m_index { 0 };
 };

@@ -24,7 +24,7 @@ NodeFilter::NodeFilter(JS::Realm& realm, WebIDL::CallbackType& callback)
 void NodeFilter::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_callback);
+    visitor.visit(m_callback);
 }
 
 }

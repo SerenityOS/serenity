@@ -31,7 +31,7 @@ ThrowCompletionOr<void> StringObject::initialize(Realm& realm)
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
-    define_direct_property(vm.names.length, Value(MUST_OR_THROW_OOM(m_string.utf16_string_view()).length_in_code_units()), 0);
+    define_direct_property(vm.names.length, Value(MUST_OR_THROW_OOM(m_string->utf16_string_view()).length_in_code_units()), 0);
 
     return {};
 }
@@ -39,7 +39,7 @@ ThrowCompletionOr<void> StringObject::initialize(Realm& realm)
 void StringObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_string);
+    visitor.visit(m_string);
 }
 
 // 10.4.3.5 StringGetOwnProperty ( S, P ), https://tc39.es/ecma262/#sec-stringgetownproperty
@@ -133,7 +133,7 @@ ThrowCompletionOr<MarkedVector<Value>> StringObject::internal_own_property_keys(
     auto keys = MarkedVector<Value> { heap() };
 
     // 2. Let str be O.[[StringData]].
-    auto str = TRY(m_string.utf16_string_view());
+    auto str = TRY(m_string->utf16_string_view());
 
     // 3. Assert: Type(str) is String.
 

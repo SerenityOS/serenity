@@ -43,10 +43,10 @@ private:
     virtual bool is_global_environment() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
-    ObjectEnvironment* m_object_record { nullptr };           // [[ObjectRecord]]
-    Object* m_global_this_value { nullptr };                  // [[GlobalThisValue]]
-    DeclarativeEnvironment* m_declarative_record { nullptr }; // [[DeclarativeRecord]]
-    Vector<DeprecatedFlyString> m_var_names;                  // [[VarNames]]
+    GCPtr<ObjectEnvironment> m_object_record;           // [[ObjectRecord]]
+    GCPtr<Object> m_global_this_value;                  // [[GlobalThisValue]]
+    GCPtr<DeclarativeEnvironment> m_declarative_record; // [[DeclarativeRecord]]
+    Vector<DeprecatedFlyString> m_var_names;            // [[VarNames]]
 };
 
 template<>

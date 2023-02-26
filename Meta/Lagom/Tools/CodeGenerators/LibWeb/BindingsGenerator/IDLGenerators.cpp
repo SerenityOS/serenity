@@ -1706,12 +1706,12 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
   if (!@value@) {
       @result_expression@ JS::js_null();
   } else {
-      @result_expression@ &@value@->callback;
+      @result_expression@ @value@->callback;
   }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
-  @result_expression@ &@value@->callback;
+  @result_expression@ @value@->callback;
 )~~~");
         }
     } else if (interface.dictionaries.contains(type.name())) {

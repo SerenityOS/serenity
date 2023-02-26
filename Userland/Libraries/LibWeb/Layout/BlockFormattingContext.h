@@ -76,7 +76,7 @@ private:
     };
 
     struct FloatingBox {
-        Box const& box;
+        JS::NonnullGCPtr<Box const> box;
         // Offset from left/right edge to the left content edge of `box`.
         CSSPixels offset_from_edge { 0 };
 
@@ -155,7 +155,7 @@ private:
     FloatSideData m_left_floats;
     FloatSideData m_right_floats;
 
-    Vector<Box const&> m_absolutely_positioned_boxes;
+    Vector<JS::NonnullGCPtr<Box const>> m_absolutely_positioned_boxes;
 
     bool m_was_notified_after_parent_dimensioned_my_root_box { false };
 };

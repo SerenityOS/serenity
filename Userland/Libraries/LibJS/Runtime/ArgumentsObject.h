@@ -35,8 +35,8 @@ private:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
-    Environment& m_environment;
-    Object* m_parameter_map { nullptr };
+    NonnullGCPtr<Environment> m_environment;
+    GCPtr<Object> m_parameter_map;
 };
 
 }

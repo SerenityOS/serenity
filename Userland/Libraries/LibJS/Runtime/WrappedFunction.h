@@ -22,9 +22,9 @@ public:
     virtual ThrowCompletionOr<Value> internal_call(Value this_argument, MarkedVector<Value> arguments_list) override;
 
     // FIXME: Remove this (and stop inventing random internal slots that shouldn't exist, jeez)
-    virtual DeprecatedFlyString const& name() const override { return m_wrapped_target_function.name(); }
+    virtual DeprecatedFlyString const& name() const override { return m_wrapped_target_function->name(); }
 
-    virtual Realm* realm() const override { return &m_realm; }
+    virtual Realm* realm() const override { return m_realm; }
 
     FunctionObject const& wrapped_target_function() const { return m_wrapped_target_function; }
     FunctionObject& wrapped_target_function() { return m_wrapped_target_function; }
@@ -35,8 +35,8 @@ private:
     virtual void visit_edges(Visitor&) override;
 
     // Internal Slots of Wrapped Function Exotic Objects, https://tc39.es/proposal-shadowrealm/#table-internal-slots-of-wrapped-function-exotic-objects
-    FunctionObject& m_wrapped_target_function; // [[WrappedTargetFunction]]
-    Realm& m_realm;                            // [[Realm]]
+    NonnullGCPtr<FunctionObject> m_wrapped_target_function; // [[WrappedTargetFunction]]
+    NonnullGCPtr<Realm> m_realm;                            // [[Realm]]
 };
 
 ThrowCompletionOr<Value> ordinary_wrapped_function_call(WrappedFunction const&, Value this_argument, MarkedVector<Value> const& arguments_list);

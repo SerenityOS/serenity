@@ -33,7 +33,7 @@ void Instant::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
 
-    visitor.visit(&m_nanoseconds);
+    visitor.visit(m_nanoseconds);
 }
 
 // 8.5.1 IsValidEpochNanoseconds ( epochNanoseconds ), https://tc39.es/proposal-temporal/#sec-temporal-isvalidepochnanoseconds

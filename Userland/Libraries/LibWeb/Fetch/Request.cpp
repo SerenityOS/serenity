@@ -157,8 +157,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     auto window = Infrastructure::Request::WindowType { Infrastructure::Request::Window::Client };
 
     // 9. If request’s window is an environment settings object and its origin is same origin with origin, then set window to request’s window.
-    if (input_request->window().has<HTML::EnvironmentSettingsObject*>()) {
-        auto* eso = input_request->window().get<HTML::EnvironmentSettingsObject*>();
+    if (input_request->window().has<JS::GCPtr<HTML::EnvironmentSettingsObject>>()) {
+        auto eso = input_request->window().get<JS::GCPtr<HTML::EnvironmentSettingsObject>>();
         if (eso->origin().is_same_origin(origin))
             window = input_request->window();
     }

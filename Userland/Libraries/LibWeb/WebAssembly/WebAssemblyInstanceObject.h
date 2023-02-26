@@ -33,7 +33,7 @@ public:
 
 private:
     size_t m_index { 0 };
-    Object* m_exports_object { nullptr };
+    JS::GCPtr<Object> m_exports_object;
 };
 
 }

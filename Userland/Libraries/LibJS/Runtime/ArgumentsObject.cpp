@@ -28,7 +28,7 @@ ThrowCompletionOr<void> ArgumentsObject::initialize(Realm& realm)
 void ArgumentsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_environment);
+    visitor.visit(m_environment);
     visitor.visit(m_parameter_map);
 }
 
