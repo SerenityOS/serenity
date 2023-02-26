@@ -104,48 +104,48 @@ static Optional<DeprecatedString> elf_details(DeprecatedString description, Depr
         is_dynamically_linked ? dynamic_section : "");
 }
 
-#define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                            \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/gzip", "gzip compressed data", gzip_details)                     \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript", "JavaScript source", description_only)              \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json", "JSON data", description_only)                            \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/pdf", "PDF document", description_only)                          \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/rtf", "Rich text file", description_only)                        \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/tar", "tape archive", description_only)                          \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/wasm", "WebAssembly bytecode", description_only)                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed", "7-Zip archive", description_only)             \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/flac", "FLAC audio", description_only)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi", "MIDI notes", description_only)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/mpeg", "MP3 audio", description_only)                                  \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/wave", "WAVE audio", description_only)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/blender", "Blender project file", description_only)                    \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/elf", "ELF", elf_details)                                              \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/ext", "ext filesystem", description_only)                              \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/iso-9660", "ISO 9660 CD/DVD image", description_only)                  \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/isz", "Compressed ISO image", description_only)                        \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/lua-bytecode", "Lua bytecode", description_only)                       \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/matroska", "Matroska container", description_only)                     \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/nes-rom", "Nintendo Entertainment System ROM", description_only)       \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/qcow", "qcow file", description_only)                                  \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/raw-zlib", "raw zlib stream", description_only)                        \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/sqlite", "sqlite database", description_only)                          \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/win-31x-compressed", "Windows 3.1X compressed file", description_only) \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/win-95-compressed", "Windows 95 compressed file", description_only)    \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp", "BMP image data", image_details)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif", "GIF image data", image_details)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg", "JPEG image data", image_details)                               \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/png", "PNG image data", image_details)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/webp", "WebP image data", image_details)                               \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-bitmap", "PBM image data", image_details)                   \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-graymap", "PGM image data", image_details)                  \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-pixmap", "PPM image data", image_details)                   \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-qoi", "QOI image data", image_details)                               \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown", "Markdown document", description_only)                       \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript", "POSIX shell script text executable", description_only)
+#define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                              \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/gzip"sv, "gzip compressed data", gzip_details)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript"sv, "JavaScript source", description_only)              \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json"sv, "JSON data", description_only)                            \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/pdf"sv, "PDF document", description_only)                          \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/rtf"sv, "Rich text file", description_only)                        \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/tar"sv, "tape archive", description_only)                          \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/wasm"sv, "WebAssembly bytecode", description_only)                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed"sv, "7-Zip archive", description_only)             \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/flac"sv, "FLAC audio", description_only)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi"sv, "MIDI notes", description_only)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/mpeg"sv, "MP3 audio", description_only)                                  \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/wave"sv, "WAVE audio", description_only)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/blender"sv, "Blender project file", description_only)                    \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/elf"sv, "ELF", elf_details)                                              \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/ext"sv, "ext filesystem", description_only)                              \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/iso-9660"sv, "ISO 9660 CD/DVD image", description_only)                  \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/isz"sv, "Compressed ISO image", description_only)                        \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/lua-bytecode"sv, "Lua bytecode", description_only)                       \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/matroska"sv, "Matroska container", description_only)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/nes-rom"sv, "Nintendo Entertainment System ROM", description_only)       \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/qcow"sv, "qcow file", description_only)                                  \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/raw-zlib"sv, "raw zlib stream", description_only)                        \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/sqlite"sv, "sqlite database", description_only)                          \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/win-31x-compressed"sv, "Windows 3.1X compressed file", description_only) \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/win-95-compressed"sv, "Windows 95 compressed file", description_only)    \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp"sv, "BMP image data", image_details)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif"sv, "GIF image data", image_details)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg"sv, "JPEG image data", image_details)                               \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/png"sv, "PNG image data", image_details)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/webp"sv, "WebP image data", image_details)                               \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-bitmap"sv, "PBM image data", image_details)                   \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-graymap"sv, "PGM image data", image_details)                  \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-pixmap"sv, "PPM image data", image_details)                   \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-qoi"sv, "QOI image data", image_details)                               \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown"sv, "Markdown document", description_only)                       \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript"sv, "POSIX shell script text executable", description_only)
 
-static Optional<DeprecatedString> get_description_from_mime_type(DeprecatedString const& mime, DeprecatedString const& path)
+static Optional<DeprecatedString> get_description_from_mime_type(StringView mime, DeprecatedString const& path)
 {
 #define __ENUMERATE_MIME_TYPE_DESCRIPTION(mime_type, description, details) \
-    if (DeprecatedString(mime_type) == mime)                               \
+    if (mime_type == mime)                                                 \
         return details(DeprecatedString(description), path);
     ENUMERATE_MIME_TYPE_DESCRIPTIONS;
 #undef __ENUMERATE_MIME_TYPE_DESCRIPTION
