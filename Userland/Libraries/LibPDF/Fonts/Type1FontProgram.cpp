@@ -271,7 +271,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
 
             // hints operators
             case HStemHM:
-                state.n_hints++;
+                state.n_hints += state.sp / 2;
                 [[fallthrough]];
             case HStem:
                 maybe_read_width(Odd);
@@ -279,7 +279,7 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
                 break;
 
             case VStemHM:
-                state.n_hints++;
+                state.n_hints += state.sp / 2;
                 [[fallthrough]];
             case VStem:
                 maybe_read_width(Odd);
@@ -289,9 +289,11 @@ PDFErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes 
             case Hintmask:
             case Cntrmask: {
                 maybe_read_width(Odd);
+                state.n_hints += state.sp / 2;
                 auto hint_bytes = (state.n_hints + 8 - 1) / 8;
                 TRY(require(hint_bytes));
                 i += hint_bytes;
+                state.sp = 0;
                 break;
             }
 
