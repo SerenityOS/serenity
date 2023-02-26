@@ -11,7 +11,6 @@
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Thread.h>
-#include <LibC/mallocdefs.h>
 
 namespace Kernel {
 
@@ -82,16 +81,10 @@ void PageFault::handle(RegisterState& regs)
             is_instruction_fetch() ? "instruction fetch / " : "",
             is_write() ? "write to" : "read from",
             VirtualAddress(fault_address));
-        constexpr FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
-        constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         constexpr FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
         constexpr FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
         if (response == PageFaultResponse::BusError) {
             dbgln("Note: Address {} is an access to an undefined memory range of an Inode-backed VMObject", VirtualAddress(fault_address));
-        } else if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
-            dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
-        } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
-            dbgln("Note: Address {} looks like it may be recently free()'d memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (kmalloc_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be uninitialized kmalloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (kfree_scrub_pattern & 0xffff0000)) {
