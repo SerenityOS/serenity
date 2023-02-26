@@ -169,7 +169,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     auto stream = TRY(Core::File::open(real_path.bytes_as_string_view(), Core::File::OpenMode::Read));
 
     auto const info = ContentInfo {
-        .type = TRY(String::from_deprecated_string(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
+        .type = TRY(String::from_utf8(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
         .length = TRY(Core::DeprecatedFile::size(real_path.bytes_as_string_view()))
     };
     TRY(send_response(*stream, request, move(info)));
