@@ -7,11 +7,14 @@
 
 #pragma once
 
+#include "Skins/SnakeSkin.h"
 #include <AK/CircularQueue.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Frame.h>
 
 namespace Snake {
+
+NonnullOwnPtr<SnakeSkin> create_snake_skin(StringView const&);
 
 class Game : public GUI::Frame {
     C_OBJECT_ABSTRACT(Game);
@@ -25,16 +28,22 @@ public:
     void pause();
     void reset();
 
-    void set_snake_base_color(Color color);
-
     Function<bool(u32)> on_score_update;
 
+    void set_skin(NonnullOwnPtr<SnakeSkin> skin) { m_snake_skin = move(skin); }
+    SnakeSkin& skin() { return *m_snake_skin.ptr(); }
+
 private:
-    explicit Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps);
+    explicit Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps, NonnullOwnPtr<SnakeSkin> skin);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+
+    struct Velocity {
+        int vertical { 0 };
+        int horizontal { 0 };
+    };
 
     struct Coordinate {
         int row { 0 };
@@ -44,11 +53,6 @@ private:
         {
             return row == other.row && column == other.column;
         }
-    };
-
-    struct Velocity {
-        int vertical { 0 };
-        int horizontal { 0 };
     };
 
     void game_over();
@@ -78,7 +82,7 @@ private:
 
     NonnullRefPtrVector<Gfx::Bitmap> m_food_bitmaps;
 
-    Gfx::Color m_snake_base_color { Color::Yellow };
+    NonnullOwnPtr<SnakeSkin> m_snake_skin;
 };
 
 }

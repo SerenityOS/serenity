@@ -7,6 +7,8 @@
  */
 
 #include "Game.h"
+#include "Skins/Classic.h"
+#include "Skins/Image.h"
 #include <AK/Random.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/MessageBox.h>
@@ -18,6 +20,14 @@
 REGISTER_WIDGET(Snake, Game);
 
 namespace Snake {
+
+NonnullOwnPtr<SnakeSkin> create_snake_skin(StringView const& skin)
+{
+    if (skin == "classic")
+        return make<ClassicSkin>();
+    else
+        return make<ImageSkin>();
+}
 
 ErrorOr<NonnullRefPtr<Game>> Game::try_create()
 {
@@ -66,16 +76,17 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
         food_bitmaps.unchecked_append(bitmap.release_value());
     }
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps)));
+    auto skin = create_snake_skin(Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "classic"sv));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps), move(skin)));
 }
 
-Game::Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
+Game::Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps, NonnullOwnPtr<SnakeSkin> skin)
     : m_food_bitmaps(move(food_bitmaps))
+    , m_snake_skin(move(skin))
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
     reset();
-
-    m_snake_base_color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, m_snake_base_color.value()));
 }
 
 void Game::pause()
@@ -105,12 +116,6 @@ void Game::reset()
     start();
     spawn_fruit();
     update();
-}
-
-void Game::set_snake_base_color(Color color)
-{
-    Config::write_u32("Snake"sv, "Snake"sv, "BaseColor"sv, color.value());
-    m_snake_base_color = color;
 }
 
 bool Game::is_available(Coordinate const& coord)
@@ -248,19 +253,17 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::Black);
 
-    painter.fill_rect(cell_rect(m_head), m_snake_base_color);
-    for (auto& part : m_tail) {
-        auto rect = cell_rect(part);
-        painter.fill_rect(rect, m_snake_base_color.darkened(0.77));
+    auto head_rect = cell_rect(m_head);
+    m_snake_skin->draw_head(painter, head_rect, cell_rect(m_tail[0]));
 
-        Gfx::IntRect left_side(rect.x(), rect.y(), 2, rect.height());
-        Gfx::IntRect top_side(rect.x(), rect.y(), rect.width(), 2);
-        Gfx::IntRect right_side(rect.right() - 1, rect.y(), 2, rect.height());
-        Gfx::IntRect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
-        painter.fill_rect(left_side, m_snake_base_color.darkened(0.88));
-        painter.fill_rect(right_side, m_snake_base_color.darkened(0.55));
-        painter.fill_rect(top_side, m_snake_base_color.darkened(0.88));
-        painter.fill_rect(bottom_side, m_snake_base_color.darkened(0.55));
+    for (size_t i = 0; i < m_tail.size(); i++) {
+        auto head = i > 0 ? cell_rect(m_tail[i - 1]) : head_rect;
+        auto body = cell_rect(m_tail[i]);
+
+        if (i != m_tail.size() - 1)
+            m_snake_skin->draw_body(painter, head, body, cell_rect(m_tail[i + 1]));
+        else
+            m_snake_skin->draw_tail(painter, head, body);
     }
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type].rect());

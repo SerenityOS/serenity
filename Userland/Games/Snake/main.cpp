@@ -5,12 +5,16 @@
  */
 
 #include "Game.h"
+#include "Skins/Classic.h"
+#include "Skins/Image.h"
 #include <AK/URL.h>
 #include <Games/Snake/SnakeGML.h>
 #include <LibConfig/Client.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -22,6 +26,11 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
+
+static StringView get_current_skin()
+{
+    return Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv);
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -92,13 +101,57 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             action.set_icon(pause_icon);
         }
     })));
-    TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
+
+    auto change_snake_color = GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         game.pause();
         auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
         if (dialog->exec() == GUI::Dialog::ExecResult::OK)
-            game.set_snake_base_color(dialog->color());
+            dynamic_cast<Snake::ClassicSkin*>(&game.skin())->set_skin_color(dialog->color());
         game.start();
-    })));
+    });
+    if (get_current_skin() != "classic"sv)
+        change_snake_color->set_enabled(false);
+    TRY(game_menu->try_add_action(change_snake_color));
+
+    GUI::ActionGroup skin_action_group;
+    skin_action_group.set_exclusive(true);
+
+    auto skin_menu = TRY(game_menu->try_add_submenu("&Skin"));
+    skin_menu->set_icon(app_icon.bitmap_for_size(16));
+
+    Core::DirIterator skin_directory("/res/icons/snake/skins/", Core::DirIterator::SkipParentAndBaseDir);
+    while (skin_directory.has_next()) {
+        auto skin_path = skin_directory.next_path();
+        auto action = GUI::Action::create_checkable(skin_path, [&](auto& action) {
+            if (get_current_skin() == action.text())
+                return;
+            Config::write_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, action.text());
+            game.set_skin(make<Snake::ImageSkin>());
+            game.update();
+            change_snake_color->set_enabled(false);
+        });
+
+        skin_action_group.add_action(*action);
+        if (get_current_skin() == skin_path)
+            action->set_checked(true);
+        TRY(skin_menu->try_add_action(*action));
+    }
+
+    {
+        auto action = GUI::Action::create_checkable("classic", [&](auto& action) {
+            if (get_current_skin() == action.text())
+                return;
+            Config::write_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, action.text());
+            game.set_skin(make<Snake::ClassicSkin>());
+            game.update();
+            change_snake_color->set_enabled(true);
+        });
+        skin_action_group.add_action(*action);
+        if (get_current_skin() == "classic")
+            action->set_checked(true);
+        TRY(skin_menu->try_add_action(*action));
+    }
+
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();

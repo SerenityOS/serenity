@@ -9,6 +9,8 @@ compile_gml(Snake.gml SnakeGML.h snake_gml)
 set(SOURCES
     Game.cpp
     main.cpp
+    Skins/Classic.cpp
+    Skins/Image.cpp
 )
 
 set(GENERATED_SOURCES
