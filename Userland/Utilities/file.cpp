@@ -189,7 +189,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto bytes = TRY(file->read(buffer));
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
             auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes).value_or(file_name_guess);
-            auto human_readable_description = get_description_from_mime_type(mime_type, DeprecatedString(path)).value_or(mime_type);
+            auto human_readable_description = get_description_from_mime_type(mime_type, path).value_or(mime_type);
             outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
         }
     }
