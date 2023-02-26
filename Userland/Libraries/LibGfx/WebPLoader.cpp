@@ -86,7 +86,7 @@ struct WebPLoadingContext {
         NotDecoded = 0,
         Error,
         HeaderDecoded,
-        FirstChunkDecoded,
+        FirstChunkRead,
         SizeDecoded,
         ChunksDecoded,
         BitmapDecoded,
@@ -361,9 +361,9 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
     return {};
 }
 
-static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
+static ErrorOr<void> read_webp_first_chunk(WebPLoadingContext& context)
 {
-    if (context.state >= WebPLoadingContext::State::FirstChunkDecoded)
+    if (context.state >= WebPLoadingContext::State::FirstChunkRead)
         return {};
 
     if (context.state < WebPLoadingContext::HeaderDecoded)
@@ -376,7 +376,7 @@ static ErrorOr<void> decode_webp_first_chunk(WebPLoadingContext& context)
         return context.error("WebPImageDecoderPlugin: Invalid first chunk type");
 
     context.first_chunk = first_chunk;
-    context.state = WebPLoadingContext::State::FirstChunkDecoded;
+    context.state = WebPLoadingContext::State::FirstChunkRead;
 
     if (first_chunk.type == FourCC("VP8 ") || first_chunk.type == FourCC("VP8L"))
         context.image_data_chunk = first_chunk;
@@ -389,8 +389,8 @@ static ErrorOr<void> decode_webp_size(WebPLoadingContext& context)
     if (context.state >= WebPLoadingContext::State::SizeDecoded)
         return {};
 
-    if (context.state < WebPLoadingContext::FirstChunkDecoded)
-        TRY(decode_webp_first_chunk(context));
+    if (context.state < WebPLoadingContext::FirstChunkRead)
+        TRY(read_webp_first_chunk(context));
 
     if (context.first_chunk->type == FourCC("VP8 ")) {
         auto header = TRY(decode_webp_chunk_VP8_header(context, context.first_chunk.value()));
