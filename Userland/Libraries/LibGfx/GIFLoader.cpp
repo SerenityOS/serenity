@@ -569,7 +569,7 @@ bool GIFImageDecoderPlugin::initialize()
     return !decode_gif_header(stream).is_error();
 }
 
-ErrorOr<bool> GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
     return !decode_gif_header(stream).is_error();

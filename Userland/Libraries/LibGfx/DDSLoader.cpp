@@ -656,7 +656,7 @@ bool DDSImageDecoderPlugin::initialize()
         && m_context->data[3] == 0x20;
 }
 
-ErrorOr<bool> DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool DDSImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     // The header is always at least 128 bytes, so if the file is smaller, it can't be a DDS.
     return data.size() > 128

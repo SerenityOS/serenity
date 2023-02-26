@@ -16,7 +16,7 @@ class ICOImageDecoderPlugin;
 
 class BMPImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<BMPImageDecoderPlugin>> create_as_included_in_ico(Badge<ICOImageDecoderPlugin>, ReadonlyBytes);
 

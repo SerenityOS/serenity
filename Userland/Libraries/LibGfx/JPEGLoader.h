@@ -16,7 +16,7 @@ struct JPEGLoadingContext;
 
 class JPEGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
-    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     virtual ~JPEGImageDecoderPlugin() override;

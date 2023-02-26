@@ -210,7 +210,7 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
             // FIXME: Use the ImageDecoder service.
-            if (Gfx::PNGImageDecoderPlugin::sniff({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors()) {
+            if (Gfx::PNGImageDecoderPlugin::sniff({ section->raw_data(), section->size() })) {
                 auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors();
                 if (png_decoder->initialize()) {
                     auto frame_or_error = png_decoder->frame(0);

@@ -31,7 +31,7 @@
 TEST_CASE(test_bmp)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgba32-1.bmp"sv)));
-    EXPECT(MUST(Gfx::BMPImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::BMPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::BMPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -46,7 +46,7 @@ TEST_CASE(test_bmp)
 TEST_CASE(test_gif)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("download-animation.gif"sv)));
-    EXPECT(MUST(Gfx::GIFImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::GIFImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::GIFImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -61,7 +61,7 @@ TEST_CASE(test_gif)
 TEST_CASE(test_not_ico)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie.png"sv)));
-    EXPECT(!MUST(Gfx::ICOImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(!Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
     EXPECT(!plugin_decoder->initialize());
 
@@ -75,7 +75,7 @@ TEST_CASE(test_not_ico)
 TEST_CASE(test_bmp_embedded_in_ico)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("serenity.ico"sv)));
-    EXPECT(MUST(Gfx::ICOImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::ICOImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::ICOImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -89,7 +89,7 @@ TEST_CASE(test_bmp_embedded_in_ico)
 TEST_CASE(test_jpg)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgb24.jpg"sv)));
-    EXPECT(MUST(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -104,7 +104,7 @@ TEST_CASE(test_jpg)
 TEST_CASE(test_pbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.pbm"sv)));
-    EXPECT(MUST(Gfx::PBMImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::PBMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PBMImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -119,7 +119,7 @@ TEST_CASE(test_pbm)
 TEST_CASE(test_pgm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.pgm"sv)));
-    EXPECT(MUST(Gfx::PGMImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::PGMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PGMImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -134,7 +134,7 @@ TEST_CASE(test_pgm)
 TEST_CASE(test_png)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie.png"sv)));
-    EXPECT(MUST(Gfx::PNGImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::PNGImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PNGImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -149,7 +149,7 @@ TEST_CASE(test_png)
 TEST_CASE(test_ppm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.ppm"sv)));
-    EXPECT(MUST(Gfx::PPMImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::PPMImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::PPMImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -224,7 +224,7 @@ TEST_CASE(test_targa_top_left_compressed)
 TEST_CASE(test_webp_simple_lossy)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8.webp"sv)));
-    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -238,7 +238,7 @@ TEST_CASE(test_webp_simple_lossy)
 TEST_CASE(test_webp_simple_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8l.webp"sv)));
-    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -252,7 +252,7 @@ TEST_CASE(test_webp_simple_lossless)
 TEST_CASE(test_webp_extended_lossy)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
-    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -266,7 +266,7 @@ TEST_CASE(test_webp_extended_lossy)
 TEST_CASE(test_webp_extended_lossless)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
-    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
@@ -280,7 +280,7 @@ TEST_CASE(test_webp_extended_lossless)
 TEST_CASE(test_webp_extended_lossless_animated)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless-animated.webp"sv)));
-    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 

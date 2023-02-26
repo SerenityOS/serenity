@@ -149,7 +149,7 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context,
         return Error::from_string_literal("Index out of bounds");
 
     ICOImageDescriptor& desc = context.images[real_index];
-    if (TRY(PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size }))) {
+    if (PNGImageDecoderPlugin::sniff({ context.data + desc.offset, desc.size })) {
         auto png_decoder = TRY(PNGImageDecoderPlugin::create({ context.data + desc.offset, desc.size }));
         if (png_decoder->initialize()) {
             auto decoded_png_frame = TRY(png_decoder->frame(0));
@@ -181,7 +181,7 @@ ErrorOr<void> ICOImageDecoderPlugin::load_ico_bitmap(ICOLoadingContext& context,
     }
 }
 
-ErrorOr<bool> ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool ICOImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
     return !decode_ico_header(stream).is_error();

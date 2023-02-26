@@ -22,7 +22,7 @@
 namespace Gfx {
 
 struct ImagePluginInitializer {
-    ErrorOr<bool> (*sniff)(ReadonlyBytes) = nullptr;
+    bool (*sniff)(ReadonlyBytes) = nullptr;
     ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
 };
 
@@ -53,7 +53,7 @@ static constexpr ImagePluginWithMIMETypeInitializer s_initializers_with_mime_typ
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
 {
     for (auto& plugin : s_initializers) {
-        auto sniff_result = plugin.sniff(bytes).release_value_but_fixme_should_propagate_errors();
+        auto sniff_result = plugin.sniff(bytes);
         if (!sniff_result)
             continue;
         auto plugin_decoder = plugin.create(bytes).release_value_but_fixme_should_propagate_errors();
