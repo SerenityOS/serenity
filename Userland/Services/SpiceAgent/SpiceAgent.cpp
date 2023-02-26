@@ -142,19 +142,19 @@ void SpiceAgent::on_message_received()
         } else {
             ErrorOr<Gfx::ImageFrameDescriptor> frame_or_error = Gfx::ImageFrameDescriptor {};
             if (type == ClipboardType::PNG) {
-                if (Gfx::PNGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors()) {
+                if (Gfx::PNGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() })) {
                     auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
                     if (png_decoder->initialize())
                         frame_or_error = png_decoder->frame(0);
                 }
             } else if (type == ClipboardType::BMP) {
-                if (Gfx::BMPImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors()) {
+                if (Gfx::BMPImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() })) {
                     auto bmp_decoder = Gfx::BMPImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
                     if (bmp_decoder->initialize())
                         frame_or_error = bmp_decoder->frame(0);
                 }
             } else if (type == ClipboardType::JPEG) {
-                if (Gfx::JPEGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors()) {
+                if (Gfx::JPEGImageDecoderPlugin::sniff({ data_buffer.data(), data_buffer.size() })) {
                     auto jpeg_decoder = Gfx::JPEGImageDecoderPlugin::create({ data_buffer.data(), data_buffer.size() }).release_value_but_fixme_should_propagate_errors();
                     if (jpeg_decoder->initialize())
                         frame_or_error = jpeg_decoder->frame(0);

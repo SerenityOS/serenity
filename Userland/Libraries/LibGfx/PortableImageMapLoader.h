@@ -49,7 +49,7 @@ struct PortableImageMapLoadingContext {
 template<typename TContext>
 class PortableImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     PortableImageDecoderPlugin(u8 const*, size_t);
@@ -133,7 +133,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>:
 }
 
 template<typename TContext>
-ErrorOr<bool> PortableImageDecoderPlugin<TContext>::sniff(ReadonlyBytes data)
+bool PortableImageDecoderPlugin<TContext>::sniff(ReadonlyBytes data)
 {
     using Context = TContext;
     if (data.size() < 2)

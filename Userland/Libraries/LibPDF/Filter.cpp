@@ -269,7 +269,7 @@ ErrorOr<ByteBuffer> Filter::decode_jbig2(ReadonlyBytes)
 
 ErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
-    if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() }).release_value_but_fixme_should_propagate_errors()) {
+    if (Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() })) {
         auto decoder = Gfx::JPEGImageDecoderPlugin::create({ bytes.data(), bytes.size() }).release_value_but_fixme_should_propagate_errors();
         if (decoder->initialize()) {
             auto frame = TRY(decoder->frame(0));

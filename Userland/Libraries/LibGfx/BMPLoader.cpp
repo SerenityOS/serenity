@@ -1505,7 +1505,7 @@ bool BMPImageDecoderPlugin::initialize()
     return !decode_bmp_header(*m_context).is_error();
 }
 
-ErrorOr<bool> BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool BMPImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     BMPLoadingContext context;
     context.file_bytes = data.data();

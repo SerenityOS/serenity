@@ -1363,7 +1363,7 @@ bool JPEGImageDecoderPlugin::initialize()
     return true;
 }
 
-ErrorOr<bool> JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     return data.size() > 3
         && data.data()[0] == 0xFF

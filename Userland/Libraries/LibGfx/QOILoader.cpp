@@ -200,7 +200,7 @@ bool QOIImageDecoderPlugin::initialize()
     return !decode_header_and_update_context(*m_context->stream).is_error();
 }
 
-ErrorOr<bool> QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool QOIImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     FixedMemoryStream stream { { data.data(), data.size() } };
     return !decode_qoi_header(stream).is_error();
