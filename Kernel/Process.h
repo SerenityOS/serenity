@@ -14,6 +14,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Userspace.h>
 #include <AK/Variant.h>
+#include <Kernel/API/POSIX/select.h>
 #include <Kernel/API/POSIX/sys/resource.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Assertions.h>

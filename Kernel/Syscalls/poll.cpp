@@ -6,6 +6,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/Time.h>
+#include <Kernel/API/POSIX/select.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Process.h>

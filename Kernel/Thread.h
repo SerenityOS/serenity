@@ -16,6 +16,7 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <Kernel/API/POSIX/sched.h>
+#include <Kernel/API/POSIX/select.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Arch/ThreadRegisters.h>
@@ -31,7 +32,6 @@
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/UnixTypes.h>
-#include <LibC/fd_set.h>
 
 namespace Kernel {
 
