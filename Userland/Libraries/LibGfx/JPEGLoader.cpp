@@ -60,6 +60,8 @@
 #define JPEG_RST6 0xFFD6
 #define JPEG_RST7 0xFFD7
 
+#define JPEG_ZRL 0xF0
+
 #define JPEG_DHP 0xFFDE
 #define JPEG_EXP 0xFFDF
 
@@ -353,8 +355,8 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         if (ac_symbol == 0)
             break;
 
-        // ac_symbol = 0xF0 means we need to skip 16 zeroes.
-        u8 run_length = ac_symbol == 0xF0 ? 16 : ac_symbol >> 4;
+        // ac_symbol = JPEG_ZRL means we need to skip 16 zeroes.
+        u8 run_length = ac_symbol == JPEG_ZRL ? 16 : ac_symbol >> 4;
         j += run_length;
 
         if (j > scan.spectral_selection_end) {
