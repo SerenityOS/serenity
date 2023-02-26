@@ -74,7 +74,7 @@ protected:
         Array<float, 14> flex_sequence;
 
         size_t sp { 0 };
-        Array<float, 24> stack;
+        Array<float, 48> stack;
         u8 n_hints { 0 };
 
         size_t postscript_sp { 0 };
