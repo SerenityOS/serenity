@@ -60,6 +60,16 @@ public:
     {
     }
 
+    Handle(GCPtr<T> cell)
+        : Handle(cell.ptr())
+    {
+    }
+
+    Handle(NonnullGCPtr<T> cell)
+        : Handle(*cell)
+    {
+    }
+
     T* cell() const
     {
         if (!m_impl)
