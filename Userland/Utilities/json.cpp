@@ -37,11 +37,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Pretty-print a JSON file with syntax-coloring and indentation.");
-    args_parser.add_option(dotted_key, "Dotted query key", "query", 'q', "foo.*.bar");
-    args_parser.add_option(spaces_in_indent, "Indent size", "indent-size", 'i', "spaces_in_indent");
-    args_parser.add_positional_argument(path, "Path to JSON file", "path", Core::ArgsParser::Required::No);
+    TRY(args_parser.add_option(dotted_key, "Dotted query key", "query", 'q', "foo.*.bar"));
+    TRY(args_parser.add_option(spaces_in_indent, "Indent size", "indent-size", 'i', "spaces_in_indent"));
+    TRY(args_parser.add_positional_argument(path, "Path to JSON file", "path", Core::ArgsParser::Required::No));
     VERIFY(spaces_in_indent >= 0);
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
 

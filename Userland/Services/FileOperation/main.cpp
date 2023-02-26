@@ -47,9 +47,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(operation, "Operation: either 'Copy', 'Move' or 'Delete'", "operation", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(paths, "Source paths, followed by a destination if applicable", "paths", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(operation, "Operation: either 'Copy', 'Move' or 'Delete'", "operation", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_positional_argument(paths, "Source paths, followed by a destination if applicable", "paths", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     if (operation == "Delete")
         return perform_delete(paths);

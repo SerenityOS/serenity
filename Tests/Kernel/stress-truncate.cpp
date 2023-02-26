@@ -20,10 +20,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int count = 1024;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(max_file_size, "Maximum file size to generate", "max-size", 's', "size");
-    args_parser.add_option(count, "Number of truncations to run", "number", 'n', "number");
-    args_parser.add_positional_argument(target, "Target file path", "target");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(max_file_size, "Maximum file size to generate", "max-size", 's', "size"));
+    TRY(args_parser.add_option(count, "Number of truncations to run", "number", 'n', "number"));
+    TRY(args_parser.add_positional_argument(target, "Target file path", "target"));
+    TRY(args_parser.parse(arguments));
 
     int fd = creat(target.characters_without_null_termination(), 0666);
     if (fd < 0) {

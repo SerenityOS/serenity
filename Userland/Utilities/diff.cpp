@@ -19,9 +19,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString filename1;
     DeprecatedString filename2;
 
-    parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
-    parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
-    parser.parse(arguments);
+    TRY(parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes));
+    TRY(parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes));
+    TRY(parser.parse(arguments));
 
     auto file1 = TRY(Core::File::open(filename1, Core::File::OpenMode::Read));
     auto file2 = TRY(Core::File::open(filename2, Core::File::OpenMode::Read));

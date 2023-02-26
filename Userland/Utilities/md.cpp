@@ -23,10 +23,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Render Markdown to some other format.");
-    args_parser.add_option(html, "Render to HTML rather than for the terminal", "html", 'H');
-    args_parser.add_option(view_width, "Viewport width for the terminal (defaults to current terminal width)", "view-width", 0, "width");
-    args_parser.add_positional_argument(filename, "Path to Markdown file", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(html, "Render to HTML rather than for the terminal", "html", 'H'));
+    TRY(args_parser.add_option(view_width, "Viewport width for the terminal (defaults to current terminal width)", "view-width", 0, "width"));
+    TRY(args_parser.add_positional_argument(filename, "Path to Markdown file", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (!html && view_width == 0) {
         if (isatty(STDOUT_FILENO)) {

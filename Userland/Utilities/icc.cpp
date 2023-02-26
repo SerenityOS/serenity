@@ -92,18 +92,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
 
     StringView path;
-    args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE");
+    TRY(args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE"));
 
     StringView dump_out_path;
-    args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE");
+    TRY(args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE"));
 
     StringView reencode_out_path;
-    args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE");
+    TRY(args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE"));
 
     bool force_print = false;
-    args_parser.add_option(force_print, "Print profile even when writing ICC files", "print", 0);
+    TRY(args_parser.add_option(force_print, "Print profile even when writing ICC files", "print", 0));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::MappedFile::map(path));
     ReadonlyBytes icc_bytes;

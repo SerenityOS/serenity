@@ -198,12 +198,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_mount_all = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(source, "Source path", "source", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No);
-    args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype");
-    args_parser.add_option(options, "Mount options", nullptr, 'o', "options");
-    args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(source, "Source path", "source", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(mountpoint, "Mount point", "mountpoint", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(fs_type, "File system type", nullptr, 't', "fstype"));
+    TRY(args_parser.add_option(options, "Mount options", nullptr, 'o', "options"));
+    TRY(args_parser.add_option(should_mount_all, "Mount all file systems listed in /etc/fstab and /etc/fstab.d/*", nullptr, 'a'));
+    TRY(args_parser.parse(arguments));
 
     if (should_mount_all) {
         TRY(mount_all());

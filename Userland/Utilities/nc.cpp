@@ -55,14 +55,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Network cat: Connect to network sockets as if it were a file.");
-    args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
-    args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
-    args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
-    args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
-    args_parser.add_option(maximum_tcp_receive_buffer_size_input, "Set maximum tcp receive buffer size", "length", 'I', nullptr);
-    args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target");
-    args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l'));
+    TRY(args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v'));
+    TRY(args_parser.add_option(udp_mode, "UDP mode", "udp", 'u'));
+    TRY(args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N'));
+    TRY(args_parser.add_option(maximum_tcp_receive_buffer_size_input, "Set maximum tcp receive buffer size", "length", 'I', nullptr));
+    TRY(args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target"));
+    TRY(args_parser.add_positional_argument(port, "Port to connect to or listen on", "port"));
+    TRY(args_parser.parse(arguments));
 
     if (udp_mode) {
         if (should_listen) {

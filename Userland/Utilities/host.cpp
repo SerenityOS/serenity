@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     DeprecatedString name_or_ip {};
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Convert between domain name and IPv4 address.");
-    args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name");
-    args_parser.parse(args);
+    TRY(args_parser.add_positional_argument(name_or_ip, "Domain name or IPv4 address", "name"));
+    TRY(args_parser.parse(args));
 
     // If input looks like an IPv4 address, we should do a reverse lookup.
     auto ip_address = IPv4Address::from_string(name_or_ip);

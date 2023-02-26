@@ -101,9 +101,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringOffsetFormat string_offset_format { StringOffsetFormat::None };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(minimum_string_length, "Specify the minimum string length.", nullptr, 'n', "number");
-    args_parser.add_option(show_paths, "Display the path for each matched file.", nullptr, 'p');
-    args_parser.add_option({ Core::ArgsParser::OptionArgumentMode::Required,
+    TRY(args_parser.add_option(minimum_string_length, "Specify the minimum string length.", nullptr, 'n', "number"));
+    TRY(args_parser.add_option(show_paths, "Display the path for each matched file.", nullptr, 'p'));
+    TRY(args_parser.add_option({ Core::ArgsParser::OptionArgumentMode::Required,
         "Write offset relative to start of each file in (d)ec, (o)ct, or he(x) format.",
         nullptr,
         't',
@@ -120,10 +120,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
             }
             return true;
-        } });
+        } }));
     args_parser.set_general_help("Write the sequences of printable characters in files or pipes to stdout.");
-    args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (minimum_string_length < 1) {
         warnln("Invalid minimum string length {}", minimum_string_length);

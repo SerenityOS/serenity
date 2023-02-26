@@ -99,9 +99,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool quiet;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Path to file", "path", Core::ArgsParser::Required::No);
-    args_parser.add_option(quiet, "Suppress warnings about cycles", "quiet", 'q');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "Path to file", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(quiet, "Suppress warnings about cycles", "quiet", 'q'));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     auto input_bytes = TRY(file->read_until_eof());

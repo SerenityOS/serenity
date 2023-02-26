@@ -117,9 +117,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.set_general_help("Execute a command repeatedly, and watch its output over time.");
-    args_parser.add_option(opt_interval, "Amount of time between updates", "interval", 'n', "seconds");
-    args_parser.add_option(flag_noheader, "Turn off the header describing the command and interval", "no-title", 't');
-    args_parser.add_option(flag_beep_on_fail, "Beep if the command has a non-zero exit code", "beep", 'b');
+    TRY(args_parser.add_option(opt_interval, "Amount of time between updates", "interval", 'n', "seconds"));
+    TRY(args_parser.add_option(flag_noheader, "Turn off the header describing the command and interval", "no-title", 't'));
+    TRY(args_parser.add_option(flag_beep_on_fail, "Beep if the command has a non-zero exit code", "beep", 'b'));
     Core::ArgsParser::Option file_arg {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Run command whenever this file changes. Can be used multiple times.",
@@ -131,9 +131,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         }
     };
-    args_parser.add_option(move(file_arg));
-    args_parser.add_positional_argument(command, "Command to run", "command");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(move(file_arg)));
+    TRY(args_parser.add_positional_argument(command, "Command to run", "command"));
+    TRY(args_parser.parse(arguments));
 
     command.append(nullptr);
 

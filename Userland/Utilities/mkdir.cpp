@@ -25,10 +25,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> directories;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(create_parents, "Create parent directories if they don't exist", "parents", 'p');
-    args_parser.add_option(mode_string, "Set new directory permissions", "mode", 'm', "mode");
-    args_parser.add_positional_argument(directories, "Directories to create", "directories");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(create_parents, "Create parent directories if they don't exist", "parents", 'p'));
+    TRY(args_parser.add_option(mode_string, "Set new directory permissions", "mode", 'm', "mode"));
+    TRY(args_parser.add_positional_argument(directories, "Directories to create", "directories"));
+    TRY(args_parser.parse(arguments));
 
     mode_t const default_mode = 0755;
     mode_t const mask_reference_mode = 0777;

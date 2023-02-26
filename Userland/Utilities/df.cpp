@@ -31,10 +31,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display free disk space of each partition.");
-    args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 'H');
-    args_parser.add_option(flag_inode_info, "Show inode information as well", "inodes", 'i');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h'));
+    TRY(args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 'H'));
+    TRY(args_parser.add_option(flag_inode_info, "Show inode information as well", "inodes", 'i'));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open("/sys/kernel/df"sv, Core::File::OpenMode::Read));
 

@@ -93,11 +93,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> file_specifiers;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(g_output_line, "Output line count", "lines", 'l');
-    args_parser.add_option(g_output_byte, "Output byte count", "bytes", 'c');
-    args_parser.add_option(g_output_word, "Output word count", "words", 'w');
-    args_parser.add_positional_argument(file_specifiers, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(g_output_line, "Output line count", "lines", 'l'));
+    TRY(args_parser.add_option(g_output_byte, "Output byte count", "bytes", 'c'));
+    TRY(args_parser.add_option(g_output_word, "Output word count", "words", 'w'));
+    TRY(args_parser.add_positional_argument(file_specifiers, "File to process", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (!g_output_line && !g_output_byte && !g_output_word)
         g_output_line = g_output_byte = g_output_word = true;

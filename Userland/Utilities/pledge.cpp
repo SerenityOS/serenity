@@ -30,10 +30,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool add_promises_for_dynamic_linker;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(promises, "Space-separated list of pledge promises", "promises", 'p', "promises");
-    args_parser.add_option(add_promises_for_dynamic_linker, "Add temporary promises for dynamic linker", "dynamic-linker-promises", 'd');
-    args_parser.add_positional_argument(command, "Command to execute", "command");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(promises, "Space-separated list of pledge promises", "promises", 'p', "promises"));
+    TRY(args_parser.add_option(add_promises_for_dynamic_linker, "Add temporary promises for dynamic linker", "dynamic-linker-promises", 'd'));
+    TRY(args_parser.add_positional_argument(command, "Command to execute", "command"));
+    TRY(args_parser.parse(arguments));
 
     if (add_promises_for_dynamic_linker && TRY(is_dynamically_linked_executable(command[0]))) {
         auto constexpr loader_promises = "stdio rpath prot_exec"sv;

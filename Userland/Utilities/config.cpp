@@ -20,12 +20,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show or modify values in the configuration files through ConfigServer.");
-    args_parser.add_option(remove, "Remove group or key", "remove", 'r');
-    args_parser.add_positional_argument(domain, "Config domain", "domain");
-    args_parser.add_positional_argument(group, "Group name", "group");
-    args_parser.add_positional_argument(key, "Key name", "key", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(remove, "Remove group or key", "remove", 'r'));
+    TRY(args_parser.add_positional_argument(domain, "Config domain", "domain"));
+    TRY(args_parser.add_positional_argument(group, "Group name", "group"));
+    TRY(args_parser.add_positional_argument(key, "Key name", "key", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (remove) {
         if (!key.is_null())

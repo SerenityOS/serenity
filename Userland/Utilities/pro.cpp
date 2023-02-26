@@ -162,11 +162,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help(
         "Request a file from an arbitrary URL. This command uses RequestServer, "
         "and thus supports at least http, https, and gemini.");
-    args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O');
-    args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data");
-    args_parser.add_option(method_override, "(HTTP only) HTTP method to use for the request (eg, GET, POST, etc)", "method", 'm', "method");
-    args_parser.add_option(should_follow_url, "(HTTP only) Follow the Location header if a 3xx status is encountered", "follow", 'l');
-    args_parser.add_option(Core::ArgsParser::Option {
+    TRY(args_parser.add_option(save_at_provided_name, "Write to a file named as the remote file", nullptr, 'O'));
+    TRY(args_parser.add_option(data, "(HTTP only) Send the provided data via an HTTP POST request", "data", 'd', "data"));
+    TRY(args_parser.add_option(method_override, "(HTTP only) HTTP method to use for the request (eg, GET, POST, etc)", "method", 'm', "method"));
+    TRY(args_parser.add_option(should_follow_url, "(HTTP only) Follow the Location header if a 3xx status is encountered", "follow", 'l'));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header entry to the request",
         .long_name = "header",
@@ -179,8 +179,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
             request_headers.set(header.substring_view(0, split.value()), header.substring_view(split.value() + 1));
             return true;
-        } });
-    args_parser.add_option(Core::ArgsParser::Option {
+        } }));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "(HTTP only) Provide basic authentication credentials",
         .long_name = "auth",
@@ -199,11 +199,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             credentials = maybe_credentials.release_value();
             return true;
-        } });
-    args_parser.add_option(proxy_spec, "Specify a proxy server to use for this request (proto://ip:port)", "proxy", 'p', "proxy");
-    args_parser.add_option(verbose_output, "(HTTP only) Log request and response metadata", "verbose", 'v');
-    args_parser.add_positional_argument(url_str, "URL to download from", "url");
-    args_parser.parse(arguments);
+        } }));
+    TRY(args_parser.add_option(proxy_spec, "Specify a proxy server to use for this request (proto://ip:port)", "proxy", 'p', "proxy"));
+    TRY(args_parser.add_option(verbose_output, "(HTTP only) Log request and response metadata", "verbose", 'v'));
+    TRY(args_parser.add_positional_argument(url_str, "URL to download from", "url"));
+    TRY(args_parser.parse(arguments));
 
     // If writing to a file was requested, we'll open a new file descriptor with the same number later.
     // Until then, we just clone the stdout file descriptor, because we shouldn't be reopening the actual stdout.

@@ -22,11 +22,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Optional<size_t> head_count;
     bool is_zero_terminated = false;
 
-    args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::No);
-    args_parser.add_option(head_count, "Output at most \"count\" lines", "head-count", 'n', "count");
-    args_parser.add_option(is_zero_terminated, "Split input on \\0, not newline", "zero-terminated", 'z');
+    TRY(args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(head_count, "Output at most \"count\" lines", "head-count", 'n', "count"));
+    TRY(args_parser.add_option(is_zero_terminated, "Split input on \\0, not newline", "zero-terminated", 'z'));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     ByteBuffer buffer = TRY(file->read_until_eof());

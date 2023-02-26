@@ -67,11 +67,11 @@ int TestSuite::main(DeprecatedString const& suite_name, int argc, char** argv)
     bool do_list_cases = false;
     char const* search_string = "*";
 
-    args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
-    args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
-    args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
-    args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+    args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(do_list_cases, "List available test cases.", "list", 0).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
+    args_parser.parse(argc, argv).release_value_but_fixme_should_propagate_errors();
 
     if (m_setup)
         m_setup();

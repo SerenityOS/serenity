@@ -104,10 +104,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView command;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(command,
+    TRY(args_parser.add_positional_argument(command,
         "The program to be traced, along with its arguments",
-        "program", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+        "program", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     auto result = Debug::DebugSession::exec_and_attach(command);
     if (!result) {

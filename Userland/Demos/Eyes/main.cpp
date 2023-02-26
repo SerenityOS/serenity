@@ -29,12 +29,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool hide_window_frame = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(num_eyes, "Number of eyes", "num-eyes", 'n', "number");
-    args_parser.add_option(max_in_row, "Maximum number of eyes in a row", "max-in-row", 'm', "number");
-    args_parser.add_option(grid_rows, "Number of rows in grid (incompatible with --number)", "grid-rows", 'r', "number");
-    args_parser.add_option(grid_columns, "Number of columns in grid (incompatible with --number)", "grid-cols", 'c', "number");
-    args_parser.add_option(hide_window_frame, "Hide window frame", "hide-window", 'h');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(num_eyes, "Number of eyes", "num-eyes", 'n', "number"));
+    TRY(args_parser.add_option(max_in_row, "Maximum number of eyes in a row", "max-in-row", 'm', "number"));
+    TRY(args_parser.add_option(grid_rows, "Number of rows in grid (incompatible with --number)", "grid-rows", 'r', "number"));
+    TRY(args_parser.add_option(grid_columns, "Number of columns in grid (incompatible with --number)", "grid-cols", 'c', "number"));
+    TRY(args_parser.add_option(hide_window_frame, "Hide window frame", "hide-window", 'h'));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix cpath wpath thread"));
 

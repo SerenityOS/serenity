@@ -35,14 +35,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display network connections");
-    args_parser.add_option(flag_all, "Display both listening and non-listening sockets", "all", 'a');
-    args_parser.add_option(flag_list, "Display only listening sockets", "list", 'l');
-    args_parser.add_option(flag_tcp, "Display only TCP network connections", "tcp", 't');
-    args_parser.add_option(flag_udp, "Display only UDP network connections", "udp", 'u');
-    args_parser.add_option(flag_numeric, "Display numerical addresses", "numeric", 'n');
-    args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p');
-    args_parser.add_option(flag_wide, "Do not truncate IP addresses by printing out the whole symbolic host", "wide", 'W');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_all, "Display both listening and non-listening sockets", "all", 'a'));
+    TRY(args_parser.add_option(flag_list, "Display only listening sockets", "list", 'l'));
+    TRY(args_parser.add_option(flag_tcp, "Display only TCP network connections", "tcp", 't'));
+    TRY(args_parser.add_option(flag_udp, "Display only UDP network connections", "udp", 'u'));
+    TRY(args_parser.add_option(flag_numeric, "Display numerical addresses", "numeric", 'n'));
+    TRY(args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p'));
+    TRY(args_parser.add_option(flag_wide, "Do not truncate IP addresses by printing out the whole symbolic host", "wide", 'W'));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil("/sys/kernel/net", "r"));
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));

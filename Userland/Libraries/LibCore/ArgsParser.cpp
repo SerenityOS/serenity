@@ -29,12 +29,12 @@ namespace Core {
 
 ArgsParser::ArgsParser()
 {
-    add_option(m_show_help, "Display help message and exit", "help", 0, OptionHideMode::Markdown);
-    add_option(m_show_version, "Print version", "version", 0, OptionHideMode::Markdown);
-    add_option(m_perform_autocomplete, "Perform autocompletion", "complete", 0, OptionHideMode::CommandLineAndMarkdown);
+    add_option(m_show_help, "Display help message and exit", "help", 0, OptionHideMode::Markdown).release_value_but_fixme_should_propagate_errors();
+    add_option(m_show_version, "Print version", "version", 0, OptionHideMode::Markdown).release_value_but_fixme_should_propagate_errors();
+    add_option(m_perform_autocomplete, "Perform autocompletion", "complete", 0, OptionHideMode::CommandLineAndMarkdown).release_value_but_fixme_should_propagate_errors();
 }
 
-bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_behavior)
+ErrorOr<bool> ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_behavior)
 {
     auto fail = [this, argv, failure_behavior] {
         if (failure_behavior == FailureBehavior::PrintUsage || failure_behavior == FailureBehavior::PrintUsageAndExit)
@@ -47,7 +47,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     StringBuilder short_options_builder;
 
     if (m_stop_on_first_non_option)
-        short_options_builder.append('+');
+        TRY(short_options_builder.try_append('+'));
 
     int index_of_found_long_option = -1;
 
@@ -64,15 +64,15 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
                 &index_of_found_long_option,
                 static_cast<int>(i)
             };
-            long_options.append(long_opt);
+            TRY(long_options.try_append(long_opt));
         }
         if (opt.short_name) {
-            short_options_builder.append(opt.short_name);
+            TRY(short_options_builder.try_append(opt.short_name));
             if (opt.argument_mode != OptionArgumentMode::None)
-                short_options_builder.append(':');
+                TRY(short_options_builder.try_append(':'));
             // Note: This is a GNU extension.
             if (opt.argument_mode == OptionArgumentMode::Optional)
-                short_options_builder.append(':');
+                TRY(short_options_builder.try_append(':'));
         }
     }
     long_options.append({ 0, 0, 0, 0 });
@@ -118,7 +118,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     // Now let's show version or help if requested, or perform autocompletion if needed.
 
     if (m_show_version) {
-        print_version(stdout);
+        TRY(print_version(stdout));
         if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
             exit(0);
         return false;
@@ -142,7 +142,7 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
 
     int values_left = argc - optind;
     Vector<int, 16> num_values_for_arg;
-    num_values_for_arg.resize(m_positional_args.size(), true);
+    TRY(num_values_for_arg.try_resize(m_positional_args.size(), true));
     int total_values_required = 0;
     for (size_t i = 0; i < m_positional_args.size(); i++) {
         auto& arg = m_positional_args[i];
@@ -365,17 +365,20 @@ void ArgsParser::print_usage_markdown(FILE* file, char const* argv0)
     }
 }
 
-void ArgsParser::print_version(FILE* file)
+ErrorOr<void> ArgsParser::print_version(FILE* file)
 {
-    outln(file, Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors());
+    auto version = TRY(Core::Version::read_long_version_string());
+    outln(file, version);
+    return {};
 }
 
-void ArgsParser::add_option(Option&& option)
+ErrorOr<void> ArgsParser::add_option(Option&& option)
 {
-    m_options.append(move(option));
+    TRY(m_options.try_append(move(option)));
+    return {};
 }
 
-void ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::None,
@@ -388,10 +391,11 @@ void ArgsParser::add_ignored(char const* long_name, char short_name, OptionHideM
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::None,
@@ -406,10 +410,11 @@ void ArgsParser::add_option(bool& value, char const* help_string, char const* lo
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -423,10 +428,11 @@ void ArgsParser::add_option(char const*& value, char const* help_string, char co
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -440,10 +446,11 @@ void ArgsParser::add_option(DeprecatedString& value, char const* help_string, ch
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -457,11 +464,12 @@ void ArgsParser::add_option(StringView& value, char const* help_string, char con
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
 template<Integral I>
-void ArgsParser::add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -481,17 +489,18 @@ void ArgsParser::add_option(I& value, char const* help_string, char const* long_
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-template void ArgsParser::add_option(int&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(long&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(long long&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(unsigned&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(unsigned long&, char const*, char const*, char, char const*, OptionHideMode);
-template void ArgsParser::add_option(unsigned long long&, char const*, char const*, char, char const*, OptionHideMode);
+template ErrorOr<void> ArgsParser::add_option(int&, char const*, char const*, char, char const*, OptionHideMode);
+template ErrorOr<void> ArgsParser::add_option(long&, char const*, char const*, char, char const*, OptionHideMode);
+template ErrorOr<void> ArgsParser::add_option(long long&, char const*, char const*, char, char const*, OptionHideMode);
+template ErrorOr<void> ArgsParser::add_option(unsigned&, char const*, char const*, char, char const*, OptionHideMode);
+template ErrorOr<void> ArgsParser::add_option(unsigned long&, char const*, char const*, char, char const*, OptionHideMode);
+template ErrorOr<void> ArgsParser::add_option(unsigned long long&, char const*, char const*, char, char const*, OptionHideMode);
 
-void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -506,10 +515,11 @@ void ArgsParser::add_option(double& value, char const* help_string, char const* 
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -523,10 +533,11 @@ void ArgsParser::add_option(Optional<double>& value, char const* help_string, ch
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -540,10 +551,11 @@ void ArgsParser::add_option(Optional<size_t>& value, char const* help_string, ch
         },
         hide_mode,
     };
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Required,
@@ -566,10 +578,11 @@ void ArgsParser::add_option(Vector<size_t>& values, char const* help_string, cha
         hide_mode
     };
 
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
+ErrorOr<void> ArgsParser::add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
         OptionArgumentMode::Optional,
@@ -585,30 +598,17 @@ void ArgsParser::add_option(Vector<DeprecatedString>& values, char const* help_s
         hide_mode
     };
 
-    add_option(move(option));
+    TRY(add_option(move(option)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(Arg&& arg)
+ErrorOr<void> ArgsParser::add_positional_argument(Arg&& arg)
 {
-    m_positional_args.append(move(arg));
+    TRY(m_positional_args.try_append(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(char const*& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](char const* s) {
-            value = s;
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
-void ArgsParser::add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(char const*& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -620,10 +620,27 @@ void ArgsParser::add_positional_argument(DeprecatedString& value, char const* he
             return true;
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(StringView& value, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](char const* s) {
+            value = s;
+            return true;
+        }
+    };
+    TRY(add_positional_argument(move(arg)));
+    return {};
+}
+
+ErrorOr<void> ArgsParser::add_positional_argument(StringView& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -635,10 +652,11 @@ void ArgsParser::add_positional_argument(StringView& value, char const* help_str
             return true;
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(int& value, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(int& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -651,10 +669,11 @@ void ArgsParser::add_positional_argument(int& value, char const* help_string, ch
             return opt.has_value();
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -667,10 +686,11 @@ void ArgsParser::add_positional_argument(unsigned& value, char const* help_strin
             return opt.has_value();
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(double& value, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(double& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -683,10 +703,11 @@ void ArgsParser::add_positional_argument(double& value, char const* help_string,
             return opt.has_value();
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(Vector<char const*>& values, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(Vector<char const*>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -698,10 +719,11 @@ void ArgsParser::add_positional_argument(Vector<char const*>& values, char const
             return true;
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(Vector<DeprecatedString>& values, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(Vector<DeprecatedString>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -713,10 +735,11 @@ void ArgsParser::add_positional_argument(Vector<DeprecatedString>& values, char 
             return true;
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
-void ArgsParser::add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required)
+ErrorOr<void> ArgsParser::add_positional_argument(Vector<StringView>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
@@ -728,7 +751,8 @@ void ArgsParser::add_positional_argument(Vector<StringView>& values, char const*
             return true;
         }
     };
-    add_positional_argument(move(arg));
+    TRY(add_positional_argument(move(arg)));
+    return {};
 }
 
 void ArgsParser::autocomplete(FILE* file, StringView program_name, ReadonlySpan<char const*> remaining_arguments)

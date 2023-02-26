@@ -20,11 +20,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString value_to_write;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Path to INI file", "path");
-    args_parser.add_positional_argument(group, "Group name", "group");
-    args_parser.add_positional_argument(key, "Key name", "key");
-    args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "Path to INI file", "path"));
+    TRY(args_parser.add_positional_argument(group, "Group name", "group"));
+    TRY(args_parser.add_positional_argument(key, "Key name", "key"));
+    TRY(args_parser.add_positional_argument(value_to_write, "Value to write", "value", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (!Core::DeprecatedFile::exists(path)) {
         warnln("File does not exist: '{}'", path);

@@ -603,19 +603,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
-    args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
-    args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
-    args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b');
-    args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
-    args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm');
-    args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
-    args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'i');
-    args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h');
-    args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
-    args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
-    args_parser.add_option(evaluate_script, "Evaluate argument as a script", "evaluate", 'c', "script");
-    args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A'));
+    TRY(args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd'));
+    TRY(args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b'));
+    TRY(args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p'));
+    TRY(args_parser.add_option(s_as_module, "Treat as module", "as-module", 'm'));
+    TRY(args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l'));
+    TRY(args_parser.add_option(s_strip_ansi, "Disable ANSI colors", "disable-ansi-colors", 'i'));
+    TRY(args_parser.add_option(s_disable_source_location_hints, "Disable source location hints", "disable-source-location-hints", 'h'));
+    TRY(args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g'));
+    TRY(args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's'));
+    TRY(args_parser.add_option(evaluate_script, "Evaluate argument as a script", "evaluate", 'c', "script"));
+    TRY(args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     bool syntax_highlight = !disable_syntax_highlight;
 

@@ -31,11 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int echo_timeout = 5;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(host_name, "destination", "destination", Core::ArgsParser::Required::Yes);
-    args_parser.add_option(max_hops, "use at most <hops> to the destination", "max-hops", 'h', "hops");
-    args_parser.add_option(max_retries, "retry TTL at most <tries> times", "max-retries", 'r', "tries");
-    args_parser.add_option(echo_timeout, "wait at most <seconds> for a response", "timeout", 't', "seconds");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(host_name, "destination", "destination", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_option(max_hops, "use at most <hops> to the destination", "max-hops", 'h', "hops"));
+    TRY(args_parser.add_option(max_retries, "retry TTL at most <tries> times", "max-retries", 'r', "tries"));
+    TRY(args_parser.add_option(echo_timeout, "wait at most <seconds> for a response", "timeout", 't', "seconds"));
+    TRY(args_parser.parse(arguments));
 
     if (max_hops < 1 || max_hops > 255) {
         return Error::from_string_literal("Invalid maximum hops amount");

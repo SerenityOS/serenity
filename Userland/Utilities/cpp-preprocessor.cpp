@@ -15,9 +15,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     StringView path;
     bool print_definitions = false;
-    args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::Yes);
-    args_parser.add_option(print_definitions, "Print preprocessor definitions", "definitions", 'D');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "File", "file", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_option(print_definitions, "Print preprocessor definitions", "definitions", 'D'));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto content = TRY(file->read_until_eof());

@@ -95,20 +95,20 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<DeprecatedString>& fi
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
-    args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
-    args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0);
-    args_parser.add_option(du_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(du_option.human_readable_si, "Print human-readable sizes in SI units", "si", 0);
-    args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
-    args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's');
-    args_parser.add_option(du_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size");
-    args_parser.add_option(move(time_option));
-    args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern");
-    args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude-from", 'X', "file");
-    args_parser.add_option(du_option.block_size, "Outputs file sizes as the required blocks with the given size (defaults to 1024)", "block-size", 'B', "size");
-    args_parser.add_option(move(block_size_1k_option));
-    args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a'));
+    TRY(args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size", 0));
+    TRY(args_parser.add_option(du_option.human_readable, "Print human-readable sizes", "human-readable", 'h'));
+    TRY(args_parser.add_option(du_option.human_readable_si, "Print human-readable sizes in SI units", "si", 0));
+    TRY(args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N"));
+    TRY(args_parser.add_option(summarize, "Display only a total for each argument", "summarize", 's'));
+    TRY(args_parser.add_option(du_option.threshold, "Exclude entries smaller than size if positive, or entries greater than size if negative", "threshold", 't', "size"));
+    TRY(args_parser.add_option(move(time_option)));
+    TRY(args_parser.add_option(pattern, "Exclude files that match pattern", "exclude", 0, "pattern"));
+    TRY(args_parser.add_option(exclude_from, "Exclude files that match any pattern in file", "exclude-from", 'X', "file"));
+    TRY(args_parser.add_option(du_option.block_size, "Outputs file sizes as the required blocks with the given size (defaults to 1024)", "block-size", 'B', "size"));
+    TRY(args_parser.add_option(move(block_size_1k_option)));
+    TRY(args_parser.add_positional_argument(files_to_process, "File to process", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (summarize)
         du_option.max_depth = 0;

@@ -28,12 +28,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool interactive_password;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(interactive_password, "Prompt for password with getpass", "interactive", 'i');
-    args_parser.add_option(tls, "Connect with TLS (IMAPS)", "secure", 's');
-    args_parser.add_positional_argument(host, "IMAP host", "host");
-    args_parser.add_positional_argument(port, "Port to connect to", "port");
-    args_parser.add_positional_argument(username, "Username", "username");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(interactive_password, "Prompt for password with getpass", "interactive", 'i'));
+    TRY(args_parser.add_option(tls, "Connect with TLS (IMAPS)", "secure", 's'));
+    TRY(args_parser.add_positional_argument(host, "IMAP host", "host"));
+    TRY(args_parser.add_positional_argument(port, "Port to connect to", "port"));
+    TRY(args_parser.add_positional_argument(username, "Username", "username"));
+    TRY(args_parser.parse(arguments));
 
     if (interactive_password) {
         password = TRY(Core::get_password());

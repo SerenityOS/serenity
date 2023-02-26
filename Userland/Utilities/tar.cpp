@@ -37,17 +37,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(create, "Create archive", "create", 'c');
-    args_parser.add_option(extract, "Extract archive", "extract", 'x');
-    args_parser.add_option(list, "List contents", "list", 't');
-    args_parser.add_option(verbose, "Print paths", "verbose", 'v');
-    args_parser.add_option(gzip, "Compress or decompress file using gzip", "gzip", 'z');
-    args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress", 0);
-    args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
-    args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
-    args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h');
-    args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(create, "Create archive", "create", 'c'));
+    TRY(args_parser.add_option(extract, "Extract archive", "extract", 'x'));
+    TRY(args_parser.add_option(list, "List contents", "list", 't'));
+    TRY(args_parser.add_option(verbose, "Print paths", "verbose", 'v'));
+    TRY(args_parser.add_option(gzip, "Compress or decompress file using gzip", "gzip", 'z'));
+    TRY(args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress", 0));
+    TRY(args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY"));
+    TRY(args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE"));
+    TRY(args_parser.add_option(dereference, "Follow symlinks", "dereference", 'h'));
+    TRY(args_parser.add_positional_argument(paths, "Paths", "PATHS", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (create + extract + list != 1) {
         warnln("exactly one of -c, -x, and -t can be used");

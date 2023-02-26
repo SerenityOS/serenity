@@ -20,9 +20,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(mode_string, "Set FIFO permissions", "mode", 'm', "mode");
-    args_parser.add_positional_argument(paths, "Paths of FIFOs to create", "paths");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(mode_string, "Set FIFO permissions", "mode", 'm', "mode"));
+    TRY(args_parser.add_positional_argument(paths, "Paths of FIFOs to create", "paths"));
+    TRY(args_parser.parse(arguments));
 
     if (!mode_string.is_empty()) {
         auto mask = TRY(Core::FilePermissionsMask::parse(mode_string));

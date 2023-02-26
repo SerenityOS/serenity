@@ -39,10 +39,10 @@ ErrorOr<int> Shell::builtin_dump(int argc, char const** argv)
     StringView source;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(source, "Shell code to parse and dump", "source");
-    parser.add_option(posix, "Use the POSIX parser", "posix", 'p');
+    TRY(parser.add_positional_argument(source, "Shell code to parse and dump", "source"));
+    TRY(parser.add_option(posix, "Use the POSIX parser", "posix", 'p'));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     (posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0);
@@ -90,12 +90,12 @@ ErrorOr<int> Shell::builtin_where(int argc, char const** argv)
     bool do_print_only_type { false };
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(arguments, "List of shell builtins, aliases or executables", "arguments");
-    parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p');
-    parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's');
-    parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w');
+    TRY(parser.add_positional_argument(arguments, "List of shell builtins, aliases or executables", "arguments"));
+    TRY(parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p'));
+    TRY(parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's'));
+    TRY(parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w'));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     auto const lookup_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
@@ -154,9 +154,9 @@ ErrorOr<int> Shell::builtin_alias(int argc, char const** argv)
     Vector<DeprecatedString> arguments;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(arguments, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (arguments.is_empty()) {
@@ -191,10 +191,10 @@ ErrorOr<int> Shell::builtin_unalias(int argc, char const** argv)
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
-    parser.add_option(remove_all, "Remove all aliases", nullptr, 'a');
-    parser.add_positional_argument(arguments, "List of aliases to remove", "alias", Core::ArgsParser::Required::No);
+    TRY(parser.add_option(remove_all, "Remove all aliases", nullptr, 'a'));
+    TRY(parser.add_positional_argument(arguments, "List of aliases to remove", "alias", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (remove_all) {
@@ -229,7 +229,7 @@ ErrorOr<int> Shell::builtin_bg(int argc, char const** argv)
     bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job ID or Jobspec to run in background",
         .name = "job-id",
         .min_values = 0,
@@ -251,9 +251,9 @@ ErrorOr<int> Shell::builtin_bg(int argc, char const** argv)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -292,10 +292,10 @@ ErrorOr<int> Shell::builtin_type(int argc, char const** argv)
 
     Core::ArgsParser parser;
     parser.set_general_help("Display information about commands.");
-    parser.add_positional_argument(commands, "Command(s) to list info about", "command");
-    parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f');
+    TRY(parser.add_positional_argument(commands, "Command(s) to list info about", "command"));
+    TRY(parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f'));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     bool something_not_found = false;
@@ -359,9 +359,9 @@ ErrorOr<int> Shell::builtin_cd(int argc, char const** argv)
     char const* arg_path = nullptr;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     DeprecatedString new_path;
@@ -413,9 +413,9 @@ ErrorOr<int> Shell::builtin_cdh(int argc, char const** argv)
     int index = -1;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (index == -1) {
@@ -452,12 +452,12 @@ ErrorOr<int> Shell::builtin_dirs(int argc, char const** argv)
     Vector<DeprecatedString> paths;
 
     Core::ArgsParser parser;
-    parser.add_option(clear, "Clear the directory stack", "clear", 'c');
-    parser.add_option(print, "Print directory entries one per line", "print", 'p');
-    parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v');
-    parser.add_positional_argument(paths, "Extra paths to put on the stack", "path", Core::ArgsParser::Required::No);
+    TRY(parser.add_option(clear, "Clear the directory stack", "clear", 'c'));
+    TRY(parser.add_option(print, "Print directory entries one per line", "print", 'p'));
+    TRY(parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v'));
+    TRY(parser.add_positional_argument(paths, "Extra paths to put on the stack", "path", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     // -v implies -p
@@ -510,8 +510,8 @@ ErrorOr<int> Shell::builtin_exit(int argc, char const** argv)
 {
     int exit_code = 0;
     Core::ArgsParser parser;
-    parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No);
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    TRY(parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No));
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (m_is_interactive) {
@@ -536,9 +536,9 @@ ErrorOr<int> Shell::builtin_export(int argc, char const** argv)
     Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (vars.is_empty()) {
@@ -576,9 +576,9 @@ ErrorOr<int> Shell::builtin_glob(int argc, char const** argv)
 {
     Vector<DeprecatedString> globs;
     Core::ArgsParser parser;
-    parser.add_positional_argument(globs, "Globs to resolve", "glob");
+    TRY(parser.add_positional_argument(globs, "Globs to resolve", "glob"));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     for (auto& glob : globs) {
@@ -595,7 +595,7 @@ ErrorOr<int> Shell::builtin_fg(int argc, char const** argv)
     bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job ID or Jobspec to bring to foreground",
         .name = "job-id",
         .min_values = 0,
@@ -617,9 +617,9 @@ ErrorOr<int> Shell::builtin_fg(int argc, char const** argv)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -664,7 +664,7 @@ ErrorOr<int> Shell::builtin_disown(int argc, char const** argv)
     Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job IDs or Jobspecs to disown",
         .name = "job-id",
         .min_values = 0,
@@ -686,9 +686,9 @@ ErrorOr<int> Shell::builtin_disown(int argc, char const** argv)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (job_ids.is_empty()) {
@@ -740,10 +740,10 @@ ErrorOr<int> Shell::builtin_jobs(int argc, char const** argv)
     bool list = false, show_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_option(list, "List all information about jobs", "list", 'l');
-    parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p');
+    TRY(parser.add_option(list, "List all information about jobs", "list", 'l'));
+    TRY(parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p'));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     Job::PrintStatusMode mode = Job::PrintStatusMode::Basic;
@@ -771,9 +771,9 @@ ErrorOr<int> Shell::builtin_popd(int argc, char const** argv)
 
     bool should_not_switch = false;
     Core::ArgsParser parser;
-    parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n');
+    TRY(parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n'));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     auto popped_path = directory_stack.take_last();
@@ -874,17 +874,17 @@ ErrorOr<int> Shell::builtin_setopt(int argc, char const** argv)
     }
 
     Core::ArgsParser parser;
-#define __ENUMERATE_SHELL_OPTION(name, default_, description)     \
-    bool name = false;                                            \
-    bool not_##name = false;                                      \
-    parser.add_option(name, "Enable: " description, #name, '\0'); \
-    parser.add_option(not_##name, "Disable: " description, "no_" #name, '\0');
+#define __ENUMERATE_SHELL_OPTION(name, default_, description)          \
+    bool name = false;                                                 \
+    bool not_##name = false;                                           \
+    TRY(parser.add_option(name, "Enable: " description, #name, '\0')); \
+    TRY(parser.add_option(not_##name, "Disable: " description, "no_" #name, '\0'));
 
     ENUMERATE_SHELL_OPTIONS();
 
 #undef __ENUMERATE_SHELL_OPTION
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
@@ -905,9 +905,9 @@ ErrorOr<int> Shell::builtin_shift(int argc, char const** argv)
     int count = 1;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (count < 1)
@@ -940,10 +940,10 @@ ErrorOr<int> Shell::builtin_source(int argc, char const** argv)
     Vector<DeprecatedString> args;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(file_to_source, "File to read commands from", "path");
-    parser.add_positional_argument(args, "ARGV for the sourced file", "args", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(file_to_source, "File to read commands from", "path"));
+    TRY(parser.add_positional_argument(args, "ARGV for the sourced file", "args", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv)))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv))))
         return 1;
 
     auto previous_argv = lookup_local_variable("ARGV"sv);
@@ -968,11 +968,11 @@ ErrorOr<int> Shell::builtin_time(int argc, char const** argv)
     int number_of_iterations = 1;
 
     Core::ArgsParser parser;
-    parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations");
+    TRY(parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations"));
     parser.set_stop_on_first_non_option(true);
-    parser.add_positional_argument(command.argv, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
+    TRY(parser.add_positional_argument(command.argv, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (number_of_iterations < 1)
@@ -1020,9 +1020,9 @@ ErrorOr<int> Shell::builtin_umask(int argc, char const** argv)
     char const* mask_text = nullptr;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (!mask_text) {
@@ -1049,7 +1049,7 @@ ErrorOr<int> Shell::builtin_wait(int argc, char const** argv)
     Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job IDs or Jobspecs to wait for",
         .name = "job-id",
         .min_values = 0,
@@ -1071,9 +1071,9 @@ ErrorOr<int> Shell::builtin_wait(int argc, char const** argv)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     Vector<NonnullRefPtr<Job>> jobs_to_wait_for;
@@ -1106,9 +1106,9 @@ ErrorOr<int> Shell::builtin_unset(int argc, char const** argv)
     Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
+    TRY(parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes));
 
-    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     bool did_touch_path = false;
@@ -1334,7 +1334,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
 
                     return false;
                 };
-                user_parser.add_option(move(option));
+                user_parser.add_option(move(option)).release_value_but_fixme_should_propagate_errors();
                 type = Type::String;
                 treat_arg_as_list = false;
                 return true;
@@ -1356,7 +1356,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
 
                     return false;
                 };
-                user_parser.add_positional_argument(move(arg));
+                user_parser.add_positional_argument(move(arg)).release_value_but_fixme_should_propagate_errors();
                 type = Type::String;
                 treat_arg_as_list = false;
                 return true;
@@ -1366,7 +1366,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             });
     };
 
-    parser.add_option(Core::ArgsParser::Option {
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Stop processing arguments after a non-argument parameter is seen",
         .long_name = "stop-on-first-non-option",
@@ -1374,8 +1374,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             user_parser.set_stop_on_first_non_option(true);
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the general help string for the parser",
         .long_name = "general-help",
@@ -1384,8 +1384,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             user_parser.set_general_help(value);
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing an option",
         .long_name = "add-option",
@@ -1403,8 +1403,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
 
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Accept multiple of the current option being given",
         .long_name = "list",
@@ -1416,8 +1416,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             treat_arg_as_list = true;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Define the type of the option or argument being described",
         .long_name = "type",
@@ -1456,8 +1456,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
                 set_local_variable(current_variable, make_ref_counted<AST::StringValue>("false"), true);
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the help string of the option or argument being defined",
         .long_name = "help-string",
@@ -1473,8 +1473,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return true;
                 });
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the long name of the option being defined",
         .long_name = "long-name",
@@ -1492,8 +1492,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             option->long_name = value;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the short name of the option being defined",
         .long_name = "short-name",
@@ -1515,8 +1515,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             option->short_name = value[0];
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the value name of the option being defined",
         .long_name = "value-name",
@@ -1550,8 +1550,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
                     return true;
                 });
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing a positional argument",
         .long_name = "add-positional-argument",
@@ -1569,8 +1569,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
 
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the minimum required number of positional arguments for the argument being described",
         .long_name = "min",
@@ -1597,8 +1597,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the maximum required number of positional arguments for the argument being described",
         .long_name = "max",
@@ -1625,8 +1625,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Mark the positional argument being described as required (shorthand for --min 1)",
         .long_name = "required",
@@ -1642,16 +1642,16 @@ ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
             treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
             return true;
         },
-    });
-    parser.add_positional_argument(arguments, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No);
+    }));
+    TRY(parser.add_positional_argument(arguments, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(argc, const_cast<char* const*>(argv), Core::ArgsParser::FailureBehavior::Ignore))
+    if (!TRY(parser.parse(argc, const_cast<char* const*>(argv), Core::ArgsParser::FailureBehavior::Ignore)))
         return 2;
 
     if (!commit())
         return 2;
 
-    if (!user_parser.parse(static_cast<int>(arguments.size()), const_cast<char* const*>(arguments.data()), Core::ArgsParser::FailureBehavior::Ignore))
+    if (!TRY(user_parser.parse(static_cast<int>(arguments.size()), const_cast<char* const*>(arguments.data()), Core::ArgsParser::FailureBehavior::Ignore)))
         return 1;
 
     return 0;

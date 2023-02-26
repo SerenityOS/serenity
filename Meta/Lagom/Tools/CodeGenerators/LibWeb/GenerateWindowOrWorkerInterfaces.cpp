@@ -346,10 +346,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView base_path;
     Vector<DeprecatedString> paths;
 
-    args_parser.add_option(output_path, "Path to output generated files into", "output-path", 'o', "output-path");
-    args_parser.add_option(base_path, "Path to root of IDL file tree", "base-path", 'b', "base-path");
-    args_parser.add_positional_argument(paths, "Paths of every IDL file that could be Exposed", "paths");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(output_path, "Path to output generated files into", "output-path", 'o', "output-path"));
+    TRY(args_parser.add_option(base_path, "Path to root of IDL file tree", "base-path", 'b', "base-path"));
+    TRY(args_parser.add_positional_argument(paths, "Paths of every IDL file that could be Exposed", "paths"));
+    TRY(args_parser.parse(arguments));
 
     VERIFY(!paths.is_empty());
     VERIFY(!base_path.is_empty());

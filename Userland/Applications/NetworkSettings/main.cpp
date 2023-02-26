@@ -30,8 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     DeprecatedString adapter;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(adapter, "Adapter to display settings for", "adapter", Core::ArgsParser::Required::No);
-    parser.parse(args);
+    TRY(parser.add_positional_argument(adapter, "Adapter to display settings for", "adapter", Core::ArgsParser::Required::No));
+    TRY(parser.parse(args));
 
     auto app = TRY(GUI::Application::try_create(args));
 

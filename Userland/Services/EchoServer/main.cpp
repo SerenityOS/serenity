@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int port = 7;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(port, "Port to listen on", "port", 'p', "port");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(port, "Port to listen on", "port", 'p', "port"));
+    TRY(args_parser.parse(arguments));
 
     if ((u16)port != port) {
         warnln("Invalid port number: {}", port);

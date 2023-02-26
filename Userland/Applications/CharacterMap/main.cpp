@@ -54,8 +54,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString query;
     Core::ArgsParser args_parser;
-    args_parser.add_option(query, "Search character names using this query, and print them as a list.", "search", 's', "query");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(query, "Search character names using this query, and print them as a list.", "search", 's', "query"));
+    TRY(args_parser.parse(arguments));
 
     if (!query.is_empty()) {
         search_and_print_results(query);

@@ -70,8 +70,8 @@ public:
         Function<bool(char const*)> accept_value;
     };
 
-    bool parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
-    bool parse(Main::Arguments const& arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit)
+    ErrorOr<bool> parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
+    ErrorOr<bool> parse(Main::Arguments const& arguments, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit)
     {
         return parse(arguments.argc, arguments.argv, failure_behavior);
     }
@@ -82,34 +82,34 @@ public:
     void print_usage(FILE*, char const* argv0);
     void print_usage_terminal(FILE*, char const* argv0);
     void print_usage_markdown(FILE*, char const* argv0);
-    void print_version(FILE*);
+    ErrorOr<void> print_version(FILE*);
 
-    void add_option(Option&&);
-    void add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(Option&&);
+    ErrorOr<void> add_ignored(char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(bool& value, char const* help_string, char const* long_name, char short_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
     template<Integral I>
-    void add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
-    void add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(I& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(Optional<double>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(Optional<size_t>& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(Vector<size_t>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, char separator = ',', OptionHideMode hide_mode = OptionHideMode::None);
     // Note: This option is being used when we expect the user to use the same option
     // multiple times (e.g. "program --option=example --option=anotherexample ...").
-    void add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
+    ErrorOr<void> add_option(Vector<DeprecatedString>& values, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode = OptionHideMode::None);
 
-    void add_positional_argument(Arg&&);
-    void add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(int& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<char const*>& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<DeprecatedString>& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(Arg&&);
+    ErrorOr<void> add_positional_argument(char const*& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(int& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(Vector<char const*>& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(Vector<DeprecatedString>& value, char const* help_string, char const* name, Required required = Required::Yes);
+    ErrorOr<void> add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
 
 private:
     void autocomplete(FILE*, StringView program_name, ReadonlySpan<char const*> remaining_arguments);

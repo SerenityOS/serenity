@@ -38,8 +38,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
 
     StringView path;
-    args_parser.add_option(use_color, "Colorize output (default on tty)", "colorize", 'c');
-    args_parser.add_option(Core::ArgsParser::Option {
+    TRY(args_parser.add_option(use_color, "Colorize output (default on tty)", "colorize", 'c'));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         Core::ArgsParser::OptionArgumentMode::None,
         "Monochrome (don't colorize output)",
         "monochrome",
@@ -50,9 +50,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             use_color = false;
             return true;
         },
-    });
-    args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    }));
+    TRY(args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
 

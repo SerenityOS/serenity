@@ -18,11 +18,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(force, "Force the creation", "force", 'f');
-    args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
-    args_parser.add_positional_argument(target, "Link target", "target");
-    args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(force, "Force the creation", "force", 'f'));
+    TRY(args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's'));
+    TRY(args_parser.add_positional_argument(target, "Link target", "target"));
+    TRY(args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     DeprecatedString path_buffer;
     if (path.is_empty()) {

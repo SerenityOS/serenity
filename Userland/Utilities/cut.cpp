@@ -156,11 +156,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> files;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(files, "file(s) to cut", "file", Core::ArgsParser::Required::No);
-    args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list");
-    args_parser.add_option(fields_list, "select only these fields", "fields", 'f', "list");
-    args_parser.add_option(delimiter, "set a custom delimiter", "delimiter", 'd', "delimiter");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(files, "file(s) to cut", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(byte_list, "select only these bytes", "bytes", 'b', "list"));
+    TRY(args_parser.add_option(fields_list, "select only these fields", "fields", 'f', "list"));
+    TRY(args_parser.add_option(delimiter, "set a custom delimiter", "delimiter", 'd', "delimiter"));
+    TRY(args_parser.parse(arguments));
 
     bool selected_bytes = (byte_list != "");
     bool selected_fields = (fields_list != "");

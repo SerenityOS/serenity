@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Path to image", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "Path to image", "path"));
+    TRY(args_parser.parse(arguments));
 
     auto bitmap = TRY(Gfx::Bitmap::load_from_file(path));
 

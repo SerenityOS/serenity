@@ -64,12 +64,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a temporary file or directory, safely, and print its name.");
-    args_parser.add_positional_argument(file_template, "The template must contain at least 3 consecutive 'X's", "template", Core::ArgsParser::Required::No);
-    args_parser.add_option(create_directory, "Create a temporary directory instead of a file", "directory", 'd');
-    args_parser.add_option(dry_run, "Do not create anything, just print a unique name", "dry-run", 'u');
-    args_parser.add_option(quiet, "Do not print diagnostics about file/directory creation failure", "quiet", 'q');
-    args_parser.add_option(target_directory, "Create TEMPLATE relative to DIR", "tmpdir", 'p', "DIR");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(file_template, "The template must contain at least 3 consecutive 'X's", "template", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(create_directory, "Create a temporary directory instead of a file", "directory", 'd'));
+    TRY(args_parser.add_option(dry_run, "Do not create anything, just print a unique name", "dry-run", 'u'));
+    TRY(args_parser.add_option(quiet, "Do not print diagnostics about file/directory creation failure", "quiet", 'q'));
+    TRY(args_parser.add_option(target_directory, "Create TEMPLATE relative to DIR", "tmpdir", 'p', "DIR"));
+    TRY(args_parser.parse(arguments));
 
     if (target_directory.is_empty()) {
         if (!file_template.is_empty()) { // If a custom template is specified we assume the target directory is the current directory

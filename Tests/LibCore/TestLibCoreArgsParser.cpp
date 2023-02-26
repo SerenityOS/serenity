@@ -67,7 +67,7 @@ static ParserResult run_parser(Vector<DeprecatedString> arguments, Function<void
         parser_initialization(parser);
 
     auto parse_result = ParserResult { arguments };
-    parse_result.result = parser.parse(parse_result.argc, parse_result.argv, Core::ArgsParser::FailureBehavior::Ignore);
+    parse_result.result = parser.parse(parse_result.argc, parse_result.argv, Core::ArgsParser::FailureBehavior::Ignore).release_value_but_fixme_should_propagate_errors();
     return parse_result;
 }
 
@@ -82,7 +82,7 @@ TEST_CASE(bool_option)
     // Short option
     bool force = false;
     auto parser_result = run_parser({ "app", "-f" }, [&](auto& parser) {
-        parser.add_option(force, "force", nullptr, 'f');
+        parser.add_option(force, "force", nullptr, 'f').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, true);
@@ -90,7 +90,7 @@ TEST_CASE(bool_option)
     // Short option, not given
     force = false;
     parser_result = run_parser({ "app" }, [&](auto& parser) {
-        parser.add_option(force, "force", nullptr, 'f');
+        parser.add_option(force, "force", nullptr, 'f').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, false);
@@ -98,7 +98,7 @@ TEST_CASE(bool_option)
     // Long option
     force = false;
     parser_result = run_parser({ "app", "--force" }, [&](auto& parser) {
-        parser.add_option(force, "force", "force", '\0');
+        parser.add_option(force, "force", "force", '\0').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, true);
@@ -106,7 +106,7 @@ TEST_CASE(bool_option)
     // Long option, not given
     force = false;
     parser_result = run_parser({ "app" }, [&](auto& parser) {
-        parser.add_option(force, "force", "force", '\0');
+        parser.add_option(force, "force", "force", '\0').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, false);
@@ -114,7 +114,7 @@ TEST_CASE(bool_option)
     // Allow both short and long option, provide short
     force = false;
     parser_result = run_parser({ "app", "-f" }, [&](auto& parser) {
-        parser.add_option(force, "force", "force", 'f');
+        parser.add_option(force, "force", "force", 'f').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, true);
@@ -122,7 +122,7 @@ TEST_CASE(bool_option)
     // Allow both short and long option, provide long
     force = false;
     parser_result = run_parser({ "app", "--force" }, [&](auto& parser) {
-        parser.add_option(force, "force", "force", 'f');
+        parser.add_option(force, "force", "force", 'f').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, true);
@@ -130,7 +130,7 @@ TEST_CASE(bool_option)
     // Allow both short and long option, provide both
     force = false;
     parser_result = run_parser({ "app", "--force", "-f" }, [&](auto& parser) {
-        parser.add_option(force, "force", "force", 'f');
+        parser.add_option(force, "force", "force", 'f').release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(force, true);
@@ -141,7 +141,7 @@ TEST_CASE(positional_string_argument)
     // Single required string argument
     DeprecatedString name = "";
     auto parser_result = run_parser({ "app", "buggie" }, [&](auto& parser) {
-        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::Yes);
+        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(name, "buggie");
@@ -149,7 +149,7 @@ TEST_CASE(positional_string_argument)
     // Single required string argument, not given
     name = "";
     parser_result = run_parser({ "app" }, [&](auto& parser) {
-        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::Yes);
+        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, false);
     EXPECT_EQ(name, "");
@@ -157,7 +157,7 @@ TEST_CASE(positional_string_argument)
     // Single optional string argument
     name = "";
     parser_result = run_parser({ "app", "buggie" }, [&](auto& parser) {
-        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::No);
+        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(name, "buggie");
@@ -165,7 +165,7 @@ TEST_CASE(positional_string_argument)
     // Single optional string argument, not given
     name = "";
     parser_result = run_parser({ "app" }, [&](auto& parser) {
-        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::No);
+        parser.add_positional_argument(name, "name", "name", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(name, "");
@@ -177,7 +177,7 @@ TEST_CASE(positional_vector_string_argument)
 
     // Zero or more positional arguments, zero given
     auto parser_result = run_parser({ "app" }, [&](auto& parser) {
-        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No);
+        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(values.size(), 0u);
@@ -185,7 +185,7 @@ TEST_CASE(positional_vector_string_argument)
     // Zero or more positional arguments, one given
     values = {};
     parser_result = run_parser({ "app", "one" }, [&](auto& parser) {
-        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No);
+        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(values.size(), 1u);
@@ -195,7 +195,7 @@ TEST_CASE(positional_vector_string_argument)
     // Zero or more positional arguments, two given
     values = {};
     parser_result = run_parser({ "app", "one", "two" }, [&](auto& parser) {
-        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No);
+        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(values.size(), 2u);
@@ -207,7 +207,7 @@ TEST_CASE(positional_vector_string_argument)
     // One or more positional arguments, zero given
     values = {};
     parser_result = run_parser({ "app" }, [&](auto& parser) {
-        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::Yes);
+        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, false);
     EXPECT_EQ(values.size(), 0u);
@@ -215,7 +215,7 @@ TEST_CASE(positional_vector_string_argument)
     // One or more positional arguments, one given
     values = {};
     parser_result = run_parser({ "app", "one" }, [&](auto& parser) {
-        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::Yes);
+        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(values.size(), 1u);
@@ -225,7 +225,7 @@ TEST_CASE(positional_vector_string_argument)
     // One or more positional arguments, two given
     values = {};
     parser_result = run_parser({ "app", "one", "two" }, [&](auto& parser) {
-        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::Yes);
+        parser.add_positional_argument(values, "values", "values", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(values.size(), 2u);
@@ -243,9 +243,9 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     bool bool_opt1 = false;
     bool bool_opt2 = false;
     auto parser_result = run_parser({ "app", "-b", "-c", "one", "two" }, [&](auto& parser) {
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);
@@ -262,9 +262,9 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     bool_opt2 = false;
     positionals = {};
     parser_result = run_parser({ "app", "one", "two" }, [&](auto& parser) {
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, false);
@@ -281,9 +281,9 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     bool_opt2 = false;
     positionals = {};
     parser_result = run_parser({ "app", "-b", "-c" }, [&](auto& parser) {
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);
@@ -296,9 +296,9 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     bool_opt2 = false;
     positionals = {};
     parser_result = run_parser({ "app", "--", "-b", "-c" }, [&](auto& parser) {
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, false);
@@ -315,9 +315,9 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     bool_opt2 = false;
     positionals = {};
     parser_result = run_parser({ "app", "-b", "--", "-c" }, [&](auto& parser) {
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);
@@ -333,9 +333,9 @@ TEST_CASE(combination_of_bool_options_with_positional_vector_string)
     bool_opt2 = false;
     positionals = {};
     parser_result = run_parser({ "app", "-b", "-d", "-c" }, [&](auto& parser) {
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, false);
 };
@@ -349,9 +349,9 @@ TEST_CASE(stop_on_first_non_option)
     Vector<StringView> positionals;
     auto parser_result = run_parser({ "app", "-b", "-c", "one" }, [&](auto& parser) {
         parser.set_stop_on_first_non_option(false);
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);
@@ -367,9 +367,9 @@ TEST_CASE(stop_on_first_non_option)
     positionals = {};
     parser_result = run_parser({ "app", "-b", "one", "-c" }, [&](auto& parser) {
         parser.set_stop_on_first_non_option(false);
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);
@@ -385,9 +385,9 @@ TEST_CASE(stop_on_first_non_option)
     positionals = {};
     parser_result = run_parser({ "app", "-b", "-c", "one" }, [&](auto& parser) {
         parser.set_stop_on_first_non_option(true);
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);
@@ -403,9 +403,9 @@ TEST_CASE(stop_on_first_non_option)
     positionals = {};
     parser_result = run_parser({ "app", "-b", "one", "-c" }, [&](auto& parser) {
         parser.set_stop_on_first_non_option(true);
-        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b');
-        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
-        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes);
+        parser.add_option(bool_opt1, "bool_opt1", nullptr, 'b').release_value_but_fixme_should_propagate_errors();
+        parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c').release_value_but_fixme_should_propagate_errors();
+        parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes).release_value_but_fixme_should_propagate_errors();
     });
     EXPECT_EQ(parser_result.result, true);
     EXPECT_EQ(bool_opt1, true);

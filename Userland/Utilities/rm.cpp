@@ -24,12 +24,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r');
-    args_parser.add_option(force, "Ignore nonexistent files", "force", 'f');
-    args_parser.add_option(verbose, "Verbose", "verbose", 'v');
-    args_parser.add_option(no_preserve_root, "Do not consider '/' specially", "no-preserve-root", 0);
-    args_parser.add_positional_argument(paths, "Path(s) to remove", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(recursive, "Delete directories recursively", "recursive", 'r'));
+    TRY(args_parser.add_option(force, "Ignore nonexistent files", "force", 'f'));
+    TRY(args_parser.add_option(verbose, "Verbose", "verbose", 'v'));
+    TRY(args_parser.add_option(no_preserve_root, "Do not consider '/' specially", "no-preserve-root", 0));
+    TRY(args_parser.add_positional_argument(paths, "Path(s) to remove", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (!force && paths.is_empty()) {
         args_parser.print_usage(stderr, arguments.argv[0]);

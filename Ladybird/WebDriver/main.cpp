@@ -94,9 +94,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int port = 8000;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address");
-    args_parser.add_option(port, "Port to listen on", "port", 'p', "port");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address"));
+    TRY(args_parser.add_option(port, "Port to listen on", "port", 'p', "port"));
+    TRY(args_parser.parse(arguments));
 
     auto ipv4_address = IPv4Address::from_string(listen_address);
     if (!ipv4_address.has_value()) {

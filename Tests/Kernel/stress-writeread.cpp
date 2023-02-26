@@ -74,17 +74,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool uninitialized_mode = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(min_block_offset, "Minimum block offset to consider", "min-offset", 'o', "size");
-    args_parser.add_option(block_length, "Number of blocks to consider", "length", 's', "size");
-    args_parser.add_option(block_size, "Block size", "block-size", 'b', "size");
-    args_parser.add_option(count, "Number of write/read cycles to run", "number", 'n', "number");
-    args_parser.add_option(rng_seed, "Random number generator seed", "seed", 'S', "number");
-    args_parser.add_option(paranoid_mode, "Check entire range for consistency after each write", "paranoid", 'p');
-    args_parser.add_option(random_mode, "Write one block inside range at random", "random", 'r');
-    args_parser.add_option(stop_mode, "Stop after first error", "abort-on-error", 'a');
-    args_parser.add_option(uninitialized_mode, "Don't pre-initialize block range", "uninitialized", 'u');
-    args_parser.add_positional_argument(target, "Target device/file path", "target");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(min_block_offset, "Minimum block offset to consider", "min-offset", 'o', "size"));
+    TRY(args_parser.add_option(block_length, "Number of blocks to consider", "length", 's', "size"));
+    TRY(args_parser.add_option(block_size, "Block size", "block-size", 'b', "size"));
+    TRY(args_parser.add_option(count, "Number of write/read cycles to run", "number", 'n', "number"));
+    TRY(args_parser.add_option(rng_seed, "Random number generator seed", "seed", 'S', "number"));
+    TRY(args_parser.add_option(paranoid_mode, "Check entire range for consistency after each write", "paranoid", 'p'));
+    TRY(args_parser.add_option(random_mode, "Write one block inside range at random", "random", 'r'));
+    TRY(args_parser.add_option(stop_mode, "Stop after first error", "abort-on-error", 'a'));
+    TRY(args_parser.add_option(uninitialized_mode, "Don't pre-initialize block range", "uninitialized", 'u'));
+    TRY(args_parser.add_positional_argument(target, "Target device/file path", "target"));
+    TRY(args_parser.parse(arguments));
 
     auto buffer = TRY(AK::ByteBuffer::create_zeroed(block_size));
 

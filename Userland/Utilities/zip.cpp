@@ -24,11 +24,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool force = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(zip_path, "Zip file path", "zipfile", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(source_paths, "Input files to be archived", "files", Core::ArgsParser::Required::Yes);
-    args_parser.add_option(recurse, "Travel the directory structure recursively", "recurse-paths", 'r');
-    args_parser.add_option(force, "Overwrite existing zip file", "force", 'f');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(zip_path, "Zip file path", "zipfile", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_positional_argument(source_paths, "Input files to be archived", "files", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_option(recurse, "Travel the directory structure recursively", "recurse-paths", 'r'));
+    TRY(args_parser.add_option(force, "Overwrite existing zip file", "force", 'f'));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::pledge("stdio rpath wpath cpath"));
 

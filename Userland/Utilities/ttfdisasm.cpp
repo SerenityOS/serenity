@@ -161,12 +161,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dump_font_program = false;
     bool dump_prep_program = false;
     StringView text;
-    args_parser.add_positional_argument(font_path, "Path to font", "FILE");
-    args_parser.add_option(dump_font_program, "Disassemble font program (fpgm table)", "disasm-fpgm", 'f');
-    args_parser.add_option(dump_prep_program, "Disassemble CVT program (prep table)", "disasm-prep", 'p');
-    args_parser.add_option(text, "Disassemble glyph programs", "disasm-glyphs", 'g', "text");
-    args_parser.add_option(no_color, "Disable syntax highlighting", "no-color", 'n');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(font_path, "Path to font", "FILE"));
+    TRY(args_parser.add_option(dump_font_program, "Disassemble font program (fpgm table)", "disasm-fpgm", 'f'));
+    TRY(args_parser.add_option(dump_prep_program, "Disassemble CVT program (prep table)", "disasm-prep", 'p'));
+    TRY(args_parser.add_option(text, "Disassemble glyph programs", "disasm-glyphs", 'g', "text"));
+    TRY(args_parser.add_option(no_color, "Disable syntax highlighting", "no-color", 'n'));
+    TRY(args_parser.parse(arguments));
 
     auto font = TRY(OpenType::Font::try_load_from_file(font_path));
 

@@ -345,14 +345,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a client for the SerenitySQL database server.");
-    args_parser.add_option(database_name, "Database to connect to", "database", 'd', "database");
-    args_parser.add_option(file_to_read, "File to read", "read", 'r', "file");
-    args_parser.add_option(file_to_source, "File to source", "source", 's', "file");
-    args_parser.add_option(suppress_sqlrc, "Don't read ~/.sqlrc", "no-sqlrc", 'n');
+    TRY(args_parser.add_option(database_name, "Database to connect to", "database", 'd', "database"));
+    TRY(args_parser.add_option(file_to_read, "File to read", "read", 'r', "file"));
+    TRY(args_parser.add_option(file_to_source, "File to source", "source", 's', "file"));
+    TRY(args_parser.add_option(suppress_sqlrc, "Don't read ~/.sqlrc", "no-sqlrc", 'n'));
 #if !defined(AK_OS_SERENITY)
-    args_parser.add_option(sql_server_path, "Path to SQLServer to launch if needed", "sql-server-path", 's', "path");
+    TRY(args_parser.add_option(sql_server_path, "Path to SQLServer to launch if needed", "sql-server-path", 's', "path"));
 #endif
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     Core::EventLoop loop;
 

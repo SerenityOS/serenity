@@ -24,10 +24,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString origin;
     DeprecatedString url_string;
 
-    args_parser.add_positional_argument(url_string, "URL to connect to", "url", Core::ArgsParser::Required::Yes);
-    args_parser.add_option(origin, "URL to use as origin", "origin", 'o', "origin");
+    TRY(args_parser.add_positional_argument(url_string, "URL to connect to", "url", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_option(origin, "URL to use as origin", "origin", 'o', "origin"));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     URL url(url_string);
 

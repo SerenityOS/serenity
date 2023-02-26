@@ -19,10 +19,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Change the owning group for a file or directory.");
-    args_parser.add_option(dont_follow_symlinks, "Don't follow symlinks", "no-dereference", 'h');
-    args_parser.add_positional_argument(gid_arg, "Group ID", "gid");
-    args_parser.add_positional_argument(path, "Path to file", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(dont_follow_symlinks, "Don't follow symlinks", "no-dereference", 'h'));
+    TRY(args_parser.add_positional_argument(gid_arg, "Group ID", "gid"));
+    TRY(args_parser.add_positional_argument(path, "Path to file", "path"));
+    TRY(args_parser.parse(arguments));
 
     gid_t new_gid = -1;
 

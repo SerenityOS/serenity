@@ -26,8 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     double secs;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(secs, "Number of seconds to sleep for", "num-seconds");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(secs, "Number of seconds to sleep for", "num-seconds"));
+    TRY(args_parser.parse(arguments));
 
     struct sigaction sa;
     memset(&sa, 0, sizeof(struct sigaction));

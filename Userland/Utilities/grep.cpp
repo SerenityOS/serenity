@@ -74,10 +74,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     size_t matched_line_count = 0;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r');
-    args_parser.add_option(use_ere, "Extended regular expressions", "extended-regexp", 'E');
-    args_parser.add_option(fixed_strings, "Treat pattern as a string, not a regexp", "fixed-strings", 'F');
-    args_parser.add_option(Core::ArgsParser::Option {
+    TRY(args_parser.add_option(recursive, "Recursively scan files", "recursive", 'r'));
+    TRY(args_parser.add_option(use_ere, "Extended regular expressions", "extended-regexp", 'E'));
+    TRY(args_parser.add_option(fixed_strings, "Treat pattern as a string, not a regexp", "fixed-strings", 'F'));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Pattern",
         .long_name = "regexp",
@@ -87,13 +87,13 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             patterns.append(str);
             return true;
         },
-    });
-    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
-    args_parser.add_option(line_numbers, "Output line-numbers", "line-numbers", 'n');
-    args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
-    args_parser.add_option(quiet_mode, "Do not write anything to standard output", "quiet", 'q');
-    args_parser.add_option(suppress_errors, "Suppress error messages for nonexistent or unreadable files", "no-messages", 's');
-    args_parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i'));
+    TRY(args_parser.add_option(line_numbers, "Output line-numbers", "line-numbers", 'n'));
+    TRY(args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v'));
+    TRY(args_parser.add_option(quiet_mode, "Do not write anything to standard output", "quiet", 'q'));
+    TRY(args_parser.add_option(suppress_errors, "Suppress error messages for nonexistent or unreadable files", "no-messages", 's'));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Action to take for binary files ([binary], text, skip)",
         .long_name = "binary-mode",
@@ -108,8 +108,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 return false;
             return true;
         },
-    });
-    args_parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Treat binary files as text (same as --binary-mode text)",
         .long_name = "text",
@@ -118,8 +118,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             binary_mode = BinaryFileMode::Text;
             return true;
         },
-    });
-    args_parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Ignore binary files (same as --binary-mode skip)",
         .long_name = nullptr,
@@ -128,8 +128,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             binary_mode = BinaryFileMode::Skip;
             return true;
         },
-    });
-    args_parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "When to use colored output for the matching text ([auto], never, always)",
         .long_name = "color",
@@ -144,10 +144,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 return false;
             return true;
         },
-    });
-    args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
-    args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(args);
+    }));
+    TRY(args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c'));
+    TRY(args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(args));
 
     // mock grep behavior: if -e is omitted, use first positional argument as pattern
     if (patterns.size() == 0 && files.size())

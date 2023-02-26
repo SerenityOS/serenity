@@ -38,17 +38,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify a user account");
-    args_parser.add_option(uid, "The new numerical value of the user's ID", "uid", 'u', "uid");
-    args_parser.add_option(gid, "The group number of the user's new initial login group", "gid", 'g', "gid");
-    args_parser.add_option(lock, "Lock password", "lock", 'L');
-    args_parser.add_option(unlock, "Unlock password", "unlock", 'U');
-    args_parser.add_option(new_home_directory, "The user's new login directory", "home", 'd', "new-home");
-    args_parser.add_option(move_home, "Move the content of the user's home directory to the new location", "move", 'm');
-    args_parser.add_option(shell, "The name of the user's new login shell", "shell", 's', "path-to-shell");
-    args_parser.add_option(gecos, "Change the GECOS field of the user", "gecos", 'n', "general-info");
-    args_parser.add_positional_argument(username, "Username of the account to modify", "username");
+    TRY(args_parser.add_option(uid, "The new numerical value of the user's ID", "uid", 'u', "uid"));
+    TRY(args_parser.add_option(gid, "The group number of the user's new initial login group", "gid", 'g', "gid"));
+    TRY(args_parser.add_option(lock, "Lock password", "lock", 'L'));
+    TRY(args_parser.add_option(unlock, "Unlock password", "unlock", 'U'));
+    TRY(args_parser.add_option(new_home_directory, "The user's new login directory", "home", 'd', "new-home"));
+    TRY(args_parser.add_option(move_home, "Move the content of the user's home directory to the new location", "move", 'm'));
+    TRY(args_parser.add_option(shell, "The name of the user's new login shell", "shell", 's', "path-to-shell"));
+    TRY(args_parser.add_option(gecos, "Change the GECOS field of the user", "gecos", 'n', "general-info"));
+    TRY(args_parser.add_positional_argument(username, "Username of the account to modify", "username"));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     auto account_or_error = Core::Account::from_name(username);
 

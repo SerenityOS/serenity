@@ -101,25 +101,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List files in a directory.");
-    args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
-    args_parser.add_option(flag_show_almost_all_dotfiles, "Do not list implied . and .. directories", nullptr, 'A');
-    args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "ignore-backups", 'B');
-    args_parser.add_option(flag_list_directories_only, "List directories themselves, not their contents", "directory", 'd');
-    args_parser.add_option(flag_long, "Display long info", "long", 'l');
-    args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
-    args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
-    args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F');
-    args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
-    args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
-    args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
-    args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o');
-    args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
-    args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 0);
-    args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K');
-    args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R');
-    args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1');
-    args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a'));
+    TRY(args_parser.add_option(flag_show_almost_all_dotfiles, "Do not list implied . and .. directories", nullptr, 'A'));
+    TRY(args_parser.add_option(flag_ignore_backups, "Do not list implied entries ending with ~", "ignore-backups", 'B'));
+    TRY(args_parser.add_option(flag_list_directories_only, "List directories themselves, not their contents", "directory", 'd'));
+    TRY(args_parser.add_option(flag_long, "Display long info", "long", 'l'));
+    TRY(args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't'));
+    TRY(args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r'));
+    TRY(args_parser.add_option(flag_classify, "Append a file type indicator to entries", "classify", 'F'));
+    TRY(args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G'));
+    TRY(args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i'));
+    TRY(args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n'));
+    TRY(args_parser.add_option(flag_hide_group, "In long format, do not show group information", nullptr, 'o'));
+    TRY(args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h'));
+    TRY(args_parser.add_option(flag_human_readable_si, "Print human-readable sizes in SI units", "si", 0));
+    TRY(args_parser.add_option(flag_disable_hyperlinks, "Disable hyperlinks", "no-hyperlinks", 'K'));
+    TRY(args_parser.add_option(flag_recursive, "List subdirectories recursively", "recursive", 'R'));
+    TRY(args_parser.add_option(flag_force_newline, "List one file per line", nullptr, '1'));
+    TRY(args_parser.add_positional_argument(paths, "Directory to list", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (flag_show_almost_all_dotfiles)
         flag_show_dotfiles = true;

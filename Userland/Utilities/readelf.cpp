@@ -225,21 +225,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView string_dump_section {};
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(display_all, "Display all", "all", 'a');
-    args_parser.add_option(display_elf_header, "Display ELF header", "file-header", 'h');
-    args_parser.add_option(display_program_headers, "Display program headers", "program-headers", 'l');
-    args_parser.add_option(display_section_headers, "Display section headers", "section-headers", 'S');
-    args_parser.add_option(display_headers, "Equivalent to: -h -l -S -s -r -d -n -u -c", "headers", 'e');
-    args_parser.add_option(display_symbol_table, "Display the symbol table", "syms", 's');
-    args_parser.add_option(display_dynamic_symbol_table, "Display the dynamic symbol table", "dyn-syms", '\0');
-    args_parser.add_option(display_dynamic_section, "Display the dynamic section", "dynamic", 'd');
-    args_parser.add_option(display_core_notes, "Display core notes", "notes", 'n');
-    args_parser.add_option(display_relocations, "Display relocations", "relocs", 'r');
-    args_parser.add_option(display_unwind_info, "Display unwind info", "unwind", 'u');
-    args_parser.add_option(display_hardening, "Display security hardening info", "checksec", 'c');
-    args_parser.add_option(string_dump_section, "Display the contents of a section as strings", "string-dump", 'p', "section-name");
-    args_parser.add_positional_argument(path, "ELF path", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(display_all, "Display all", "all", 'a'));
+    TRY(args_parser.add_option(display_elf_header, "Display ELF header", "file-header", 'h'));
+    TRY(args_parser.add_option(display_program_headers, "Display program headers", "program-headers", 'l'));
+    TRY(args_parser.add_option(display_section_headers, "Display section headers", "section-headers", 'S'));
+    TRY(args_parser.add_option(display_headers, "Equivalent to: -h -l -S -s -r -d -n -u -c", "headers", 'e'));
+    TRY(args_parser.add_option(display_symbol_table, "Display the symbol table", "syms", 's'));
+    TRY(args_parser.add_option(display_dynamic_symbol_table, "Display the dynamic symbol table", "dyn-syms", '\0'));
+    TRY(args_parser.add_option(display_dynamic_section, "Display the dynamic section", "dynamic", 'd'));
+    TRY(args_parser.add_option(display_core_notes, "Display core notes", "notes", 'n'));
+    TRY(args_parser.add_option(display_relocations, "Display relocations", "relocs", 'r'));
+    TRY(args_parser.add_option(display_unwind_info, "Display unwind info", "unwind", 'u'));
+    TRY(args_parser.add_option(display_hardening, "Display security hardening info", "checksec", 'c'));
+    TRY(args_parser.add_option(string_dump_section, "Display the contents of a section as strings", "string-dump", 'p', "section-name"));
+    TRY(args_parser.add_positional_argument(path, "ELF path", "path"));
+    TRY(args_parser.parse(arguments));
 
     if (arguments.argc < 3) {
         args_parser.print_usage(stderr, arguments.argv[0]);

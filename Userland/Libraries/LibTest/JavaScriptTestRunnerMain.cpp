@@ -94,33 +94,33 @@ int main(int argc, char** argv)
     DeprecatedString test_glob;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(print_times, "Show duration of each test", "show-time", 't');
+    args_parser.add_option(print_times, "Show duration of each test", "show-time", 't').release_value_but_fixme_should_propagate_errors();
     args_parser.add_option(Core::ArgsParser::Option {
-        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Show progress with OSC 9 (true, false)",
-        .long_name = "show-progress",
-        .short_name = 'p',
-        .accept_value = [&](auto* str) {
-            if ("true"sv == str)
-                print_progress = true;
-            else if ("false"sv == str)
-                print_progress = false;
-            else
-                return false;
-            return true;
-        },
-    });
-    args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
-    args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file", 0);
-    args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
-    args_parser.add_option(g_run_bytecode, "Use the bytecode interpreter", "run-bytecode", 'b');
-    args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
-    args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
+                               .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+                               .help_string = "Show progress with OSC 9 (true, false)",
+                               .long_name = "show-progress",
+                               .short_name = 'p',
+                               .accept_value = [&](auto* str) {
+                                   if ("true"sv == str)
+                                       print_progress = true;
+                                   else if ("false"sv == str)
+                                       print_progress = false;
+                                   else
+                                       return false;
+                                   return true;
+                               },
+                           }).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(print_json, "Show results as JSON", "json", 'j').release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(per_file, "Show detailed per-file results as JSON (implies -j)", "per-file", 0).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g').release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(g_run_bytecode, "Use the bytecode interpreter", "run-bytecode", 'b').release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(JS::Bytecode::g_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd').release_value_but_fixme_should_propagate_errors();
+    args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob").release_value_but_fixme_should_propagate_errors();
     for (auto& entry : g_extra_args)
-        args_parser.add_option(*entry.key, entry.value.get<0>().characters(), entry.value.get<1>().characters(), entry.value.get<2>());
-    args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(common_path, "Path to tests-common.js", "common-path", Core::ArgsParser::Required::No);
-    args_parser.parse(argc, argv);
+        args_parser.add_option(*entry.key, entry.value.get<0>().characters(), entry.value.get<1>().characters(), entry.value.get<2>()).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
+    args_parser.add_positional_argument(common_path, "Path to tests-common.js", "common-path", Core::ArgsParser::Required::No).release_value_but_fixme_should_propagate_errors();
+    args_parser.parse(argc, argv).release_value_but_fixme_should_propagate_errors();
 
     if (per_file)
         print_json = true;

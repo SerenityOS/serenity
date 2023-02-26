@@ -17,9 +17,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_sleep = false;
 
     Core::ArgsParser parser;
-    parser.add_option(permissions, "Apply these permissions going forward", "permissions", 'p', "unveil-permissions");
-    parser.add_option(should_sleep, "Sleep after processing all arguments", "sleep", 's');
-    parser.add_option(Core::ArgsParser::Option {
+    TRY(parser.add_option(permissions, "Apply these permissions going forward", "permissions", 'p', "unveil-permissions"));
+    TRY(parser.add_option(should_sleep, "Sleep after processing all arguments", "sleep", 's'));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a path to the unveil list",
         .long_name = "unveil",
@@ -35,8 +35,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
             }
             return true;
-        } });
-    parser.add_option(Core::ArgsParser::Option {
+        } }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Lock the veil",
         .long_name = "lock",
@@ -48,8 +48,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
             }
             return true;
-        } });
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+        } }));
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Test a path against the veil",
         .name = "path",
         .min_values = 0,
@@ -61,9 +61,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             else
                 warnln("'{}' - ok", s);
             return true;
-        } });
+        } }));
 
-    parser.parse(arguments);
+    TRY(parser.parse(arguments));
     if (should_sleep)
         sleep(INT_MAX);
     return 0;

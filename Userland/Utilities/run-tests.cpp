@@ -321,7 +321,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString config_file;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(Core::ArgsParser::Option {
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Show progress with OSC 9 (true, false)",
         .long_name = "show-progress",
@@ -335,16 +335,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return false;
             return true;
         },
-    });
-    args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
-    args_parser.add_option(print_all_output, "Show all test output", "verbose", 'v');
-    args_parser.add_option(run_benchmarks, "Run benchmarks as well", "benchmarks", 'b');
-    args_parser.add_option(run_skipped_tests, "Run all matching tests, even those marked as 'skip'", "all", 'a');
-    args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
-    args_parser.add_option(exclude_pattern, "Regular expression to use to exclude paths from being considered tests", "exclude-pattern", 'e', "pattern");
-    args_parser.add_option(config_file, "Configuration file to use", "config-file", 'c', "filename");
-    args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    }));
+    TRY(args_parser.add_option(print_json, "Show results as JSON", "json", 'j'));
+    TRY(args_parser.add_option(print_all_output, "Show all test output", "verbose", 'v'));
+    TRY(args_parser.add_option(run_benchmarks, "Run benchmarks as well", "benchmarks", 'b'));
+    TRY(args_parser.add_option(run_skipped_tests, "Run all matching tests, even those marked as 'skip'", "all", 'a'));
+    TRY(args_parser.add_option(test_glob, "Only run tests matching the given glob", "filter", 'f', "glob"));
+    TRY(args_parser.add_option(exclude_pattern, "Regular expression to use to exclude paths from being considered tests", "exclude-pattern", 'e', "pattern"));
+    TRY(args_parser.add_option(config_file, "Configuration file to use", "config-file", 'c', "filename"));
+    TRY(args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     test_glob = DeprecatedString::formatted("*{}*", test_glob);
 

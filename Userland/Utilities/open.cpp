@@ -19,8 +19,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> urls_or_paths;
     Core::ArgsParser parser;
     parser.set_general_help("Open a file or URL by executing the appropriate program.");
-    parser.add_positional_argument(urls_or_paths, "URL or file path to open", "url-or-path");
-    parser.parse(arguments);
+    TRY(parser.add_positional_argument(urls_or_paths, "URL or file path to open", "url-or-path"));
+    TRY(parser.parse(arguments));
 
     bool all_ok = true;
 

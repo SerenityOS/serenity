@@ -17,9 +17,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n');
-    args_parser.add_positional_argument(paths, "Symlink path", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(no_newline, "Do not append a newline", "no-newline", 'n'));
+    TRY(args_parser.add_positional_argument(paths, "Symlink path", "path"));
+    TRY(args_parser.parse(arguments));
 
     for (auto path : paths) {
         auto destination = TRY(Core::DeprecatedFile::read_link(path));

@@ -27,13 +27,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         | PERF_EVENT_SIGNPOST;
     bool seen_event_type_arg = false;
 
-    args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID");
-    args_parser.add_option(all_processes, "Profile all processes (super-user only), result at /sys/kernel/profile", nullptr, 'a');
-    args_parser.add_option(enable, "Enable", nullptr, 'e');
-    args_parser.add_option(disable, "Disable", nullptr, 'd');
-    args_parser.add_option(free, "Free the profiling buffer for the associated process(es).", nullptr, 'f');
-    args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w');
-    args_parser.add_option(Core::ArgsParser::Option {
+    TRY(args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID"));
+    TRY(args_parser.add_option(all_processes, "Profile all processes (super-user only), result at /sys/kernel/profile", nullptr, 'a'));
+    TRY(args_parser.add_option(enable, "Enable", nullptr, 'e'));
+    TRY(args_parser.add_option(disable, "Disable", nullptr, 'd'));
+    TRY(args_parser.add_option(free, "Free the profiling buffer for the associated process(es).", nullptr, 'f'));
+    TRY(args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w'));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         Core::ArgsParser::OptionArgumentMode::Required,
         "Enable tracking specific event type", nullptr, 't', "event_type",
         [&](DeprecatedString event_type) {
@@ -57,8 +57,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 exit(1);
             }
             return true;
-        } });
-    args_parser.add_positional_argument(command, "Command to profile", "command", Core::ArgsParser::Required::No);
+        } }));
+    TRY(args_parser.add_positional_argument(command, "Command to profile", "command", Core::ArgsParser::Required::No));
     args_parser.set_stop_on_first_non_option(true);
 
     auto print_types = [] {
@@ -66,7 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("Event type can be one of: sample, context_switch, page_fault, syscall, read, kmalloc and kfree.");
     };
 
-    if (!args_parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)) {
+    if (!TRY(args_parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))) {
         print_types();
         exit(0);
     }

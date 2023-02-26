@@ -52,12 +52,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool allow_cache = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(allow_cache, "Allow using disk cache", "cache", 'c');
-    args_parser.add_option(directory, "Path to a directory where we can store the disk benchmark temp file", "directory", 'd', "directory");
-    args_parser.add_option(time_per_benchmark_sec, "Time elapsed per benchmark (seconds)", "time-per-benchmark", 't', "time-per-benchmark");
-    args_parser.add_option(file_sizes, "A comma-separated list of file sizes", "file-size", 'f', "file-size");
-    args_parser.add_option(block_sizes, "A comma-separated list of block sizes", "block-size", 'b', "block-size");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(allow_cache, "Allow using disk cache", "cache", 'c'));
+    TRY(args_parser.add_option(directory, "Path to a directory where we can store the disk benchmark temp file", "directory", 'd', "directory"));
+    TRY(args_parser.add_option(time_per_benchmark_sec, "Time elapsed per benchmark (seconds)", "time-per-benchmark", 't', "time-per-benchmark"));
+    TRY(args_parser.add_option(file_sizes, "A comma-separated list of file sizes", "file-size", 'f', "file-size"));
+    TRY(args_parser.add_option(block_sizes, "A comma-separated list of block sizes", "block-size", 'b', "block-size"));
+    TRY(args_parser.parse(arguments));
 
     Time const time_per_benchmark = Time::from_seconds(time_per_benchmark_sec);
 

@@ -104,8 +104,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView auto_login;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(auto_login, "automatically log in with no prompt", "auto-login", 'a', "username");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(auto_login, "automatically log in with no prompt", "auto-login", 'a', "username"));
+    TRY(args_parser.parse(arguments));
 
     if (auto_login.is_empty()) {
         window->show();

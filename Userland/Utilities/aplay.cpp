@@ -30,10 +30,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool show_sample_progress = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Path to audio file", "path");
-    args_parser.add_option(should_loop, "Loop playback", "loop", 'l');
-    args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "Path to audio file", "path"));
+    TRY(args_parser.add_option(should_loop, "Loop playback", "loop", 'l'));
+    TRY(args_parser.add_option(show_sample_progress, "Show playback progress in samples", "sample-progress", 's'));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/audio", "rw"));
     TRY(Core::System::unveil(Core::DeprecatedFile::absolute_path(path), "r"sv));

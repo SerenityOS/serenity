@@ -33,11 +33,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool silent = false;
 
     parser.set_general_help("Compare two files, and report the first byte that does not match. Returns 0 if files are identical, or 1 if they differ.");
-    parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes);
-    parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes);
-    parser.add_option(verbose, "Output every byte mismatch, not just the first", "verbose", 'l');
-    parser.add_option(silent, "Disable all output", "silent", 's');
-    parser.parse(arguments);
+    TRY(parser.add_positional_argument(filename1, "First file to compare", "file1", Core::ArgsParser::Required::Yes));
+    TRY(parser.add_positional_argument(filename2, "Second file to compare", "file2", Core::ArgsParser::Required::Yes));
+    TRY(parser.add_option(verbose, "Output every byte mismatch, not just the first", "verbose", 'l'));
+    TRY(parser.add_option(silent, "Disable all output", "silent", 's'));
+    TRY(parser.parse(arguments));
 
     // When opening STDIN as both files, the results are undefined.
     // Let's just report that it matches.

@@ -310,14 +310,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool dont_disable_core_dump = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(test_directory, "Directory to search for tests", "tests");
-    args_parser.add_option(per_file_location, "Output a per-file containing all results", "per-file", 'o', "filename");
-    args_parser.add_option(batch_size, "Size of batches send to runner at once", "batch-size", 'b', "batch size");
-    args_parser.add_option(runner_command, "Command to run", "runner-command", 'r', "command");
-    args_parser.add_option(pass_through_parameters, "Parameters to pass through to the runner, will split on spaces", "pass-through", 'p', "parameters");
-    args_parser.add_option(dont_print_progress, "Hide progress information", "quiet", 'q');
-    args_parser.add_option(dont_disable_core_dump, "Enabled core dumps for runner (i.e. don't pass --disable-core-dump)", "enable-core-dumps", 0);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(test_directory, "Directory to search for tests", "tests"));
+    TRY(args_parser.add_option(per_file_location, "Output a per-file containing all results", "per-file", 'o', "filename"));
+    TRY(args_parser.add_option(batch_size, "Size of batches send to runner at once", "batch-size", 'b', "batch size"));
+    TRY(args_parser.add_option(runner_command, "Command to run", "runner-command", 'r', "command"));
+    TRY(args_parser.add_option(pass_through_parameters, "Parameters to pass through to the runner, will split on spaces", "pass-through", 'p', "parameters"));
+    TRY(args_parser.add_option(dont_print_progress, "Hide progress information", "quiet", 'q'));
+    TRY(args_parser.add_option(dont_disable_core_dump, "Enabled core dumps for runner (i.e. don't pass --disable-core-dump)", "enable-core-dumps", 0));
+    TRY(args_parser.parse(arguments));
 
     // Normalize the path to ensure filenames are consistent
     Vector<DeprecatedString> paths;

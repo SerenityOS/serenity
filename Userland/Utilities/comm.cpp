@@ -34,16 +34,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Compare two sorted files line by line");
-    args_parser.add_option(suppress_col1, "Suppress column 1 (lines unique to file1)", nullptr, '1');
-    args_parser.add_option(suppress_col2, "Suppress column 2 (lines unique to file2)", nullptr, '2');
-    args_parser.add_option(suppress_col3, "Suppress column 3 (lines common to both files)", nullptr, '3');
-    args_parser.add_option(case_insensitive, "Use case-insensitive comparison of lines", nullptr, 'i');
-    args_parser.add_option(color, "Always print colored output", "color", 'c');
-    args_parser.add_option(no_color, "Do not print colored output", "no-color", 0);
-    args_parser.add_option(print_total, "Print a summary", "total", 't');
-    args_parser.add_positional_argument(file1_path, "First file to compare", "file1");
-    args_parser.add_positional_argument(file2_path, "Second file to compare", "file2");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(suppress_col1, "Suppress column 1 (lines unique to file1)", nullptr, '1'));
+    TRY(args_parser.add_option(suppress_col2, "Suppress column 2 (lines unique to file2)", nullptr, '2'));
+    TRY(args_parser.add_option(suppress_col3, "Suppress column 3 (lines common to both files)", nullptr, '3'));
+    TRY(args_parser.add_option(case_insensitive, "Use case-insensitive comparison of lines", nullptr, 'i'));
+    TRY(args_parser.add_option(color, "Always print colored output", "color", 'c'));
+    TRY(args_parser.add_option(no_color, "Do not print colored output", "no-color", 0));
+    TRY(args_parser.add_option(print_total, "Print a summary", "total", 't'));
+    TRY(args_parser.add_positional_argument(file1_path, "First file to compare", "file1"));
+    TRY(args_parser.add_positional_argument(file2_path, "Second file to compare", "file2"));
+    TRY(args_parser.parse(arguments));
 
     if (color && no_color) {
         warnln("Cannot specify 'color' and 'no-color' together");

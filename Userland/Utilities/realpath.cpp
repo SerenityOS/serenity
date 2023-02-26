@@ -19,8 +19,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
         "Show the 'real' path of a file, by resolving all symbolic links along the way.");
-    args_parser.add_positional_argument(path, "Path to resolve", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "Path to resolve", "path"));
+    TRY(args_parser.parse(arguments));
 
     char* value = realpath(path, nullptr);
     if (value == nullptr) {

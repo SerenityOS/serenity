@@ -207,15 +207,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Create a file or update file access time and/or modification time.");
-    args_parser.add_ignored(nullptr, 'f');
-    args_parser.add_option(update_atime, "Change access time of file", nullptr, 'a');
-    args_parser.add_option(no_create_file, "Do not create a file if it does not exist", nullptr, 'c');
-    args_parser.add_option(update_mtime, "Change modification time of file", nullptr, 'm');
-    args_parser.add_option(input_datetime, "Use specified datetime instead of current time", nullptr, 'd', "datetime");
-    args_parser.add_option(input_time, "Use specified time instead of current time", nullptr, 't', "time");
-    args_parser.add_option(reference_path, "Use time of file specified by reference path instead of current time", nullptr, 'r', "reference");
-    args_parser.add_positional_argument(paths, "Files to touch", "path", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_ignored(nullptr, 'f'));
+    TRY(args_parser.add_option(update_atime, "Change access time of file", nullptr, 'a'));
+    TRY(args_parser.add_option(no_create_file, "Do not create a file if it does not exist", nullptr, 'c'));
+    TRY(args_parser.add_option(update_mtime, "Change modification time of file", nullptr, 'm'));
+    TRY(args_parser.add_option(input_datetime, "Use specified datetime instead of current time", nullptr, 'd', "datetime"));
+    TRY(args_parser.add_option(input_time, "Use specified time instead of current time", nullptr, 't', "time"));
+    TRY(args_parser.add_option(reference_path, "Use time of file specified by reference path instead of current time", nullptr, 'r', "reference"));
+    TRY(args_parser.add_positional_argument(paths, "Files to touch", "path", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     if (input_datetime.is_empty() + input_time.is_empty() + reference_path.is_empty() < 2)
         err("cannot specify a time with more than one option");

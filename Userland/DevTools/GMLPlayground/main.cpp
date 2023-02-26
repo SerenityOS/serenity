@@ -77,8 +77,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* path = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "GML file to edit", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-gml-playground"sv));
     auto window = TRY(GUI::Window::try_create());

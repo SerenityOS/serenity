@@ -90,11 +90,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView arg_length;
     bool use_read_instead_of_mmap = false;
     Core::ArgsParser args;
-    args.add_positional_argument(arg_offset, "Physical Address (Offset)", "offset", Core::ArgsParser::Required::Yes);
-    args.add_positional_argument(arg_length, "Length of that region", "length", Core::ArgsParser::Required::Yes);
-    args.add_option(use_read_instead_of_mmap, "Read /dev/mem instead of try to map it", nullptr, 'r');
+    TRY(args.add_positional_argument(arg_offset, "Physical Address (Offset)", "offset", Core::ArgsParser::Required::Yes));
+    TRY(args.add_positional_argument(arg_length, "Length of that region", "length", Core::ArgsParser::Required::Yes));
+    TRY(args.add_option(use_read_instead_of_mmap, "Read /dev/mem instead of try to map it", nullptr, 'r'));
 
-    args.parse(arguments);
+    TRY(args.parse(arguments));
 
     u64 offset = 0;
     u64 length = 0;

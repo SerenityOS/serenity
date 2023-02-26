@@ -27,10 +27,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView file;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size");
-    args_parser.add_option(reference, "Resize the target file to match the size of this one", "reference", 'r', "file");
-    args_parser.add_positional_argument(file, "File path", "file");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(resize, "Resize the target file to (or by) this size. Prefix with + or - to expand or shrink the file, or a bare number to set the size exactly", "size", 's', "size"));
+    TRY(args_parser.add_option(reference, "Resize the target file to match the size of this one", "reference", 'r', "file"));
+    TRY(args_parser.add_positional_argument(file, "File path", "file"));
+    TRY(args_parser.parse(arguments));
 
     if (resize.is_empty() && reference.is_empty()) {
         args_parser.print_usage(stderr, arguments.argv[0]);

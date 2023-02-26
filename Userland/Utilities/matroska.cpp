@@ -30,11 +30,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     u64 track_number = 0;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(blocks, "Print blocks for each track.", "blocks", 'b');
-    args_parser.add_option(cues, "Print cue points for each track.", "cues", 'c');
-    args_parser.add_option<u64>(track_number, "Specify a track number to print info for, omit to print all of them.", "track", 't', "tracknumber");
-    args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(blocks, "Print blocks for each track.", "blocks", 'b'));
+    TRY(args_parser.add_option(cues, "Print cue points for each track.", "cues", 'c'));
+    TRY(args_parser.add_option<u64>(track_number, "Specify a track number to print info for, omit to print all of them.", "track", 't', "tracknumber"));
+    TRY(args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     auto reader = TRY_PARSE(Video::Matroska::Reader::from_file(filename));
 

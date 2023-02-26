@@ -25,10 +25,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");
-    args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "ip");
-    args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "adapter");
-    args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "ip"));
+    TRY(args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "adapter"));
+    TRY(args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask"));
+    TRY(args_parser.parse(arguments));
 
     if (value_ipv4.is_empty() && value_adapter.is_empty() && value_mask.is_empty()) {
         auto file = TRY(Core::File::open("/sys/kernel/net/adapters"sv, Core::File::OpenMode::Read));

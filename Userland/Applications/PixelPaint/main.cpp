@@ -28,8 +28,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     char const* image_file = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));

@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString file_to_load;
     Core::ArgsParser argument_parser;
-    argument_parser.add_positional_argument(file_to_load, "Presentation to load", "file", Core::ArgsParser::Required::No);
-    argument_parser.parse(arguments);
+    TRY(argument_parser.add_positional_argument(file_to_load, "Presentation to load", "file", Core::ArgsParser::Required::No));
+    TRY(argument_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());

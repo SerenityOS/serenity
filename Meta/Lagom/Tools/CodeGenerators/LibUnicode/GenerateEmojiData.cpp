@@ -339,14 +339,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView emoji_resource_path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path");
-    args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
-    args_parser.add_option(generated_installation_path, "Path to the emoji.txt file to generate", "generated-installation-path", 'i', "generated-installation-path");
-    args_parser.add_option(emoji_test_path, "Path to emoji-test.txt file", "emoji-test-path", 'e', "emoji-test-path");
-    args_parser.add_option(emoji_serenity_path, "Path to emoji-serenity.txt file", "emoji-serenity-path", 's', "emoji-serenity-path");
-    args_parser.add_option(emoji_base_path, "Path to the Base directory", "emoji-base-path", 'b', "emoji-base-path");
-    args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(generated_header_path, "Path to the Unicode Data header file to generate", "generated-header-path", 'h', "generated-header-path"));
+    TRY(args_parser.add_option(generated_implementation_path, "Path to the Unicode Data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path"));
+    TRY(args_parser.add_option(generated_installation_path, "Path to the emoji.txt file to generate", "generated-installation-path", 'i', "generated-installation-path"));
+    TRY(args_parser.add_option(emoji_test_path, "Path to emoji-test.txt file", "emoji-test-path", 'e', "emoji-test-path"));
+    TRY(args_parser.add_option(emoji_serenity_path, "Path to emoji-serenity.txt file", "emoji-serenity-path", 's', "emoji-serenity-path"));
+    TRY(args_parser.add_option(emoji_base_path, "Path to the Base directory", "emoji-base-path", 'b', "emoji-base-path"));
+    TRY(args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path"));
+    TRY(args_parser.parse(arguments));
 
     VERIFY(!emoji_base_path.is_empty() && Core::DeprecatedFile::exists(emoji_base_path));
     VERIFY(!emoji_resource_path.is_empty() && Core::DeprecatedFile::exists(emoji_resource_path));

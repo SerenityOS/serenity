@@ -23,13 +23,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView format_string;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(set_date, "Set system date and time", "set", 's', "date");
-    args_parser.add_option(print_unix_date, "Print date as Unix timestamp", "unix", 'u');
-    args_parser.add_option(print_iso_8601, "Print date in ISO 8601 format", "iso-8601", 'i');
-    args_parser.add_option(print_rfc_3339, "Print date in RFC 3339 format", "rfc-3339", 'r');
-    args_parser.add_option(print_rfc_5322, "Print date in RFC 5322 format", "rfc-5322", 'R');
-    args_parser.add_positional_argument(format_string, "Custom format to print the date in", "format-string", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(set_date, "Set system date and time", "set", 's', "date"));
+    TRY(args_parser.add_option(print_unix_date, "Print date as Unix timestamp", "unix", 'u'));
+    TRY(args_parser.add_option(print_iso_8601, "Print date in ISO 8601 format", "iso-8601", 'i'));
+    TRY(args_parser.add_option(print_rfc_3339, "Print date in RFC 3339 format", "rfc-3339", 'r'));
+    TRY(args_parser.add_option(print_rfc_5322, "Print date in RFC 5322 format", "rfc-5322", 'R'));
+    TRY(args_parser.add_positional_argument(format_string, "Custom format to print the date in", "format-string", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (set_date != nullptr) {
         auto number = DeprecatedString(set_date).to_uint();

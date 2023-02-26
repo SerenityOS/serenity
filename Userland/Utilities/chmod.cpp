@@ -22,10 +22,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool recursive = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(recursive, "Change file modes recursively", "recursive", 'R');
-    args_parser.add_positional_argument(mode, "File mode in octal or symbolic notation", "mode");
-    args_parser.add_positional_argument(paths, "Paths to file", "paths");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(recursive, "Change file modes recursively", "recursive", 'R'));
+    TRY(args_parser.add_positional_argument(mode, "File mode in octal or symbolic notation", "mode"));
+    TRY(args_parser.add_positional_argument(paths, "Paths to file", "paths"));
+    TRY(args_parser.parse(arguments));
 
     auto mask = TRY(Core::FilePermissionsMask::parse(mode));
 

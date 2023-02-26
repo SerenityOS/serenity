@@ -33,12 +33,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString document_root_path = default_document_root_path.to_deprecated_string();
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address");
-    args_parser.add_option(port, "Port to listen on", "port", 'p', "port");
-    args_parser.add_option(username, "HTTP basic authentication username", "user", 'U', "username");
-    args_parser.add_option(password, "HTTP basic authentication password", "pass", 'P', "password");
-    args_parser.add_positional_argument(document_root_path, "Path to serve the contents of", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(listen_address, "IP address to listen on", "listen-address", 'l', "listen_address"));
+    TRY(args_parser.add_option(port, "Port to listen on", "port", 'p', "port"));
+    TRY(args_parser.add_option(username, "HTTP basic authentication username", "user", 'U', "username"));
+    TRY(args_parser.add_option(password, "HTTP basic authentication password", "pass", 'P', "password"));
+    TRY(args_parser.add_positional_argument(document_root_path, "Path to serve the contents of", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto ipv4_address = IPv4Address::from_string(listen_address);
     if (!ipv4_address.has_value()) {

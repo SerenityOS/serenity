@@ -18,9 +18,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView filepath = {};
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(decode, "Decode data", "decode", 'd');
-    args_parser.add_positional_argument(filepath, "", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(decode, "Decode data", "decode", 'd'));
+    TRY(args_parser.add_positional_argument(filepath, "", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open_file_or_standard_stream(filepath, Core::File::OpenMode::Read));
     ByteBuffer buffer = TRY(file->read_until_eof());

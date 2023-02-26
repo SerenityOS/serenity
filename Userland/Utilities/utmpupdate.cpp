@@ -28,12 +28,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView from;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(flag_create, "Create entry", "create", 'c');
-    args_parser.add_option(flag_delete, "Delete entry", "delete", 'd');
-    args_parser.add_option(pid, "PID", "PID", 'p', "PID");
-    args_parser.add_option(from, "From", "from", 'f', "From");
-    args_parser.add_positional_argument(tty_name, "TTY name", "tty");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_create, "Create entry", "create", 'c'));
+    TRY(args_parser.add_option(flag_delete, "Delete entry", "delete", 'd'));
+    TRY(args_parser.add_option(pid, "PID", "PID", 'p', "PID"));
+    TRY(args_parser.add_option(from, "From", "from", 'f', "From"));
+    TRY(args_parser.add_positional_argument(tty_name, "TTY name", "tty"));
+    TRY(args_parser.parse(arguments));
 
     if (flag_create && flag_delete) {
         warnln("-c and -d are mutually exclusive");

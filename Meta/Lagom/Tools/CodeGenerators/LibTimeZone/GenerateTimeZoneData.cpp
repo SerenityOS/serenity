@@ -813,11 +813,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> time_zone_paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(generated_header_path, "Path to the time zone data header file to generate", "generated-header-path", 'h', "generated-header-path");
-    args_parser.add_option(generated_implementation_path, "Path to the time zone data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
-    args_parser.add_option(time_zone_coordinates_path, "Path to the time zone data coordinates file", "time-zone-coordinates-path", 'z', "time-zone-coordinates-path");
-    args_parser.add_positional_argument(time_zone_paths, "Paths to the time zone database files", "time-zone-paths");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(generated_header_path, "Path to the time zone data header file to generate", "generated-header-path", 'h', "generated-header-path"));
+    TRY(args_parser.add_option(generated_implementation_path, "Path to the time zone data implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path"));
+    TRY(args_parser.add_option(time_zone_coordinates_path, "Path to the time zone data coordinates file", "time-zone-coordinates-path", 'z', "time-zone-coordinates-path"));
+    TRY(args_parser.add_positional_argument(time_zone_paths, "Paths to the time zone database files", "time-zone-paths"));
+    TRY(args_parser.parse(arguments));
 
     auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));

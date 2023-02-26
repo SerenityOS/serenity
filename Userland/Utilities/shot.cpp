@@ -99,14 +99,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool edit_image = false;
     int screen = -1;
 
-    args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
-    args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
-    args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds");
-    args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index");
-    args_parser.add_option(select_region, "Select a region to capture", "region", 'r');
-    args_parser.add_option(edit_image, "Open in PixelPaint", "edit", 'e');
+    TRY(args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c'));
+    TRY(args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds"));
+    TRY(args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index"));
+    TRY(args_parser.add_option(select_region, "Select a region to capture", "region", 'r'));
+    TRY(args_parser.add_option(edit_image, "Open in PixelPaint", "edit", 'e'));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     if (output_path.is_empty()) {
         output_path = Core::DateTime::now().to_deprecated_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv);

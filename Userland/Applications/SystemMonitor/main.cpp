@@ -269,8 +269,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView args_tab = "processes"sv;
     Core::ArgsParser parser;
-    parser.add_option(args_tab, "Tab, one of 'processes', 'graphs', 'fs', 'hardware', or 'network'", "open-tab", 't', "tab");
-    parser.parse(arguments);
+    TRY(parser.add_option(args_tab, "Tab, one of 'processes', 'graphs', 'fs', 'hardware', or 'network'", "open-tab", 't', "tab"));
+    TRY(parser.parse(arguments));
     StringView args_tab_view = args_tab;
 
     auto app_icon = GUI::Icon::default_icon("app-system-monitor"sv);

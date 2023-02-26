@@ -22,8 +22,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     pid_t pid = 0;
-    args_parser.add_positional_argument(pid, "PID", "pid");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(pid, "PID", "pid"));
+    TRY(args_parser.parse(arguments));
     Core::EventLoop loop;
 
     Core::DirIterator iterator(DeprecatedString::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);

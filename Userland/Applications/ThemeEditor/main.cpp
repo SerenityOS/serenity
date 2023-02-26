@@ -30,8 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView file_to_edit;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No);
-    parser.parse(arguments);
+    TRY(parser.add_positional_argument(file_to_edit, "Theme file to edit", "file", Core::ArgsParser::Required::No));
+    TRY(parser.parse(arguments));
 
     Optional<DeprecatedString> path = {};
 

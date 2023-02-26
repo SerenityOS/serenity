@@ -21,8 +21,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView selected_tab;
     Core::ArgsParser args_parser;
-    args_parser.add_option(selected_tab, "Tab, one of 'terminal' or 'view'", "open-tab", 't', "tab");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(selected_tab, "Tab, one of 'terminal' or 'view'", "open-tab", 't', "tab"));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::pledge("stdio rpath recvfd sendfd"));
     TRY(Core::System::unveil("/res", "r"));

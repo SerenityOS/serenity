@@ -26,11 +26,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(force, "Force", "force", 'f');
-    args_parser.add_option(no_clobber, "Do not overwrite existing files", "no-clobber", 'n');
-    args_parser.add_option(verbose, "Verbose", "verbose", 'v');
-    args_parser.add_positional_argument(paths, "Paths to files being moved followed by target location", "paths");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(force, "Force", "force", 'f'));
+    TRY(args_parser.add_option(no_clobber, "Do not overwrite existing files", "no-clobber", 'n'));
+    TRY(args_parser.add_option(verbose, "Verbose", "verbose", 'v'));
+    TRY(args_parser.add_positional_argument(paths, "Paths to files being moved followed by target location", "paths"));
+    TRY(args_parser.parse(arguments));
 
     if (paths.size() < 2) {
         args_parser.print_usage(stderr, arguments.argv[0]);

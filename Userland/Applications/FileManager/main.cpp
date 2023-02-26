@@ -82,11 +82,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool is_selection_mode { false };
     bool ignore_path_resolution { false };
     DeprecatedString initial_location;
-    args_parser.add_option(is_desktop_mode, "Run in desktop mode", "desktop", 'd');
-    args_parser.add_option(is_selection_mode, "Show entry in parent folder", "select", 's');
-    args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r');
-    args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(is_desktop_mode, "Run in desktop mode", "desktop", 'd'));
+    TRY(args_parser.add_option(is_selection_mode, "Show entry in parent folder", "select", 's'));
+    TRY(args_parser.add_option(ignore_path_resolution, "Use raw path, do not resolve real path", "raw", 'r'));
+    TRY(args_parser.add_positional_argument(initial_location, "Path to open", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

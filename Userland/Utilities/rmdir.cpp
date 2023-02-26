@@ -18,8 +18,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(paths, "Directories to remove", "paths");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(paths, "Directories to remove", "paths"));
+    TRY(args_parser.parse(arguments));
 
     int status = 0;
     for (auto path : paths) {

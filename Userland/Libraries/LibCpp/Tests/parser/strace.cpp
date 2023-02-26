@@ -25,11 +25,11 @@ int main(int argc, char** argv)
     Core::ArgsParser parser;
     parser.set_general_help(
         "Trace all syscalls and their result.");
-    parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
-    parser.add_option(output_filename, "Filename to write output to", "output", 'o', "output");
-    parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No);
+    TRY(parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid"));
+    TRY(parser.add_option(output_filename, "Filename to write output to", "output", 'o', "output"));
+    TRY(parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No));
 
-    parser.parse(argc, argv);
+    TRY(parser.parse(argc, argv));
 
     if (output_filename != nullptr) {
         auto open_result = Core::DeprecatedFile::open(output_filename, Core::OpenMode::WriteOnly);

@@ -86,9 +86,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString webdriver_content_ipc_path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
-    args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket"));
+    TRY(args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path"));
+    TRY(args_parser.parse(arguments));
 
     VERIFY(webcontent_fd_passing_socket >= 0);
 

@@ -21,10 +21,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView properties_json_path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(generated_header_path, "Path to the PropertyID header file to generate", "generated-header-path", 'h', "generated-header-path");
-    args_parser.add_option(generated_implementation_path, "Path to the PropertyID implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
-    args_parser.add_option(properties_json_path, "Path to the JSON file to read from", "json-path", 'j', "json-path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(generated_header_path, "Path to the PropertyID header file to generate", "generated-header-path", 'h', "generated-header-path"));
+    TRY(args_parser.add_option(generated_implementation_path, "Path to the PropertyID implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path"));
+    TRY(args_parser.add_option(properties_json_path, "Path to the JSON file to read from", "json-path", 'j', "json-path"));
+    TRY(args_parser.parse(arguments));
 
     auto json = TRY(read_entire_file_as_json(properties_json_path));
     VERIFY(json.is_object());

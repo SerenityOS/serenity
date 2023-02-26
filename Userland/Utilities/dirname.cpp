@@ -12,8 +12,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     DeprecatedString path = {};
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "Path", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "Path", "path"));
+    TRY(args_parser.parse(arguments));
 
     outln("{}", LexicalPath::dirname(path));
     return 0;

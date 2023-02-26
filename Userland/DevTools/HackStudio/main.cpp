@@ -58,10 +58,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool mode_coredump = false;
     pid_t pid_to_debug = -1;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No);
-    args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c');
-    args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path_argument, "Path to a workspace or a file", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(mode_coredump, "Debug a coredump in HackStudio", "coredump", 'c'));
+    TRY(args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID"));
+    TRY(args_parser.parse(arguments));
 
     auto absolute_path_argument = Core::DeprecatedFile::real_path_for(path_argument);
     auto hack_studio_widget = TRY(create_hack_studio_widget(mode_coredump, absolute_path_argument, pid_to_debug));

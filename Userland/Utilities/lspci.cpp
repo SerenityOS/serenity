@@ -48,9 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List PCI devices.");
-    args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
-    args_parser.add_option(flag_verbose, "Show verbose info on devices", "verbose", 'v');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n'));
+    TRY(args_parser.add_option(flag_verbose, "Show verbose info on devices", "verbose", 'v'));
+    TRY(args_parser.parse(arguments));
 
     if (!flag_show_numerical)
         TRY(Core::System::unveil("/res/pci.ids", "r"));

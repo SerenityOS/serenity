@@ -29,8 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView selected_tab;
     Core::ArgsParser args_parser;
-    args_parser.add_option(selected_tab, "Tab, one of 'background', 'fonts', 'monitor', 'themes', or 'workspaces'", "open-tab", 't', "tab");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(selected_tab, "Tab, one of 'background', 'fonts', 'monitor', 'themes', or 'workspaces'", "open-tab", 't', "tab"));
+    TRY(args_parser.parse(arguments));
 
     auto app_icon = GUI::Icon::default_icon("app-display-settings"sv);
 

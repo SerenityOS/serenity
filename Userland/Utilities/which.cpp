@@ -17,8 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     char const* filename = nullptr;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(filename, "Name of executable", "executable");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(filename, "Name of executable", "executable"));
+    TRY(args_parser.parse(arguments));
 
     auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment({ filename, strlen(filename) });
     if (!fullpath.has_value()) {

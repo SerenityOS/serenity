@@ -16,8 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView filename = ""sv;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto window = TRY(GUI::Window::try_create());

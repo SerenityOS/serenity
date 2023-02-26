@@ -49,13 +49,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    args_parser.add_option(move(number_style_option));
-    args_parser.add_option(increment, "Line count increment", "increment", 'i', "number");
-    args_parser.add_option(separator, "Separator between line numbers and lines", "separator", 's', "string");
-    args_parser.add_option(start_number, "Initial line number", "startnum", 'v', "number");
-    args_parser.add_option(number_width, "Number width", "width", 'w', "number");
-    args_parser.add_positional_argument(files, "Files to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(move(number_style_option)));
+    TRY(args_parser.add_option(increment, "Line count increment", "increment", 'i', "number"));
+    TRY(args_parser.add_option(separator, "Separator between line numbers and lines", "separator", 's', "string"));
+    TRY(args_parser.add_option(start_number, "Initial line number", "startnum", 'v', "number"));
+    TRY(args_parser.add_option(number_width, "Number width", "width", 'w', "number"));
+    TRY(args_parser.add_positional_argument(files, "Files to process", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     Vector<FILE*> file_pointers;
     if (!files.is_empty()) {

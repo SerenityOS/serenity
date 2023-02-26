@@ -109,11 +109,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> directories;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(flag_show_hidden_files, "Show hidden files", "all", 'a');
-    args_parser.add_option(flag_show_only_directories, "Show only directories", "only-directories", 'd');
-    args_parser.add_option(max_depth, "Maximum depth of the tree", "maximum-depth", 'L', "level");
-    args_parser.add_positional_argument(directories, "Directories to print", "directories", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_show_hidden_files, "Show hidden files", "all", 'a'));
+    TRY(args_parser.add_option(flag_show_only_directories, "Show only directories", "only-directories", 'd'));
+    TRY(args_parser.add_option(max_depth, "Maximum depth of the tree", "maximum-depth", 'L', "level"));
+    TRY(args_parser.add_positional_argument(directories, "Directories to print", "directories", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (max_depth < 1) {
         warnln("{}: Invalid level, must be greater than 0.", arguments.argv[0]);

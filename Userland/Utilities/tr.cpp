@@ -100,12 +100,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView to_chars;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c');
-    args_parser.add_option(delete_flag, "Delete characters instead of replacing", "delete", 'd');
-    args_parser.add_option(squeeze_flag, "Omit repeated characters listed in the last given set from the output", "squeeze-repeats", 's');
-    args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from");
-    args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(complement_flag, "Take the complement of the first set", "complement", 'c'));
+    TRY(args_parser.add_option(delete_flag, "Delete characters instead of replacing", "delete", 'd'));
+    TRY(args_parser.add_option(squeeze_flag, "Omit repeated characters listed in the last given set from the output", "squeeze-repeats", 's'));
+    TRY(args_parser.add_positional_argument(from_chars, "Set of characters to translate from", "from"));
+    TRY(args_parser.add_positional_argument(to_chars, "Set of characters to translate to", "to", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     bool transform_flag = !to_chars.is_empty() && !delete_flag;
 
