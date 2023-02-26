@@ -17,6 +17,7 @@
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/TGALoader.h>
+#include <LibGfx/WebPLoader.h>
 #include <LibTest/TestCase.h>
 #include <stdio.h>
 #include <string.h>
@@ -218,4 +219,75 @@ TEST_CASE(test_targa_top_left_compressed)
 
     auto frame = MUST(plugin_decoder->frame(0));
     EXPECT(frame.duration == 0);
+}
+
+TEST_CASE(test_webp_simple_lossy)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8.webp"sv)));
+    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(240, 240));
+}
+
+TEST_CASE(test_webp_simple_lossless)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("simple-vp8l.webp"sv)));
+    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(386, 395));
+}
+
+TEST_CASE(test_webp_extended_lossy)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossy.webp"sv)));
+    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
+}
+
+TEST_CASE(test_webp_extended_lossless)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless.webp"sv)));
+    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(417, 223));
+}
+
+TEST_CASE(test_webp_extended_lossless_animated)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless-animated.webp"sv)));
+    EXPECT(MUST(Gfx::WebPImageDecoderPlugin::sniff(file->bytes())));
+    auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    // FIXME: These three lines are wrong.
+    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+    EXPECT(!plugin_decoder->is_animated());
+    EXPECT(!plugin_decoder->loop_count());
+
+    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(990, 1050));
 }
