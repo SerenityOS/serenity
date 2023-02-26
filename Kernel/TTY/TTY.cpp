@@ -10,13 +10,13 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/signal_numbers.h>
+#include <Kernel/API/ttydefaults.h>
+#include <Kernel/API/ttydefaultschars.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
-#define TTYDEFCHARS
-#include <LibC/sys/ttydefaults.h>
-#undef TTYDEFCHARS
+#include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 
