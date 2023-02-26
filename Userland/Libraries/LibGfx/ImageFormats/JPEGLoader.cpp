@@ -365,11 +365,9 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
 
         scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
 
-        if (scan.end_of_bands_run_count >= 1) {
-            // end_of_bands_run_count is decremented at the end of `build_macroblocks`.
-            // This line compensate this effect.
-            ++scan.end_of_bands_run_count;
-        }
+        // end_of_bands_run_count is decremented at the end of `build_macroblocks`.
+        // And we need to now that we reached End of Block in `add_ac`.
+        ++scan.end_of_bands_run_count;
 
         return true;
     }
@@ -395,28 +393,29 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
     // 0th coefficient is the dc, which is already handled
     auto first_coefficient = max(1, scan.spectral_selection_start);
 
-    for (int j = first_coefficient; j <= scan.spectral_selection_end;) {
-        if (scan.end_of_bands_run_count > 0)
-            continue;
-
+    u32 to_skip = 0;
+    Optional<u8> saved_symbol;
+    for (int j = first_coefficient; j <= scan.spectral_selection_end; ++j) {
         // AC symbols encode 2 pieces of information, the high 4 bits represent
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
-        auto ac_symbol = TRY(get_next_symbol(scan.huffman_stream, ac_table));
+        if (scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
+            saved_symbol = TRY(get_next_symbol(scan.huffman_stream, ac_table));
 
-        if (TRY(read_eob(scan, ac_symbol)))
-            break;
-
-        // ac_symbol = JPEG_ZRL means we need to skip 16 zeroes.
-        u8 run_length = ac_symbol == JPEG_ZRL ? 16 : ac_symbol >> 4;
-        j += run_length;
-
-        if (j > scan.spectral_selection_end) {
-            dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", j, run_length);
-            return Error::from_string_literal("Run-length exceeded boundaries");
+            if (!TRY(read_eob(scan, *saved_symbol))) {
+                to_skip = *saved_symbol >> 4;
+            }
         }
 
-        u8 coeff_length = ac_symbol & 0x0F;
+        if (to_skip > 0) {
+            --to_skip;
+            continue;
+        }
+
+        if (scan.end_of_bands_run_count > 0)
+            continue;
+
+        u8 coeff_length = *saved_symbol & 0x0F;
         if (coeff_length > 10) {
             dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
             return Error::from_string_literal("AC coefficient too long");
@@ -427,8 +426,15 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
             if (ac_coefficient < (1 << (coeff_length - 1)))
                 ac_coefficient -= (1 << coeff_length) - 1;
 
-            select_component[zigzag_map[j++]] = ac_coefficient;
+            select_component[zigzag_map[j]] = ac_coefficient;
         }
+
+        saved_symbol.clear();
+    }
+
+    if (to_skip > 0) {
+        dbgln_if(JPEG_DEBUG, "Run-length exceeded boundaries. Cursor: {}, Skipping: {}!", scan.spectral_selection_end + to_skip, to_skip);
+        return Error::from_string_literal("Run-length exceeded boundaries");
     }
 
     return {};
