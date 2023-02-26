@@ -37,7 +37,18 @@ static Optional<DeprecatedString> image_details(DeprecatedString const& descript
     if (!image_decoder)
         return {};
 
-    return DeprecatedString::formatted("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
+    StringBuilder builder;
+    builder.appendff("{}, {} x {}", description, image_decoder->width(), image_decoder->height());
+    if (image_decoder->is_animated()) {
+        builder.appendff(", animated with {} frames that loop", image_decoder->frame_count());
+        int loop_count = image_decoder->loop_count();
+        if (loop_count == 0)
+            builder.appendff(" indefinitely");
+        else
+            builder.appendff(" {} {}", loop_count, loop_count == 1 ? "time" : "times");
+    }
+
+    return builder.to_deprecated_string();
 }
 
 static Optional<DeprecatedString> gzip_details(DeprecatedString description, DeprecatedString const& path)
