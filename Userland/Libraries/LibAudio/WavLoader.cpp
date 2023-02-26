@@ -137,20 +137,18 @@ LoaderSamples WavLoaderPlugin::samples_from_pcm_data(Bytes const& data, size_t s
     return samples;
 }
 
-LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
+ErrorOr<Vector<FixedArray<Sample>>, LoaderError> WavLoaderPlugin::load_chunks(size_t samples_to_read_from_input)
 {
     auto remaining_samples = m_total_samples - m_loaded_samples;
     if (remaining_samples <= 0)
-        return FixedArray<Sample> {};
+        return Vector<FixedArray<Sample>> {};
 
     // One "sample" contains data from all channels.
     // In the Wave spec, this is also called a block.
     size_t bytes_per_sample
         = m_num_channels * pcm_bits_per_sample(m_sample_format) / 8;
 
-    // Might truncate if not evenly divisible by the sample size
-    auto max_samples_to_read = max_samples_to_read_from_input / bytes_per_sample;
-    auto samples_to_read = min(max_samples_to_read, remaining_samples);
+    auto samples_to_read = min(samples_to_read_from_input, remaining_samples);
     auto bytes_to_read = samples_to_read * bytes_per_sample;
 
     dbgln_if(AWAVLOADER_DEBUG, "Read {} bytes WAV with num_channels {} sample rate {}, "
@@ -163,7 +161,9 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_
 
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
-    return samples_from_pcm_data(sample_data.bytes(), samples_to_read);
+    Vector<FixedArray<Sample>> samples;
+    TRY(samples.try_append(TRY(samples_from_pcm_data(sample_data.bytes(), samples_to_read))));
+    return samples;
 }
 
 MaybeLoaderError WavLoaderPlugin::seek(int sample_index)

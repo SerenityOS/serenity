@@ -15,12 +15,6 @@
 
 namespace Audio {
 
-// Experimentally determined to be a decent buffer size on i686:
-// 4K (the default) is slightly worse, and 64K is much worse.
-// At sufficiently large buffer sizes, the advantage of infrequent read() calls is outweighed by the memmove() overhead.
-// There was no intensive fine-tuning done to determine this value, so improvements may definitely be possible.
-constexpr size_t FLAC_BUFFER_SIZE = 8 * KiB;
-
 ALWAYS_INLINE u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type);
 // Sign-extend an arbitrary-size signed number to 64 bit signed
 ALWAYS_INLINE i64 sign_extend(u32 n, u8 size);
@@ -49,7 +43,7 @@ public:
     static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(StringView path);
     static Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> create(Bytes buffer);
 
-    virtual LoaderSamples get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
+    virtual ErrorOr<Vector<FixedArray<Sample>>, LoaderError> load_chunks(size_t samples_to_read_from_input) override;
 
     virtual MaybeLoaderError reset() override;
     virtual MaybeLoaderError seek(int sample_index) override;
@@ -70,8 +64,8 @@ private:
     // Either returns the metadata block or sets error message.
     // Additionally, increments m_data_start_location past the read meta block.
     ErrorOr<FlacRawMetadataBlock, LoaderError> next_meta_block(BigEndianInputBitStream& bit_input);
-    // Fetches and writes the next FLAC frame
-    MaybeLoaderError next_frame(Span<Sample>);
+    // Fetches and returns the next FLAC frame.
+    LoaderSamples next_frame();
     // Helper of next_frame that fetches a sub frame's header
     ErrorOr<FlacSubframeHeader, LoaderError> next_subframe_header(BigEndianInputBitStream& bit_input, u8 channel_index);
     // Helper of next_frame that decompresses a subframe
@@ -108,8 +102,6 @@ private:
     // keep track of the start of the data in the FLAC stream to seek back more easily
     u64 m_data_start_location { 0 };
     Optional<FlacFrameHeader> m_current_frame;
-    // Whatever the last get_more_samples() call couldn't return gets stored here.
-    Vector<Sample, FLAC_BUFFER_SIZE> m_unread_data;
     u64 m_current_sample_or_frame { 0 };
     Vector<FlacSeekPoint> m_seektable;
 };

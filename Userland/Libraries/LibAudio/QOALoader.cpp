@@ -142,38 +142,36 @@ MaybeLoaderError QOALoaderPlugin::load_one_frame(Span<Sample>& target, IsFirstFr
     return {};
 }
 
-LoaderSamples QOALoaderPlugin::get_more_samples(size_t max_samples_to_read_from_input)
+ErrorOr<Vector<FixedArray<Sample>>, LoaderError> QOALoaderPlugin::load_chunks(size_t samples_to_read_from_input)
 {
-    // Because each frame can only have so many inter-channel samples (quite a low number),
-    // we just load frames until the limit is reached, but at least one.
-    // This avoids caching samples in the QOA loader, simplifying state management.
-
-    if (max_samples_to_read_from_input < QOA::max_frame_samples)
-        return LoaderError { LoaderError::Category::Internal, LOADER_TRY(m_stream->tell()), "QOA loader is not capable of reading less than one frame of samples"sv };
-
     ssize_t const remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
     if (remaining_samples <= 0)
-        return FixedArray<Sample> {};
-    size_t const samples_to_read = min(max_samples_to_read_from_input, remaining_samples);
+        return Vector<FixedArray<Sample>> {};
+    size_t const samples_to_read = min(samples_to_read_from_input, remaining_samples);
     auto is_first_frame = m_loaded_samples == 0 ? IsFirstFrame::Yes : IsFirstFrame::No;
 
-    auto samples = LOADER_TRY(FixedArray<Sample>::create(samples_to_read));
+    Vector<FixedArray<Sample>> frames;
     size_t current_loaded_samples = 0;
 
     while (current_loaded_samples < samples_to_read) {
-        auto slice_to_load_into = samples.span().slice(current_loaded_samples, min(QOA::max_frame_samples, samples.size() - current_loaded_samples));
+        auto samples = LOADER_TRY(FixedArray<Sample>::create(QOA::max_frame_samples));
+        auto slice_to_load_into = samples.span();
         TRY(this->load_one_frame(slice_to_load_into, is_first_frame));
         is_first_frame = IsFirstFrame::No;
         VERIFY(slice_to_load_into.size() <= QOA::max_frame_samples);
         current_loaded_samples += slice_to_load_into.size();
-        // The buffer wasn't large enough for the next frame.
-        if (slice_to_load_into.size() == 0)
+        if (slice_to_load_into.size() != samples.size()) {
+            auto smaller_samples = LOADER_TRY(FixedArray<Sample>::create(slice_to_load_into));
+            samples.swap(smaller_samples);
+        }
+        LOADER_TRY(frames.try_append(move(samples)));
+
+        if (slice_to_load_into.size() != samples.size())
             break;
     }
     m_loaded_samples += current_loaded_samples;
-    auto trimmed_samples = LOADER_TRY(FixedArray<Sample>::create(samples.span().trim(current_loaded_samples)));
 
-    return trimmed_samples;
+    return frames;
 }
 
 MaybeLoaderError QOALoaderPlugin::reset()
