@@ -336,6 +336,8 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, C
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
 static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
+    VERIFY(context.first_chunk->type == FourCC("VP8X"));
+
     // FIXME: This isn't quite to spec, which says
     // "All chunks SHOULD be placed in the same order as listed above.
     //  If a chunk appears in the wrong place, the file is invalid, but readers MAY parse the file, ignoring the chunks that are out of order."
@@ -361,6 +363,37 @@ static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyB
         else if (chunk.type == FourCC("VP8 ") || chunk.type == FourCC("VP8L"))
             store(context.image_data_chunk, chunk);
     }
+
+    // Validate chunks.
+
+    // https://developers.google.com/speed/webp/docs/riff_container#animation
+    // "ANIM Chunk: [...] This chunk MUST appear if the Animation flag in the VP8X chunk is set. If the Animation flag is not set and this chunk is present, it MUST be ignored."
+    if (context.vp8x_header.has_animation && !context.animation_header_chunk.has_value())
+        return context.error("WebPImageDecoderPlugin: Header claims animation, but no ANIM chunk");
+    if (!context.vp8x_header.has_animation && context.animation_header_chunk.has_value()) {
+        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: Header claims no animation, but ANIM chunk present. Ignoring ANIM chunk.");
+        context.animation_header_chunk.clear();
+    }
+
+    // "ANMF Chunk: [...] If the Animation flag is not set, then this chunk SHOULD NOT be present."
+    if (!context.vp8x_header.has_animation && context.animation_header_chunk.has_value()) {
+        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: Header claims no animation, but ANMF chunks present. Ignoring ANMF chunks.");
+        context.animation_frame_chunks.clear();
+    }
+
+    // https://developers.google.com/speed/webp/docs/riff_container#alpha
+    // "A frame containing a 'VP8L' chunk SHOULD NOT contain this chunk."
+    // FIXME: Also check in ANMF chunks.
+    if (context.alpha_chunk.has_value() && context.image_data_chunk.has_value() && context.image_data_chunk->type == FourCC("VP8L")) {
+        dbgln_if(WEBP_DEBUG, "WebPImageDecoderPlugin: VP8L frames should not have ALPH chunks. Ignoring ALPH chunk.");
+        context.alpha_chunk.clear();
+    }
+
+    // https://developers.google.com/speed/webp/docs/riff_container#color_profile
+    // "This chunk MUST appear before the image data."
+    // FIXME: Doesn't check animated files.
+    if (context.iccp_chunk.has_value() && context.image_data_chunk.has_value() && context.iccp_chunk->data.data() > context.image_data_chunk->data.data())
+        return context.error("WebPImageDecoderPlugin: ICCP chunk is after image data");
 
     context.state = WebPLoadingContext::State::ChunksDecoded;
     return {};
