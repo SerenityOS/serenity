@@ -574,6 +574,7 @@ static inline bool is_supported_marker(Marker const marker)
     case JPEG_DRI:
     case JPEG_EOI:
     case JPEG_SOF0:
+    case JPEG_SOF2:
     case JPEG_SOI:
     case JPEG_SOS:
         return true;
@@ -649,8 +650,8 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         current_scan.spectral_selection_end,
         current_scan.successive_approximation);
 
-    // The three values should be fixed for baseline JPEGs utilizing sequential DCT.
-    if (current_scan.spectral_selection_start != 0 || current_scan.spectral_selection_end != 63 || current_scan.successive_approximation != 0) {
+    // FIXME: Support SOF2 jpegs with current_scan.successive_approximation != 0
+    if (current_scan.spectral_selection_start > 63 || current_scan.spectral_selection_end > 63 || current_scan.successive_approximation != 0) {
         dbgln_if(JPEG_DEBUG, "{}: ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
             TRY(stream.tell()),
             current_scan.spectral_selection_start,
@@ -1292,6 +1293,7 @@ static ErrorOr<void> parse_header(AK::SeekableStream& stream, JPEGLoadingContext
             dbgln_if(JPEG_DEBUG, "{}: Unexpected marker {:x}!", TRY(stream.tell()), marker);
             return Error::from_string_literal("Unexpected marker");
         case JPEG_SOF0:
+        case JPEG_SOF2:
             TRY(read_start_of_frame(stream, context));
             context.state = JPEGLoadingContext::FrameDecoded;
             return {};
