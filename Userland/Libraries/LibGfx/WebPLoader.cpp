@@ -526,8 +526,7 @@ ErrorOr<bool> WebPImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     WebPLoadingContext context;
     context.data = data;
-    TRY(decode_webp_header(context));
-    return true;
+    return !decode_webp_header(context).is_error();
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> WebPImageDecoderPlugin::create(ReadonlyBytes data)
