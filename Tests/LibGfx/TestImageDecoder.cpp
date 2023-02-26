@@ -284,9 +284,10 @@ TEST_CASE(test_webp_extended_lossless_animated)
     auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
     EXPECT(plugin_decoder->initialize());
 
-    // FIXME: These three lines are wrong.
-    EXPECT_EQ(plugin_decoder->frame_count(), 1u);
-    EXPECT(!plugin_decoder->is_animated());
+    EXPECT_EQ(plugin_decoder->frame_count(), 8u);
+    EXPECT(plugin_decoder->is_animated());
+
+    // FIXME: This is wrong.
     EXPECT(!plugin_decoder->loop_count());
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(990, 1050));

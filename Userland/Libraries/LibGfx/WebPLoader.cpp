@@ -519,8 +519,15 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> WebPImageDecoderPlugin::create(Readon
 
 bool WebPImageDecoderPlugin::is_animated()
 {
-    // FIXME
-    return false;
+    if (m_context->state == WebPLoadingContext::State::Error)
+        return false;
+
+    if (m_context->state < WebPLoadingContext::State::FirstChunkDecoded) {
+        if (decode_webp_first_chunk(*m_context).is_error())
+            return false;
+    }
+
+    return m_context->first_chunk->type == FourCC("VP8X") && m_context->vp8x_header.has_animation;
 }
 
 size_t WebPImageDecoderPlugin::loop_count()
@@ -531,8 +538,15 @@ size_t WebPImageDecoderPlugin::loop_count()
 
 size_t WebPImageDecoderPlugin::frame_count()
 {
-    // FIXME
-    return 1;
+    if (!is_animated())
+        return 1;
+
+    if (m_context->state < WebPLoadingContext::State::ChunksDecoded) {
+        if (decode_webp_chunks(*m_context).is_error())
+            return 1;
+    }
+
+    return m_context->animation_frame_chunks.size();
 }
 
 ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
