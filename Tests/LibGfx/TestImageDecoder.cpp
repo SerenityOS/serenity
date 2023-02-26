@@ -86,7 +86,7 @@ TEST_CASE(test_bmp_embedded_in_ico)
     EXPECT(!plugin_decoder->frame(0).is_error());
 }
 
-TEST_CASE(test_jpg)
+TEST_CASE(test_jpeg_sof0_one_scan)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("rgb24.jpg"sv)));
     EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
