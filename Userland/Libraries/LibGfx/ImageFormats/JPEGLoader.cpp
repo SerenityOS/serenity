@@ -199,9 +199,10 @@ struct Scan {
     // B.2.3 - Scan header syntax
     Vector<ScanComponent, 3> components;
 
-    u8 spectral_selection_start {};
-    u8 spectral_selection_end {};
-    u8 successive_approximation {};
+    u8 spectral_selection_start {};      // Ss
+    u8 spectral_selection_end {};        // Se
+    u8 successive_approximation_high {}; // Ah
+    u8 successive_approximation_low {};  // Al
 
     HuffmanStreamState huffman_stream;
 
@@ -662,19 +663,23 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
 
     current_scan.spectral_selection_start = TRY(stream.read_value<u8>());
     current_scan.spectral_selection_end = TRY(stream.read_value<u8>());
-    current_scan.successive_approximation = TRY(stream.read_value<u8>());
+    auto const successive_approximation = TRY(stream.read_value<u8>());
+    current_scan.successive_approximation_high = successive_approximation >> 4;
+    current_scan.successive_approximation_low = successive_approximation & 0x0F;
 
-    dbgln_if(JPEG_DEBUG, "Start of Selection: {}, End of Selection: {}, Successive Approximation: {}",
+    dbgln_if(JPEG_DEBUG, "Start of Selection: {}, End of Selection: {}, Successive Approximation High: {}, Successive Approximation Low: {}",
         current_scan.spectral_selection_start,
         current_scan.spectral_selection_end,
-        current_scan.successive_approximation);
+        current_scan.successive_approximation_high,
+        current_scan.successive_approximation_low);
 
     // FIXME: Support SOF2 jpegs with current_scan.successive_approximation != 0
-    if (current_scan.spectral_selection_start > 63 || current_scan.spectral_selection_end > 63 || current_scan.successive_approximation != 0) {
-        dbgln_if(JPEG_DEBUG, "ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation: {}!",
+    if (current_scan.spectral_selection_start > 63 || current_scan.spectral_selection_end > 63 || successive_approximation != 0) {
+        dbgln_if(JPEG_DEBUG, "ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation High: {}, Successive Approximation Low: {}!",
             current_scan.spectral_selection_start,
             current_scan.spectral_selection_end,
-            current_scan.successive_approximation);
+            current_scan.successive_approximation_high,
+            current_scan.successive_approximation_low);
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
 
