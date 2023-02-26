@@ -79,6 +79,11 @@ struct VP8XHeader {
     u32 height;
 };
 
+struct ANIMChunk {
+    u32 background_color;
+    u16 loop_count;
+};
+
 }
 
 struct WebPLoadingContext {
@@ -333,6 +338,20 @@ static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, C
     return VP8XHeader { has_icc, has_alpha, has_exif, has_xmp, has_animation, width, height };
 }
 
+// https://developers.google.com/speed/webp/docs/riff_container#animation
+static ErrorOr<ANIMChunk> decode_webp_chunk_ANIM(WebPLoadingContext& context, Chunk const& anim_chunk)
+{
+    VERIFY(anim_chunk.type == FourCC("ANIM"));
+    if (anim_chunk.data.size() < 6)
+        return context.error("WebPImageDecoderPlugin: ANIM chunk too small");
+
+    u8 const* data = anim_chunk.data.data();
+    u32 background_color = (u32)data[0] | ((u32)data[1] << 8) | ((u32)data[2] << 16) | ((u32)data[3] << 24);
+    u16 loop_count = data[4] | (data[5] << 8);
+
+    return ANIMChunk { background_color, loop_count };
+}
+
 // https://developers.google.com/speed/webp/docs/riff_container#extended_file_format
 static ErrorOr<void> decode_webp_extended(WebPLoadingContext& context, ReadonlyBytes chunks)
 {
@@ -532,8 +551,19 @@ bool WebPImageDecoderPlugin::is_animated()
 
 size_t WebPImageDecoderPlugin::loop_count()
 {
-    // FIXME
-    return 0;
+    if (!is_animated())
+        return 0;
+
+    if (m_context->state < WebPLoadingContext::State::ChunksDecoded) {
+        if (decode_webp_chunks(*m_context).is_error())
+            return 0;
+    }
+
+    auto anim_or_error = decode_webp_chunk_ANIM(*m_context, m_context->animation_header_chunk.value());
+    if (decode_webp_chunks(*m_context).is_error())
+        return 0;
+
+    return anim_or_error.value().loop_count;
 }
 
 size_t WebPImageDecoderPlugin::frame_count()
