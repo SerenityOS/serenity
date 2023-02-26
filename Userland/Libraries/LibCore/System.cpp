@@ -473,6 +473,13 @@ ErrorOr<void> ftruncate(int fd, off_t length)
     return {};
 }
 
+ErrorOr<void> truncate(StringView path, off_t length)
+{
+    if (::truncate(path.characters_without_null_termination(), length) < 0)
+        return Error::from_syscall("truncate"sv, -errno);
+    return {};
+}
+
 ErrorOr<struct stat> stat(StringView path)
 {
     if (!path.characters_without_null_termination())
