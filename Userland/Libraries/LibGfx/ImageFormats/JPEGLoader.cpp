@@ -365,6 +365,12 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
 
         scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
 
+        if (scan.end_of_bands_run_count >= 1) {
+            // end_of_bands_run_count is decremented at the end of `build_macroblocks`.
+            // This line compensate this effect.
+            ++scan.end_of_bands_run_count;
+        }
+
         return true;
     }
 
@@ -390,6 +396,9 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
     auto first_coefficient = max(1, scan.spectral_selection_start);
 
     for (int j = first_coefficient; j <= scan.spectral_selection_end;) {
+        if (scan.end_of_bands_run_count > 0)
+            continue;
+
         // AC symbols encode 2 pieces of information, the high 4 bits represent
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
@@ -462,18 +471,18 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                         continue;
                 }
 
-                // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
-                if (context.current_scan.end_of_bands_run_count > 0) {
-                    --context.current_scan.end_of_bands_run_count;
-                    continue;
-                }
-
                 Macroblock& block = macroblocks[macroblock_index];
 
                 if (context.current_scan.spectral_selection_start == 0)
                     TRY(add_dc(context, block, scan_component));
                 if (context.current_scan.spectral_selection_end != 0)
                     TRY(add_ac(context, block, scan_component));
+
+                // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
+                if (context.current_scan.end_of_bands_run_count > 0) {
+                    --context.current_scan.end_of_bands_run_count;
+                    continue;
+                }
             }
         }
     }
