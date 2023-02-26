@@ -430,7 +430,7 @@ private:
     RefPtr<AST::Node> immediate_length_impl(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
-    int builtin_##builtin(int argc, char const** argv);
+    ErrorOr<int> builtin_##builtin(int argc, char const** argv);
 
     ENUMERATE_SHELL_BUILTINS();
 

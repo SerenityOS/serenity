@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2023, Undefine <undefine@undefine.pl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +16,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/System.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -26,12 +28,12 @@ extern char** environ;
 
 namespace Shell {
 
-int Shell::builtin_noop(int, char const**)
+ErrorOr<int> Shell::builtin_noop(int, char const**)
 {
     return 0;
 }
 
-int Shell::builtin_dump(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_dump(int argc, char const** argv)
 {
     bool posix = false;
     StringView source;
@@ -80,7 +82,7 @@ static Vector<DeprecatedString> find_matching_executables_in_path(StringView fil
     return executables;
 }
 
-int Shell::builtin_where(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_where(int argc, char const** argv)
 {
     Vector<StringView> arguments;
     bool do_only_path_search { false };
@@ -147,7 +149,7 @@ int Shell::builtin_where(int argc, char const** argv)
     return at_least_one_succeded ? 0 : 1;
 }
 
-int Shell::builtin_alias(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_alias(int argc, char const** argv)
 {
     Vector<DeprecatedString> arguments;
 
@@ -174,7 +176,7 @@ int Shell::builtin_alias(int argc, char const** argv)
                 fail = true;
             }
         } else {
-            m_aliases.set(parts[0], parts[1]);
+            TRY(m_aliases.try_set(parts[0], parts[1]));
             add_entry_to_cache({ RunnablePath::Kind::Alias, parts[0] });
         }
     }
@@ -182,7 +184,7 @@ int Shell::builtin_alias(int argc, char const** argv)
     return fail ? 1 : 0;
 }
 
-int Shell::builtin_unalias(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_unalias(int argc, char const** argv)
 {
     bool remove_all { false };
     Vector<DeprecatedString> arguments;
@@ -221,7 +223,7 @@ int Shell::builtin_unalias(int argc, char const** argv)
     return failed ? 1 : 0;
 }
 
-int Shell::builtin_bg(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_bg(int argc, char const** argv)
 {
     int job_id = -1;
     bool is_pid = false;
@@ -277,16 +279,13 @@ int Shell::builtin_bg(int argc, char const** argv)
 
     // Try using the PGID, but if that fails, just use the PID.
     if (killpg(job->pgid(), SIGCONT) < 0) {
-        if (kill(job->pid(), SIGCONT) < 0) {
-            perror("kill");
-            return 1;
-        }
+        TRY(Core::System::kill(job->pid(), SIGCONT));
     }
 
     return 0;
 }
 
-int Shell::builtin_type(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_type(int argc, char const** argv)
 {
     Vector<DeprecatedString> commands;
     bool dont_show_function_source = false;
@@ -314,17 +313,17 @@ int Shell::builtin_type(int argc, char const** argv)
             printf("%s is a function\n", command.characters());
             if (!dont_show_function_source) {
                 StringBuilder builder;
-                builder.append(fn.name);
-                builder.append('(');
+                TRY(builder.try_append(fn.name));
+                TRY(builder.try_append('('));
                 for (size_t i = 0; i < fn.arguments.size(); i++) {
-                    builder.append(fn.arguments[i]);
+                    TRY(builder.try_append(fn.arguments[i]));
                     if (!(i == fn.arguments.size() - 1))
-                        builder.append(' ');
+                        TRY(builder.try_append(' '));
                 }
-                builder.append(") {\n"sv);
+                TRY(builder.try_append(") {\n"sv));
                 if (fn.body) {
                     auto formatter = Formatter(*fn.body);
-                    builder.append(formatter.format());
+                    TRY(builder.try_append(formatter.format()));
                     printf("%s\n}\n", builder.to_deprecated_string().characters());
                 } else {
                     printf("%s\n}\n", builder.to_deprecated_string().characters());
@@ -355,7 +354,7 @@ int Shell::builtin_type(int argc, char const** argv)
         return 0;
 }
 
-int Shell::builtin_cd(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_cd(int argc, char const** argv)
 {
     char const* arg_path = nullptr;
 
@@ -403,13 +402,13 @@ int Shell::builtin_cd(int argc, char const** argv)
         }
         return 1;
     }
-    setenv("OLDPWD", cwd.characters(), 1);
+    TRY(Core::System::setenv("OLDPWD"sv, cwd, 1));
     cwd = move(real_path);
-    setenv("PWD", cwd.characters(), 1);
+    TRY(Core::System::setenv("PWD"sv, cwd, 1));
     return 0;
 }
 
-int Shell::builtin_cdh(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_cdh(int argc, char const** argv)
 {
     int index = -1;
 
@@ -440,7 +439,7 @@ int Shell::builtin_cdh(int argc, char const** argv)
     return Shell::builtin_cd(2, cd_args);
 }
 
-int Shell::builtin_dirs(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_dirs(int argc, char const** argv)
 {
     // The first directory in the stack is ALWAYS the current directory
     directory_stack.at(0) = cwd.characters();
@@ -478,7 +477,7 @@ int Shell::builtin_dirs(int argc, char const** argv)
     }
 
     for (auto& path : paths)
-        directory_stack.append(path);
+        TRY(directory_stack.try_append(path));
 
     if (print || (!clear && paths.is_empty())) {
         int index = 0;
@@ -493,7 +492,7 @@ int Shell::builtin_dirs(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_exec(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_exec(int argc, char const** argv)
 {
     if (argc < 2) {
         warnln("Shell: No command given to exec");
@@ -501,13 +500,13 @@ int Shell::builtin_exec(int argc, char const** argv)
     }
 
     Vector<char const*> argv_vector;
-    argv_vector.append(argv + 1, argc - 1);
-    argv_vector.append(nullptr);
+    TRY(argv_vector.try_append(argv + 1, argc - 1));
+    TRY(argv_vector.try_append(nullptr));
 
     execute_process(move(argv_vector));
 }
 
-int Shell::builtin_exit(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_exit(int argc, char const** argv)
 {
     int exit_code = 0;
     Core::ArgsParser parser;
@@ -532,7 +531,7 @@ int Shell::builtin_exit(int argc, char const** argv)
     exit(exit_code);
 }
 
-int Shell::builtin_export(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_export(int argc, char const** argv)
 {
     Vector<DeprecatedString> vars;
 
@@ -556,20 +555,15 @@ int Shell::builtin_export(int argc, char const** argv)
             if (value) {
                 auto values = const_cast<AST::Value&>(*value).resolve_as_list(*this);
                 StringBuilder builder;
-                builder.join(' ', values);
-                parts.append(builder.to_deprecated_string());
+                TRY(builder.try_join(' ', values));
+                TRY(parts.try_append(builder.to_deprecated_string()));
             } else {
                 // Ignore the export.
                 continue;
             }
         }
 
-        int setenv_return = setenv(parts[0].characters(), parts[1].characters(), 1);
-
-        if (setenv_return != 0) {
-            perror("setenv");
-            return 1;
-        }
+        TRY(Core::System::setenv(parts[0], parts[1], 1));
 
         if (parts[0] == "PATH")
             cache_path();
@@ -578,7 +572,7 @@ int Shell::builtin_export(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_glob(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_glob(int argc, char const** argv)
 {
     Vector<DeprecatedString> globs;
     Core::ArgsParser parser;
@@ -595,7 +589,7 @@ int Shell::builtin_glob(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_fg(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_fg(int argc, char const** argv)
 {
     int job_id = -1;
     bool is_pid = false;
@@ -648,15 +642,12 @@ int Shell::builtin_fg(int argc, char const** argv)
     dbgln("Resuming {} ({})", job->pid(), job->cmd());
     warnln("Resuming job {} - {}", job->job_id(), job->cmd());
 
-    tcsetpgrp(STDOUT_FILENO, job->pgid());
-    tcsetpgrp(STDIN_FILENO, job->pgid());
+    TRY(Core::System::tcsetpgrp(STDOUT_FILENO, job->pgid()));
+    TRY(Core::System::tcsetpgrp(STDIN_FILENO, job->pgid()));
 
     // Try using the PGID, but if that fails, just use the PID.
     if (killpg(job->pgid(), SIGCONT) < 0) {
-        if (kill(job->pid(), SIGCONT) < 0) {
-            perror("kill");
-            return 1;
-        }
+        TRY(Core::System::kill(job->pid(), SIGCONT));
     }
 
     block_on_job(job);
@@ -667,7 +658,7 @@ int Shell::builtin_fg(int argc, char const** argv)
         return 0;
 }
 
-int Shell::builtin_disown(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_disown(int argc, char const** argv)
 {
     Vector<int> job_ids;
     Vector<bool> id_is_pid;
@@ -701,8 +692,8 @@ int Shell::builtin_disown(int argc, char const** argv)
         return 1;
 
     if (job_ids.is_empty()) {
-        job_ids.append(find_last_job_id());
-        id_is_pid.append(false);
+        TRY(job_ids.try_append(find_last_job_id()));
+        TRY(id_is_pid.try_append(false));
     }
 
     Vector<Job const*> jobs_to_disown;
@@ -714,7 +705,7 @@ int Shell::builtin_disown(int argc, char const** argv)
         if (!job)
             warnln("disown: Job with id/pid {} not found", id);
         else
-            jobs_to_disown.append(job);
+            TRY(jobs_to_disown.try_append(job));
     }
 
     if (jobs_to_disown.is_empty()) {
@@ -736,7 +727,7 @@ int Shell::builtin_disown(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_history(int, char const**)
+ErrorOr<int> Shell::builtin_history(int, char const**)
 {
     for (size_t i = 0; i < m_editor->history().size(); ++i) {
         printf("%6zu  %s\n", i + 1, m_editor->history()[i].entry.characters());
@@ -744,7 +735,7 @@ int Shell::builtin_history(int, char const**)
     return 0;
 }
 
-int Shell::builtin_jobs(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_jobs(int argc, char const** argv)
 {
     bool list = false, show_pid = false;
 
@@ -771,7 +762,7 @@ int Shell::builtin_jobs(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_popd(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_popd(int argc, char const** argv)
 {
     if (directory_stack.size() <= 1) {
         warnln("Shell: popd: directory stack empty");
@@ -791,15 +782,12 @@ int Shell::builtin_popd(int argc, char const** argv)
         return 0;
 
     auto new_path = LexicalPath::canonicalized_path(popped_path);
-    if (chdir(new_path.characters()) < 0) {
-        warnln("chdir({}) failed: {}", new_path, strerror(errno));
-        return 1;
-    }
+    TRY(Core::System::chdir(new_path));
     cwd = new_path;
     return 0;
 }
 
-int Shell::builtin_pushd(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_pushd(int argc, char const** argv)
 {
     StringBuilder path_builder;
     bool should_switch = true;
@@ -814,14 +802,10 @@ int Shell::builtin_pushd(int argc, char const** argv)
 
         DeprecatedString dir1 = directory_stack.take_first();
         DeprecatedString dir2 = directory_stack.take_first();
-        directory_stack.insert(0, dir2);
-        directory_stack.insert(1, dir1);
+        TRY(directory_stack.try_insert(0, dir2));
+        TRY(directory_stack.try_insert(1, dir1));
 
-        int rc = chdir(dir2.characters());
-        if (rc < 0) {
-            warnln("chdir({}) failed: {}", dir2, strerror(errno));
-            return 1;
-        }
+        TRY(Core::System::chdir(dir2));
 
         cwd = dir2;
 
@@ -830,22 +814,22 @@ int Shell::builtin_pushd(int argc, char const** argv)
 
     // Let's assume the user's typed in 'pushd <dir>'
     if (argc == 2) {
-        directory_stack.append(cwd.characters());
+        TRY(directory_stack.try_append(cwd.characters()));
         if (argv[1][0] == '/') {
-            path_builder.append({ argv[1], strlen(argv[1]) });
+            TRY(path_builder.try_append({ argv[1], strlen(argv[1]) }));
         } else {
-            path_builder.appendff("{}/{}", cwd, argv[1]);
+            TRY(path_builder.try_appendff("{}/{}", cwd, argv[1]));
         }
     } else if (argc == 3) {
-        directory_stack.append(cwd.characters());
+        TRY(directory_stack.try_append(cwd.characters()));
         for (int i = 1; i < argc; i++) {
             char const* arg = argv[i];
 
             if (arg[0] != '-') {
                 if (arg[0] == '/') {
-                    path_builder.append({ arg, strlen(arg) });
+                    TRY(path_builder.try_append({ arg, strlen(arg) }));
                 } else
-                    path_builder.appendff("{}/{}", cwd, arg);
+                    TRY(path_builder.try_appendff("{}/{}", cwd, arg));
             }
 
             if (!strcmp(arg, "-n"))
@@ -855,12 +839,7 @@ int Shell::builtin_pushd(int argc, char const** argv)
 
     auto real_path = LexicalPath::canonicalized_path(path_builder.to_deprecated_string());
 
-    struct stat st;
-    int rc = stat(real_path.characters(), &st);
-    if (rc < 0) {
-        warnln("stat({}) failed: {}", real_path, strerror(errno));
-        return 1;
-    }
+    struct stat st = TRY(Core::System::stat(real_path));
 
     if (!S_ISDIR(st.st_mode)) {
         warnln("Not a directory: {}", real_path);
@@ -868,26 +847,21 @@ int Shell::builtin_pushd(int argc, char const** argv)
     }
 
     if (should_switch) {
-        int rc = chdir(real_path.characters());
-        if (rc < 0) {
-            warnln("chdir({}) failed: {}", real_path, strerror(errno));
-            return 1;
-        }
-
+        TRY(Core::System::chdir(real_path));
         cwd = real_path;
     }
 
     return 0;
 }
 
-int Shell::builtin_pwd(int, char const**)
+ErrorOr<int> Shell::builtin_pwd(int, char const**)
 {
     print_path(cwd);
     fputc('\n', stdout);
     return 0;
 }
 
-int Shell::builtin_setopt(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_setopt(int argc, char const** argv)
 {
     if (argc == 1) {
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
@@ -926,7 +900,7 @@ int Shell::builtin_setopt(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_shift(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_shift(int argc, char const** argv)
 {
     int count = 1;
 
@@ -960,7 +934,7 @@ int Shell::builtin_shift(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_source(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_source(int argc, char const** argv)
 {
     char const* file_to_source = nullptr;
     Vector<DeprecatedString> args;
@@ -987,7 +961,7 @@ int Shell::builtin_source(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_time(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_time(int argc, char const** argv)
 {
     AST::Command command;
 
@@ -1041,7 +1015,7 @@ int Shell::builtin_time(int argc, char const** argv)
     return exit_code;
 }
 
-int Shell::builtin_umask(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_umask(int argc, char const** argv)
 {
     char const* mask_text = nullptr;
 
@@ -1069,7 +1043,7 @@ int Shell::builtin_umask(int argc, char const** argv)
     return 1;
 }
 
-int Shell::builtin_wait(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_wait(int argc, char const** argv)
 {
     Vector<int> job_ids;
     Vector<bool> id_is_pid;
@@ -1127,7 +1101,7 @@ int Shell::builtin_wait(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_unset(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_unset(int argc, char const** argv)
 {
     Vector<DeprecatedString> vars;
 
@@ -1155,7 +1129,7 @@ int Shell::builtin_unset(int argc, char const** argv)
     return 0;
 }
 
-int Shell::builtin_not(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_not(int argc, char const** argv)
 {
     // FIXME: Use ArgsParser when it can collect unrelated -arguments too.
     if (argc == 1)
@@ -1179,7 +1153,7 @@ int Shell::builtin_not(int argc, char const** argv)
     return exit_code == 0 ? 1 : 0;
 }
 
-int Shell::builtin_kill(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<DeprecatedString> replaced_values;
@@ -1188,18 +1162,18 @@ int Shell::builtin_kill(int argc, char const** argv)
         warnln("kill: `kill' not found in PATH");
         return 126;
     }
-    replaced_values.append(kill_path.release_value());
+    TRY(replaced_values.try_append(kill_path.release_value()));
     for (auto i = 1; i < argc; ++i) {
         if (auto job_id = resolve_job_spec({ argv[i], strlen(argv[1]) }); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
-                replaced_values.append(DeprecatedString::number(job->pid()));
+                TRY(replaced_values.try_append(DeprecatedString::number(job->pid())));
             } else {
                 warnln("kill: Job with pid {} not found", job_id.value());
                 return 1;
             }
         } else {
-            replaced_values.append(argv[i]);
+            TRY(replaced_values.try_append(argv[i]));
         }
     }
 
@@ -1208,18 +1182,9 @@ int Shell::builtin_kill(int argc, char const** argv)
     command.argv = move(replaced_values);
     command.position = m_source_position.has_value() ? m_source_position->position : Optional<AST::Position> {};
 
-    auto exit_code = 1;
-    auto job_result = run_command(command);
-    if (job_result.is_error()) {
-        warnln("kill: Failed to run {}: {}", command.argv.first(), job_result.error());
-        return exit_code;
-    }
-
-    if (auto job = job_result.release_value()) {
-        block_on_job(job);
-        exit_code = job->exit_code();
-    }
-    return exit_code;
+    auto job = TRY(run_command(command));
+    block_on_job(job);
+    return job->exit_code();
 }
 
 bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Rewiring> const& rewirings, int& retval)
@@ -1254,14 +1219,20 @@ bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Re
     if (name == ":"sv)
         name = "noop"sv;
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin)                               \
-    if (name == #builtin) {                                              \
-        retval = builtin_##builtin(argv.size() - 1, argv.data());        \
-        if (!has_error(ShellError::None))                                \
-            raise_error(m_error, m_error_description, command.position); \
-        fflush(stdout);                                                  \
-        fflush(stderr);                                                  \
-        return true;                                                     \
+#define __ENUMERATE_SHELL_BUILTIN(builtin)                                     \
+    if (name == #builtin) {                                                    \
+        auto result = builtin_##builtin(argv.size() - 1, argv.data());         \
+        if (result.is_error()) {                                               \
+            auto error = result.release_error();                               \
+            warnln("\033[31;1m{}: Runtime error\033[0m: {}", #builtin, error); \
+            retval = 1;                                                        \
+        } else                                                                 \
+            retval = result.release_value();                                   \
+        if (!has_error(ShellError::None))                                      \
+            raise_error(m_error, m_error_description, command.position);       \
+        fflush(stdout);                                                        \
+        fflush(stderr);                                                        \
+        return true;                                                           \
     }
 
     ENUMERATE_SHELL_BUILTINS();
@@ -1270,7 +1241,7 @@ bool Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Re
     return false;
 }
 
-int Shell::builtin_argsparser_parse(int argc, char const** argv)
+ErrorOr<int> Shell::builtin_argsparser_parse(int argc, char const** argv)
 {
     // argsparser_parse
     //   --add-option variable [--type (bool | string | i32 | u32 | double | size)] --help-string "" --long-name "" --short-name "" [--value-name "" <if not --type bool>] --list
