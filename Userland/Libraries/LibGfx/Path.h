@@ -252,6 +252,7 @@ public:
     }
 
     Path copy_transformed(AffineTransform const&) const;
+    void add_path(Path const&);
 
     DeprecatedString to_deprecated_string() const;
 
