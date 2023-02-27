@@ -9,6 +9,7 @@
 #include <AK/RefCounted.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Geometry/DOMMatrixReadOnly.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 
 namespace Web::HTML {
@@ -24,6 +25,8 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Path2D>> construct_impl(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const& path);
 
     virtual ~Path2D() override;
+
+    WebIDL::ExceptionOr<void> add_path(JS::NonnullGCPtr<Path2D> path, Geometry::DOMMatrix2DInit& transform);
 
 private:
     Path2D(JS::Realm&, Optional<Variant<JS::Handle<Path2D>, DeprecatedString>> const&);
