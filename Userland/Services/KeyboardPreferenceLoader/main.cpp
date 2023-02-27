@@ -20,18 +20,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto keyboard_settings_config = TRY(Core::ConfigFile::open_for_app("KeyboardSettings"));
 
     TRY(Core::System::unveil("/bin/keymap", "x"));
-    TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
     TRY(Core::System::unveil("/dev/input/keyboard/0", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    auto mapper_config = TRY(Core::ConfigFile::open("/etc/Keyboard.ini"));
-    auto keymaps = mapper_config->read_entry("Mapping", "Keymaps", "");
-
-    auto keymaps_vector = keymaps.split(',');
-    if (keymaps_vector.size() == 0)
-        exit(1);
-
     pid_t child_pid;
-    char const* argv[] = { "/bin/keymap", "-m", keymaps_vector.first().characters(), nullptr };
+    char const* argv[] = { "/bin/keymap", "-r", nullptr };
     if ((errno = posix_spawn(&child_pid, "/bin/keymap", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
         exit(1);

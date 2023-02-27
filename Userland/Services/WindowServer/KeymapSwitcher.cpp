@@ -47,12 +47,14 @@ void KeymapSwitcher::refresh()
 
     auto current_keymap = get_current_keymap();
 
+    auto new_keymap = mapper_config->read_entry("Mapping", "Keymap", current_keymap);
+
     // Refresh might indicate that some external program has changed the keymap,
     // so better notify our clients that we may have a new keymap
     if (on_keymap_change)
-        on_keymap_change(current_keymap);
+        on_keymap_change(new_keymap);
 
-    if (m_keymaps.find(current_keymap).is_end()) {
+    if (m_keymaps.find(new_keymap).is_end()) {
         set_keymap(m_keymaps.first());
     }
 }

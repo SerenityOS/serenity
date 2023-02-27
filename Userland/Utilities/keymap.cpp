@@ -40,14 +40,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString mapping;
     DeprecatedString mappings;
+    bool refresh;
     Core::ArgsParser args_parser;
     args_parser.add_option(mapping, "The mapping to be used", "set-keymap", 'm', "keymap");
     args_parser.add_option(mappings, "Comma separated list of enabled mappings", "set-keymaps", 's', "keymaps");
+    args_parser.add_option(refresh, "Refresh mapping from configuration file", "refresh", 'r');
+
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    if (mapping.is_empty() && mappings.is_empty()) {
+    if (mapping.is_empty() && mappings.is_empty() && !refresh) {
         auto keymap = TRY(Keyboard::CharacterMap::fetch_system_map());
         outln("{}", keymap.character_map_name());
         return 0;
@@ -73,7 +76,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto keymaps = DeprecatedString::join(',', mappings_vector);
         mapper_config->write_entry("Mapping", "Keymaps", keymaps);
-        TRY(mapper_config->sync());
     }
 
     auto keymaps = mapper_config->read_entry("Mapping", "Keymaps");
@@ -83,18 +85,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (keymaps_vector.is_empty()) {
             warnln("No keymaps configured - writing default configurations (en-us)");
             mapper_config->write_entry("Mapping", "Keymaps", "en-us");
-            TRY(mapper_config->sync());
             keymaps_vector.append("en-us");
         }
 
         if (!keymaps_vector.find(mapping).is_end()) {
-            int rc = set_keymap(mapping);
-            if (rc == 0)
-                return rc;
+            mapper_config->write_entry("Mapping", "Keymap", mapping);
         } else {
+            mapper_config->write_entry("Mapping", "Keymap", keymaps_vector.first());
             warnln("Keymap '{}' is not in list of configured keymaps ({})", mapping, keymaps);
         }
     }
 
-    return set_keymap(keymaps_vector.first());
+    auto keymap = mapper_config->read_entry("Mapping", "Keymap");
+    int rc = set_keymap(keymap);
+    if (rc == 0) {
+        TRY(mapper_config->sync());
+    }
+    return rc;
 }
