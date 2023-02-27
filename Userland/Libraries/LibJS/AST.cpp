@@ -779,14 +779,16 @@ Completion ForStatement::loop_evaluation(Interpreter& interpreter, Vector<Deprec
         if (declaration) {
             loop_env = new_declarative_environment(*old_environment);
             auto is_const = declaration->is_constant_declaration();
-            declaration->for_each_bound_name([&](auto const& name) {
+            // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
+            //       an exception should not result from `for_each_bound_name`.
+            MUST(declaration->for_each_bound_name([&](auto const& name) {
                 if (is_const) {
                     MUST(loop_env->create_immutable_binding(vm, name, true));
                 } else {
                     MUST(loop_env->create_mutable_binding(vm, name, false));
                     ++per_iteration_bindings_size;
                 }
-            });
+            }));
 
             interpreter.vm().running_execution_context().lexical_environment = loop_env;
         }
@@ -979,7 +981,9 @@ struct ForInOfHeadState {
 
             // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
             // 1. For each element name of the BoundNames of ForBinding, do
-            for_declaration.for_each_bound_name([&](auto const& name) {
+            // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
+            //       an exception should not result from `for_each_bound_name`.
+            MUST(for_declaration.for_each_bound_name([&](auto const& name) {
                 if (first_name.is_empty())
                     first_name = name;
 
@@ -993,7 +997,7 @@ struct ForInOfHeadState {
                     // i. Perform ! environment.CreateMutableBinding(name, false).
                     MUST(iteration_environment->create_mutable_binding(vm, name, false));
                 }
-            });
+            }));
             interpreter.vm().running_execution_context().lexical_environment = iteration_environment;
 
             if (!destructuring) {
@@ -1074,18 +1078,20 @@ static ThrowCompletionOr<ForInOfHeadState> for_in_of_head_execute(Interpreter& i
             } else {
                 state.lhs_kind = ForInOfHeadState::LexicalBinding;
                 new_environment = new_declarative_environment(*interpreter.lexical_environment());
-                variable_declaration.for_each_bound_name([&](auto const& name) {
+                // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_name`.
+                MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
                     MUST(new_environment->create_mutable_binding(vm, name, false));
-                });
+                }));
             }
         } else {
             VERIFY(is<UsingDeclaration>(ast_ptr->ptr()));
             auto& declaration = static_cast<UsingDeclaration const&>(*(*ast_ptr));
             state.lhs_kind = ForInOfHeadState::LexicalBinding;
             new_environment = new_declarative_environment(*interpreter.lexical_environment());
-            declaration.for_each_bound_name([&](auto const& name) {
+            // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_name`.
+            MUST(declaration.for_each_bound_name([&](auto const& name) {
                 MUST(new_environment->create_mutable_binding(vm, name, false));
-            });
+            }));
         }
 
         if (new_environment) {
@@ -2071,7 +2077,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
         class_constructor->add_private_method(private_method);
 
     for (auto& method : static_private_methods)
-        class_constructor->private_method_or_accessor_add(move(method));
+        TRY(class_constructor->private_method_or_accessor_add(move(method)));
 
     for (auto& element : static_elements) {
         TRY(element.visit(
@@ -3983,10 +3989,11 @@ Completion TryStatement::execute(Interpreter& interpreter) const
             },
             [&](NonnullRefPtr<BindingPattern const> const& pattern) {
                 // 3. For each element argName of the BoundNames of CatchParameter, do
-                pattern->for_each_bound_name([&](auto& name) {
+                // NOTE: Due to the use of MUST with `create_mutable_binding` below, an exception should not result from `for_each_bound_name`.
+                MUST(pattern->for_each_bound_name([&](auto& name) {
                     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).
                     MUST(catch_environment->create_mutable_binding(vm, name, false));
-                });
+                }));
             });
 
         // 4. Set the running execution context's LexicalEnvironment to catchEnv.
@@ -4725,16 +4732,19 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
     VERIFY(environment);
     auto* private_environment = vm.running_execution_context().private_environment;
     // Note: All the calls here are ! and thus we do not need to TRY this callback.
-    for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+    //       We use MUST to ensure it does not throw and to avoid discarding the returned ThrowCompletionOr<void>.
+    MUST(for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         auto is_constant_declaration = declaration.is_constant_declaration();
-        declaration.for_each_bound_name([&](auto const& name) {
+        // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
+        //       an exception should not result from `for_each_bound_name`.
+        MUST(declaration.for_each_bound_name([&](auto const& name) {
             if (is_constant_declaration) {
                 MUST(environment->create_immutable_binding(vm, name, true));
             } else {
                 if (!MUST(environment->has_binding(name)))
                     MUST(environment->create_mutable_binding(vm, name, false));
             }
-        });
+        }));
 
         if (is<FunctionDeclaration>(declaration)) {
             auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
@@ -4742,7 +4752,7 @@ void ScopeNode::block_declaration_instantiation(Interpreter& interpreter, Enviro
             VERIFY(is<DeclarativeEnvironment>(*environment));
             static_cast<DeclarativeEnvironment&>(*environment).initialize_or_set_mutable_binding({}, vm, function_declaration.name(), function);
         }
-    });
+    }));
 }
 
 // 16.1.7 GlobalDeclarationInstantiation ( script, env ), https://tc39.es/ecma262/#sec-globaldeclarationinstantiation

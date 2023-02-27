@@ -70,9 +70,10 @@ public:
                     scope_pusher.m_forbidden_lexical_names.set(name);
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& binding_pattern) {
-                    binding_pattern->for_each_bound_name([&](auto const& name) {
+                    // NOTE: Nothing in the callback throws an exception.
+                    MUST(binding_pattern->for_each_bound_name([&](auto const& name) {
                         scope_pusher.m_forbidden_lexical_names.set(name);
-                    });
+                    }));
                 });
         }
         return scope_pusher;
@@ -94,9 +95,10 @@ public:
         if (init && is<VariableDeclaration>(*init)) {
             auto& variable_declaration = static_cast<VariableDeclaration const&>(*init);
             if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
-                variable_declaration.for_each_bound_name([&](auto const& name) {
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
                     scope_pusher.m_forbidden_var_names.set(name);
-                });
+                }));
             }
         }
 
@@ -107,9 +109,10 @@ public:
     {
         ScopePusher scope_pusher(parser, nullptr, ScopeLevel::NotTopLevel);
         if (pattern) {
-            pattern->for_each_bound_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(pattern->for_each_bound_name([&](auto const& name) {
                 scope_pusher.m_forbidden_var_names.set(name);
-            });
+            }));
         } else if (!parameter.is_empty()) {
             scope_pusher.m_var_names.set(parameter);
         }
@@ -129,17 +132,19 @@ public:
     void add_declaration(NonnullRefPtr<Declaration const> declaration)
     {
         if (declaration->is_lexical_declaration()) {
-            declaration->for_each_bound_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(declaration->for_each_bound_name([&](auto const& name) {
                 if (m_var_names.contains(name) || m_forbidden_lexical_names.contains(name) || m_function_names.contains(name))
                     throw_identifier_declared(name, declaration);
 
                 if (m_lexical_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                     throw_identifier_declared(name, declaration);
-            });
+            }));
 
             m_node->add_lexical_declaration(move(declaration));
         } else if (!declaration->is_function_declaration()) {
-            declaration->for_each_bound_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(declaration->for_each_bound_name([&](auto const& name) {
                 ScopePusher* pusher = this;
                 while (true) {
                     if (pusher->m_lexical_names.contains(name)
@@ -156,16 +161,17 @@ public:
                 }
                 VERIFY(pusher->is_top_level() && pusher->m_node);
                 pusher->m_node->add_var_scoped_declaration(declaration);
-            });
+            }));
 
             VERIFY(m_top_level_scope);
             m_top_level_scope->m_node->add_var_scoped_declaration(move(declaration));
         } else {
             if (m_scope_level != ScopeLevel::NotTopLevel && m_scope_level != ScopeLevel::ModuleTopLevel) {
                 // Only non-top levels and Module don't var declare the top functions
-                declaration->for_each_bound_name([&](auto const& name) {
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(declaration->for_each_bound_name([&](auto const& name) {
                     m_var_names.set(name);
-                });
+                }));
                 m_node->add_var_scoped_declaration(move(declaration));
             } else {
                 VERIFY(is<FunctionDeclaration>(*declaration));
@@ -567,16 +573,18 @@ void Parser::parse_module(Program& program)
 
             auto const& exported_name = entry.local_or_import_name;
             bool found = false;
-            program.for_each_lexically_declared_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(program.for_each_lexically_declared_name([&](auto const& name) {
                 if (name == exported_name)
                     found = true;
-            });
+            }));
             if (found)
                 continue;
-            program.for_each_var_declared_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(program.for_each_var_declared_name([&](auto const& name) {
                 if (name == exported_name)
                     found = true;
-            });
+            }));
             for (auto& import : program.imports()) {
                 if (import.has_bound_name(exported_name)) {
                     found = true;
@@ -2532,7 +2540,8 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
                     parameter_names.append(parameter_name);
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& binding) {
-                    binding->for_each_bound_name([&](auto& bound_name) {
+                    // NOTE: Nothing in the callback throws an exception.
+                    MUST(binding->for_each_bound_name([&](auto& bound_name) {
                         if (function_kind == FunctionKind::Generator && bound_name == "yield"sv)
                             syntax_error("Parameter name 'yield' not allowed in this context");
 
@@ -2546,7 +2555,7 @@ NonnullRefPtr<FunctionBody const> Parser::parse_function_body(Vector<FunctionPar
                             }
                         }
                         parameter_names.append(bound_name);
-                    });
+                    }));
                 });
         }
     }
@@ -2686,10 +2695,11 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
                 },
                 [&](NonnullRefPtr<BindingPattern const> const& bindings) {
                     bool found_duplicate = false;
-                    bindings->for_each_bound_name([&](auto& bound_name) {
+                    // NOTE: Nothing in the callback throws an exception.
+                    MUST(bindings->for_each_bound_name([&](auto& bound_name) {
                         if (bound_name == parameter_name)
                             found_duplicate = true;
-                    });
+                    }));
                     return found_duplicate;
                 });
 
@@ -2951,14 +2961,15 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
     pattern->kind = kind;
 
     Vector<StringView> bound_names;
-    pattern->for_each_bound_name([&](auto& name) {
+    // NOTE: Nothing in the callback throws an exception.
+    MUST(pattern->for_each_bound_name([&](auto& name) {
         if (allow_duplicates == AllowDuplicates::No) {
             if (bound_names.contains_slow(name))
                 syntax_error("Duplicate parameter names in bindings");
             bound_names.append(name);
         }
         check_identifier_name_for_assignment_validity(name);
-    });
+    }));
 
     return pattern;
 }
@@ -3018,10 +3029,11 @@ NonnullRefPtr<VariableDeclaration const> Parser::parse_variable_declaration(IsFo
         Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>, Empty> target {};
         if (auto pattern = parse_binding_pattern(declaration_kind != DeclarationKind::Var ? AllowDuplicates::No : AllowDuplicates::Yes, AllowMemberExpressions::No)) {
             if ((declaration_kind == DeclarationKind::Let || declaration_kind == DeclarationKind::Const)) {
-                pattern->for_each_bound_name([this](auto& name) {
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(pattern->for_each_bound_name([this](auto& name) {
                     if (name == "let"sv)
                         syntax_error("Lexical binding may not be called 'let'");
-                });
+                }));
             }
 
             target = pattern.release_nonnull();
@@ -3454,11 +3466,12 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
     HashTable<DeprecatedFlyString> bound_names;
 
     if (pattern_parameter) {
-        pattern_parameter->for_each_bound_name(
+        // NOTE: Nothing in the callback throws an exception.
+        MUST(pattern_parameter->for_each_bound_name(
             [&](auto& name) {
                 check_identifier_name_for_assignment_validity(name);
                 bound_names.set(name);
-            });
+            }));
     }
 
     if (!parameter.is_empty()) {
@@ -3469,10 +3482,11 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
     ScopePusher catch_scope = ScopePusher::catch_scope(*this, pattern_parameter, parameter);
     auto body = parse_block_statement();
 
-    body->for_each_lexically_declared_name([&](auto const& name) {
+    // NOTE: Nothing in the callback throws an exception.
+    MUST(body->for_each_lexically_declared_name([&](auto const& name) {
         if (bound_names.contains(name))
             syntax_error(DeprecatedString::formatted("Identifier '{}' already declared as catch parameter", name));
-    });
+    }));
 
     if (pattern_parameter) {
         return create_ast_node<CatchClause>(
@@ -3612,10 +3626,11 @@ NonnullRefPtr<Statement const> Parser::parse_for_statement()
             } else {
                 // This does not follow the normal declaration structure so we need additional checks.
                 HashTable<DeprecatedFlyString> bound_names;
-                declaration->for_each_bound_name([&](auto const& name) {
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(declaration->for_each_bound_name([&](auto const& name) {
                     if (bound_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                         syntax_error(DeprecatedString::formatted("Identifier '{}' already declared in for loop initializer", name), declaration->source_range().start);
-                });
+                }));
             }
 
             if (match_for_in_of()) {
@@ -4650,9 +4665,10 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
                             entries_with_location.append({ ExportEntry::named_export(identifier->string(), identifier->string()), identifier->source_range().start });
                         },
                         [&](NonnullRefPtr<BindingPattern const> const& binding) {
-                            binding->for_each_bound_name([&](auto& name) {
+                            // NOTE: Nothing in the callback throws an exception.
+                            MUST(binding->for_each_bound_name([&](auto& name) {
                                 entries_with_location.append({ ExportEntry::named_export(name, name), decl_position });
-                            });
+                            }));
                         });
                 }
             }
@@ -4667,9 +4683,10 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
                         entries_with_location.append({ ExportEntry::named_export(identifier->string(), identifier->string()), identifier->source_range().start });
                     },
                     [&](NonnullRefPtr<BindingPattern const> const& binding) {
-                        binding->for_each_bound_name([&](auto& name) {
+                        // NOTE: Nothing in the callback throws an exception.
+                        MUST(binding->for_each_bound_name([&](auto& name) {
                             entries_with_location.append({ ExportEntry::named_export(name, name), variable_position });
-                        });
+                        }));
                     });
             }
             expression = variable_declaration;

@@ -44,7 +44,8 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
 
         (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
             auto is_constant_declaration = declaration.is_constant_declaration();
-            declaration.for_each_bound_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(declaration.for_each_bound_name([&](auto const& name) {
                 auto index = generator.intern_identifier(name);
                 // NOTE: BlockDeclarationInstantiation takes as input the new lexical environment that was created and checks if there is a binding for the current name only in this new scope.
                 //       For example: `{ let a = 1; { let a = 2; } }`. The second `a` will shadow the first `a` instead of re-initializing or setting it.
@@ -52,7 +53,7 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
                     generator.register_binding(index);
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
                 }
-            });
+            }));
 
             if (is<FunctionDeclaration>(declaration)) {
                 auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
@@ -257,13 +258,14 @@ Bytecode::CodeGenerationErrorOr<void> ScopeNode::generate_bytecode(Bytecode::Gen
         // FIXME: Implement this boi correctly.
         (void)for_each_lexically_scoped_declaration([&](Declaration const& declaration) -> ThrowCompletionOr<void> {
             auto is_constant_declaration = declaration.is_constant_declaration();
-            declaration.for_each_bound_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(declaration.for_each_bound_name([&](auto const& name) {
                 auto index = generator.intern_identifier(name);
                 if (is_constant_declaration || !generator.has_binding(index)) {
                     generator.register_binding(index);
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_constant_declaration);
                 }
-            });
+            }));
 
             if (is<FunctionDeclaration>(declaration)) {
                 auto& function_declaration = static_cast<FunctionDeclaration const&>(declaration);
@@ -1001,11 +1003,12 @@ Bytecode::CodeGenerationErrorOr<void> ForStatement::generate_labelled_evaluation
                 generator.begin_variable_scope(Bytecode::Generator::BindingMode::Lexical, Bytecode::Generator::SurroundingScopeKind::Block);
 
                 bool is_const = variable_declaration.is_constant_declaration();
-                variable_declaration.for_each_bound_name([&](auto const& name) {
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
                     auto index = generator.intern_identifier(name);
                     generator.register_binding(index);
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_const);
-                });
+                }));
             }
         }
 
@@ -2475,12 +2478,13 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
             // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
             generator.begin_variable_scope();
             // c. For each String name of uninitializedBoundNames, do
-            variable_declaration.for_each_bound_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
                 // i. Perform ! newEnv.CreateMutableBinding(name, false).
                 auto identifier = generator.intern_identifier(name);
                 generator.register_binding(identifier);
                 generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
-            });
+            }));
             // d. Set the running execution context's LexicalEnvironment to newEnv.
             // NOTE: Done by CreateEnvironment.
         }
@@ -2634,7 +2638,8 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         // NOTE: We just made it.
         auto& variable_declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode const>>());
         // 2. For each element name of the BoundNames of ForBinding, do
-        variable_declaration.for_each_bound_name([&](auto const& name) {
+        // NOTE: Nothing in the callback throws an exception.
+        MUST(variable_declaration.for_each_bound_name([&](auto const& name) {
             auto identifier = generator.intern_identifier(name);
             generator.register_binding(identifier, Bytecode::Generator::BindingMode::Lexical);
             // a. If IsConstantDeclaration of LetOrConst is true, then
@@ -2647,7 +2652,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
                 // i. Perform ! environment.CreateMutableBinding(name, false).
                 generator.emit<Bytecode::Op::CreateVariable>(identifier, Bytecode::Op::EnvironmentMode::Lexical, false);
             }
-        });
+        }));
         // 3. Return unused.
         // NOTE: No need to do that as we've inlined this.
 

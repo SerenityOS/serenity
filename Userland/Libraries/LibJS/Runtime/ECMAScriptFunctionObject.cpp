@@ -355,10 +355,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                 if (pattern->contains_expression())
                     has_parameter_expressions = true;
 
-                pattern->for_each_bound_name([&](auto& name) {
+                // NOTE: Nothing in the callback throws an exception.
+                MUST(pattern->for_each_bound_name([&](auto& name) {
                     if (parameter_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                         has_duplicates = true;
-                });
+                }));
             });
     }
 
@@ -374,10 +375,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     if (scope_body) {
-        scope_body->for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
+        // NOTE: Nothing in the callback throws an exception.
+        MUST(scope_body->for_each_var_function_declaration_in_reverse_order([&](FunctionDeclaration const& function) {
             if (function_names.set(function.name()) == AK::HashSetResult::InsertedNewEntry)
                 functions_to_initialize.append(function);
-        });
+        }));
 
         auto const& arguments_name = vm.names.arguments.as_string();
 
@@ -385,10 +387,11 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             arguments_object_needed = false;
 
         if (!has_parameter_expressions && arguments_object_needed) {
-            scope_body->for_each_lexically_declared_name([&](auto const& name) {
+            // NOTE: Nothing in the callback throws an exception.
+            MUST(scope_body->for_each_lexically_declared_name([&](auto const& name) {
                 if (name == arguments_name)
                     arguments_object_needed = false;
-            });
+            }));
         }
     } else {
         arguments_object_needed = false;
@@ -489,12 +492,14 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
 
     if (!has_parameter_expressions) {
         if (scope_body) {
-            scope_body->for_each_var_declared_name([&](auto const& name) {
+            // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
+            //       an exception should not result from `for_each_var_declared_name`.
+            MUST(scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (!parameter_names.contains(name) && instantiated_var_names.set(name) == AK::HashSetResult::InsertedNewEntry) {
                     MUST(environment->create_mutable_binding(vm, name, false));
                     MUST(environment->initialize_binding(vm, name, js_undefined(), Environment::InitializeBindingHint::Normal));
                 }
-            });
+            }));
         }
         var_environment = environment;
     } else {
@@ -502,7 +507,9 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         callee_context.variable_environment = var_environment;
 
         if (scope_body) {
-            scope_body->for_each_var_declared_name([&](auto const& name) {
+            // NOTE: Due to the use of MUST with `create_mutable_binding`, `get_binding_value` and `initialize_binding` below,
+            //       an exception should not result from `for_each_var_declared_name`.
+            MUST(scope_body->for_each_var_declared_name([&](auto const& name) {
                 if (instantiated_var_names.set(name) != AK::HashSetResult::InsertedNewEntry)
                     return;
                 MUST(var_environment->create_mutable_binding(vm, name, false));
@@ -514,13 +521,15 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
                     initial_value = MUST(environment->get_binding_value(vm, name, false));
 
                 MUST(var_environment->initialize_binding(vm, name, initial_value, Environment::InitializeBindingHint::Normal));
-            });
+            }));
         }
     }
 
     // B.3.2.1 Changes to FunctionDeclarationInstantiation, https://tc39.es/ecma262/#sec-web-compat-functiondeclarationinstantiation
     if (!m_strict && scope_body) {
-        scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
+        // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
+        //       an exception should not result from `for_each_function_hoistable_with_annexB_extension`.
+        MUST(scope_body->for_each_function_hoistable_with_annexB_extension([&](FunctionDeclaration& function_declaration) {
             auto& function_name = function_declaration.name();
             if (parameter_names.contains(function_name))
                 return;
@@ -532,7 +541,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
             }
 
             function_declaration.set_should_do_additional_annexB_steps();
-        });
+        }));
     }
 
     GCPtr<Environment> lex_environment;
@@ -565,14 +574,17 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::function_declaration_instantia
         return {};
 
     if (!Bytecode::Interpreter::current()) {
-        scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
-            declaration.for_each_bound_name([&](auto const& name) {
+        // NOTE: Due to the use of MUST in the callback, an exception should not result from `for_each_lexically_scoped_declaration`.
+        MUST(scope_body->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+            // NOTE: Due to the use of MUST with `create_immutable_binding` and `create_mutable_binding` below,
+            //       an exception should not result from `for_each_bound_name`.
+            MUST(declaration.for_each_bound_name([&](auto const& name) {
                 if (declaration.is_constant_declaration())
                     MUST(lex_environment->create_immutable_binding(vm, name, true));
                 else
                     MUST(lex_environment->create_mutable_binding(vm, name, false));
-            });
-        });
+            }));
+        }));
     }
 
     auto* private_environment = callee_context.private_environment;
