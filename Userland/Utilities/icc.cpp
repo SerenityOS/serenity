@@ -13,6 +13,7 @@
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
+#include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
@@ -92,7 +93,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
 
     StringView path;
-    args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE");
+    args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE", Core::ArgsParser::Required::No);
+
+    StringView name;
+    args_parser.add_option(name, "Name of a built-in profile, such as 'sRGB'", "name", 'n', "NAME");
 
     StringView dump_out_path;
     args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE");
@@ -105,27 +109,46 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::MappedFile::map(path));
+    if (path.is_empty() && name.is_empty()) {
+        warnln("need either a path or a profile name");
+        return 1;
+    }
+    if (!path.is_empty() && !name.is_empty()) {
+        warnln("can't have both a path and a profile name");
+        return 1;
+    }
+    if (path.is_empty() && !dump_out_path.is_empty()) {
+        warnln("--dump-to only valid with path, not with profile name; use --reencode-to instead");
+        return 1;
+    }
+
     ReadonlyBytes icc_bytes;
-
-    auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
-    if (decoder) {
-        if (auto embedded_icc_bytes = TRY(decoder->icc_data()); embedded_icc_bytes.has_value()) {
-            icc_bytes = *embedded_icc_bytes;
-        } else {
-            outln("image contains no embedded ICC profile");
-            return 1;
+    NonnullRefPtr<Gfx::ICC::Profile> profile = TRY([&]() -> ErrorOr<NonnullRefPtr<Gfx::ICC::Profile>> {
+        if (!name.is_empty()) {
+            if (name == "sRGB")
+                return Gfx::ICC::sRGB();
+            return Error::from_string_literal("unknown profile name");
         }
-    } else {
-        icc_bytes = file->bytes();
-    }
+        auto file = TRY(Core::MappedFile::map(path));
 
-    if (!dump_out_path.is_empty()) {
-        auto output_stream = TRY(Core::File::open(dump_out_path, Core::File::OpenMode::Write));
-        TRY(output_stream->write_entire_buffer(icc_bytes));
-    }
+        auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+        if (decoder) {
+            if (auto embedded_icc_bytes = TRY(decoder->icc_data()); embedded_icc_bytes.has_value()) {
+                icc_bytes = *embedded_icc_bytes;
+            } else {
+                outln("image contains no embedded ICC profile");
+                exit(1);
+            }
+        } else {
+            icc_bytes = file->bytes();
+        }
 
-    auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes));
+        if (!dump_out_path.is_empty()) {
+            auto output_stream = TRY(Core::File::open(dump_out_path, Core::File::OpenMode::Write));
+            TRY(output_stream->write_entire_buffer(icc_bytes));
+        }
+        return Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes);
+    }());
 
     if (!reencode_out_path.is_empty()) {
         auto reencoded_bytes = TRY(Gfx::ICC::encode(profile));
