@@ -46,7 +46,7 @@ private:
     NonnullRefPtr<JS::VM> m_vm;
     NonnullOwnPtr<JS::Interpreter> m_interpreter;
     JS::VM::InterpreterExecutionScope m_interpreter_scope;
-    WorkbookObject* m_workbook_object { nullptr };
+    JS::GCPtr<WorkbookObject> m_workbook_object;
     JS::ExecutionContext m_main_execution_context;
     GUI::Window& m_parent_window;
 
