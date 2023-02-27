@@ -157,6 +157,8 @@ set(SOURCES
     FileAPI/File.cpp
     FileAPI/FileList.cpp
     FontCache.cpp
+    Geometry/DOMMatrix.cpp
+    Geometry/DOMMatrixReadOnly.cpp
     Geometry/DOMPoint.cpp
     Geometry/DOMPointReadOnly.cpp
     Geometry/DOMRect.cpp

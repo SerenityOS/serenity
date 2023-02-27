@@ -223,6 +223,8 @@ class File;
 }
 
 namespace Web::Geometry {
+class DOMMatrix;
+class DOMMatrixReadOnly;
 class DOMPoint;
 class DOMPointReadOnly;
 class DOMRect;
