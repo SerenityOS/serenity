@@ -271,12 +271,10 @@ void EditingEngine::move_to_line_beginning()
 
 void EditingEngine::move_to_line_end()
 {
-    if (m_editor->is_wrapping_enabled()) {
-        auto end_position = m_editor->cursor_content_rect().location().translated(m_editor->width(), 0);
-        m_editor->set_cursor(m_editor->text_position_at_content_position(end_position));
-    } else {
+    if (m_editor->is_wrapping_enabled())
+        m_editor->set_cursor_to_end_of_visual_line();
+    else
         move_to_logical_line_end();
-    }
 }
 
 void EditingEngine::move_to_logical_line_end()
