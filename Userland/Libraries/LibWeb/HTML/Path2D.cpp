@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Geometry/DOMMatrix.h>
 #include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGPathElement.h>
@@ -58,6 +60,39 @@ JS::ThrowCompletionOr<void> Path2D::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::Path2DPrototype>(realm, "Path2D"));
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/canvas.html#dom-path2d-addpath
+WebIDL::ExceptionOr<void> Path2D::add_path(JS::NonnullGCPtr<Path2D> path, Geometry::DOMMatrix2DInit& transform)
+{
+    // The addPath(path, transform) method, when invoked on a Path2D object a, must run these steps:
+
+    // 1. If the Path2D object path has no subpaths, then return.
+    if (path->path().segments().is_empty())
+        return {};
+
+    // 2. Let matrix be the result of creating a DOMMatrix from the 2D dictionary transform.
+    auto matrix = TRY(Geometry::DOMMatrix::create_from_dom_matrix_2d_init(realm(), transform));
+
+    // 3. If one or more of matrix's m11 element, m12 element, m21 element, m22 element, m41 element, or m42 element are infinite or NaN, then return.
+    if (!isfinite(matrix->m11()) || !isfinite(matrix->m12()) || !isfinite(matrix->m21()) || !isfinite(matrix->m22()) || !isfinite(matrix->m41()) || !isfinite(matrix->m42()))
+        return {};
+
+    // 4. Create a copy of all the subpaths in path. Let this copy be known as c.
+    // 5. Transform all the coordinates and lines in c by the transform matrix matrix.
+    auto copy = path->path().copy_transformed(Gfx::AffineTransform { static_cast<float>(matrix->m11()), static_cast<float>(matrix->m12()), static_cast<float>(matrix->m21()), static_cast<float>(matrix->m22()), static_cast<float>(matrix->m41()), static_cast<float>(matrix->m42()) });
+
+    // 6. Let (x, y) be the last point in the last subpath of c.
+    auto xy = copy.segments().last().point();
+
+    // 7. Add all the subpaths in c to a.
+    // FIXME: Is this correct?
+    this->path().add_path(copy);
+
+    // 8. Create a new subpath in a with (x, y) as the only point in the subpath.
+    this->move_to(xy.x(), xy.y());
 
     return {};
 }
