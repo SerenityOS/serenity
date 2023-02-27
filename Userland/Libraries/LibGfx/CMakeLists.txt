@@ -32,6 +32,7 @@ set(SOURCES
     ICC/Profile.cpp
     ICC/Tags.cpp
     ICC/TagTypes.cpp
+    ICC/WellKnownProfiles.cpp
     ICOLoader.cpp
     ImageDecoder.cpp
     JPEGLoader.cpp
