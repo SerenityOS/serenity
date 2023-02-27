@@ -191,6 +191,7 @@ public:
     void set_cursor(size_t line, size_t column);
     virtual void set_cursor(TextPosition const&);
     void set_cursor_to_text_position(Gfx::IntPoint);
+    void set_cursor_to_end_of_visual_line();
 
     Syntax::Highlighter* syntax_highlighter();
     Syntax::Highlighter const* syntax_highlighter() const;

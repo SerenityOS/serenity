@@ -1418,6 +1418,19 @@ void TextEditor::set_cursor_to_text_position(Gfx::IntPoint position)
     set_cursor({ visual_position.line(), physical_column });
 }
 
+void TextEditor::set_cursor_to_end_of_visual_line()
+{
+    for_each_visual_line(m_cursor.line(), [&](auto const&, auto& view, size_t start_of_visual_line, auto) {
+        if (m_cursor.column() < start_of_visual_line)
+            return IterationDecision::Continue;
+        if ((m_cursor.column() - start_of_visual_line) >= view.length())
+            return IterationDecision::Continue;
+
+        set_cursor(m_cursor.line(), start_of_visual_line + view.length());
+        return IterationDecision::Break;
+    });
+}
+
 void TextEditor::focusin_event(FocusEvent& event)
 {
     if (event.source() == FocusSource::Keyboard)
