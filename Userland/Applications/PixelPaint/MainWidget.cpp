@@ -1137,6 +1137,8 @@ void MainWidget::set_actions_enabled(bool enabled)
     m_filter_menu->set_children_actions_enabled(enabled);
 
     m_zoom_combobox->set_enabled(enabled);
+
+    m_levels_dialog_action->set_enabled(enabled);
 }
 
 void MainWidget::set_mask_actions_for_layer(Layer* layer)
