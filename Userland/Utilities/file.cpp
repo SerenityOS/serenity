@@ -19,13 +19,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static Optional<DeprecatedString> description_only(StringView description, [[maybe_unused]] DeprecatedString const& path)
+static Optional<DeprecatedString> description_only(StringView description, StringView)
 {
     return description;
 }
 
 // FIXME: Ideally Gfx::ImageDecoder could tell us the image type directly.
-static Optional<DeprecatedString> image_details(StringView description, DeprecatedString const& path)
+static Optional<DeprecatedString> image_details(StringView description, StringView path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
@@ -51,7 +51,7 @@ static Optional<DeprecatedString> image_details(StringView description, Deprecat
     return builder.to_deprecated_string();
 }
 
-static Optional<DeprecatedString> gzip_details(StringView description, DeprecatedString const& path)
+static Optional<DeprecatedString> gzip_details(StringView description, StringView path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
@@ -68,7 +68,7 @@ static Optional<DeprecatedString> gzip_details(StringView description, Deprecate
     return DeprecatedString::formatted("{}, {}", description, gzip_details.value());
 }
 
-static Optional<DeprecatedString> elf_details(StringView description, DeprecatedString const& path)
+static Optional<DeprecatedString> elf_details(StringView description, StringView path)
 {
     auto file_or_error = Core::MappedFile::map(path);
     if (file_or_error.is_error())
@@ -104,7 +104,7 @@ static Optional<DeprecatedString> elf_details(StringView description, Deprecated
         is_dynamically_linked ? dynamic_section : "");
 }
 
-#define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                              \
+#define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                                \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/gzip"sv, "gzip compressed data"sv, gzip_details)                     \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript"sv, "JavaScript source"sv, description_only)              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json"sv, "JSON data"sv, description_only)                            \
@@ -142,7 +142,7 @@ static Optional<DeprecatedString> elf_details(StringView description, Deprecated
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown"sv, "Markdown document"sv, description_only)                       \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript"sv, "POSIX shell script text executable"sv, description_only)
 
-static Optional<DeprecatedString> get_description_from_mime_type(StringView mime, DeprecatedString const& path)
+static Optional<DeprecatedString> get_description_from_mime_type(StringView mime, StringView path)
 {
 #define __ENUMERATE_MIME_TYPE_DESCRIPTION(mime_type, description, details) \
     if (mime_type == mime)                                                 \
@@ -156,7 +156,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    Vector<DeprecatedString> paths;
+    Vector<StringView> paths;
     bool flag_mime_only = false;
 
     Core::ArgsParser args_parser;
@@ -172,7 +172,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto const& path : paths) {
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
-            perror(path.characters());
+            warnln("{}: {}", path, file_or_error.release_error());
             all_ok = false;
             continue;
         }
