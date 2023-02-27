@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Runtime/Object.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::WebIDL {
@@ -20,6 +21,7 @@ void CallbackType::visit_edges(Cell::Visitor& visitor)
 {
     Cell::visit_edges(visitor);
     visitor.visit(&callback);
+    visitor.visit(callback_context);
 }
 
 }
