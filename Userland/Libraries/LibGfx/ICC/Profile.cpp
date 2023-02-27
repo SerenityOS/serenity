@@ -1316,7 +1316,12 @@ ErrorOr<NonnullRefPtr<Profile>> Profile::try_load_from_externally_owned_memory(R
     bytes = bytes.trim(header.on_disk_size);
     auto tag_table = TRY(read_tag_table(bytes));
 
-    auto profile = TRY(try_make_ref_counted<Profile>(header, move(tag_table)));
+    return create(header, move(tag_table));
+}
+
+ErrorOr<NonnullRefPtr<Profile>> Profile::create(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
+{
+    auto profile = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Profile(header, move(tag_table))));
 
     TRY(profile->check_required_tags());
     TRY(profile->check_tag_types());

@@ -211,12 +211,7 @@ struct ProfileHeader {
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
-
-    Profile(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
-        : m_header(header)
-        , m_tag_table(move(tag_table))
-    {
-    }
+    static ErrorOr<NonnullRefPtr<Profile>> create(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table);
 
     Optional<PreferredCMMType> preferred_cmm_type() const { return m_header.preferred_cmm_type; }
     Version version() const { return m_header.version; }
@@ -262,6 +257,12 @@ public:
     bool is_v4() const { return version().major_version() == 4; }
 
 private:
+    Profile(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
+        : m_header(header)
+        , m_tag_table(move(tag_table))
+    {
+    }
+
     ErrorOr<void> check_required_tags();
     ErrorOr<void> check_tag_types();
 
