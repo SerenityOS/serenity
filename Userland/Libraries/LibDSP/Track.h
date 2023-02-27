@@ -9,6 +9,7 @@
 #include <AK/DisjointChunks.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/Weakable.h>
 #include <LibDSP/Clip.h>
 #include <LibDSP/Effects.h>
 #include <LibDSP/Keyboard.h>
@@ -19,7 +20,8 @@
 namespace DSP {
 
 // A track is also known as a channel and serves as a container for the audio pipeline: clips -> processors -> mixing & output
-class Track : public RefCounted<Track> {
+class Track : public RefCounted<Track>
+    , public Weakable<Track> {
 public:
     virtual ~Track() = default;
 

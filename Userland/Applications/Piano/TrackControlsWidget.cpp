@@ -7,28 +7,46 @@
  */
 
 #include "TrackControlsWidget.h"
-#include "MainWidget.h"
 #include "ProcessorParameterWidget/ParameterWidget.h"
-#include "TrackManager.h"
-#include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Label.h>
-#include <LibGfx/Orientation.h>
+#include <LibGUI/Frame.h>
+#include <LibGUI/GroupBox.h>
+#include <LibGUI/Widget.h>
 
-TrackControlsWidget::TrackControlsWidget(TrackManager& track_manager, MainWidget& main_widget)
-    : m_track_manager(track_manager)
-    , m_main_widget(main_widget)
+TrackControlsWidget::TrackControlsWidget(WeakPtr<DSP::Track> track)
+    : m_track(move(track))
 {
-    set_layout<GUI::HorizontalBoxLayout>();
-    set_preferred_width(GUI::SpecialDimension::Grow);
-    set_fill_with_background_color(true);
+}
 
-    for (auto& parameter : m_track_manager.current_track()->track_mastering()->parameters())
-        m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
+ErrorOr<NonnullRefPtr<TrackControlsWidget>> TrackControlsWidget::try_create(WeakPtr<DSP::Track> track)
+{
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) TrackControlsWidget(move(track))));
 
-    for (auto& parameter : m_track_manager.current_track()->synth()->parameters())
-        m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
+    TRY(widget->try_set_layout<GUI::HorizontalBoxLayout>());
+    widget->set_preferred_width(GUI::SpecialDimension::Grow);
+    widget->set_fill_with_background_color(true);
 
-    for (auto& parameter : m_track_manager.current_track()->delay()->parameters())
-        m_parameter_widgets.append(add<ProcessorParameterWidget>(parameter));
+    auto mastering_parameters = TRY(widget->try_add<GUI::GroupBox>());
+    TRY(mastering_parameters->try_set_layout<GUI::HorizontalBoxLayout>());
+
+    auto strong_track = widget->m_track.value();
+
+    for (auto& parameter : strong_track->track_mastering()->parameters())
+        (void)TRY(mastering_parameters->try_add<ProcessorParameterWidget>(parameter));
+
+    TRY(widget->m_processor_groups.try_append(mastering_parameters));
+
+    TRY(widget->add_spacer());
+
+    for (auto& processor : strong_track->processor_chain()) {
+        auto processor_parameters = TRY(widget->try_add<GUI::GroupBox>());
+        TRY(processor_parameters->try_set_layout<GUI::HorizontalBoxLayout>());
+
+        for (auto& parameter : processor->parameters())
+            (void)TRY(processor_parameters->try_add<ProcessorParameterWidget>(parameter));
+
+        TRY(widget->m_processor_groups.try_append(processor_parameters));
+    }
+
+    return widget;
 }

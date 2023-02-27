@@ -11,11 +11,12 @@
 
 class AudioPlayerLoop;
 class TrackManager;
+class MainWidget;
 
 class PlayerWidget final : public GUI::Toolbar {
-    C_OBJECT(PlayerWidget)
+    C_OBJECT_ABSTRACT(PlayerWidget)
 public:
-    static ErrorOr<NonnullRefPtr<PlayerWidget>> create(TrackManager&, AudioPlayerLoop&);
+    static ErrorOr<NonnullRefPtr<PlayerWidget>> try_create(TrackManager&, MainWidget&, AudioPlayerLoop&);
     virtual ~PlayerWidget() override = default;
 
     void add_track();
@@ -23,11 +24,12 @@ public:
     void toggle_paused();
 
 private:
-    explicit PlayerWidget(TrackManager&, AudioPlayerLoop&);
+    explicit PlayerWidget(TrackManager&, MainWidget&, AudioPlayerLoop&);
 
     ErrorOr<void> initialize();
 
     TrackManager& m_track_manager;
+    MainWidget& m_main_widget;
     AudioPlayerLoop& m_audio_loop;
     Vector<DeprecatedString> m_track_number_choices;
 

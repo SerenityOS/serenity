@@ -8,6 +8,7 @@
  */
 
 #include "RollWidget.h"
+#include "LibDSP/Music.h"
 #include "TrackManager.h"
 #include <AK/IntegralMath.h>
 #include <LibGUI/Event.h>
@@ -127,7 +128,7 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int distance_to_next_x = next_x_pos - x_pos;
             Gfx::IntRect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
-            if (m_track_manager.keyboard()->is_pressed(note))
+            if (static_cast<size_t>(note) < DSP::note_frequencies.size() && m_track_manager.keyboard()->is_pressed(note))
                 painter.fill_rect(rect, note_pressed_color.with_alpha(128));
         }
     }
