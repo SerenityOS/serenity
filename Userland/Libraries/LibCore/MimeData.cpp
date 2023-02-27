@@ -145,6 +145,7 @@ StringView guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(png, "image/png", 0, 8, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)                                            \
     __ENUMERATE_MIME_TYPE_HEADER(ppm, "image/x-portable-pixmap", 0, 3, 0x50, 0x33, 0x0A)                                                         \
     __ENUMERATE_MIME_TYPE_HEADER(qcow, "extra/qcow", 0, 3, 'Q', 'F', 'I')                                                                        \
+    __ENUMERATE_MIME_TYPE_HEADER(qoa, "audio/qoa", 0, 4, 'q', 'o', 'a', 'f')                                                                     \
     __ENUMERATE_MIME_TYPE_HEADER(qoi, "image/x-qoi", 0, 4, 'q', 'o', 'i', 'f')                                                                   \
     __ENUMERATE_MIME_TYPE_HEADER(rtf, "application/rtf", 0, 6, 0x7B, 0x5C, 0x72, 0x74, 0x66, 0x31)                                               \
     __ENUMERATE_MIME_TYPE_HEADER(sevenzip, "application/x-7z-compressed", 0, 6, 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C)                              \
