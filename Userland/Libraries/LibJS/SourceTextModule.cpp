@@ -436,7 +436,9 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
 
     // 21. For each element d of varDeclarations, do
     // a. For each element dn of the BoundNames of d, do
-    m_ecmascript_code->for_each_var_declared_name([&](auto const& name) {
+    // NOTE: Due to the use of MUST with `create_mutable_binding` and `initialize_binding` below,
+    //       an exception should not result from `for_each_var_declared_name`.
+    MUST(m_ecmascript_code->for_each_var_declared_name([&](auto const& name) {
         // i. If dn is not an element of declaredVarNames, then
         if (!declared_var_names.contains_slow(name)) {
             // 1. Perform ! env.CreateMutableBinding(dn, false).
@@ -448,7 +450,7 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
             // 3. Append dn to declaredVarNames.
             declared_var_names.empend(name);
         }
-    });
+    }));
 
     // 22. Let lexDeclarations be the LexicallyScopedDeclarations of code.
     // Note: We only loop through them in step 24.
@@ -457,9 +459,12 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
     PrivateEnvironment* private_environment = nullptr;
 
     // 24. For each element d of lexDeclarations, do
-    m_ecmascript_code->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
+    // NOTE: Due to the use of MUST in the callback, an exception should not result from `for_each_lexically_scoped_declaration`.
+    MUST(m_ecmascript_code->for_each_lexically_scoped_declaration([&](Declaration const& declaration) {
         // a. For each element dn of the BoundNames of d, do
-        declaration.for_each_bound_name([&](DeprecatedFlyString const& name) {
+        // NOTE: Due to the use of MUST with `create_immutable_binding`, `create_mutable_binding` and `initialize_binding` below,
+        //       an exception should not result from `for_each_bound_name`.
+        MUST(declaration.for_each_bound_name([&](DeprecatedFlyString const& name) {
             // i. If IsConstantDeclaration of d is true, then
             if (declaration.is_constant_declaration()) {
                 // 1. Perform ! env.CreateImmutableBinding(dn, true).
@@ -487,8 +492,8 @@ ThrowCompletionOr<void> SourceTextModule::initialize_environment(VM& vm)
                 // 2. Perform ! env.InitializeBinding(dn, fo, normal).
                 MUST(environment->initialize_binding(vm, name, function, Environment::InitializeBindingHint::Normal));
             }
-        });
-    });
+        }));
+    }));
 
     // Note: The default export name is also part of the local lexical declarations but
     //       instead of making that a special case in the parser we just check it here.
