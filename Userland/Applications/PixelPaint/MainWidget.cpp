@@ -691,7 +691,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         if (!visible)
             return;
 
-        bool image_has_selection = !current_image_editor()->active_layer()->image().selection().is_empty();
+        auto* editor = current_image_editor();
+        bool image_has_selection = editor && editor->active_layer() && !editor->active_layer()->image().selection().is_empty();
 
         m_layer_via_copy->set_enabled(image_has_selection);
         m_layer_via_cut->set_enabled(image_has_selection);
