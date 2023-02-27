@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
@@ -654,7 +654,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         }
 
         enum_generator.append(R"~~~(
-    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_deprecated_string(vm));
+    auto @js_name.as_string@ = TRY(@js_name@@js_suffix@.to_string(vm));
 )~~~");
         auto first = true;
         VERIFY(enumeration.translated_cpp_names.size() >= 1);
@@ -1617,6 +1617,15 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     );
 )~~~");
     } else if (interface.enumerations.contains(type.name())) {
+        if (!interface.extended_attributes.contains("UseNewAKString")) {
+            scoped_generator.append(R"~~~(
+    @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
+    @result_expression@ JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, Bindings::idl_enum_to_string(@value@)));
+)~~~");
+        }
         scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
 )~~~");
@@ -2411,21 +2420,43 @@ enum class @enum.type.name@ {
 
         enum_generator.append(R"~~~(
 };
+)~~~");
+
+        if (!interface.extended_attributes.contains("UseNewAKString")) {
+            enum_generator.append(R"~~~(
 inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
     switch(value) {
 )~~~");
-        for (auto& entry : it.value.translated_cpp_names) {
-            enum_generator.set("enum.entry", entry.value);
-            enum_generator.set("enum.string", entry.key);
-            enum_generator.append(R"~~~(
+            for (auto& entry : it.value.translated_cpp_names) {
+                enum_generator.set("enum.entry", entry.value);
+                enum_generator.set("enum.string", entry.key);
+                enum_generator.append(R"~~~(
     case @enum.type.name@::@enum.entry@: return "@enum.string@";
 )~~~");
-        }
-        enum_generator.append(R"~~~(
+            }
+            enum_generator.append(R"~~~(
     default: return "<unknown>";
     };
 }
 )~~~");
+        } else {
+            enum_generator.append(R"~~~(
+inline ErrorOr<String> idl_enum_to_string(@enum.type.name@ value) {
+    switch(value) {
+)~~~");
+            for (auto& entry : it.value.translated_cpp_names) {
+                enum_generator.set("enum.entry", entry.value);
+                enum_generator.set("enum.string", entry.key);
+                enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@: return String::from_utf8("@enum.string@"sv);
+)~~~");
+            }
+            enum_generator.append(R"~~~(
+    default: return String::from_utf8("<unknown>"sv);
+    };
+}
+)~~~");
+        }
     }
 
     generator.append(R"~~~(
@@ -2811,9 +2842,15 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_getter_name@(); }));
 )~~~");
         } else {
-            stringifier_generator.append(R"~~~(
+            if (!interface.extended_attributes.contains("UseNewAKString")) {
+                stringifier_generator.append(R"~~~(
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_deprecated_string(); }));
 )~~~");
+            } else {
+                stringifier_generator.append(R"~~~(
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_string(); }));
+)~~~");
+            }
         }
         stringifier_generator.append(R"~~~(
 
