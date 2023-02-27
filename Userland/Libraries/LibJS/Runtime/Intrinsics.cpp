@@ -136,7 +136,7 @@ static void initialize_constructor(VM& vm, PropertyKey const& property_key, Obje
 }
 
 // 9.3.2 CreateIntrinsics ( realmRec ), https://tc39.es/ecma262/#sec-createintrinsics
-NonnullGCPtr<Intrinsics> Intrinsics::create(Realm& realm)
+ThrowCompletionOr<NonnullGCPtr<Intrinsics>> Intrinsics::create(Realm& realm)
 {
     auto& vm = realm.vm();
 
@@ -158,7 +158,7 @@ NonnullGCPtr<Intrinsics> Intrinsics::create(Realm& realm)
     //    is the specified value of the function's [[Prototype]] internal slot. The
     //    creation of the intrinsics and their properties must be ordered to avoid
     //    any dependencies upon objects that have not yet been created.
-    intrinsics->initialize_intrinsics(realm);
+    MUST_OR_THROW_OOM(intrinsics->initialize_intrinsics(realm));
 
     // 3. Perform AddRestrictedFunctionProperties(realmRec.[[Intrinsics]].[[%Function.prototype%]], realmRec).
     add_restricted_function_properties(static_cast<FunctionObject&>(*realm.intrinsics().function_prototype()), realm);
@@ -167,7 +167,7 @@ NonnullGCPtr<Intrinsics> Intrinsics::create(Realm& realm)
     return *intrinsics;
 }
 
-void Intrinsics::initialize_intrinsics(Realm& realm)
+ThrowCompletionOr<void> Intrinsics::initialize_intrinsics(Realm& realm)
 {
     auto& vm = this->vm();
 
@@ -184,8 +184,8 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
     m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
     // Normally Heap::allocate() takes care of this, but these are allocated via allocate_without_realm().
-    static_cast<FunctionPrototype*>(m_function_prototype)->initialize(realm);
-    static_cast<ObjectPrototype*>(m_object_prototype)->initialize(realm);
+    MUST_OR_THROW_OOM(static_cast<FunctionPrototype*>(m_function_prototype)->initialize(realm));
+    MUST_OR_THROW_OOM(static_cast<ObjectPrototype*>(m_object_prototype)->initialize(realm));
 
 #define __JS_ENUMERATE(ClassName, snake_name) \
     VERIFY(!m_##snake_name##_prototype);      \
@@ -255,6 +255,8 @@ void Intrinsics::initialize_intrinsics(Realm& realm)
     m_json_parse_function = &json_object()->get_without_side_effects(vm.names.parse).as_function();
     m_json_stringify_function = &json_object()->get_without_side_effects(vm.names.stringify).as_function();
     m_object_prototype_to_string_function = &object_prototype()->get_without_side_effects(vm.names.toString).as_function();
+
+    return {};
 }
 
 template<typename T>

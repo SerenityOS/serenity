@@ -44,7 +44,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ShadowRealmConstructor::construct(Functi
     auto& vm = this->vm();
 
     // 3. Let realmRec be CreateRealm().
-    auto realm = Realm::create(vm);
+    auto realm = MUST_OR_THROW_OOM(Realm::create(vm));
 
     // 5. Let context be a new execution context.
     auto context = ExecutionContext { vm.heap() };

@@ -15,7 +15,7 @@ class Intrinsics final : public Cell {
     JS_CELL(Intrinsics, Cell);
 
 public:
-    static NonnullGCPtr<Intrinsics> create(Realm&);
+    static ThrowCompletionOr<NonnullGCPtr<Intrinsics>> create(Realm&);
 
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
@@ -98,7 +98,7 @@ private:
 
     virtual void visit_edges(Visitor&) override;
 
-    void initialize_intrinsics(Realm&);
+    ThrowCompletionOr<void> initialize_intrinsics(Realm&);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     void initialize_##snake_name();
