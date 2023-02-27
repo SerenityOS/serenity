@@ -18,6 +18,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Slider.h>
+#include <LibGUI/StackWidget.h>
 #include <LibGUI/TabWidget.h>
 
 ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(TrackManager& manager, AudioPlayerLoop& loop)
@@ -47,7 +48,7 @@ ErrorOr<void> MainWidget::initialize()
     m_roll_widget->set_fixed_height(300);
 
     (void)TRY(m_tab_widget->try_add_tab<SamplerWidget>("Sampler"_short_string, m_track_manager));
-    m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, m_audio_loop));
+    m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, *this, m_audio_loop));
 
     m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
     TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 2));
@@ -78,7 +79,11 @@ ErrorOr<void> MainWidget::initialize()
         m_octave_value->set_text(String::number(new_octave).release_value_but_fixme_should_propagate_errors());
     };
 
-    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<TrackControlsWidget>(m_track_manager, *this));
+    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<GUI::StackWidget>());
+    for (auto track : m_track_manager.tracks())
+        TRY(m_track_controls.try_append(TRY(m_knobs_widget->try_add<TrackControlsWidget>(TRY(track->try_make_weak_ptr())))));
+
+    update_selected_track();
 
     m_roll_widget->set_keys_widget(m_keys_widget);
 
@@ -97,6 +102,20 @@ ErrorOr<void> MainWidget::add_track_actions(GUI::Menu& menu)
         turn_on_pressed_keys();
     })));
 
+    return {};
+}
+
+void MainWidget::update_selected_track()
+{
+    if (static_cast<size_t>(m_track_manager.track_count()) > m_track_controls.size())
+        MUST(add_controls_for_current_track());
+    m_knobs_widget->set_active_widget(m_track_controls.at(m_track_manager.current_track_index()).ptr());
+}
+
+ErrorOr<void> MainWidget::add_controls_for_current_track()
+{
+    auto track = m_track_manager.current_track();
+    TRY(m_track_controls.try_append(TRY(m_knobs_widget->try_add<TrackControlsWidget>(TRY(track->try_make_weak_ptr())))));
     return {};
 }
 

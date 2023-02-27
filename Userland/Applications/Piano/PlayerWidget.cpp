@@ -8,6 +8,7 @@
 #include "PlayerWidget.h"
 
 #include "AudioPlayerLoop.h"
+#include "MainWidget.h"
 #include "Music.h"
 #include "TrackManager.h"
 #include <LibGUI/BoxLayout.h>
@@ -16,9 +17,9 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 
-ErrorOr<NonnullRefPtr<PlayerWidget>> PlayerWidget::create(TrackManager& manager, AudioPlayerLoop& loop)
+ErrorOr<NonnullRefPtr<PlayerWidget>> PlayerWidget::try_create(TrackManager& manager, MainWidget& main_widget, AudioPlayerLoop& loop)
 {
-    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PlayerWidget(manager, loop)));
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PlayerWidget(manager, main_widget, loop)));
 
     widget->m_play_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv));
     widget->m_pause_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png"sv));
@@ -31,8 +32,9 @@ ErrorOr<NonnullRefPtr<PlayerWidget>> PlayerWidget::create(TrackManager& manager,
     return widget;
 }
 
-PlayerWidget::PlayerWidget(TrackManager& manager, AudioPlayerLoop& loop)
+PlayerWidget::PlayerWidget(TrackManager& manager, MainWidget& main_widget, AudioPlayerLoop& loop)
     : m_track_manager(manager)
+    , m_main_widget(main_widget)
     , m_audio_loop(loop)
 {
 }
@@ -54,6 +56,7 @@ ErrorOr<void> PlayerWidget::initialize()
     m_track_dropdown->set_selected_index(0);
     m_track_dropdown->on_change = [this]([[maybe_unused]] auto name, GUI::ModelIndex model_index) {
         m_track_manager.set_current_track(static_cast<size_t>(model_index.row()));
+        m_main_widget.update_selected_track();
     };
 
     m_add_track_button = TRY(try_add<GUI::Button>());

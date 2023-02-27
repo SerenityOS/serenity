@@ -9,25 +9,21 @@
 #pragma once
 
 #include "ProcessorParameterWidget/ParameterWidget.h"
-#include <LibDSP/ProcessorParameter.h>
-#include <LibDSP/Synthesizers.h>
-#include <LibGUI/Frame.h>
-#include <LibGUI/Label.h>
-#include <LibGUI/Widget.h>
-
-class TrackManager;
-class MainWidget;
+#include <AK/Vector.h>
+#include <AK/WeakPtr.h>
+#include <LibDSP/Track.h>
+#include <LibGUI/Forward.h>
 
 class TrackControlsWidget final : public GUI::Frame {
-    C_OBJECT(TrackControlsWidget)
+    C_OBJECT_ABSTRACT(TrackControlsWidget)
 public:
     virtual ~TrackControlsWidget() override = default;
 
+    static ErrorOr<NonnullRefPtr<TrackControlsWidget>> try_create(WeakPtr<DSP::Track>);
+
 private:
-    TrackControlsWidget(TrackManager&, MainWidget&);
+    TrackControlsWidget(WeakPtr<DSP::Track>);
 
-    TrackManager& m_track_manager;
-    MainWidget& m_main_widget;
-
-    Vector<NonnullRefPtr<ProcessorParameterWidget>> m_parameter_widgets;
+    WeakPtr<DSP::Track> m_track;
+    Vector<NonnullRefPtr<GUI::GroupBox>> m_processor_groups;
 };

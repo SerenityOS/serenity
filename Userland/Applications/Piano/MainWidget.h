@@ -11,6 +11,7 @@
 
 #include "Music.h"
 #include <LibDSP/Keyboard.h>
+#include <LibGUI/StackWidget.h>
 #include <LibGUI/Widget.h>
 
 class AudioPlayerLoop;
@@ -32,6 +33,8 @@ public:
 
     void change_octave_via_keys(DSP::Keyboard::Direction);
     void set_octave_via_slider(int octave);
+    void update_selected_track();
+    ErrorOr<void> add_controls_for_current_track();
 
 private:
     explicit MainWidget(TrackManager&, AudioPlayerLoop&);
@@ -57,7 +60,8 @@ private:
     RefPtr<GUI::TabWidget> m_tab_widget;
     RefPtr<GUI::Widget> m_keys_and_knobs_container;
     RefPtr<KeysWidget> m_keys_widget;
-    RefPtr<TrackControlsWidget> m_knobs_widget;
+    RefPtr<GUI::StackWidget> m_knobs_widget;
+    Vector<NonnullRefPtr<TrackControlsWidget>> m_track_controls;
     RefPtr<PlayerWidget> m_player_widget;
 
     RefPtr<GUI::Widget> m_octave_container;

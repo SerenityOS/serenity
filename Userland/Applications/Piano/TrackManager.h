@@ -28,11 +28,13 @@ public:
 
     NonnullRefPtr<DSP::NoteTrack> current_track() { return *m_tracks[m_current_track]; }
     size_t track_count() { return m_tracks.size(); };
+    size_t current_track_index() const { return m_current_track; }
     void set_current_track(size_t track_index)
     {
         VERIFY(track_index < track_count());
         m_current_track = track_index;
     }
+    Span<NonnullRefPtr<DSP::NoteTrack>> tracks() { return m_tracks.span(); }
 
     NonnullRefPtr<DSP::Transport> transport() const { return m_transport; }
     NonnullRefPtr<DSP::Keyboard> keyboard() const { return m_keyboard; }
