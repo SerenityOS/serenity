@@ -70,7 +70,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ShadowRealmConstructor::construct(Functi
     auto& global_object = set_default_global_bindings(object->shadow_realm());
 
     // FIXME: 12. Perform ? HostInitializeShadowRealm(O.[[ShadowRealm]]).
-    global_object.initialize(object->shadow_realm());
+    MUST_OR_THROW_OOM(global_object.initialize(object->shadow_realm()));
 
     // 13. Return O.
     return object;
