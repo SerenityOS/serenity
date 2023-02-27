@@ -344,7 +344,7 @@ private:
 };
 
 template<>
-class ThrowCompletionOr<void> : public ThrowCompletionOr<Empty> {
+class [[nodiscard]] ThrowCompletionOr<void> : public ThrowCompletionOr<Empty> {
 public:
     using ThrowCompletionOr<Empty>::ThrowCompletionOr;
 };
