@@ -25,7 +25,7 @@ static void set_flood_selection(Gfx::Bitmap& bitmap, Image& image, Gfx::IntPoint
 {
     VERIFY(bitmap.bpp() == 32);
 
-    Mask selection_mask = Mask::empty(bitmap.rect());
+    auto selection_mask = Mask::empty({ selection_offset, bitmap.size() });
 
     auto pixel_reached = [&](Gfx::IntPoint location) {
         selection_mask.set(selection_offset.x() + location.x(), selection_offset.y() + location.y(), 0xFF);
